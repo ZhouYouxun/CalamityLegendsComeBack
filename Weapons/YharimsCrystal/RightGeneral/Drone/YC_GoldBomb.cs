@@ -19,7 +19,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         private static readonly Color BombOrange = new(255, 111, 34);
         private static readonly Color BombWhite = new(255, 246, 196);
 
-        private const int FuseFrames = 58;
+        private const int FuseFrames = 64;
 
         public new string LocalizationCategory => "Projectiles.YharimsCrystal";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
@@ -55,7 +55,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         }
 
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) =>
-            CalamityUtils.CircularHitboxCollision(Projectile.Center, Exploding ? 132f : 18f, targetHitbox);
+            CalamityUtils.CircularHitboxCollision(Projectile.Center, Exploding ? 168f * Projectile.scale : 20f * Projectile.scale, targetHitbox);
 
         public override void AI()
         {
@@ -73,13 +73,13 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
 
                 if (Projectile.timeLeft % 4 == 0)
                 {
-                    Vector2 ringPos = Projectile.Center + Main.rand.NextVector2CircularEdge(80f, 80f) * Main.rand.NextFloat(0.7f, 1.1f);
-                    GeneralParticleHandler.SpawnParticle(new CustomPulse(ringPos, Vector2.Zero, BombGold, "CalamityMod/Particles/HighResHollowCircleHardEdge", Vector2.One, Main.rand.NextFloat(-10f, 10f), 0f, Main.rand.NextFloat(0.04f, 0.07f), 13));
+                    Vector2 ringPos = Projectile.Center + Main.rand.NextVector2CircularEdge(104f, 104f) * Main.rand.NextFloat(0.75f, 1.15f);
+                    GeneralParticleHandler.SpawnParticle(new CustomPulse(ringPos, Vector2.Zero, BombGold, "CalamityMod/Particles/HighResHollowCircleHardEdge", Vector2.One, Main.rand.NextFloat(-10f, 10f), 0f, Main.rand.NextFloat(0.055f, 0.09f), 15));
                 }
             }
             else
             {
-                Projectile.velocity *= 0.988f;
+                Projectile.velocity *= 0.991f;
             }
 
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
@@ -99,7 +99,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         private void Detonate()
         {
             Player owner = Main.player[Projectile.owner];
-            owner.Calamity().GeneralScreenShakePower = System.Math.Max(owner.Calamity().GeneralScreenShakePower, 9f);
+            owner.Calamity().GeneralScreenShakePower = System.Math.Max(owner.Calamity().GeneralScreenShakePower, 12f);
 
             SoundStyle boom = new("CalamityMod/Sounds/Item/DeadSunExplosion");
             SoundEngine.PlaySound(boom with { Volume = 1.1f, Pitch = -0.18f, PitchVariance = 0.12f }, Projectile.Center);
@@ -107,23 +107,23 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             if (Main.dedServ)
                 return;
 
-            GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero, BombWhite, "CalamityMod/Particles/HighResHollowCircleHardEdge", Vector2.One, Main.rand.NextFloat(-10f, 10f), 0f, 0.13f, 16));
-            GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero, Color.Lerp(BombGold, Color.White, 0.4f), "CalamityMod/Particles/BloomCircle", Vector2.One, Main.rand.NextFloat(-10f, 10f), 3.2f, 0f, 26));
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero, BombWhite, "CalamityMod/Particles/HighResHollowCircleHardEdge", Vector2.One, Main.rand.NextFloat(-10f, 10f), 0f, 0.17f * Projectile.scale, 18));
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero, Color.Lerp(BombGold, Color.White, 0.4f), "CalamityMod/Particles/BloomCircle", Vector2.One, Main.rand.NextFloat(-10f, 10f), 4.1f * Projectile.scale, 0f, 30));
 
             // Own-style finish: a radial starburst of bloom streaks, distinct from the purple pulse-ring look it replaces.
-            int rays = 14;
+            int rays = 20;
             for (int i = 0; i < rays; i++)
             {
                 float angle = MathHelper.TwoPi * i / rays + Main.rand.NextFloat(-0.05f, 0.05f);
                 Vector2 dir = angle.ToRotationVector2();
-                Particle ray = new CustomSpark(Projectile.Center, dir * Main.rand.NextFloat(2f, 4f), "CalamityMod/Particles/BloomLineAngled", false, 22, Main.rand.NextFloat(0.9f, 1.3f), i % 2 == 0 ? BombGold : BombOrange, new Vector2(0.18f, 1f), true, false, 0f, false, false, 0.9f);
+                Particle ray = new CustomSpark(Projectile.Center, dir * Main.rand.NextFloat(3f, 6f), "CalamityMod/Particles/BloomLineAngled", false, 26, Main.rand.NextFloat(1.1f, 1.55f), i % 2 == 0 ? BombGold : BombOrange, new Vector2(0.22f, 1.12f), true, false, 0f, false, false, 0.9f);
                 GeneralParticleHandler.SpawnParticle(ray);
             }
 
-            for (int i = 0; i < 30; i++)
+            for (int i = 0; i < 48; i++)
             {
-                Vector2 vel = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(4f, 13f);
-                Dust dust = Dust.NewDustPerfect(Projectile.Center, DustID.GoldFlame, vel, 0, Main.rand.NextBool(3) ? BombWhite : BombGold, Main.rand.NextFloat(1.1f, 1.7f));
+                Vector2 vel = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(5f, 18f);
+                Dust dust = Dust.NewDustPerfect(Projectile.Center, DustID.GoldFlame, vel, 0, Main.rand.NextBool(3) ? BombWhite : BombGold, Main.rand.NextFloat(1.25f, 2f));
                 dust.noGravity = true;
             }
         }

@@ -87,17 +87,11 @@ Mods: {
 						LegendaryHint: "[c/BABABA:Hold Shift to read the legendary record]"
 						LegendaryText:
 							'''
-							[c/B0D8FF:At first it was merely an ice crystal shard forgotten in the permafrost,]
-							[c/B0D8FF:spinning alone in an abyss untouched for a thousand years.]
-							[c/B0D8FF:It knew nothing of warmth, nor any sound beyond silence.]
-							[c/80C8FF:Then someone tried to tame it, weaving the cold into orbiting guardians,]
-							[c/80C8FF:only to discover that frost has its own rhythm and will.]
-							[c/80C8FF:Every rotation was an unfinished melody;]
-							[c/80C8FF:every fracture, an unvoiced sigh.]
-							[c/A0B0FF:And so the cleave split the stagnant air,]
-							[c/A0B0FF:the pierce threaded through frozen time,]
-							[c/A0B0FF:and the strike shattered what was never meant to break.]
-							[c/A0B0FF:Three stances are not a choice — they are the breathing of the ice itself.]
+							[c/B0D8FF:The first Glacial Embrace was closer to an awakened ice core, answering the wielder with spikes and cold blades.]
+							[c/B0D8FF:That design already had forms, but cleave, pierce, and strike too easily felt like three unrelated move sets.]
+							[c/80C8FF:After the rebuild, every form belongs to the same ice formation: cleaves spread cold blades, pierces nail targets, and strikes clamp the ice frame shut.]
+							[c/A0B0FF:Stable combos quicken the spikes and weave recovery, armor, and brief aurora protection into the rhythm.]
+							[c/E0C0FF:When glacial energy is pushed to its limit, the formation gathers into a three-layer divine drill and drives every previous rotation through at once.]
 							[c/C0A0FF:Learn to listen to its beat, step in rhythm with each frozen cadence —]
 							[c/C0A0FF:that is the only key to commanding absolute cold.]
 							[c/E0C0FF:When the final beat falls perfectly, the Diamond Drill awakens,]

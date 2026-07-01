@@ -138,14 +138,17 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             if (Projectile.velocity == Vector2.Zero || BeamLength <= 0f)
                 return false;
 
+            DrawClassicLaser();
+            if (Tier == YCRightLaserVisualTier.Classic)
+                return false;
+
             return Tier switch
             {
                 YCRightLaserVisualTier.Cell => DrawCellLaser(),
-                YCRightLaserVisualTier.Classic => DrawClassicLaser(),
                 YCRightLaserVisualTier.MoonLord => DrawMoonLordLaser(),
                 YCRightLaserVisualTier.Providence => DrawProvidenceLaser(),
                 YCRightLaserVisualTier.Yharon => DrawYharonLaser(),
-                _ => DrawClassicLaser(),
+                _ => false,
             };
         }
 
@@ -316,8 +319,6 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
 
         private bool DrawMoonLordLaser()
         {
-            DrawClassicLaser();
-
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Texture2D ring = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);

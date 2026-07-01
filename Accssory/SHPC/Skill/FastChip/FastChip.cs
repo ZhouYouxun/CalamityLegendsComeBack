@@ -1,5 +1,8 @@
+using CalamityLegendsComeBack.Weapons.SHPC.EXSkill;
+using CalamityMod;
 using CalamityMod.Items.Accessories;
 using CalamityMod.Items.Materials;
+using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -22,6 +25,13 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.FastChip
             FastChipPlayer fastChip = player.GetModPlayer<FastChipPlayer>();
             fastChip.FastChipEquipped = true;
             fastChip.FastChipDrawbackActive = true;
+        }
+
+        public override void ModifyTooltips(List<TooltipLine> tooltips)
+        {
+            bool unlocked = Main.LocalPlayer.GetModPlayer<NewLegend_EXPlayer>().EXUnlocked;
+            string text = this.GetLocalizedValue(unlocked ? "TooltipUnlocked" : "TooltipLocked");
+            tooltips.FindAndReplace("[GFB]", text);
         }
 
         public override void AddRecipes()

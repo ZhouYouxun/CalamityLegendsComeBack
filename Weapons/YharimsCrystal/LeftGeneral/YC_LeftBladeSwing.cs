@@ -70,9 +70,10 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
         private float bladeAngle;
         private float bladeAngularVelocity;
         private float swingStartAngle;
-        private const float IdleMaxTurnSpeed = 0.24f;
-        private const float ChargeMaxTurnSpeed = 0.18f;
-        private const float RecoveryMaxTurnSpeed = 0.15f;
+        private const float IdleMaxTurnSpeed = 0.075f;
+        private const float ChargeMaxTurnSpeed = 0.16f;
+        private const float RecoveryMaxTurnSpeed = 0.055f;
+        private const float MouseAimMaxTurnSpeed = 0.045f;
         private float fadeIn = 0;
         private float bladeFade = 0;
         private float chargeBorderIntensity = 0;
@@ -82,6 +83,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
 
         private Vector2 lockedMouseWorld;
         private int lockedFacingDirection = 1;
+        private float smoothedMouseBladeAngle;
+        private float smoothedMouseBladeVelocity;
 
         private static float SwordAngleOffset => MathHelper.PiOver4;
         private static float DownwardPrepBladeAngle => MathHelper.PiOver2 + SwordAngleOffset;
@@ -94,11 +97,28 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             return mouseWorld == Vector2.Zero ? Main.MouseWorld : mouseWorld;
         }
 
-        private float GetMouseTargetAngle()
+        private float GetRawMouseTargetAngle()
         {
-            lockedMouseWorld = GetMouseWorld();
-            Vector2 aim = (lockedMouseWorld - Owner.MountedCenter).SafeNormalize(CurrentAimDirection);
+            Vector2 mouseWorld = GetMouseWorld();
+            Vector2 aim = (mouseWorld - Owner.MountedCenter).SafeNormalize(CurrentAimDirection);
             return aim.ToRotation() + SwordAngleOffset;
+        }
+
+        private float GetSmoothedMouseTargetAngle()
+        {
+            float rawTarget = GetRawMouseTargetAngle();
+            float delta = MathHelper.WrapAngle(rawTarget - smoothedMouseBladeAngle);
+            float distance = MathHelper.Clamp(Math.Abs(delta) / MathHelper.Pi, 0f, 1f);
+            float desiredSpeed = Math.Sign(delta) * MouseAimMaxTurnSpeed * SmootherStep(distance);
+            float maxAcceleration = MouseAimMaxTurnSpeed * 0.06f;
+
+            smoothedMouseBladeVelocity += MathHelper.Clamp(desiredSpeed - smoothedMouseBladeVelocity, -maxAcceleration, maxAcceleration);
+            smoothedMouseBladeVelocity *= 0.91f;
+            smoothedMouseBladeAngle += smoothedMouseBladeVelocity;
+
+            Vector2 smoothedAim = (smoothedMouseBladeAngle - SwordAngleOffset).ToRotationVector2();
+            lockedMouseWorld = Owner.MountedCenter + smoothedAim * 160f;
+            return smoothedMouseBladeAngle;
         }
 
         private void SmoothBladeToward(float targetAngle, float maxSpeed)
@@ -168,6 +188,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             Vector2 spawnAim = Projectile.velocity.SafeNormalize(Vector2.UnitX * Owner.direction);
             bladeAngle = spawnAim.ToRotation() + SwordAngleOffset;
             bladeAngularVelocity = 0f;
+            smoothedMouseBladeAngle = bladeAngle;
+            smoothedMouseBladeVelocity = 0f;
             swingStartAngle = bladeAngle;
             lockedMouseWorld = Owner.MountedCenter + spawnAim * 160f;
             UpdateFacingFromBlade();
@@ -312,7 +334,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             fadeIn = MathHelper.Lerp(fadeIn, 0f, 0.2f);
             postSwing = false;
             CanHit = false;
-            SmoothBladeToward(GetMouseTargetAngle(), RecoveryMaxTurnSpeed);
+            SmoothBladeToward(GetSmoothedMouseTargetAngle(), RecoveryMaxTurnSpeed);
             ArmRotationOffset = MathHelper.ToRadians(-140f);
             ArmRotationOffsetBack = MathHelper.ToRadians(-140f);
 
@@ -337,7 +359,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             CanHit = false;
             postSwing = false;
             fadeIn = MathHelper.Lerp(fadeIn, 0f, 0.22f);
-            SmoothBladeToward(GetMouseTargetAngle(), IdleMaxTurnSpeed);
+            SmoothBladeToward(GetSmoothedMouseTargetAngle(), IdleMaxTurnSpeed);
 
             idleTimer++;
             if (idleTimer >= IdleDismissFrames)
@@ -352,7 +374,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             CanHit = false;
             postSwing = postSwingCooldown > PostSwingCooldownMax - 10;
             fadeIn = MathHelper.Lerp(fadeIn, 0f, 0.18f);
-            SmoothBladeToward(GetMouseTargetAngle(), RecoveryMaxTurnSpeed);
+            SmoothBladeToward(GetSmoothedMouseTargetAngle(), RecoveryMaxTurnSpeed);
 
             if (postSwingCooldown > 0)
                 postSwingCooldown--;
@@ -370,6 +392,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             stateTimer = 0;
             swingStartAngle = bladeAngle;
             bladeAngularVelocity = 0f;
+            smoothedMouseBladeAngle = bladeAngle;
+            smoothedMouseBladeVelocity = 0f;
             lastSwingId = swingId;
             playSwingSound = true;
             bladeHitFireballsThisSpin = 0;
@@ -434,6 +458,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             bladeAngle = MathHelper.WrapAngle(bladeAngle);
             swingStartAngle = bladeAngle;
             bladeAngularVelocity = 0f;
+            smoothedMouseBladeAngle = bladeAngle;
+            smoothedMouseBladeVelocity = 0f;
             motionState = BladeMotionState.Recovery;
             postSwingCooldown = PostSwingCooldownMax;
             stateTimer = 0;

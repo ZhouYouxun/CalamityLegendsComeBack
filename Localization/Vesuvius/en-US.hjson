@@ -36,10 +36,11 @@ Mods: {
 					LegendaryHint: "[c/BABABA:Hold Shift to access the record]"
 					LegendaryText:
 						'''
-						[c/FFB15C:Vesuvius no longer imitates a single falling asteroid.]
-						[c/FF8A3D:It compresses every eruption type into one staff: jet, bomb, plume, firestorm, and caldera collapse.]
-						[c/D84BFF:The final stage does not throw lava. It tears open the battlefield and lets the mountain speak through it.]
-						[c/FF4422:Amidst crustal roars and obsidian booms, the sleeping geological strata declare their supremacy in a final eruption.]
+						[c/FFB15C:The first Vesuvius understood volcanoes as meteors: fall from above, smash the target, then explode.]
+						[c/FF8A3D:That design was direct enough, but it only showed the surface fall of a volcano, not the disaster moving through the earth below.]
+						[c/FFB15C:After the rebuild, jets, volcanic bombs, magma pillars, firestorms, and caldera collapse are all compressed into one staff.]
+						[c/D84BFF:Right click is no longer just another projectile. It pulls earthquakes, faults, and crust pressure into the fight.]
+						[c/FF4422:When the final eruption comes, what falls is no longer lava. It is an entire layer of earth finishing the volcano's declaration.]
 						'''
 				}
 			}

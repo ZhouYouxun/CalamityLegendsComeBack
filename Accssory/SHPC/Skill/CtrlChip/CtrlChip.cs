@@ -21,7 +21,7 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip
             CtrlChipPlayer ctrlPlayer = player.GetModPlayer<CtrlChipPlayer>();
             ctrlPlayer.CtrlChipEquipped = true;
             ctrlPlayer.CtrlChipVisualsHidden = hideVisual;
-            player.GetCritChance(DamageClass.Generic) += 8f;
+            player.GetCritChance(DamageClass.Generic) += 7f;
         }
 
         public override void AddRecipes()

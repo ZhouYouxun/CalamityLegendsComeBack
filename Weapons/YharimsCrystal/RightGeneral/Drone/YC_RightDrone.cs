@@ -28,7 +28,9 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         public override string Texture => "CalamityLegendsComeBack/Weapons/YharimsCrystal/YC_Right_Drone";
 
         private const int ShutdownFrames = 120;
-        private const float MaxOffsetLength = 5f;
+        private const float LungeDurationFrames = 16f;
+        private const float LungeLightDistance = 95f;
+        private const float LungeHeavyDistance = 210f;
 
         public int SlotIndex => (int)Projectile.ai[0];
         public int ParentHoldoutIndex => (int)Projectile.ai[1];
@@ -48,8 +50,11 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             _ => 20f,
         };
 
-        private ref float OffsetLength => ref Projectile.localAI[0];
+        // On firing, the drone darts toward the target and back — an attack lunge,
+        // not a recoil kick. Counts down from LungeDurationFrames to 0.
+        private ref float LungeTimer => ref Projectile.localAI[0];
         private ref float ShootingTimer => ref Projectile.localAI[1];
+        private float lungeDistance;
 
         private Player Owner;
         private int time;
@@ -78,7 +83,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
 
         public override void OnSpawn(IEntitySource source)
         {
-            OffsetLength = MaxOffsetLength;
+            LungeTimer = 0f;
         }
 
         public override bool ShouldUpdatePosition() => false;
@@ -121,8 +126,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             Vector2 ownerToMouse = NewLegendYharimsCrystal.GetMouseWorld(Owner) - Owner.MountedCenter;
             UpdateFormationPosition(ownerToMouse);
 
-            if (OffsetLength != MaxOffsetLength)
-                OffsetLength = MathHelper.Lerp(OffsetLength, MaxOffsetLength, 0.1f);
+            if (LungeTimer > 0f)
+                LungeTimer--;
 
             ShootingTimer++;
             time++;
@@ -131,16 +136,18 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         }
 
         // Lays the six drones out like an air-defense battery: rockets forward and narrow,
-        // autocannons mid-line, zap lasers held back and spread wide.
+        // autocannons mid-line, zap lasers held back and spread wide. Pulled in much
+        // tighter/closer to the player than the original layout, and shifted rearward
+        // overall so the rear pair sits just behind the player instead of out front.
         private static (float along, float perp) GetFormationOffset(int slot) => slot switch
         {
-            0 => (185f, -65f),
-            1 => (185f, 65f),
-            2 => (115f, -165f),
-            3 => (115f, 165f),
-            4 => (50f, -250f),
-            5 => (50f, 250f),
-            _ => (120f, 0f),
+            0 => (65f, -45f),
+            1 => (65f, 45f),
+            2 => (20f, -100f),
+            3 => (20f, 100f),
+            4 => (-25f, -155f),
+            5 => (-25f, 155f),
+            _ => (30f, 0f),
         };
 
         private void UpdateFormationPosition(Vector2 ownerToMouse)
@@ -155,9 +162,14 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             float bob = MathF.Sin(time * 0.045f + SlotIndex * 1.7f) * 14f;
 
             Vector2 formationCenter = Owner.MountedCenter + aimDir * along + perpDir * (perp + bob);
-            Vector2 recoilOffset = aimDir * OffsetLength;
 
-            Projectile.Center = formationCenter + recoilOffset;
+            // Attack lunge: darts toward the target's direction on firing, then eases back —
+            // a bell curve so it's a genuine there-and-back dart, not a linear snap.
+            float lungeProgress = MathHelper.Clamp(1f - LungeTimer / LungeDurationFrames, 0f, 1f);
+            float lungeBell = LungeTimer > 0f ? MathF.Sin(lungeProgress * MathHelper.Pi) : 0f;
+            Vector2 lungeOffset = aimDir * lungeDistance * lungeBell;
+
+            Projectile.Center = formationCenter + lungeOffset;
             Projectile.velocity = Projectile.velocity.ToRotation().AngleTowards(aimDir.ToRotation(), 0.2f).ToRotationVector2();
             Projectile.rotation = (NewLegendYharimsCrystal.GetMouseWorld(Owner) - Projectile.Center)
                 .SafeNormalize(Vector2.UnitX).ToRotation();
@@ -216,7 +228,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
                 shootDirection * 20f, false, Main.rand.Next(7, 12), 0.035f,
                 DroneGold, new Vector2(1.5f, 0.9f), true));
 
-            OffsetLength -= isGrenade ? 27f : 5f;
+            LungeTimer = LungeDurationFrames;
+            lungeDistance = isGrenade ? LungeHeavyDistance : LungeLightDistance;
         }
 
         private void FireRocket(Vector2 direction, Vector2 origin)
@@ -274,22 +287,40 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         private void FireHeavyBombs(Vector2 direction, Vector2 origin)
         {
             SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/DeadSunExplosion")
-            { Volume = 0.22f, Pitch = -0.35f, PitchVariance = 0.15f }, Projectile.Center);
+            { Volume = 0.48f, Pitch = -0.45f, PitchVariance = 0.12f }, Projectile.Center);
+            Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, 4.8f);
+
+            if (!Main.dedServ)
+            {
+                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(origin, Vector2.Zero, DroneGold, Vector2.One, direction.ToRotation(), 0.12f, 2.2f, 18));
+                for (int i = 0; i < 10; i++)
+                {
+                    Vector2 blastVel = -direction.RotatedByRandom(0.5f) * Main.rand.NextFloat(4f, 12f);
+                    Dust dust = Dust.NewDustPerfect(origin, DustID.GoldFlame, blastVel, 0, Main.rand.NextBool(3) ? Color.White : DroneOrange, Main.rand.NextFloat(1.15f, 1.8f));
+                    dust.noGravity = true;
+                }
+            }
 
             if (Main.myPlayer != Projectile.owner)
                 return;
 
-            Vector2 firingVelocity = direction * 10f;
+            Vector2 firingVelocity = direction * 12.5f;
 
-            Projectile bomb = Projectile.NewProjectileDirect(Projectile.GetSource_FromThis(), origin, firingVelocity,
-                ModContent.ProjectileType<YC_GoldBomb>(), Projectile.damage * 14, Projectile.knockBack * 5f, Projectile.owner);
+            Projectile bomb = Projectile.NewProjectileDirect(Projectile.GetSource_FromThis(), origin, firingVelocity.RotatedBy(MathHelper.ToRadians(-2.5f)),
+                ModContent.ProjectileType<YC_GoldBomb>(), Projectile.damage * 18, Projectile.knockBack * 7.5f, Projectile.owner);
             bomb.timeLeft = 420;
+            bomb.scale = 1.18f;
+            bomb.CritChance = Projectile.CritChance;
             YharimsCrystalHellBladeGlobalProjectile.Mark(bomb, YCWeaponForm.Crystal);
 
-            int bomb2 = Projectile.NewProjectile(Projectile.GetSource_FromThis(), origin, firingVelocity * 1.2f,
-                ModContent.ProjectileType<YC_GoldBomb>(), Projectile.damage * 14, Projectile.knockBack * 5f, Projectile.owner);
+            int bomb2 = Projectile.NewProjectile(Projectile.GetSource_FromThis(), origin, (firingVelocity * 1.12f).RotatedBy(MathHelper.ToRadians(2.5f)),
+                ModContent.ProjectileType<YC_GoldBomb>(), Projectile.damage * 18, Projectile.knockBack * 7.5f, Projectile.owner);
             if (Main.projectile.IndexInRange(bomb2))
+            {
+                Main.projectile[bomb2].scale = 1.18f;
+                Main.projectile[bomb2].CritChance = Projectile.CritChance;
                 YharimsCrystalHellBladeGlobalProjectile.Mark(Main.projectile[bomb2], YCWeaponForm.Crystal);
+            }
         }
 
         private void PostFiringCooldown()
@@ -348,21 +379,20 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
 
             Vector2 drawPosition = Projectile.Center - Main.screenPosition + new Vector2(0f, Owner.gfxOffY);
             Color drawColor = Projectile.GetAlpha(lightColor);
-            float drawRotation = Projectile.rotation + (Projectile.spriteDirection == -1 ? MathHelper.Pi : 0f);
+            float drawRotation = Projectile.rotation + MathHelper.PiOver2;
             Vector2 rotationPoint = texture.Size() * 0.5f;
             SpriteEffects flipSprite = Projectile.spriteDirection == -1 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
-
-            // Mirror the left unit of each pair so the formation reads symmetrically.
-            bool leftOfPair = SlotIndex % 2 == 0;
-            if (Projectile.spriteDirection == -1 ? leftOfPair : !leftOfPair)
-                flipSprite |= SpriteEffects.FlipVertically;
 
             // Soft gold ambient glow behind the drone
             Main.EntitySpriteDraw(bloom, drawPosition, null, DroneGold with { A = 0 } * 0.18f, 0f, bloom.Size() * 0.5f, Projectile.scale * 0.72f, SpriteEffects.None);
 
             // Gold afterimage trail
-            CalamityUtils.DrawAfterimagesCentered(Projectile, ProjectileID.Sets.TrailingMode[Type],
-                Color.Lerp(DroneOrange, DroneGold, 0.5f) with { A = 0 } * 0.18f, 1, texture);
+            for (int i = 1; i < Projectile.oldPos.Length; i++)
+            {
+                Vector2 oldDrawPosition = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition + new Vector2(0f, Owner.gfxOffY);
+                Color trailColor = Color.Lerp(DroneOrange, DroneGold, 0.5f) with { A = 0 } * (0.18f * (Projectile.oldPos.Length - i) / Projectile.oldPos.Length);
+                Main.EntitySpriteDraw(texture, oldDrawPosition, null, trailColor, Projectile.oldRot[i] + MathHelper.PiOver2, rotationPoint, Projectile.scale, flipSprite);
+            }
 
             // Gold border outline (pulsing)
             float pulse = 0.82f + 0.18f * MathF.Sin(Main.GlobalTimeWrappedHourly * 5f);
@@ -392,7 +422,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         {
             writer.Write(Projectile.rotation);
             writer.Write(Projectile.spriteDirection);
-            writer.Write(OffsetLength);
+            writer.Write(LungeTimer);
+            writer.Write(lungeDistance);
             writer.Write(ShootingTimer);
             writer.Write(time);
             writer.Write(firingDelay);
@@ -403,7 +434,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         {
             Projectile.rotation = reader.ReadSingle();
             Projectile.spriteDirection = reader.ReadInt32();
-            OffsetLength = reader.ReadSingle();
+            LungeTimer = reader.ReadSingle();
+            lungeDistance = reader.ReadSingle();
             ShootingTimer = reader.ReadSingle();
             time = reader.ReadInt32();
             firingDelay = reader.ReadInt32();

@@ -8,7 +8,7 @@ Mods: {
 						'''
 						Left-click to fire a single precise shot (300 RPM)
 						The shot's effect depends on the gun chambered in the slot
-						Middle-click the Desert Eagle in your inventory to open the chamber slot
+						Middle-click the Desert Eagle in inventory to open the chamber slot (or use the bound key)
 						Hold right-click to spin the Desert Eagle, shredding enemies on contact
 						When fully charged, release to fire a powerful piercing round
 						"Used by legendary marksmen"

@@ -75,12 +75,11 @@ Mods: {
 					LegendaryHint: "[c/6C8EFF:Hold Shift to read the record]"
 					LegendaryText:
 						'''
-						[c/66CCFF:The blade only begins its true hunt once the tide gauge is completely full.]
-						[c/7F8FA6:It searches around the cursor for the worthiest target, then drags the whole battlefield into the sentence.]
-						[c/99CCFF:Once the lock is set, fleeing or repositioning only changes the angle of the execution.]
-						[c/DDA0FF:The confirming left click makes the wielder appear around the victim again and again, piercing through, cleaving, and reappearing.]
-						[c/FFB347:The final mark does not fade at once; it clings to the prey and keeps delivering giant verdict slashes.]
-						[c/66CCFF:When the tide finally recedes, the target and every bystander on the line are usually already broken apart.]
+						[c/66CCFF:The first Briny Baron kept only the most direct way to fight: swing the blade, raise a typhoon, then throw a homing shuriken.]
+						[c/66CCFF:That design was clean enough, but it could not carry the tide rhythm a legendary weapon deserves.]
+						[c/99CCFF:After the rebuild, slashes no longer wait only for a hit. They build tide step by step, unfolding seafoam, sea spirits, shuriken, and waves through the combo.]
+						[c/FFB347:Right click is no longer locked to throwing. Different devices can rewrite it into dashes, rebounds, teleports, or more aggressive pursuit.]
+						[c/DDA0FF:When the tide is pushed to its limit, every path, lock, and lingering mark is gathered into one final execution.]
 						'''
 				}
 			}

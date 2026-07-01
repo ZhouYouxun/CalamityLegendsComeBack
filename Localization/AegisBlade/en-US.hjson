@@ -21,11 +21,11 @@ Mods: {
 					LegendaryHint: "[c/BABABA:Hold Shift to read the legendary record]"
 					LegendaryText:
 						'''
-						[c/FFD966:On an ancient battlefield, there was a knight clad in golden armor, wielding this blade.]
-						[c/FFD966:His shield never shattered — not because it was unbreakable,]
-						[c/FFD966:but because he could absorb every strike at the precise moment of impact, turning it into light.]
-						[c/FFD966:They say his silhouette was like the dawn itself — untouchable, impossible to overcome.]
-						[c/FFD966:And this sword was the extension of his will: the edge of a guardian.]
+						[c/FFD966:The first Aegis Blade was closer to a defensive relic: raise the shield, take the hit, then answer with the edge.]
+						[c/FFD966:That direction was clear enough, but it made "protection" too easy to reduce to damage cuts and standing still.]
+						[c/FFD966:After the rebuild, it no longer rewards only holding your ground. Speed, position, and guard timing are all part of the line.]
+						[c/FFD966:A perfect guard briefly resets that defensive logic, making hesitation, retreat, and counterattack parts of the same judgment.]
+						[c/FFD966:What it truly protects is not the wielder from harm, but the rule that every incoming hit must pass through sword and shield first.]
 						'''
 				}
 

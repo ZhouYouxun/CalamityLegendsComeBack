@@ -18,10 +18,11 @@ Mods: {
 					LegendaryHint: "[c/BABABA:Hold Shift to read the legendary record]"
 					LegendaryText:
 						'''
-						[c/8B6CFF:A slave knight was not born great.]
-						[c/8B6CFF:Only an old greatsword, a ruined cloak, and the will to walk to the end of the world.]
-						[c/8B6CFF:Here, that end is set after the Wall of Flesh — because Terraria once ended there too.]
-						[c/A01A2A:Blood and fire do not make him noble. They only keep him moving.]
+						[c/8B6CFF:The first Gael's Greatsword only needed to keep one thing: an old blade still swinging forward at the end.]
+						[c/8B6CFF:But if it only copied the swing, it would remain a tribute, not a weapon that could keep fighting in this world.]
+						[c/8B6CFF:After the rebuild, left click became a heavy three-part sword sequence, tying close-range cuts to distant aftershocks.]
+						[c/A01A2A:Right click is no longer just a defensive action. It catches projectiles with a guard and turns the successful moment into the next counterattack.]
+						[c/8B6CFF:It is still not a noble sword. It only drags blood, fire, and late anger back to the center of the battlefield again and again.]
 						'''
 					FinisherLocked: Gael reaches the end of the world only after the Wall of Flesh
 				}

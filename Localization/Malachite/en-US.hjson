@@ -96,11 +96,11 @@ Mods: {
 					LegendaryHint: "[c/BABABA:Hold Shift to read the record]"
 					LegendaryText:
 						'''
-						[c/B5FF74:It is not a plume, but a set of blades waiting for wind.]
-						[c/7DFF9A:The first kunai is quiet; the rest become the fan.]
-						[c/80FFC8:The calmer the right feathers, the cleaner the green line.]
-						[c/D6FF9A:When petals fall, the target is already pinned by light.]
-						[c/BABABA:A true Peacock Plume never lingers after the cut.]
+						[c/B5FF74:The first Malachite was clean: throw the kunai, open the blade fan, then let stealth strikes add denser tracking.]
+						[c/7DFF9A:That gave it a clear hidden-weapon feel, but it had not truly stitched plague, hive technology, and peacock display together.]
+						[c/80FFC8:After the rebuild, the first kunai is in no hurry to show off. The later blade shadows open like feathers under pressure.]
+						[c/D6FF9A:Right click and stealth strikes turn quiet throws into sheets of marks, tracking, and retrieval.]
+						[c/BABABA:It does not exist to show its feathers. The moment the edge leaves your hand, the display is already over.]
 						'''
 				}
 			}

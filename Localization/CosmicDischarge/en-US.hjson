@@ -42,9 +42,11 @@ Mods: {
 					LegendaryHint: "[c/BABABA:Hold Shift to read the legendary record]"
 					LegendaryText:
 						'''
-						[c/8DEBFF:The rift does not open because you swung the blade. It opens because it was already open — waiting for something to fall through.]
-						[c/6FDFFF:Every form is a different language the Devourer uses to finish a sentence it started before the universe remembered itself.]
-						[c/B8F4FF:The seal does not protect you. It reminds the void that you are still here to be consumed later.]
+						[c/8DEBFF:The first Cosmic Discharge felt like a compressed cosmic slash: open the rift and pour the energy straight out.]
+						[c/6FDFFF:That burst was dangerous enough, but it struggled to show the Devourer's segmented pressure, its chasing bites, and its constant approach.]
+						[c/8DEBFF:After the rebuild, rifts are no longer just exits for projectiles. They are where each form begins to consume the battlefield.]
+						[c/6FDFFF:Blade, opening, and void echo take over in turn, splitting a single release into a multi-stage language of endings.]
+						[c/B8F4FF:When the seal lights again, it is not promising safety. It is confirming that the next devouring still has a target to find.]
 						'''
 				}
 			}

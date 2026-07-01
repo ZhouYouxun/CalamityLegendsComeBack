@@ -95,10 +95,11 @@ Mods: {
 					LegendaryHint: "[c/BABABA:Hold Shift to access the record]"
 					LegendaryText:
 						'''
-						[c/FF9340:Pristine Fury no longer burns as one weapon.]
-						[c/FFB066:It records the pressure, malice, divinity, plague, and impossible hunger of anything its hook can anchor.]
-						[c/9AEAFF:The barrel remembers those patterns as imprints, then exhales them back into the world.]
-						[c/FF7733:In the fires of the end, the anchored legends will finally be reborn in divine glory.]
+						[c/FF9340:The first Pristine Fury was still a weapon that breathed holy flame, holding back nearby enemies with sustained burning.]
+						[c/FFB066:That fire was pure enough, but it could not carry the pressure left by defeated bosses beyond Providence.]
+						[c/9AEAFF:After the rebuild, the hook is no longer only a hit tool. It extracts, records, and preserves the marks of different enemies.]
+						[c/FFB066:Each mark returns to the barrel, letting the flame carry malice, divinity, plague, hunger, or a more distant echo.]
+						[c/FF7733:When the final fire burns again, Pristine Fury exhales more than flame. It exhales the legends it once anchored.]
 						'''
 				}
 			}

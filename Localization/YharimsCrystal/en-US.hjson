@@ -34,10 +34,11 @@ Mods: {
 					LegendaryHint: "[c/BABABA:Hold Shift to access the record]"
 					LegendaryText:
 						'''
-						[c/E6C024:In the depths of the galaxy, imperial science weaves the coordinates of terminal light.]
-						[c/E6C024:Twelve golden battleships circle the energy focus, primed for a devastating salvo.]
-						[c/E6C024:When the Tyrant's will converges on the prism's node, light refracts not just power, but ruin.]
-						[c/E6C024:This golden crystal, beyond its era, ultimately melts the void and aurora into a single point.]
+						[c/E6C024:The first Tyrant Crystal was closer to a golden prism: refract the beam, gather the energy, then fire ruin forward.]
+						[c/E6C024:But if it is written only as distant fleets or generic imperial technology, it drifts farther from the Tyrant, auric power, and dragonflame.]
+						[c/E6C024:After the rebuild, the left-click beams are no longer just a matter of quantity. Between spreading and converging, they keep closing in on the true focus.]
+						[c/E6C024:The burst structure released by right click feels like overloaded crystal energy being split out early, forcing the battlefield through repeated calibration.]
+						[c/E6C024:When the final stage opens, the prism no longer searches for brighter light. It waits for the Tyrant's will to press every ray into one command.]
 						'''
 				}
 			}

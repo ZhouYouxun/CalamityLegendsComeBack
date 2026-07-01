@@ -17,15 +17,20 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
         private const int StateStuck = 1;
         private const int StateDirectedThrow = 2;
         private const int StateRightThrow = 3;
+
+        // StateRightThrow sub-phases: launch up, hunt the nearest enemy with hard homing,
+        // dive-slam onto them, then keep carving them up before self-destructing.
         private const int RightThrowRising = 0;
-        private const int RightThrowHovering = 1;
-        private const int RightThrowPulling = 2;
+        private const int RightThrowTracking = 1;
+        private const int RightThrowSlamming = 2;
+        private const int RightThrowCutting = 3;
         private const int RightThrowRiseFrames = 72;
-        private const int RightThrowHoverFrames = 180;
-        private const int RightThrowMaxPullFrames = 90;
+        private const int RightThrowMaxTrackingFrames = 150;
+        private const float RightThrowSlamTriggerDistance = 220f;
+        private const int RightThrowSlamFrames = 16;
+        private const int RightThrowCutFrames = 110;
         private const int RightThrowJudgementCharges = 9;
         private const float RightThrowPeakSpeed = 28f;
-        private const float RightThrowArrivalDistance = 42f;
         private static float UpwardBladeAngle => -MathHelper.PiOver4;
 
         public new string LocalizationCategory => "Projectiles.YharimsCrystal";
@@ -58,10 +63,11 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                 int size = (int)(110 * Projectile.scale);
                 Projectile.Resize(size, size);
                 Projectile.penetrate = -1;
-                Projectile.timeLeft = RightThrowRiseFrames + RightThrowHoverFrames + RightThrowMaxPullFrames + 30;
+                Projectile.timeLeft = RightThrowRiseFrames + RightThrowMaxTrackingFrames + RightThrowSlamFrames + RightThrowCutFrames + 30;
                 Projectile.localAI[0] = 0f;
                 Projectile.localAI[1] = 0f;
                 Projectile.rotation = Projectile.ai[2];
+                Projectile.ai[2] = -1f; // repurposed after spawn: locked target NPC index
             }
         }
 
@@ -73,7 +79,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             if (Projectile.ai[0] == StateDirectedThrow && Projectile.localAI[0] <= 48f)
                 return false;
 
-            if (Projectile.ai[0] == StateRightThrow)
+            // No damage while it's still traveling to position — only once it's diving in or cutting.
+            if (Projectile.ai[0] == StateRightThrow && Projectile.ai[1] < RightThrowSlamming)
                 return false;
 
             return null;
@@ -246,44 +253,59 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
 
             if (Projectile.ai[1] == RightThrowRising)
             {
-                Projectile.localAI[0]++;
-                float progress = MathHelper.Clamp(Projectile.localAI[0] / RightThrowRiseFrames, 0f, 1f);
-                float easedProgress = SmootherStep(progress);
-                float speed = RightThrowPeakSpeed * SmoothBell(progress);
-                Projectile.velocity = -Vector2.UnitY * speed;
-                Projectile.rotation = Projectile.rotation.AngleTowards(UpwardBladeAngle, MathHelper.ToRadians(MathHelper.Lerp(1.8f, 7.5f, easedProgress)));
-
-                EmitRightThrowFX(easedProgress);
-
-                if (progress >= 1f)
-                {
-                    Projectile.velocity = Vector2.Zero;
-                    Projectile.ai[1] = RightThrowHovering;
-                    Projectile.localAI[0] = 0f;
-                    Projectile.netUpdate = true;
-                    SoundEngine.PlaySound(SoundID.Item74 with { Volume = 0.7f, Pitch = -0.05f }, Projectile.Center);
-                }
+                RunRightThrowRising();
                 return;
             }
 
-            if (Projectile.ai[1] == RightThrowHovering)
+            if (Projectile.ai[1] == RightThrowTracking)
             {
-                Projectile.localAI[0]++;
-                Projectile.velocity = Vector2.Zero;
-                float hoverWave = (float)Math.Sin(Projectile.localAI[0] * 0.055f) * 0.055f;
-                Projectile.rotation = Projectile.rotation.AngleTowards(UpwardBladeAngle + hoverWave, MathHelper.ToRadians(1.15f));
-                EmitRightHoverFX();
+                RunRightThrowTracking(owner);
+                return;
+            }
 
-                if (Projectile.owner == Main.myPlayer && IsOwnerPressingLeft(owner))
-                {
-                    Projectile.ai[1] = RightThrowPulling;
-                    Projectile.localAI[0] = 0f;
-                    Projectile.netUpdate = true;
-                    SoundEngine.PlaySound(SoundID.Item84 with { Volume = 0.78f, Pitch = -0.28f }, Projectile.Center);
-                    return;
-                }
+            if (Projectile.ai[1] == RightThrowSlamming)
+            {
+                RunRightThrowSlamming(owner);
+                return;
+            }
 
-                if (Projectile.localAI[0] >= RightThrowHoverFrames)
+            RunRightThrowCutting(owner);
+        }
+
+        private void RunRightThrowRising()
+        {
+            Projectile.localAI[0]++;
+            float progress = MathHelper.Clamp(Projectile.localAI[0] / RightThrowRiseFrames, 0f, 1f);
+            float easedProgress = SmootherStep(progress);
+            float speed = RightThrowPeakSpeed * SmoothBell(progress);
+            Projectile.velocity = -Vector2.UnitY * speed;
+            Projectile.rotation = Projectile.rotation.AngleTowards(UpwardBladeAngle, MathHelper.ToRadians(MathHelper.Lerp(1.8f, 7.5f, easedProgress)));
+
+            EmitRightThrowFX(easedProgress);
+
+            if (progress >= 1f)
+            {
+                Projectile.ai[1] = RightThrowTracking;
+                Projectile.localAI[0] = 0f;
+                Projectile.netUpdate = true;
+                SoundEngine.PlaySound(SoundID.Item74 with { Volume = 0.7f, Pitch = -0.05f }, Projectile.Center);
+            }
+        }
+
+        // Hard, ever-tightening homing: the closer it gets, the faster it turns and the
+        // faster it flies, so a dodging target can't simply outrun the lock-on.
+        private void RunRightThrowTracking(Player owner)
+        {
+            Projectile.localAI[0]++;
+            NPC target = GetRightThrowTarget();
+
+            if (target == null)
+            {
+                Projectile.velocity *= 0.985f;
+                Projectile.rotation = Projectile.rotation.AngleTowards(UpwardBladeAngle, MathHelper.ToRadians(2f));
+                EmitRightTrackingFX(0f);
+
+                if (Projectile.localAI[0] >= RightThrowMaxTrackingFrames)
                 {
                     DissipateRightThrow();
                     Projectile.Kill();
@@ -291,17 +313,168 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                 return;
             }
 
-            Projectile.localAI[0]++;
-            Projectile.velocity = Vector2.Zero;
-            Projectile.rotation = Projectile.rotation.AngleTowards(UpwardBladeAngle, MathHelper.ToRadians(1.4f));
-            PullOwnerToBlade(owner);
-            EmitRightPullFX(owner);
+            float distance = Vector2.Distance(Projectile.Center, target.Center);
+            float closeFactor = Utils.GetLerpValue(900f, 150f, distance, true);
+            float turnRate = MathHelper.ToRadians(MathHelper.Lerp(9f, 32f, closeFactor));
+            float speed = MathHelper.Lerp(20f, 42f, closeFactor);
 
-            float distanceToOwner = Vector2.Distance(owner.Center, Projectile.Center);
-            if (distanceToOwner <= RightThrowArrivalDistance || Projectile.localAI[0] >= RightThrowMaxPullFrames)
+            Vector2 desiredDirection = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY);
+            Vector2 currentDirection = Projectile.velocity.SafeNormalize(-Vector2.UnitY);
+            float newAngle = currentDirection.ToRotation().AngleTowards(desiredDirection.ToRotation(), turnRate);
+            Projectile.velocity = newAngle.ToRotationVector2() * speed;
+            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
+
+            EmitRightTrackingFX(closeFactor);
+
+            if (distance <= RightThrowSlamTriggerDistance || Projectile.localAI[0] >= RightThrowMaxTrackingFrames)
             {
-                FinishRightThrowPull(owner);
+                Projectile.ai[1] = RightThrowSlamming;
+                Projectile.localAI[0] = 0f;
+                Projectile.netUpdate = true;
+                SoundEngine.PlaySound(SoundID.Item84 with { Volume = 0.78f, Pitch = -0.28f }, Projectile.Center);
+            }
+        }
+
+        // A short, decisive dive burst straight into the target — the "slam" impact.
+        private void RunRightThrowSlamming(Player owner)
+        {
+            Projectile.localAI[0]++;
+            NPC target = GetRightThrowTarget();
+
+            if (target != null)
+            {
+                Vector2 desiredDirection = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY);
+                Vector2 currentDirection = Projectile.velocity.SafeNormalize(desiredDirection);
+                float newAngle = currentDirection.ToRotation().AngleTowards(desiredDirection.ToRotation(), MathHelper.ToRadians(34f));
+                float speed = MathHelper.Lerp(38f, 58f, Projectile.localAI[0] / (float)RightThrowSlamFrames);
+                Projectile.velocity = newAngle.ToRotationVector2() * speed;
+            }
+            else
+            {
+                Projectile.velocity *= 1.03f;
+            }
+
+            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
+            EmitRightSlamFX();
+
+            bool arrived = target != null && Vector2.Distance(Projectile.Center, target.Center) <= 90f;
+            if (arrived || Projectile.localAI[0] >= RightThrowSlamFrames)
+            {
+                TriggerSlamImpact(owner, target);
+                Projectile.ai[1] = RightThrowCutting;
+                Projectile.localAI[0] = 0f;
+                Projectile.netUpdate = true;
+            }
+        }
+
+        // Keeps chasing and carving the same target (or the nearest replacement) for a
+        // fixed window, then detonates into a burst of the blade's own burning shards.
+        private void RunRightThrowCutting(Player owner)
+        {
+            Projectile.localAI[0]++;
+            NPC target = GetRightThrowTarget();
+
+            Vector2 desiredDirection = target != null
+                ? (target.Center - Projectile.Center).SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitY))
+                : Projectile.velocity.SafeNormalize(Vector2.UnitY);
+
+            float turnRate = MathHelper.ToRadians(target != null ? 22f : 6f);
+            float currentAngle = Projectile.velocity.SafeNormalize(Vector2.UnitY).ToRotation();
+            float newAngle = currentAngle.AngleTowards(desiredDirection.ToRotation(), turnRate);
+            float speed = MathHelper.Lerp(24f, 40f, Utils.GetLerpValue(0f, 16f, Projectile.localAI[0], true));
+            Projectile.velocity = newAngle.ToRotationVector2() * speed;
+            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
+
+            EmitRightSlamFX();
+
+            if (Projectile.localAI[0] >= RightThrowCutFrames)
+            {
+                SelfDestructIntoFireballs(owner);
                 Projectile.Kill();
+            }
+        }
+
+        private NPC GetRightThrowTarget()
+        {
+            int index = (int)Projectile.ai[2];
+            if (index >= 0 && index < Main.maxNPCs)
+            {
+                NPC candidate = Main.npc[index];
+                if (candidate.active && candidate.CanBeChasedBy(Projectile))
+                    return candidate;
+            }
+
+            NPC fresh = FindNearestTarget(1400f);
+            if (Projectile.owner == Main.myPlayer)
+            {
+                int freshIndex = fresh?.whoAmI ?? -1;
+                if ((int)Projectile.ai[2] != freshIndex)
+                {
+                    Projectile.ai[2] = freshIndex;
+                    Projectile.netUpdate = true;
+                }
+            }
+            return fresh;
+        }
+
+        private void TriggerSlamImpact(Player owner, NPC target)
+        {
+            owner.Calamity().GeneralScreenShakePower = Math.Max(owner.Calamity().GeneralScreenShakePower, 9f);
+            SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.9f, Pitch = -0.15f }, Projectile.Center);
+            SoundEngine.PlaySound(SoundID.Item70 with { Volume = 0.8f, Pitch = -0.3f }, Projectile.Center);
+
+            if (owner.whoAmI == Main.myPlayer)
+                owner.GetModPlayer<YharimsCrystalStatePlayer>().GrantAuricJudgementChain(RightThrowJudgementCharges);
+
+            if (Main.dedServ)
+                return;
+
+            Vector2 impactPoint = target?.Center ?? Projectile.Center;
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(impactPoint, Vector2.Zero, new Color(255, 214, 88), Vector2.One, Projectile.rotation, 0.14f, 2.6f, 22));
+            for (int i = 0; i < 34; i++)
+            {
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(4f, 17f);
+                Dust dust = Dust.NewDustPerfect(impactPoint, DustID.GoldFlame, velocity, 0, Main.rand.NextBool(3) ? Color.White : new Color(255, 210, 70), Main.rand.NextFloat(1f, 1.8f));
+                dust.noGravity = true;
+            }
+        }
+
+        private void SelfDestructIntoFireballs(Player owner)
+        {
+            owner.Calamity().GeneralScreenShakePower = Math.Max(owner.Calamity().GeneralScreenShakePower, 7f);
+            SoundEngine.PlaySound(SoundID.Item62 with { Volume = 0.85f, Pitch = -0.1f }, Projectile.Center);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/DeadSunExplosion") { Volume = 0.6f, Pitch = -0.15f }, Projectile.Center);
+
+            if (!Main.dedServ)
+            {
+                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Vector2.Zero, new Color(255, 214, 88), Vector2.One, Projectile.rotation, 0.14f, 2.6f, 24));
+                for (int i = 0; i < 36; i++)
+                {
+                    Vector2 vel = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(4f, 16f);
+                    Dust d = Dust.NewDustPerfect(Projectile.Center, DustID.GoldFlame, vel, 0, Main.rand.NextBool(3) ? Color.White : new Color(255, 210, 70), Main.rand.NextFloat(1.0f, 1.8f));
+                    d.noGravity = true;
+                }
+            }
+
+            if (Projectile.owner != Main.myPlayer)
+                return;
+
+            int count = 6;
+            for (int i = 0; i < count; i++)
+            {
+                float angle = MathHelper.TwoPi * i / count;
+                Vector2 velocity = angle.ToRotationVector2() * Main.rand.NextFloat(7f, 10f);
+                int shard = Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    Projectile.Center,
+                    velocity,
+                    ModContent.ProjectileType<YC_BurningShard>(),
+                    Math.Max(1, (int)(Projectile.damage * 0.6f)),
+                    Projectile.knockBack * 0.3f,
+                    Projectile.owner);
+
+                if (Main.projectile.IndexInRange(shard))
+                    Main.projectile[shard].CritChance = Projectile.CritChance;
             }
         }
 
@@ -309,15 +482,6 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
         {
             if ((int)Projectile.localAI[0] % 14 == 0)
                 SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/SwooshMid") { Volume = 0.55f, Pitch = -0.25f, MaxInstances = 3 }, Projectile.Center);
-        }
-
-        private static bool IsOwnerPressingLeft(Player owner)
-        {
-            return (Main.mouseLeft || owner.controlUseItem) &&
-                Main.myPlayer == owner.whoAmI &&
-                !Main.mapFullscreen &&
-                !Main.blockMouse &&
-                !owner.mouseInterface;
         }
 
         private static float SmootherStep(float progress)
@@ -334,47 +498,6 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             return accelerate * decelerate;
         }
 
-        private void PullOwnerToBlade(Player owner)
-        {
-            Vector2 toBlade = Projectile.Center - owner.Center;
-            float distance = toBlade.Length();
-            if (distance <= 0.001f)
-                return;
-
-            float distanceFactor = 1f - MathHelper.Clamp((distance - RightThrowArrivalDistance) / 680f, 0f, 1f);
-            float pullSpeed = MathHelper.Lerp(14f, 46f, SmootherStep(distanceFactor));
-            Vector2 desiredVelocity = toBlade / distance * pullSpeed;
-            owner.velocity = Vector2.Lerp(owner.velocity, desiredVelocity, 0.16f);
-            owner.fallStart = (int)(owner.position.Y / 16f);
-            owner.immune = true;
-            owner.immuneNoBlink = true;
-            owner.SetImmuneTimeForAllTypes(8);
-        }
-
-        private void FinishRightThrowPull(Player owner)
-        {
-            if (owner.whoAmI == Main.myPlayer)
-                owner.GetModPlayer<YharimsCrystalStatePlayer>().GrantAuricJudgementChain(RightThrowJudgementCharges);
-
-            owner.velocity = Vector2.Lerp(owner.velocity, Vector2.Zero, 0.18f);
-            owner.immune = true;
-            owner.immuneNoBlink = true;
-            owner.SetImmuneTimeForAllTypes(18);
-            owner.Calamity().GeneralScreenShakePower = Math.Max(owner.Calamity().GeneralScreenShakePower, 6f);
-
-            SoundEngine.PlaySound(SoundID.Item74 with { Volume = 0.88f, Pitch = -0.24f }, Projectile.Center);
-            if (!Main.dedServ)
-            {
-                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Vector2.Zero, new Color(255, 214, 88), Vector2.One, Projectile.rotation, 0.12f, 2.1f, 20));
-                for (int i = 0; i < 32; i++)
-                {
-                    Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(4f, 16f);
-                    Dust dust = Dust.NewDustPerfect(Projectile.Center, DustID.GoldFlame, velocity, 0, Main.rand.NextBool(3) ? Color.White : new Color(255, 210, 70), Main.rand.NextFloat(1f, 1.7f));
-                    dust.noGravity = true;
-                }
-            }
-        }
-
         private void DissipateRightThrow()
         {
             SoundEngine.PlaySound(SoundID.Item10 with { Volume = 0.5f, Pitch = -0.2f }, Projectile.Center);
@@ -389,45 +512,49 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             }
         }
 
-        private void EmitRightHoverFX()
+        private void EmitRightTrackingFX(float intensity)
         {
             if (Main.dedServ)
                 return;
 
-            if ((int)Projectile.localAI[0] % 9 == 0)
-                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Vector2.Zero, new Color(255, 214, 88), Vector2.One, Projectile.rotation, 0.035f, 1.15f, 16));
+            if ((int)Projectile.localAI[0] % 6 == 0)
+                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Vector2.Zero, new Color(255, 214, 88), Vector2.One, Projectile.rotation, 0.035f, 1.1f + intensity * 0.6f, 14));
 
-            if (Main.rand.NextBool(3))
+            if (Main.rand.NextBool(2))
             {
-                Vector2 velocity = -Vector2.UnitY.RotatedByRandom(0.5f) * Main.rand.NextFloat(1.2f, 3.8f);
-                Dust dust = Dust.NewDustPerfect(Projectile.Center + Main.rand.NextVector2Circular(24f, 18f), DustID.GoldFlame, velocity, 0, Main.rand.NextBool(4) ? Color.White : new Color(255, 214, 88), Main.rand.NextFloat(0.9f, 1.45f));
+                Vector2 velocity = -Projectile.velocity.SafeNormalize(-Vector2.UnitY).RotatedByRandom(0.4f) * Main.rand.NextFloat(2f, 5f + intensity * 5f);
+                Dust dust = Dust.NewDustPerfect(Projectile.Center + Main.rand.NextVector2Circular(18f, 14f), DustID.GoldFlame, velocity, 0, Main.rand.NextBool(4) ? Color.White : new Color(255, 214, 88), Main.rand.NextFloat(0.9f, 1.45f));
                 dust.noGravity = true;
             }
         }
 
-        private void EmitRightPullFX(Player owner)
+        private void EmitRightSlamFX()
         {
             if (Main.dedServ)
                 return;
 
-            Vector2 line = Projectile.Center - owner.Center;
-            if (line.LengthSquared() <= 0.001f || !Main.rand.NextBool(2))
-                return;
+            if (Main.rand.NextBool(2))
+            {
+                Vector2 vel = -Projectile.velocity.SafeNormalize(Vector2.UnitY).RotatedByRandom(0.3f) * Main.rand.NextFloat(4f, 9f);
+                Dust d = Dust.NewDustPerfect(Projectile.Center + Main.rand.NextVector2Circular(12f, 12f), DustID.GoldFlame, vel, 0, Main.rand.NextBool(3) ? Color.White : new Color(255, 214, 88), Main.rand.NextFloat(1.1f, 1.7f));
+                d.noGravity = true;
+            }
 
-            Vector2 position = Vector2.Lerp(owner.Center, Projectile.Center, Main.rand.NextFloat(0.15f, 0.85f));
-            Vector2 velocity = line.SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(3f, 8f);
-            GeneralParticleHandler.SpawnParticle(new CustomSpark(
-                position + Main.rand.NextVector2Circular(10f, 10f),
-                velocity,
-                "CalamityMod/Particles/Sparkle",
-                false,
-                Main.rand.Next(10, 16),
-                Main.rand.NextFloat(0.38f, 0.68f),
-                Main.rand.NextBool(3) ? Color.White : new Color(255, 210, 70),
-                new Vector2(0.24f, 0.95f),
-                true,
-                true,
-                shrinkSpeed: 0.16f));
+            if ((int)Projectile.localAI[0] % 3 == 0)
+            {
+                GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                    Projectile.Center + Main.rand.NextVector2Circular(10f, 10f),
+                    -Projectile.velocity.SafeNormalize(Vector2.UnitY).RotatedByRandom(0.3f) * Main.rand.NextFloat(2f, 6f),
+                    "CalamityMod/Particles/Sparkle",
+                    false,
+                    Main.rand.Next(12, 18),
+                    Main.rand.NextFloat(0.42f, 0.78f),
+                    Main.rand.NextBool(3) ? Color.White : new Color(255, 190, 54),
+                    new Vector2(0.24f, 0.95f),
+                    true,
+                    true,
+                    shrinkSpeed: 0.16f));
+            }
         }
 
         private void EmitRightThrowFX(float intensity)
@@ -596,8 +723,10 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             SoundEngine.PlaySound(SoundID.Item22 with { Volume = 0.85f, Pitch = -0.1f }, target.Center);
 
             bool directedImpact = Projectile.ai[0] == StateDirectedThrow;
+            bool rushImpact = Projectile.ai[0] == StateRightThrow;
 
-            if (Projectile.ai[0] != StateStuck)
+            // The right-thrown blade must keep flying and keep cutting — it never embeds in a target.
+            if (Projectile.ai[0] != StateStuck && !rushImpact)
             {
                 Projectile.ai[0] = StateStuck;
                 Projectile.ai[1] = target.whoAmI;
@@ -614,6 +743,20 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                     {
                         Vector2 vel = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(4f, 16f);
                         Dust d = Dust.NewDustPerfect(target.Center + Main.rand.NextVector2Circular(20f, 20f), DustID.GoldFlame, vel, 0, Main.rand.NextBool(3) ? Color.White : new Color(255, 210, 80), Main.rand.NextFloat(1.0f, 1.7f));
+                        d.noGravity = true;
+                    }
+                }
+            }
+            else if (rushImpact)
+            {
+                Player owner = Main.player[Projectile.owner];
+                owner.Calamity().GeneralScreenShakePower = Math.Max(owner.Calamity().GeneralScreenShakePower, 2.2f);
+                if (!Main.dedServ)
+                {
+                    for (int k = 0; k < 8; k++)
+                    {
+                        Vector2 vel = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(3f, 10f);
+                        Dust d = Dust.NewDustPerfect(target.Center + Main.rand.NextVector2Circular(14f, 14f), DustID.GoldFlame, vel, 0, Main.rand.NextBool(3) ? Color.White : new Color(255, 210, 80), Main.rand.NextFloat(0.9f, 1.4f));
                         d.noGravity = true;
                     }
                 }

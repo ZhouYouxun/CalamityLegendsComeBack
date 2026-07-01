@@ -41,9 +41,11 @@ Mods: {
 					LegendaryHint: "[c/BABABA:Hold Shift to access the disaster record]"
 					LegendaryText:
 						'''
-						[c/58FFDA:The rifle does not fire bullets so much as it files coordinates for a spreading disaster.]
-						[c/4CD268:Every crack of cyan light is a pressure fracture. Every green leak is a warning that the ocean has learned to burn.]
-						[c/FF8A30:When the sky opens, the correct follow-up is not another shot. It is the protocol that makes everything already infected collapse.]
+						[c/58FFDA:The first Sea's Searing only needed to do one thing: put bullets into the target and let pollution begin to spread.]
+						[c/4CD268:That design already suited the Sulphurous Sea, but it too easily reduced disaster to damage-over-time numbers.]
+						[c/58FFDA:After the rebuild, every shot leaves disaster coordinates, while pollution clouds, cracked light, and acid corrosion stack across the field.]
+						[c/4CD268:Right click is no longer just extra damage. It chooses when to detonate the areas already infected.]
+						[c/FF8A30:When the final strike lands, what bursts is not one bullet, but the collapse all previous pollution had been pointing toward.]
 						'''
 				}
 			}

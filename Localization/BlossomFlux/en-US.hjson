@@ -110,13 +110,11 @@ Mods: {
 					LegendaryHint: "[c/BABABA:Hold Shift to read the legendary record]"
 					LegendaryText:
 						'''
-						[c/66E6FF:It began as an attempt to make burst fire faster.]
-						[c/66E6FF:Later, its maker realized speed was not the answer.]
-						[c/66E6FF:The same bowstring had to learn five ways to breathe.]
-						[c/66E6FF:So doctrine split into five branches.]
-						[c/66E6FF:Even a plain wooden arrow changes form after release.]
-						[c/66E6FF:It will keep growing, but the rhythm is already formed.]
-						[c/66E6FF:Wait, loose, and let the doctrine answer.]
+						[c/66E6FF:The first Blossom Flux only chased faster firing, pushing enemies down with denser volleys.]
+						[c/66E6FF:The problem became clear later: speed can create pressure, but it cannot make every release feel different.]
+						[c/66E6FF:After the rebuild, one bow was split into five tactical branches, and arrows change shape with the current rhythm.]
+						[c/66E6FF:Plain wooden arrows are no longer just ammunition. Forest energy redistributes them into assault, recovery, recon, bombardment, and spread.]
+						[c/66E6FF:It is still fast, but what decides the fight is no longer fire rate. It is which branch you choose to let bloom first.]
 						'''
 				}
 
