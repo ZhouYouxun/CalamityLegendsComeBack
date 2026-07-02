@@ -34,14 +34,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         private static int ownerWhoAmI = -1;
         private static Vector2 panelCenter;
         private static bool prevMouseMiddle;
+        private static bool prevKeybindPressed;
         #endregion
 
         #region ===== 开关 =====
         public static void Open(int who)
         {
-            if (Main.gamePaused)
-                return;
-
             IsOpen = true;
             ownerWhoAmI = who;
             Main.playerInventory = true;
@@ -76,7 +74,44 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         #endregion
 
         #region ===== Update：检测开关触发 =====
-        // 所有输入检测已迁移至 Draw()，以兼容自动暂停模式（gamePaused 时 PostUpdateEverything 可能被跳过）
+        public override void PreUpdatePlayers()
+        {
+            if (Main.netMode == NetmodeID.Server || Main.myPlayer < 0)
+                return;
+
+            if (IsOpen)
+            {
+                Vector2 center = Main.ScreenSize.ToVector2() * 0.5f;
+                Rectangle blockedArea = Utils.CenteredRectangle(center, new Vector2(SlotSize * 3.2f + 72f));
+                if (blockedArea.Contains(Main.mouseX, Main.mouseY))
+                {
+                    Main.LocalPlayer.mouseInterface = true;
+                }
+            }
+        }
+
+        private static bool IsKeybindPressed(ModKeybind keybind)
+        {
+            if (keybind == null) return false;
+            var keys = keybind.GetAssignedKeys();
+            if (keys == null || keys.Count == 0) return false;
+
+            foreach (var key in keys)
+            {
+                if (key == "Mouse1") { if (Main.mouseLeft) return true; }
+                else if (key == "Mouse2") { if (Main.mouseRight) return true; }
+                else if (key == "Mouse3") { if (Main.mouseMiddle) return true; }
+                else
+                {
+                    if (System.Enum.TryParse<Microsoft.Xna.Framework.Input.Keys>(key, true, out var xnaKey))
+                    {
+                        if (Main.keyState.IsKeyDown(xnaKey))
+                            return true;
+                    }
+                }
+            }
+            return false;
+        }
         #endregion
 
         private static NewLegendSHPC FindWeapon(Player player)
@@ -85,20 +120,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 if (player.inventory[i].ModItem is NewLegendSHPC w) return w;
             return null;
         }
-        //#endregion
 
         #region ===== 绘制主入口 =====
         private static void Draw(SpriteBatch sb)
         {
-            if (Main.gamePaused)
-            {
-                if (IsOpen)
-                    Close();
-
-                prevMouseMiddle = Main.mouseMiddle;
-                return;
-            }
-
             // ---- 开关触发检测（在 Draw 内执行，自动暂停时依然有效）----
             if (Main.netMode != NetmodeID.Server && Main.myPlayer >= 0)
             {
@@ -109,12 +134,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 {
                     Close();
                     prevMouseMiddle = Main.mouseMiddle;
+                    prevKeybindPressed = IsKeybindPressed(KeybindSystem.SHPCLoadingUI);
                     return;
                 }
 
                 if (Main.playerInventory)
                 {
                     bool keyBound = KeybindSystem.SHPCLoadingUI.GetAssignedKeys().Any();
+                    bool keybindPressed = IsKeybindPressed(KeybindSystem.SHPCLoadingUI);
+                    bool keybindJustPressed = keybindPressed && !prevKeybindPressed;
+                    prevKeybindPressed = keybindPressed;
 
                     // 鼠标中键触发（仅限未绑定时）
                     if (!keyBound)
@@ -131,11 +160,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                                 localPlayer.Center);
                         }
                     }
-
                     // 绑定按键触发
-                    if (keyBound && KeybindSystem.SHPCLoadingUI.JustPressed)
+                    else
                     {
-                        if (Main.HoverItem.ModItem is NewLegendSHPC)
+                        if (keybindJustPressed && Main.HoverItem.ModItem is NewLegendSHPC)
                         {
                             bool wasOpen = IsOpen;
                             Toggle(localPlayer.whoAmI);

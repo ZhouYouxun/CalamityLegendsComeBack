@@ -3,7 +3,7 @@ Mods: {
 		Items: {
 			Weapons: {
 				NewLegendSHPC: {
-					DisplayName: SHPC-传奇归来
+					DisplayName: 新传奇 - SHPC
 					SHPC_LeftIntro: "[c/66CCFF:左键发射能量光球，默认发射白色光球，造成范围伤害]"
 					SHPC_LoadingUIHint: "[c/66CCFF:打开背包并按下] [[c/66CCFF:{0}]] [c/66CCFF:打开装填UI，将特定材料装填进去，可以改变攻击效果]"
 					SHPC_CurrentAmmoEffect: "[c/66CCFF:当前装填效果：{0}]"

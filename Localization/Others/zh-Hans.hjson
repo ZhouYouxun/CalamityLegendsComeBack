@@ -97,6 +97,11 @@ Mods: {
 				Tooltip: 使用后永久解锁此角色手持所有传奇武器的大招
 				AlreadyConsumed: 这个角色已经获得了黄金饰章的永久强化。
 			}
+
+			LegendaryUltimateTester: {
+				DisplayName: 传奇大招测试器
+				Tooltip: 仅限测试用：SHPC大招会在1秒内充能完成
+			}
 		}
 
 		Projectiles: {
