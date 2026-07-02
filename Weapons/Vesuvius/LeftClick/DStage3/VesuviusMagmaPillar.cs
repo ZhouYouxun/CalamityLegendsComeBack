@@ -145,6 +145,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.DStage3
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Texture2D smoke = ModContent.Request<Texture2D>("CalamityMod/Particles/HighResFoggyCircleHardEdge").Value;
             float fade = Projectile.timeLeft / 18f;
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
             Main.EntitySpriteDraw(
                 smoke,
                 Projectile.Center - Main.screenPosition - Vector2.UnitY * 5f,
@@ -159,11 +160,12 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.DStage3
                 bloom,
                 Projectile.Center - Main.screenPosition,
                 null,
-                new Color(VesuviusProjectileVisuals.LavaOrange.R, VesuviusProjectileVisuals.LavaOrange.G, VesuviusProjectileVisuals.LavaOrange.B, 0) * 0.16f * fade * VesuviusProjectileVisuals.VisualIntensity,
+                VesuviusProjectileVisuals.LavaOrange * 0.16f * fade * VesuviusProjectileVisuals.VisualIntensity,
                 Projectile.rotation,
                 bloom.Size() * 0.5f,
                 new Vector2(0.42f, 0.18f) * (1f + (1f - fade) * 0.4f) * VesuviusProjectileVisuals.VisualScale,
                 SpriteEffects.None);
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
             return false;
         }
     }

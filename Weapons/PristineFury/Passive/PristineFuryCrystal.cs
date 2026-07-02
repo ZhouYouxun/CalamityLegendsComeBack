@@ -17,11 +17,13 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.Passive
 
         internal const float HoverHeight = 90f;
         private const float DrawScale = 0.45f;
-        private const int ShardFireInterval = 42;
-        private const int ShardBurstCount = 6;
-        private const float ShardFallSpeed = 24f;
+        private const int ShardPairInterval = 3;
+        private const int ShardWaveInterval = 20;
+        private const int ShardWaveCount = 7;
+        private const int ShardPairCount = 4;
+        private const float ShardFallSpeed = 36f;
         private const float ShardSpawnHeight = 50f * 16f;
-        private const float ShardSpawnHalfWidth = 10f * 16f;
+        private const float ShardSpawnHalfWidth = 12f * 16f;
         private const int LaserPairCooldown = 85;
         private const float LaserRotPerFrame = MathHelper.Pi / 160f;
         private static readonly Color RadiantGold = new(255, 222, 76);
@@ -31,6 +33,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.Passive
         private ref float IntroSoundFired => ref Projectile.localAI[1];
         private ref float ShardTimer => ref Projectile.ai[0];
         private ref float LaserCooldown => ref Projectile.ai[1];
+        private ref float ShardPairIndex => ref Projectile.ai[2];
 
         private bool IntroComplete => IntroProgress >= 1f;
 
@@ -100,16 +103,12 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.Passive
 
             if (leftHeld)
             {
-                ShardTimer++;
-                if (ShardTimer >= ShardFireInterval)
-                {
-                    ShardTimer = 0f;
-                    FireShardBurst(owner);
-                }
+                UpdateShardRain(owner);
             }
             else
             {
                 ShardTimer = 0f;
+                ShardPairIndex = 0f;
             }
 
             if (rightHeld && !leftHeld)
@@ -125,22 +124,61 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.Passive
                 LaserCooldown--;
         }
 
-        private void FireShardBurst(Player owner)
+        private void UpdateShardRain(Player owner)
+        {
+            if (ShardTimer > 0f)
+            {
+                ShardTimer--;
+                return;
+            }
+
+            if (FireShardPair(owner, (int)ShardPairIndex))
+            {
+                ShardPairIndex++;
+                int nextDelay = ShardPairIndex >= ShardPairCount ? ShardWaveInterval : ShardPairInterval;
+                ShardTimer = nextDelay - 1;
+
+                if (ShardPairIndex >= ShardPairCount)
+                    ShardPairIndex = 0f;
+            }
+            else
+                ShardTimer = 5f;
+        }
+
+        private bool FireShardPair(Player owner, int pairIndex)
         {
             NPC target = FindTarget(owner, 1500f);
             if (target == null)
-                return;
+                return false;
 
-            SpawnShardReleaseFlash(target.Center);
+            SpawnShardReleaseFlash(target.Center, pairIndex);
 
             int shardType = ModContent.ProjectileType<PristineFuryCrystalShard>();
-            for (int i = 0; i < ShardBurstCount; i++)
+            int alreadyFired = pairIndex * 2;
+            int shotsThisPair = Math.Min(2, ShardWaveCount - alreadyFired);
+
+            for (int i = 0; i < shotsThisPair; i++)
             {
+                int shotIndex = alreadyFired + i;
+                float waveRatio = shotIndex / (float)(ShardWaveCount - 1);
+                float arcOffset = MathHelper.Lerp(-ShardSpawnHalfWidth, ShardSpawnHalfWidth, waveRatio);
+                float waveCurl = (float)Math.Sin((Main.GameUpdateCount + shotIndex * 17) * 0.11f) * 46f;
+
                 Vector2 spawnPosition = target.Center + new Vector2(
-                    Main.rand.NextFloat(-ShardSpawnHalfWidth, ShardSpawnHalfWidth),
-                    -ShardSpawnHeight + Main.rand.NextFloat(-28f, 28f));
-                Vector2 aimPosition = target.Center + target.velocity * Main.rand.NextFloat(8f, 16f) + Main.rand.NextVector2Circular(34f, 22f);
+                    arcOffset + waveCurl + Main.rand.NextFloat(-18f, 18f),
+                    -ShardSpawnHeight + Main.rand.NextFloat(-38f, 38f));
+
+                Vector2 aimPosition =
+                    target.Center
+                    + target.velocity * Main.rand.NextFloat(9f, 17f)
+                    + new Vector2(
+                        (float)Math.Sin(waveRatio * MathHelper.TwoPi + Main.GameUpdateCount * 0.05f) * 44f,
+                        (float)Math.Cos(waveRatio * MathHelper.Pi) * 18f)
+                    + Main.rand.NextVector2Circular(18f, 12f);
+
                 Vector2 velocity = (aimPosition - spawnPosition).SafeNormalize(Vector2.UnitY) * ShardFallSpeed * Main.rand.NextFloat(0.92f, 1.08f);
+                SpawnShardTelegraph(spawnPosition, aimPosition, shotIndex);
+
                 Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
                     spawnPosition,
@@ -149,14 +187,17 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.Passive
                     Projectile.damage,
                     Projectile.knockBack,
                     Projectile.owner,
-                    0f,
+                    waveRatio,
                     target.whoAmI + 1f);
             }
 
-            SoundEngine.PlaySound(SoundID.DD2_WitherBeastCrystalImpact with { Volume = 0.55f, Pitch = 0.4f }, Projectile.Center);
+            if (pairIndex == 0)
+                SoundEngine.PlaySound(SoundID.DD2_WitherBeastCrystalImpact with { Volume = 0.55f, Pitch = 0.4f }, Projectile.Center);
+
+            return true;
         }
 
-        private void SpawnShardReleaseFlash(Vector2 targetCenter)
+        private void SpawnShardReleaseFlash(Vector2 targetCenter, int pairIndex)
         {
             if (Main.dedServ)
                 return;
@@ -174,11 +215,58 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.Passive
 
             GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
                 Projectile.Center, Vector2.Zero, RadiantGold with { A = 0 },
-                new Vector2(1.8f, 1.8f), toTarget.ToRotation(), 0.5f, 0.08f, 14));
+                new Vector2(1.25f + pairIndex * 0.18f, 1.25f + pairIndex * 0.18f), toTarget.ToRotation(), 0.5f, 0.08f, 14));
             GeneralParticleHandler.SpawnParticle(new CustomPulse(
                 Projectile.Center, Vector2.Zero, RadiantWhite with { A = 0 },
                 "CalamityMod/Particles/BloomCircle",
                 Vector2.One, 0f, 0.32f, 0.08f, 16));
+        }
+
+        private void SpawnShardTelegraph(Vector2 spawnPosition, Vector2 aimPosition, int shotIndex)
+        {
+            if (Main.dedServ)
+                return;
+
+            Vector2 direction = (aimPosition - spawnPosition).SafeNormalize(Vector2.UnitY);
+            Vector2 right = direction.RotatedBy(MathHelper.PiOver2);
+            Color warningGold = Color.Lerp(RadiantGold, Color.White, 0.18f) with { A = 0 };
+            Color warningOrange = new Color(255, 156, 42, 0);
+
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                aimPosition,
+                Vector2.Zero,
+                warningGold * 0.78f,
+                new Vector2(0.75f, 0.75f),
+                direction.ToRotation(),
+                0.18f,
+                0.85f,
+                18));
+
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                aimPosition,
+                Vector2.Zero,
+                warningOrange * 0.42f,
+                new Vector2(1.2f, 0.42f),
+                direction.ToRotation() + MathHelper.PiOver2,
+                0.26f,
+                1.35f,
+                22));
+
+            for (int i = 0; i < 4; i++)
+            {
+                float progress = (i + 1f) / 5f;
+                Vector2 linePos =
+                    Vector2.Lerp(spawnPosition, aimPosition, progress)
+                    + right * (float)Math.Sin(progress * MathHelper.TwoPi + shotIndex) * 12f;
+
+                GeneralParticleHandler.SpawnParticle(new LineParticle(
+                    linePos,
+                    direction * Main.rand.NextFloat(2.6f, 4.8f),
+                    false,
+                    Main.rand.Next(14, 20),
+                    Main.rand.NextFloat(0.16f, 0.24f),
+                    Color.Lerp(warningGold, warningOrange, progress) * MathHelper.Lerp(0.3f, 0.85f, progress)));
+            }
         }
 
         private void FireScissorPair(Player owner)

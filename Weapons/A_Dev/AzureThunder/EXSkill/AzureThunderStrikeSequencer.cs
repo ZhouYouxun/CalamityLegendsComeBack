@@ -19,7 +19,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         // ai[0] 锁定目标，ai[1] 是雷击次数，ai[2] 编码消耗层数和是否处于天理真和。
         private int TargetIndex => (int)Projectile.ai[0];
-        private int StrikeCount => Math.Max(1, (int)Projectile.ai[1]);
+        private int RawStrikeCount => Math.Max(1, (int)Projectile.ai[1]);
+        private int StrikeCount => HarmonyMode ? 4 : RawStrikeCount;
         private int ConsumedCharge => Math.Max(0, (int)Projectile.ai[2] / 10);
         private bool HarmonyMode => (int)Projectile.ai[2] % 10 == 1;
 
@@ -146,6 +147,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 damageFactor = HarmonyMode ? 0.81f : 0.45f;
 
             Vector2 strikePoint = target.Center + Main.rand.NextVector2Circular(HarmonyMode ? 95f : 55f, HarmonyMode ? 55f : 35f);
+            if (HarmonyMode && finalStrike)
+            {
+                SpawnFinalJudgement(target, strikePoint);
+                return;
+            }
+
             bool applyCrumbling = finalStrike &&
                 !HarmonyMode &&
                 AzureThunderProgression.DownedYharon &&
@@ -171,15 +178,67 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 oneThirdVisualIntensity: HarmonyMode,
                 lightningScale: HarmonyMode ? 1.5f : 0.72f);
 
-            // 终极右键每发落雷额外补透明 AOE，最后一发范围更大。
             if (HarmonyMode)
-                SpawnHarmonyAoe(strikePoint, finalStrike);
+                SpawnGrandSword(target, strikePoint);
 
-            if (finalStrike && HarmonyMode)
+            // 终极右键前三发落雷额外补透明 AOE；最终段已经在上方改走审判雷柱。
+            if (HarmonyMode)
             {
-                // 终极右键最后一击改为从爆点向上炸开的闪电束。
-                AzureThunderPlayer.SpawnUpwardThunderBoltBurst(strikePoint, 5, 1.5f);
+                SpawnHarmonyAoe(strikePoint, finalStrike);
             }
+        }
+
+        private void SpawnGrandSword(NPC target, Vector2 impactPosition)
+        {
+            if (Main.myPlayer != Projectile.owner)
+                return;
+
+            Vector2 refinedImpact = target.Center + Main.rand.NextVector2Circular(34f, 22f);
+            int grandSword = Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                refinedImpact - Vector2.UnitY * 780f,
+                Vector2.Zero,
+                ModContent.ProjectileType<AzureThunderGrandSword>(),
+                Math.Max(1, (int)(Projectile.damage * AzureThunderProgression.UltimateGrandSwordDamageFactor * 0.62f)),
+                Projectile.knockBack,
+                Projectile.owner,
+                target.whoAmI,
+                refinedImpact.X,
+                refinedImpact.Y);
+
+            if (Main.projectile.IndexInRange(grandSword))
+            {
+                Terraria.Projectile sword = Main.projectile[grandSword];
+                sword.localAI[1] = 1f;
+                AzureThunderPlayer.ApplyProjectileGrowth(sword);
+            }
+        }
+
+        private void SpawnFinalJudgement(NPC target, Vector2 impactPosition)
+        {
+            if (Main.myPlayer != Projectile.owner)
+                return;
+
+            float damageFactor = AzureThunderProgression.UltimateRightClickFinalDamageFactor +
+                ConsumedCharge * AzureThunderProgression.UltimateRightClickChargeDamageBonus;
+            damageFactor *= 1.18f;
+
+            int judgement = Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                impactPosition - Vector2.UnitY * 920f,
+                Vector2.UnitY,
+                ModContent.ProjectileType<AzureThunderFinalJudgementBolt>(),
+                Math.Max(1, (int)(Projectile.damage * damageFactor)),
+                Projectile.knockBack,
+                Projectile.owner,
+                target.whoAmI,
+                impactPosition.X,
+                impactPosition.Y);
+
+            if (Main.projectile.IndexInRange(judgement))
+                AzureThunderPlayer.ApplyProjectileGrowth(Main.projectile[judgement]);
+
+            Main.player[Projectile.owner].Calamity().GeneralScreenShakePower = Math.Max(Main.player[Projectile.owner].Calamity().GeneralScreenShakePower, 9f);
         }
 
         private void SpawnHarmonyAoe(Vector2 strikePoint, bool finalStrike)

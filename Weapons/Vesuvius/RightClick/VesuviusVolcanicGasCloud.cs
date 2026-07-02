@@ -1,3 +1,4 @@
+using CalamityMod;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -118,8 +119,9 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
             float pulse = 0.5f + 0.5f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 4.8f + Projectile.identity);
             Vector2 baseScale = new(Projectile.width / (float)smoke.Width, Projectile.height / (float)smoke.Height);
             Color smokeColor = Color.Lerp(VesuviusProjectileVisuals.RavagerSmoke, new Color(128, 118, 74), 0.4f);
-            Color sulfurColor = new Color(190, 170, 82, 0);
+            Color sulfurColor = new(190, 170, 82);
 
+            Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
             for (int i = 0; i < 3; i++)
             {
                 float localPulse = pulse + i * 0.18f;
@@ -145,6 +147,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
                 new Vector2(Projectile.width / (float)bloom.Width, Projectile.height / (float)bloom.Height) * 1.12f * VesuviusProjectileVisuals.VisualScale,
                 SpriteEffects.None);
 
+            Main.spriteBatch.ExitShaderRegion();
             return false;
         }
     }

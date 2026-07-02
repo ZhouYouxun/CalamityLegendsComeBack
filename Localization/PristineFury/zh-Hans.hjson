@@ -55,7 +55,7 @@ Mods: {
 
 			Weapons: {
 				NewLegendPristineFury: {
-					DisplayName: 纯元：传奇归来
+					DisplayName: 新传奇 - 纯元怒焰
 					PristineFuryIntro: "[c/FF9340:当前印记：{0}。]"
 					RightClick: "[c/FFB066:右键：蓄力并释放纯元新星弹。]"
 					Hook: "[c/9AEAFF:按住左键与右键发射提取钩；有效 Boss 会授予对应印记。]"

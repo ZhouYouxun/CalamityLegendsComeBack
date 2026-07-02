@@ -3,7 +3,7 @@ Mods: {
 		Items: {
 			Weapons: {
 				NewVesuvius: {
-					DisplayName: 维苏维阿斯
+					DisplayName: 新传奇 - 维苏维阿斯
 					Tooltip: "[GFB]"
 					LeftClick:
 						'''

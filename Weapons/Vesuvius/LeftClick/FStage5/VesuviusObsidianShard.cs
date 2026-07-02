@@ -233,11 +233,12 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.FStage5
             Texture2D smoke = ModContent.Request<Texture2D>("CalamityMod/Particles/HighResFoggyCircleHardEdge").Value;
             float expand = Utils.GetLerpValue(22f, 0f, Projectile.timeLeft, true);
             float fade = Utils.GetLerpValue(0f, 12f, Projectile.timeLeft, true);
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
             Main.EntitySpriteDraw(
                 smoke,
                 Projectile.Center - Main.screenPosition,
                 null,
-                Color.Black * 0.38f * fade * VesuviusProjectileVisuals.VisualIntensity,
+                VesuviusProjectileVisuals.ObsidianEdge * 0.38f * fade * VesuviusProjectileVisuals.VisualIntensity,
                 Main.GlobalTimeWrappedHourly * 0.7f,
                 smoke.Size() * 0.5f,
                 (0.28f + expand * 0.96f) * VesuviusProjectileVisuals.VisualScale,
@@ -246,11 +247,12 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.FStage5
                 bloom,
                 Projectile.Center - Main.screenPosition,
                 null,
-                new Color(VesuviusProjectileVisuals.ObsidianEdge.R, VesuviusProjectileVisuals.ObsidianEdge.G, VesuviusProjectileVisuals.ObsidianEdge.B, 0) * 0.24f * fade * VesuviusProjectileVisuals.VisualIntensity,
+                VesuviusProjectileVisuals.ObsidianEdge * 0.24f * fade * VesuviusProjectileVisuals.VisualIntensity,
                 0f,
                 bloom.Size() * 0.5f,
                 (0.55f + expand * 1.25f) * VesuviusProjectileVisuals.VisualScale,
                 SpriteEffects.None);
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
             return false;
         }
     }

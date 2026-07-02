@@ -28,8 +28,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         public override string Texture => "CalamityLegendsComeBack/Weapons/YharimsCrystal/YC_Right_Drone";
 
         private const int ShutdownFrames = 120;
-        private const int SwapIntervalFrames = 30;
-        private const int HeavyLungeFrames = 42;
+        private const float MaxOffsetLength = 5f;
 
         public int SlotIndex => (int)Projectile.ai[0];
         public int ParentHoldoutIndex => (int)Projectile.ai[1];
@@ -49,14 +48,17 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             _ => 20f,
         };
 
-        // Omicron-style side offset. Paired drones interpolate through the aim line
-        // instead of lunging forward and snapping back.
-        private ref float PerpOffset => ref Projectile.localAI[0];
+        // Omicron-style recoil offset. Firing pulls the drone back along its barrel,
+        // then it eases back to the formation distance.
+        private ref float OffsetLength => ref Projectile.localAI[0];
         private ref float ShootingTimer => ref Projectile.localAI[1];
         private Player Owner;
+        private YC_RightCrystalHoldout linkedHoldout;
         private int time;
         private int firingDelay = 15;
         private float postFireCooldown;
+        private bool movingUp = true;
+        private float yOffset;
 
         public override void SetStaticDefaults()
         {
@@ -80,9 +82,9 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
 
         public override void OnSpawn(IEntitySource source)
         {
-            int side = SlotIndex % 2 == 0 ? -1 : 1;
-            float maxPerp = GetFormationLane(SlotIndex).perpDistance;
-            PerpOffset = side * maxPerp;
+            OffsetLength = MaxOffsetLength;
+            movingUp = SlotIndex % 2 == 0;
+            yOffset = 0f;
         }
 
         public override bool ShouldUpdatePosition() => false;
@@ -99,6 +101,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             }
 
             bool hasHoldout = TryGetHoldout(out Projectile holdoutProj, out YC_RightCrystalHoldout holdout);
+            linkedHoldout = hasHoldout ? holdout : null;
             if (!hasHoldout && postFireCooldown <= 0f && time > 1)
             {
                 Projectile.Kill();
@@ -121,6 +124,9 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
                     Shoot(false);
                 ShootingTimer = 0f;
             }
+
+            if (OffsetLength != MaxOffsetLength)
+                OffsetLength = MathHelper.Lerp(OffsetLength, MaxOffsetLength, 0.1f);
 
             Vector2 ownerToMouse = NewLegendYharimsCrystal.GetMouseWorld(Owner) - Owner.MountedCenter;
             UpdateFormationPosition(ownerToMouse, holdout);
@@ -145,34 +151,29 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
 
         private void UpdateFormationPosition(Vector2 ownerToMouse, YC_RightCrystalHoldout holdout)
         {
-            Vector2 aimDir = ownerToMouse.SafeNormalize(Vector2.UnitX * Owner.direction);
-            int direction = Math.Sign(ownerToMouse.X);
+            // 无人机跟随持械激光的核心角度（自动继承其每帧2度的转向限制），
+            // 只有在持械暂时不存在的收尾帧才退回鼠标方向。
+            Vector2 aimDir = holdout?.ForwardDirection ?? ownerToMouse.SafeNormalize(Vector2.UnitX * Owner.direction);
+            int direction = Math.Sign(aimDir.X);
             if (direction == 0)
                 direction = Owner.direction;
 
             (float along, float maxPerp) = GetFormationLane(SlotIndex);
-            Vector2 perpDir = aimDir.RotatedBy(MathHelper.PiOver2);
+            if (time % 30 == 0)
+                movingUp = !movingUp;
 
-            // 奥密克戎式协同：全体无人机读取持械弹幕的同一个时钟，
-            // 摆动方向由时钟直接推导，因此所有僚机在同一帧一起换向、一起往返。
-            float sharedTime = holdout?.SharedSwayClock ?? time;
-            int slotSide = SlotIndex % 2 == 0 ? -1 : 1;
-            float basePerp = maxPerp * slotSide;
-            // Both sides sway in the same direction globally so they move as a single rigid body
-            float globalSway = (float)Math.Sin(sharedTime * 0.06f) * 32f;
-            PerpOffset = basePerp + globalSway;
+            float hoverResponse = 0.085f - FiringTime * 0.0012f;
+            yOffset = MathHelper.Lerp(yOffset, maxPerp * (movingUp ? -1f : 1f), hoverResponse);
 
-            float lungeProgress = postFireCooldown > ShutdownFrames - HeavyLungeFrames
-                ? MathHelper.Clamp((ShutdownFrames - postFireCooldown) / HeavyLungeFrames, 0f, 1f)
-                : 0f;
-            float lungeDistance = SmootherBell(lungeProgress) * 196f;
+            Vector2 oldRotationVector = Projectile.rotation.ToRotationVector2();
+            Vector2 recoilOffset = oldRotationVector * OffsetLength;
 
-            // Attack lunge: darts toward the target's direction on firing, then eases back —
-            // a bell curve so it's a genuine there-and-back dart, not a linear snap.
-            Projectile.Center = Owner.MountedCenter + aimDir * (along + lungeDistance) + perpDir * PerpOffset;
+            // Omicron rhythm: turn toward the aim line, hover across it, and apply recoil only along the barrel.
             Projectile.velocity = Projectile.velocity.ToRotation().AngleTowards(aimDir.ToRotation(), 0.2f).ToRotationVector2();
-            Projectile.rotation = (NewLegendYharimsCrystal.GetMouseWorld(Owner) - Projectile.Center)
-                .SafeNormalize(Vector2.UnitX).ToRotation();
+            Vector2 formationDirection = Projectile.velocity.SafeNormalize(Vector2.UnitX * direction);
+            Vector2 placementOffset = formationDirection.RotatedBy(MathHelper.PiOver2) * yOffset;
+            Projectile.Center = Owner.MountedCenter + formationDirection * along + placementOffset + recoilOffset;
+            Projectile.rotation = (NewLegendYharimsCrystal.GetMouseWorld(Owner) - Projectile.Center).SafeNormalize(Vector2.UnitX * direction).ToRotation();
             Projectile.spriteDirection = Projectile.direction = direction;
         }
 
@@ -186,23 +187,11 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             Projectile.netUpdate = true;
         }
 
-        private static float SmootherBell(float progress)
-        {
-            progress = MathHelper.Clamp(progress, 0f, 1f);
-            float up = SmootherStep(MathHelper.Clamp(progress / 0.42f, 0f, 1f));
-            float down = 1f - SmootherStep(MathHelper.Clamp((progress - 0.58f) / 0.42f, 0f, 1f));
-            return up * down;
-        }
-
-        private static float SmootherStep(float progress)
-        {
-            progress = MathHelper.Clamp(progress, 0f, 1f);
-            return progress * progress * progress * (progress * (progress * 6f - 15f) + 10f);
-        }
-
         private void Shoot(bool isGrenade)
         {
-            Vector2 shootDirection = (NewLegendYharimsCrystal.GetMouseWorld(Owner) - Projectile.Center).SafeNormalize(Vector2.UnitX);
+            // 攻击方向对齐持械激光核心角度，而非直接瞄准鼠标
+            Vector2 shootDirection = linkedHoldout?.ForwardDirection
+                ?? (NewLegendYharimsCrystal.GetMouseWorld(Owner) - Projectile.Center).SafeNormalize(Vector2.UnitX);
             Vector2 tipPosition = Projectile.Center + Projectile.velocity.SafeNormalize(Vector2.Zero)
                 .RotatedBy(-0.05f * Projectile.direction) * 12f;
 
@@ -225,6 +214,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
                         break;
                 }
             }
+
+            OffsetLength -= isGrenade ? 27f : 5f;
 
             if (Main.dedServ)
                 return;
@@ -394,6 +385,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             float drawRotation = Projectile.rotation + MathHelper.PiOver2;
             Vector2 rotationPoint = texture.Size() * 0.5f;
             SpriteEffects flipSprite = Projectile.spriteDirection == -1 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+            if (Projectile.spriteDirection == -1 ? movingUp : !movingUp)
+                flipSprite |= SpriteEffects.FlipVertically;
 
             // Soft gold ambient glow behind the drone
             Main.EntitySpriteDraw(bloom, drawPosition, null, DroneGold with { A = 0 } * 0.18f, 0f, bloom.Size() * 0.5f, Projectile.scale * 0.72f, SpriteEffects.None);
@@ -434,22 +427,26 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         {
             writer.Write(Projectile.rotation);
             writer.Write(Projectile.spriteDirection);
-            writer.Write(PerpOffset);
+            writer.Write(OffsetLength);
             writer.Write(ShootingTimer);
             writer.Write(time);
             writer.Write(firingDelay);
             writer.Write(postFireCooldown);
+            writer.Write(yOffset);
+            writer.Write(movingUp);
         }
 
         public override void ReceiveExtraAI(BinaryReader reader)
         {
             Projectile.rotation = reader.ReadSingle();
             Projectile.spriteDirection = reader.ReadInt32();
-            PerpOffset = reader.ReadSingle();
+            OffsetLength = reader.ReadSingle();
             ShootingTimer = reader.ReadSingle();
             time = reader.ReadInt32();
             firingDelay = reader.ReadInt32();
             postFireCooldown = reader.ReadSingle();
+            yOffset = reader.ReadSingle();
+            movingUp = reader.ReadBoolean();
         }
     }
 }

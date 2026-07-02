@@ -172,6 +172,8 @@ Mods: {
 				AzureThunderStrikeSequencer.DisplayName: SunderBlade Strike Sequencer
 				AzureThunderHarmonyBar.DisplayName: SunderBlade Empyrean Bar
 				AzureThunderGroundSwordMatrix.DisplayName: Azure Thunder Ground Sword Matrix
+				AzureThunderHarmonyImpactMark.DisplayName: SunderBlade Empyrean Mark
+				AzureThunderFinalJudgementBolt.DisplayName: SunderBlade Final Judgement
 			}
 
 			SeasSearingMissile.DisplayName: Seas Searing Missile

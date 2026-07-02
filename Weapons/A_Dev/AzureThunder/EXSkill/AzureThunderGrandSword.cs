@@ -277,6 +277,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             AzureThunderAccessoryPlayer.ApplyAzureThunderAccessoryOnHit(Projectile, target);
             AzureThunderPlayer.ApplyUltimateDot(target, 240);
             if (Main.myPlayer == Projectile.owner)
+                AzureThunderPlayer.SpawnHarmonyHitMark(Projectile.GetSource_FromThis(), target.Center, Projectile.owner, target.whoAmI, exploding ? 1.45f : 1.12f);
+            if (Main.myPlayer == Projectile.owner && Projectile.localAI[1] != 1f)
                 Main.player[Projectile.owner].GetModPlayer<ZhuangFangYiPetPlayer>().QueueStrongAttackCandidate(target);
 
             // 下坠过程中穿透数用完时提前在目标处爆开。

@@ -3,7 +3,7 @@ Mods: {
 		Items: {
 			Weapons: {
 				LeonidProgenitor: {
-					DisplayName: 流星
+					DisplayName: 新传奇 - 狮源流星
 					Tooltip: "[GFB]"
 					LeftClick:
 						'''

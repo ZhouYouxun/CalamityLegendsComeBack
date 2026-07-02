@@ -3,17 +3,18 @@ Mods: {
 		Items: {
 			Weapons: {
 				NewLegendGaelsGreatsword: {
-					DisplayName: 盖尔大剑
+					DisplayName: 新传奇 - 盖尔大剑
 					Tooltip: "[GFB]"
 					FunctionalTooltip:
 						'''
-						[c/FFD966:左键] [c/DCD6C8:略快于雄伟之护的自定义大剑挥舞；进度越高，真近战重复命中越频繁]
-						[c/8DB8FF:右键] [c/DCD6C8:舍身斩：朝鼠标方向跳劈，造成高额伤害；使用后45帧内，下一次左键变为横斩]
+						[c/FFD966:左键] [c/DCD6C8:略快于雄伟之护的自定义大剑挥舞；真近战命中积蓄黑暗余烬，并可能爆出血火余波]
+						[c/8DB8FF:右键] [c/DCD6C8:舍身斩：朝鼠标方向跳劈，造成高额伤害并积蓄更多余烬；使用后45帧内，下一次左键变为横斩]
 						[c/7B5CFF:黑暗灵魂] [c/DCD6C8:肉前固定恢复灾厄怒气并获得缓落；随Boss进度强化为短程飞行]
-						[c/A01A2A:融于血与火] [c/DCD6C8:生命不高于50%或怒气达到75%以上时获得黑暗之血；左键进伤害窗口会消耗生命并提高伤害]
+						[c/A01A2A:融于血与火] [c/DCD6C8:生命不高于50%或怒气达到75%以上时获得黑暗之血；左键进伤害窗口会消耗生命，提高伤害并点燃余烬]
 						[c/A01A2A:黑暗之血] [c/DCD6C8:离开触发阈值后仍持续3秒]
+						[c/C86AFF:黑暗余烬] [c/DCD6C8:命中与黑暗之血会充能；余烬越高，近战伤害、攻速和减伤略微提高；满格时终结技就绪]
 						[c/7B5CFF:黑暗人性] [c/DCD6C8:生命不高于50%时获得怒气并大幅提高近战攻速；这是肉后唯一的怒气来源]
-						[c/FFD700:终结技] [c/DCD6C8:击败肉山后，无需传奇饰章；按灾厄怒气键 {0} 旋转斗篷并释放大量追踪血骷髅]
+						[c/FFD700:终结技] [c/DCD6C8:击败肉山后，无需传奇饰章；满余烬时按灾厄怒气键 {0} 消耗余烬，旋转斗篷并释放大量追踪血骷髅]
 						'''
 					LegendaryHint: "[c/BABABA:按住Shift键以读取记录]"
 					LegendaryText:
@@ -21,10 +22,11 @@ Mods: {
 						[c/8B6CFF:最初的盖尔大剑只需要保留一件事：一把破旧大剑在终局仍然向前挥下。]
 						[c/8B6CFF:但如果只是复刻挥砍，它就只剩致敬，而不是能在这个世界里继续战斗的武器。]
 						[c/8B6CFF:重构后，左键被整理为沉重的三段剑势，每一段都把近身斩击与远处余波绑在一起。]
-						[c/A01A2A:右键则不再只是防御动作，而是用格挡截住弹幕，并把成功的瞬间转化为下一轮反击。]
+						[c/A01A2A:右键不再只是笨重下劈，而是把舍身突进、余烬爆发与下一轮横斩缝成一次反击。]
 						[c/8B6CFF:它依旧不是高贵的剑，只是把血、火与迟来的怒意，一次又一次拖回战场中央。]
 						'''
 					FinisherLocked: 肉山之后，盖尔才抵达世界的尽头
+					FinisherNeedsEmbers: 黑暗余烬尚未填满
 				}
 			}
 		}
@@ -33,6 +35,8 @@ Mods: {
 			GaelGreatswordSwingHoldout.DisplayName: 盖尔大剑挥舞
 			GaelGreatswordPlungeHoldout.DisplayName: 舍身斩
 			GaelGreatswordCapeFinisher.DisplayName: 黑暗灵魂斗篷
+			GaelGreatswordEmberUI.DisplayName: 黑暗余烬
+			GaelGreatswordBloodEcho.DisplayName: 血火余波
 			GaelGreatswordDarkSoul.DisplayName: 血骷髅
 		}
 

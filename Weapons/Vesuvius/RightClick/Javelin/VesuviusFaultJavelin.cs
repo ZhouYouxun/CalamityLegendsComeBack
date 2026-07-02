@@ -345,6 +345,8 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
             Texture2D texture = TextureAssets.Projectile[Type].Value;
             Texture2D glow = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/Vesuvius/NewVesuviusGlow").Value;
 
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
+
             // Spinning fire trail — staff tumbles through the air leaving molten streaks
             for (int i = Embedded ? 0 : Projectile.oldPos.Length - 1; i >= 1; i--)
             {
@@ -352,13 +354,13 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
                 float t = (Projectile.oldPos.Length - i) / (float)Projectile.oldPos.Length;
                 Color trailC = VesuviusProjectileVisuals.LavaOrange * (t * 0.42f);
                 Main.EntitySpriteDraw(texture, oldCenter - Main.screenPosition, null,
-                    VesuviusProjectileVisuals.AdditiveColor(trailC),
+                    trailC,
                     Projectile.oldRot[i], texture.Size() * 0.5f,
                     MathHelper.Lerp(0.6f, 1f, t) * Projectile.scale, SpriteEffects.None);
             }
 
             // Golden outline/border effect (Additive blending with LavaGold)
-            Color goldBorderC = VesuviusProjectileVisuals.LavaGold with { A = 0 };
+            Color goldBorderC = VesuviusProjectileVisuals.LavaGold;
             float borderRadius = 2.4f;
             int borderCopies = 8;
             for (int i = 0; i < borderCopies; i++)
@@ -369,14 +371,16 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
             }
 
             // Main weapon sprite — spinning staff
-            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null,
-                lightColor, Projectile.rotation, texture.Size() * 0.5f, 1.05f * Projectile.scale, SpriteEffects.None);
-
             // Additive glow overlay
             Color glowC = VesuviusProjectileVisuals.LavaGold * 0.75f;
             Main.EntitySpriteDraw(glow, Projectile.Center - Main.screenPosition, null,
-                VesuviusProjectileVisuals.AdditiveColor(glowC),
+                glowC,
                 Projectile.rotation, glow.Size() * 0.5f, 1.05f * Projectile.scale, SpriteEffects.None);
+
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
+
+            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null,
+                lightColor, Projectile.rotation, texture.Size() * 0.5f, 1.05f * Projectile.scale, SpriteEffects.None);
 
             return false;
         }

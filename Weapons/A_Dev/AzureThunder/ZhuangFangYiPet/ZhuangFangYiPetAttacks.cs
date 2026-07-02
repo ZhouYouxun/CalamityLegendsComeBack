@@ -461,4 +461,80 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.ZhuangFangYiPet
             return false;
         }
     }
+
+    internal sealed class ZhuangFangYiSwordFlash : ModProjectile, ILocalizedModType
+    {
+        public new string LocalizationCategory => "Projectiles.AzureThunder";
+        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+
+        private Vector2 EndPoint => new(Projectile.ai[0], Projectile.ai[1]);
+        private float VisualScale => Projectile.ai[2] <= 0f ? 1f : Projectile.ai[2];
+        private int timer;
+
+        public override void SetDefaults()
+        {
+            Projectile.width = 8;
+            Projectile.height = 8;
+            Projectile.friendly = false;
+            Projectile.hostile = false;
+            Projectile.penetrate = -1;
+            Projectile.timeLeft = 16;
+            Projectile.tileCollide = false;
+            Projectile.ignoreWater = true;
+        }
+
+        public override bool? CanDamage() => false;
+
+        public override void AI()
+        {
+            timer++;
+            Lighting.AddLight(Vector2.Lerp(Projectile.Center, EndPoint, 0.5f), new Vector3(0.15f, 0.95f, 0.72f) * 0.36f);
+
+            if (timer == 1)
+            {
+                SoundEngine.PlaySound(SoundID.Item71 with { Volume = 0.34f, Pitch = 0.42f, MaxInstances = 4 }, Projectile.Center);
+                Vector2 direction = (EndPoint - Projectile.Center).SafeNormalize(Vector2.UnitX);
+                for (int i = 0; i < 8; i++)
+                {
+                    Dust dust = Dust.NewDustPerfect(
+                        Vector2.Lerp(Projectile.Center, EndPoint, Main.rand.NextFloat()) + Main.rand.NextVector2Circular(16f, 16f),
+                        DustID.FireworksRGB,
+                        direction.RotatedByRandom(0.7f) * Main.rand.NextFloat(1.8f, 5.5f),
+                        0,
+                        Main.rand.NextBool() ? ZhuangFangYiPetVisuals.Teal : ZhuangFangYiPetVisuals.Pale,
+                        Main.rand.NextFloat(0.55f, 0.9f) * VisualScale);
+                    dust.noGravity = true;
+                }
+            }
+        }
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            Vector2 direction = (EndPoint - Projectile.Center).SafeNormalize(Vector2.UnitX);
+            Vector2 normal = direction.RotatedBy(MathHelper.PiOver2);
+            float progress = Utils.GetLerpValue(0f, 16f, timer, true);
+            float opacity = Utils.GetLerpValue(1f, 0f, progress, true);
+            float reach = MathHelper.Lerp(0.42f, 1.08f, 1f - (float)Math.Pow(1f - progress, 2.6f));
+            Vector2 slashEnd = Vector2.Lerp(Projectile.Center, EndPoint, reach);
+            Vector2 slashStart = Vector2.Lerp(Projectile.Center, EndPoint, MathHelper.Clamp(reach - 0.46f, 0f, 1f));
+            float bend = (float)Math.Sin(progress * MathHelper.Pi) * 46f * VisualScale;
+
+            Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
+            for (int i = 0; i < 4; i++)
+            {
+                float layer = i / 3f;
+                Vector2 offset = normal * (bend * (layer - 0.5f));
+                Color color = (i % 2 == 0 ? ZhuangFangYiPetVisuals.Teal : ZhuangFangYiPetVisuals.Pale) with { A = 0 };
+                ZhuangFangYiPetVisuals.DrawLine(slashStart + offset, slashEnd - offset * 0.35f, color * opacity * (0.32f + layer * 0.16f), (7f - i * 1.2f) * VisualScale);
+            }
+
+            ZhuangFangYiPetVisuals.DrawLine(
+                Projectile.Center + normal * bend * 0.32f,
+                EndPoint - normal * bend * 0.18f,
+                ZhuangFangYiPetVisuals.Green with { A = 0 } * opacity * 0.2f,
+                2.2f * VisualScale);
+            Main.spriteBatch.ExitShaderRegion();
+            return false;
+        }
+    }
 }

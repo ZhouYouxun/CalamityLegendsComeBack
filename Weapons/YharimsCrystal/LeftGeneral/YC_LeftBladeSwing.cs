@@ -392,7 +392,9 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             CanHit = false;
             postSwing = postSwingCooldown > PostSwingCooldownMax - 10;
             fadeIn = MathHelper.Lerp(fadeIn, 0f, 0.18f);
-            SmoothBladeToward(GetSmoothedMouseTargetAngle(), RecoveryMaxTurnSpeed);
+            // 每圈收力后角速度已经归零：这里不能用慢速平滑（看起来像停在原地不动），
+            // 必须立刻切回跟随鼠标的转动，和待机时一致。
+            TurnIdleBladeTowardMouse();
 
             if (postSwingCooldown > 0)
                 postSwingCooldown--;

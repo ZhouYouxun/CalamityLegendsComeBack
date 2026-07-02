@@ -197,6 +197,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.General
             }
 
             SpawnAscendantSpiritVisuals();
+
+            EmitLivingArcs();
+
+            EmitTrailLightning();
         }
 
         public override void OnHitNPC(
@@ -213,6 +217,241 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.General
             AzureThunderSounds.PlayOrbImpact(target.Center);
 
             SpawnDisappearanceEffects(target.Center);
+
+            SpawnImpactArcs(target);
+        }
+
+        // 电弧配色：以青色为基调，混入光球当前的循环色保持整体协调。
+        private Color ArcColor =>
+            Color.Lerp(
+                new Color(70, 255, 240),
+                AscendantVisualColor,
+                Main.rand.NextFloat(0.35f));
+
+        // 飞行放电：周期性劈出会持续扭动的电弧。
+        // 附近有敌人时电弧吸附成“静电触须”，否则绕核心空放。
+        private void EmitLivingArcs()
+        {
+            if (Main.dedServ)
+                return;
+
+            // 用 identity 错开每颗光球的放电节拍，避免四颗同时闪。
+            if ((timer + Projectile.identity % 7 * 2) % 14 != 0)
+                return;
+
+            bool bigArc = Main.rand.NextBool(4);
+
+            NPC zapTarget = FindArcTarget(Projectile.Center, 280f, -1);
+            if (zapTarget != null)
+            {
+                // 静电触须：电向敌人身体上的随机一点，两端都吸附跟随。
+                Vector2 contactPoint =
+                    zapTarget.Center +
+                    Main.rand.NextVector2Circular(
+                        zapTarget.width * 0.3f,
+                        zapTarget.height * 0.3f);
+
+                AzureThunderArcParticle tether =
+                    new(
+                        Projectile.Center,
+                        contactPoint,
+                        ArcColor,
+                        bigArc ? 20 : 16,
+                        bigArc ? 3.4f : 2.8f,
+                        bigArc ? 1.4f : 1f);
+
+                tether.AttachStart(Projectile);
+                tether.AttachEnd(zapTarget);
+                GeneralParticleHandler.SpawnParticle(tether);
+
+                // 接触点补两粒电火花，强调“电到了”。
+                for (int i = 0; i < 2; i++)
+                {
+                    Dust dust =
+                        Dust.NewDustPerfect(
+                            contactPoint,
+                            DustID.Electric,
+                            Main.rand.NextVector2Circular(2.6f, 2.6f),
+                            0,
+                            default,
+                            Main.rand.NextFloat(0.5f, 0.8f));
+
+                    dust.noGravity = true;
+                    dust.color = ArcColor;
+                }
+            }
+            else
+            {
+                // 空放电弧：无目标时绕核心随机方向劈出短弧，偶发大弧线。
+                float arcLength =
+                    Main.rand.NextFloat(52f, 104f) *
+                    (bigArc ? 1.45f : 1f);
+
+                AzureThunderArcParticle idleArc =
+                    new(
+                        Projectile.Center,
+                        Projectile.Center +
+                        Main.rand.NextVector2Unit() * arcLength,
+                        ArcColor,
+                        bigArc ? 18 : 14,
+                        bigArc ? 3f : 2.4f,
+                        bigArc ? 1.5f : 1f);
+
+                idleArc.AttachStart(Projectile);
+                GeneralParticleHandler.SpawnParticle(idleArc);
+            }
+        }
+
+        // 轨迹缠绕电流：把整条历史飞行路径包进双螺旋电流里，
+        // 并让电弧在轨迹上的随机两点之间反复跳动。快照留在世界里，
+        // 弹幕飞远后旧路径依然带电，直到淡出。
+        private void EmitTrailLightning()
+        {
+            if (Main.dedServ)
+                return;
+
+            bool spawnCrawler = timer % 10 == 0;
+            bool spawnJumpArc = timer % 8 == 4;
+            if (!spawnCrawler && !spawnJumpArc)
+                return;
+
+            Vector2[] trail = SnapshotTrail();
+            if (trail == null)
+                return;
+
+            if (spawnCrawler)
+            {
+                // 1/5 概率出现更狂野的大缠绕。
+                bool wild = Main.rand.NextBool(5);
+
+                GeneralParticleHandler.SpawnParticle(
+                    new AzureThunderTrailLightningParticle(
+                        trail,
+                        ArcColor,
+                        Main.rand.Next(10, 16),
+                        wild ? 2.8f : 2.2f,
+                        Main.rand.NextFloat(10f, 16f) * (wild ? 1.6f : 1f),
+                        wild ? 1.6f : 1.2f));
+            }
+
+            if (spawnJumpArc && trail.Length >= 14)
+            {
+                // 在轨迹上随机取两个相距足够远的点，让电弧跨过路径弯折跳动。
+                int indexA = Main.rand.Next(trail.Length - 8);
+                int indexB = Math.Min(
+                    indexA + Main.rand.Next(8, 19),
+                    trail.Length - 1);
+
+                GeneralParticleHandler.SpawnParticle(
+                    new AzureThunderArcParticle(
+                        trail[indexA],
+                        trail[indexB],
+                        ArcColor,
+                        Main.rand.Next(8, 13),
+                        2.2f,
+                        1.4f));
+            }
+        }
+
+        // 收集有效历史轨迹：index 0 = 当前中心，之后是 oldPos 缓存（顶点坐标转中心坐标）。
+        private Vector2[] SnapshotTrail()
+        {
+            int validCount = 0;
+            for (int i = 0; i < Projectile.oldPos.Length; i++)
+            {
+                if (Projectile.oldPos[i] == Vector2.Zero)
+                    break;
+
+                validCount++;
+            }
+
+            if (validCount < 6)
+                return null;
+
+            Vector2 halfSize = Projectile.Size * 0.5f;
+            Vector2[] points = new Vector2[validCount + 1];
+            points[0] = Projectile.Center;
+            for (int i = 0; i < validCount; i++)
+                points[i + 1] = Projectile.oldPos[i] + halfSize;
+
+            return points;
+        }
+
+        // 命中放电：命中点炸出放射电弧，并向下一个敌人视觉链电（纯视觉，无伤害）。
+        private void SpawnImpactArcs(NPC target)
+        {
+            if (Main.dedServ)
+                return;
+
+            int radialCount = Main.rand.Next(4, 6);
+            for (int i = 0; i < radialCount; i++)
+            {
+                Vector2 arcDirection =
+                    (MathHelper.TwoPi * i / radialCount +
+                     Main.rand.NextFloat(-0.35f, 0.35f))
+                    .ToRotationVector2();
+
+                AzureThunderArcParticle radialArc =
+                    new(
+                        target.Center,
+                        target.Center +
+                        arcDirection *
+                        Main.rand.NextFloat(76f, 128f),
+                        ArcColor,
+                        Main.rand.Next(12, 17),
+                        2.4f,
+                        1.25f);
+
+                // 起点钉在目标身上，外端留在世界坐标，敌人移动时电弧被拉扯。
+                radialArc.AttachStart(target);
+                GeneralParticleHandler.SpawnParticle(radialArc);
+            }
+
+            NPC chainTarget = FindArcTarget(target.Center, 460f, target.whoAmI);
+            if (chainTarget != null)
+            {
+                AzureThunderArcParticle chainArc =
+                    new(
+                        target.Center,
+                        chainTarget.Center,
+                        Color.Lerp(ArcColor, Color.White, 0.2f),
+                        18,
+                        3.6f,
+                        0.85f);
+
+                // 两端各吸附一个敌人，形成会跟着双方移动的活体电桥。
+                chainArc.AttachStart(target);
+                chainArc.AttachEnd(chainTarget);
+                GeneralParticleHandler.SpawnParticle(chainArc);
+            }
+        }
+
+        // 最近敌人搜索，可排除指定 NPC（用于链电时跳过刚命中的目标）。
+        private static NPC FindArcTarget(
+            Vector2 point,
+            float maxDistance,
+            int excludeIndex)
+        {
+            NPC bestTarget = null;
+            float bestDistance = maxDistance;
+
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (npc.whoAmI == excludeIndex ||
+                    !npc.CanBeChasedBy())
+                    continue;
+
+                float distance =
+                    point.Distance(npc.Center);
+
+                if (distance < bestDistance)
+                {
+                    bestTarget = npc;
+                    bestDistance = distance;
+                }
+            }
+
+            return bestTarget;
         }
 
         // Shader 颜色控制：拖尾从透明青白之间脉动。

@@ -173,6 +173,8 @@ Mods: {
 				AzureThunderStrikeSequencer.DisplayName: 青霆序列
 				AzureThunderHarmonyBar.DisplayName: 破天刃苍穹条
 				AzureThunderGroundSwordMatrix.DisplayName: Azure Thunder Ground Sword Matrix
+				AzureThunderHarmonyImpactMark.DisplayName: 青霆真和印
+				AzureThunderFinalJudgementBolt.DisplayName: 青霆终裁雷柱
 			}
 
 			// SeasSearingMissile.DisplayName: Seas Searing Missile

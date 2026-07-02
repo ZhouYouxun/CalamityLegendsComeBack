@@ -327,12 +327,12 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick.Javelin
             Texture2D glow = ModContent.Request<Texture2D>("CalamityMod/Projectiles/Magic/AsteroidMoltenGlow").Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
 
-            Color glowColor = (Color.Lerp(VesuviusProjectileVisuals.LavaOrange, Color.White, State == FiringState ? 0.36f : 0.18f) with { A = 0 }) * Projectile.Opacity;
+            Color glowColor = Color.Lerp(VesuviusProjectileVisuals.LavaOrange, Color.White, State == FiringState ? 0.36f : 0.18f) * Projectile.Opacity;
             float drawScale = Projectile.scale * (State == FiringState ? 1.05f : 0.92f);
 
-            // 辉光/描边用 A=0 颜色走默认 AlphaBlend（预乘加算）；本体和 Glow 包边按灾厄原版正常混合。
-            // 禁止再套 BlendState.Additive：其源因子为 SourceAlpha，配 A=0 会让整个陨石隐形。
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
             Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition, null, glowColor * 0.28f, 0f, bloom.Size() * 0.5f, 0.34f + drawScale * 0.18f, SpriteEffects.None);
+
 
             int borderCopies = State == FiringState ? 14 : 10;
             float borderRadius = State == FiringState ? 5.5f : 3.4f;
@@ -342,10 +342,11 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick.Javelin
                 Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition + offset, null, glowColor * 0.16f, Projectile.rotation, texture.Size() * 0.5f, drawScale, SpriteEffects.None);
             }
 
-            // 灾厄原版画法：本体贴图正常混合，AsteroidMoltenGlow 用白色叠在上面形成橙色包边。
+            // 灾厄原版画法：本体贴图正常混合，AsteroidMoltenGlow 用白色叠在上面形成橙色包边�?            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, lightColor * Projectile.Opacity, Projectile.rotation, texture.Size() * 0.5f, drawScale, SpriteEffects.None);
+            Main.EntitySpriteDraw(glow, Projectile.Center - Main.screenPosition, null, Color.White * (0.45f * Projectile.Opacity), Projectile.rotation, glow.Size() * 0.5f, drawScale * 1.05f, SpriteEffects.None);
+
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
             Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, lightColor * Projectile.Opacity, Projectile.rotation, texture.Size() * 0.5f, drawScale, SpriteEffects.None);
-            Main.EntitySpriteDraw(glow, Projectile.Center - Main.screenPosition, null, Color.White * Projectile.Opacity, Projectile.rotation, glow.Size() * 0.5f, drawScale, SpriteEffects.None);
-            Main.EntitySpriteDraw(glow, Projectile.Center - Main.screenPosition, null, Color.White with { A = 0 } * (0.45f * Projectile.Opacity), Projectile.rotation, glow.Size() * 0.5f, drawScale * 1.05f, SpriteEffects.None);
             return false;
         }
 
@@ -460,16 +461,17 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick.Javelin
         {
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             float fade = Utils.GetLerpValue(0f, 4f, Projectile.timeLeft, true);
-            // A=0 颜色直接走默认 AlphaBlend 即可发光；套 Additive 会因源因子为 SourceAlpha 而全透明。
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
             Main.EntitySpriteDraw(
                 bloom,
                 Projectile.Center - Main.screenPosition,
                 null,
-                new Color(255, 116, 32, 0) * 0.34f * fade,
+                new Color(255, 116, 32) * 0.34f * fade,
                 0f,
                 bloom.Size() * 0.5f,
                 1.12f + Stage * 0.08f,
                 SpriteEffects.None);
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
             return false;
         }
     }

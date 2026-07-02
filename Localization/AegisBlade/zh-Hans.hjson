@@ -3,7 +3,7 @@ Mods: {
 		Items: {
 			Weapons: {
 				AegisBlade: {
-					DisplayName: 庇护之刃
+					DisplayName: 新传奇 - 庇护之刃
 					Tooltip: "[GFB]"
 					FunctionalTooltip:
 						'''
@@ -31,7 +31,7 @@ Mods: {
 
 				Summon: {
 					GlacialEmbrace: {
-						DisplayName: 冰霜之拥 — 传奇重塑
+						DisplayName: 新传奇 - 冰川之拥
 						Tooltip: "[GFB]"
 					}
 				}

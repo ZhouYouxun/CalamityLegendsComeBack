@@ -3,7 +3,7 @@ Mods: {
 		Items: {
 			Weapons: {
 				NewLegendBrinyBaron: {
-					DisplayName: 海爵剑-传奇归来
+					DisplayName: 新传奇 - 海爵剑
 					Tooltip: "[GFB]"
 					BB_Left_1:
 						'''

@@ -25,6 +25,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         private const float GripOriginX = 0f;
         private const float GripOriginY = 172f / HoldoutDrawScale;
         private const float LeftSweepLightningScale = 2.5f;
+        private const int HarmonyStageLightningCount = 3;
 
         public new string LocalizationCategory => "Projectiles.AzureThunder";
         public override string Texture => "CalamityLegendsComeBack/Weapons/A_Dev/AzureThunder/AzureThunder";
@@ -247,9 +248,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             }
             else if (HarmonyActive && currentStage <= 1)
             {
-                int strikeCount = AzureThunderProgression.DownedDragonfolly ? 5 : 4;
                 stageImpactFrame = 10;
-                stageDuration = Math.Max(stageDuration, stageImpactFrame + (strikeCount - 1) * 8 + 10);
+                stageDuration = Math.Max(stageDuration, stageImpactFrame + HarmonyStageLightningCount * 8 + 18);
+            }
+            else if (HarmonyActive && currentStage == 2)
+            {
+                stageImpactFrame = 10;
+                stageDuration = Math.Max(stageDuration, stageImpactFrame + 34);
             }
 
             // 重置本段事件和命中状态。
@@ -433,11 +438,16 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             // 终极前两段变成平行雷幕。
             if (currentStage <= 1)
             {
-                int strikeCount = AzureThunderProgression.DownedDragonfolly ? 5 : 4;
-                if (harmonyBarrageShotsFired < strikeCount && ReachedSwingImpact(harmonyBarrageShotsFired * 8))
+                if (harmonyBarrageShotsFired < HarmonyStageLightningCount && ReachedSwingImpact(harmonyBarrageShotsFired * 8))
                 {
                     SpawnParallelBarrageLightning(harmonyBarrageShotsFired);
                     harmonyBarrageShotsFired++;
+                }
+
+                if (!stageEventOne && harmonyBarrageShotsFired >= HarmonyStageLightningCount && ReachedSwingImpact(HarmonyStageLightningCount * 8))
+                {
+                    SpawnGrandSword(0.78f, suppressPetStrongAttack: true);
+                    stageEventOne = true;
                 }
 
                 return;
@@ -446,7 +456,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             // 终极第三段召唤巨剑。
             if (!stageEventOne && ReachedSwingImpact())
             {
-                SpawnGrandSword();
+                SpawnHarmonyFinalJudgement();
                 stageEventOne = true;
             }
         }
@@ -588,7 +598,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             if (Main.myPlayer != Projectile.owner)
                 return;
 
-            int strikeCount = AzureThunderProgression.DownedDragonfolly ? 5 : 4;
+            int strikeCount = HarmonyStageLightningCount;
             Vector2 sweepAxis = lockedAimDirection.SafeNormalize(Vector2.UnitX * Owner.direction).RotatedBy(MathHelper.PiOver2);
             float centeredIndex = index - (strikeCount - 1) * 0.5f;
             Vector2 focusPoint = lockedMouseWorld + Main.rand.NextVector2Circular(44f, 34f);
@@ -651,7 +661,34 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             }
         }
 
-        private void SpawnGrandSword()
+        private void SpawnHarmonyFinalJudgement()
+        {
+            if (Main.myPlayer != Projectile.owner)
+                return;
+
+            NPC target = AzureThunderPlayer.FindMouseNearestTarget(Owner);
+            Vector2 impactPosition = target?.Center ?? lockedMouseWorld;
+            float damageFactor = AzureThunderProgression.UltimateRightClickFinalDamageFactor * 1.12f;
+
+            int judgement = Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                impactPosition - Vector2.UnitY * 920f,
+                Vector2.UnitY,
+                ModContent.ProjectileType<AzureThunderFinalJudgementBolt>(),
+                Math.Max(1, (int)(Projectile.damage * damageFactor)),
+                Projectile.knockBack,
+                Projectile.owner,
+                target?.whoAmI ?? -1,
+                impactPosition.X,
+                impactPosition.Y);
+
+            if (Main.projectile.IndexInRange(judgement))
+                AzureThunderPlayer.ApplyProjectileGrowth(Main.projectile[judgement]);
+
+            Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, 10f);
+        }
+
+        private void SpawnGrandSword(float damageMultiplier = 1f, bool suppressPetStrongAttack = false)
         {
             // 终极第三段召唤巨剑，目标优先取鼠标附近 NPC。
             if (Main.myPlayer != Projectile.owner)
@@ -668,7 +705,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 spawnPosition,
                 Vector2.Zero,
                 ModContent.ProjectileType<AzureThunderGrandSword>(),
-                Math.Max(1, (int)(Projectile.damage * AzureThunderProgression.UltimateGrandSwordDamageFactor)),
+                Math.Max(1, (int)(Projectile.damage * AzureThunderProgression.UltimateGrandSwordDamageFactor * damageMultiplier)),
                 Projectile.knockBack,
                 Projectile.owner,
                 target?.whoAmI ?? -1,
@@ -676,7 +713,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 impactPosition.Y);
 
             if (Main.projectile.IndexInRange(grandSword))
-                AzureThunderPlayer.ApplyProjectileGrowth(Main.projectile[grandSword]);
+            {
+                Terraria.Projectile sword = Main.projectile[grandSword];
+                if (suppressPetStrongAttack)
+                    sword.localAI[1] = 1f;
+                AzureThunderPlayer.ApplyProjectileGrowth(sword);
+            }
         }
 
         private Vector2 GetDanceOfLightSpawnPosition(Vector2 shootDirection, float sideBias)

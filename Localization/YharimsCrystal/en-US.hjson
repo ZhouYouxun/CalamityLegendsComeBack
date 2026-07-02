@@ -7,13 +7,13 @@ Mods: {
 					Tooltip: "[GFB]"
 					TooltipBody:
 						'''
-						[c/F8E28A:Left Click Mode]: Hold left click to swing a high-speed spinning crystal disk to shred enemies ahead.
-						Upon hitting enemies, the disk erupts into a barrage of splitting holy fireballs and sacred light shards.
-						[c/73DFFF:Right Click Mode]: Hold right click to deploy six golden escort warships for coordinated air defense while channeling a continuous scorching deathray.
-						Press left click during right click to trigger a coordinated heavy attack, widening the main laser and spraying fanning split rays before causing a 2-second cooldown.
-						[c/F6D06B:Auric Ultimate (EX Skill)]: When charge is full and the Legendary Emblem is equipped, press the [Legendary Skill Key] to activate:
-						- In Left Click Mode, cast [Sacred Flame Blade]: Swing giant blades that tear through space, summoning towering pillars of golden fire from the ground.
-						- In Right Click Mode, cast [Laser Storm]: Summon 12 gold-sheened laser ships above the target, weaving a storm of concentrated deathrays.
+						[c/F8E28A:Left Click]: Hold to whirl the crystal into a high-speed spinning golden disc that shreds nearby enemies; after each full revolution the blade eases to a stop and re-aims toward your cursor.
+						Striking enemies bursts out homing gold-flame fireballs and burning shards that orbit targets, scorch them, and detonate in holy fire.
+						[c/73DFFF:Right Click]: Hold to summon six golden escort warships into an air-defense formation while the crystal itself vents an unending scorching main laser.
+						Clicking left during the barrage unleashes a coordinated heavy strike: the main laser instantly thickens, sprays golden bolts to both sides, fans out splitting lasers, and the fleet volleys twin gold bombs before briefly powering down.
+						[c/F6D06B:Auric Ultimate]: With full energy and the Legendary Emblem equipped, press the [Legendary Skill Key] to unleash one of two ultimates:
+						[c/F6D06B:- Sacred Flame Blade (blade form)]: swing a colossal sacred blade that tears through space and raises sky-piercing pillars of golden fire.
+						[c/F6D06B:- Laser Storm (crystal form)]: deploy twelve gold-sheened laser ships above the target, weaving an all-destroying storm of deathrays.
 						'''
 					CurrentMode: "[c/F6D06B:Current core] {0}"
 					Mode_Drill: "[c/F2B85D:Siege Drill]"
@@ -30,17 +30,6 @@ Mods: {
 					RightCommandInfo: "[c/73DFFF:Right Array] [c/DCD6C8:deploy six golden drones into an air-defense battery: the front pair fire tracking rockets, the mid pair sustain a piercing barrage, and the rear pair snap off instant gold lasers, while the crystal itself keeps firing its main beam; left click commands the whole battery to volley twin gold bombs before a 2-second shutdown.]"
 					ResetInfo: "[c/FF7A45:Reset] [c/DCD6C8:releasing left click, dying, or running out of mana clears the entire sequence.]"
 					EXInfo: "[c/F6D06B:Legendary Skill (Laser Storm)] [c/DCD6C8:summon 12 golden laser ships into orbit. Left click when they are ready to fire.]"
-					Growth_Header: "[c/F6D06B:Current growth: stage {0}/{1}] [c/DCD6C8:left-click blade scale {2}.]"
-					Growth_Stage0: "[c/F6D06B:Base form] [c/DCD6C8:left click uses spinning slashes, charged throws, and essence flame support; right click deploys the main beam and six golden drones.]"
-					Growth_Stage1: "[c/F6D06B:Latest unlock (Desert Scourge)] [c/DCD6C8:left-click burning is upgraded; right-click array damage is increased.]"
-					Growth_Stage2: "[c/F6D06B:Latest unlock (Evil Boss T1)] [c/DCD6C8:left-click blade scale and recovery improve; right-click array damage is increased.]"
-					Growth_Stage3: "[c/F6D06B:Latest unlock (Wall of Flesh)] [c/DCD6C8:directed left-click throws keep their no-gravity charge dash; the right-click main beam switches to the classic sustained laser visual.]"
-					Growth_Stage4: "[c/F6D06B:Latest unlock (Brimstone Elemental)] [c/DCD6C8:left-click burning shards release brimstone missiles; the right-click main beam keeps the classic laser visual, and blade scale improves.]"
-					Growth_Stage5: "[c/F6D06B:Latest unlock (Golem)] [c/DCD6C8:left-click recovery and blade scale improve; right-click charge time is halved.]"
-					Growth_Stage6: "[c/F6D06B:Latest unlock (Empress of Light)] [c/DCD6C8:left-click burning shards release rainbow bolts; right-click array damage is increased.]"
-					Growth_Stage7: "[c/F6D06B:Latest unlock (Moon Lord)] [c/DCD6C8:left-click blade scale improves again; the right-click main beam switches to the Moon Lord visual.]"
-					Growth_Stage8: "[c/F6D06B:Latest unlock (Providence)] [c/DCD6C8:left-click low-life recovery improves; the right-click main beam switches to a profaned holy-ray visual.]"
-					Growth_Stage9: "[c/F6D06B:Latest unlock (Yharon)] [c/DCD6C8:the legendary skill empowers the current weapon form; the right-click main beam switches to Yharon's tornado visual.]"
 					LegendaryHint: "[c/BABABA:Hold Shift to access the record]"
 					LegendaryText:
 						'''

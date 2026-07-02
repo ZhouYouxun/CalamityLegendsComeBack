@@ -208,6 +208,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.CStage2
             float pulse = 0.5f + 0.5f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 8f + Projectile.identity);
             Vector2 poolScale = new(Projectile.width / (float)bloom.Width, Projectile.height / (float)bloom.Height);
 
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
             Main.EntitySpriteDraw(
                 smoke,
                 Projectile.Center - Main.screenPosition - Vector2.UnitY * 8f,
@@ -222,7 +223,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.CStage2
                 bloom,
                 Projectile.Center - Main.screenPosition,
                 null,
-                new Color(255, 70, 20, 0) * (0.2f + pulse * 0.05f) * fade * VesuviusProjectileVisuals.VisualIntensity,
+                new Color(255, 70, 20) * (0.2f + pulse * 0.05f) * fade * VesuviusProjectileVisuals.VisualIntensity,
                 0f,
                 bloom.Size() * 0.5f,
                 poolScale * 1.55f * VesuviusProjectileVisuals.VisualScale,
@@ -232,12 +233,13 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.CStage2
                 bloom,
                 Projectile.Center - Main.screenPosition,
                 null,
-                new Color(VesuviusProjectileVisuals.LavaGold.R, VesuviusProjectileVisuals.LavaGold.G, VesuviusProjectileVisuals.LavaGold.B, 0) * 0.16f * fade * VesuviusProjectileVisuals.VisualIntensity,
+                VesuviusProjectileVisuals.LavaGold * 0.16f * fade * VesuviusProjectileVisuals.VisualIntensity,
                 0f,
                 bloom.Size() * 0.5f,
                 poolScale * new Vector2(0.82f, 0.42f) * VesuviusProjectileVisuals.VisualScale,
                 SpriteEffects.None);
 
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
             return false;
         }
     }

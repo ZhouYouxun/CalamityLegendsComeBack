@@ -30,6 +30,12 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
         private static int SwingHoldoutType => ModContent.ProjectileType<GaelGreatswordSwingHoldout>();
         private static int PlungeHoldoutType => ModContent.ProjectileType<GaelGreatswordPlungeHoldout>();
         private static int CapeFinisherType => ModContent.ProjectileType<GaelGreatswordCapeFinisher>();
+        private static int EmberUIType => ModContent.ProjectileType<GaelGreatswordEmberUI>();
+
+        public override void SetStaticDefaults()
+        {
+            ItemID.Sets.ItemsThatAllowRepeatedRightClick[Type] = true;
+        }
 
         public override void SetDefaults()
         {
@@ -120,7 +126,13 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
             GaelGreatswordPlayer gaelPlayer = player.GetModPlayer<GaelGreatswordPlayer>();
             gaelPlayer.ApplyHeldEffects();
 
-            if (Main.myPlayer != player.whoAmI || !GaelGreatswordRageInterop.RageHotKeyJustPressed())
+            if (Main.myPlayer != player.whoAmI)
+                return;
+
+            if (player.ownedProjectileCounts[EmberUIType] <= 0)
+                Projectile.NewProjectile(Item.GetSource_FromThis(), player.Center, Vector2.Zero, EmberUIType, 0, 0f, player.whoAmI);
+
+            if (!GaelGreatswordRageInterop.RageHotKeyJustPressed())
                 return;
 
             TryActivateFinisher(player, gaelPlayer);
@@ -160,7 +172,13 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
                 return;
             }
 
-            int damage = (int)(player.GetWeaponDamage(Item) * 0.8f);
+            if (!gaelPlayer.ConsumeDarkEmbers(GaelGreatswordPlayer.DarkEmberMax))
+            {
+                CombatText.NewText(player.Hitbox, new Color(120, 56, 170), Language.GetTextValue("Mods.CalamityLegendsComeBack.Items.Weapons.NewLegendGaelsGreatsword.FinisherNeedsEmbers"));
+                return;
+            }
+
+            int damage = (int)(player.GetWeaponDamage(Item) * 0.92f);
             Projectile.NewProjectile(Item.GetSource_FromThis(), player.Center, Vector2.Zero, CapeFinisherType, damage, Item.knockBack, player.whoAmI);
             gaelPlayer.FinisherCooldown = FinisherCooldown;
 
@@ -177,17 +195,25 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
 
     internal sealed class GaelGreatswordPlayer : ModPlayer
     {
+        public const int DarkEmberMax = 100;
+
         public int FollowupSlashWindow;
         public int FinisherCooldown;
+        public int DarkEmbers;
+        public int DarkEmberFlashTimer;
 
         private int holdingTimer;
         private int blackBloodAfterglowTimer;
         private int darkSoulFlightTime;
         private int blackBloodLifeCostCooldown;
+        private int darkEmberDecayDelay;
+        private bool darkEmberWasReady;
 
         public bool HoldingGael => holdingTimer > 0;
         public bool BlackBloodActive => blackBloodAfterglowTimer > 0;
         public bool BlackHumanityActive => HoldingGael && Player.statLife <= Player.statLifeMax2 / 2;
+        public bool DarkEmberReady => DarkEmbers >= DarkEmberMax;
+        public float DarkEmberRatio => MathHelper.Clamp(DarkEmbers / (float)DarkEmberMax, 0f, 1f);
 
         public override void PreUpdate()
         {
@@ -201,6 +227,23 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
                 blackBloodAfterglowTimer--;
             if (blackBloodLifeCostCooldown > 0)
                 blackBloodLifeCostCooldown--;
+            if (DarkEmberFlashTimer > 0)
+                DarkEmberFlashTimer--;
+            UpdateDarkEmbers();
+        }
+
+        public override void UpdateDead()
+        {
+            FollowupSlashWindow = 0;
+            FinisherCooldown = 0;
+            DarkEmbers = 0;
+            DarkEmberFlashTimer = 0;
+            holdingTimer = 0;
+            blackBloodAfterglowTimer = 0;
+            darkSoulFlightTime = 0;
+            blackBloodLifeCostCooldown = 0;
+            darkEmberDecayDelay = 0;
+            darkEmberWasReady = false;
         }
 
         public bool ConsumeFollowupSlash()
@@ -218,6 +261,7 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
             ApplyDarkSoulPassive();
             ApplyBloodAndFire();
             ApplyBlackHumanity();
+            ApplyDarkEmberPassive();
         }
 
         public float TryPayBlackBloodCost()
@@ -229,10 +273,54 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
             Player.statLife = Math.Max(1, Player.statLife - cost);
             blackBloodLifeCostCooldown = 6;
             blackBloodAfterglowTimer = Math.Max(blackBloodAfterglowTimer, 180);
+            AddDarkEmbers(4 + GaelGreatswordProgression.GetStage(), true);
 
             CombatText.NewText(Player.Hitbox, new Color(160, 18, 34), cost, true);
             SpawnBlackBloodPaidEffects();
-            return 1.32f + GaelGreatswordProgression.GetStage() * 0.03f;
+            return 1.32f + GaelGreatswordProgression.GetStage() * 0.03f + DarkEmberRatio * 0.08f;
+        }
+
+        public void RegisterGreatswordHit(NPC target, int baseEmbers, bool forceBloodWake = false)
+        {
+            AddDarkEmbers(baseEmbers + GaelGreatswordProgression.GetStage(), forceBloodWake);
+
+            if (target != null && Main.myPlayer == Player.whoAmI && Main.rand.NextBool(3))
+            {
+                int echoDamage = Math.Max(1, (int)(Player.GetWeaponDamage(Player.HeldItem) * MathHelper.Lerp(0.16f, 0.28f, DarkEmberRatio)));
+                Projectile.NewProjectile(Player.GetSource_FromThis(), target.Center, Vector2.Zero,
+                    ModContent.ProjectileType<GaelGreatswordBloodEcho>(), echoDamage, 1.2f, Player.whoAmI, DarkEmberRatio);
+            }
+        }
+
+        public bool ConsumeDarkEmbers(int amount)
+        {
+            if (DarkEmbers < amount)
+                return false;
+
+            DarkEmbers -= amount;
+            DarkEmberFlashTimer = 20;
+            darkEmberWasReady = false;
+            SpawnDarkEmberBurst(28, 6.2f);
+            return true;
+        }
+
+        public void AddDarkEmbers(int amount, bool forceBloodWake = false)
+        {
+            if (amount <= 0)
+                return;
+
+            bool wasReady = DarkEmberReady;
+            DarkEmbers = Math.Clamp(DarkEmbers + amount, 0, DarkEmberMax);
+            darkEmberDecayDelay = 6 * 60;
+            DarkEmberFlashTimer = Math.Max(DarkEmberFlashTimer, 10);
+
+            if (forceBloodWake)
+                blackBloodAfterglowTimer = Math.Max(blackBloodAfterglowTimer, 180);
+
+            if (DarkEmberReady && !wasReady)
+                SpawnDarkEmberBurst(18, 4.4f);
+
+            LegendaryUltimateReadySound.PlayIfReadyTransition(Player, ref darkEmberWasReady, DarkEmberReady);
         }
 
         private void ApplyDarkSoulPassive()
@@ -276,6 +364,40 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
             }
         }
 
+        private void ApplyDarkEmberPassive()
+        {
+            if (DarkEmbers <= 0)
+                return;
+
+            float ratio = DarkEmberRatio;
+            Player.GetDamage(DamageClass.Melee) += ratio * 0.06f;
+            Player.GetAttackSpeed(DamageClass.Melee) += ratio * 0.08f;
+            Player.endurance += ratio * 0.025f;
+            Lighting.AddLight(Player.Center, 0.16f * ratio, 0.03f * ratio, 0.22f * ratio);
+
+            if (DarkEmberReady && Main.rand.NextBool(4))
+            {
+                Dust dust = Dust.NewDustPerfect(Player.Center + Main.rand.NextVector2Circular(Player.width * 0.8f, Player.height),
+                    Main.rand.NextBool(3) ? DustID.Blood : DustID.Shadowflame,
+                    Main.rand.NextVector2Circular(1.1f, 1.1f), 100, new Color(150, 20, 70), Main.rand.NextFloat(0.85f, 1.3f));
+                dust.noGravity = true;
+            }
+        }
+
+        private void UpdateDarkEmbers()
+        {
+            if (darkEmberDecayDelay > 0)
+            {
+                darkEmberDecayDelay--;
+            }
+            else if (!HoldingGael && DarkEmbers > 0 && Main.GameUpdateCount % 5 == 0)
+            {
+                DarkEmbers--;
+            }
+
+            LegendaryUltimateReadySound.PlayIfReadyTransition(Player, ref darkEmberWasReady, DarkEmberReady);
+        }
+
         private void HandleDarkSoulFlight()
         {
             int maxFlightTime = GaelGreatswordProgression.GetFlightFrames();
@@ -312,6 +434,22 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
                 Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.4f, 4.4f);
                 Dust dust = Dust.NewDustPerfect(Player.Center + Main.rand.NextVector2Circular(18f, 28f), DustID.Blood, velocity, 80, new Color(145, 0, 26), Main.rand.NextFloat(1.1f, 1.7f));
                 dust.noGravity = Main.rand.NextBool();
+            }
+        }
+
+        private void SpawnDarkEmberBurst(int count, float speed)
+        {
+            if (Main.dedServ)
+                return;
+
+            for (int i = 0; i < count; i++)
+            {
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(speed * 0.25f, speed);
+                Dust dust = Dust.NewDustPerfect(Player.Center + Main.rand.NextVector2Circular(18f, 28f),
+                    Main.rand.NextBool(3) ? DustID.Blood : DustID.Shadowflame,
+                    velocity, 90, Main.rand.NextBool() ? new Color(175, 18, 42) : new Color(92, 36, 150),
+                    Main.rand.NextFloat(1f, 1.65f));
+                dust.noGravity = true;
             }
         }
     }
@@ -517,6 +655,9 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
+            GaelGreatswordPlayer gaelPlayer = Owner.GetModPlayer<GaelGreatswordPlayer>();
+            gaelPlayer.RegisterGreatswordHit(target, FollowupSlash ? 11 : 7, bloodDamageMultiplier > 1f);
+
             if (Main.myPlayer == Projectile.owner && Main.rand.NextBool(FollowupSlash ? 1 : 2))
             {
                 Vector2 spawnPosition = target.Center + Main.rand.NextVector2Circular(70f, 70f);
@@ -841,7 +982,9 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            Owner.GetModPlayer<GaelGreatswordPlayer>().FollowupSlashWindow = 45;
+            GaelGreatswordPlayer gaelPlayer = Owner.GetModPlayer<GaelGreatswordPlayer>();
+            gaelPlayer.FollowupSlashWindow = 45;
+            gaelPlayer.RegisterGreatswordHit(target, 16, true);
             Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, 4.5f);
 
             if (Main.myPlayer == Projectile.owner)
@@ -987,9 +1130,20 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
             modifiers.SourceDamage *= MathHelper.Lerp(1f, 0.42f, MathHelper.Clamp(Projectile.numHits / 12f, 0f, 1f));
         }
 
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            if (Main.myPlayer != Projectile.owner || Projectile.numHits % 4 != 0)
+                return;
+
+            int echoDamage = Math.Max(1, (int)(Projectile.damage * 0.32f));
+            Projectile.NewProjectile(Projectile.GetSource_OnHit(target), target.Center, Vector2.Zero,
+                ModContent.ProjectileType<GaelGreatswordBloodEcho>(), echoDamage, 1.5f, Projectile.owner, 1f);
+        }
+
         private void FireDarkSouls()
         {
-            if (Main.myPlayer != Projectile.owner || timer % 7 != 0)
+            int interval = Math.Max(4, 8 - GaelGreatswordProgression.GetStage());
+            if (Main.myPlayer != Projectile.owner || timer % interval != 0)
                 return;
 
             NPC target = FindTarget();
@@ -1095,6 +1249,206 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
         }
     }
 
+    internal sealed class GaelGreatswordEmberUI : ModProjectile
+    {
+        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+
+        private static readonly Color EmptyColor = new(82, 32, 116);
+        private static readonly Color FilledColor = new(190, 22, 54);
+        private static readonly Color ReadyColor = new(244, 202, 92);
+
+        public override void SetDefaults()
+        {
+            Projectile.width = Projectile.height = 2;
+            Projectile.tileCollide = false;
+            Projectile.ignoreWater = true;
+            Projectile.penetrate = -1;
+            Projectile.timeLeft = 2;
+        }
+
+        public override bool? CanDamage() => false;
+        public override bool ShouldUpdatePosition() => false;
+
+        public override void AI()
+        {
+            Player owner = Main.player[Projectile.owner];
+            if (!owner.active || owner.dead || owner.HeldItem.type != ModContent.ItemType<NewLegendGaelsGreatsword>())
+            {
+                Projectile.Kill();
+                return;
+            }
+
+            Projectile.Center = owner.Top + new Vector2(0f, -28f);
+            Projectile.timeLeft = 2;
+        }
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            if (Main.myPlayer != Projectile.owner)
+                return false;
+
+            Player owner = Main.player[Projectile.owner];
+            GaelGreatswordPlayer gaelPlayer = owner.GetModPlayer<GaelGreatswordPlayer>();
+            Texture2D barBack = ModContent.Request<Texture2D>("CalamityMod/UI/MiscTextures/GenericBarBack").Value;
+            Texture2D barFront = ModContent.Request<Texture2D>("CalamityMod/UI/MiscTextures/GenericBarFront").Value;
+            float progress = gaelPlayer.DarkEmberRatio;
+            bool ready = gaelPlayer.DarkEmberReady;
+            float flash = Utils.GetLerpValue(0f, 18f, gaelPlayer.DarkEmberFlashTimer, true);
+            float pulse = ready ? 0.86f + MathF.Sin(Main.GlobalTimeWrappedHourly * 8f) * 0.12f : 0.78f + flash * 0.18f;
+            Color barColor = ready
+                ? Color.Lerp(FilledColor, ReadyColor, 0.58f + MathF.Sin(Main.GlobalTimeWrappedHourly * 5f) * 0.16f)
+                : Color.Lerp(EmptyColor, FilledColor, progress);
+
+            Vector2 barPosition = owner.Top - Main.screenPosition + new Vector2(-barBack.Width * 0.5f, -34f);
+            Rectangle frame = new(0, 0, (int)MathF.Ceiling(barFront.Width * progress), barFront.Height);
+
+            Main.spriteBatch.Draw(barBack, barPosition, Color.Black * 0.58f);
+            if (frame.Width > 0)
+                Main.spriteBatch.Draw(barFront, barPosition, frame, barColor * pulse);
+
+            if (ready || flash > 0f)
+            {
+                Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+                Vector2 center = barPosition + new Vector2(barBack.Width * 0.5f, barBack.Height * 0.5f);
+                Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
+                Main.EntitySpriteDraw(bloom, center, null, barColor with { A = 0 } * (ready ? 0.22f : 0.12f) * Math.Max(flash, 0.5f),
+                    0f, bloom.Size() * 0.5f, ready ? 0.42f : 0.25f + flash * 0.14f, SpriteEffects.None);
+                Main.spriteBatch.ExitShaderRegion();
+            }
+
+            return false;
+        }
+    }
+
+    internal sealed class GaelGreatswordBloodEcho : ModProjectile
+    {
+        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+
+        private const int Lifetime = 30;
+
+        private static readonly Color SoulPurple = new(86, 28, 140);
+        private static readonly Color BloodRed = new(176, 14, 42);
+        private static readonly Color PaleCore = new(230, 214, 245);
+
+        private float Power => MathHelper.Clamp(Projectile.ai[0], 0f, 1f);
+
+        public override void SetDefaults()
+        {
+            Projectile.width = Projectile.height = 260;
+            Projectile.friendly = true;
+            Projectile.DamageType = DamageClass.Melee;
+            Projectile.tileCollide = false;
+            Projectile.ignoreWater = true;
+            Projectile.penetrate = -1;
+            Projectile.timeLeft = Lifetime;
+            Projectile.usesLocalNPCImmunity = true;
+            Projectile.localNPCHitCooldown = -1;
+            Projectile.noEnchantmentVisuals = true;
+        }
+
+        public override void AI()
+        {
+            Projectile.ai[1]++;
+            Projectile.rotation += 0.08f + Power * 0.04f;
+            float progress = Projectile.ai[1] / Lifetime;
+            Lighting.AddLight(Projectile.Center, 0.28f + Power * 0.22f, 0.03f, 0.32f + Power * 0.22f);
+
+            if (Projectile.ai[1] == 1f)
+            {
+                SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.38f, Pitch = -0.28f }, Projectile.Center);
+                SpawnOpeningDust();
+            }
+
+            if (!Main.dedServ && Main.rand.NextBool(3))
+            {
+                float radius = GetRadius(progress);
+                Vector2 position = Projectile.Center + Main.rand.NextVector2CircularEdge(radius, radius);
+                Dust dust = Dust.NewDustPerfect(position, Main.rand.NextBool(3) ? DustID.Blood : DustID.Shadowflame,
+                    position.DirectionFrom(Projectile.Center) * Main.rand.NextFloat(0.8f, 2.4f), 100,
+                    Main.rand.NextBool() ? BloodRed : SoulPurple, Main.rand.NextFloat(0.9f, 1.3f));
+                dust.noGravity = true;
+            }
+        }
+
+        public override bool? CanDamage()
+        {
+            float progress = Projectile.ai[1] / Lifetime;
+            return progress >= 0.12f && progress <= 0.55f ? null : false;
+        }
+
+        public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
+        {
+            float radius = GetRadius(Projectile.ai[1] / Lifetime);
+            Vector2 closest = targetHitbox.ClosestPointInRect(Projectile.Center);
+            return closest.Distance(Projectile.Center) <= radius ? null : false;
+        }
+
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
+        {
+            modifiers.SourceDamage *= MathHelper.Lerp(1f, 0.45f, MathHelper.Clamp(Projectile.numHits / 5f, 0f, 1f));
+        }
+
+        public override void OnKill(int timeLeft)
+        {
+            if (Main.dedServ)
+                return;
+
+            for (int i = 0; i < 10; i++)
+            {
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.2f, 4.2f);
+                Dust dust = Dust.NewDustPerfect(Projectile.Center + Main.rand.NextVector2Circular(70f, 70f),
+                    Main.rand.NextBool() ? DustID.Blood : DustID.Shadowflame, velocity, 100,
+                    Main.rand.NextBool() ? BloodRed : SoulPurple, Main.rand.NextFloat(0.8f, 1.2f));
+                dust.noGravity = true;
+            }
+        }
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            if (Main.dedServ)
+                return false;
+
+            float progress = MathHelper.Clamp(Projectile.ai[1] / Lifetime, 0f, 1f);
+            float opacity = Utils.GetLerpValue(1f, 5f, Projectile.ai[1], true) * Utils.GetLerpValue(Lifetime, Lifetime - 10f, Projectile.ai[1], true);
+            float radius = GetRadius(progress);
+            Color echoColor = Color.Lerp(SoulPurple, BloodRed, 0.48f + Power * 0.25f);
+            Vector2 center = Projectile.Center - Main.screenPosition;
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D ring = ModContent.Request<Texture2D>("CalamityMod/Particles/HollowCircleHardEdge").Value;
+
+            Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
+            Main.EntitySpriteDraw(bloom, center, null, echoColor with { A = 0 } * opacity * 0.38f,
+                0f, bloom.Size() * 0.5f, radius / bloom.Width * (1.15f + Power * 0.24f), SpriteEffects.None);
+            Main.EntitySpriteDraw(ring, center, null, PaleCore with { A = 0 } * opacity * 0.72f,
+                Projectile.rotation, ring.Size() * 0.5f, radius / ring.Width * 2f, SpriteEffects.None);
+            Main.EntitySpriteDraw(ring, center, null, BloodRed with { A = 0 } * opacity * 0.44f,
+                -Projectile.rotation * 0.7f, ring.Size() * 0.5f, radius / ring.Width * 1.35f, SpriteEffects.None);
+            Main.spriteBatch.ExitShaderRegion();
+            return false;
+        }
+
+        private float GetRadius(float progress)
+        {
+            float eased = CalamityUtils.EaseInOutExp(MathHelper.Clamp(progress, 0f, 1f), 3f, 2f);
+            return MathHelper.Lerp(28f, 132f + Power * 46f, eased);
+        }
+
+        private void SpawnOpeningDust()
+        {
+            if (Main.dedServ)
+                return;
+
+            int count = 16 + (int)(Power * 10f);
+            for (int i = 0; i < count; i++)
+            {
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.6f, 5.4f + Power * 2f);
+                Dust dust = Dust.NewDustPerfect(Projectile.Center, Main.rand.NextBool(3) ? DustID.Blood : DustID.Shadowflame,
+                    velocity, 95, Main.rand.NextBool() ? BloodRed : SoulPurple, Main.rand.NextFloat(1f, 1.55f));
+                dust.noGravity = true;
+            }
+        }
+    }
+
     internal sealed class GaelGreatswordDarkSoul : ModProjectile
     {
         public override string Texture => "Terraria/Images/Projectile_" + ProjectileID.Skull;
@@ -1150,6 +1504,11 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
             modifiers.SourceDamage *= MathHelper.Lerp(1f, 0.55f, MathHelper.Clamp(Projectile.numHits / 3f, 0f, 1f));
+        }
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            Main.player[Projectile.owner].GetModPlayer<GaelGreatswordPlayer>().AddDarkEmbers(3 + GaelGreatswordProgression.GetStage() / 2);
         }
 
         public override void OnKill(int timeLeft)

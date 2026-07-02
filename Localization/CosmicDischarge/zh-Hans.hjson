@@ -4,7 +4,7 @@ Mods: {
 			Weapons: {
 				Melee: {
 					CosmicDischarge: {
-						DisplayName: 神噬裂宙弹刃
+						DisplayName: 寒宙弹刃
 						Tooltip: ""
 					}
 
@@ -15,7 +15,7 @@ Mods: {
 				}
 
 				NewLegendCosmicDischarge: {
-					DisplayName: 神噬裂宙弹刃-传奇归来
+					DisplayName: 新传奇 - 寒宙弹刃
 					Tooltip: "[GFB]"
 					WhipName: 鞭形态
 					SwordName: 剑形态

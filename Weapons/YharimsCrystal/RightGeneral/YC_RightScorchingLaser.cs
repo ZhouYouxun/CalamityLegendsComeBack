@@ -154,6 +154,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             {
                 EmitBeamFX();
                 EmitEmpoweredTipFX();
+                EmitEmpoweredSideSpray();
             }
             if (Projectile.ai[0] > -2f)
                 EmitBeamStreamFX();
@@ -368,57 +369,118 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
 
         private void EmitBeamStreamFX()
         {
-            // Streams a dense field of gold/red sparks back along the beam toward the crystal,
-            // mirroring the blade's flame-vent look but threaded along the laser's full length.
+            // 沿激光全长向水晶方向回流的光点流。
+            // 只允许小型辉光球（GlowOrbParticle）/发光点粒子（PointParticle）；
+            // 禁用大型拉伸光斑 GlowSparkParticle——体积太大，已被明确否决。
             if (Main.dedServ || Projectile.velocity == Vector2.Zero || BeamLength <= 0f)
                 return;
 
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             float halfWidth = GetCollisionWidth() * 0.45f;
-            int streamCount = (int)MathHelper.Clamp(BeamLength / 90f, 2f, 14f);
+            int streamCount = (int)MathHelper.Clamp(BeamLength / 70f, 3f, 18f);
 
             for (int i = 0; i < streamCount; i++)
             {
-                if (!Main.rand.NextBool(2))
-                    continue;
-
                 float along = Main.rand.NextFloat(BeamLength);
                 Vector2 perpendicular = direction.RotatedBy(MathHelper.PiOver2) * Main.rand.NextFloat(-halfWidth, halfWidth);
                 Vector2 position = Projectile.Center + direction * along + perpendicular;
-                Vector2 velocity = -direction * Main.rand.NextFloat(22f, 46f) + direction.RotatedByRandom(0.3f) * Main.rand.NextFloat(-2f, 2f);
+                Vector2 velocity = -direction * Main.rand.NextFloat(9f, 20f) + direction.RotatedByRandom(0.3f) * Main.rand.NextFloat(-2f, 2f);
                 Color color = Main.rand.NextBool(3) ? Color.White : Color.Lerp(LaserRed, LaserGold, Main.rand.NextFloat(0.2f, 0.9f));
 
-                GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(
-                    position,
-                    velocity,
-                    false,
-                    Main.rand.Next(10, 16),
-                    Main.rand.NextFloat(0.045f, 0.085f) * Projectile.scale,
-                    color,
-                    new Vector2(2.6f, 0.32f),
-                    true,
-                    false,
-                    0.7f));
+                if (Main.rand.NextBool())
+                {
+                    GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                        position,
+                        velocity,
+                        false,
+                        Main.rand.Next(9, 15),
+                        Main.rand.NextFloat(0.26f, 0.5f) * MathHelper.Clamp(Projectile.scale, 0.5f, 1.6f),
+                        color));
+                }
+                else
+                {
+                    GeneralParticleHandler.SpawnParticle(new PointParticle(
+                        position,
+                        velocity * 0.6f,
+                        false,
+                        Main.rand.Next(10, 16),
+                        Main.rand.NextFloat(0.6f, 1.05f),
+                        color,
+                        true));
+                }
             }
         }
 
         private void EmitEmpoweredTipFX()
         {
-            if (Main.dedServ || Main.GameUpdateCount % 3 != 0)
+            if (Main.dedServ || Main.GameUpdateCount % 2 != 0)
                 return;
 
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 endPoint = Projectile.Center + direction * BeamLength;
 
-            GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(
-                endPoint,
-                -direction.RotatedByRandom(0.9f) * Main.rand.NextFloat(4f, 14f),
-                false,
-                Main.rand.Next(8, 14),
-                Main.rand.NextFloat(0.05f, 0.1f),
-                Main.rand.NextBool(3) ? Color.White : LaserGold,
-                new Vector2(2.2f, 0.5f),
-                true));
+            for (int i = 0; i < 3; i++)
+            {
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    endPoint + Main.rand.NextVector2Circular(10f, 10f),
+                    -direction.RotatedByRandom(0.9f) * Main.rand.NextFloat(3f, 9f),
+                    false,
+                    Main.rand.Next(8, 14),
+                    Main.rand.NextFloat(0.3f, 0.6f),
+                    Main.rand.NextBool(3) ? Color.White : LaserGold));
+            }
+        }
+
+        // 重击期间：激光沿身向两侧喷出大量光点，并成对甩出金色光弹
+        private void EmitEmpoweredSideSpray()
+        {
+            if (Projectile.velocity == Vector2.Zero || BeamLength <= 0f)
+                return;
+
+            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 perpendicular = direction.RotatedBy(MathHelper.PiOver2);
+
+            if (!Main.dedServ)
+            {
+                int sprayCount = (int)MathHelper.Clamp(BeamLength / 110f, 3f, 12f);
+                for (int i = 0; i < sprayCount; i++)
+                {
+                    float along = Main.rand.NextFloat(BeamLength);
+                    int side = Main.rand.NextBool() ? 1 : -1;
+                    Vector2 position = Projectile.Center + direction * along;
+                    Vector2 velocity = perpendicular * side * Main.rand.NextFloat(5f, 14f) + direction * Main.rand.NextFloat(-1.5f, 1.5f);
+                    Color color = Main.rand.NextBool(3) ? Color.White : Color.Lerp(LaserRed, LaserGold, Main.rand.NextFloat(0.25f, 0.9f));
+
+                    if (Main.rand.NextBool())
+                        GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(position, velocity, false, Main.rand.Next(10, 17), Main.rand.NextFloat(0.3f, 0.58f), color));
+                    else
+                        GeneralParticleHandler.SpawnParticle(new PointParticle(position, velocity, false, Main.rand.Next(10, 16), Main.rand.NextFloat(0.65f, 1.1f), color, true));
+                }
+            }
+
+            // 额外弹幕：从激光上随机一点向两侧同时甩出金色光弹
+            if (Projectile.owner == Main.myPlayer && Main.GameUpdateCount % 5 == 0)
+            {
+                float along = Main.rand.NextFloat(BeamLength * 0.15f, BeamLength * 0.9f);
+                Vector2 position = Projectile.Center + direction * along;
+                for (int side = -1; side <= 1; side += 2)
+                {
+                    Vector2 velocity = (perpendicular * side).RotatedByRandom(0.22f) * Main.rand.NextFloat(9f, 13f);
+                    int bolt = Projectile.NewProjectile(
+                        Projectile.GetSource_FromThis(),
+                        position,
+                        velocity,
+                        ModContent.ProjectileType<YC_DroneShot>(),
+                        Math.Max(1, (int)(Projectile.damage * 0.4f)),
+                        Projectile.knockBack * 0.4f,
+                        Projectile.owner);
+                    if (Main.projectile.IndexInRange(bolt))
+                    {
+                        YharimsCrystalHellBladeGlobalProjectile.Mark(Main.projectile[bolt], YCWeaponForm.Crystal);
+                        Main.projectile[bolt].CritChance = Projectile.CritChance;
+                    }
+                }
+            }
         }
 
         private void DrawCellLaser()

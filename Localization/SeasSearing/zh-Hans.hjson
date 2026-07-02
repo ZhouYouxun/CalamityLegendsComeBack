@@ -3,7 +3,7 @@ Mods: {
 		Items: {
 			Weapons: {
 				SeasSearing: {
-					DisplayName: 海之烧灼：传奇归来
+					DisplayName: 新传奇 - 海之烧灼
 					Tooltip: "[GFB]"
 					Intro: "[c/58FFDA:深海辐射步枪。污染会累积、扩散，并在指令下崩坏。]"
 					LeftClick_Stage0: "[c/9AEAFF:左键：单发精准射击。每次命中叠加深渊辐射污染。]"

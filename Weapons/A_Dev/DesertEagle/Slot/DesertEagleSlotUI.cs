@@ -1,24 +1,20 @@
 using CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle.LeftClick.Rules;
 using Microsoft.Xna.Framework;
-using CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.Audio;
 using Terraria.GameContent;
 using Terraria.ID;
-using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle.Slot
 {
     /// <summary>
-    /// 中键点击沙漠之鹰后弹出的单格 UI 覆盖层（以弹幕形式存在）。
-    /// 渲染一个 Terraria 风格物品栏格子，玩家可将列表中的手枪拖入/取出。
+    /// 中键点击沙漠之鹰后弹出的单格 UI 覆盖层。
+    /// 与 SHPCLoadingUI 同架构：纯界面层实现，检测、交互、绘制全部在 Draw 阶段完成，
+    /// 因此自动暂停（gamePaused）期间也能正常弹出并放入/取出手枪。
     /// </summary>
-    public class DesertEagleSlotUI : ModProjectile, ILocalizedModType
+    public static class DesertEagleSlotUI
     {
-        public new string LocalizationCategory => "Projectiles.A_Dev";
-        public override string Texture => "CalamityLegendsComeBack/MainMenu/Backgrounds/BlankPixel";
-
         // ── 面板常量 ─────────────────────────────────────────────
         private const int PanelW = 200;
         private const int PanelH = 100;
@@ -27,25 +23,20 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle.Slot
         private static readonly Color BorderColor = new(120, 140, 200, 240);
         private static readonly Color SlotColor = new(30, 30, 60, 220);
 
-        private float Opacity
-        {
-            get => Projectile.ai[0];
-            set => Projectile.ai[0] = value;
-        }
+        // ── 状态 ────────────────────────────────────────────────
+        public static bool IsOpen { get; private set; }
+        private static float opacity;
+        private static bool closing;
 
-        private bool Closing
-        {
-            get => Projectile.ai[1] != 0;
-            set => Projectile.ai[1] = value ? 1f : 0f;
-        }
-
-        // 面板屏幕坐标（固定在画面中央偏上）
-        private Rectangle PanelRect => new(
+        // 面板屏幕坐标（raw 屏幕像素，与 SHPCLoadingUI 同坐标系；
+        // 界面层用 InterfaceScaleType.None，此时 Main.mouseX/screenWidth 都是原始像素，
+        // 绝对不要再除 UIScale——tML 只在 ScaleType.UI 的层里才做该转换，双重转换会让点击热区脱靶）
+        public static Rectangle PanelRect => new(
             (Main.screenWidth - PanelW) / 2,
             (Main.screenHeight - PanelH) / 2 - 60,
             PanelW, PanelH);
 
-        private Rectangle SlotRect
+        public static Rectangle SlotRect
         {
             get
             {
@@ -56,73 +47,76 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle.Slot
             }
         }
 
-        public override void SetStaticDefaults()
+        // ── 开关 ────────────────────────────────────────────────
+        public static void Toggle(Player player)
         {
-            ProjectileID.Sets.DrawScreenCheckFluff[Type] = 9999999;
-        }
-
-        public override void SetDefaults()
-        {
-            Projectile.width = 2;
-            Projectile.height = 2;
-            Projectile.friendly = false;
-            Projectile.hostile = false;
-            Projectile.tileCollide = false;
-            Projectile.ignoreWater = true;
-            Projectile.netImportant = true;
-            Projectile.timeLeft = int.MaxValue;
-            Projectile.penetrate = -1;
-        }
-
-        public override void AI()
-        {
-            if (Projectile.owner != Main.myPlayer)
+            if (IsOpen && !closing)
             {
-                Projectile.Kill();
-                return;
-            }
-
-            Player player = Main.LocalPlayer;
-            DesertEagleSlotPlayer slotPlayer = player.GetModPlayer<DesertEagleSlotPlayer>();
-            slotPlayer.SlotUIOpen = true;
-
-            // 跟随玩家位置（避免被剔除视野）
-            Projectile.Center = player.Center;
-
-            // 淡入/淡出
-            if (!Closing)
-            {
-                Opacity = MathHelper.Clamp(Opacity + 0.08f, 0f, 1f);
-
-                // 关闭条件：玩家打开了物品栏以外的 UI，或按下 ESC
-                bool inventoryOpen = Main.playerInventory;
-                if (!inventoryOpen)
-                {
-                    Closing = true;
-                }
+                BeginClose(player, true);
             }
             else
             {
-                Opacity -= 0.1f;
-                if (Opacity <= 0f)
+                IsOpen = true;
+                closing = false;
+                SoundEngine.PlaySound(SoundID.MenuOpen with { Pitch = 0.06f, Volume = 0.62f }, player.Center);
+            }
+        }
+
+        private static void BeginClose(Player player, bool playSound)
+        {
+            closing = true;
+            if (playSound)
+                SoundEngine.PlaySound(SoundID.MenuClose with { Pitch = 0.06f, Volume = 0.62f }, player.Center);
+        }
+
+        // ── 主入口：每帧由界面层调用（暂停时照常执行） ─────────────
+        public static void DrawAndHandle(SpriteBatch sb)
+        {
+            if (!IsOpen)
+                return;
+
+            Player player = Main.LocalPlayer;
+            DesertEagleSlotPlayer slotPlayer = player.GetModPlayer<DesertEagleSlotPlayer>();
+
+            // 关闭条件：背包被收起 → 淡出
+            if (!closing && !Main.playerInventory)
+                closing = true;
+
+            // 淡入/淡出
+            if (!closing)
+            {
+                opacity = MathHelper.Clamp(opacity + 0.08f, 0f, 1f);
+            }
+            else
+            {
+                opacity -= 0.1f;
+                if (opacity <= 0f)
                 {
-                    Projectile.Kill();
+                    opacity = 0f;
+                    IsOpen = false;
                     return;
                 }
             }
 
-            // 防止玩家使用武器（鼠标在面板区域内时拦截鼠标）
-            if (!Closing && PanelRect.Contains(Main.MouseScreen.ToPoint()))
+            // ScaleType.None 层内 Main.mouseX/Y 即原始像素，直接使用。
+            int mouseX = Main.mouseX;
+            int mouseY = Main.mouseY;
+
+            // 鼠标在面板区域内时拦截鼠标，防止误用武器/误丢物品
+            if (!closing && PanelRect.Contains(mouseX, mouseY))
             {
                 player.mouseInterface = true;
-                HandleSlotInteraction(slotPlayer);
+                Main.blockMouse = true;
+                HandleSlotInteraction(slotPlayer, mouseX, mouseY);
             }
+
+            DrawPanel(sb, slotPlayer, mouseX, mouseY);
         }
 
-        private void HandleSlotInteraction(DesertEagleSlotPlayer slotPlayer)
+        // ── 格子交互 ─────────────────────────────────────────────
+        private static void HandleSlotInteraction(DesertEagleSlotPlayer slotPlayer, int mouseX, int mouseY)
         {
-            Rectangle slot = SlotRect;
-            if (!slot.Contains(Main.MouseScreen.ToPoint()))
+            if (!SlotRect.Contains(mouseX, mouseY))
                 return;
 
             if (!Main.mouseLeft || !Main.mouseLeftRelease)
@@ -172,18 +166,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle.Slot
         }
 
         // ── 绘制 ─────────────────────────────────────────────────
-        public override bool PreDraw(ref Color lightColor)
+        private static void DrawPanel(SpriteBatch sb, DesertEagleSlotPlayer slotPlayer, int mouseX, int mouseY)
         {
-            if (Projectile.owner != Main.myPlayer || Main.dedServ || Main.gamePaused)
-                return false;
-
-            SpriteBatch sb = Main.spriteBatch;
-            sb.End();
-            sb.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp,
-                DepthStencilState.None, RasterizerState.CullCounterClockwise, null,
-                Main.UIScaleMatrix);
-
-            float opacity = Opacity;
             Rectangle panel = PanelRect;
             Rectangle slot = SlotRect;
 
@@ -191,18 +175,29 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle.Slot
             DrawRect(sb, panel, FrameColor * opacity, BorderColor * opacity);
 
             // 标题文字
-            string title = Main.LocalPlayer.HeldItem.type == ModContent.ItemType<DesertEagle>()
-                ? "[Chamber Slot]"
-                : "[Chamber Slot]";
-            Utils.DrawBorderStringFourWay(sb, FontAssets.MouseText.Value, title,
+            Utils.DrawBorderStringFourWay(sb, FontAssets.MouseText.Value, "[Chamber Slot]",
                 panel.X + 8, panel.Y + 8, Color.Silver * opacity, Color.Black * opacity, Vector2.Zero, 0.85f);
 
-            // 格子
+            // 格子（悬停时根据鼠标物品给出绿/红反馈）
+            bool hovered = slot.Contains(mouseX, mouseY);
+            bool mouseHasRegisteredGun = !Main.mouseItem.IsAir && DEBulletRegistry.IsRegisteredGun(Main.mouseItem.type);
+            bool mouseHasWrongItem = !Main.mouseItem.IsAir && !mouseHasRegisteredGun;
+
+            Color slotBorder = BorderColor;
+            if (hovered && !closing)
+            {
+                if (mouseHasRegisteredGun)
+                    slotBorder = Color.Lerp(slotBorder, Color.LimeGreen, 0.55f);
+                else if (mouseHasWrongItem)
+                    slotBorder = Color.Lerp(slotBorder, new Color(255, 90, 90), 0.5f);
+                else
+                    slotBorder = Color.Lerp(slotBorder, Color.White, 0.35f);
+            }
+
             DrawRect(sb, new Rectangle(slot.X - 2, slot.Y - 2, slot.Width + 4, slot.Height + 4),
-                SlotColor * opacity, BorderColor * opacity);
+                SlotColor * opacity, slotBorder * opacity);
 
             // 格子内物品
-            DesertEagleSlotPlayer slotPlayer = Main.LocalPlayer.GetModPlayer<DesertEagleSlotPlayer>();
             if (!slotPlayer.SlottedGun.IsAir)
             {
                 Main.instance.LoadItem(slotPlayer.SlottedGun.type);
@@ -214,6 +209,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle.Slot
                 Vector2 center = new(slot.X + slot.Width / 2f, slot.Y + slot.Height / 2f);
                 sb.Draw(itemTex, center, null, Color.White * opacity, 0f,
                     itemTex.Size() / 2f, scale, SpriteEffects.None, 0f);
+
+                if (hovered && Main.mouseItem.IsAir)
+                    Main.hoverItemName = slotPlayer.SlottedGun.Name;
             }
             else
             {
@@ -230,12 +228,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle.Slot
             Utils.DrawBorderStringFourWay(sb, FontAssets.MouseText.Value, hint,
                 panel.X + 8, panel.Y + panel.Height - 22,
                 Color.SkyBlue * 0.85f * opacity, Color.Black * opacity, Vector2.Zero, 0.72f);
-
-            sb.End();
-            sb.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState,
-                DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
-
-            return false;
         }
 
         private static void DrawRect(SpriteBatch sb, Rectangle rect, Color fill, Color border)
@@ -252,8 +244,5 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle.Slot
             sb.Draw(pixel, new Rectangle(rect.X, rect.Y, b, rect.Height), border);
             sb.Draw(pixel, new Rectangle(rect.Right - b, rect.Y, b, rect.Height), border);
         }
-
-        // 不绘制武器本身贴图
-        public override bool ShouldUpdatePosition() => false;
     }
 }

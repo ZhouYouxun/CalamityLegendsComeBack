@@ -186,19 +186,6 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
         public bool ShouldShardReleaseRainbowBolts() => DownedEmpress;
         public bool UltimateEmpowersAfterUse() => DownedYharon;
 
-        public string BuildProgressionSummary(System.Func<string, string> localize)
-        {
-            List<string> parts = new();
-            int stage = GetCompletedStageIndex();
-            int maxStage = DefaultProgressionUnlocks.GetLength(0) - 1;
-            parts.Add(string.Format(localize("Growth_Header"), stage, maxStage, GetLeftBladeScale().ToString("0.00")));
-
-            if (stage >= 0 && stage < DefaultProgressionUnlocks.GetLength(0))
-                parts.Add(localize($"Growth_Stage{stage}"));
-
-            return string.Join("\n", parts);
-        }
-
         private int GetValueForStage(int[] values, int stageIndex)
         {
             if (values == null || values.Length == 0)

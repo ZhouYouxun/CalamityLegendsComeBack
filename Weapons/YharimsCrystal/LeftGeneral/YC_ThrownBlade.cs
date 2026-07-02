@@ -19,11 +19,15 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
         private const int StateRightThrow = 3;
 
         // StateRightThrow sub-phases: launch up, hunt the nearest enemy with hard homing,
-        // dive-slam onto them, then keep carving them up before self-destructing.
+        // dive-slam onto them, then impale into the target for repeated ticks.
+        // 只在未命中时追踪；一旦真正命中就钉入敌人（参考 MiracleMatterJav），不再追踪。
         private const int RightThrowRising = 0;
         private const int RightThrowTracking = 1;
         private const int RightThrowSlamming = 2;
         private const int RightThrowCutting = 3;
+        private const int RightThrowImpaled = 4;
+        private const int ImpaleTickCount = 10;
+        private const int ImpaleTickInterval = 12;
         private const int RightThrowRiseFrames = 58;
         private const int RightThrowMaxTrackingFrames = 96;
         private const float RightThrowSlamTriggerDistance = 220f;
@@ -36,6 +40,9 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
 
         public new string LocalizationCategory => "Projectiles.YharimsCrystal";
         public override string Texture => "CalamityMod/Items/Weapons/Melee/Earth";
+
+        // 钉入时刀刃相对目标中心的偏移（视觉用，不参与netcode）
+        private Vector2 impaleOffset;
 
         public override void SetStaticDefaults()
         {
@@ -80,9 +87,16 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             if (Projectile.ai[0] == StateDirectedThrow && Projectile.localAI[0] <= 48f)
                 return false;
 
-            // No damage while it's still traveling to position — only once it's diving in or cutting.
-            if (Projectile.ai[0] == StateRightThrow && Projectile.ai[1] < RightThrowSlamming)
-                return false;
+            // No damage while it's still traveling to position — only once it's diving in or impaled.
+            if (Projectile.ai[0] == StateRightThrow)
+            {
+                if (Projectile.ai[1] < RightThrowSlamming)
+                    return false;
+
+                // 钉入后只对被钉住的目标持续跳伤
+                if (Projectile.ai[1] == RightThrowImpaled && target.whoAmI != (int)Projectile.ai[2])
+                    return false;
+            }
 
             return null;
         }
@@ -250,6 +264,13 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             }
 
             Lighting.AddLight(Projectile.Center, new Vector3(1f, 0.85f, 0.35f) * 0.65f);
+
+            if (Projectile.ai[1] == RightThrowImpaled)
+            {
+                RunRightThrowImpaled(owner);
+                return;
+            }
+
             PlayTravelWhoosh();
 
             if (Projectile.ai[1] == RightThrowRising)
@@ -355,6 +376,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
         }
 
         // A short, decisive dive burst straight into the target — the "slam" impact.
+        // 命中判定交给 OnHitNPC：真正撞到敌人才会钉入，不再切入持续切割/追踪。
         private void RunRightThrowSlamming(Player owner)
         {
             Projectile.localAI[0]++;
@@ -366,7 +388,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                 Vector2 desiredDirection = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY);
                 Vector2 currentDirection = Projectile.velocity.SafeNormalize(desiredDirection);
                 float newAngle = currentDirection.ToRotation().AngleTowards(desiredDirection.ToRotation(), MathHelper.ToRadians(34f));
-                float speed = MathHelper.Lerp(38f, 58f, Projectile.localAI[0] / (float)RightThrowSlamFrames);
+                float speed = MathHelper.Lerp(38f, 58f, MathHelper.Clamp(Projectile.localAI[0] / RightThrowSlamFrames, 0f, 1f));
                 Projectile.velocity = newAngle.ToRotationVector2() * speed;
             }
             else
@@ -374,32 +396,64 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                 Vector2 desiredDirection = (fallbackPoint - Projectile.Center).SafeNormalize(Vector2.UnitY);
                 Vector2 currentDirection = Projectile.velocity.SafeNormalize(desiredDirection);
                 float newAngle = currentDirection.ToRotation().AngleTowards(desiredDirection.ToRotation(), MathHelper.ToRadians(36f));
-                float speed = MathHelper.Lerp(42f, 62f, Projectile.localAI[0] / (float)RightThrowSlamFrames);
+                float speed = MathHelper.Lerp(42f, 62f, MathHelper.Clamp(Projectile.localAI[0] / RightThrowSlamFrames, 0f, 1f));
                 Projectile.velocity = newAngle.ToRotationVector2() * speed;
             }
 
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
             EmitRightSlamFX();
 
-            bool arrived = target != null && Vector2.Distance(Projectile.Center, target.Center) <= 90f;
-            bool groundArrived = target == null && Vector2.Distance(Projectile.Center, fallbackPoint) <= 92f;
-            if (arrived || Projectile.localAI[0] >= RightThrowSlamFrames)
+            bool groundArrived = target == null && (Vector2.Distance(Projectile.Center, fallbackPoint) <= 92f || Projectile.localAI[0] >= RightThrowSlamFrames);
+            bool missedTooLong = target != null && Projectile.localAI[0] >= RightThrowSlamFrames * 4f;
+            if (groundArrived || missedTooLong)
             {
                 TriggerSlamImpact(owner, target);
-                if (target == null)
+                SelfDestructIntoFireballs(owner);
+                Projectile.Kill();
+            }
+        }
+
+        // 钉入阶段：锁死在被命中的敌人身上，靠本地无敌帧持续跳伤（共10跳），期间完全不追踪。
+        private void RunRightThrowImpaled(Player owner)
+        {
+            int npcIndex = (int)Projectile.ai[2];
+            if (npcIndex < 0 || npcIndex >= Main.maxNPCs)
+            {
+                SelfDestructIntoFireballs(owner);
+                Projectile.Kill();
+                return;
+            }
+
+            NPC npc = Main.npc[npcIndex];
+            if (!npc.active || npc.dontTakeDamage)
+            {
+                SelfDestructIntoFireballs(owner);
+                Projectile.Kill();
+                return;
+            }
+
+            Projectile.localAI[0]++;
+            Projectile.velocity = Vector2.Zero;
+            Projectile.Center = npc.Center - impaleOffset;
+            Projectile.gfxOffY = npc.gfxOffY;
+            Projectile.rotation += (float)Math.Sin(Projectile.localAI[0] * 0.55f) * 0.02f;
+            Projectile.timeLeft = Math.Max(Projectile.timeLeft, 10);
+
+            if (!Main.dedServ)
+            {
+                if (Main.rand.NextBool(3))
                 {
-                    SelfDestructIntoFireballs(owner);
-                    Projectile.Kill();
-                    return;
+                    Dust d = Dust.NewDustPerfect(Projectile.Center + Main.rand.NextVector2Circular(20f, 20f), DustID.GoldFlame, Main.rand.NextVector2Circular(3.5f, 3.5f), 0, default, 1.2f);
+                    d.noGravity = true;
                 }
 
-                Projectile.ai[1] = RightThrowCutting;
-                Projectile.localAI[0] = 0f;
-                Projectile.netUpdate = true;
+                if ((int)Projectile.localAI[0] % ImpaleTickInterval == 0)
+                    GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(npc.Center, Vector2.Zero, new Color(255, 214, 88), Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.05f, 0.9f, 14));
             }
-            else if (groundArrived)
+
+            // 10跳打满或滞留超时便引爆成燃烧碎片
+            if (Projectile.localAI[1] >= ImpaleTickCount || Projectile.localAI[0] >= ImpaleTickInterval * (ImpaleTickCount + 2))
             {
-                TriggerSlamImpact(owner, null);
                 SelfDestructIntoFireballs(owner);
                 Projectile.Kill();
             }
@@ -776,7 +830,6 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             bool directedImpact = Projectile.ai[0] == StateDirectedThrow;
             bool rushImpact = Projectile.ai[0] == StateRightThrow;
 
-            // The right-thrown blade must keep flying and keep cutting — it never embeds in a target.
             if (Projectile.ai[0] != StateStuck && !rushImpact)
             {
                 Projectile.ai[0] = StateStuck;
@@ -801,6 +854,26 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             else if (rushImpact)
             {
                 Player owner = Main.player[Projectile.owner];
+
+                if (Projectile.ai[1] != RightThrowImpaled)
+                {
+                    // 首次命中：立刻钉入目标，停止一切追踪；本次命中记为第1跳
+                    Projectile.ai[1] = RightThrowImpaled;
+                    Projectile.ai[2] = target.whoAmI;
+                    Projectile.localAI[0] = 0f;
+                    Projectile.localAI[1] = 1f;
+                    impaleOffset = (target.Center - Projectile.Center) * 0.6f;
+                    Projectile.velocity = Vector2.Zero;
+                    Projectile.localNPCHitCooldown = ImpaleTickInterval;
+                    Projectile.timeLeft = ImpaleTickInterval * (ImpaleTickCount + 3);
+                    Projectile.netUpdate = true;
+                    TriggerSlamImpact(owner, target);
+                }
+                else
+                {
+                    Projectile.localAI[1]++;
+                }
+
                 owner.Calamity().GeneralScreenShakePower = Math.Max(owner.Calamity().GeneralScreenShakePower, 2.2f);
                 if (!Main.dedServ)
                 {
@@ -854,8 +927,9 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             Vector2 origin = texture.Size() * 0.5f;
             Vector2 drawPos = Projectile.Center - Main.screenPosition;
             SpriteEffects effects = SpriteEffects.None;
+            bool impaled = Projectile.ai[0] == StateRightThrow && Projectile.ai[1] == RightThrowImpaled;
 
-            if (Projectile.ai[0] == StateDirectedThrow || Projectile.ai[0] == StateRightThrow)
+            if (Projectile.ai[0] == StateDirectedThrow || (Projectile.ai[0] == StateRightThrow && !impaled))
             {
                 Vector2 travelDirection = GetTravelDirectionForDraw();
                 Vector2 tailDirection = -travelDirection;
@@ -879,11 +953,12 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                         (0.26f - progress * 0.1f) * pulse,
                         SpriteEffects.None);
                 }
-                Main.EntitySpriteDraw(glow, drawPos, null, new Color(255, 223, 132, 0) * 0.72f, Projectile.rotation, origin, Projectile.scale * 1.16f, effects, 0);
+                // Additive 混合下颜色必须保留不透明度，A=0 会被 SourceAlpha 因子乘成全透明
+                Main.EntitySpriteDraw(glow, drawPos, null, new Color(255, 223, 132) * 0.72f, Projectile.rotation, origin, Projectile.scale * 1.16f, effects, 0);
                 Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
             }
 
-            if (Projectile.ai[0] != StateStuck)
+            if (Projectile.ai[0] != StateStuck && !impaled)
             {
                 for (int i = Projectile.oldPos.Length - 1; i >= 0; i--)
                 {
@@ -909,6 +984,19 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                     SpriteEffects.None,
                     0);
                 Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
+            }
+
+            // 右键投掷的金色包边：刀刃本体沿环形偏移用纯金色重绘一圈
+            if (Projectile.ai[0] == StateRightThrow)
+            {
+                Color outlineGold = new Color(255, 214, 88) with { A = 0 };
+                float outlinePulse = 0.8f + 0.2f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 9f);
+                float outlineRadius = 3f * outlinePulse;
+                for (int i = 0; i < 8; i++)
+                {
+                    Vector2 outlineOffset = (MathHelper.TwoPi * i / 8f).ToRotationVector2() * outlineRadius;
+                    Main.EntitySpriteDraw(texture, drawPos + outlineOffset, null, outlineGold * 0.55f, Projectile.rotation, origin, Projectile.scale, effects, 0);
+                }
             }
 
             Main.EntitySpriteDraw(texture, drawPos, null, lightColor, Projectile.rotation, origin, Projectile.scale, effects, 0);

@@ -246,25 +246,20 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
             Vector2 tipPosition = JavelinTip - Main.screenPosition;
             Vector2 origin = texture.Size() * 0.5f;
-            float drawRotation = Projectile.rotation;
             bool facingLeft = Projectile.spriteDirection == -1;
-            if (facingLeft)
-                drawRotation -= MathHelper.PiOver2; // Rotate 90 degrees counter-clockwise when facing left
+            SpriteEffects flip = facingLeft ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+            float drawRotation = Projectile.rotation + (facingLeft ? MathHelper.PiOver2 : 0f);
 
             Color stageColor = VesuviusProgression.GetStageColor(Stage);
             bool fullVolleyReady = Owner.GetModPlayer<VesuviusRightMeteorPlayer>().HasFullReadyVolley();
             float volleyBoost = fullVolleyReady ? 1f : 0f;
-            Color chargeColor = Color.Lerp(stageColor, VesuviusProjectileVisuals.LavaGold, volleyBoost * 0.42f);
-            Color additiveColor = VesuviusProjectileVisuals.AdditiveColor(chargeColor);
+            Color additiveColor = Color.Lerp(stageColor, VesuviusProjectileVisuals.LavaGold, volleyBoost * 0.42f);
             float pullback = PullbackCompletion;
             float heat = HeatCompletion;
             float readyFlash = Utils.GetLerpValue(PullbackLength + ReadyFlashLength, PullbackLength, chargeTimer, true);
             float pulse = 0.5f + 0.5f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * (8f + Stage));
-            // GetVisualRotation 的朝左分支是按水平镜像推导的，绘制时必须配套翻转贴图（参考 BloodstoneJav），
-            // 否则朝左时贴图会顺时针偏转 90 度。
-            SpriteEffects flip = facingLeft ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
 
-            Main.spriteBatch.SetBlendState(BlendState.Additive);
+            Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
 
             float borderRadius = 1.8f + pullback * 2.2f + heat * 2.4f + volleyBoost * 2.6f;
             int borderCopies = (pullback >= 1f ? 12 : 8) + (fullVolleyReady ? 6 : 0);
@@ -279,10 +274,10 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
                 Projectile.rotation, bloom.Size() * 0.5f, 0.38f + pullback * 0.28f + heat * 0.22f + volleyBoost * 0.18f, SpriteEffects.None);
             Main.EntitySpriteDraw(bloomRing, tipPosition, null, additiveColor * (0.16f + heat * 0.34f + volleyBoost * 0.2f),
                 -Main.GlobalTimeWrappedHourly * 2.2f, bloomRing.Size() * 0.5f, 0.15f + pullback * 0.25f + heat * 0.22f + volleyBoost * 0.16f, SpriteEffects.None);
-            Main.EntitySpriteDraw(lightFlash, tipPosition, null, Color.White with { A = 0 } * (readyFlash * 0.35f + heat * 0.22f),
+            Main.EntitySpriteDraw(lightFlash, tipPosition, null, Color.White * (readyFlash * 0.35f + heat * 0.22f),
                 Projectile.rotation, lightFlash.Size() * 0.5f, new Vector2(0.34f + heat * 0.18f, 0.1f + pulse * 0.04f), SpriteEffects.None);
 
-            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
+            Main.spriteBatch.ExitShaderRegion();
 
             Main.EntitySpriteDraw(texture, drawPosition, null, lightColor, drawRotation, origin, Projectile.scale, flip);
             Main.EntitySpriteDraw(glow, drawPosition, null, Color.White with { A = 0 } * (0.5f + pullback * 0.3f + heat * 0.2f), drawRotation, glow.Size() * 0.5f, Projectile.scale, flip);
@@ -291,10 +286,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
 
         private static float GetVisualRotation(Vector2 velocity, int fallbackDirection)
         {
-            int direction = velocity.X > 0.001f ? 1 : velocity.X < -0.001f ? -1 : fallbackDirection;
-            if (direction == 0)
-                direction = 1;
-            return velocity.ToRotation() + (direction == 1 ? 0f : MathHelper.Pi) + direction * VisualRotationOffset;
+            return velocity.SafeNormalize(Vector2.UnitX * fallbackDirection).ToRotation() + VisualRotationOffset;
         }
     }
 }

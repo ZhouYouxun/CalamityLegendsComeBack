@@ -186,6 +186,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             Player owner = Main.player[Projectile.owner];
             AzureThunderPlayer thunderPlayer = owner.GetModPlayer<AzureThunderPlayer>();
+            if (thunderPlayer.HarmonyActive && Projectile.numHits == 0 && Main.myPlayer == Projectile.owner)
+                AzureThunderPlayer.SpawnHarmonyHitMark(Projectile.GetSource_FromThis(), target.Center, Projectile.owner, target.whoAmI, BigLightning ? 1.32f : 0.92f);
 
             // 最后一段左键雷可读取目标身上的电系 debuff 并转化为充能层数。
             if (GainCharge)

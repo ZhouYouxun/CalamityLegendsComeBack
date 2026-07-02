@@ -673,6 +673,26 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 target.AddBuff(ModContent.BuffType<AuricRebuke>(), duration);
         }
 
+        public static void SpawnHarmonyHitMark(IEntitySource source, Vector2 position, int owner, int targetIndex = -1, float scale = 1f)
+        {
+            if (Main.dedServ)
+                return;
+
+            int mark = Projectile.NewProjectile(
+                source,
+                position,
+                Vector2.Zero,
+                ModContent.ProjectileType<AzureThunderHarmonyImpactMark>(),
+                0,
+                0f,
+                owner,
+                targetIndex,
+                MathHelper.Clamp(scale, 0.45f, 2.6f));
+
+            if (Main.projectile.IndexInRange(mark))
+                Main.projectile[mark].netImportant = false;
+        }
+
         public static void SpawnVerticalLightning(
             IEntitySource source,
             Vector2 impactPosition,

@@ -238,6 +238,18 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.ZhuangFangYiPet
                 int damage = petPlayer.GetAzureThunderDamage(5.4f);
                 Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
+                    Projectile.Center,
+                    Vector2.Zero,
+                    ModContent.ProjectileType<ZhuangFangYiSwordFlash>(),
+                    0,
+                    0f,
+                    Projectile.owner,
+                    (target?.Center ?? focus).X,
+                    (target?.Center ?? focus).Y,
+                    1.35f);
+
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
                     target?.Center ?? focus,
                     Vector2.Zero,
                     ModContent.ProjectileType<ZhuangFangYiConvergenceController>(),
@@ -248,6 +260,18 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.ZhuangFangYiPet
                     owner.HasBuff(ModContent.BuffType<AzureThunderHarmonyBuff>()) ? 1f : 0f);
                 return;
             }
+
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                Projectile.Center,
+                Vector2.Zero,
+                ModContent.ProjectileType<ZhuangFangYiSwordFlash>(),
+                0,
+                0f,
+                Projectile.owner,
+                focus.X,
+                focus.Y,
+                0.88f);
 
             Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),

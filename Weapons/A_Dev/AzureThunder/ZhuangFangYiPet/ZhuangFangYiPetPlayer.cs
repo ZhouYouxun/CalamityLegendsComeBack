@@ -16,7 +16,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.ZhuangFangYiPet
     {
         private const int StrongAttackCooldown = 17 * 60;
         private const int HarmonyAttackCooldown = 3 * 60;
-        private const int WeakAttackInterval = 20 * 60;
+        private const int WeakAttackInterval = 25 * 60;
         private const int CandidateResolveDelay = 4;
 
         private readonly List<int> strongAttackCandidates = new List<int>();
@@ -255,7 +255,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.ZhuangFangYiPet
                 return;
             }
 
-            NPC target = FindNearestPetTarget(Player.Center, 1600f, requireElectricDebuff: false);
+            NPC target = FindNearestPetTarget(Player.Center, 1600f, requireElectricDebuff: true);
             if (target != null)
             {
                 queuedWeakTarget = target.whoAmI;

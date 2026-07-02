@@ -3,7 +3,7 @@ Mods: {
 		Items: {
 			Weapons: {
 				Malachite: {
-					DisplayName: 孔雀翎
+					DisplayName: 新传奇 - 孔雀翎
 					Tooltip: "[GFB]"
 					LeftClick0:
 						'''

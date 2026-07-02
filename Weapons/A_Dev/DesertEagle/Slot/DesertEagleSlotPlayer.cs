@@ -27,19 +27,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle.Slot
         /// <summary>PridefulHuntersPlanarRipper 射击计数器（每4发一次强化）。</summary>
         public int BurstCounter;
 
-        /// <summary>是否已有格子槽 UI 处于开启状态（防止重复生成）。</summary>
-        public bool SlotUIOpen;
-
         // ── 生命周期 ─────────────────────────────────────────────
         public override void Initialize()
         {
             SlottedGun = new Item();
             SlottedGun.SetDefaults(ItemID.None);   // Air
-        }
-
-        public override void ResetEffects()
-        {
-            SlotUIOpen = false;
         }
 
         // ── 存档 / 读档 ──────────────────────────────────────────

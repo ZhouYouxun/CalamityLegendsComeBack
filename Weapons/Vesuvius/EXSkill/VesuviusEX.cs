@@ -493,11 +493,14 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.EXSkill
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
             Vector2 origin = texture.Size() * 0.5f;
             float pulse = 0.5f + 0.5f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 10f);
-            Color color = state == 2 ? new Color(255, 90, 28, 0) : new Color(255, 210, 80, 0);
+            Color color = state == 2 ? new Color(255, 90, 28) : new Color(255, 210, 80);
 
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
             Main.EntitySpriteDraw(bloom, GunTip - Main.screenPosition, null, color * (0.28f + pulse * 0.18f), 0f, bloom.Size() * 0.5f, state == 2 ? 1.2f + pulse * 0.45f : 0.7f + pulse * 0.22f, SpriteEffects.None);
-            Main.EntitySpriteDraw(texture, drawPosition, null, lightColor, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None);
             Main.EntitySpriteDraw(glow, drawPosition, null, Color.White * (0.75f + pulse * 0.25f), Projectile.rotation, origin, Projectile.scale, SpriteEffects.None);
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
+
+            Main.EntitySpriteDraw(texture, drawPosition, null, lightColor, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None);
             return false;
         }
     }

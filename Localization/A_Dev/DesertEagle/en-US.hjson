@@ -35,7 +35,6 @@ Mods: {
 				DEBullet_HydraSnake.DisplayName: Hydra Snake Round
 				DEBullet_NeedleSpike.DisplayName: Needle Spike
 				DEBullet_StellarStar.DisplayName: Stellar Star
-				DesertEagleSlotUI.DisplayName: Chamber Slot UI
 			}
 		}
 	}
