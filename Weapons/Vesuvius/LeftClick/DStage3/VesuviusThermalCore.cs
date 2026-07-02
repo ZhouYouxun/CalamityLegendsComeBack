@@ -123,6 +123,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.DStage3
             Color coreColor = Color.Lerp(VesuviusProjectileVisuals.LavaOrange, VesuviusProjectileVisuals.HotWhite, 0.4f);
             Color additiveCore = new Color(coreColor.R, coreColor.G, coreColor.B, 0);
 
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
             for (int i = Projectile.oldPos.Length - 1; i >= 1; i--)
             {
                 Vector2 oldCenter = Projectile.oldPos[i] + Projectile.Size * 0.5f;
@@ -148,9 +149,10 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.DStage3
                 Projectile.scale * 1.4f * VesuviusProjectileVisuals.VisualScale,
                 SpriteEffects.None);
 
-            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, frame, Color.White,
+            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, frame, Color.White with { A = 0 },
                 Projectile.rotation, frame.Size() * 0.5f, Projectile.scale * 1.2f, SpriteEffects.None);
 
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
             return false;
         }
     }

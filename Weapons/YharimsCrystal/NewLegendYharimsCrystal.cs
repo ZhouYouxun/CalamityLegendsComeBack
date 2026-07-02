@@ -180,14 +180,12 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
 
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
-            string modeInfo = this.GetLocalizedValue("PrismReworkInfo");
-            string exInfo = this.GetLocalizedValue("EXInfo");
-            string growth = balance.BuildProgressionSummary(key => this.GetLocalizedValue(key));
+            string bodyInfo = this.GetLocalizedValue("TooltipBody");
             bool shiftPressed = Main.keyState.PressingShift();
             if (shiftPressed)
                 tooltips.RemoveAll(t => t.Text == "[GFB]");
             else
-                tooltips.FindAndReplace("[GFB]", modeInfo + "\n" + growth + "\n" + exInfo);
+                tooltips.FindAndReplace("[GFB]", bodyInfo);
 
             string legendarySection = shiftPressed ? this.GetLocalizedValue("LegendaryText") : this.GetLocalizedValue("LegendaryHint");
             tooltips.Add(new TooltipLine(Mod, "YharimsCrystalGoldenTechLegendaryText", legendarySection));

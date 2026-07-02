@@ -21,6 +21,8 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         private static readonly Color GoldColor = new(255, 196, 62);
         private static readonly Color FireColor = new(255, 120, 38);
 
+        private float EmbeddedFade => embedded ? Utils.GetLerpValue(40f, 0f, embedTimer, true) : 1f;
+
         public override void SetDefaults()
         {
             Projectile.width = Projectile.height = 24;
@@ -49,6 +51,11 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             }
 
             embedTimer++;
+            float fade = EmbeddedFade;
+            Lighting.AddLight(Projectile.Center, GoldColor.ToVector3() * (0.35f + fade * 0.55f));
+            if (!Main.dedServ && embedTimer % 3 == 0)
+                EmitEmbeddedDissolve(fade);
+
             if (!wallSpawned && embedTimer == 1)
             {
                 SpawnWalls();
@@ -110,6 +117,24 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             }
         }
 
+        private void EmitEmbeddedDissolve(float fade)
+        {
+            Vector2 outward = Main.rand.NextVector2CircularEdge(1f, 1f);
+            Vector2 position = Projectile.Center + outward * Main.rand.NextFloat(4f, 22f);
+            Dust dust = Dust.NewDustPerfect(position, DustID.RainbowMk2,
+                outward * Main.rand.NextFloat(0.25f, 1.1f), 80,
+                Color.Lerp(CoreColor, GoldColor, Main.rand.NextFloat()), Main.rand.NextFloat(0.7f, 1.25f) * fade);
+            dust.noGravity = true;
+
+            if (Main.rand.NextBool(2))
+            {
+                GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
+                    position, outward * Main.rand.NextFloat(0.35f, 1.6f),
+                    Color.Lerp(FireColor, GoldColor, Main.rand.NextFloat()), Color.Transparent,
+                    Main.rand.NextFloat(0.18f, 0.36f) * fade, Main.rand.Next(12, 20), Main.rand.NextFloat(-0.04f, 0.04f)));
+            }
+        }
+
         private void SpawnWalls()
         {
             if (Main.myPlayer != Projectile.owner)
@@ -147,20 +172,34 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             Texture2D bloomTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
             Vector2 origin = new(0f, swordTexture.Height);
+            float fade = EmbeddedFade;
 
             Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
-            float glowStrength = embedded ? System.MathF.Max(0f, 1f - embedTimer / 40f) : 0.55f;
+            float glowStrength = embedded ? fade : 0.55f;
             for (int i = 0; i < 6; i++)
             {
                 Vector2 offset = (MathHelper.TwoPi * i / 6f).ToRotationVector2() * 2.4f * glowStrength;
                 Main.EntitySpriteDraw(swordTexture, drawPosition + offset, null, GoldColor with { A = 0 } * glowStrength * 0.1f,
                     Projectile.rotation, origin, Projectile.scale, SpriteEffects.None);
             }
+            if (embedded)
+            {
+                float dissolveProgress = 1f - fade;
+                for (int i = 0; i < 16; i++)
+                {
+                    float angle = MathHelper.TwoPi * i / 16f + dissolveProgress * 1.7f;
+                    Vector2 offset = angle.ToRotationVector2() * MathHelper.Lerp(3f, 22f, dissolveProgress);
+                    Color copyColor = Color.Lerp(CoreColor, GoldColor, i / 16f) with { A = 0 };
+                    Main.EntitySpriteDraw(swordTexture, drawPosition + offset, null, copyColor * fade * 0.13f,
+                        Projectile.rotation, origin, Projectile.scale * (1f + dissolveProgress * 0.08f), SpriteEffects.None);
+                }
+            }
             Main.EntitySpriteDraw(bloomTexture, drawPosition, null, CoreColor with { A = 0 } * glowStrength * 0.5f,
                 0f, bloomTexture.Size() * 0.5f, 0.55f + glowStrength * 0.25f, SpriteEffects.None);
             Main.spriteBatch.ExitShaderRegion();
 
-            Main.EntitySpriteDraw(swordTexture, drawPosition, null, lightColor,
+            Color bodyColor = embedded ? Color.Lerp(lightColor, CoreColor, 0.55f) * fade : lightColor;
+            Main.EntitySpriteDraw(swordTexture, drawPosition, null, bodyColor,
                 Projectile.rotation, origin, Projectile.scale, SpriteEffects.None);
             return false;
         }

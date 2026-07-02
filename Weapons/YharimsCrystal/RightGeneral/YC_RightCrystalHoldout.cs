@@ -21,10 +21,11 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         private const int CoordinatedShutdownFrames = 120;
         private const float MainBatteryFireRate = 15f;
         private const float MainBatteryStarterWindup = 60f;
-        private static readonly int[] DroneDeploySchedule = { 1, 4, 7, 10, 13, 16 };
+        private static readonly int[] DroneDeploySchedule = { 1, 1, 1, 1, 1, 1 };
 
         private readonly BalanceYharimsCrystal balance = new();
         private int shardIndex = -1;
+        private int laserIndex = -1;
         private bool heavyAttackQueued;
         private bool leftHeldLastFrame;
         private int coordinatedCooldown;
@@ -37,6 +38,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         public float ChargeRatio => MathHelper.Clamp(HoldFrameCounter / balance.GetRightChargeFrames(), 0f, 1f);
         public bool Charged => HoldFrameCounter >= balance.GetRightChargeFrames();
         public Vector2 Muzzle => Projectile.Center + ForwardDirection * 32f;
+        // 所有无人机共用的同步时钟，保证编队一起往返
+        public float SharedSwayClock => HoldFrameCounter;
 
         protected override float HoldoutDistance => 12f;
         protected override float SoundPitch => 0.14f;
@@ -56,6 +59,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
 
             EmitChargeFX();
             MaintainEmpoweredShard();
+            MaintainMainLaser();
 
             if (Projectile.owner == Main.myPlayer)
             {
@@ -151,6 +155,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         public override void OnKill(int timeLeft)
         {
             KillProjectile(shardIndex);
+            KillProjectile(laserIndex);
 
             // Kill all associated drones
             for (int i = 0; i < Main.maxProjectiles; i++)
@@ -211,7 +216,6 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         private void FireMainBattery(bool yBeam)
         {
             Vector2 shootDirection = ForwardDirection;
-            Vector2 firingVelocity = shootDirection * 10f;
 
             if (yBeam)
             {
@@ -230,18 +234,53 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
                 Owner.SetScreenshake(6.5f);
                 if (Main.myPlayer == Projectile.owner)
                 {
-                    int laserIndex = Projectile.NewProjectile(
-                        Projectile.GetSource_FromThis(),
-                        Muzzle,
-                        firingVelocity,
-                        ModContent.ProjectileType<YC_RightScorchingLaser>(),
-                        Projectile.damage * 4,
-                        Projectile.knockBack,
-                        Projectile.owner,
-                        -1f); // ai[0] = -1 for standalone mode
+                    // 重击不再单独生成一条激光：让常驻基底激光瞬间增粗，并从炮口撒出扇形分裂激光
+                    EmpowerMainLaser();
 
-                    if (Main.projectile.IndexInRange(laserIndex))
-                        YharimsCrystalHellBladeGlobalProjectile.Mark(Main.projectile[laserIndex], YCWeaponForm.Crystal);
+                    // Spawn 1 pair of fanning split scorching lasers (much cleaner and sleeker)
+                    for (int sign = -1; sign <= 1; sign += 2)
+                    {
+                        float spread = MathHelper.ToRadians(9f) * sign;
+                        float fanDrift = MathHelper.ToRadians(0.085f) * sign;
+                        int split = Projectile.NewProjectile(
+                            Projectile.GetSource_FromThis(),
+                            Muzzle,
+                            shootDirection.RotatedBy(spread),
+                            ModContent.ProjectileType<YC_RightScorchingLaser>(),
+                            Projectile.damage,
+                            Projectile.knockBack,
+                            Projectile.owner,
+                            -(Projectile.whoAmI + 2f), // ai[0] <= -2: fanning split laser
+                            0.22f, // Thinner scale
+                            fanDrift);
+
+                        if (Main.projectile.IndexInRange(split))
+                        {
+                            YharimsCrystalHellBladeGlobalProjectile.Mark(Main.projectile[split], YCWeaponForm.Crystal);
+                            Main.projectile[split].CritChance = Projectile.CritChance;
+                        }
+                    }
+
+                    // Spray 6 high-speed golden plasma bolts to the sides as physical fanning projectiles
+                    for (int i = 0; i < 6; i++)
+                    {
+                        float spread = MathHelper.ToRadians(12f + i * 7.5f) * (i % 2 == 0 ? 1 : -1);
+                        Vector2 shotVel = shootDirection.RotatedBy(spread) * Main.rand.NextFloat(22f, 29f);
+                        int shot = Projectile.NewProjectile(
+                            Projectile.GetSource_FromThis(),
+                            Muzzle,
+                            shotVel,
+                            ModContent.ProjectileType<YC_DroneShot>(),
+                            (int)(Projectile.damage * 0.65f),
+                            Projectile.knockBack * 0.5f,
+                            Projectile.owner);
+
+                        if (Main.projectile.IndexInRange(shot))
+                        {
+                            YharimsCrystalHellBladeGlobalProjectile.Mark(Main.projectile[shot], YCWeaponForm.Crystal);
+                            Main.projectile[shot].CritChance = Projectile.CritChance;
+                        }
+                    }
                 }
             }
             else
@@ -345,6 +384,40 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             Main.EntitySpriteDraw(bloom, drawPosition, null, Color.White with { A = 0 } * (0.08f + charge * 0.28f), Projectile.rotation, bloom.Size() * 0.5f, (0.04f + charge * 0.08f) * pulse, SpriteEffects.None);
             Main.EntitySpriteDraw(ring, drawPosition, null, gold * charge * 0.58f, Main.GlobalTimeWrappedHourly * 1.7f, ring.Size() * 0.5f, (0.12f + charge * 0.22f) * pulse, SpriteEffects.None);
             return false;
+        }
+
+        // 只要右键持械存在，基底主激光就必须存在——不管有没有重击、是否在冷却
+        private void MaintainMainLaser()
+        {
+            if (Projectile.owner != Main.myPlayer)
+                return;
+
+            int laserType = ModContent.ProjectileType<YC_RightScorchingLaser>();
+            if (IsProjectileActive(laserIndex, laserType))
+                return;
+
+            laserIndex = Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                Muzzle,
+                ForwardDirection,
+                laserType,
+                Projectile.damage,
+                Projectile.knockBack,
+                Projectile.owner,
+                Projectile.whoAmI); // ai[0] >= 0：附着模式，跟随本持械
+
+            if (Main.projectile.IndexInRange(laserIndex))
+            {
+                YharimsCrystalHellBladeGlobalProjectile.Mark(Main.projectile[laserIndex], YCWeaponForm.Crystal);
+                Main.projectile[laserIndex].CritChance = Projectile.CritChance;
+            }
+        }
+
+        private void EmpowerMainLaser()
+        {
+            MaintainMainLaser();
+            if (IsProjectileActive(laserIndex, ModContent.ProjectileType<YC_RightScorchingLaser>()))
+                YC_RightScorchingLaser.Empower(Main.projectile[laserIndex]);
         }
 
         private void MaintainEmpoweredShard()

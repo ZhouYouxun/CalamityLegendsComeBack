@@ -439,6 +439,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             SoundEngine.PlaySound(SoundID.Item89 with { Volume = 0.85f, Pitch = -0.08f }, Projectile.Center);
             LeonidVisualUtils.SpawnDustBurst(Projectile.Center, MeteorColor, FromStealthRain ? 26 : 18, FromStealthRain ? 6.0f : 4.5f, FromStealthRain ? 2.4f : 1.8f);
             LeonidVisualUtils.SpawnCelestialPulse(Projectile.Center, Projectile.oldVelocity, MeteorColor, FromStealthRain ? 1.35f : 1f, FromStealthRain ? 24 : 18);
+            CLCBLightingBoltsSystem.Spawn_LeonidStarfieldMatrixBurst(Projectile.Center, FromStealthRain ? 1.8f : 1f);
 
             for (int i = 0; i < activeEffects.Length; i++)
                 activeEffects[i].OnKill(this, Owner, timeLeft);

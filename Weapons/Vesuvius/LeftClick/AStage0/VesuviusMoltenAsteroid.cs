@@ -143,8 +143,29 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.AStage0
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D texture = GetAsteroidTexture(false);
-            Color trailColor = Color.Lerp(lightColor, VesuviusProjectileVisuals.LavaOrange, 0.42f) * VesuviusProjectileVisuals.VisualIntensity;
-            CalamityUtils.DrawAfterimagesCentered(Projectile, ProjectileID.Sets.TrailingMode[Type], trailColor, 1, texture);
+
+            // 灾厄原版画法：正常混合绘制本体和残影，岩石贴图必须完整可见。
+            // 千万不要把本体放进 BlendState.Additive + A=0 的组合里——Additive 的源因子是
+            // SourceAlpha，A=0 会把整张贴图乘成全透明（此前陨石隐形就是这个原因）。
+            CalamityUtils.DrawAfterimagesCentered(Projectile, ProjectileID.Sets.TrailingMode[Type], lightColor, 1, texture);
+
+            // 叠加特效：熔岩色辉光拖尾。A=0 走默认 AlphaBlend（预乘加算）即可发光。
+            Color trailColor = (Color.Lerp(lightColor, VesuviusProjectileVisuals.LavaOrange, 0.42f) with { A = 0 }) * VesuviusProjectileVisuals.VisualIntensity;
+            for (int i = Projectile.oldPos.Length - 1; i >= 1; i--)
+            {
+                if (Projectile.oldPos[i] == Vector2.Zero)
+                    continue;
+
+                float t = (Projectile.oldPos.Length - i) / (float)Projectile.oldPos.Length;
+                Vector2 oldCenter = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
+                Main.EntitySpriteDraw(texture, oldCenter, null, trailColor * (0.34f * t), Projectile.oldRot[i], texture.Size() * 0.5f, Projectile.scale * MathHelper.Lerp(0.72f, 1f, t), SpriteEffects.None);
+            }
+
+            // Draw the solid, opaque meteor body at its current position using normal blending and light color
+            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, lightColor * Projectile.Opacity, Projectile.rotation, texture.Size() * 0.5f, Projectile.scale, SpriteEffects.None);
+
+            // Overlay the temperature glow layer
+            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, trailColor * 0.6f, Projectile.rotation, texture.Size() * 0.5f, Projectile.scale, SpriteEffects.None);
             return false;
         }
 
@@ -154,14 +175,26 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.AStage0
             if (glow == null)
                 return;
 
+            // 灾厄原版橙色包边：正常混合 + Color.White，与 CalamityMod AsteroidMolten.PostDraw 一致。
             Main.EntitySpriteDraw(
                 glow,
                 Projectile.Center - Main.screenPosition,
                 null,
-                new Color(255, 255, 255, 0) * VesuviusProjectileVisuals.VisualIntensity,
+                Color.White,
                 Projectile.rotation,
                 glow.Size() * 0.5f,
                 Projectile.scale,
+                SpriteEffects.None);
+
+            // 叠加特效：额外的高温辉光层。
+            Main.EntitySpriteDraw(
+                glow,
+                Projectile.Center - Main.screenPosition,
+                null,
+                (Color.White with { A = 0 }) * VesuviusProjectileVisuals.VisualIntensity,
+                Projectile.rotation,
+                glow.Size() * 0.5f,
+                Projectile.scale * 1.06f,
                 SpriteEffects.None);
         }
 

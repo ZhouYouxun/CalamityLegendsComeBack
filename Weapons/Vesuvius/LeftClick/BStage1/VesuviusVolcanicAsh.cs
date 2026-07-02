@@ -1,3 +1,4 @@
+using CalamityMod;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -128,6 +129,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.BStage1
             Rectangle frame = texture.Frame(1, Main.projFrames[Type], 0, Projectile.frame);
             float fade = Projectile.Opacity;
 
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
             Main.EntitySpriteDraw(
                 bloom,
                 Projectile.Center - Main.screenPosition,
@@ -142,11 +144,12 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.BStage1
             {
                 Vector2 oldCenter = Projectile.oldPos[i] + Projectile.Size * 0.5f;
                 float trailFade = (Projectile.oldPos.Length - i) / (float)Projectile.oldPos.Length;
+                Color trailColor = Color.Lerp(Color.DarkGray, VesuviusProjectileVisuals.LavaOrange, 0.18f) with { A = 0 };
                 Main.EntitySpriteDraw(
                     texture,
                     oldCenter - Main.screenPosition,
                     frame,
-                    Color.Lerp(Color.DarkGray, VesuviusProjectileVisuals.LavaOrange, 0.18f) * fade * 0.42f * trailFade * VesuviusProjectileVisuals.VisualIntensity,
+                    trailColor * fade * 0.42f * trailFade * VesuviusProjectileVisuals.VisualIntensity,
                     Projectile.rotation,
                     frame.Size() * 0.5f,
                     Projectile.scale * (0.85f + trailFade * 0.2f),
@@ -169,12 +172,13 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.BStage1
                 texture,
                 Projectile.Center - Main.screenPosition,
                 frame,
-                Color.Lerp(lightColor, VesuviusProjectileVisuals.LavaOrange, 0.55f) * fade,
+                (Color.Lerp(lightColor, VesuviusProjectileVisuals.LavaOrange, 0.55f) with { A = 0 }) * fade,
                 Projectile.rotation,
                 frame.Size() * 0.5f,
                 Projectile.scale * 1.08f,
                 SpriteEffects.None);
 
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
             return false;
         }
     }

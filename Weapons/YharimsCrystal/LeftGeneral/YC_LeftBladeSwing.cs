@@ -88,6 +88,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
 
         private static float SwordAngleOffset => MathHelper.PiOver4;
         private static float DownwardPrepBladeAngle => MathHelper.PiOver2 + SwordAngleOffset;
+        private static float MouseHoldAngleOffset => MathHelper.ToRadians(24f);
 
         private Vector2 CurrentAimDirection => (bladeAngle - SwordAngleOffset).ToRotationVector2();
 
@@ -104,9 +105,16 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             return aim.ToRotation() + SwordAngleOffset;
         }
 
+        private float GetMouseHoldTargetAngle()
+        {
+            float side = Projectile.ai[1] == 0f ? 1f : -Projectile.ai[1];
+            int facing = lockedFacingDirection == 0 ? Owner.direction : lockedFacingDirection;
+            return GetRawMouseTargetAngle() + MouseHoldAngleOffset * side * facing;
+        }
+
         private float GetSmoothedMouseTargetAngle()
         {
-            float rawTarget = GetRawMouseTargetAngle();
+            float rawTarget = GetMouseHoldTargetAngle();
             float delta = MathHelper.WrapAngle(rawTarget - smoothedMouseBladeAngle);
             float distance = MathHelper.Clamp(Math.Abs(delta) / MathHelper.Pi, 0f, 1f);
             float desiredSpeed = Math.Sign(delta) * MouseAimMaxTurnSpeed * SmootherStep(distance);
@@ -135,7 +143,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
 
         private void TurnIdleBladeTowardMouse()
         {
-            float targetAngle = GetRawMouseTargetAngle();
+            float targetAngle = GetMouseHoldTargetAngle();
             bladeAngle += MathHelper.WrapAngle(targetAngle - bladeAngle) * IdleAngleLerp;
             bladeAngularVelocity = MathHelper.Lerp(bladeAngularVelocity, 0f, 0.28f);
             smoothedMouseBladeAngle = bladeAngle;

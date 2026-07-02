@@ -18,6 +18,9 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         private const int BurstShotSpacing  = 4;   // frames between shots in a burst
         private const int TorpedoDelay      = 4;   // frames after last burst shot → fire torpedo
         private const int VentLockoutExtra  = 24;  // extra lockout for VentCooldown bursts
+        private const int ReleaseSprayCount = 2;
+        private const int ReleaseSpraySpacing = 7;
+        private const int ReleaseSprayPellets = 12;
 
         // ── Right-click state thresholds (frames) ───────────────────────────
         private const int ChargeToLockedFrames  = 60;
@@ -42,6 +45,8 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         private int torpedoPendingTimer;
         private int cachedBurstStage;
         private int cachedBurstTotal;
+        private int releaseSpraysRemaining;
+        private int releaseSprayTimer;
 
         // ── Visual timers ────────────────────────────────────────────────────
         private int   muzzleFlashTimer;
@@ -118,6 +123,15 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 }
             }
 
+            if (releaseSpraysRemaining > 0)
+            {
+                if (releaseSprayTimer > 0)
+                    releaseSprayTimer--;
+
+                if (releaseSprayTimer <= 0)
+                    FirePendingReleaseSpray();
+            }
+
             bool valid     = SeasSearing.CanUseWorldInput(Owner);
             bool leftHeld  = valid && Main.mouseLeft;
             bool rightHeld = valid && (Main.mouseRight || Owner.Calamity().mouseRight);
@@ -159,6 +173,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                     if (!rightHeld)
                     {
                         FirePressureBolt(strong: true);
+                        StartReleaseDoubleSpray();
                         EnterVentCooldown();
                         break;
                     }
@@ -325,6 +340,70 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             TriggerMuzzleFlash(8);
             SpawnMuzzleBurst(dir, burstIndex, Color.Lerp(SeasSearingPalette.RadioactiveCyan, SeasSearingPalette.ToxicGreen, 0.3f));
             SeasSearingVisualUtility.PlayDeepShot(GunTipPosition, burstIndex * 0.06f);
+        }
+
+        // Right-release double spray: same projectile family as a normal left-click round.
+        private void StartReleaseDoubleSpray()
+        {
+            releaseSpraysRemaining = ReleaseSprayCount;
+            releaseSprayTimer = 0;
+            FirePendingReleaseSpray();
+        }
+
+        private void FirePendingReleaseSpray()
+        {
+            if (releaseSpraysRemaining <= 0)
+                return;
+
+            int sprayIndex = ReleaseSprayCount - releaseSpraysRemaining;
+            FireReleaseSpray(sprayIndex);
+            releaseSpraysRemaining--;
+            releaseSprayTimer = releaseSpraysRemaining > 0 ? ReleaseSpraySpacing : 0;
+        }
+
+        private void FireReleaseSpray(int sprayIndex)
+        {
+            int stage = SS_Balance.GetLeftClickStage();
+            Vector2 dir = AimDirection;
+            Vector2 perpendicular = dir.RotatedBy(MathHelper.PiOver2);
+            float speed = 24f + Math.Clamp(stage, 0, 5) * 2f;
+            float arc = MathHelper.ToRadians(9.5f);
+            float centerBias = sprayIndex == 0 ? -0.35f : 0.35f;
+
+            for (int i = 0; i < ReleaseSprayPellets; i++)
+            {
+                float completion = ReleaseSprayPellets == 1 ? 0.5f : i / (float)(ReleaseSprayPellets - 1);
+                float angle = MathHelper.Lerp(-arc, arc, completion)
+                    + MathHelper.ToRadians(Main.rand.NextFloat(-0.7f, 0.7f))
+                    + MathHelper.ToRadians(centerBias);
+                Vector2 shotDir = dir.RotatedBy(angle);
+                Vector2 spawnOffset = perpendicular * ((i % 2 == 0 ? -1f : 1f) * (3.5f + sprayIndex * 1.2f))
+                    + Main.rand.NextVector2Circular(1.6f, 1.6f);
+
+                int idx = Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    GunTipPosition + dir * 9f + spawnOffset,
+                    shotDir * speed * Main.rand.NextFloat(0.94f, 1.06f),
+                    ModContent.ProjectileType<SeasSearingPollutionRound>(),
+                    Projectile.damage,
+                    Projectile.knockBack,
+                    Projectile.owner,
+                    0f,
+                    stage);
+
+                if (Main.projectile.IndexInRange(idx))
+                {
+                    Main.projectile[idx].CritChance = Owner.GetWeaponCrit(Owner.HeldItem);
+                    Main.projectile[idx].ArmorPenetration += 18;
+                }
+            }
+
+            ApplyRecoil(11.5f + sprayIndex * 3.2f);
+            TriggerMuzzleFlash(18 + sprayIndex * 4);
+            resonanceGlow = Math.Max(resonanceGlow, 1.1f);
+            Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, 3.6f + sprayIndex * 1.1f);
+            SpawnReleaseSprayVisuals(dir, sprayIndex);
+            SeasSearingVisualUtility.PlayDeepShot(GunTipPosition, -0.18f + sprayIndex * 0.08f);
         }
 
         // 尝试使用背包中的特殊子弹开火，返回 true 表示已处理（跳过默认弹幕）
@@ -728,6 +807,47 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         // ────────────────────────────────────────────────────────────────────
         // DRAWING
         // ────────────────────────────────────────────────────────────────────
+
+        private void SpawnReleaseSprayVisuals(Vector2 direction, int sprayIndex)
+        {
+            if (Main.dedServ) return;
+
+            Color pressureTint = Color.Lerp(SeasSearingPalette.PressureBlue, SeasSearingPalette.RadioactiveCyan, 0.45f);
+            Color toxinTint = Color.Lerp(SeasSearingPalette.ToxicGreen, SeasSearingPalette.BiohazardLime, 0.35f);
+            Vector2 muzzle = GunTipPosition;
+
+            for (int i = 0; i < 24; i++)
+            {
+                float spread = MathHelper.Lerp(-0.36f, 0.36f, i / 23f) + Main.rand.NextFloat(-0.05f, 0.05f);
+                Vector2 vel = direction.RotatedBy(spread) * Main.rand.NextFloat(3.6f, 9.4f);
+                Dust jet = Dust.NewDustPerfect(
+                    muzzle + Main.rand.NextVector2Circular(4f, 4f),
+                    i % 3 == 0 ? DustID.Water : DustID.GemEmerald,
+                    vel,
+                    90,
+                    Color.Lerp(pressureTint, toxinTint, Main.rand.NextFloat(0.15f, 0.85f)),
+                    Main.rand.NextFloat(0.8f, 1.45f));
+                jet.noGravity = true;
+                jet.fadeIn = 0.6f;
+            }
+
+            for (int i = 0; i < 10; i++)
+            {
+                Vector2 vel = -direction.RotatedByRandom(0.42f) * Main.rand.NextFloat(1.0f, 3.6f);
+                Dust smoke = Dust.NewDustPerfect(
+                    muzzle - direction * Main.rand.NextFloat(3f, 18f),
+                    DustID.Smoke,
+                    vel,
+                    150,
+                    Color.Lerp(SeasSearingPalette.AbyssBlack, SeasSearingPalette.FalloutAsh, Main.rand.NextFloat(0.35f, 0.75f)),
+                    Main.rand.NextFloat(0.65f, 1.15f));
+                smoke.noGravity = true;
+            }
+
+            SeasSearingVisualUtility.SpawnPressureRing(muzzle + direction * 6f, 4.5f + sprayIndex * 0.8f, 15f + sprayIndex * 4f, 22, pressureTint);
+            SeasSearingVisualUtility.SpawnAbyssDust(muzzle + direction * 12f, 14, 5.2f + sprayIndex, 10f, 0.95f);
+            SeasSearingVisualUtility.ShakeAt(muzzle, 4.6f + sprayIndex * 1.4f, 1300f);
+        }
 
         public override bool PreDraw(ref Color lightColor)
         {

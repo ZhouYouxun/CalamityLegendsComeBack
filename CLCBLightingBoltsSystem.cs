@@ -1760,6 +1760,129 @@ namespace CalamityLegendsComeBack
 
 
 
+        // 狮子座源初-星空矩阵爆发【左键彗星命中 intensity=1f；潜伏彗星命中 intensity 调高更绚丽】
+        // 结构：① 中心十字耀星 ② 旋转点阵星格（矩阵排布的光点，向外扩散） ③ 星座四芒主星 ④ 外圈漂移星尘
+        public static void Spawn_LeonidStarfieldMatrixBurst(Vector2 center, float intensity = 1f)
+        {
+            // 星空调色盘：深空蓝 → 层云蓝 → 月光紫 → 月白 → 星金
+            Color deepBlue = new Color(18, 42, 168);
+            Color stratusBlue = new Color(82, 216, 255);
+            Color moonViolet = new Color(172, 150, 255);
+            Color moonWhite = new Color(224, 240, 255);
+            Color starGold = new Color(255, 226, 104);
+
+            // ① 中心十字耀星：一横一竖两条细长光带叠成四芒闪光
+            for (int axis = 0; axis < 2; axis++)
+            {
+                PrettySparkleParticle flash = _poolPrettySparkle.RequestParticle();
+                flash.ColorTint = moonWhite;
+                flash.LocalPosition = center;
+                flash.Velocity = Vector2.Zero;
+                flash.Rotation = axis * MathHelper.PiOver2;
+                flash.Scale = new Vector2(3.8f * intensity, 0.62f);
+                flash.FadeInNormalizedTime = 0.01f;
+                flash.FadeOutNormalizedTime = 0.7f;
+                flash.TimeToLive = 18;
+                flash.FadeInEnd = 3;
+                flash.FadeOutStart = 8;
+                flash.FadeOutEnd = 18;
+                flash.AdditiveAmount = 1f;
+                Main.ParticleSystem_World_OverPlayers.Add(flash);
+            }
+
+            // ② 旋转点阵星格：整块方形矩阵随机基旋转，只保留半径内的格点，随后整体向外缓慢扩散
+            float baseRotation = Main.rand.NextFloat(MathHelper.TwoPi);
+            int gridHalf = intensity >= 1.4f ? 3 : 2; // 5×5 或 7×7 点阵
+            float cellSize = 15f;
+            float maxRadius = gridHalf * cellSize + 2f;
+            for (int gx = -gridHalf; gx <= gridHalf; gx++)
+            {
+                for (int gy = -gridHalf; gy <= gridHalf; gy++)
+                {
+                    Vector2 cell = new Vector2(gx, gy) * cellSize;
+                    float cellDist = cell.Length();
+                    if (cellDist > maxRadius)
+                        continue;
+
+                    Vector2 offset = cell.RotatedBy(baseRotation);
+                    float ring = cellDist / maxRadius; // 0=中心 1=外缘
+
+                    PrettySparkleParticle dot = _poolPrettySparkle.RequestParticle();
+                    Color latticeColor = Color.Lerp(stratusBlue, moonViolet, ring);
+                    if ((gx + gy) % 2 == 0)
+                        latticeColor = Color.Lerp(latticeColor, moonWhite, 0.35f); // 棋盘式明暗交错，强化矩阵感
+                    dot.ColorTint = latticeColor;
+                    dot.LocalPosition = center + offset;
+                    dot.Velocity = offset.SafeNormalize(Vector2.UnitY) * (0.35f + ring * 1.7f) * intensity;
+                    dot.Rotation = baseRotation + MathHelper.PiOver4;
+                    dot.Scale = new Vector2(0.46f, 0.46f) * (0.85f + 0.3f * (1f - ring));
+                    dot.FadeInNormalizedTime = 0.05f;
+                    dot.FadeOutNormalizedTime = 0.8f;
+                    dot.TimeToLive = 24 + (int)(ring * 14f);
+                    dot.FadeInEnd = 4;
+                    dot.FadeOutStart = 12;
+                    dot.FadeOutEnd = dot.TimeToLive;
+                    dot.AdditiveAmount = 0.72f;
+                    Main.ParticleSystem_World_OverPlayers.Add(dot);
+                }
+            }
+
+            // ③ 星座四芒主星：外圈散布的大星，每颗由两条互相垂直的细长闪光叠成，缓慢外漂
+            int starCount = (int)(7f * intensity);
+            for (int i = 0; i < starCount; i++)
+            {
+                float starAngle = MathHelper.TwoPi * i / starCount + Main.rand.NextFloat(-0.35f, 0.35f);
+                float starDist = Main.rand.NextFloat(26f, 62f) * intensity;
+                Vector2 starPos = center + starAngle.ToRotationVector2() * starDist;
+                Vector2 starDrift = starAngle.ToRotationVector2() * Main.rand.NextFloat(0.5f, 1.3f);
+                float sparkleRot = Main.rand.NextFloat(MathHelper.TwoPi);
+                bool golden = i % 4 == 3; // 每第四颗点上星金，像夜空里最亮的那几颗
+                Color starColor = golden
+                    ? Color.Lerp(starGold, moonWhite, Main.rand.NextFloat(0.2f, 0.45f))
+                    : Color.Lerp(moonViolet, moonWhite, Main.rand.NextFloat(0.25f, 0.6f));
+                int starLife = Main.rand.Next(26, 44);
+                float starLen = Main.rand.NextFloat(1.5f, 2.5f) * (golden ? 1.25f : 1f);
+
+                for (int axis = 0; axis < 2; axis++)
+                {
+                    PrettySparkleParticle star = _poolPrettySparkle.RequestParticle();
+                    star.ColorTint = starColor;
+                    star.LocalPosition = starPos;
+                    star.Velocity = starDrift;
+                    star.Rotation = sparkleRot + axis * MathHelper.PiOver2;
+                    star.Scale = new Vector2(starLen, 0.4f);
+                    star.FadeInNormalizedTime = 0.08f;
+                    star.FadeOutNormalizedTime = 0.82f;
+                    star.TimeToLive = starLife;
+                    star.FadeInEnd = 6;
+                    star.FadeOutStart = starLife / 2;
+                    star.FadeOutEnd = starLife;
+                    star.AdditiveAmount = golden ? 0.92f : 0.7f;
+                    Main.ParticleSystem_World_OverPlayers.Add(star);
+                }
+            }
+
+            // ④ 漂移星尘：细碎光点向四周洒开，深蓝到月白渐层，拖出星野的纵深感
+            int dustCount = (int)(13f * intensity);
+            for (int i = 0; i < dustCount; i++)
+            {
+                PrettySparkleParticle stardust = _poolPrettySparkle.RequestParticle();
+                float depth = Main.rand.NextFloat();
+                stardust.ColorTint = Color.Lerp(deepBlue, depth > 0.7f ? moonWhite : stratusBlue, depth);
+                stardust.LocalPosition = center + Main.rand.NextVector2Circular(10f, 10f);
+                stardust.Velocity = Main.rand.NextVector2Circular(1f, 1f).SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(1.2f, 4.8f) * intensity;
+                stardust.Rotation = Main.rand.NextFloat(MathHelper.TwoPi);
+                stardust.Scale = new Vector2(Main.rand.NextFloat(0.24f, 0.4f));
+                stardust.FadeInNormalizedTime = 0.05f;
+                stardust.FadeOutNormalizedTime = 0.85f;
+                stardust.TimeToLive = Main.rand.Next(30, 52);
+                stardust.FadeInEnd = 5;
+                stardust.FadeOutStart = 18;
+                stardust.FadeOutEnd = stardust.TimeToLive;
+                stardust.AdditiveAmount = 0.55f;
+                Main.ParticleSystem_World_OverPlayers.Add(stardust);
+            }
+        }
 
     }
 }

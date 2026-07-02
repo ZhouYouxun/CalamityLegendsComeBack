@@ -122,12 +122,10 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 OnFullCharge();
             }
 
+            // 按住右键时点击左键：直接投掷刀片，盾牌保持举起（不 Kill，
+            // 否则下一帧盾牌状态标志被清空、左键仍按住会漏出左键挥舞弹幕）
             if (leftJustPressed && Main.myPlayer == Projectile.owner)
-            {
                 TriggerBladePlunge();
-                Projectile.Kill();
-                return;
-            }
 
             EmitGuardFlames();
         }
@@ -180,7 +178,9 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 BalanceAegisBlade.ShieldDashMaximumDistance, DashPower);
 
             // 速度 = 原冲刺速度的33%，不强制停止，交由物理减速
-            Owner.velocity = dashDirection * dashDistance / DashDuration * 0.33f;
+            // 蓄满力后冲刺加速度提升200%（×3）
+            float fullChargeAccelMultiplier = ChargeUnlocked && Charge >= FullChargeTime ? 3f : 1f;
+            Owner.velocity = dashDirection * dashDistance / DashDuration * 0.33f * fullChargeAccelMultiplier;
 
             // DashDestination 存储方向单位向量（非零即代表处于冲刺中）
             DashDestination = dashDirection;

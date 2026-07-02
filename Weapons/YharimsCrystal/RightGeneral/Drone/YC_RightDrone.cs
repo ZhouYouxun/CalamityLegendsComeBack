@@ -29,6 +29,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
 
         private const int ShutdownFrames = 120;
         private const int SwapIntervalFrames = 30;
+        private const int HeavyLungeFrames = 42;
 
         public int SlotIndex => (int)Projectile.ai[0];
         public int ParentHoldoutIndex => (int)Projectile.ai[1];
@@ -56,7 +57,6 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         private int time;
         private int firingDelay = 15;
         private float postFireCooldown;
-        private bool movingPositive;
 
         public override void SetStaticDefaults()
         {
@@ -83,7 +83,6 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             int side = SlotIndex % 2 == 0 ? -1 : 1;
             float maxPerp = GetFormationLane(SlotIndex).perpDistance;
             PerpOffset = side * maxPerp;
-            movingPositive = side > 0;
         }
 
         public override bool ShouldUpdatePosition() => false;
@@ -124,7 +123,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             }
 
             Vector2 ownerToMouse = NewLegendYharimsCrystal.GetMouseWorld(Owner) - Owner.MountedCenter;
-            UpdateFormationPosition(ownerToMouse);
+            UpdateFormationPosition(ownerToMouse, holdout);
 
             ShootingTimer++;
             time++;
@@ -144,7 +143,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             _ => (30f, 80f),
         };
 
-        private void UpdateFormationPosition(Vector2 ownerToMouse)
+        private void UpdateFormationPosition(Vector2 ownerToMouse, YC_RightCrystalHoldout holdout)
         {
             Vector2 aimDir = ownerToMouse.SafeNormalize(Vector2.UnitX * Owner.direction);
             int direction = Math.Sign(ownerToMouse.X);
@@ -153,17 +152,24 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
 
             (float along, float maxPerp) = GetFormationLane(SlotIndex);
             Vector2 perpDir = aimDir.RotatedBy(MathHelper.PiOver2);
-            if (time % SwapIntervalFrames == 0)
-                movingPositive = !movingPositive;
 
+            // 奥密克戎式协同：全体无人机读取持械弹幕的同一个时钟，
+            // 摆动方向由时钟直接推导，因此所有僚机在同一帧一起换向、一起往返。
+            float sharedTime = holdout?.SharedSwayClock ?? time;
             int slotSide = SlotIndex % 2 == 0 ? -1 : 1;
-            float targetPerp = maxPerp * slotSide * (movingPositive ? 1f : -1f);
-            PerpOffset = MathHelper.Lerp(PerpOffset, targetPerp, 0.085f);
-            float drift = MathF.Sin(time * 0.05f + SlotIndex * 1.7f) * 5f;
+            float basePerp = maxPerp * slotSide;
+            // Both sides sway in the same direction globally so they move as a single rigid body
+            float globalSway = (float)Math.Sin(sharedTime * 0.06f) * 32f;
+            PerpOffset = basePerp + globalSway;
+
+            float lungeProgress = postFireCooldown > ShutdownFrames - HeavyLungeFrames
+                ? MathHelper.Clamp((ShutdownFrames - postFireCooldown) / HeavyLungeFrames, 0f, 1f)
+                : 0f;
+            float lungeDistance = SmootherBell(lungeProgress) * 196f;
 
             // Attack lunge: darts toward the target's direction on firing, then eases back —
             // a bell curve so it's a genuine there-and-back dart, not a linear snap.
-            Projectile.Center = Owner.MountedCenter + aimDir * along + perpDir * (PerpOffset + drift);
+            Projectile.Center = Owner.MountedCenter + aimDir * (along + lungeDistance) + perpDir * PerpOffset;
             Projectile.velocity = Projectile.velocity.ToRotation().AngleTowards(aimDir.ToRotation(), 0.2f).ToRotationVector2();
             Projectile.rotation = (NewLegendYharimsCrystal.GetMouseWorld(Owner) - Projectile.Center)
                 .SafeNormalize(Vector2.UnitX).ToRotation();
@@ -178,6 +184,20 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             firingDelay = 15;
             Shoot(true);
             Projectile.netUpdate = true;
+        }
+
+        private static float SmootherBell(float progress)
+        {
+            progress = MathHelper.Clamp(progress, 0f, 1f);
+            float up = SmootherStep(MathHelper.Clamp(progress / 0.42f, 0f, 1f));
+            float down = 1f - SmootherStep(MathHelper.Clamp((progress - 0.58f) / 0.42f, 0f, 1f));
+            return up * down;
+        }
+
+        private static float SmootherStep(float progress)
+        {
+            progress = MathHelper.Clamp(progress, 0f, 1f);
+            return progress * progress * progress * (progress * (progress * 6f - 15f) + 10f);
         }
 
         private void Shoot(bool isGrenade)
@@ -415,7 +435,6 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             writer.Write(Projectile.rotation);
             writer.Write(Projectile.spriteDirection);
             writer.Write(PerpOffset);
-            writer.Write(movingPositive);
             writer.Write(ShootingTimer);
             writer.Write(time);
             writer.Write(firingDelay);
@@ -427,7 +446,6 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             Projectile.rotation = reader.ReadSingle();
             Projectile.spriteDirection = reader.ReadInt32();
             PerpOffset = reader.ReadSingle();
-            movingPositive = reader.ReadBoolean();
             ShootingTimer = reader.ReadSingle();
             time = reader.ReadInt32();
             firingDelay = reader.ReadInt32();

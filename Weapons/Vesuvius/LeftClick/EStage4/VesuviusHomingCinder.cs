@@ -166,12 +166,13 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.EStage4
             Texture2D texture = TextureAssets.Projectile[Type].Value;
             Rectangle frame = texture.Frame(1, Main.projFrames[Type], 0, Projectile.frame);
 
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
             // Glowing afterimage trail
             for (int i = Projectile.oldPos.Length - 1; i >= 1; i--)
             {
                 Vector2 oldCenter = Projectile.oldPos[i] + Projectile.Size * 0.5f;
                 float t = (Projectile.oldPos.Length - i) / (float)Projectile.oldPos.Length;
-                Color trailC = VesuviusProjectileVisuals.LavaOrange * (t * 0.32f * VesuviusProjectileVisuals.VisualIntensity);
+                Color trailC = (VesuviusProjectileVisuals.LavaOrange with { A = 0 }) * (t * 0.32f * VesuviusProjectileVisuals.VisualIntensity);
                 Main.EntitySpriteDraw(texture, oldCenter - Main.screenPosition, frame,
                     trailC, Projectile.rotation, frame.Size() * 0.5f,
                     Projectile.scale * MathHelper.Lerp(0.55f, 1f, t), SpriteEffects.None);
@@ -179,9 +180,10 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.EStage4
 
             // Main cinder sprite
             Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, frame,
-                Color.Lerp(lightColor, VesuviusProjectileVisuals.LavaGold, 0.55f),
+                Color.Lerp(lightColor, VesuviusProjectileVisuals.LavaGold, 0.55f) with { A = 0 },
                 Projectile.rotation, frame.Size() * 0.5f, Projectile.scale, SpriteEffects.None);
 
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
             return false;
         }
     }

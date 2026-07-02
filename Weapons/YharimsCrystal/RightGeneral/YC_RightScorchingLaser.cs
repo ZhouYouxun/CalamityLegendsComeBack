@@ -18,19 +18,51 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
     {
         private const float MaxBeamLength = 2600f;
         private const int SampleCount = 3;
+        private const int SplitBeamLifetime = 48;
+        // 重击后基底激光保持增粗状态的帧数
+        public const int EmpowerDuration = 85;
         private static readonly Color LaserRed = new(255, 70, 32);
         private static readonly Color LaserGold = new(255, 216, 92);
+        private static readonly Color PristineGold = new(255, 224, 78);
 
         private readonly BalanceYharimsCrystal balance = new();
+        private bool wasEmpowered;
 
         public new string LocalizationCategory => "Projectiles.YharimsCrystal";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
-        private int HoldoutIndex => (int)Projectile.ai[0];
-        private bool IsStandalone => HoldoutIndex < 0;
+        // ai[0] >= 0：附着模式，值为持械弹幕索引（常驻基底激光）
+        // ai[0] == -1：自由独立激光
+        // ai[0] <= -2：分裂激光，锚定持械索引 = -ai[0] - 2
+        // 附着模式 ai[1]：重击增粗剩余帧数；分裂模式 ai[1]：宽度倍率，ai[2]：每帧扇形漂移弧度
+        private bool IsStandalone => Projectile.ai[0] < 0f;
+        private int AnchorIndex => Projectile.ai[0] >= 0f ? (int)Projectile.ai[0] : (int)(-Projectile.ai[0]) - 2;
+        private ref float EmpowerFramesLeft => ref Projectile.ai[1];
+        private float SplitScale => Projectile.ai[1] <= 0f ? 1f : Projectile.ai[1];
+        private float FanDrift => Projectile.ai[2];
         private ref float Timer => ref Projectile.localAI[0];
         private ref float BeamLength => ref Projectile.localAI[1];
         private YCRightLaserVisualTier Tier => balance.GetRightLaserTier();
+        private bool Empowered => !IsStandalone && EmpowerFramesLeft > 0f;
+
+        private float EmpowerBoost
+        {
+            get
+            {
+                if (!Empowered)
+                    return 1f;
+
+                float ramp = Utils.GetLerpValue(EmpowerDuration, EmpowerDuration - 7f, EmpowerFramesLeft, true);
+                float fade = Utils.GetLerpValue(0f, 16f, EmpowerFramesLeft, true);
+                return 1f + 1.5f * ramp * fade;
+            }
+        }
+
+        public static void Empower(Projectile laser)
+        {
+            laser.ai[1] = EmpowerDuration;
+            laser.netUpdate = true;
+        }
 
         public override void SetStaticDefaults()
         {
@@ -59,7 +91,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             YharimsCrystalHellBladeGlobalProjectile.Mark(Projectile, YCWeaponForm.Crystal);
             if (IsStandalone)
             {
-                Projectile.timeLeft = 48;
+                Projectile.timeLeft = SplitBeamLifetime;
                 return;
             }
             SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/PlasmaBolt") { Volume = 0.42f, Pitch = -0.15f, MaxInstances = 4 }, Projectile.Center);
@@ -70,18 +102,27 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             if (IsStandalone)
             {
                 Timer++;
+
+                // 分裂激光锚定在水晶炮口上，方向按自身漂移量持续张开
+                if (TryGetHoldout(AnchorIndex, out _, out YC_RightCrystalHoldout anchor))
+                    Projectile.Center = anchor.Muzzle;
+
+                if (FanDrift != 0f)
+                    Projectile.velocity = Projectile.velocity.RotatedBy(FanDrift);
+
                 Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitX);
                 Projectile.rotation = Projectile.velocity.ToRotation();
-                Projectile.scale = GetBeamScale();
+                Projectile.scale = GetBeamScale() * SplitScale;
                 UpdateBeamLength();
                 EmitBeamFX();
-                EmitBeamStreamFX();
+                if (Projectile.ai[0] > -2f)
+                    EmitBeamStreamFX();
                 CastBeamLight();
                 // timeLeft decrements naturally — no refresh
                 return;
             }
 
-            if (!TryGetHoldout(out Projectile holdoutProjectile, out YC_RightCrystalHoldout holdout))
+            if (!TryGetHoldout(AnchorIndex, out Projectile holdoutProjectile, out YC_RightCrystalHoldout holdout))
             {
                 Projectile.Kill();
                 return;
@@ -93,14 +134,29 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             Projectile.Center = holdout.Muzzle;
             Projectile.velocity = holdout.ForwardDirection;
             Projectile.rotation = Projectile.velocity.ToRotation();
-            Projectile.scale = GetBeamScale();
+            Projectile.scale = GetBeamScale() * EmpowerBoost;
 
             float empower = owner.GetModPlayer<YharimsCrystalStatePlayer>().CrystalEmpowered ? 1.35f : 1f;
-            Projectile.damage = Math.Max(1, (int)(holdoutProjectile.damage * GetDamageMultiplier() * empower));
+            float sustain = Empowered ? 2.4f : 0.55f;
+            Projectile.damage = Math.Max(1, (int)(holdoutProjectile.damage * GetDamageMultiplier() * empower * sustain));
 
             UpdateBeamLength();
+
+            bool empoweredNow = EmpowerFramesLeft > 0f;
+            if (empoweredNow && !wasEmpowered)
+                TriggerEmpowerBurst();
+            wasEmpowered = empoweredNow;
+            if (empoweredNow)
+                EmpowerFramesLeft--;
+
             EmitBeamFX();
-            EmitBeamStreamFX();
+            if (empoweredNow)
+            {
+                EmitBeamFX();
+                EmitEmpoweredTipFX();
+            }
+            if (Projectile.ai[0] > -2f)
+                EmitBeamStreamFX();
             CastBeamLight();
         }
 
@@ -138,31 +194,44 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             if (Projectile.velocity == Vector2.Zero || BeamLength <= 0f)
                 return false;
 
-            DrawClassicLaser();
-            if (Tier == YCRightLaserVisualTier.Classic)
-                return false;
-
-            return Tier switch
+            if (IsStandalone)
             {
-                YCRightLaserVisualTier.Cell => DrawCellLaser(),
-                YCRightLaserVisualTier.MoonLord => DrawMoonLordLaser(),
-                YCRightLaserVisualTier.Providence => DrawProvidenceLaser(),
-                YCRightLaserVisualTier.Yharon => DrawYharonLaser(),
-                _ => false,
-            };
+                DrawProvidenceStyleBeam(PristineGold);
+                return false;
+            }
+
+            DrawClassicLaser();
+            switch (Tier)
+            {
+                case YCRightLaserVisualTier.Cell:
+                    DrawCellLaser();
+                    break;
+                case YCRightLaserVisualTier.MoonLord:
+                    DrawMoonLordLaser();
+                    break;
+                case YCRightLaserVisualTier.Providence:
+                    DrawProvidenceLaser();
+                    break;
+                case YCRightLaserVisualTier.Yharon:
+                    DrawYharonLaser();
+                    break;
+            }
+
+            // PF 圣光射线风格的基底主激光：右键持械期间永远绘制
+            DrawProvidenceStyleBeam(Color.Lerp(LaserRed, LaserGold, 0.55f));
+            return false;
         }
 
-        private bool TryGetHoldout(out Projectile holdoutProjectile, out YC_RightCrystalHoldout holdout)
+        private static bool TryGetHoldout(int index, out Projectile holdoutProjectile, out YC_RightCrystalHoldout holdout)
         {
             holdoutProjectile = null;
             holdout = null;
 
-            if (HoldoutIndex < 0 || HoldoutIndex >= Main.maxProjectiles)
+            if (index < 0 || index >= Main.maxProjectiles)
                 return false;
 
-            Projectile candidate = Main.projectile[HoldoutIndex];
+            Projectile candidate = Main.projectile[index];
             if (!candidate.active ||
-                candidate.owner != Projectile.owner ||
                 candidate.type != ModContent.ProjectileType<YC_RightCrystalHoldout>() ||
                 candidate.ModProjectile is not YC_RightCrystalHoldout holdoutMod)
             {
@@ -230,6 +299,47 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             };
         }
 
+        private void TriggerEmpowerBurst()
+        {
+            if (BeamLength <= 0f)
+                UpdateBeamLength();
+
+            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 endPoint = Projectile.Center + direction * BeamLength;
+
+            if (!Main.dedServ)
+            {
+                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/LargeWeaponFire") { Volume = 0.5f, Pitch = -0.1f, MaxInstances = 3 }, Projectile.Center);
+                GeneralParticleHandler.SpawnParticle(new StrongBloom(Projectile.Center, Vector2.Zero, LaserGold, 1.15f, 18));
+                GeneralParticleHandler.SpawnParticle(new StrongBloom(endPoint, Vector2.Zero, Color.Lerp(LaserRed, LaserGold, 0.4f), 1.4f, 22));
+                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(endPoint, Vector2.Zero, LaserGold, Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.1f, 1.6f, 20));
+
+                for (int i = 0; i < 26; i++)
+                {
+                    Vector2 sparkVelocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(5f, 17f);
+                    Dust dust = Dust.NewDustPerfect(endPoint, Main.rand.NextBool(4) ? 267 : DustID.GoldFlame, sparkVelocity, 0, Main.rand.NextBool(3) ? Color.White : LaserGold, Main.rand.NextFloat(1.2f, 1.9f));
+                    dust.noGravity = true;
+                }
+            }
+
+            if (Projectile.owner == Main.myPlayer)
+            {
+                int blast = Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    endPoint,
+                    Vector2.Zero,
+                    ModContent.ProjectileType<YC_LaserBlast>(),
+                    Math.Max(1, (int)(Projectile.damage * 1.5f)),
+                    Projectile.knockBack,
+                    Projectile.owner);
+                if (Main.projectile.IndexInRange(blast))
+                {
+                    YharimsCrystalHellBladeGlobalProjectile.Mark(Main.projectile[blast], YCWeaponForm.Crystal);
+                    Main.projectile[blast].CritChance = Projectile.CritChance;
+                }
+            }
+        }
+
         private void CastBeamLight()
         {
             Color lightColor = Color.Lerp(LaserRed, LaserGold, 0.42f);
@@ -292,7 +402,26 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             }
         }
 
-        private bool DrawCellLaser()
+        private void EmitEmpoweredTipFX()
+        {
+            if (Main.dedServ || Main.GameUpdateCount % 3 != 0)
+                return;
+
+            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 endPoint = Projectile.Center + direction * BeamLength;
+
+            GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(
+                endPoint,
+                -direction.RotatedByRandom(0.9f) * Main.rand.NextFloat(4f, 14f),
+                false,
+                Main.rand.Next(8, 14),
+                Main.rand.NextFloat(0.05f, 0.1f),
+                Main.rand.NextBool(3) ? Color.White : LaserGold,
+                new Vector2(2.2f, 0.5f),
+                true));
+        }
+
+        private void DrawCellLaser()
         {
             Texture2D outer = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomLineFade").Value;
             Texture2D inner = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomLineThick").Value;
@@ -308,16 +437,14 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             Main.EntitySpriteDraw(outer, beamCenter, null, outerColor * opacity, Projectile.rotation + MathHelper.PiOver2, outer.Size() * 0.5f, new Vector2(1.5f, 55f * beamLengthScale) * Projectile.scale * 0.01f, SpriteEffects.FlipVertically);
             Main.EntitySpriteDraw(inner, beamCenter, null, innerColor * opacity, Projectile.rotation + MathHelper.PiOver2, inner.Size() * 0.5f, new Vector2(0.32f, 55f * beamLengthScale) * Projectile.scale * 0.01f, SpriteEffects.FlipVertically);
             Main.EntitySpriteDraw(glow, start + unit * 7f, null, LaserGold with { A = 0 } * opacity, Projectile.rotation, glow.Size() * 0.5f, Projectile.scale * 0.08f, SpriteEffects.None);
-            return false;
         }
 
-        private bool DrawClassicLaser()
+        private void DrawClassicLaser()
         {
             YC_YharimBeamVisuals.DrawYharimBeam(Projectile, BeamLength, Projectile.scale * 0.48f, LaserOpacity(), Color.Lerp(LaserRed, LaserGold, 0.5f));
-            return false;
         }
 
-        private bool DrawMoonLordLaser()
+        private void DrawMoonLordLaser()
         {
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Texture2D ring = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
@@ -333,11 +460,9 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
                 Main.EntitySpriteDraw(ring, start, null, color * 0.18f * opacity, rotation, ring.Size() * 0.5f, Projectile.scale * (0.18f + i * 0.018f), SpriteEffects.None);
                 Main.EntitySpriteDraw(bloom, end, null, color * 0.22f * opacity, -rotation, bloom.Size() * 0.5f, Projectile.scale * (0.18f + i * 0.02f), SpriteEffects.None);
             }
-
-            return false;
         }
 
-        private bool DrawProvidenceLaser()
+        private void DrawProvidenceLaser()
         {
             Texture2D startTex = ModContent.Request<Texture2D>("CalamityMod/Projectiles/Boss/ProvidenceHolyRay").Value;
             Texture2D midTex = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Lasers/ProvidenceHolyRayMid").Value;
@@ -379,10 +504,55 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
 
             Main.spriteBatch.Draw(endTex, center - Main.screenPosition, null, color * opacity, rotation, new Vector2(endTex.Width / 2f, 0f), drawScale, SpriteEffects.None, 0f);
             Main.EntitySpriteDraw(bloom, drawStart, null, LaserGold with { A = 0 } * 0.62f * opacity, 0f, bloom.Size() * 0.5f, Projectile.scale * 0.16f, SpriteEffects.None);
-            return false;
         }
 
-        private bool DrawYharonLaser()
+        // PF 水晶激光同款的 ProvidenceHolyRay 三段式绘制。
+        // 注意：颜色 A=0 走默认 AlphaBlend（预乘加算）即可，绝不能再套 BlendState.Additive，
+        // Additive 的源因子是 SourceAlpha，配 A=0 会把整条激光乘成全透明。
+        private void DrawProvidenceStyleBeam(Color beamColor)
+        {
+            Texture2D startTex = ModContent.Request<Texture2D>("CalamityMod/Projectiles/Boss/ProvidenceHolyRay").Value;
+            Texture2D midTex = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Lasers/ProvidenceHolyRayMid").Value;
+            Texture2D endTex = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Lasers/ProvidenceHolyRayEnd").Value;
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            float rotation = direction.ToRotation() - MathHelper.PiOver2;
+            float drawScale = Projectile.scale * 0.56f;
+            float opacity = LaserOpacity();
+            Color color = beamColor with { A = 0 };
+            Vector2 drawStart = Projectile.Center - Main.screenPosition;
+
+            Main.EntitySpriteDraw(startTex, drawStart, null, color * opacity, rotation, startTex.Size() * 0.5f, drawScale, SpriteEffects.None);
+
+            float currentLength = BeamLength - (startTex.Height * 0.5f + endTex.Height) * drawScale;
+            Vector2 center = Projectile.Center + direction * drawScale * startTex.Height * 0.5f;
+            if (currentLength > 0f)
+            {
+                float lengthDrawn = 0f;
+                int frameHeight = 36;
+                int frameY = frameHeight * ((int)Timer / 3 % 4);
+                Rectangle sourceRect = new(0, frameY, midTex.Width, frameHeight);
+                while (lengthDrawn + 1f < currentLength)
+                {
+                    if (currentLength - lengthDrawn < frameHeight * drawScale)
+                        sourceRect.Height = (int)((currentLength - lengthDrawn) / drawScale);
+                    if (sourceRect.Height <= 0)
+                        break;
+
+                    Main.EntitySpriteDraw(midTex, center - Main.screenPosition, sourceRect, color * opacity, rotation, new Vector2(sourceRect.Width * 0.5f, 0f), drawScale, SpriteEffects.None);
+                    lengthDrawn += sourceRect.Height * drawScale;
+                    center += direction * sourceRect.Height * drawScale;
+                    sourceRect.Y += frameHeight;
+                    if (sourceRect.Y + sourceRect.Height > midTex.Height)
+                        sourceRect.Y = 0;
+                }
+            }
+
+            Main.EntitySpriteDraw(endTex, center - Main.screenPosition, null, color * opacity, rotation, new Vector2(endTex.Width * 0.5f, 0f), drawScale, SpriteEffects.None);
+            Main.EntitySpriteDraw(bloom, drawStart, null, Color.White with { A = 0 } * 0.42f * opacity, 0f, bloom.Size() * 0.5f, Projectile.scale * 0.18f, SpriteEffects.None);
+        }
+
+        private void DrawYharonLaser()
         {
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2[] points =
@@ -414,7 +584,6 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
                 Main.EntitySpriteDraw(vortex, Projectile.Center - Main.screenPosition + angle.ToRotationVector2() * 3f, null, drawColor, angle + MathHelper.PiOver2, vortex.Size() * 0.5f, Projectile.scale * 0.75f, SpriteEffects.None);
             }
             Main.spriteBatch.ExitShaderRegion();
-            return false;
         }
 
         private float LaserOpacity()
@@ -434,6 +603,84 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         private Color YharonColorFunction(float completionRatio, Vector2 vertexPosition)
         {
             return Color.Lerp(LaserGold, LaserRed, completionRatio * 0.45f) * LaserOpacity();
+        }
+    }
+
+    // 重击瞬间在基底激光命中点引爆的范围爆炸
+    internal sealed class YC_LaserBlast : ModProjectile, ILocalizedModType
+    {
+        private static readonly Color BlastGold = new(255, 216, 92);
+        private static readonly Color BlastRed = new(255, 70, 32);
+
+        private readonly BalanceYharimsCrystal balance = new();
+
+        public new string LocalizationCategory => "Projectiles.YharimsCrystal";
+        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+
+        public override void SetDefaults()
+        {
+            Projectile.width = 176;
+            Projectile.height = 176;
+            Projectile.friendly = true;
+            Projectile.hostile = false;
+            Projectile.tileCollide = false;
+            Projectile.ignoreWater = true;
+            Projectile.penetrate = -1;
+            Projectile.timeLeft = 4;
+            Projectile.DamageType = DamageClass.Magic;
+            Projectile.usesLocalNPCImmunity = true;
+            Projectile.localNPCHitCooldown = -1;
+        }
+
+        public override bool ShouldUpdatePosition() => false;
+
+        public override void AI()
+        {
+            if (Projectile.localAI[0]++ != 0f || Main.dedServ)
+                return;
+
+            SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.45f, Pitch = -0.1f }, Projectile.Center);
+            GeneralParticleHandler.SpawnParticle(new StrongBloom(Projectile.Center, Vector2.Zero, Color.Lerp(BlastRed, BlastGold, 0.45f), 1.05f, 17));
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Vector2.Zero, BlastGold, Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.1f, 1.35f, 19));
+
+            for (int i = 0; i < 16; i++)
+            {
+                Dust dust = Dust.NewDustPerfect(
+                    Projectile.Center,
+                    Main.rand.NextBool(4) ? 267 : DustID.GoldFlame,
+                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(3f, 11f),
+                    0,
+                    Main.rand.NextBool(3) ? Color.White : BlastGold,
+                    Main.rand.NextFloat(1.1f, 1.75f));
+                dust.noGravity = true;
+            }
+        }
+
+        public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
+        {
+            float radius = Projectile.width * 0.5f;
+            return Vector2.Distance(Projectile.Center, targetHitbox.ClosestPointInRect(Projectile.Center)) <= radius;
+        }
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            target.AddBuff(balance.GetFireDebuffType(), 240);
+        }
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            float fade = Utils.GetLerpValue(0f, 4f, Projectile.timeLeft, true);
+            Main.EntitySpriteDraw(
+                bloom,
+                Projectile.Center - Main.screenPosition,
+                null,
+                (BlastGold with { A = 0 }) * 0.4f * fade,
+                0f,
+                bloom.Size() * 0.5f,
+                1.3f,
+                SpriteEffects.None);
+            return false;
         }
     }
 }

@@ -21,6 +21,10 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         private const float FireballSpawnProgress = 0.3f;
         private const float SwordVisualScale = 1.55f;
         private const float BladeReach = 104f;
+        private const float SpinDiscRadiusScale = 0.134f;
+        private const float SpinDiscSpriteScale = 0.201f;
+        private const float SpinSprayRadiusScale = 0.8f;    // 线性粒子喷射覆盖半径（独立于刀盘）
+        private const float SpinSpraySpriteScale = 0.3f;    // 线性粒子本体大小（独立于刀盘）
         private const int BladeTrailHistoryFrames = 16;
         private const int TrackingSoulInterval = 4;
         private const int TrackingSoulBurstCount = 2;
@@ -43,6 +47,8 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         private float outlineBaseOpacity;
         private float outlinePulseOpacity;
         private float discRingOpacity;   // 刀盘环形光圈强度
+        private float discFadeIn;        // 刀盘整体淡入（20帧内透明度逐渐降低至完全显示）
+        private const int DiscFadeInFrames = 20;
 
         private static readonly Color BladeGold = new(255, 205, 80);
         private static readonly Color BladeLight = new(255, 242, 185);
@@ -82,6 +88,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 return;
             }
 
+            discFadeIn = Math.Min(discFadeIn + 1f / DiscFadeInFrames, 1f);
             scale = Owner.GetMeleeScale() * SwordVisualScale;
             Owner.heldProj = Projectile.whoAmI;
             Owner.GetModPlayer<AegisBladePlayer>().IsSwinging = true;
@@ -280,11 +287,20 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
         {
             Rectangle swingHitbox = GetSwingDamageHitbox();
-            return Collision.CheckAABBvAABBCollision(
+            bool boxHit = Collision.CheckAABBvAABBCollision(
                 targetHitbox.TopLeft(),
                 targetHitbox.Size(),
                 swingHitbox.TopLeft(),
-                swingHitbox.Size()) ? null : false;
+                swingHitbox.Size());
+
+            if (boxHit)
+                return null;
+
+            Vector2 direction = currentAngle.ToRotationVector2().SafeNormalize(Vector2.UnitX * Owner.direction);
+            Vector2 start = Owner.MountedCenter + direction * (26f * scale);
+            Vector2 end = Owner.MountedCenter + direction * ((BalanceAegisBlade.LeftClickCoreHitboxOutset + BalanceAegisBlade.LeftClickCoreHitboxSize * 0.55f) * scale);
+            float collisionPoint = 0f;
+            return Collision.CheckAABBvLineCollision(targetHitbox.TopLeft(), targetHitbox.Size(), start, end, BalanceAegisBlade.LeftClickCoreHitboxSize * 0.36f * scale, ref collisionPoint);
         }
 
         private Rectangle GetSwingDamageHitbox()
@@ -301,12 +317,32 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
+            SpawnBodyHitEffects(target);
+
             if (Main.myPlayer != Projectile.owner)
                 return;
 
             Projectile.NewProjectile(Projectile.GetSource_FromThis(), target.Center, Vector2.Zero,
                 ModContent.ProjectileType<AegisSparkExplosion>(), Math.Max(1, (int)(Projectile.damage * 0.42f)),
                 Projectile.knockBack * 0.35f, Projectile.owner);
+        }
+
+        private void SpawnBodyHitEffects(NPC target)
+        {
+            if (Main.dedServ)
+                return;
+
+            Vector2 direction = currentAngle.ToRotationVector2().SafeNormalize(Vector2.UnitX * Owner.direction);
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                target.Center, Vector2.Zero, BladeGold, new Vector2(1.05f, 0.62f),
+                direction.ToRotation(), 0.12f, 0.82f, 14));
+            for (int i = 0; i < 10; i++)
+            {
+                Vector2 velocity = direction.RotatedByRandom(0.72f) * Main.rand.NextFloat(3f, 10f);
+                Dust dust = Dust.NewDustPerfect(target.Center + Main.rand.NextVector2Circular(12f, 12f),
+                    DustID.GoldFlame, velocity, 0, Main.rand.NextBool(3) ? BladeLight : BladeGold, Main.rand.NextFloat(0.8f, 1.35f));
+                dust.noGravity = true;
+            }
         }
 
         private void TrackBladeTrail(bool hitWindow)
@@ -340,7 +376,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             if (Main.dedServ || !hitWindow)
                 return;
 
-            float bladeRadius = BladeReach * scale;
+            float bladeRadius = BladeReach * scale * SpinSprayRadiusScale;
             // 沿刀轨道均匀分布 3 个粒子（仿 BB SpawnRightSpinParticles）
             float ringPhase = stateTimer * 0.38f * swingDirection;
             for (int i = 0; i < 7; i++)
@@ -352,7 +388,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 GeneralParticleHandler.SpawnParticle(new LineParticle(
                     pos,
                     tangent * Main.rand.NextFloat(1.2f, 4.2f) + orbitDir * Main.rand.NextFloat(-0.25f, 0.9f),
-                    false, Main.rand.Next(9, 19), Main.rand.NextFloat(0.28f, 0.72f),
+                    false, Main.rand.Next(9, 19), Main.rand.NextFloat(0.28f, 0.72f) * SpinSpraySpriteScale,
                     Main.rand.NextBool(3) ? BladeLight : BladeGold));
             }
         }
@@ -416,11 +452,11 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 Main.EntitySpriteDraw(ringTexture, drawPosition, null,
                     BladeGold with { A = 0 } * discRingOpacity * 0.45f,
                     Main.GlobalTimeWrappedHourly * swipeDir * 0.85f,
-                    ringTexture.Size() * 0.5f, scale * 2.4f, SpriteEffects.None, 0);
+                    ringTexture.Size() * 0.5f, scale * 2.4f * SpinDiscRadiusScale, SpriteEffects.None, 0);
                 Main.EntitySpriteDraw(ringTexture, drawPosition, null,
                     BladeLight with { A = 0 } * discRingOpacity * 0.28f,
                     Main.GlobalTimeWrappedHourly * swipeDir * -1.1f,
-                    ringTexture.Size() * 0.5f, scale * 1.8f, SpriteEffects.None, 0);
+                    ringTexture.Size() * 0.5f, scale * 1.8f * SpinDiscRadiusScale, SpriteEffects.None, 0);
 
                 // ── 20 个武器残影均匀布满一圈（仿 BB DrawMaxRightSpinWeaponAfterimages）──
                 float ghostOpacity = MathHelper.Clamp(0.52f + discRingOpacity * 0.28f, 0.52f, 0.8f) * discRingOpacity;
@@ -433,7 +469,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                     Main.EntitySpriteDraw(swordTexture, drawPosition + jitter, null,
                         ghostColor * 0.16f * ghostOpacity,
                         ghostAngle + MathHelper.PiOver4,
-                        origin, scale, SpriteEffects.None, 0);
+                        origin, scale * SpinDiscSpriteScale, SpriteEffects.None, 0);
                 }
             }
 
@@ -459,17 +495,17 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 Main.EntitySpriteDraw(swooshTexture, drawPosition, null,
                     swooshGold * slashOpacity * 0.85f,
                     drawRotation + MathHelper.PiOver2 * swipeDir,
-                    swooshTexture.Size() * 0.5f, scale * 1.55f, SpriteEffects.None, 0);
+                    swooshTexture.Size() * 0.5f, scale * 1.55f * SpinDiscSpriteScale, SpriteEffects.None, 0);
 
                 Main.EntitySpriteDraw(swooshTexture, drawPosition, null,
                     BladeLight * slashOpacity * 0.38f,
                     drawRotation + MathHelper.PiOver2 * swipeDir + 0.16f * swipeDir,
-                    swooshTexture.Size() * 0.5f, scale * 1.18f, SpriteEffects.None, 0);
+                    swooshTexture.Size() * 0.5f, scale * 1.18f * SpinDiscSpriteScale, SpriteEffects.None, 0);
 
-                Vector2 bladeMid = Owner.MountedCenter + currentAngle.ToRotationVector2() * BladeReach * scale * 0.5f - Main.screenPosition;
+                Vector2 bladeMid = Owner.MountedCenter + currentAngle.ToRotationVector2() * BladeReach * scale * SpinDiscRadiusScale * 0.5f - Main.screenPosition;
                 Main.EntitySpriteDraw(bloomTexture, bladeMid, null,
                     BladeLight with { A = 0 } * slashOpacity * 0.52f,
-                    0f, bloomTexture.Size() * 0.5f, scale * 0.5f, SpriteEffects.None, 0);
+                    0f, bloomTexture.Size() * 0.5f, scale * 0.5f * SpinDiscSpriteScale, SpriteEffects.None, 0);
             }
 
             for (int i = 0; i < 20; i++)
@@ -488,14 +524,14 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 
         private void DrawAegisSpinDisc(Texture2D swordTexture, Texture2D swooshTexture, Texture2D ringTexture, Vector2 drawPosition, Vector2 origin, float swipeDir)
         {
-            float discOpacity = MathHelper.Clamp(0.68f + discRingOpacity * 0.22f, 0.68f, 0.92f);
+            float discOpacity = MathHelper.Clamp(0.68f + discRingOpacity * 0.22f, 0.68f, 0.92f) * discFadeIn;
             float spin = Main.GlobalTimeWrappedHourly * swipeDir * 5.8f;
 
             Main.EntitySpriteDraw(ringTexture, drawPosition, null,
                 BladeGold with { A = 0 } * discOpacity * 0.62f,
                 spin * 0.28f,
                 ringTexture.Size() * 0.5f,
-                scale * 2.9f,
+                scale * 2.9f * SpinDiscRadiusScale,
                 SpriteEffects.None,
                 0);
 
@@ -503,7 +539,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 BladeLight with { A = 0 } * discOpacity * 0.42f,
                 -spin * 0.34f,
                 ringTexture.Size() * 0.5f,
-                scale * 2.15f,
+                scale * 2.15f * SpinDiscRadiusScale,
                 SpriteEffects.None,
                 0);
 
@@ -515,7 +551,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                     smearColor * discOpacity * 0.72f,
                     rotation,
                     swooshTexture.Size() * 0.5f,
-                    scale * 1.9f,
+                    scale * 1.9f * SpinDiscSpriteScale,
                     SpriteEffects.None,
                     0);
             }
@@ -532,7 +568,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                     ghostColor * discOpacity * 0.24f,
                     ghostAngle + MathHelper.PiOver4,
                     origin,
-                    scale,
+                    scale * SpinDiscSpriteScale,
                     SpriteEffects.None,
                     0);
             }

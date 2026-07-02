@@ -17,7 +17,7 @@ Mods: {
 					ChargeStage5: "[c/D84BFF:当前解锁：第5层，Toba级超级喷发。]"
 					RightClick:
 						'''
-						[c/FFB15C:右键：像标枪一样投掷法杖。]
+						[c/FFB15C:右键：按住右键像标枪一样架住法杖蓄力，松开后投掷。]
 						[c/FFB15C:插入地形后形成活动断层核心；流程推进后会追加炮台火球、火山碎屑流和俯冲带。]
 						'''
 					Passive:
@@ -59,6 +59,7 @@ Mods: {
 				VesuviusObsidianShard.DisplayName: 黑曜石碎片
 				VesuviusObsidianSlash.DisplayName: 黑曜石斩击
 				VesuviusObsidianBlast.DisplayName: 黑曜石爆破
+				VesuviusRightJavelinHoldout.DisplayName: 断层法杖手持体
 				VesuviusFaultJavelin.DisplayName: 断层法杖
 				VesuviusFaultCore.DisplayName: 活动断层核心
 				VesuviusFaultFireball.DisplayName: 火山火球
@@ -70,6 +71,11 @@ Mods: {
 				VesuviusVolcanicGasCloud.DisplayName: 火山气云
 				// VesuviusThermalCore.DisplayName: Vesuvius Thermal Core
 				// VesuviusThermalCoreBlast.DisplayName: Vesuvius Thermal Core Blast
+				// VesuviusRightGravityFlame.DisplayName: Vesuvius Right Gravity Flame
+				// VesuviusRightJavelinVent.DisplayName: Vesuvius Right Javelin Vent
+				// VesuviusRightMeteorExplosion.DisplayName: Vesuvius Right Meteor Explosion
+				// VesuviusRightReturningMeteor.DisplayName: Vesuvius Right Returning Meteor
+				// VesuviusRightRisingSpark.DisplayName: Vesuvius Right Rising Spark
 			}
 
 			// PurifiedGel_BallExplosion.DisplayName: Purified Gel_ Ball Explosion

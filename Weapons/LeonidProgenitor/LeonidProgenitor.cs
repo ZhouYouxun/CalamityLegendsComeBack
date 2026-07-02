@@ -92,33 +92,19 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 // Left Click
                 if (stealthStrike)
                 {
-                    // Left Click Stealth Strike: 7 comets falling diagonally
-                    Vector2 mousePos = Main.MouseWorld;
-                    for (int i = 0; i < 7; i++)
-                    {
-                        // Spawn in the upper-diagonal area of the mouse cursor
-                        Vector2 spawnPos = mousePos + new Vector2(Main.rand.Next(-250, -100) * player.direction, Main.rand.Next(-600, -450));
-                        Vector2 targetPos = mousePos + Main.rand.NextVector2Circular(80f, 80f);
-                        Vector2 vel = (targetPos - spawnPos).SafeNormalize(Vector2.UnitY) * 16f;
-
-                        int p = Projectile.NewProjectile(
-                            source,
-                            spawnPos,
-                            vel,
-                            ModContent.ProjectileType<LeonidCometSmall>(),
-                            damage,
-                            knockback,
-                            player.whoAmI,
-                            effectIDs[0],
-                            effectIDs[1],
-                            LeonidCometSmall.FromStealthFlag);
-                        
-                        if (p.WithinBounds(Main.maxProjectiles))
-                        {
-                            Main.projectile[p].Calamity().stealthStrike = true;
-                            Main.projectile[p].localAI[1] = 0f; // no launch delay
-                        }
-                    }
+                    // Left Click Stealth Strike: spawner drops 7 comets one by one
+                    // (every 5 ticks, from ~50 tiles above the cursor)
+                    Projectile.NewProjectile(
+                        source,
+                        Main.MouseWorld,
+                        Vector2.Zero,
+                        ModContent.ProjectileType<LeonidStealthRainSpawner>(),
+                        damage,
+                        knockback,
+                        player.whoAmI,
+                        effectIDs[0],
+                        effectIDs[1],
+                        player.direction);
                 }
                 else
                 {

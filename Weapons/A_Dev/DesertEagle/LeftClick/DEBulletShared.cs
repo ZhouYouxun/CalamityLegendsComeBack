@@ -468,7 +468,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle.LeftClick.SubProject
     public class DEBullet_HydraSnake : ModProjectile, ILocalizedModType
     {
         public new string LocalizationCategory => "Projectiles.A_Dev";
-        public override string Texture => "CalamityMod/Projectiles/Ranged/HydrasBlood";
+        public override string Texture => "CalamityMod/Projectiles/Magic/VitriolicViperSpit";
 
         public override void SetStaticDefaults()
         {

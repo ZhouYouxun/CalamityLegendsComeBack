@@ -150,6 +150,7 @@ Mods: {
 				LeonidUltimateUI.DisplayName: Ultimate Energy Bar
 				LeonidRightClickHoldout.DisplayName: Leonid Right Click Holdout
 				LPBookPanel.DisplayName: Leonid Metal Matrix Panel
+				LeonidStealthRainSpawner.DisplayName: Leonid Stealth Rain Spawner
 			}
 		}
 

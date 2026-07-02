@@ -13,6 +13,11 @@ Mods: {
 			}
 		}
 
-		Projectiles.PhoenixBlade.PhoenixBladeHoldout.DisplayName: Phoenix Blade
+		Projectiles: {
+			PhoenixBlade.PhoenixBladeHoldout.DisplayName: Phoenix Blade
+			AncientIceShieldVisual.DisplayName: Ancient Ice Shield Visual
+			GlacialWeaponFamiliar.DisplayName: Glacial Weapon Familiar
+			GlacialWeaponFamiliarShot.DisplayName: Glacial Weapon Familiar Shot
+		}
 	}
 }

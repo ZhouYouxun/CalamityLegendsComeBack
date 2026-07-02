@@ -5,6 +5,16 @@ Mods: {
 				NewLegendYharimsCrystal: {
 					DisplayName: 暴君水晶
 					Tooltip: "[GFB]"
+					TooltipBody:
+						'''
+						[c/F8E28A:左键模式]：按住左键会舞出高速旋转的水晶圆盘绞杀前方敌人。
+						水晶圆盘在击中目标时会朝周围散射大量金焰火球和圣光碎片，造成持续灼烧。
+						[c/73DFFF:右键模式]：按住右键会部署六台金色护卫战舰进行防空扫射，并从水晶本体射出持续灼热死光。
+						右键期间点击左键会发动重型协同攻击，使主激光显著变粗并朝前方散射大范围的分裂镭射，随后使全阵列宕机2秒。
+						[c/F6D06B:金源绝技（EX大招）]：当能量积满且装备传说徽记时，按[技能键]可释放终极攻击：
+						- 在左键形态下释放【烈焰圣刃】：挥舞出撕裂空间的巨刃，并在地面引发贯穿天地的冲天金焰火柱。
+						- 在右键形态下释放【激光风暴】：在目标上空部署12艘金辉激光舰，编织出毁灭一切的死光风暴。
+						'''
 					CurrentMode: "[c/F6D06B:当前形态] {0}"
 					Mode_Drill: "[c/F2B85D:攻城钻头]"
 					Mode_Flamethrower: "[c/FF7A45:金焰喷射]"
@@ -187,6 +197,7 @@ Mods: {
 				YC_RainbowUltimaBolt.DisplayName: 彩虹终焉光弹
 				YC_RightCrystalHoldout.DisplayName: 亚利姆水晶右键持握体
 				YC_RightScorchingLaser.DisplayName: 亚利姆水晶灼热激光
+				YC_LaserBlast.DisplayName: 亚利姆水晶灼热爆裂
 				YC_EssenceFlame.DisplayName: 精华火焰
 				YC_ThrownBlade.DisplayName: 投掷水晶刃
 				YC_RightDrone.DisplayName: 亚利姆水晶右键无人机

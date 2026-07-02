@@ -31,7 +31,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         private const float BaseHitboxOutset = 90f;
         private static readonly Vector2 BaseHitboxSize = new(132f, 132f);
         private const float SwooshRadiusCorrection = 0.575f;
-        private const float RightSpinSwooshScaleMultiplier = 1.42f;
+        private const float RightSpinSwooshScaleMultiplier = 0.95f;
+        private const float RightSpinVisualReachScale = 0.67f;
         private int CurrentGrowthStage => BB_Balance.GetGrowthStage();
         private int ComboLength => CurrentGrowthStage switch
         {
@@ -760,7 +761,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             Vector2 slashDirection = rightSpinDirectionVector.SafeNormalize(Vector2.UnitX * Owner.direction);
             Vector2 tangentDirection = slashDirection.RotatedBy(MathHelper.PiOver2 * rightSpinOrbitDirection);
             float ringPhase = rightSpinTimer * 0.18f * rightSpinOrbitDirection;
-            float bladeReach = RightSpinBladeReach;
+            float bladeReach = RightSpinBladeReach * RightSpinVisualReachScale;
 
             for (int i = 0; i < 3; i++)
             {
@@ -1003,11 +1004,20 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
         {
             Rectangle swingHitbox = GetSwingDamageHitbox();
-            return Collision.CheckAABBvAABBCollision(
+            bool boxHit = Collision.CheckAABBvAABBCollision(
                 targetHitbox.TopLeft(),
                 targetHitbox.Size(),
                 swingHitbox.TopLeft(),
-                swingHitbox.Size()) ? null : false;
+                swingHitbox.Size());
+
+            if (boxHit)
+                return null;
+
+            Vector2 slashDirection = SlashAngle.ToRotationVector2().SafeNormalize(Vector2.UnitX * Owner.direction);
+            Vector2 start = Owner.MountedCenter + slashDirection * (24f * Projectile.scale);
+            Vector2 end = Owner.MountedCenter + slashDirection * ((BB_Balance.LeftClickCoreHitboxOutset + BB_Balance.LeftClickCoreHitboxSize * 0.55f) * Projectile.scale);
+            float collisionPoint = 0f;
+            return Collision.CheckAABBvLineCollision(targetHitbox.TopLeft(), targetHitbox.Size(), start, end, BB_Balance.LeftClickCoreHitboxSize * 0.36f * Projectile.scale, ref collisionPoint);
         }
 
         private Rectangle GetSwingDamageHitbox()
@@ -1036,6 +1046,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
+            SpawnBladeHitEffects(target);
             target.AddBuff(BuffID.Frostburn, 180);
             if (Main.myPlayer == Projectile.owner)
                 Owner.GetModPlayer<BBTideValuePlayer>().TryAddTideFromBlade();
@@ -1324,6 +1335,27 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     origin,
                     bladeScale,
                     effects);
+            }
+        }
+
+        private void SpawnBladeHitEffects(NPC target)
+        {
+            if (Main.dedServ)
+                return;
+
+            Vector2 slashDirection = SlashAngle.ToRotationVector2().SafeNormalize(Vector2.UnitX * Owner.direction);
+            Color ringColor = rightSpinActive ? Color.Cyan : Color.DeepSkyBlue;
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                target.Center, Vector2.Zero, ringColor, new Vector2(1.05f, 0.58f),
+                slashDirection.ToRotation(), 0.12f, 0.76f, 14));
+
+            for (int i = 0; i < 10; i++)
+            {
+                Vector2 velocity = slashDirection.RotatedByRandom(0.7f) * Main.rand.NextFloat(2.8f, 8.8f);
+                Dust dust = Dust.NewDustPerfect(target.Center + Main.rand.NextVector2Circular(12f, 12f),
+                    Main.rand.NextBool() ? DustID.Water : DustID.Frost, velocity, 100,
+                    Main.rand.NextBool(3) ? Color.White : ringColor, Main.rand.NextFloat(0.8f, 1.3f));
+                dust.noGravity = true;
             }
         }
 

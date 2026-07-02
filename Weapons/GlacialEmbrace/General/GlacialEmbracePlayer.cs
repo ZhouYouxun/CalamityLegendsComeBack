@@ -48,12 +48,25 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.General
 
         // ── 核心被动与增益状态 ────────────────────────────────────────────────
         public bool GlacialEmbraceMinion = false;
+        public bool HasGlacialEmbraceInInventory { get; private set; } = false;
+        public bool AncientIceShieldActive { get; private set; } = false;
+        public int HeldSupportClass { get; private set; } = -1;
         public int  CurrentMode = 0;          // 0 = 斩击, 1 = 突刺, 2 = 打击
         public int  ModeTimer   = 0;
         public const int ModeDuration = 300;  // 5 秒自动轮换
         public int  FramesUntilModeSwitch => Math.Max(0, ModeDuration - ModeTimer);
         public int  UltimateCharge = 0;
         public const int MaxUltimateCharge = 240;
+        public const int SupportClassMelee = 0;
+        public const int SupportClassRanged = 1;
+        public const int SupportClassMagic = 2;
+        public const int SupportClassRogue = 3;
+        private const int StillnessFramesForShield = 45;
+        private const int AncientIceShieldDefense = 36;
+        private const float AncientIceShieldDamageReduction = 0.22f;
+        private const int SupportRespawnInterval = 24;
+        private int stillnessTimer = 0;
+        private int supportSpawnTimer = 0;
 
         // ── 右键 QTE ─────────────────────────────────────────────────────────
         public bool QteActive  = false;
@@ -90,6 +103,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.General
         public override void ResetEffects()
         {
             GlacialEmbraceMinion = false;
+            HasGlacialEmbraceInInventory = HasGlacialEmbraceItem();
         }
 
         public override void UpdateLifeRegen()
@@ -102,6 +116,11 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.General
         {
             if (GlacialEmbraceMinion && ComboCount > 0)
                 Player.statDefense += DefenseBonus;
+            if (AncientIceShieldActive)
+            {
+                Player.statDefense += AncientIceShieldDefense;
+                Player.endurance += AncientIceShieldDamageReduction;
+            }
             if (GlacialEmbraceMinion && AuroraMelodyTimer > 0)
                 Player.statDefense += 10;
             if (GlacialEmbraceMinion && ResonanceEchoTimer > 0)
@@ -112,11 +131,19 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.General
         {
             if (GlacialEmbraceMinion && AuroraMelodyTimer > 0)
                 modifiers.SourceDamage *= 0.85f;
+            if (AncientIceShieldActive)
+                modifiers.SourceDamage *= 1f - AncientIceShieldDamageReduction;
         }
 
         public override void PreUpdate()
         {
+            HasGlacialEmbraceInInventory = HasGlacialEmbraceItem();
+            if (Player.HasBuff(ModContent.BuffType<GlacialEmbraceBuff>()))
+                GlacialEmbraceMinion = true;
+
             bool holdingWeapon = Player.HeldItem.type == ModContent.ItemType<GlacialEmbrace>();
+            HeldSupportClass = GetHeldSupportClass();
+            UpdateAncientIceShield();
 
             if (!GlacialEmbraceMinion)
             {
@@ -132,6 +159,9 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.General
                 SealStates.Clear();
                 pendingCascades.Clear();
                 ResonanceEchoTimer  = 0;
+                HeldSupportClass = -1;
+                AncientIceShieldActive = false;
+                stillnessTimer = 0;
                 return;
             }
 
@@ -142,6 +172,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.General
             }
 
             EnforceMinionLimit();
+            EnsureSupportFamiliar();
 
             if (AuroraMelodyTimer   > 0) AuroraMelodyTimer--;
             if (GlacialDivinityTimer > 0) GlacialDivinityTimer--;
@@ -588,6 +619,89 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.General
         }
 
         // ─────────────────────────────────────────────────────────────────────
+
+        private bool HasGlacialEmbraceItem()
+        {
+            int glacialType = ModContent.ItemType<GlacialEmbrace>();
+            for (int i = 0; i < Player.inventory.Length; i++)
+            {
+                Item item = Player.inventory[i];
+                if (item != null && !item.IsAir && item.type == glacialType)
+                    return true;
+            }
+            return false;
+        }
+
+        private int GetHeldSupportClass()
+        {
+            if (!HasGlacialEmbraceInInventory)
+                return -1;
+
+            Item item = Player.HeldItem;
+            if (item == null || item.IsAir || item.damage <= 0 || item.type == ModContent.ItemType<GlacialEmbrace>())
+                return -1;
+
+            DamageClass damageClass = item.DamageType;
+            if (damageClass == DamageClass.Melee || damageClass == DamageClass.MeleeNoSpeed)
+                return SupportClassMelee;
+            if (damageClass == DamageClass.Ranged)
+                return SupportClassRanged;
+            if (damageClass == DamageClass.Magic)
+                return SupportClassMagic;
+            if (damageClass == ModContent.GetInstance<RogueDamageClass>())
+                return SupportClassRogue;
+
+            return -1;
+        }
+
+        private void UpdateAncientIceShield()
+        {
+            bool still = HasGlacialEmbraceInInventory
+                && Math.Abs(Player.velocity.X) < 0.08f
+                && Math.Abs(Player.velocity.Y) < 0.08f
+                && !Player.controlLeft
+                && !Player.controlRight
+                && !Player.controlJump
+                && !Player.controlDown
+                && !Player.controlUp;
+
+            stillnessTimer = still ? Math.Min(StillnessFramesForShield, stillnessTimer + 1) : 0;
+            AncientIceShieldActive = stillnessTimer >= StillnessFramesForShield;
+
+            if (Main.myPlayer == Player.whoAmI
+                && AncientIceShieldActive
+                && Player.ownedProjectileCounts[ModContent.ProjectileType<AncientIceShieldVisual>()] <= 0)
+            {
+                Projectile.NewProjectile(Player.GetSource_FromThis(), Player.Center, Vector2.Zero,
+                    ModContent.ProjectileType<AncientIceShieldVisual>(), 0, 0f, Player.whoAmI);
+            }
+        }
+
+        private void EnsureSupportFamiliar()
+        {
+            if (Main.myPlayer != Player.whoAmI || !HasGlacialEmbraceInInventory || HeldSupportClass < 0)
+                return;
+
+            if (supportSpawnTimer > 0)
+            {
+                supportSpawnTimer--;
+                return;
+            }
+
+            int familiarType = ModContent.ProjectileType<GlacialWeaponFamiliar>();
+            for (int i = 0; i < Main.maxProjectiles; i++)
+            {
+                Projectile projectile = Main.projectile[i];
+                if (projectile.active && projectile.owner == Player.whoAmI && projectile.type == familiarType
+                    && (int)projectile.ai[0] == HeldSupportClass)
+                    return;
+            }
+
+            int damage = Math.Max(1, (int)(Player.GetWeaponDamage(Player.HeldItem) * 0.65f));
+            Projectile.NewProjectile(Player.GetSource_FromThis(), Player.Center, Vector2.Zero,
+                familiarType, damage, 2f, Player.whoAmI, HeldSupportClass);
+            supportSpawnTimer = SupportRespawnInterval;
+        }
 
         private void EnforceMinionLimit()
         {

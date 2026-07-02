@@ -96,10 +96,23 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.FStage5
 
         public override bool PreDraw(ref Color lightColor)
         {
-            CalamityUtils.DrawAfterimagesCentered(Projectile, ProjectileID.Sets.TrailingMode[Type], VesuviusProjectileVisuals.ObsidianEdge * 0.68f * VesuviusProjectileVisuals.VisualIntensity);
             Texture2D texture = TextureAssets.Projectile[Type].Value;
-            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, VesuviusProjectileVisuals.ObsidianEdge * 0.92f * VesuviusProjectileVisuals.VisualIntensity, Projectile.rotation, texture.Size() * 0.5f, Projectile.scale * 1.18f, SpriteEffects.None);
-            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, Color.Black, Projectile.rotation, texture.Size() * 0.5f, Projectile.scale * 1.02f, SpriteEffects.None);
+            Color edge = VesuviusProjectileVisuals.ObsidianEdge with { A = 0 };
+
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
+            for (int i = Projectile.oldPos.Length - 1; i >= 1; i--)
+            {
+                if (Projectile.oldPos[i] == Vector2.Zero)
+                    continue;
+
+                float t = (Projectile.oldPos.Length - i) / (float)Projectile.oldPos.Length;
+                Vector2 oldCenter = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
+                Main.EntitySpriteDraw(texture, oldCenter, null, edge * (0.36f * t * VesuviusProjectileVisuals.VisualIntensity), Projectile.oldRot[i], texture.Size() * 0.5f, Projectile.scale * MathHelper.Lerp(0.72f, 1.18f, t), SpriteEffects.None);
+            }
+
+            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, edge * 0.92f * VesuviusProjectileVisuals.VisualIntensity, Projectile.rotation, texture.Size() * 0.5f, Projectile.scale * 1.18f, SpriteEffects.None);
+            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, Color.White with { A = 0 } * 0.08f, Projectile.rotation, texture.Size() * 0.5f, Projectile.scale * 0.86f, SpriteEffects.None);
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
             return false;
         }
     }
@@ -155,6 +168,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.FStage5
             Texture2D texture = TextureAssets.Projectile[Type].Value;
             float fade = Utils.GetLerpValue(0f, 10f, Projectile.timeLeft, true);
 
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
             // BlackSLASH has a black background intended for additive blending.
             // Use A=0 so black pixels contribute nothing; bright slash lines glow additively.
             // Outer dark halo
@@ -171,6 +185,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.FStage5
                 Projectile.rotation, texture.Size() * 0.5f,
                 new Vector2(1.05f, 0.55f) * Projectile.scale, SpriteEffects.None);
 
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
             return false;
         }
     }

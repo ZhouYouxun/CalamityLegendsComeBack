@@ -968,15 +968,17 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
 
             if (chargeIntensity > 0.03f)
             {
+                Main.spriteBatch.SetBlendState(BlendState.Additive);
                 Main.EntitySpriteDraw(
                     volatileCore,
                     tipScreen,
                     coreSource,
-                    Color.White * chargeIntensity,
+                    (Color.Lerp(stageColor, Color.White, 0.42f) with { A = 0 }) * chargeIntensity,
                     0f,
                     coreSource.Size() * 0.5f,
                     Projectile.scale * MathHelper.Lerp(0.2f, 0.58f, chargeIntensity) * fullChargeBonus,
                     SpriteEffects.None);
+                Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
             }
 
             return false;

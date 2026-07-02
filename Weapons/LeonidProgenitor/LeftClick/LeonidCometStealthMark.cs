@@ -78,7 +78,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 SpawnTimer = 0;
                 SpawnedMeteors++;
 
-                Vector2 spawnPosition = new(target.Center.X + Main.rand.Next(-120, 121), target.Center.Y - 600f - Main.rand.Next(30, 120));
+                Vector2 spawnPosition = new(target.Center.X + Main.rand.Next(-120, 121), target.Center.Y - 800f - Main.rand.Next(30, 120));
                 Vector2 velocity = (target.Center - spawnPosition).SafeNormalize(Vector2.UnitY) * 20.5f;
 
                 Projectile.NewProjectile(

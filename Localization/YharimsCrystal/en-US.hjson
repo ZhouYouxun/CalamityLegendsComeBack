@@ -5,6 +5,16 @@ Mods: {
 				NewLegendYharimsCrystal: {
 					DisplayName: Tyrant Crystal
 					Tooltip: "[GFB]"
+					TooltipBody:
+						'''
+						[c/F8E28A:Left Click Mode]: Hold left click to swing a high-speed spinning crystal disk to shred enemies ahead.
+						Upon hitting enemies, the disk erupts into a barrage of splitting holy fireballs and sacred light shards.
+						[c/73DFFF:Right Click Mode]: Hold right click to deploy six golden escort warships for coordinated air defense while channeling a continuous scorching deathray.
+						Press left click during right click to trigger a coordinated heavy attack, widening the main laser and spraying fanning split rays before causing a 2-second cooldown.
+						[c/F6D06B:Auric Ultimate (EX Skill)]: When charge is full and the Legendary Emblem is equipped, press the [Legendary Skill Key] to activate:
+						- In Left Click Mode, cast [Sacred Flame Blade]: Swing giant blades that tear through space, summoning towering pillars of golden fire from the ground.
+						- In Right Click Mode, cast [Laser Storm]: Summon 12 gold-sheened laser ships above the target, weaving a storm of concentrated deathrays.
+						'''
 					CurrentMode: "[c/F6D06B:Current core] {0}"
 					Mode_Drill: "[c/F2B85D:Siege Drill]"
 					Mode_Flamethrower: "[c/FF7A45:Auric Flamethrower]"
@@ -187,6 +197,7 @@ Mods: {
 				YC_RainbowUltimaBolt.DisplayName: Y C_ Rainbow Ultima Bolt
 				YC_RightCrystalHoldout.DisplayName: Y C_ Right Crystal Holdout
 				YC_RightScorchingLaser.DisplayName: Y C_ Right Scorching Laser
+				YC_LaserBlast.DisplayName: Scorching Laser Blast
 				YC_EssenceFlame.DisplayName: Y C_ Essence Flame
 				YC_ThrownBlade.DisplayName: Y C_ Thrown Blade
 				YC_RightDrone.DisplayName: Y C_ Right Drone

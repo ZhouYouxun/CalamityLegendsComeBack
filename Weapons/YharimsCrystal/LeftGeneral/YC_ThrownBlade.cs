@@ -24,13 +24,14 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
         private const int RightThrowTracking = 1;
         private const int RightThrowSlamming = 2;
         private const int RightThrowCutting = 3;
-        private const int RightThrowRiseFrames = 72;
-        private const int RightThrowMaxTrackingFrames = 150;
+        private const int RightThrowRiseFrames = 58;
+        private const int RightThrowMaxTrackingFrames = 96;
         private const float RightThrowSlamTriggerDistance = 220f;
         private const int RightThrowSlamFrames = 16;
         private const int RightThrowCutFrames = 110;
         private const int RightThrowJudgementCharges = 9;
         private const float RightThrowPeakSpeed = 28f;
+        private const float RightThrowSpinSmearScale = 1.12f;
         private static float UpwardBladeAngle => -MathHelper.PiOver4;
 
         public new string LocalizationCategory => "Projectiles.YharimsCrystal";
@@ -277,13 +278,24 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             Projectile.localAI[0]++;
             float progress = MathHelper.Clamp(Projectile.localAI[0] / RightThrowRiseFrames, 0f, 1f);
             float easedProgress = SmootherStep(progress);
-            float speed = RightThrowPeakSpeed * SmoothBell(progress);
-            Projectile.velocity = -Vector2.UnitY * speed;
-            Projectile.rotation = Projectile.rotation.AngleTowards(UpwardBladeAngle, MathHelper.ToRadians(MathHelper.Lerp(1.8f, 7.5f, easedProgress)));
+            Player owner = Main.player[Projectile.owner];
+            if (Projectile.localAI[0] == 1f)
+            {
+                Vector2 aim = owner.Calamity().mouseWorld - Projectile.Center;
+                float xSign = Math.Sign(aim.X);
+                if (xSign == 0f)
+                    xSign = owner.direction == 0 ? 1f : owner.direction;
+
+                Projectile.velocity = new Vector2(xSign * 13f, -23f);
+            }
+
+            Projectile.velocity.X *= 0.986f;
+            Projectile.velocity.Y = MathHelper.Clamp(Projectile.velocity.Y + 0.58f, -28f, 24f);
+            Projectile.rotation += 0.5f * Math.Sign(Projectile.velocity.X == 0f ? owner.direction : Projectile.velocity.X);
 
             EmitRightThrowFX(easedProgress);
 
-            if (progress >= 1f)
+            if (progress >= 1f || Projectile.velocity.Y >= 14f)
             {
                 Projectile.ai[1] = RightThrowTracking;
                 Projectile.localAI[0] = 0f;
@@ -301,14 +313,21 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
 
             if (target == null)
             {
-                Projectile.velocity *= 0.985f;
-                Projectile.rotation = Projectile.rotation.AngleTowards(UpwardBladeAngle, MathHelper.ToRadians(2f));
+                Vector2 groundPoint = GetNoTargetSlamPoint(owner);
+                Vector2 fallbackDirection = (groundPoint - Projectile.Center).SafeNormalize(Vector2.UnitY);
+                Vector2 fallbackCurrent = Projectile.velocity.SafeNormalize(fallbackDirection);
+                float fallbackAngle = fallbackCurrent.ToRotation().AngleTowards(fallbackDirection.ToRotation(), MathHelper.ToRadians(18f));
+                float fallbackSpeed = MathHelper.Lerp(28f, 48f, Utils.GetLerpValue(0f, 20f, Projectile.localAI[0], true));
+                Projectile.velocity = fallbackAngle.ToRotationVector2() * fallbackSpeed;
+                Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
                 EmitRightTrackingFX(0f);
 
-                if (Projectile.localAI[0] >= RightThrowMaxTrackingFrames)
+                if (Vector2.Distance(Projectile.Center, groundPoint) <= 90f || Projectile.localAI[0] >= 24f)
                 {
-                    DissipateRightThrow();
-                    Projectile.Kill();
+                    Projectile.ai[1] = RightThrowSlamming;
+                    Projectile.localAI[0] = 0f;
+                    Projectile.netUpdate = true;
+                    SoundEngine.PlaySound(SoundID.Item84 with { Volume = 0.78f, Pitch = -0.28f }, Projectile.Center);
                 }
                 return;
             }
@@ -340,6 +359,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
         {
             Projectile.localAI[0]++;
             NPC target = GetRightThrowTarget();
+            Vector2 fallbackPoint = GetNoTargetSlamPoint(owner);
 
             if (target != null)
             {
@@ -351,19 +371,37 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             }
             else
             {
-                Projectile.velocity *= 1.03f;
+                Vector2 desiredDirection = (fallbackPoint - Projectile.Center).SafeNormalize(Vector2.UnitY);
+                Vector2 currentDirection = Projectile.velocity.SafeNormalize(desiredDirection);
+                float newAngle = currentDirection.ToRotation().AngleTowards(desiredDirection.ToRotation(), MathHelper.ToRadians(36f));
+                float speed = MathHelper.Lerp(42f, 62f, Projectile.localAI[0] / (float)RightThrowSlamFrames);
+                Projectile.velocity = newAngle.ToRotationVector2() * speed;
             }
 
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
             EmitRightSlamFX();
 
             bool arrived = target != null && Vector2.Distance(Projectile.Center, target.Center) <= 90f;
+            bool groundArrived = target == null && Vector2.Distance(Projectile.Center, fallbackPoint) <= 92f;
             if (arrived || Projectile.localAI[0] >= RightThrowSlamFrames)
             {
                 TriggerSlamImpact(owner, target);
+                if (target == null)
+                {
+                    SelfDestructIntoFireballs(owner);
+                    Projectile.Kill();
+                    return;
+                }
+
                 Projectile.ai[1] = RightThrowCutting;
                 Projectile.localAI[0] = 0f;
                 Projectile.netUpdate = true;
+            }
+            else if (groundArrived)
+            {
+                TriggerSlamImpact(owner, null);
+                SelfDestructIntoFireballs(owner);
+                Projectile.Kill();
             }
         }
 
@@ -415,6 +453,19 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                 }
             }
             return fresh;
+        }
+
+        private Vector2 GetNoTargetSlamPoint(Player owner)
+        {
+            Vector2 mouse = owner.Calamity().mouseWorld;
+            if (mouse == Vector2.Zero)
+                mouse = Main.MouseWorld;
+
+            float x = Math.Abs(mouse.X - owner.Center.X) > 80f
+                ? mouse.X
+                : owner.Center.X + (owner.direction == 0 ? 1f : owner.direction) * 340f;
+            float y = Math.Max(mouse.Y, owner.Center.Y + 520f);
+            return new Vector2(x, y);
         }
 
         private void TriggerSlamImpact(Player owner, NPC target)
@@ -811,6 +862,9 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                 float pulse = 0.9f + 0.1f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 20f);
 
                 Main.spriteBatch.SetBlendState(BlendState.Additive);
+                if (Projectile.ai[0] == StateRightThrow)
+                    DrawRightThrowSpinDisc(drawPos, travelDirection);
+
                 for (int i = 0; i < 5; i++)
                 {
                     float progress = i / 5f;
@@ -860,6 +914,29 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             Main.EntitySpriteDraw(texture, drawPos, null, lightColor, Projectile.rotation, origin, Projectile.scale, effects, 0);
             Main.EntitySpriteDraw(glow, drawPos, null, new Color(255, 214, 88) * 0.8f, Projectile.rotation, origin, Projectile.scale, effects, 0);
             return false;
+        }
+
+        private void DrawRightThrowSpinDisc(Vector2 drawPos, Vector2 travelDirection)
+        {
+            Texture2D circular = ModContent.Request<Texture2D>("CalamityMod/Particles/CircularSmearFire3").Value;
+            Texture2D semi = ModContent.Request<Texture2D>("CalamityMod/Particles/SemiCircularSmearSwipe").Value;
+            float spin = Main.GlobalTimeWrappedHourly * 7.2f + Projectile.rotation;
+            float intensity = Projectile.ai[1] >= RightThrowSlamming ? 1.1f : 0.78f;
+            Color gold = new Color(255, 214, 88) with { A = 0 };
+            Color white = Color.White with { A = 0 };
+
+            Main.EntitySpriteDraw(semi, drawPos, null,
+                gold * 0.54f * intensity * Projectile.Opacity,
+                spin * 1.45f,
+                semi.Size() * 0.5f,
+                RightThrowSpinSmearScale * Projectile.scale * 0.95f,
+                travelDirection.X < 0f ? SpriteEffects.FlipHorizontally : SpriteEffects.None);
+            Main.EntitySpriteDraw(circular, drawPos, null,
+                white * 0.28f * intensity * Projectile.Opacity,
+                -spin * 1.15f,
+                circular.Size() * 0.5f,
+                RightThrowSpinSmearScale * Projectile.scale * 0.78f,
+                SpriteEffects.None);
         }
     }
 }

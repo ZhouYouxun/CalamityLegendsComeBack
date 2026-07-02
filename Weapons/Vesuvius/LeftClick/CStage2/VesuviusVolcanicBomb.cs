@@ -131,6 +131,28 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.CStage2
         {
             target.AddBuff(BuffID.OnFire3, 300);
         }
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            Texture2D texture = ModContent.Request<Texture2D>(Texture).Value;
+            Rectangle frame = texture.Frame(1, Main.projFrames[Type], 0, Projectile.frame);
+            Color fireColor = Color.Lerp(VesuviusProjectileVisuals.LavaOrange, VesuviusProjectileVisuals.LavaGold, 0.42f) with { A = 0 };
+
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
+            for (int i = Projectile.oldPos.Length - 1; i >= 1; i--)
+            {
+                if (Projectile.oldPos[i] == Vector2.Zero)
+                    continue;
+
+                float t = (Projectile.oldPos.Length - i) / (float)Projectile.oldPos.Length;
+                Vector2 oldCenter = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
+                Main.EntitySpriteDraw(texture, oldCenter, frame, fireColor * (0.34f * t), Projectile.oldRot[i], frame.Size() * 0.5f, Projectile.scale * MathHelper.Lerp(0.72f, 1f, t), SpriteEffects.None);
+            }
+
+            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, frame, fireColor, Projectile.rotation, frame.Size() * 0.5f, Projectile.scale, SpriteEffects.None);
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
+            return false;
+        }
     }
 
     public class VesuviusLingeringLava : ModProjectile, ILocalizedModType

@@ -1,6 +1,7 @@
 using CalamityLegendsComeBack.Weapons.Vesuvius.EXSkill;
 using CalamityLegendsComeBack.Weapons.Vesuvius.Passive;
 using CalamityLegendsComeBack.Weapons.Vesuvius.RightClick;
+using CalamityLegendsComeBack.Weapons.Vesuvius.RightClick.Javelin;
 using CalamityMod;
 using CalamityMod.Items;
 using CalamityMod.Rarities;
@@ -62,12 +63,12 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
             {
                 Item.useTime = 28;
                 Item.useAnimation = 28;
-                Item.channel = false;
+                Item.channel = true;
                 Item.noUseGraphic = true;
-                Item.shoot = ModContent.ProjectileType<VesuviusFaultJavelin>();
-                Item.shootSpeed = 25f;
-                Item.UseSound = SoundID.Item1 with { Volume = 0.78f, Pitch = -0.22f };
-                return player.ownedProjectileCounts[ModContent.ProjectileType<VesuviusFaultJavelin>()] < 1;
+                Item.shoot = ModContent.ProjectileType<VesuviusRightJavelinHoldout>();
+                Item.shootSpeed = 1f;
+                Item.UseSound = null;
+                return false;
             }
 
             Item.useTime = 30;
@@ -132,6 +133,9 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
             if (Main.myPlayer != player.whoAmI)
                 return;
 
+            if (CanStartRightClickHoldout(player))
+                StartRightClickHoldout(player);
+
             if (KeybindSystem.LegendarySkill.JustPressed &&
                 player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.LegendaryEmblemPlayer>().EXAccessoryEquipped &&
                 exPlayer.ConsumeAllEX() &&
@@ -195,13 +199,70 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
             return player.ownedProjectileCounts[ModContent.ProjectileType<VesuviusEXWeapon>()] > 0;
         }
 
-        private static void KillOwnedVesuviusAttacks(Player player)
+        private bool CanStartRightClickHoldout(Player player)
+        {
+            return player.whoAmI == Main.myPlayer &&
+                   player.Calamity().mouseRight &&
+                   !HasActiveUltimate(player) &&
+                   !Main.mapFullscreen &&
+                   !Main.blockMouse &&
+                   !player.mouseInterface &&
+                   !player.noItems &&
+                   !player.CCed &&
+                   player.ownedProjectileCounts[ModContent.ProjectileType<VesuviusRightJavelinHoldout>()] <= 0 &&
+                   !HasActiveFlyingRightJavelin(player);
+        }
+
+        private void StartRightClickHoldout(Player player)
         {
             int leftHoldoutType = ModContent.ProjectileType<VesuviusLeftHoldout>();
             for (int i = 0; i < Main.maxProjectiles; i++)
             {
                 Projectile projectile = Main.projectile[i];
                 if (projectile.active && projectile.owner == player.whoAmI && projectile.type == leftHoldoutType)
+                    projectile.Kill();
+            }
+
+            Vector2 aimDirection = (player.Calamity().mouseWorld - player.MountedCenter).SafeNormalize(Vector2.UnitX * player.direction);
+            int projIndex = Projectile.NewProjectile(
+                Item.GetSource_FromThis(),
+                player.MountedCenter,
+                aimDirection,
+                ModContent.ProjectileType<VesuviusRightJavelinHoldout>(),
+                VesuviusProgression.GetRightDamage(player.GetWeaponDamage(Item)),
+                Item.knockBack,
+                player.whoAmI,
+                VesuviusProgression.GetMaxStage());
+
+            if (Main.projectile.IndexInRange(projIndex))
+                Main.projectile[projIndex].CritChance = player.GetWeaponCrit(Item);
+        }
+
+        private static bool HasActiveFlyingRightJavelin(Player player)
+        {
+            int javelinType = ModContent.ProjectileType<VesuviusFaultJavelin>();
+            for (int i = 0; i < Main.maxProjectiles; i++)
+            {
+                Projectile projectile = Main.projectile[i];
+                if (projectile.active &&
+                    projectile.owner == player.whoAmI &&
+                    projectile.type == javelinType &&
+                    projectile.ai[0] == 0f)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static void KillOwnedVesuviusAttacks(Player player)
+        {
+            int leftHoldoutType = ModContent.ProjectileType<VesuviusLeftHoldout>();
+            int rightHoldoutType = ModContent.ProjectileType<VesuviusRightJavelinHoldout>();
+            for (int i = 0; i < Main.maxProjectiles; i++)
+            {
+                Projectile projectile = Main.projectile[i];
+                if (projectile.active && projectile.owner == player.whoAmI &&
+                    (projectile.type == leftHoldoutType || projectile.type == rightHoldoutType))
                     projectile.Kill();
             }
         }

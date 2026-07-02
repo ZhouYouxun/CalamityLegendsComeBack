@@ -53,7 +53,34 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
         {
             // Keep the actual throw angle — the staff flies true, it does not tumble or spin
             if (Projectile.ai[0] == FlightState)
+            {
                 UpdateFlightRotation();
+
+                // Homing logic: track the closest target while in flight
+                NPC target = null;
+                float maxDistance = 900f;
+                for (int i = 0; i < Main.maxNPCs; i++)
+                {
+                    NPC npc = Main.npc[i];
+                    if (npc.active && !npc.friendly && npc.chaseable && !npc.dontTakeDamage && npc.lifeMax > 5)
+                    {
+                        float distance = Vector2.Distance(Projectile.Center, npc.Center);
+                        if (distance < maxDistance)
+                        {
+                            maxDistance = distance;
+                            target = npc;
+                        }
+                    }
+                }
+
+                if (target != null)
+                {
+                    float homingStrength = 0.08f;
+                    float speed = Projectile.velocity.Length();
+                    Vector2 targetDir = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitX);
+                    Projectile.velocity = Vector2.Normalize(Vector2.Lerp(Projectile.velocity, targetDir * speed, homingStrength)) * speed;
+                }
+            }
 
             if (Projectile.ai[0] == NpcStickState)
             {
@@ -143,6 +170,23 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
         {
             target.AddBuff(BuffID.OnFire3, 240);
             SpawnSmallImpact(target.Center);
+
+            // Release 2 fireballs in random directions on every strike (initial or stuck ticks)
+            if (Projectile.owner == Main.myPlayer)
+            {
+                for (int i = 0; i < 2; i++)
+                {
+                    Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(4f, 8f);
+                    Projectile.NewProjectile(
+                        Projectile.GetSource_FromThis(),
+                        Projectile.Center,
+                        velocity,
+                        ModContent.ProjectileType<VesuviusFaultFireball>(),
+                        (int)(Projectile.damage * 0.45f),
+                        Projectile.knockBack * 0.5f,
+                        Projectile.owner);
+                }
+            }
 
             if (Stage >= 5 && Projectile.localAI[2] == 0f && Projectile.owner == Main.myPlayer)
             {
@@ -311,6 +355,17 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
                     VesuviusProjectileVisuals.AdditiveColor(trailC),
                     Projectile.oldRot[i], texture.Size() * 0.5f,
                     MathHelper.Lerp(0.6f, 1f, t) * Projectile.scale, SpriteEffects.None);
+            }
+
+            // Golden outline/border effect (Additive blending with LavaGold)
+            Color goldBorderC = VesuviusProjectileVisuals.LavaGold with { A = 0 };
+            float borderRadius = 2.4f;
+            int borderCopies = 8;
+            for (int i = 0; i < borderCopies; i++)
+            {
+                Vector2 offset = (MathHelper.TwoPi * i / borderCopies + Main.GlobalTimeWrappedHourly * 1.6f).ToRotationVector2() * borderRadius;
+                Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition + offset, null,
+                    goldBorderC * 0.25f, Projectile.rotation, texture.Size() * 0.5f, 1.05f * Projectile.scale, SpriteEffects.None);
             }
 
             // Main weapon sprite — spinning staff

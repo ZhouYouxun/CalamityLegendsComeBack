@@ -157,6 +157,7 @@ Mods: {
 				LeonidUltimateUI.DisplayName: 终结能量条
 				LeonidRightClickHoldout.DisplayName: 流星右键手持弹幕
 				LPBookPanel.DisplayName: 狮源金属矩阵面板
+				// LeonidStealthRainSpawner.DisplayName: Leonid Stealth Rain Spawner
 			}
 		}
 

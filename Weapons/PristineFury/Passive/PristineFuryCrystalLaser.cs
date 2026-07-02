@@ -110,13 +110,13 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.Passive
                     float randDir = Projectile.velocity.ToRotation() + (Main.rand.NextBool() ? -1f : 1f) * MathHelper.PiOver2;
                     float randSpeed = (float)Main.rand.NextDouble() * 2f + 2f;
                     Vector2 dustVel = new Vector2((float)Math.Cos(randDir) * randSpeed, (float)Math.Sin(randDir) * randSpeed);
-                    Dust d = Dust.NewDustPerfect(tipPos, DustID.RainbowMk2, dustVel, 0, Color.Violet, 1.5f);
+                    Dust d = Dust.NewDustPerfect(tipPos, DustID.GoldFlame, dustVel, 0, Main.rand.NextBool(3) ? Color.White : new Color(255, 224, 72), 1.5f);
                     d.noGravity = true;
                 }
             }
 
             // Lighting along beam
-            DelegateMethods.v3_1 = new Vector3(0.28f, 0.12f, 0.55f);
+            DelegateMethods.v3_1 = new Vector3(0.9f, 0.68f, 0.16f);
             Utils.PlotTileLine(Projectile.Center, Projectile.Center + Projectile.velocity * LaserLength, Projectile.width * Projectile.scale, DelegateMethods.CastLight);
         }
 
@@ -134,7 +134,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.Passive
         public override Color? GetAlpha(Color lightColor)
         {
             byte a = (byte)(180 * Projectile.scale);
-            return new Color(200, 150, 255, a);
+            return new Color(255, 224, 88, a);
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -148,7 +148,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.Passive
             Texture2D midTex = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Lasers/ProvidenceHolyRayMid", ReLogic.Content.AssetRequestMode.ImmediateLoad).Value;
             Texture2D endTex = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Lasers/ProvidenceHolyRayEnd", ReLogic.Content.AssetRequestMode.ImmediateLoad).Value;
 
-            Color baseColor = (new Color(210, 150, 255) with { A = 0 }) * Projectile.scale;
+            Color baseColor = (new Color(255, 224, 88) with { A = 0 }) * Projectile.scale;
             Vector2 drawOrigin = Projectile.Center - Main.screenPosition;
 
             // Head node
