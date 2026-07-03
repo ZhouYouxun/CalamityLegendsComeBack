@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
 using CalamityMod;
 using Microsoft.Xna.Framework;
@@ -90,28 +89,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             }
         }
 
-        private static bool IsKeybindPressed(ModKeybind keybind)
-        {
-            if (keybind == null) return false;
-            var keys = keybind.GetAssignedKeys();
-            if (keys == null || keys.Count == 0) return false;
-
-            foreach (var key in keys)
-            {
-                if (key == "Mouse1") { if (Main.mouseLeft) return true; }
-                else if (key == "Mouse2") { if (Main.mouseRight) return true; }
-                else if (key == "Mouse3") { if (Main.mouseMiddle) return true; }
-                else
-                {
-                    if (System.Enum.TryParse<Microsoft.Xna.Framework.Input.Keys>(key, true, out var xnaKey))
-                    {
-                        if (Main.keyState.IsKeyDown(xnaKey))
-                            return true;
-                    }
-                }
-            }
-            return false;
-        }
         #endregion
 
         private static NewLegendSHPC FindWeapon(Player player)
@@ -134,14 +111,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 {
                     Close();
                     prevMouseMiddle = Main.mouseMiddle;
-                    prevKeybindPressed = IsKeybindPressed(KeybindSystem.SHPCLoadingUI);
+                    prevKeybindPressed = InventoryActivationInput.IsPressed(KeybindSystem.SHPCLoadingUI);
                     return;
                 }
 
                 if (Main.playerInventory)
                 {
-                    bool keyBound = KeybindSystem.SHPCLoadingUI.GetAssignedKeys().Any();
-                    bool keybindPressed = IsKeybindPressed(KeybindSystem.SHPCLoadingUI);
+                    bool keyBound = InventoryActivationInput.HasBoundKey(KeybindSystem.SHPCLoadingUI);
+                    bool keybindPressed = InventoryActivationInput.IsPressed(KeybindSystem.SHPCLoadingUI);
                     bool keybindJustPressed = keybindPressed && !prevKeybindPressed;
                     prevKeybindPressed = keybindPressed;
 
