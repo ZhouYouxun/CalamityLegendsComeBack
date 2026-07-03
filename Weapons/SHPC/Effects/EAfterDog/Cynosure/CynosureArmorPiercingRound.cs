@@ -35,7 +35,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
 
         public override void SetStaticDefaults()
         {
-            ProjectileID.Sets.TrailCacheLength[Type] = 44;
+            ProjectileID.Sets.TrailCacheLength[Type] = 18;
             ProjectileID.Sets.TrailingMode[Type] = 2;
         }
 
@@ -48,8 +48,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
             Projectile.ignoreWater = true;
             Projectile.tileCollide = true;
             Projectile.penetrate = 1;
-            Projectile.timeLeft = 300;
-            Projectile.extraUpdates = 2;
+            Projectile.timeLeft = 240;
+            Projectile.extraUpdates = 1;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = -1;
             Projectile.ArmorPenetration = 100;
@@ -62,12 +62,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
 
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 normal = forward.RotatedBy(MathHelper.PiOver2);
-            float age = 300f - Projectile.timeLeft;
+            float age = 240f - Projectile.timeLeft;
 
             // ═══════════════════════════════════════════════════
             // 装饰层 1：对数螺旋双臂 (Logarithmic Spiral)
             // r = a · e^(b·θ)，两条螺旋臂相位差 π
             // ═══════════════════════════════════════════════════
+            if (Projectile.numUpdates == 0)
             {
                 float spiralA = 2.8f;
                 float spiralB = 0.12f;
@@ -189,10 +190,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
             Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, Vector2.Zero,
                 ModContent.ProjectileType<CynosureLightningExplosion>(), burstDamage, Projectile.knockBack, Projectile.owner);
 
-            SpawnEllipse(preferredTarget, ellipseGroup: 0, count: 30);
-            SpawnEllipse(preferredTarget, ellipseGroup: 1, count: 30);
+            SpawnEllipse(preferredTarget, ellipseGroup: 0, count: 10);
+            SpawnEllipse(preferredTarget, ellipseGroup: 1, count: 10);
 
-            const int chargedCount = 12;
+            const int chargedCount = 6;
             for (int i = 0; i < chargedCount; i++)
             {
                 float angle = MathHelper.TwoPi * i / chargedCount;
@@ -233,11 +234,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
                 Main.rand.NextFloat(MathHelper.TwoPi),
                 0.035f, 0.28f, 16));
 
-            CynosureVisuals.SpawnElectricBurst(Projectile.Center, 54, 4.5f, 26f);
-            CynosureVisuals.SpawnScarletStyleBurst(Projectile.Center, 34, 12f, 21f, 1.22f);
+            CynosureVisuals.SpawnElectricBurst(Projectile.Center, 16, 4.5f, 22f);
+            CynosureVisuals.SpawnScarletStyleBurst(Projectile.Center, 8, 10f, 18f, 1.0f);
 
             // 辐射状辉光火花
-            for (int i = 0; i < 28; i++)
+            for (int i = 0; i < 8; i++)
             {
                 Vector2 velocity = Main.rand.NextVector2Unit() * Main.rand.NextFloat(5f, 20f);
                 Color color = Main.rand.NextBool(4) ? Color.White : Color.Cyan;
@@ -251,7 +252,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
             }
 
             // 玫瑰线图案爆炸火花
-            for (int i = 0; i < 72; i++)
+            for (int i = 0; i < 18; i++)
             {
                 float angle = MathHelper.TwoPi * i / 72f;
                 float rose = 0.78f + 0.32f * MathF.Sin(angle * 5f);
@@ -266,7 +267,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
                     Main.rand.NextFloat(0.32f, 0.64f),
                     Main.rand.Next(13, 22)));
 
-                if (i % 3 == 0)
+                if (i % 6 == 0)
                 {
                     Dust dust = Dust.NewDustPerfect(
                         Projectile.Center + direction * Main.rand.NextFloat(10f, 34f),
@@ -311,7 +312,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
                 }
             }
 
-            if (Projectile.numUpdates <= 1 && Main.rand.NextBool(2))
+            if (Projectile.numUpdates == 0 && Main.rand.NextBool(4))
             {
                 float petalAngle = time * 2.6f + Main.rand.NextFloat(MathHelper.TwoPi);
                 float petalRadius = Main.rand.NextFloat(5f, 26f) * (0.65f + speedPower * 0.7f);
@@ -325,7 +326,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
                     Main.rand.Next(8, 14)));
             }
 
-            if (Projectile.numUpdates == 0 && age % 5f < 1f)
+            if (Projectile.numUpdates == 0 && age % 8f < 1f)
             {
                 GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
                     Projectile.Center - forward * 10f,
@@ -338,7 +339,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
                     12));
             }
 
-            for (int i = 0; i < 2; i++)
+            if (Projectile.numUpdates != 0 || !Main.rand.NextBool(2))
+                return;
+
+            for (int i = 0; i < 1; i++)
             {
                 Dust dust = Dust.NewDustPerfect(
                     Projectile.Center - forward * Main.rand.NextFloat(2f, 18f) + normal * Main.rand.NextFloat(-9f, 9f),
@@ -371,7 +375,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
             PrimitiveRenderer.RenderTrail(Projectile.oldPos,
                 new PrimitiveSettings(TrailWidth, TrailColor, (_, _) => Projectile.Size * 0.5f,
                     shader: GameShaders.Misc["CalamityMod:OverpoweredTouhouSpearShader"]),
-                42);
+                18);
 
             // --- 主体层：BloomLineSoftEdge 直绘纤细发光拖尾 ---
             Texture2D bloomLine = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomLineSoftEdge").Value;
@@ -386,7 +390,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
             Main.spriteBatch.SetBlendState(BlendState.Additive);
 
             // 主拖尾：遍历 oldPos，每个历史点绘制一条纤细的 BloomLineSoftEdge
-            for (int i = trailLength - 1; i >= 0; i--)
+            for (int i = trailLength - 1; i >= 0; i -= 3)
             {
                 if (Projectile.oldPos[i] == Vector2.Zero)
                     continue;
@@ -479,9 +483,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
             Color outlineColor = AuricGold with { A = 0 };
 
             Main.spriteBatch.SetBlendState(BlendState.Additive);
-            for (int i = 0; i < 12; i++)
+            for (int i = 0; i < 4; i++)
             {
-                float angle = MathHelper.TwoPi * i / 12f;
+                float angle = MathHelper.TwoPi * i / 4f;
                 Vector2 offset = angle.ToRotationVector2() * (2.2f + outlinePulse);
                 Main.EntitySpriteDraw(
                     texture,

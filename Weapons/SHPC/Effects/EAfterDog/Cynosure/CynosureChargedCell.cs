@@ -73,10 +73,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
                 Projectile.velocity *= 0.9f;
 
                 // 充能蓄力特效：随机电火花 + 偶发光球
-                if (Main.rand.NextBool(2))
+                if (Projectile.timeLeft % 6 == 0)
                     CynosureVisuals.SpawnElectricBurst(Projectile.Center, 1, 0.8f, 2.5f);
 
-                if (!Main.dedServ && Main.rand.NextBool(4))
+                if (!Main.dedServ && Projectile.timeLeft % 10 == 0)
                 {
                     GeneralParticleHandler.SpawnParticle(new SquishyLightParticle(
                         Projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
@@ -105,12 +105,19 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
                     Projectile.owner, target.whoAmI, target.Center.X, target.Center.Y);
 
                 // 在目标处同时产生闪电爆炸
-                Projectile.NewProjectile(Projectile.GetSource_FromThis(), target.Center, Vector2.Zero,
-                    ModContent.ProjectileType<CynosureLightningExplosion>(), Projectile.damage, Projectile.knockBack,
-                    Projectile.owner);
+                if (Main.rand.NextBool(4))
+                {
+                    Projectile.NewProjectile(Projectile.GetSource_FromThis(), target.Center, Vector2.Zero,
+                        ModContent.ProjectileType<CynosureLightningExplosion>(), Projectile.damage, Projectile.knockBack,
+                        Projectile.owner);
+                }
+                else
+                {
+                    SpawnSimpleLightningImpact(target.Center);
+                }
             }
 
-            CynosureVisuals.SpawnElectricBurst(Projectile.Center, 22, 2.4f, 12f);
+            CynosureVisuals.SpawnElectricBurst(Projectile.Center, 7, 2.4f, 10f);
 
             // 脉冲环
             GeneralParticleHandler.SpawnParticle(new CustomPulse(
@@ -130,9 +137,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
                 0.55f, 0.04f, 10));
 
             // 放射状线条火花（仿 AuricBall OnKill）
-            for (int i = 0; i < 16; i++)
+            for (int i = 0; i < 5; i++)
             {
-                float angle = MathHelper.TwoPi * i / 16f;
+                float angle = MathHelper.TwoPi * i / 5f;
                 Vector2 dir = angle.ToRotationVector2();
                 GeneralParticleHandler.SpawnParticle(new LineParticle(
                     Projectile.Center + dir * Main.rand.NextFloat(2f, 7f),
@@ -141,6 +148,37 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
                     Main.rand.Next(8, 15),
                     Main.rand.NextFloat(0.16f, 0.38f),
                     i % 2 == 0 ? new Color(255, 214, 88) : new Color(255, 240, 160)));
+            }
+        }
+
+        private static void SpawnSimpleLightningImpact(Vector2 center)
+        {
+            if (Main.dedServ)
+                return;
+
+            CynosureVisuals.SpawnElectricBurst(center, 7, 2.2f, 10f);
+
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                center,
+                Vector2.Zero,
+                new Color(255, 218, 84),
+                "CalamityMod/Particles/BloomRing",
+                Vector2.One * 0.42f,
+                Main.rand.NextFloat(MathHelper.TwoPi),
+                0.04f,
+                0.16f,
+                10));
+
+            for (int i = 0; i < 5; i++)
+            {
+                Vector2 direction = Main.rand.NextVector2Unit();
+                GeneralParticleHandler.SpawnParticle(new LineParticle(
+                    center + direction * Main.rand.NextFloat(2f, 8f),
+                    direction * Main.rand.NextFloat(3f, 9f),
+                    false,
+                    Main.rand.Next(8, 14),
+                    Main.rand.NextFloat(0.12f, 0.28f),
+                    Main.rand.NextBool(3) ? Color.White : new Color(54, 205, 255)));
             }
         }
 
@@ -167,9 +205,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
 
             // 贴图轮廓辉光（10 圈，仿 AuricBall）
             float outlinePulse = 1f + 0.10f * MathF.Sin(Main.GlobalTimeWrappedHourly * 12f + Projectile.identity);
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 4; i++)
             {
-                Vector2 offset = (MathHelper.TwoPi * i / 10f).ToRotationVector2() * (2.4f * outlinePulse);
+                Vector2 offset = (MathHelper.TwoPi * i / 4f).ToRotationVector2() * (2.1f * outlinePulse);
                 Main.EntitySpriteDraw(texture, center + offset, frame,
                     gold * 0.45f,
                     Projectile.rotation, texOrigin, Projectile.scale * 1.08f, SpriteEffects.None);
@@ -191,9 +229,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
         public new string LocalizationCategory => "Projectiles.SHPC";
 
-        private const int ExplosionLifetime = 28;
+        private const int ExplosionLifetime = 18;
         private const float TenTileRadius = 10f * 16f;
-        private const float OuterVisualRadius = TenTileRadius * 1.32f;
+        private const float OuterVisualRadius = TenTileRadius * 1.32f * 0.4f;
         private static readonly Color CynosureBlue = new(54, 205, 255);
         private static readonly Color CynosureGold = new(255, 218, 84);
         private static readonly Color CynosureWhite = new(232, 250, 255);
@@ -224,14 +262,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
                 SpawnOpeningBlast();
             }
 
-            if (Projectile.timeLeft % 4 == 0)
+            if (Projectile.timeLeft % 20 == 0)
                 BuildLightning();
 
             float fade = Projectile.timeLeft / (float)ExplosionLifetime;
             Lighting.AddLight(Projectile.Center, new Vector3(0.16f, 0.74f, 1f) * (0.95f + fade * 0.6f));
             CynosureVisuals.SpawnScarletStyleBurst(
                 Projectile.Center,
-                Math.Max(5, (int)MathF.Ceiling(fade * 24f)),
+                Math.Max(1, (int)MathF.Ceiling(fade * 5f)),
                 12f,
                 29f,
                 1.12f + fade * 0.62f);
@@ -243,8 +281,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
         {
             // Rebuild the outer cracks periodically so the sigil flickers like a real high-energy fracture.
             lightningTrails.Clear();
-            const int crackCount = 28;
-            const int pointCount = 12;
+            const int crackCount = 4;
+            const int pointCount = 6;
 
             for (int i = 0; i < crackCount; i++)
             {
@@ -279,23 +317,21 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
         {
             sigilTrails.Clear();
 
-            AddRoseTrail(0f, 5, TenTileRadius, 112, 0.08f);
-            AddRoseTrail(MathHelper.PiOver2, 5, TenTileRadius * 0.74f, 112, -0.10f);
-            AddLissajousTrail(0f, TenTileRadius * 0.78f, 128);
-            AddLissajousTrail(MathHelper.PiOver4, TenTileRadius * 0.58f, 128);
+            AddRoseTrail(0f, 5, TenTileRadius * 0.34f, 14, 0.08f);
+            AddLissajousTrail(MathHelper.PiOver4, TenTileRadius * 0.24f, 16);
 
-            const int starPoints = 10;
+            const int starPoints = 6;
             for (int i = 0; i < starPoints; i++)
             {
                 float start = MathHelper.TwoPi * i / starPoints - MathHelper.PiOver2;
                 float end = MathHelper.TwoPi * ((i + 3) % starPoints) / starPoints - MathHelper.PiOver2;
-                AddChordTrail(start, end, TenTileRadius, 0.16f + (i % 2) * 0.10f);
+                AddChordTrail(start, end, TenTileRadius * 0.4f, 0.16f + (i % 2) * 0.10f);
             }
 
-            for (int arm = 0; arm < 6; arm++)
+            for (int arm = 0; arm < 3; arm++)
             {
                 float phase = MathHelper.TwoPi * arm / 6f;
-                AddFermatSpiral(phase, TenTileRadius * 0.96f, clockwise: arm % 2 == 0);
+                AddFermatSpiral(phase, TenTileRadius * 0.38f, clockwise: arm % 2 == 0);
             }
         }
 
@@ -349,9 +385,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
         {
             List<Vector2> points = new();
             float direction = clockwise ? 1f : -1f;
-            for (int i = 0; i <= 34; i++)
+            for (int i = 0; i <= 10; i++)
             {
-                float completion = i / 34f;
+                float completion = i / 10f;
                 float angle = phase + direction * completion * MathHelper.TwoPi * 2.45f;
                 float r = MathF.Sqrt(completion) * radius;
                 points.Add(Projectile.Center + angle.ToRotationVector2() * r);
@@ -363,34 +399,34 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
         {
             float rotation = Main.rand.NextFloat(MathHelper.TwoPi);
 
-            CynosureVisuals.SpawnElectricBurst(Projectile.Center, 118, 5f, 36f);
+            CynosureVisuals.SpawnElectricBurst(Projectile.Center, 10, 5f, 30f);
             GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
-                Projectile.Center, Vector2.Zero, CynosureBlue, Vector2.One * 1.65f, 0f, 0.08f, 1.05f, 24));
+                Projectile.Center, Vector2.Zero, CynosureBlue, Vector2.One * 0.66f, 0f, 0.08f, 0.42f, 24));
             GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
-                Projectile.Center, Vector2.Zero, CynosureGold, new Vector2(0.72f, 1.95f), rotation, 0.05f, 1.18f, 22));
+                Projectile.Center, Vector2.Zero, CynosureGold, new Vector2(0.29f, 0.78f), rotation, 0.05f, 0.47f, 22));
             GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
-                Projectile.Center, Vector2.Zero, CynosureWhite, new Vector2(1.95f, 0.72f), rotation + MathHelper.PiOver2, 0.04f, 0.92f, 20));
+                Projectile.Center, Vector2.Zero, CynosureWhite, new Vector2(0.78f, 0.29f), rotation + MathHelper.PiOver2, 0.04f, 0.37f, 20));
 
             GeneralParticleHandler.SpawnParticle(new CustomPulse(
                 Projectile.Center, Vector2.Zero, CynosureGold * 0.66f,
                 "CalamityMod/Particles/ShatteredExplosion", Vector2.One, rotation,
-                0f, 1.05f, 32));
+                0f, 0.42f, 32));
             GeneralParticleHandler.SpawnParticle(new CustomPulse(
                 Projectile.Center, Vector2.Zero, CynosureBlue * 0.72f,
                 "CalamityMod/Particles/ShatteredExplosion", Vector2.One, rotation + MathHelper.TwoPi / 3f,
-                0f, 0.82f, 29));
+                0f, 0.33f, 29));
             GeneralParticleHandler.SpawnParticle(new CustomPulse(
                 Projectile.Center, Vector2.Zero, CynosureWhite * 0.56f,
                 "CalamityMod/Particles/ShatteredExplosion", Vector2.One, rotation + MathHelper.TwoPi * 2f / 3f,
-                0f, 0.58f, 26));
+                0f, 0.23f, 26));
 
             GeneralParticleHandler.SpawnParticle(new CustomPulse(
                 Projectile.Center, Vector2.Zero, new Color(255, 224, 92),
                 "CalamityMod/Particles/PlasmaExplosion", Vector2.One,
-                rotation + MathHelper.PiOver4, 0.04f, 0.44f, 18));
+                rotation + MathHelper.PiOver4, 0.04f, 0.18f, 18));
 
             float goldenAngle = MathHelper.Pi * (3f - MathF.Sqrt(5f));
-            for (int i = 0; i < 96; i++)
+            for (int i = 0; i < 8; i++)
             {
                 float angle = goldenAngle * i + rotation;
                 float rose = 0.76f + 0.24f * MathF.Sin(angle * 5f);
@@ -407,7 +443,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
                     i % 5 == 0 ? CynosureWhite : color));
             }
 
-            for (int i = 0; i < 72; i++)
+            for (int i = 0; i < 6; i++)
             {
                 float angle = MathHelper.TwoPi * i / 72f + rotation;
                 Vector2 direction = angle.ToRotationVector2();
@@ -428,7 +464,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
                 return;
 
             float age = ExplosionLifetime - Projectile.timeLeft;
-            int count = Math.Max(6, (int)MathF.Ceiling(14f * fade));
+            int count = Math.Max(1, (int)MathF.Ceiling(2f * fade));
             float expansion = Utils.GetLerpValue(0f, ExplosionLifetime * 0.62f, age, true);
 
             for (int i = 0; i < count; i++)
@@ -437,7 +473,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
                 float rose = 0.72f + 0.28f * MathF.Cos(angle * 5f + age * 0.21f);
                 Vector2 direction = angle.ToRotationVector2();
                 Vector2 tangent = direction.RotatedBy(MathHelper.PiOver2);
-                Vector2 position = Projectile.Center + direction * TenTileRadius * MathHelper.Lerp(0.38f, 1f, expansion) * rose;
+                Vector2 position = Projectile.Center + direction * TenTileRadius * 0.4f * MathHelper.Lerp(0.38f, 1f, expansion) * rose;
                 Vector2 velocity = direction * Main.rand.NextFloat(1.2f, 4.8f) + tangent * MathF.Sin(age * 0.2f + i) * Main.rand.NextFloat(0.8f, 3.2f);
                 Color color = Color.Lerp(CynosureGold, CynosureBlue, (i % 5) / 4f);
 
@@ -500,14 +536,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
             GameShaders.Misc["CalamityMod:TeslaTrail"].SetShaderTexture(ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/ZapTrail"));
             foreach (List<Vector2> points in sigilTrails)
             {
-                PrimitiveRenderer.RenderTrail(points, new PrimitiveSettings(SigilBackWidth, SigilBackColor, smoothen: false, shader: GameShaders.Misc["CalamityMod:TeslaTrail"]), 74);
-                PrimitiveRenderer.RenderTrail(points, new PrimitiveSettings(SigilWidth, SigilColor, smoothen: false, shader: GameShaders.Misc["CalamityMod:TeslaTrail"]), 74);
+                PrimitiveRenderer.RenderTrail(points, new PrimitiveSettings(SigilWidth, SigilColor, smoothen: false, shader: GameShaders.Misc["CalamityMod:TeslaTrail"]), 28);
             }
 
             foreach (List<Vector2> points in lightningTrails)
             {
-                PrimitiveRenderer.RenderTrail(points, new PrimitiveSettings(LightningBackWidth, LightningBackColor, smoothen: false, shader: GameShaders.Misc["CalamityMod:TeslaTrail"]), 60);
-                PrimitiveRenderer.RenderTrail(points, new PrimitiveSettings(LightningWidth, LightningColor, smoothen: false, shader: GameShaders.Misc["CalamityMod:TeslaTrail"]), 60);
+                PrimitiveRenderer.RenderTrail(points, new PrimitiveSettings(LightningWidth, LightningColor, smoothen: false, shader: GameShaders.Misc["CalamityMod:TeslaTrail"]), 24);
             }
 
             Main.spriteBatch.ExitShaderRegion();

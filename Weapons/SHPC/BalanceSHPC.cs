@@ -216,6 +216,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             return GetValueForStage(GetDefaultLeftClickExplosionRadiusValues(), GetCompletedStageIndex());
         }
 
+        public int GetDefaultLeftClickNoAmmoExplosionRadius()
+        {
+            return GetValueForStage(GetDefaultLeftClickNoAmmoExplosionRadiusValues(), GetRightClickProgressState());
+        }
+
         public int GetRightClickBaseDamage()
         {
             return GetValueForStage(GetRightClickBaseDamageValues(), GetCompletedStageIndex());
@@ -296,7 +301,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         {
             bool hasCoolingBoost = player != null &&
                 (player.HasBuff(BuffID.Inferno) ||
-                player.GetModPlayer<SHPCEnergyCorePlayer>().HasEnergyCore ||
                 player.GetModPlayer<HeatModulePlayer>().HeatModuleEquipped);
 
             float multiplier = hasCoolingBoost
@@ -341,6 +345,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             280,
             320,
             360
+        };
+
+        private static readonly int[] DefaultLeftClickNoAmmoExplosionRadii =
+        {
+            75,
+            125,
+            175,
+            225,
+            300
         };
 
         // 右键热量总积攒时间固定为15秒；当前可用的热量等级平分这15秒。
@@ -426,6 +439,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         private static int[] GetDefaultLeftClickExplosionRadiusValues() =>
             RuntimeBalanceData.GetSourceIntArray(SourceFile, nameof(DefaultLeftClickExplosionRadii), DefaultLeftClickExplosionRadii);
+
+        private static int[] GetDefaultLeftClickNoAmmoExplosionRadiusValues() =>
+            RuntimeBalanceData.GetSourceIntArray(SourceFile, nameof(DefaultLeftClickNoAmmoExplosionRadii), DefaultLeftClickNoAmmoExplosionRadii);
 
         private static int[] GetHeatFillTimesByProgressStateValues() =>
             RuntimeBalanceData.GetSourceIntArray(SourceFile, nameof(HeatFillTimesByProgressState), HeatFillTimesByProgressState);
