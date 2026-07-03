@@ -16,8 +16,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
         public override string Texture => "CalamityLegendsComeBack/Weapons/SHPC/Effects/EAfterDog/Cynosure/注能金源珠九帧图";
         public new string LocalizationCategory => "Projectiles.SHPC";
 
-        private const int Lifetime = 220;
-        private const int ScatterSlowdownFrames = 84;
+        private const int Lifetime = 300;
+        private const int ScatterSlowdownFrames = 120;
         private const float HomingRange = 2600f;
         private const float StartingHomingSpeed = 24f;
         private const float MaxHomingSpeed = 96f;
@@ -45,7 +45,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
             Projectile.tileCollide = false;
             Projectile.penetrate = 2;
             Projectile.timeLeft = Lifetime;
-            Projectile.extraUpdates = 0;
+            Projectile.extraUpdates = 1;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = 18;
         }

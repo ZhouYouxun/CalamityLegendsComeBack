@@ -48,8 +48,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
             Projectile.ignoreWater = true;
             Projectile.tileCollide = true;
             Projectile.penetrate = 1;
-            Projectile.timeLeft = 240;
-            Projectile.extraUpdates = 1;
+            Projectile.timeLeft = 300;
+            Projectile.extraUpdates = 2;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = -1;
             Projectile.ArmorPenetration = 100;
@@ -62,7 +62,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
 
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 normal = forward.RotatedBy(MathHelper.PiOver2);
-            float age = 240f - Projectile.timeLeft;
+            float age = 300f - Projectile.timeLeft;
 
             // ═══════════════════════════════════════════════════
             // 装饰层 1：对数螺旋双臂 (Logarithmic Spiral)
@@ -190,10 +190,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
             Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, Vector2.Zero,
                 ModContent.ProjectileType<CynosureLightningExplosion>(), burstDamage, Projectile.knockBack, Projectile.owner);
 
-            SpawnEllipse(preferredTarget, ellipseGroup: 0, count: 10);
-            SpawnEllipse(preferredTarget, ellipseGroup: 1, count: 10);
+            SpawnEllipse(preferredTarget, ellipseGroup: 0, count: 30);
+            SpawnEllipse(preferredTarget, ellipseGroup: 1, count: 30);
 
-            const int chargedCount = 6;
+            const int chargedCount = 12;
             for (int i = 0; i < chargedCount; i++)
             {
                 float angle = MathHelper.TwoPi * i / chargedCount;

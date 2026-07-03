@@ -105,7 +105,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
                     Projectile.owner, target.whoAmI, target.Center.X, target.Center.Y);
 
                 // 在目标处同时产生闪电爆炸
-                if (Main.rand.NextBool(4))
+                if (Main.rand.NextBool(3))
                 {
                     Projectile.NewProjectile(Projectile.GetSource_FromThis(), target.Center, Vector2.Zero,
                         ModContent.ProjectileType<CynosureLightningExplosion>(), Projectile.damage, Projectile.knockBack,
@@ -532,20 +532,52 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
 
         public override bool PreDraw(ref Color lightColor)
         {
-            Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
-            GameShaders.Misc["CalamityMod:TeslaTrail"].SetShaderTexture(ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/ZapTrail"));
+            Texture2D pixel = TextureAssets.MagicPixel.Value;
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
+
             foreach (List<Vector2> points in sigilTrails)
-            {
-                PrimitiveRenderer.RenderTrail(points, new PrimitiveSettings(SigilWidth, SigilColor, smoothen: false, shader: GameShaders.Misc["CalamityMod:TeslaTrail"]), 28);
-            }
+                DrawTrailSegments(pixel, points, sigil: true);
 
             foreach (List<Vector2> points in lightningTrails)
-            {
-                PrimitiveRenderer.RenderTrail(points, new PrimitiveSettings(LightningWidth, LightningColor, smoothen: false, shader: GameShaders.Misc["CalamityMod:TeslaTrail"]), 24);
-            }
+                DrawTrailSegments(pixel, points, sigil: false);
 
-            Main.spriteBatch.ExitShaderRegion();
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
             return false;
+        }
+
+        private void DrawTrailSegments(Texture2D pixel, List<Vector2> trailPoints, bool sigil)
+        {
+            if (trailPoints.Count < 2)
+                return;
+
+            for (int i = 1; i < trailPoints.Count; i++)
+            {
+                float completion = i / (float)(trailPoints.Count - 1);
+                Vector2 start = trailPoints[i - 1];
+                Vector2 end = trailPoints[i];
+                float width = sigil ? SigilWidth(completion, end) : LightningWidth(completion, end);
+                Color color = sigil ? SigilColor(completion, end) : LightningColor(completion, end);
+
+                DrawExplosionSegment(pixel, start, end, color, width * 1.55f, 0.22f);
+                DrawExplosionSegment(pixel, start, end, color, Math.Max(1f, width), 0.72f);
+            }
+        }
+
+        private static void DrawExplosionSegment(Texture2D pixel, Vector2 start, Vector2 end, Color color, float width, float opacity)
+        {
+            Vector2 edge = end - start;
+            if (edge.LengthSquared() <= 0.001f)
+                return;
+
+            Main.EntitySpriteDraw(
+                pixel,
+                start - Main.screenPosition,
+                new Rectangle(0, 0, 1, 1),
+                color * opacity,
+                edge.ToRotation(),
+                new Vector2(0f, 0.5f),
+                new Vector2(edge.Length(), width),
+                SpriteEffects.None);
         }
     }
 
@@ -620,11 +652,36 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
         {
             if (points.Count < 2)
                 return false;
-            Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
-            GameShaders.Misc["CalamityMod:TeslaTrail"].SetShaderTexture(ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/ZapTrail"));
-            PrimitiveRenderer.RenderTrail(points, new PrimitiveSettings(Width, ColorFunction, smoothen: false, shader: GameShaders.Misc["CalamityMod:TeslaTrail"]), 24);
-            Main.spriteBatch.ExitShaderRegion();
+
+            Texture2D pixel = TextureAssets.MagicPixel.Value;
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
+
+            for (int i = 1; i < points.Count; i++)
+            {
+                float completion = i / (float)(points.Count - 1);
+                DrawLightningSegment(pixel, points[i - 1], points[i], ColorFunction(completion, points[i]), Width(completion, points[i]) * 1.55f, 0.28f);
+                DrawLightningSegment(pixel, points[i - 1], points[i], Color.White, Math.Max(1f, Width(completion, points[i]) * 0.42f), 0.62f);
+            }
+
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
             return false;
+        }
+
+        private static void DrawLightningSegment(Texture2D pixel, Vector2 start, Vector2 end, Color color, float width, float opacity)
+        {
+            Vector2 edge = end - start;
+            if (edge.LengthSquared() <= 0.001f)
+                return;
+
+            Main.EntitySpriteDraw(
+                pixel,
+                start - Main.screenPosition,
+                new Rectangle(0, 0, 1, 1),
+                color * opacity,
+                edge.ToRotation(),
+                new Vector2(0f, 0.5f),
+                new Vector2(edge.Length(), width),
+                SpriteEffects.None);
         }
     }
 
