@@ -1657,7 +1657,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         private string GetSHPCLoadingUIKeyText(bool isChinese)
         {
-            return KeybindSystem.SHPCLoadingUI.GetAssignedKeys().FirstOrDefault() ?? (isChinese ? "鼠标中键" : "Middle Mouse");
+            return InventoryActivationInput.GetDisplayKeyOrDefault(
+                KeybindSystem.SHPCLoadingUI,
+                isChinese ? "鼠标中键" : "Middle Mouse");
         }
 
         private string BuildCurrentAmmoEffectTooltipText()

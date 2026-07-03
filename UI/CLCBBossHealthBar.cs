@@ -5,14 +5,14 @@ using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Graphics;
 using Terraria;
 using Terraria.GameContent;
+using Terraria.GameContent.UI.BigProgressBar;
 using Terraria.ID;
 using Terraria.ModLoader;
-using Terraria.UI;
 using Terraria.UI.Chat;
 
 namespace CalamityLegendsComeBack.UI
 {
-    public class CLCBBossHealthBarSystem : ModSystem
+    public class CLCBBossHealthBarSystem : ModBossBarStyle
     {
         // ─── layout constants ───────────────────────────────────────────────
         private const int PanelW     = 460;
@@ -47,16 +47,17 @@ namespace CalamityLegendsComeBack.UI
 
         private static readonly List<BossBar> Bars = new();
 
-        private static bool IsEnabled => CLCBClientConfig.Instance?.ShowMatrixBossBar ?? true;
+        public override string DisplayName => "CLCB Matrix";
+
+        public override bool PreventDraw => true;
 
         // ─── lifecycle ──────────────────────────────────────────────────────
-        public override void OnWorldUnload() => Bars.Clear();
+        public override void Unload() => Bars.Clear();
 
-        public override void PostUpdateEverything()
+        public override void Update(IBigProgressBar currentBar, ref BigProgressBarInfo info)
         {
             if (Main.netMode == NetmodeID.Server) return;
-            if (!IsEnabled) { Bars.Clear(); return; }
-            if (Main.gameMenu) return;
+            if (Main.gameMenu) { Bars.Clear(); return; }
 
             // Update existing entries
             for (int i = Bars.Count - 1; i >= 0; i--)
@@ -143,27 +144,16 @@ namespace CalamityLegendsComeBack.UI
         }
 
         // ─── interface layer ────────────────────────────────────────────────
-        public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
-        {
-            int idx = layers.FindIndex(l => l.Name == "Vanilla: Mouse Text");
-            if (idx < 0) return;
-
-            layers.Insert(idx, new LegacyGameInterfaceLayer(
-                "CalamityLegendsComeBack: Matrix Boss Bars",
-                () => { DrawAllBars(Main.spriteBatch); return true; },
-                InterfaceScaleType.None));
-        }
-
         // ─── drawing ────────────────────────────────────────────────────────
-        private static void DrawAllBars(SpriteBatch sb)
+        public override void Draw(SpriteBatch spriteBatch, IBigProgressBar currentBar, BigProgressBarInfo info)
         {
-            if (!IsEnabled || Main.gameMenu) return;
+            if (Main.gameMenu) return;
 
             int drawn = 0;
             foreach (BossBar bar in Bars)
             {
                 if (bar.Opacity > 0.002f)
-                    DrawBar(sb, bar, drawn++);
+                    DrawBar(spriteBatch, bar, drawn++);
             }
         }
 
