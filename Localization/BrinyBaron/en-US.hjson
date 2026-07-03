@@ -7,28 +7,40 @@ Mods: {
 					Tooltip: "[GFB]"
 					BB_Left_1:
 						'''
-						[c/66CCFF:Left Click: a steady sea-blade chain that grows with progression.]
-						[c/66CCFF:Stage I fires foam blades and sea spirits; tide stacks raise damage and empower full-tide attacks.]
+						[c/66CCFF:Left Click: perform a series of swings and fire seafoam blades and sea spirits.]
+						[c/66CCFF:Seafoam blades fly quickly, then burst into splashing water.]
+						[c/66CCFF:Sea spirits home in on enemies and inflict Riptide.]
 						'''
 					BB_Left_2:
 						'''
-						[c/66CCFF:Left Click: a three-step tide chain with sharper foam and a light wave.]
-						[c/66CCFF:True blade hits call tornadoes; tide stacks raise damage and empower full-tide attacks.]
+						[c/66CCFF:Left Click: perform a three-swing chain and fire seafoam blades, sea spirits, and waves.]
+						[c/66CCFF:Seafoam blades scatter into larger water blades and pierce more enemies.]
+						[c/66CCFF:Sea spirits home in faster and inflict Riptide.]
+						[c/66CCFF:Waves surge forward as wide tidal slashes.]
+						[c/66CCFF:True blade hits can call forth a tornado.]
 						'''
 					BB_Left_3:
 						'''
-						[c/66CCFF:Left Click: a four-step tide chain mixing foam, spirits, shurikens, and waves.]
-						[c/66CCFF:The finisher releases a larger light wave; tide stacks raise damage and empower full-tide attacks.]
+						[c/66CCFF:Left Click: perform a four-swing chain and fire seafoam blades, sea spirits, shurikens, and waves.]
+						[c/66CCFF:Seafoam blades fire in parallel, pierce enemies, and burst into splashing water.]
+						[c/66CCFF:Sea spirits swarm toward enemies and inflict Riptide.]
+						[c/66CCFF:Shurikens fan outward, cut enemies, and release seafoam on hit.]
+						[c/66CCFF:Waves surge forward; the finisher releases a larger tidal slash.]
+						[c/66CCFF:True blade hits can call forth a tornado.]
 						'''
 					BB_Left_4:
 						'''
-						[c/66CCFF:Left Click: a complete tide chain ending in the ultimate light wave.]
-						[c/66CCFF:Blade hits and the finisher flood the field with tornadoes, spirits, and full-tide pressure.]
+						[c/66CCFF:Left Click: perform the complete swing chain and fire seafoam blades, sea spirits, shurikens, and waves.]
+						[c/66CCFF:Seafoam blades fire in parallel, pierce enemies, and burst into splashing water.]
+						[c/66CCFF:Sea spirits swarm toward enemies and inflict Riptide.]
+						[c/66CCFF:Shurikens fan outward, cut enemies, and release seafoam on hit.]
+						[c/66CCFF:Waves surge forward; the finisher releases a larger tidal slash.]
+						[c/66CCFF:True blade hits can call forth a tornado and add a burst of sea spirits.]
 						'''
 					BB_Right_DefaultShuriken:
 						'''
-						[c/FFB347:Right Click: throw tide shurikens at the cursor.]
-						[c/FFB347:At full tide, shurikens begin hunting enemies on their own.]
+						[c/FFB347:Right Click: throw a tide shuriken to cut through enemies.]
+						[c/FFB347:At full tide, the shuriken can home in on enemies.]
 						'''
 					BB_Right_LostGarment:
 						'''
@@ -48,12 +60,12 @@ Mods: {
 					BB_Right_Spin_Locked: "[c/DDA0FF:Hold Left Click, then hold Right Click: Whirl Cleave is locked until Stage II.]"
 					BB_Right_Spin_Unlocked:
 						'''
-						[c/DDA0FF:Hold Left Click, then hold Right Click: whirl the blade around you.]
-						[c/DDA0FF:The wheel accelerates while held; at full speed, it scatters tidal blades.]
+						[c/DDA0FF:Hold both buttons to keep swinging the greatsword; it gradually accelerates as it spins.]
+						[c/DDA0FF:At maximum speed, it deals maximum damage and continuously releases shurikens.]
 						'''
 					BB_Tide: "[c/4FAEFF:Current tide value: ]"
-					BB_Tide_Desc_NoAccessory: "[c/4FAEFF:Tide currently feeds only weapon damage.]"
-					BB_Tide_Desc_HasAccessory: "[c/4FAEFF:Equipped gear converts right click into a movement attack.]"
+					BB_Tide_Desc_NoAccessory: "[c/4FAEFF:Current tide effects: 【increases damage】【increases movement speed】【adds extra damage at full tide】]"
+					BB_Tide_Desc_HasAccessory: "[c/4FAEFF:Current tide effects: 【increases damage】【increases movement speed】【adds extra damage at full tide】【gear adds right-click or full-tide effects】]"
 					Dash1_Unlock: "[c/66FFAA:Unlocked: Basic Dash]"
 					Dash1_Lock: "[c/7F8FA6:Locked: Defeat the Eye of Cthulhu to unlock it.]"
 					Dash2_Unlock: "[c/66FFAA:Unlocked: Spiral Cleave]"

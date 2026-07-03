@@ -1,5 +1,4 @@
 ﻿using CalamityLegendsComeBack.Weapons.SHPC;
-using CalamityLegendsComeBack.Accssory.SHPC.General;
 using CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.CommandAscend;
 using CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.KarasawaModule;
 using CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.MilitaryCaller;
@@ -91,7 +90,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         public bool CanSustainMaximumHeat()
         {
-            return Player.GetModPlayer<SHPCEnergyCorePlayer>().HasInfiniteSHPCMana;
+            return HeatMaxStage >= 5 && HeatStage >= 5;
         }
 
         public void StartForcedShutdownCooling(int frames, int maxHeatStage)

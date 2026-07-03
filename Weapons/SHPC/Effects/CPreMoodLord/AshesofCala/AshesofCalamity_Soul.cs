@@ -27,7 +27,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.AshesofCala
         private const float FreeFlightDamping = 0.996f;
         private const float NoTargetDamping = 0.992f;
         private const float WanderingTurnStrength = 0.006f;
-        private const int TotalRelayShots = 9;
+        private const float NonHomingTurnStrength = 0.011f;
 
         public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
@@ -35,7 +35,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.AshesofCala
         private ref float Timer => ref Projectile.localAI[0];
         private int ShotIndex => (int)Projectile.ai[1];
         private bool IsPiercingShot => Projectile.ai[0] > 0f;
-        private float ShotCompletion => MathHelper.Clamp(ShotIndex / (float)(TotalRelayShots - 1), 0f, 1f);
 
         public override void SetStaticDefaults()
         {
@@ -72,7 +71,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.AshesofCala
             Projectile.extraUpdates = 0;
             Projectile.timeLeft = 720;
             Projectile.localNPCHitCooldown = 8;
-            Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitX) * MathHelper.Lerp(5.4f, 7.2f, ShotCompletion);
+            Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitX) * BaseSpeed;
         }
 
         public override void AI()
@@ -147,10 +146,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.AshesofCala
 
         private void UpdatePiercingFlight(Vector2 currentDirection)
         {
-            float targetSpeed = MathHelper.Lerp(5.2f, 7.1f, ShotCompletion);
-            float wave = (float)Math.Sin((Timer + ShotIndex * 19f) * 0.12f) * 0.020f;
-            wave += (float)Math.Sin((Timer + Projectile.identity * 3f) * 0.047f) * 0.006f;
-            Projectile.velocity = currentDirection.RotatedBy(wave) * MathHelper.Lerp(Projectile.velocity.Length(), targetSpeed, 0.035f);
+            float wander = (float)Math.Sin((Timer + Projectile.identity * 5f) * 0.08f) * NonHomingTurnStrength;
+            wander += (float)Math.Sin((Timer + ShotIndex * 19f) * 0.047f) * 0.004f;
+            float speed = MathHelper.Lerp(Projectile.velocity.Length(), BaseSpeed, 0.08f);
+            Projectile.velocity = currentDirection.RotatedBy(wander) * speed;
         }
 
         private NPC FindNearestTarget(float range)
@@ -176,8 +175,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.AshesofCala
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            if (!IsPiercingShot)
+            if (IsPiercingShot)
+            {
+                if (!Main.dedServ)
+                    SpawnImpactEffects();
+            }
+            else
+            {
                 Projectile.Kill();
+            }
         }
 
         public override void OnKill(int timeLeft)
@@ -185,14 +191,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.AshesofCala
             if (Main.dedServ)
                 return;
 
+            SpawnImpactEffects();
+        }
+
+        private void SpawnImpactEffects()
+        {
             Color orange = new(255, 140, 42);
             Color red = new(180, 12, 8);
 
-            int burstCount = IsPiercingShot ? 16 : 10;
-            int bladeLifetime = IsPiercingShot ? Main.rand.Next(10, 16) : 1;
-            float burstScale = IsPiercingShot ? 1.28f : 1f;
-
-            for (int i = 0; i < burstCount; i++)
+            for (int i = 0; i < 10; i++)
             {
                 Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2f, 6f);
                 GeneralParticleHandler.SpawnParticle(new CustomSpark(
@@ -200,15 +207,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.AshesofCala
                     velocity,
                     "CalamityMod/Particles/VerticalSmear",
                     false,
-                    bladeLifetime,
-                    Main.rand.NextFloat(0.6f, 1.2f) * burstScale,
+                    Main.rand.Next(10, 15),
+                    Main.rand.NextFloat(0.6f, 1.2f),
                     Color.Lerp(orange, red, Main.rand.NextFloat(0.15f, 0.65f)),
-                    new Vector2(0.18f, 0.86f) * burstScale,
+                    new Vector2(0.18f, 0.86f),
                     true,
                     true,
-                    extraRotation: MathHelper.TwoPi * i / burstCount + Main.rand.NextFloat(-0.18f, 0.18f),
-                    shrinkSpeed: IsPiercingShot ? 0.18f : 0.82f,
-                    glowOpacity: IsPiercingShot ? 0.66f : 0.48f));
+                    shrinkSpeed: 0.82f,
+                    glowOpacity: 0.48f));
             }
         }
 
@@ -219,52 +225,25 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.AshesofCala
             Color orange = new(255, 140, 42);
             Color red = new(180, 12, 8);
 
-            SpawnBladeDisc(direction, normal, orange, red);
-
-            if (IsPiercingShot && Main.rand.NextBool(2))
-            {
-                Dust ember = Dust.NewDustPerfect(
-                    Projectile.Center - direction * Main.rand.NextFloat(8f, 22f) + normal * Main.rand.NextFloat(-10f, 10f),
-                    DustID.Torch,
-                    -direction * Main.rand.NextFloat(0.4f, 1.6f) + normal * Main.rand.NextFloat(-0.7f, 0.7f),
-                    100,
-                    Color.Lerp(orange, red, Main.rand.NextFloat(0.2f, 0.7f)),
-                    Main.rand.NextFloat(0.9f, 1.45f));
-                ember.noGravity = true;
-            }
+            if (IsPiercingShot)
+                SpawnBladeDisc(direction, normal, orange, red);
         }
 
         private void SpawnBladeDisc(Vector2 direction, Vector2 normal, Color orange, Color red)
         {
-            int bladeCount = IsPiercingShot ? 5 : 3;
-            int lifetime = IsPiercingShot ? Main.rand.Next(12, 18) : 1;
-            float discRotation = direction.ToRotation() + Timer * (IsPiercingShot ? 0.24f : 0.42f) + ShotIndex * 0.71f;
-            float scale = IsPiercingShot ? Main.rand.NextFloat(1.45f, 2.15f) : Main.rand.NextFloat(1.1f, 1.55f);
-
-            for (int i = 0; i < bladeCount; i++)
-            {
-                float rotation = discRotation + MathHelper.TwoPi * i / bladeCount;
-                Vector2 bladeDirection = rotation.ToRotationVector2();
-                Vector2 center = Projectile.Center
-                    - direction * Main.rand.NextFloat(1f, IsPiercingShot ? 8f : 5f)
-                    + normal * Main.rand.NextFloat(-3f, 3f);
-
-                GeneralParticleHandler.SpawnParticle(new CustomSpark(
-                    center,
-                    Projectile.velocity * 0.015f + bladeDirection * Main.rand.NextFloat(0.08f, IsPiercingShot ? 0.42f : 0.18f),
-                    "CalamityMod/Particles/VerticalSmear",
-                    false,
-                    lifetime,
-                    scale,
-                    Color.Lerp(orange, red, Main.rand.NextFloat(0.12f, 0.72f)),
-                    new Vector2(IsPiercingShot ? 0.24f : 0.18f, IsPiercingShot ? 1.08f : 0.82f),
-                    true,
-                    true,
-                    extraRotation: rotation,
-                    shrinkSpeed: IsPiercingShot ? 0.16f : 0.82f,
-                    glowOpacity: IsPiercingShot ? 0.7f : 0.52f,
-                    spin: IsPiercingShot ? Main.rand.NextFloat(-0.045f, 0.045f) : 0f));
-            }
+            GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                Projectile.Center - direction * Main.rand.NextFloat(2f, 12f) + normal * Main.rand.NextFloat(-4f, 4f),
+                Projectile.velocity * 0.02f,
+                "CalamityMod/Particles/VerticalSmear",
+                false,
+                Main.rand.Next(13, 18),
+                Main.rand.NextFloat(1.25f, 1.85f),
+                Color.Lerp(orange, red, Main.rand.NextFloat(0.15f, 0.65f)),
+                new Vector2(0.18f, 0.86f),
+                true,
+                true,
+                shrinkSpeed: 0.82f,
+                glowOpacity: 0.48f));
         }
 
         private void SpawnCalamitousDartMetaballs(Vector2 direction)

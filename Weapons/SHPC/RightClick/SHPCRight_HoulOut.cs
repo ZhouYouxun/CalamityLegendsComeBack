@@ -279,7 +279,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                     bonusHeatProgress -= bonusHeat;
                 }
 
-                if (stage >= MaxHeatStage && heatPlayer.CanSustainMaximumHeat())
+                if (stage >= MaxHeatStage && CanSustainCurrentMaximumHeat())
                 {
                     stageTimer = Math.Min(stageTimer, GetStageUpTime());
                     bonusHeatProgress = 0f;
@@ -347,7 +347,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 }
                 else if (stage >= MaxHeatStage)
                 {
-                    if (heatPlayer.CanSustainMaximumHeat())
+                    if (CanSustainCurrentMaximumHeat())
                     {
                         overheatTimer = 0;
                     }
@@ -533,6 +533,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             TriggerStageOutlinePulse();
             SpawnForcedShutdownGasBurst();
             SpawnHeatRedirectField(player, heatModuleEquipped ? 420 : 280, shutdownTime);
+            player.AddBuff(ModContent.BuffType<SHPCRight_DeBuff>(), shutdownTime);
+        }
+
+        private bool CanSustainCurrentMaximumHeat()
+        {
+            return MaxHeatStage >= 5 && stage >= 5;
         }
 
         private void ApplyRecoilRotation()
@@ -697,7 +703,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             }
 
             // ===== Heat4+：施加过热Debuff =====
-            if (stage >= 4)
+            if (ShouldApplyHeatBurnDebuff())
             {
                 player.AddBuff(ModContent.BuffType<SHPCRight_DeBuff>(), 180); // 3�?
             }
@@ -708,6 +714,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             if (stage >= 5 && (int)Main.GameUpdateCount % 15 == 0)
                 SpawnHeatRedirectField(player, 240, 45);
+        }
+
+        private bool ShouldApplyHeatBurnDebuff()
+        {
+            int secondHighestStage = Math.Max(1, MaxHeatStage - 1);
+            return stage >= secondHighestStage || stage >= 4;
         }
 
         #endregion

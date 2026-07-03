@@ -380,7 +380,11 @@ namespace CalamityLegendsComeBack
             string[] lines = text.Replace("\r", string.Empty).Split('\n');
             int maxLines = Math.Max(1, (int)(area.Height / (font.LineSpacing * scale)));
             for (int i = 0; i < lines.Length && i < maxLines; i++)
-                DrawTextWithShadow(lines[i], new Vector2(area.X, area.Y + i * font.LineSpacing * scale), color * opacity, scale, opacity);
+            {
+                Vector2 size = font.MeasureString(lines[i]) * scale;
+                Vector2 position = new(area.Center.X - size.X * 0.5f, area.Y + i * font.LineSpacing * scale);
+                DrawTextWithShadow(lines[i], position, color * opacity, scale, opacity);
+            }
         }
 
         private static void DrawCenteredText(string text, Rectangle area, Color color, float maxScale, float minScale, float opacity)

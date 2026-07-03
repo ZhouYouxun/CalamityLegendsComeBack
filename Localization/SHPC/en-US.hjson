@@ -39,9 +39,9 @@ Mods: {
 						'''
 					SHPC_RightIntro5:
 						'''
-						[c/FFB347:Right click fires a laser barrage. Barrage fire builds heat; at full heat the weapon overheats and shuts down. Heat dissipates after you stop attacking.]
+						[c/FFB347:Right click fires a laser barrage. Barrage fire builds heat; before heat level V is unlocked, full heat overheats and shuts the weapon down. Heat dissipates after you stop attacking.]
 						[c/FFB347:As progression advances, full heat can enter higher levels. Each heat level multiplicatively increases right-click damage by 5% and adds special effects.]
-						[c/FFB347:Current heat cap: V. Effect: infinite pierce and bonus damage based on target maximum life.]
+						[c/FFB347:Current heat cap: V. Effect: infinite pierce. At full heat, the weapon no longer shuts down, but holding right click rapidly burns your own life.]
 						[c/FFB347:Left click during barrage consumes one heat level to immediately fire three energy orbs.]
 						'''
 					SHPC_Final: "[c/99B3FF:The system is still evolving......]"

@@ -16,6 +16,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
         private static readonly Color DeepTechBlue = new(0, 120, 220);
         private static readonly Color TechBurnColor = Color.Lerp(TechBlue, Color.White, 0.3f);
         private static readonly Color TechBurnBloom = Color.Lerp(DeepTechBlue, Color.White, 0.3f);
+        private static readonly Color CriticalBurnColor = new(255, 98, 42);
+        private static readonly Color CriticalBurnBloom = new(255, 202, 88);
 
         public override void SetStaticDefaults()
         {
@@ -27,8 +29,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         public override void Update(Player player, ref int buffIndex)
         {
-            int stage = player.GetModPlayer<SHPCRight_Player>().HeatStage;
-            if (stage <= 0)
+            SHPCRight_Player heatPlayer = player.GetModPlayer<SHPCRight_Player>();
+            int actualStage = heatPlayer.HeatStage;
+            int displayedStage = heatPlayer.GetDisplayedHeatLevel();
+            int maxStage = System.Math.Max(1, heatPlayer.HeatMaxStage);
+            int visualStage = heatPlayer.IsForcedShutdownCooling()
+                ? System.Math.Max(actualStage, displayedStage)
+                : actualStage;
+
+            if (visualStage <= 0)
                 return;
 
             if (player.statLife <= 0)
@@ -37,22 +46,33 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 return;
             }
 
-            if (stage < 4)
+            bool isHighestHeat = visualStage >= maxStage;
+            bool isSecondHighestHeat = maxStage >= 2 && visualStage == maxStage - 1;
+            bool isFinalHeatSustain = maxStage >= 5 &&
+                actualStage >= 5 &&
+                heatPlayer.HasActiveRightClickHoldout();
+
+            if (!isHighestHeat && !isSecondHighestHeat && actualStage < 4)
                 return;
 
-            player.lifeRegenTime = 0;
-            if (player.lifeRegen > 0)
-                player.lifeRegen = 0;
+            if (actualStage >= 4 || isFinalHeatSustain)
+            {
+                player.lifeRegenTime = 0;
+                if (player.lifeRegen > 0)
+                    player.lifeRegen = 0;
+            }
 
-            if (stage == 4)
+            if (isFinalHeatSustain)
+            {
+                ApplyOverheatDamage(player, 1);
+            }
+            else if (actualStage == 4)
             {
                 if (player.statLife > 100 && Main.GameUpdateCount % 30 == 0)
                     ApplyOverheatDamage(player, 1);
             }
-            else if (stage >= 5 && Main.GameUpdateCount % 5 == 0)
-                ApplyOverheatDamage(player, Main.rand.Next(1, 3));
 
-            ApplyOverheatVisual(player, stage);
+            ApplyOverheatVisual(player, visualStage, maxStage, isHighestHeat);
         }
 
         private static void ApplyOverheatDamage(Player player, int damage)
@@ -78,19 +98,21 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             player.KillMe(PlayerDeathReason.ByCustomReason(NetworkText.FromLiteral($"{player.name} was burned out by SHPC overload.")), System.Math.Max(1, damage), 0);
         }
 
-        private void ApplyOverheatVisual(Player player, int stage)
+        private void ApplyOverheatVisual(Player player, int stage, int maxStage, bool isHighestHeat)
         {
-            if (Main.dedServ || stage < 4)
+            if (Main.dedServ)
                 return;
 
-            SpawnHolyTechFlames(player, stage);
-            Lighting.AddLight(player.Center, TechBurnColor.ToVector3() * (stage >= 5 ? 0.45f : 0.32f));
+            SpawnHolyTechFlames(player, isHighestHeat, maxStage >= 5 && stage >= 5);
+            Color lightColor = isHighestHeat ? CriticalBurnColor : TechBurnColor;
+            Lighting.AddLight(player.Center, lightColor.ToVector3() * (isHighestHeat ? 0.45f : 0.30f));
         }
 
-        private static void SpawnHolyTechFlames(Player player, int stage)
+        private static void SpawnHolyTechFlames(Player player, bool isHighestHeat, bool finalStage)
         {
-            bool finalStage = stage >= 5;
-            int mainChance = finalStage ? 2 : 3;
+            int mainChance = isHighestHeat ? 2 : 3;
+            Color flameColor = isHighestHeat ? CriticalBurnColor : TechBurnColor;
+            Color bloomColor = isHighestHeat ? CriticalBurnBloom : TechBurnBloom;
 
             if (Main.rand.NextBool(mainChance))
             {
@@ -100,12 +122,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 GeneralParticleHandler.SpawnParticle(new CritSpark(
                     RandomBodyPoint(player, 0.52f, 0.58f),
                     sparkVelocity + player.velocity * 0.2f,
-                    TechBurnColor,
-                    TechBurnBloom,
-                    finalStage ? 1.12f : 0.96f,
-                    finalStage ? 19 : 17,
-                    finalStage ? 2.45f : 2.15f,
-                    finalStage ? 2.35f : 2.05f));
+                    flameColor,
+                    bloomColor,
+                    isHighestHeat ? 1.12f : 0.88f,
+                    isHighestHeat ? 19 : 16,
+                    isHighestHeat ? 2.45f : 1.9f,
+                    isHighestHeat ? 2.35f : 1.85f));
             }
 
             if (Main.rand.NextBool(mainChance))
@@ -114,9 +136,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 Vector2 dustVelocity = player.velocity + new Vector2(0f, Main.rand.NextFloat(-5f, -1f));
                 Dust fire = Dust.NewDustDirect(dustCorner, player.width + 4, player.height + 4, DustID.GemTopaz, dustVelocity.X, dustVelocity.Y);
                 fire.noGravity = true;
-                fire.scale = Main.rand.NextFloat(finalStage ? 0.9f : 0.75f, finalStage ? 1.45f : 1.25f);
+                fire.scale = Main.rand.NextFloat(isHighestHeat ? 0.9f : 0.65f, isHighestHeat ? 1.45f : 1.05f);
                 fire.alpha = 225;
-                fire.color = TechBurnColor;
+                fire.color = flameColor;
             }
 
             if (!finalStage)

@@ -34,8 +34,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
             Item.damage = BalanceYharimsCrystal.GetInitialLeftClickBaseDamage();
             Item.DamageType = DamageClass.Magic;
             Item.mana = 6;
-            Item.useTime = 25;
-            Item.useAnimation = 25;
+            Item.useTime = 45;
+            Item.useAnimation = 45;
             Item.useStyle = ItemUseStyleID.Shoot;
             Item.noMelee = true;
             Item.noUseGraphic = true;
@@ -73,8 +73,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
             }
             else
             {
-                Item.useTime = 25;
-                Item.useAnimation = 25;
+                Item.useTime = 45;
+                Item.useAnimation = 45;
                 Item.channel = true;
                 Item.shoot = LeftHoldoutType;
                 Item.UseSound = null;

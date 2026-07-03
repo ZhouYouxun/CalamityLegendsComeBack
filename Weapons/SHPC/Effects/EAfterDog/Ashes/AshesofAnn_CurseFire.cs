@@ -15,13 +15,24 @@ using Terraria.GameContent;
 using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.ModLoader;
+using CalamityLegendsComeBack.Systems;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
 {
     internal sealed class AshesofAnn_CurseFire : ModProjectile, ILocalizedModType, IPixelatedPrimitiveRenderer
     {
-        private const float BaseSpeed = 16.2f;
-        private const float HomingRange = 200f * 16f;
+        private const float BaseSpeed = 18.5f;
+        private const float HomingRange = 160f * 16f;
+        private const float HomingStartFrames = 9f;
+        private const float HomingWarmupFrames = 18f;
+        private const float MinHomingSpeed = 13.5f;
+        private const float MaxHomingSpeed = 21.5f;
+        private const float HomingInertia = 18f;
+        private const float FreeFlightDamping = 0.996f;
+        private const float NoTargetDamping = 0.992f;
+        private const float WanderingTurnStrength = 0.008f;
+        private const float NonHomingTurnStrength = 0.014f;
+
         private const int TotalRelayShots = 18;
         private const float VisualEffectScale = 0.7f;
 
@@ -88,23 +99,34 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                 Projectile.extraUpdates = 0;
                 Projectile.timeLeft = 310;
                 Projectile.localNPCHitCooldown = 6;
+                Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitX) * BaseSpeed;
             }
         }
 
         public override void AI()
         {
-            Timer++;
+            if (Projectile.numUpdates == 0)
+                Timer++;
 
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-            float homingDelay = MathHelper.Lerp(6f, 3f, ShotCompletion) * (Projectile.extraUpdates + 1f);
-            bool homingActive = !IsPiercingShot && Timer >= homingDelay;
+            bool homingActive = !IsPiercingShot && Timer >= HomingStartFrames;
 
             if (IsPiercingShot)
+            {
                 UpdatePiercingFlight(direction);
+            }
             else if (homingActive)
-                UpdateHoming(direction, homingDelay);
+            {
+                NPC target = FindTarget(HomingRange, direction);
+                if (target is not null)
+                    SoftHomeTowardTarget(target, direction);
+                else
+                    FreeDrift(NoTargetDamping);
+            }
             else
-                UpdateLaunchCurve(direction, homingDelay);
+            {
+                FreeDrift(FreeFlightDamping);
+            }
 
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
             Projectile.Opacity = Utils.GetLerpValue(0f, 10f, Timer, true) * Utils.GetLerpValue(0f, 18f, Projectile.timeLeft, true);
@@ -112,52 +134,57 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
 
             Lighting.AddLight(Projectile.Center, MainColor.ToVector3() * (0.66f * Projectile.Opacity));
 
+            // Register screen-space shared fluid field source
+            AshesFluidFieldSystem.RegisterSource(
+                Projectile.Center,
+                Projectile.velocity * -0.1f,
+                MainColor,
+                0.85f * Projectile.Opacity
+            );
+
             if (!Main.dedServ)
                 SpawnFlightParticles(homingActive);
         }
 
-        private void UpdateLaunchCurve(Vector2 direction, float homingDelay)
+        private void FreeDrift(float damping)
         {
-            float launchPower = Utils.GetLerpValue(0f, homingDelay, Timer, true);
-            float speed = MathHelper.Lerp(Projectile.velocity.Length(), BaseSpeed * MathHelper.Lerp(0.88f, 1.08f, launchPower), 0.08f);
-            float curve = (float)Math.Sin((Timer + Projectile.ai[2] * 23f) * 0.18f) * 0.012f;
-            Projectile.velocity = direction.RotatedBy(curve) * speed;
+            float wander = (float)Math.Sin((Timer + Projectile.identity * 5f) * 0.08f) * WanderingTurnStrength;
+            Projectile.velocity = Projectile.velocity.RotatedBy(wander) * damping;
         }
 
-        private void UpdatePiercingFlight(Vector2 direction)
+        private void UpdatePiercingFlight(Vector2 currentDirection)
         {
-            float speed = MathHelper.Lerp(Projectile.velocity.Length(), BaseSpeed * MathHelper.Lerp(0.42f, 0.58f, ShotCompletion), 0.045f);
-            float curve = (float)Math.Sin((Timer + ShotIndex * 17f) * 0.11f) * 0.018f;
-            curve += (float)Math.Sin((Timer + Projectile.identity * 5f) * 0.037f) * 0.006f;
-            Projectile.velocity = direction.RotatedBy(curve) * speed;
+            float wander = (float)Math.Sin((Timer + Projectile.identity * 5f) * 0.08f) * NonHomingTurnStrength;
+            wander += (float)Math.Sin((Timer + ShotIndex * 19f) * 0.047f) * 0.004f;
+            float targetSpeed = BaseSpeed * MathHelper.Lerp(0.85f, 1.15f, ShotCompletion);
+            float speed = MathHelper.Lerp(Projectile.velocity.Length(), targetSpeed, 0.08f);
+            Projectile.velocity = currentDirection.RotatedBy(wander) * speed;
         }
 
-        private void UpdateHoming(Vector2 currentDirection, float homingDelay)
+        private void SoftHomeTowardTarget(NPC target, Vector2 fallbackDirection)
         {
-            NPC target = FindTarget(HomingRange, currentDirection);
-            float idealSpeed = BaseSpeed * MathHelper.Lerp(1.02f, 1.32f, ShotCompletion);
+            Vector2 currentVelocity = Projectile.velocity;
+            float currentSpeed = currentVelocity.Length();
+            if (currentSpeed < 0.1f)
+                currentVelocity = (target.Center - Projectile.Center).SafeNormalize(fallbackDirection) * 4f;
 
-            if (target is null)
-            {
-                float curve = (float)Math.Sin((Timer + Projectile.ai[2] * 19f) * 0.075f) * 0.018f;
-                Projectile.velocity = currentDirection.RotatedBy(curve) * MathHelper.Lerp(Projectile.velocity.Length(), idealSpeed, 0.07f);
-                return;
-            }
+            Vector2 desiredDirection = (target.Center - Projectile.Center).SafeNormalize(currentVelocity.SafeNormalize(fallbackDirection));
 
-            float distance = Projectile.Distance(target.Center);
-            float predictionFrames = MathHelper.Clamp(distance / Math.Max(idealSpeed, 1f), 8f, 24f);
-            Vector2 predictedCenter = target.Center + target.velocity * predictionFrames;
-            Vector2 desiredDirection = (predictedCenter - Projectile.Center).SafeNormalize(currentDirection);
-            float timePower = Utils.GetLerpValue(0f, 76f * (Projectile.extraUpdates + 1f), Timer - homingDelay, true);
-            float closePower = Utils.GetLerpValue(780f, 120f, distance, true);
-            float trackingPower = MathHelper.Max(timePower, closePower * 0.82f);
-            float targetSpeed = idealSpeed * MathHelper.Lerp(1.06f, 1.72f, trackingPower);
-            float inertia = MathHelper.Lerp(12f, 1.85f, trackingPower);
+            float homingTimer = Timer - HomingStartFrames;
+            float warmup = Utils.GetLerpValue(0f, HomingWarmupFrames, homingTimer, true);
+            float closePressure = Utils.GetLerpValue(360f, 70f, Projectile.Distance(target.Center), true);
+            float pullStrength = MathHelper.Lerp(0.35f, 1f, MathHelper.Max(warmup, closePressure * 0.75f));
 
-            Projectile.velocity = (Projectile.velocity * inertia + desiredDirection * targetSpeed) / (inertia + 1f);
+            float targetSpeed = MathHelper.Lerp(MinHomingSpeed, MaxHomingSpeed, pullStrength);
+            Vector2 desiredVelocity = desiredDirection * targetSpeed;
+            Projectile.velocity = (currentVelocity * HomingInertia + desiredVelocity) / (HomingInertia + 1f);
 
-            float speed = Projectile.velocity.Length();
-            Projectile.velocity = Projectile.velocity.SafeNormalize(desiredDirection) * MathHelper.Clamp(speed, idealSpeed * 0.9f, idealSpeed * 1.86f);
+            float sideSway = (float)Math.Sin((Timer + Projectile.identity * 7f) * 0.075f) *
+                MathHelper.Lerp(0.012f, 0.004f, pullStrength);
+            Projectile.velocity = Projectile.velocity.RotatedBy(sideSway);
+
+            if (Projectile.velocity.Length() > MaxHomingSpeed)
+                Projectile.velocity = Projectile.velocity.SafeNormalize(desiredDirection) * MaxHomingSpeed;
         }
 
         private NPC FindTarget(float range, Vector2 currentDirection)

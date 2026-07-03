@@ -11,6 +11,11 @@ Mods: {
 						'''
 				}
 			}
+
+			MarkedMagnum: {
+				// DisplayName: Marked Magnum
+				// Tooltip: ""
+			}
 		}
 
 		Projectiles: {
@@ -18,6 +23,7 @@ Mods: {
 			// AncientIceShieldVisual.DisplayName: Ancient Ice Shield Visual
 			// GlacialWeaponFamiliar.DisplayName: Glacial Weapon Familiar
 			// GlacialWeaponFamiliarShot.DisplayName: Glacial Weapon Familiar Shot
+			// MarkedMagnumLaser.DisplayName: Marked Magnum Laser
 		}
 	}
 }
