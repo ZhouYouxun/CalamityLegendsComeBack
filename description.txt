@@ -26,7 +26,7 @@ VeluriyamLib
 [h1]反馈与建议[/h1]
 反馈、报错、平衡建议都欢迎。
 如果哪里玩的不舒服，可以直接提出。这个模组还会继续长。
-如果您有意加入我们的制作组：可以加入“内群群号”
+如果您有意加入我们的制作组：可以加入Q“876728711”
 
 [h1]源码[/h1]
 [url=https://github.com/ZhouYouxun/CalamityLegendsComeBack]点击以跳转[/url]
