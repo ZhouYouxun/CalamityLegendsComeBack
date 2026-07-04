@@ -2,7 +2,6 @@ using CalamityMod;
 using CalamityMod.Enums;
 using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
-using CalamityLegendsComeBack.Weapons.A_Olds.TheEnforcer;
 using CalamityLegendsComeBack.Weapons.SHPC;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

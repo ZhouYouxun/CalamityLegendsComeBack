@@ -53,7 +53,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
             Projectile.hostile = false;
             Projectile.DamageType = DamageClass.Magic;
             Projectile.penetrate = 1;
-            Projectile.timeLeft = 540;
+            Projectile.timeLeft = 150; // homing template lifetime
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.extraUpdates = 1;
@@ -72,7 +72,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
 
             Projectile.penetrate = -1;
             Projectile.extraUpdates = 0;
-            Projectile.timeLeft = 720;
+            Projectile.timeLeft = 280; // non-homing / wandering template lifetime
             Projectile.localNPCHitCooldown = 8;
             Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitX) * BaseSpeed;
         }
@@ -105,11 +105,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
             Projectile.alpha = Math.Max(0, Projectile.alpha - 24);
             Lighting.AddLight(Projectile.Center, new Color(255, 120, 48).ToVector3() * 0.55f);
 
-            AshesFluidFieldSystem.RegisterSource(
-                Projectile.Center,
-                Projectile.velocity * -0.055f,
-                Color.Lerp(new Color(255, 92, 34), new Color(255, 206, 112), 0.28f + ShotCompletion * 0.22f),
-                0.32f * Utils.GetLerpValue(255f, 0f, Projectile.alpha, true));
+            // Blazing-cursor fire rides ONLY the homing form; the piercing / self-wandering
+            // form deliberately carries no fluid fire.
+            if (!IsPiercingShot)
+            {
+                AshesFluidFieldSystem.RegisterSource(
+                    Projectile.Center,
+                    Projectile.velocity * -0.055f,
+                    Color.Lerp(new Color(255, 92, 34), new Color(255, 206, 112), 0.28f + ShotCompletion * 0.22f),
+                    0.7f * Utils.GetLerpValue(255f, 0f, Projectile.alpha, true));
+            }
 
             if (!Main.dedServ)
             {

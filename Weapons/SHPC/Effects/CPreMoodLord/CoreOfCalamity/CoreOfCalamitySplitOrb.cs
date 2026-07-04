@@ -1,5 +1,4 @@
-﻿using CalamityLegendsComeBack.Weapons.A_Olds.TheEnforcer;
-using CalamityMod;
+﻿using CalamityMod;
 using CalamityMod.Enums;
 using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
@@ -225,13 +224,19 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
                         SpriteEffects.None);
             }
 
-            TheNewEnforcerMagicCoreDraw.Draw(
-                position,
-                Projectile.rotation,
-                Projectile.scale * 2.05f,
-                0.86f,
-                OrbColor,
-                Projectile.identity);
+            for (int i = 0; i < 4; i++)
+            {
+                float pulse = 0.86f + MathF.Sin((Main.GlobalTimeWrappedHourly * 5.2f) + Projectile.identity + i) * 0.08f;
+                Main.EntitySpriteDraw(
+                    bloom,
+                    position,
+                    null,
+                    Color.Lerp(OrbColor, Color.White, i * 0.18f) with { A = 0 } * (0.42f - i * 0.06f),
+                    Projectile.rotation + MathHelper.PiOver2 * i,
+                    bloom.Size() * 0.5f,
+                    new Vector2(0.1f, 0.34f) * Projectile.scale * pulse,
+                    SpriteEffects.None);
+            }
 
             DrawHyperiusGlow(position);
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);

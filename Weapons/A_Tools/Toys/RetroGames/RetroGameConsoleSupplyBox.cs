@@ -7,6 +7,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.Toys.RetroGames
 {
     public class RetroGameConsoleSupplyBox : ModItem, ILocalizedModType
     {
+        //public override string Texture => "CalamityLegendsComeBack/LegendarySupplyBox";
         public new string LocalizationCategory => "Items.Consumables";
 
         public override void SetDefaults()

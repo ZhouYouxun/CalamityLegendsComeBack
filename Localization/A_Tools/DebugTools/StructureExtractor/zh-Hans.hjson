@@ -9,36 +9,7 @@ Mods: {
 			}
 		}
 
-		Projectiles: {
-			A_Dev.StructureExtractorOverlay.DisplayName: 建筑物提取矩阵
-			// BarrierShieldVisual.DisplayName: Barrier Shield Visual
-			// CtrlChipNEWReticle.DisplayName: Ctrl Chip N E W Reticle
-			// CtrlChipReticle.DisplayName: Ctrl Chip Reticle
-			// LegendaryCodexPanel.DisplayName: Legendary Codex Panel
-
-			TheEnforcer: {
-				// TheNewEnforcerLaserWall.DisplayName: The New Enforcer Laser Wall
-				// TheNewEnforcerRiftCrack.DisplayName: The New Enforcer Rift Crack
-				// TheNewEnforcerRiftField.DisplayName: The New Enforcer Rift Field
-				// TheNewEnforcerRiftSeed.DisplayName: The New Enforcer Rift Seed
-			}
-
-			// Magic.AnodizedWulfrumShard.DisplayName: Anodized Wulfrum Shard
-			// PurifiedGel_Ball.DisplayName: Purified Gel_ Ball
-			// NewSHPS.DisplayName: New S H P S
-			// DepthCells_Drop.DisplayName: Depth Cells_ Drop
-			// PlagueCell_Marked.DisplayName: Plague Cell_ Marked
-			// ArmoredShell_Ball.DisplayName: Armored Shell_ Ball
-			// AshesofAnn_Located.DisplayName: Ashesof Ann_ Located
-			// ExoPrism_Geometry.DisplayName: Exo Prism_ Geometry
-			// NightmareFuel_ARC.DisplayName: Nightmare Fuel_ A R C
-			// NL_SHPC_EXWeapon.DisplayName: N L_ S H P C_ E X Weapon
-			// SHPCLeftClickHoldout.DisplayName: S H P C Left Click Holdout
-			// SHPCMagazineStatusPanel.DisplayName: S H P C Magazine Status Panel
-			// SHPC.StellarVortexShard.DisplayName: Stellar Vortex Shard
-		}
-
-		// Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split
+		Projectiles.A_Dev.StructureExtractorOverlay.DisplayName: 建筑物提取矩阵
 
 		TheSpecialText: {
 			StructureExtractorSelectionLabel: "{0}x{1} | 起点 {2}, {3} | {4} tiles"

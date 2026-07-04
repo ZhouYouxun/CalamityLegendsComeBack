@@ -5,11 +5,49 @@
 				Tag: SYSTEM // SHPC
 				Body:
 					'''
-					热量在矩阵里排队。
-					弹匣像一座冷却的城市。
-					它不祈祷命中；
-					它把轨道、材料和枪口的白光
-					压成同一个答案。
+					发射SHPLB与SHPL
+					通过不同材料来强化SHPLB
+					消耗热量以释放SHPLB
+					'''
+			}
+
+			BlossomFlux: {
+				Tag: ???
+				Body:
+					'''
+					???
+					???
+					???
+					'''
+			}
+
+			BrinyBaron: {
+				Tag: ???
+				Body:
+					'''
+					???
+					???
+					???
+					'''
+			}
+
+			PristineFury: {
+				Tag: ???
+				Body:
+					'''
+					???
+					???
+					???
+					'''
+			}
+
+			Vesuvius: {
+				Tag: ???
+				Body:
+					'''
+					???
+					???
+					???
 					'''
 			}
 		}

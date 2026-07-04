@@ -1,0 +1,19 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				ParticleLabDebugItem: {
+					DisplayName: 粒子实验室
+					Tooltip: 右键打开粒子矩阵。左键释放当前选中的单个粒子特效。
+				}
+			}
+		}
+
+		Projectiles: {
+			A_Dev: {
+				ParticleLabProjectile.DisplayName: 粒子实验室测试弹幕
+				ParticleLabPanel.DisplayName: 粒子实验室矩阵
+			}
+		}
+	}
+}
