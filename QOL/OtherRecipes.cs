@@ -2,6 +2,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using System.Collections.Generic;
+using CalamityMod.Items.Materials;
 
 namespace CalamityLegendsComeBack.QOL
 {
@@ -57,7 +58,7 @@ namespace CalamityLegendsComeBack.QOL
                     causticTearRecipe.Register();
                 }
 
-                // Bobbit Hook: 10 Ruinous Soul + 1 Lunar Hook
+                // 博比特虫 Hook: 10 Ruinous Soul + 1 Lunar Hook
                 if (calamity.TryFind<ModItem>("BobbitHook", out ModItem bobbitHook) &&
                     calamity.TryFind<ModItem>("RuinousSoul", out ModItem ruinousSoul))
                 {
@@ -67,7 +68,19 @@ namespace CalamityLegendsComeBack.QOL
                     bobbitHookRecipe.Register();
                 }
 
-                // Depth Crusher: 10 Abyss Gravel + 10 Silver/Tungsten Bars + any hammer.
+                // 钨钢屏障生成器 Rover Drive: Energy Core + 2 Wulfrum Metal Scrap + 5 Chains @ Iron/Lead Anvil.
+                if (calamity.TryFind<ModItem>("RoverDrive", out ModItem roverDrive) &&
+                    calamity.TryFind<ModItem>("WulfrumMetalScrap", out ModItem wulfrumMetalScrap))
+                {
+                    Recipe roverDriveRecipe = Recipe.Create(roverDrive.Type);
+                    roverDriveRecipe.AddIngredient<EnergyCore>();
+                    roverDriveRecipe.AddIngredient(wulfrumMetalScrap.Type, 2);
+                    roverDriveRecipe.AddIngredient(ItemID.Chain, 5);
+                    roverDriveRecipe.AddTile(TileID.Anvils);
+                    roverDriveRecipe.Register();
+                }
+
+                // 深渊碾碎者Depth Crusher: 10 Abyss Gravel + 10 Silver/Tungsten Bars + any hammer.
                 if (calamity.TryFind<ModItem>("DepthCrusher", out ModItem depthCrusher) &&
                     calamity.TryFind<ModItem>("AbyssGravel", out ModItem abyssGravel))
                 {
@@ -75,7 +88,7 @@ namespace CalamityLegendsComeBack.QOL
                     RegisterDepthCrusherRecipe(depthCrusher.Type, abyssGravel.Type, ItemID.TungstenBar);
                 }
 
-                // Calamari's Lament: Black Ink + 10 Planty Mush + 10 Ruinous Soul + Terrarium.
+                // 乌贼之哀歌Calamari's Lament: Black Ink + 10 Planty Mush + 10 Ruinous Soul + Terrarium.
                 if (calamity.TryFind<ModItem>("CalamarisLament", out ModItem calamarisLament) &&
                     calamity.TryFind<ModItem>("PlantyMush", out ModItem plantyMush) &&
                     calamity.TryFind<ModItem>("RuinousSoul", out ModItem lamentRuinousSoul))

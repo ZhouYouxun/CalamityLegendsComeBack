@@ -1,13 +1,40 @@
-﻿Mods: {
+Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
 			IUMWMatrixTablet: {
 				DisplayName: 传奇矩阵终端
 				Tooltip: 打开“灾厄传说归来”的矩阵说明界面。
 			}
+
+			TestWeapon: {
+				// DisplayName: Test Weapon
+				// Tooltip: ""
+			}
 		}
 
-		Projectiles.IUMWMatrixPanel.DisplayName: 传奇矩阵界面
+		Projectiles: {
+			IUMWMatrixPanel.DisplayName: 传奇矩阵界面
+			// BarrierShieldVisual.DisplayName: Barrier Shield Visual
+			// CtrlChipNEWReticle.DisplayName: Ctrl Chip N E W Reticle
+			// CtrlChipReticle.DisplayName: Ctrl Chip Reticle
+			// LegendaryCodexPanel.DisplayName: Legendary Codex Panel
+			// BossSummonerPanel.DisplayName: Boss Summoner Panel
+			// TestWeaponProj.DisplayName: Test Weapon Proj
+			// Magic.AnodizedWulfrumShard.DisplayName: Anodized Wulfrum Shard
+			// PurifiedGel_Ball.DisplayName: Purified Gel_ Ball
+			// NewSHPS.DisplayName: New S H P S
+			// DepthCells_Drop.DisplayName: Depth Cells_ Drop
+			// PlagueCell_Marked.DisplayName: Plague Cell_ Marked
+			// ArmoredShell_Ball.DisplayName: Armored Shell_ Ball
+			// AshesofAnn_Located.DisplayName: Ashesof Ann_ Located
+			// ExoPrism_Geometry.DisplayName: Exo Prism_ Geometry
+			// NightmareFuel_ARC.DisplayName: Nightmare Fuel_ A R C
+			// NL_SHPC_EXWeapon.DisplayName: N L_ S H P C_ E X Weapon
+			// SHPCLeftClickHoldout.DisplayName: S H P C Left Click Holdout
+			// SHPCMagazineStatusPanel.DisplayName: S H P C Magazine Status Panel
+		}
+
+		// Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split
 
 		UI: {
 			GuideTitle: 灾厄传说矩阵

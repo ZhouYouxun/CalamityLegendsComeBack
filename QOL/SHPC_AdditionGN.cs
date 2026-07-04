@@ -24,11 +24,6 @@ namespace CalamityLegendsComeBack.QOL
 
         public override void ModifyNPCLoot(NPC npc, NPCLoot npcLoot)
         {
-            if (npc.type == NPCID.KingSlime)
-            {
-                npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<SHPCBook>()));
-            }
-
             if (npc.type == NPCID.WallofFlesh)
             {
                 LeadingConditionRule firstWallKill = new(DropHelper.If(() => !Main.hardMode, desc: DropHelper.FirstKillText));

@@ -45,6 +45,16 @@ Mods: {
 				DisplayName: Matrix Protection Field
 				Description: Fortifies body · reduces damage · regenerates life · boosts speed · reduces aggro; the core recompiles the battlefield
 			}
+
+			YharonSoulFragment_Buff: {
+				DisplayName: Yharon Soul Fragment_ Buff
+				Description: Mods.CalamityLegendsComeBack.Buffs.YharonSoulFragment_Buff.Description
+			}
+
+			SHPCRight_DeBuff: {
+				DisplayName: S H P C Right_ De Buff
+				Description: Mods.CalamityLegendsComeBack.Buffs.SHPCRight_DeBuff.Description
+			}
 		}
 
 		Projectiles: {

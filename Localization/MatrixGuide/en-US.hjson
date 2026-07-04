@@ -1,13 +1,40 @@
-﻿Mods: {
+Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
 			IUMWMatrixTablet: {
 				DisplayName: Matrix Guide Tablet
 				Tooltip: Opens the Calamity Legends Come Back matrix guide.
 			}
+
+			TestWeapon: {
+				DisplayName: Test Weapon
+				Tooltip: ""
+			}
 		}
 
-		Projectiles.IUMWMatrixPanel.DisplayName: Matrix Guide Panel
+		Projectiles: {
+			IUMWMatrixPanel.DisplayName: Matrix Guide Panel
+			BarrierShieldVisual.DisplayName: Barrier Shield Visual
+			CtrlChipNEWReticle.DisplayName: Ctrl Chip N E W Reticle
+			CtrlChipReticle.DisplayName: Ctrl Chip Reticle
+			LegendaryCodexPanel.DisplayName: Legendary Codex Panel
+			BossSummonerPanel.DisplayName: Boss Summoner Panel
+			TestWeaponProj.DisplayName: Test Weapon Proj
+			Magic.AnodizedWulfrumShard.DisplayName: Anodized Wulfrum Shard
+			PurifiedGel_Ball.DisplayName: Purified Gel_ Ball
+			NewSHPS.DisplayName: New S H P S
+			DepthCells_Drop.DisplayName: Depth Cells_ Drop
+			PlagueCell_Marked.DisplayName: Plague Cell_ Marked
+			ArmoredShell_Ball.DisplayName: Armored Shell_ Ball
+			AshesofAnn_Located.DisplayName: Ashesof Ann_ Located
+			ExoPrism_Geometry.DisplayName: Exo Prism_ Geometry
+			NightmareFuel_ARC.DisplayName: Nightmare Fuel_ A R C
+			NL_SHPC_EXWeapon.DisplayName: N L_ S H P C_ E X Weapon
+			SHPCLeftClickHoldout.DisplayName: S H P C Left Click Holdout
+			SHPCMagazineStatusPanel.DisplayName: S H P C Magazine Status Panel
+		}
+
+		Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split
 
 		UI: {
 			GuideTitle: CALAMITY LEGENDS MATRIX
