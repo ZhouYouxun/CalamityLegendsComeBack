@@ -22,6 +22,17 @@ Mods: {
 						[c/5880C0:聚合爆炸：汇聚能量后，在目标处引发剧烈爆炸。]
 						[c/AA88FF:空间扭曲：对大型敌人施加持续扭曲伤害。]
 						[c/9DA8B8:七芒符文：刻下七芒符文，射出碎片与追踪数据矛。]
+						[c/B4FFC8:莫比乌斯环：投影一条三维莫比乌斯扭曲环，数据沿环面流动后从各采样点射出追踪矛。]
+						[c/78FF50:分形递归树：向目标方向生长一棵L-系统分形树，递归4层后，所有叶节点同时爆射碎片。]
+						[c/FFA0C8:沃罗诺伊破碎：在目标周围生成德劳内三角网格，从外向内逐格碎裂后所有种子点射出数据矛。]
+						[c/FFDC64:环面纽结：投影一条(2,3)三叶结纽结，纽结收紧缠绕目标施加持续扭曲伤害。]
+						[c/C878FF:洛伦兹蝶群：根据洛伦兹混沌方程生成三条蝶形吸引子轨迹，数据流沿轨迹灼烧目标。]
+						[c/FFC83C:斐波那契螺旋：展开一条黄金螺旋线，沿黄金角分布的18个节点逐个亮起后齐射追踪矛。]
+						[c/64B4FF:彭罗斯坍缩：铺设非周期彭罗斯菱形镶嵌图案，菱形从外向内坍缩后引爆数据聚合爆炸。]
+						[c/FF8080:双曲抛物面：在目标处展开自转双曲抛物鞍面，从其网格边缘的8个顶点朝目标交叉倾泻数据矛。]
+						[c/96C8FF:克利福德环面：构建克利福德环面的4D投影倾斜圆环，周期性解脱并射出6枚追踪数据矛。]
+						[c/C8FF64:超配方渐变：绘制实时插值过渡对称性的超配方极坐标图形，在各对称曲率凸起顶点周期散射碎片。]
+						[c/FF64FF:谢尔宾斯基三角：构筑递归等边分形三角形，网格断裂并向心坍缩后引爆威力巨大的数据爆炸。]
 						[c/FF3030:常驻数据场：在核心周围持续侵蚀靠近的敌人。]
 						[c/FFFFFF:编译风暴：同时启动所有主要攻击，最终引爆数据奇点。]
 						'''
@@ -33,16 +44,6 @@ Mods: {
 			HyperdimensionalMatrixCoreBuff: {
 				DisplayName: 矩阵防护场
 				Description: 强化躯体 · 降低伤害 · 恢复生命 · 提升速度 · 降低仇恨
-			}
-
-			YharonSoulFragment_Buff: {
-				// DisplayName: Yharon Soul Fragment_ Buff
-				// Description: Mods.CalamityLegendsComeBack.Buffs.YharonSoulFragment_Buff.Description
-			}
-
-			SHPCRight_DeBuff: {
-				// DisplayName: S H P C Right_ De Buff
-				// Description: Mods.CalamityLegendsComeBack.Buffs.SHPCRight_DeBuff.Description
 			}
 		}
 
@@ -61,6 +62,17 @@ Mods: {
 				MatrixRunicStamp.DisplayName: 超维刻印
 				MatrixCompileStorm.DisplayName: 编译风暴
 				MatrixSingularity.DisplayName: 数据奇点
+				MatrixMobiusRing.DisplayName: 莫比乌斯数据环
+				MatrixFractalTree.DisplayName: 分形递归树
+				MatrixVoronoiShatter.DisplayName: 沃罗诺伊破碎
+				MatrixTorusKnot.DisplayName: 环面纽结
+				MatrixLorenzSwarm.DisplayName: 洛伦兹蝶群
+				MatrixFibonacciSpiral.DisplayName: 斐波那契螺旋
+				MatrixPenroseTiling.DisplayName: 彭罗斯镶嵌
+				MatrixParaboloidWarp.DisplayName: 双曲抛物马鞍面
+				MatrixCliffordTorus.DisplayName: 克利福德环面
+				MatrixSuperformulaMorph.DisplayName: 超配方形态渐变
+				MatrixSierpinskiCollapse.DisplayName: 谢尔宾斯基三角
 			}
 		}
 	}
