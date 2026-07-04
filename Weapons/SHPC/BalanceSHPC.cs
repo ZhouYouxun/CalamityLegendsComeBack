@@ -349,11 +349,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         private static readonly int[] DefaultLeftClickNoAmmoExplosionRadii =
         {
-            75,
-            125,
-            175,
-            225,
-            300
+            112,
+            228,
+            344,
+            460,
+            576
         };
 
         // 右键热量总积攒时间固定为15秒；当前可用的热量等级平分这15秒。

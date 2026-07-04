@@ -7,6 +7,7 @@ using CalamityMod.Projectiles.Magic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.IO;
 using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
@@ -37,6 +38,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         private static readonly DefaultEffect DefaultEffectInstance = new();
         private RulesOfEffect cachedEffect;
+        private int cachedEffectID = int.MinValue;
 
 
         //private RulesOfEffect CurrentEffect
@@ -73,24 +75,43 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         public override void OnSpawn(IEntitySource source)
         {
             Player owner = Main.player[Projectile.owner];
+            RefreshEffectFromAI(owner);
+        }
 
-            cachedEffect = EffectRegistry.GetEffectByID((int)Projectile.ai[0]) ?? DefaultEffectInstance;
+        public override void SendExtraAI(BinaryWriter writer)
+        {
+            writer.Write((int)Projectile.ai[0]);
+        }
 
-            // 同步粒子系数（关键）
+        public override void ReceiveExtraAI(BinaryReader reader)
+        {
+            Projectile.ai[0] = reader.ReadInt32();
+            cachedEffectID = int.MinValue;
+        }
+
+        private void RefreshEffectFromAI(Player owner)
+        {
+            int effectID = (int)Projectile.ai[0];
+            if (cachedEffectID == effectID && cachedEffect != null)
+                return;
+
+            cachedEffectID = effectID;
+            cachedEffect = EffectRegistry.GetEffectByID(effectID) ?? DefaultEffectInstance;
+
             SquishyLightParticleFactor = cachedEffect.SquishyLightParticleFactor;
             ExplosionPulseFactor = cachedEffect.ExplosionPulseFactor;
-
-            // 同步光芒控制
             GlowScaleFactor = cachedEffect.GlowScaleFactor;
             GlowIntensityFactor = cachedEffect.GlowIntensityFactor;
 
             cachedEffect.OnSpawn(Projectile, owner);
         }
+
         // 是否启用默认减速（默认开启）
         public virtual bool EnableDefaultSlowdown => true;
         public override void AI()
         {
             Player owner = Main.player[Projectile.owner];
+            RefreshEffectFromAI(owner);
 
             // ===== 默认发光 =====
             float lightStrength = Main.rand.Next(90, 111) * 0.01f;
@@ -287,7 +308,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             {
                 // ===== 爆炸核心参数 =====
                 float defaultExplosionVisualScale = CurrentEffect.EffectID == -1
-                    ? new BalanceSHPC().GetDefaultLeftClickNoAmmoExplosionRadius() / 75f
+                    ? new BalanceSHPC().GetDefaultLeftClickNoAmmoExplosionRadius() / 112f
                     : 1f;
                 float startSize = 0.07f * ExplosionPulseFactor * defaultExplosionVisualScale;
                 float endSize = 0.33f * ExplosionPulseFactor * defaultExplosionVisualScale;

@@ -79,6 +79,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         // 外置弹药库：每格最多存 MaxReservePerSlot 个相同材料，开火时自动补充内弹夹
         private readonly int[] magazineReserve = new int[MagazineCount];
         private int selectedMagazineIndex;
+        private bool suppressWorldRightClickUntilRelease;
+        private bool wasWorldRightClickInteractionActive;
 
         public int storedEffectPower
         {
@@ -1251,11 +1253,41 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         private bool CanStartRightClickHoldout(Player player)
         {
-            return player.whoAmI == Main.myPlayer &&
-                   !IsUsingEX(player) &&
-                   player.Calamity().mouseRight &&
-                   KeybindSystem.LegendaryWeaponFormSwitch?.Current != true &&
-                   CanUseWorldRightClick(player);
+            if (player.whoAmI != Main.myPlayer ||
+                IsUsingEX(player) ||
+                KeybindSystem.LegendaryWeaponFormSwitch?.Current == true)
+            {
+                return false;
+            }
+
+            bool rightClickHeld = player.Calamity().mouseRight || Main.mouseRight;
+            bool interactionActive = IsWorldRightClickInteractionActive(player);
+
+            if (!rightClickHeld)
+            {
+                suppressWorldRightClickUntilRelease = false;
+                wasWorldRightClickInteractionActive = interactionActive;
+                return false;
+            }
+
+            if (interactionActive || wasWorldRightClickInteractionActive)
+                suppressWorldRightClickUntilRelease = true;
+
+            wasWorldRightClickInteractionActive = interactionActive;
+
+            if (!player.Calamity().mouseRight)
+                return false;
+
+            if (suppressWorldRightClickUntilRelease)
+                return false;
+
+            if (!CanUseWorldRightClick(player) || IsRightClickBlockedByWorldInteraction())
+            {
+                suppressWorldRightClickUntilRelease = true;
+                return false;
+            }
+
+            return true;
         }
 
         private void InterruptNormalSHPCUse(Player player)
@@ -1310,15 +1342,34 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 player.CCed ||
                 Main.mapFullscreen ||
                 Main.blockMouse ||
-                player.mouseInterface)
+                player.mouseInterface ||
+                IsWorldRightClickInteractionActive(player))
             {
                 return false;
             }
 
-            if (Main.playerInventory && !Main.HoverItem.IsAir)
+            return true;
+        }
+
+        private static bool IsWorldRightClickInteractionActive(Player player)
+        {
+            return Main.playerInventory ||
+                   player.chest != -1 ||
+                   player.sleeping.isSleeping ||
+                   player.TalkNPC != null;
+        }
+
+        private static bool IsRightClickBlockedByWorldInteraction()
+        {
+            if (!Main.mouseRightRelease)
                 return false;
 
-            return true;
+            if (!Main.npcChatRelease)
+                return true;
+
+            return Main.SmartInteractX != -1 ||
+                   Main.SmartInteractY != -1 ||
+                   Main.SmartInteractProj != -1;
         }
 
         private void HandleAmmoSelectionKey(Player player)

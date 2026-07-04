@@ -7,7 +7,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
 {
     internal static class BrinyBaron_SkillDashTornado_FlightEffects
     {
-        private const string GlowBladeTexture = "CalamityLegendsComeBack/Weapons/BrinyBaron/SkillA_ShortDash/GlowBlade";
+        private const string GlowBladeTexture = "CalamityLegendsComeBack/Texture/Shared/GlowBlade";
         private const float FrontAnchorDistance = 16f * 3f;
 
         public static Vector2 GetFrontAnchor(Projectile projectile, Vector2 fallbackDirection)

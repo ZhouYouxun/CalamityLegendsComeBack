@@ -1,0 +1,48 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			IUMWMatrixTablet: {
+				DisplayName: 传奇矩阵终端
+				Tooltip: 打开“灾厄传说归来”的矩阵说明界面。
+			}
+
+			TestWeapon: {
+				// DisplayName: Test Weapon
+				// Tooltip: ""
+			}
+		}
+
+		Projectiles: {
+			IUMWMatrixPanel.DisplayName: 传奇矩阵界面
+			// BarrierShieldVisual.DisplayName: Barrier Shield Visual
+			// CtrlChipNEWReticle.DisplayName: Ctrl Chip N E W Reticle
+			// CtrlChipReticle.DisplayName: Ctrl Chip Reticle
+			// LegendaryCodexPanel.DisplayName: Legendary Codex Panel
+			// BossSummonerPanel.DisplayName: Boss Summoner Panel
+			// TestWeaponProj.DisplayName: Test Weapon Proj
+			// Magic.AnodizedWulfrumShard.DisplayName: Anodized Wulfrum Shard
+			// PurifiedGel_Ball.DisplayName: Purified Gel_ Ball
+			// NewSHPS.DisplayName: New S H P S
+			// DepthCells_Drop.DisplayName: Depth Cells_ Drop
+			// PlagueCell_Marked.DisplayName: Plague Cell_ Marked
+			// ArmoredShell_Ball.DisplayName: Armored Shell_ Ball
+			// AshesofAnn_Located.DisplayName: Ashesof Ann_ Located
+			// ExoPrism_Geometry.DisplayName: Exo Prism_ Geometry
+			// NightmareFuel_ARC.DisplayName: Nightmare Fuel_ A R C
+			// NL_SHPC_EXWeapon.DisplayName: N L_ S H P C_ E X Weapon
+			// SHPCLeftClickHoldout.DisplayName: S H P C Left Click Holdout
+			// SHPCMagazineStatusPanel.DisplayName: S H P C Magazine Status Panel
+		}
+
+		// Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split
+
+		UI: {
+			GuideTitle: 灾厄传说矩阵
+			GuideSubtitle: 传奇归来信息终端
+			GuideBody: “灾厄传说归来”1.0 聚焦 SHPC、SHPC 配饰、高维矩阵工具、视觉特效、调试工具、复古游戏面板，以及可以直接从源码学习的本地实验内容。
+			BossListTitle: 当前可学习内容
+			BossList: SHPC 材料与热量系统、高维矩阵核心、SHPP 平台、神镐、隔音工具、调试面板、复古游戏面板，以及 Z_TeachingProjectile 中的教学示例。
+			CloseHint: 再次使用终端，或点击面板外关闭。
+		}
+	}
+}

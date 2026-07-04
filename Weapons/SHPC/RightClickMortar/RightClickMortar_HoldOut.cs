@@ -224,7 +224,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar
                 Particle line = new CustomSpark(
                     muzzle + right * Main.rand.NextFloat(-5f, 5f),
                     lane * Main.rand.NextFloat(11f, 18f),
-                    "CalamityLegendsComeBack/Weapons/BrinyBaron/SkillA_ShortDash/GlowBlade",
+                    "CalamityLegendsComeBack/Texture/Shared/GlowBlade",
                     false,
                     11,
                     Main.rand.NextFloat(0.042f, 0.065f),

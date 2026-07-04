@@ -45,6 +45,16 @@ Mods: {
 				DisplayName: 矩阵防护场
 				Description: 强化躯体 · 降低伤害 · 恢复生命 · 提升速度 · 降低仇恨
 			}
+
+			YharonSoulFragment_Buff: {
+				// DisplayName: Yharon Soul Fragment_ Buff
+				// Description: Mods.CalamityLegendsComeBack.Buffs.YharonSoulFragment_Buff.Description
+			}
+
+			SHPCRight_DeBuff: {
+				// DisplayName: S H P C Right_ De Buff
+				// Description: Mods.CalamityLegendsComeBack.Buffs.SHPCRight_DeBuff.Description
+			}
 		}
 
 		Projectiles: {
