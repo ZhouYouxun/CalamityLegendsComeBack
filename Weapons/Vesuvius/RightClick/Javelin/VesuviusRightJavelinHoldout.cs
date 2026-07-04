@@ -22,8 +22,8 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
         private const int PullbackLength = 30;
         private const int MaxChargeLength = 78;
         private const int ReadyFlashLength = 20;
-        private const float MinThrowSpeed = 25f;
-        private const float MaxThrowSpeed = 36f;
+        private const float MinThrowSpeed = 50f;
+        private const float MaxThrowSpeed = 72f;
         private const float VisualRotationOffset = MathHelper.PiOver4;
 
         private bool releaseRequested;

@@ -14,6 +14,13 @@ namespace CalamityLegendsComeBack.Systems
 
         private static readonly List<FluidSourceInfo> pendingSources = new();
 
+        // Tracks how long it has been since a curse shot last fed the field. Used to keep the
+        // (expensive, screen-covering) fluid simulation dormant while the weapon isn't firing,
+        // and to let the fire dissipate smoothly instead of snapping off.
+        private static int framesSinceLastSource = int.MaxValue;
+        private const int IdleUpdateFrames = 180;
+        private const int IdleDrawFrames = 220;
+
         private struct FluidSourceInfo
         {
             public Vector2 WorldPos;
@@ -62,20 +69,49 @@ namespace CalamityLegendsComeBack.Systems
 
         private static void DrawFluidFieldHook(On_Main.orig_SortDrawCacheWorms orig, Main self)
         {
-            orig(self);
-
-            if (SharedField is not null && !Main.gameMenu)
+            // Draw BEFORE orig(self), the exact point where Calamity draws its own Profaned
+            // Moonlight aurora field. At this entry there is no active spriteBatch, so
+            // FluidField.Draw's internal Begin/End (needsToCallEnd: false) is safe. Drawing
+            // AFTER orig() can collide with a spriteBatch that orig left open, throwing inside
+            // the detour and silently killing the effect (which is why nothing showed up).
+            if (SharedField is not null && !Main.gameMenu && framesSinceLastSource <= IdleDrawFrames)
             {
                 Vector2 screenCenter = new Vector2(Main.screenWidth, Main.screenHeight) * 0.5f;
                 // Draw in World space using GameViewMatrix transformation matrix.
                 SharedField.Draw(screenCenter, false, Main.GameViewMatrix.TransformationMatrix, Matrix.Identity);
             }
+
+            orig(self);
         }
 
         public override void PostUpdateEverything()
         {
             if (Main.dedServ)
                 return;
+
+            // Advance the idle timer. RegisterSource pushes into pendingSources during projectile
+            // AI (earlier this tick), so a non-empty queue means fire is active this frame.
+            bool activeThisFrame;
+            lock (pendingSources)
+                activeThisFrame = pendingSources.Count > 0;
+
+            if (activeThisFrame)
+                framesSinceLastSource = 0;
+            else if (framesSinceLastSource != int.MaxValue)
+                framesSinceLastSource++;
+
+            // Nothing has fed the field for a while: let it go dormant. The field stays allocated
+            // (a single screen-sized field, like Calamity's own cursor field) but stops simulating
+            // and drawing so it costs nothing while idle.
+            if (framesSinceLastSource > IdleUpdateFrames)
+            {
+                if (SharedField is not null)
+                    SharedField.ShouldUpdate = false;
+
+                lock (pendingSources)
+                    pendingSources.Clear();
+                return;
+            }
 
             int size = 370;
             FluidFieldManager.AdjustSizeRelativeToGraphicsQuality(ref size);

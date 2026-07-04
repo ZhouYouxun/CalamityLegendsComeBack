@@ -99,7 +99,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             bool   shifted  = Main.keyState.PressingShift();
             string legendary = shifted ? this.GetLocalizedValue("LegendaryText") : this.GetLocalizedValue("LegendaryHint");
 
-            string finalText = intro + "\n\n" + left + "\n" + right + "\n" + passive + "\n" + ultimate + "\n";
+            string finalText = intro + "\n" + left + "\n" + right + "\n" + passive + "\n" + ultimate + "\n";
 
             if (shifted)
                 tooltips.RemoveAll(t => t.Text == "[GFB]");
@@ -108,21 +108,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             tooltips.Add(new TooltipLine(Mod, "SeasSearingAbyssalPollutionLegendaryText", legendary));
         }
 
-        public override void AddRecipes()
-        {
-            if (!ModLoader.TryGetMod("CalamityMod", out Mod calamity) ||
-                !calamity.TryFind("SeasSearing", out ModItem originalSeaSearing))
-                return;
 
-            CreateRecipe()
-                .AddIngredient(originalSeaSearing.Type)
-                .AddIngredient<DepthCells>(25)
-                .AddIngredient<Lumenyl>(18)
-                .AddIngredient<InfectedArmorPlating>(12)
-                .AddIngredient(ItemID.IllegalGunParts)
-                .AddTile(TileID.MythrilAnvil)
-                .Register();
-        }
 
         internal static bool CanUseWorldInput(Player player)
         {

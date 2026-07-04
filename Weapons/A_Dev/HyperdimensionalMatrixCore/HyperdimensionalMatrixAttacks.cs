@@ -1779,6 +1779,72 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
                     Math.Max(1, (int)(dmg * MatrixModuleNumbers.InscriptionDamage)), kb, owner,
                     Projectile.whoAmI, tIdx);
 
+                // Module 6: Möbius Data Ring
+                Projectile.NewProjectile(src, target.Center, Vector2.Zero,
+                    ModContent.ProjectileType<MatrixMobiusRing>(),
+                    Math.Max(1, (int)(dmg * MatrixModuleNumbers.MobiusRingDamage)), kb, owner,
+                    Projectile.whoAmI, tIdx);
+
+                // Module 7: Fractal Tree
+                Projectile.NewProjectile(src, Projectile.Center, Vector2.Zero,
+                    ModContent.ProjectileType<MatrixFractalTree>(),
+                    Math.Max(1, (int)(dmg * MatrixModuleNumbers.FractalTreeDamage)), kb, owner,
+                    Projectile.whoAmI, tIdx);
+
+                // Module 8: Voronoi Shatter
+                Projectile.NewProjectile(src, target.Center, Vector2.Zero,
+                    ModContent.ProjectileType<MatrixVoronoiShatter>(),
+                    Math.Max(1, (int)(dmg * MatrixModuleNumbers.VoronoiDamage)), kb, owner,
+                    Projectile.whoAmI, tIdx);
+
+                // Module 9: Torus Knot
+                Projectile.NewProjectile(src, target.Center, Vector2.Zero,
+                    ModContent.ProjectileType<MatrixTorusKnot>(),
+                    Math.Max(1, (int)(dmg * MatrixModuleNumbers.TorusKnotDamage)), kb, owner,
+                    Projectile.whoAmI, tIdx);
+
+                // Module 10: Lorenz Attractor
+                Projectile.NewProjectile(src, target.Center, Vector2.Zero,
+                    ModContent.ProjectileType<MatrixLorenzSwarm>(),
+                    Math.Max(1, (int)(dmg * MatrixModuleNumbers.LorenzDamage)), kb, owner,
+                    Projectile.whoAmI, tIdx);
+
+                // Module 11: Fibonacci Spiral
+                Projectile.NewProjectile(src, target.Center, Vector2.Zero,
+                    ModContent.ProjectileType<MatrixFibonacciSpiral>(),
+                    Math.Max(1, (int)(dmg * MatrixModuleNumbers.FibonacciDamage)), kb, owner,
+                    Projectile.whoAmI, tIdx);
+
+                // Module 12: Penrose Tiling Collapse
+                Projectile.NewProjectile(src, target.Center, Vector2.Zero,
+                    ModContent.ProjectileType<MatrixPenroseTiling>(),
+                    Math.Max(1, (int)(dmg * MatrixModuleNumbers.PenroseDamage)), kb, owner,
+                    Projectile.whoAmI, tIdx);
+
+                // Module 13: Paraboloid Warp
+                Projectile.NewProjectile(src, target.Center, Vector2.Zero,
+                    ModContent.ProjectileType<MatrixParaboloidWarp>(),
+                    Math.Max(1, (int)(dmg * MatrixModuleNumbers.ParaboloidDamage)), kb, owner,
+                    Projectile.whoAmI, tIdx);
+
+                // Module 14: Clifford Torus
+                Projectile.NewProjectile(src, target.Center, Vector2.Zero,
+                    ModContent.ProjectileType<MatrixCliffordTorus>(),
+                    Math.Max(1, (int)(dmg * MatrixModuleNumbers.CliffordDamage)), kb, owner,
+                    Projectile.whoAmI, tIdx);
+
+                // Module 15: Superformula Morph
+                Projectile.NewProjectile(src, target.Center, Vector2.Zero,
+                    ModContent.ProjectileType<MatrixSuperformulaMorph>(),
+                    Math.Max(1, (int)(dmg * MatrixModuleNumbers.SuperformulaDamage)), kb, owner,
+                    Projectile.whoAmI, tIdx);
+
+                // Module 16: Sierpinski Collapse
+                Projectile.NewProjectile(src, target.Center, Vector2.Zero,
+                    ModContent.ProjectileType<MatrixSierpinskiCollapse>(),
+                    Math.Max(1, (int)(dmg * MatrixModuleNumbers.SierpinskiDamage)), kb, owner,
+                    Projectile.whoAmI, tIdx);
+
                 SoundEngine.PlaySound(new SoundStyle(MatrixModuleNumbers.SndCompileStorm), target.Center);
 
                 if (!Main.dedServ && Main.LocalPlayer.active)
@@ -1887,9 +1953,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             // Holographic module-compile status panel floating above the midpoint
             Vector2 panelCenter = Vector2.Lerp(corePos, tgtPos, 0.38f) + new Vector2(0f, -90f);
 
-            const float cellSize = 7.5f;
-            const float gap      = 3f;
-            const int   cols     = 6;   // one column per module
+            const float cellSize = 4.2f;
+            const float gap      = 1.5f;
+            const int   cols     = 17;   // one column per module
             const int   rows     = 4;
             float panelW = cols * cellSize + (cols - 1) * gap;
             float panelH = rows * cellSize + (rows - 1) * gap;
@@ -1960,6 +2026,17 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             3 => new Color(200, 220, 255, 0),
             4 => new Color(80,  255, 120, 0),
             5 => new Color(255, 200, 255, 0),
+            6 => new Color(180, 255, 200, 0),
+            7 => new Color(120, 255, 80,  0),
+            8 => new Color(255, 160, 200, 0),
+            9 => new Color(255, 220, 100, 0),
+            10 => new Color(200, 120, 255, 0),
+            11 => new Color(255, 200, 60,  0),
+            12 => new Color(100, 180, 255, 0),
+            13 => new Color(255, 100, 100, 0),
+            14 => new Color(150, 200, 255, 0),
+            15 => new Color(200, 255, 100, 0),
+            16 => new Color(255, 100, 255, 0),
             _ => Color.White with { A = 0 }
         };
 

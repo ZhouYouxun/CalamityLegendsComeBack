@@ -10,57 +10,8 @@ using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.SumBoss
+namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.BossProgress
 {
-    public class BossSummonerItem : ModItem, ILocalizedModType
-    {
-        public new string LocalizationCategory => "Items.Weapons";
-        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Tools/DebugTools/SumBoss/BossSummonerItem";
-
-        public override void SetDefaults()
-        {
-            Item.width = 44;
-            Item.height = 44;
-            Item.useTime = 12;
-            Item.useAnimation = 12;
-            Item.useStyle = ItemUseStyleID.HoldUp;
-            Item.noMelee = true;
-            Item.autoReuse = false;
-            Item.shoot = ModContent.ProjectileType<BossSummonerPanel>();
-            Item.shootSpeed = 0f;
-            Item.UseSound = null;
-            Item.value = 0;
-            Item.rare = ItemRarityID.Cyan;
-        }
-
-        public override bool AltFunctionUse(Player player) => true;
-
-        public override bool CanUseItem(Player player)
-        {
-            return Main.myPlayer == player.whoAmI
-                && !Main.mapFullscreen
-                && !Main.blockMouse
-                && !player.mouseInterface
-                && !(Main.playerInventory && Main.HoverItem.type == Type);
-        }
-
-        public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
-        {
-            if (player.altFunctionUse != 2)
-                return false;
-
-            if (BossSummonerPanel.TryClose(player))
-            {
-                SoundEngine.PlaySound(SoundID.MenuClose with { Volume = 0.58f, Pitch = 0.05f }, player.Center);
-                return false;
-            }
-
-            Projectile.NewProjectile(source, player.Center, Vector2.Zero, ModContent.ProjectileType<BossSummonerPanel>(), 0, 0f, player.whoAmI);
-            SoundEngine.PlaySound(SoundID.MenuOpen with { Volume = 0.68f, Pitch = 0.08f }, player.Center);
-            return false;
-        }
-    }
-
     internal sealed class BossSummonerPanel : ModProjectile
     {
         private const int Columns = 8;
@@ -132,7 +83,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.SumBoss
                 return;
             }
 
-            if (owner.HeldItem.type != ModContent.ItemType<BossSummonerItem>())
+            if (owner.HeldItem.type != ModContent.ItemType<CTRLBoss>())
                 FadeOut = true;
 
             if (!initialized && Main.myPlayer == Projectile.owner)

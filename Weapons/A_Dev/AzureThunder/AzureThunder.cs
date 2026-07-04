@@ -205,14 +205,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             // [GFB] 是本武器本地化文本里的占位符，这里按当前进度拼成完整说明。
             string text =
-                this.GetLocalizedValue("AzureThunderLeft") + "\n\n" +
-                this.GetLocalizedValue("AzureThunderRight") + "\n\n" +
+                this.GetLocalizedValue("AzureThunderLeft") + "\n" +
+                this.GetLocalizedValue("AzureThunderRight") + "\n" +
                 this.GetLocalizedValue(GetHeavenEarthTooltipKey()) + "\n" +
                 this.GetLocalizedValue(GetHeavensWardTooltipKey()) + "\n" +
-                this.GetLocalizedValue(GetFourSymbolsTooltipKey()) + "\n\n" +
-                ultimateText + "\n\n" +
+                this.GetLocalizedValue(GetFourSymbolsTooltipKey()) + "\n" +
+                ultimateText + "\n" +
                 this.GetLocalizedValue("AzureThunderThunderCharge") + "\n" +
-                this.GetLocalizedValue("AzureThunderDot") + "\n\n" +
+                this.GetLocalizedValue("AzureThunderDot") + "\n" +
                 this.GetLocalizedValue("AzureThunderFinal");
             tooltips.FindAndReplace("[GFB]", text);
         }

@@ -31,7 +31,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
         public override void SetStaticDefaults()
         {
             Main.projFrames[Type] = 9;
-            ProjectileID.Sets.TrailCacheLength[Type] = 20;
+            ProjectileID.Sets.TrailCacheLength[Type] = 8;
             ProjectileID.Sets.TrailingMode[Type] = 0;
         }
 
@@ -74,8 +74,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
             Lighting.AddLight(Projectile.Center, new Vector3(0.12f, 0.5f, 0.92f) * 0.55f);
             SpawnAuricTrail(age);
 
-            Dust dust = Dust.NewDustPerfect(Projectile.Center, DustID.Electric, -Projectile.velocity * 0.05f, 0, AuricBlue, 0.72f);
-            dust.noGravity = true;
+            if (Projectile.timeLeft % 2 == 0)
+            {
+                Dust dust = Dust.NewDustPerfect(Projectile.Center, DustID.Electric, -Projectile.velocity * 0.05f, 0, AuricBlue, 0.62f);
+                dust.noGravity = true;
+            }
         }
 
         private void InitializeScatter()
@@ -140,7 +143,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
             Vector2 side = forward.RotatedBy(MathHelper.PiOver2);
             float ramp = Utils.GetLerpValue(ScatterSlowdownFrames, ScatterSlowdownFrames + 90f, age, true);
 
-            if (Projectile.numUpdates == 0 || Main.rand.NextBool(2))
+            if (Projectile.timeLeft % 3 == 0)
             {
                 Color trailColor = Main.rand.NextBool(4) ? AuricGold : Color.Lerp(AuricBlue, AuricWhite, Main.rand.NextFloat(0.1f, 0.7f));
                 GeneralParticleHandler.SpawnParticle(new LineParticle(
@@ -152,7 +155,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
                     trailColor));
             }
 
-            if (Projectile.numUpdates == 0 && Main.rand.NextBool(3))
+            if (Projectile.timeLeft % 5 == 0 && Main.rand.NextBool(2))
             {
                 float phase = age * 0.21f + Projectile.ai[2];
                 Vector2 curl = side * MathF.Sin(phase * 2f) * Main.rand.NextFloat(3f, 10f);
@@ -173,7 +176,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
                 return;
 
             SoundEngine.PlaySound(SoundID.DD2_LightningAuraZap with { Volume = 0.14f, Pitch = 0.26f, PitchVariance = 0.12f, MaxInstances = 4 }, Projectile.Center);
-            CynosureVisuals.SpawnElectricBurst(Projectile.Center, 24, 2.8f, 14f);
+            CynosureVisuals.SpawnElectricBurst(Projectile.Center, 7, 2.8f, 12f);
             GeneralParticleHandler.SpawnParticle(new CustomPulse(
                 Projectile.Center,
                 Vector2.Zero,
@@ -185,7 +188,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
                 0.24f,
                 13));
 
-            for (int i = 0; i < 18; i++)
+            for (int i = 0; i < 5; i++)
             {
                 float angle = MathHelper.TwoPi * i / 18f + Projectile.ai[2];
                 Vector2 direction = angle.ToRotationVector2();
@@ -207,7 +210,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
             Rectangle frame = texture.Frame(1, Main.projFrames[Type], 0, Projectile.frame);
             Vector2 origin = frame.Size() * 0.5f;
 
-            for (int i = Projectile.oldPos.Length - 1; i >= 0; i--)
+            for (int i = Projectile.oldPos.Length - 1; i >= 0; i -= 2)
             {
                 Color afterimageColor = Color.Lerp(AuricBlue, AuricGold, i / (float)Projectile.oldPos.Length) with { A = 0 };
                 afterimageColor *= ((Projectile.oldPos.Length - i) / (float)Projectile.oldPos.Length) * 0.62f;
@@ -224,9 +227,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
 
             Main.spriteBatch.SetBlendState(BlendState.Additive);
             float outlinePulse = 1f + 0.1f * MathF.Sin(Main.GlobalTimeWrappedHourly * 12f + Projectile.identity);
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 4; i++)
             {
-                Vector2 offset = (MathHelper.TwoPi * i / 10f).ToRotationVector2() * (2.4f * outlinePulse);
+                Vector2 offset = (MathHelper.TwoPi * i / 4f).ToRotationVector2() * (2.2f * outlinePulse);
                 Main.EntitySpriteDraw(
                     texture,
                     Projectile.Center + offset - Main.screenPosition,

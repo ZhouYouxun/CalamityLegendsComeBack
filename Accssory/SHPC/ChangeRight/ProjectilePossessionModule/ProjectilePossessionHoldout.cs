@@ -29,6 +29,13 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.ProjectilePossession
         private SlotId vacuumSound;
         private bool playedEndSound;
         private bool released;
+        private bool releaseSequenceActive;
+        private readonly List<Projectile> releaseQueue = new();
+        private int releaseIndex;
+        private int releaseTimer;
+        private Vector2 queuedReleaseDirection;
+        private Vector2 queuedTipPosition;
+        private int queuedBaseDamage;
         private int fullPulseCooldown;
 
         private Player Owner => Main.player[Projectile.owner];
@@ -54,6 +61,12 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.ProjectilePossession
 
         public override void AI()
         {
+            if (releaseSequenceActive)
+            {
+                ContinueReleaseSequence();
+                return;
+            }
+
             if (!CanContinueHolding())
             {
                 ReleaseAndKill();
@@ -106,7 +119,7 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.ProjectilePossession
                 activeSound?.Stop();
 
             if (!released && Owner.active && !Owner.dead)
-                ReleaseCapturedProjectiles();
+                ReleaseCapturedProjectiles(immediate: true);
         }
 
         private bool CanContinueHolding()
@@ -180,12 +193,16 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.ProjectilePossession
         private void ReleaseAndKill()
         {
             if (!released)
-                ReleaseCapturedProjectiles();
+            {
+                ReleaseCapturedProjectiles(immediate: false);
+                if (releaseSequenceActive)
+                    return;
+            }
 
             Projectile.Kill();
         }
 
-        private void ReleaseCapturedProjectiles()
+        private void ReleaseCapturedProjectiles(bool immediate)
         {
             released = true;
             StopVacuumSoundAndPlayEnd();
@@ -194,30 +211,83 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.ProjectilePossession
             if (capturedProjectiles.Count <= 0)
                 return;
 
-            Vector2 releaseDirection = AimDirection;
-            int baseDamage = Math.Max(1, Projectile.damage);
-            float baseSpeed = 20f;
-            int count = capturedProjectiles.Count;
-            float spread = MathHelper.Lerp(MathHelper.ToRadians(2f), MathHelper.ToRadians(28f), count / (float)ProjectilePossessionModulePlayer.MaxAbsorbedProjectiles);
+            queuedReleaseDirection = AimDirection;
+            queuedTipPosition = TipPosition;
+            queuedBaseDamage = Math.Max(1, Projectile.damage);
+            releaseQueue.Clear();
+            releaseQueue.AddRange(capturedProjectiles);
+            releaseIndex = 0;
+            releaseTimer = 0;
 
-            for (int i = 0; i < count; i++)
+            if (immediate)
             {
-                Projectile projectile = capturedProjectiles[i];
-                SHPCProjectilePossessionGlobalProjectile possession = projectile.GetGlobalProjectile<SHPCProjectilePossessionGlobalProjectile>();
-
-                float progress = count <= 1 ? 0.5f : i / (float)(count - 1);
-                float angle = MathHelper.Lerp(-spread, spread, progress);
-                float speed = MathHelper.Clamp(possession.OriginalSpeed * 1.25f, 12f, 30f);
-                if (speed <= 0f)
-                    speed = baseSpeed;
-
-                Vector2 velocity = releaseDirection.RotatedBy(angle) * speed;
-                projectile.Center = TipPosition + releaseDirection * 16f + releaseDirection.RotatedBy(MathHelper.PiOver2) * MathHelper.Lerp(-18f, 18f, progress);
-                possession.Release(projectile, Owner, velocity, Math.Max(baseDamage, possession.OriginalDamage));
+                while (releaseIndex < releaseQueue.Count)
+                    ReleaseNextQueuedProjectile();
+                FinishReleaseSequence();
+                return;
             }
 
-            Owner.GetModPlayer<ProjectilePossessionModulePlayer>().RefreshAbsorbedCount();
+            releaseSequenceActive = true;
+            Projectile.timeLeft = 2;
+        }
+
+        private void ContinueReleaseSequence()
+        {
+            if (!Owner.active || Owner.dead)
+            {
+                FinishReleaseSequence();
+                Projectile.Kill();
+                return;
+            }
+
+            Projectile.timeLeft = 2;
+            Projectile.Center = Owner.Center;
+            Projectile.rotation = queuedReleaseDirection.ToRotation();
+            Projectile.velocity = Vector2.Zero;
+            UpdateOwnerHoldout();
+
+            if (releaseTimer % 3 == 0)
+                ReleaseNextQueuedProjectile();
+
+            releaseTimer++;
+
+            if (releaseIndex >= releaseQueue.Count)
+            {
+                FinishReleaseSequence();
+                Projectile.Kill();
+            }
+        }
+
+        private void ReleaseNextQueuedProjectile()
+        {
+            while (releaseIndex < releaseQueue.Count)
+            {
+                Projectile projectile = releaseQueue[releaseIndex];
+                int shotIndex = releaseIndex;
+                releaseIndex++;
+
+                if (projectile == null || !projectile.active)
+                    continue;
+
+                SHPCProjectilePossessionGlobalProjectile possession = projectile.GetGlobalProjectile<SHPCProjectilePossessionGlobalProjectile>();
+                float speed = MathHelper.Clamp(possession.OriginalSpeed * 1.25f, 12f, 30f);
+                if (speed <= 0f)
+                    speed = 20f;
+
+                float angle = (shotIndex % 2 == 0 ? -1f : 1f) * MathHelper.ToRadians(3f);
+                Vector2 velocity = queuedReleaseDirection.RotatedBy(angle) * speed;
+                projectile.Center = queuedTipPosition + queuedReleaseDirection * (16f + shotIndex * 5f);
+                possession.Release(projectile, Owner, velocity, Math.Max(queuedBaseDamage, possession.OriginalDamage));
+                return;
+            }
+        }
+
+        private void FinishReleaseSequence()
+        {
+            releaseSequenceActive = false;
+            releaseQueue.Clear();
             SoundEngine.PlaySound(SoundID.Item91 with { Volume = 0.9f, Pitch = -0.18f }, Owner.Center);
+            Owner.GetModPlayer<ProjectilePossessionModulePlayer>().RefreshAbsorbedCount();
         }
 
         private void StopVacuumSoundAndPlayEnd()

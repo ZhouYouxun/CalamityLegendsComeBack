@@ -15,7 +15,6 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.ProjectilePossession
         private const int MaxAllowedTimeLeft = 3600;
         private const int MaxAllowedDamage = 3600;
         private const float AbsorbedSourceMultiplier = 0.8f;
-        private const int PossessedCloneDamageMultiplier = 20;
         private static readonly HashSet<int> BlacklistedProjectileTypes = new()
         {
             ProjectileID.SaucerDeathray,
@@ -430,9 +429,7 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.ProjectilePossession
 
         private static int GetEmpoweredDamage(int baseDamage)
         {
-            return System.Math.Max(1, baseDamage) > int.MaxValue / PossessedCloneDamageMultiplier
-                ? int.MaxValue
-                : System.Math.Max(1, baseDamage * PossessedCloneDamageMultiplier);
+            return System.Math.Max(1, baseDamage);
         }
 
         private static void EnsureMagicDamageTypeIfDefault(Projectile projectile)

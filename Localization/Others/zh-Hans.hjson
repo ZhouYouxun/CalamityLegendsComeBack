@@ -75,8 +75,8 @@ Mods: {
 				}
 
 				CTRLBoss: {
-					DisplayName: Boss进度修改器
-					Tooltip: 左键打开或关闭 Boss 进度调试面板。
+					DisplayName: Boss进度与召唤器
+					Tooltip: 左键打开或关闭 Boss 进度调试面板，右键打开或关闭 Boss 召唤面板。
 				}
 
 				SoundproofEarmuffs: {

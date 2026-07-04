@@ -74,8 +74,8 @@ Mods: {
 				}
 
 				CTRLBoss: {
-					DisplayName: Boss Progress Controller
-					Tooltip: Left click to open or close the boss progress debug panel.
+					DisplayName: Boss Progress & Summoner
+					Tooltip: Left click to open or close the boss progress debug panel. Right click to open or close the boss summon panel.
 				}
 
 				SoundproofEarmuffs: {

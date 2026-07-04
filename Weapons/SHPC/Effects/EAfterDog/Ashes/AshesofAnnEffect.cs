@@ -23,8 +23,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
         public override float GlowScaleFactor => 0f;
         public override bool EnableDefaultSlowdown => false;
         public override bool PlayDefaultLeftClickFireSound => false;
-        public override int LeftClickBurstCount => 5;
-
         public override void OnSpawn(Projectile projectile, Player owner)
         {
             projectile.penetrate = -1;

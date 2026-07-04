@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using CalamityMod;
 using Microsoft.Xna.Framework;
 using Terraria.DataStructures;
@@ -19,6 +20,17 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
         public const int FusionCooldown      = 400;
         public const int SpaceWarpCooldown   = 560;
         public const int InscriptionCooldown = 360;
+        public const int MobiusRingCooldown  = 300;
+        public const int FractalTreeCooldown = 340;
+        public const int VoronoiCooldown     = 380;
+        public const int TorusKnotCooldown   = 420;
+        public const int LorenzCooldown      = 320;
+        public const int FibonacciCooldown   = 280;
+        public const int PenroseCooldown     = 500;
+        public const int ParaboloidCooldown  = 320;
+        public const int CliffordCooldown    = 360;
+        public const int SuperformulaCooldown = 300;
+        public const int SierpinskiCooldown  = 460;
 
         public const int CompileStormInterval   = 900;
         public const float TargetingRange       = 2400f;
@@ -32,6 +44,17 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
         public const float SpaceWarpDamage   = 0.26f;
         public const float CompileStormDmg   = 0.20f;
         public const float InscriptionDamage = 1.04f; // non-homing shards
+        public const float MobiusRingDamage  = 0.22f;
+        public const float FractalTreeDamage = 0.85f;
+        public const float VoronoiDamage     = 0.75f;
+        public const float TorusKnotDamage   = 0.16f;
+        public const float LorenzDamage      = 0.12f;
+        public const float FibonacciDamage   = 0.15f;
+        public const float PenroseDamage     = 1.80f;
+        public const float ParaboloidDamage  = 0.45f;
+        public const float CliffordDamage    = 0.20f;
+        public const float SuperformulaDamage = 0.35f;
+        public const float SierpinskiDamage  = 1.50f;
 
         // 模组自定义音效路径（使用时不调音量 / 音调）
         public const string SndGeoBurst     = "CalamityLegendsComeBack/Sound/Other/Helldiver2/磁轨炮-开火";
@@ -47,7 +70,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
 
     public sealed class HyperdimensionalMatrixCoreProjectile : ModProjectile, ILocalizedModType
     {
-        private const int ModuleCount = 6;
+        private const int ModuleCount = 17;
 
         private readonly int[] moduleCooldowns = new int[ModuleCount];
         private int compileStormTimer;
@@ -259,16 +282,30 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             if (target == null)
                 return;
 
-            // Rotate through modules; fire the first ready one
-            for (int offset = 0; offset < ModuleCount; offset++)
+            // Collect all ready modules
+            List<int> readyModules = new();
+            for (int m = 0; m < ModuleCount; m++)
             {
-                int m = (lastFiredModule + 1 + offset) % ModuleCount;
-                if (!ModuleReady(m, target))
-                    continue;
+                if (ModuleReady(m, target))
+                    readyModules.Add(m);
+            }
 
-                FireModule(m, target);
-                lastFiredModule = m;
-                break;
+            if (readyModules.Count > 0)
+            {
+                Player owner = Main.player[Projectile.owner];
+                bool overloading = owner.active && owner.statLife < owner.statLifeMax2 * 0.5f;
+                int maxSimultaneous = overloading ? 5 : 3;
+
+                int toFireCount = Math.Min(maxSimultaneous, readyModules.Count);
+                for (int i = 0; i < toFireCount; i++)
+                {
+                    int randIdx = Main.rand.Next(readyModules.Count);
+                    int m = readyModules[randIdx];
+                    readyModules.RemoveAt(randIdx);
+
+                    FireModule(m, target);
+                    lastFiredModule = m;
+                }
             }
         }
 
@@ -356,6 +393,116 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
                         Projectile.whoAmI, target.whoAmI);
                     moduleCooldowns[5] = MatrixModuleNumbers.InscriptionCooldown;
                     SoundEngine.PlaySound(new SoundStyle(MatrixModuleNumbers.SndInscription), Projectile.Center);
+                    break;
+
+                case 6: // Möbius Data Ring
+                    Projectile.NewProjectile(src, target.Center, Vector2.Zero,
+                        ModContent.ProjectileType<MatrixMobiusRing>(),
+                        Math.Max(1, (int)(dmg * MatrixModuleNumbers.MobiusRingDamage)),
+                        Projectile.knockBack, Projectile.owner,
+                        Projectile.whoAmI, target.whoAmI);
+                    moduleCooldowns[6] = MatrixModuleNumbers.MobiusRingCooldown;
+                    SoundEngine.PlaySound(SoundID.Item117 with { Volume = 0.32f, Pitch = 0.35f, MaxInstances = 3 }, Projectile.Center);
+                    break;
+
+                case 7: // Fractal Recursion Tree
+                    Projectile.NewProjectile(src, Projectile.Center, Vector2.Zero,
+                        ModContent.ProjectileType<MatrixFractalTree>(),
+                        Math.Max(1, (int)(dmg * MatrixModuleNumbers.FractalTreeDamage)),
+                        Projectile.knockBack, Projectile.owner,
+                        Projectile.whoAmI, target.whoAmI);
+                    moduleCooldowns[7] = MatrixModuleNumbers.FractalTreeCooldown;
+                    SoundEngine.PlaySound(new SoundStyle(MatrixModuleNumbers.SndGeoBurst), Projectile.Center);
+                    break;
+
+                case 8: // Voronoi Shatter
+                    Projectile.NewProjectile(src, target.Center, Vector2.Zero,
+                        ModContent.ProjectileType<MatrixVoronoiShatter>(),
+                        Math.Max(1, (int)(dmg * MatrixModuleNumbers.VoronoiDamage)),
+                        Projectile.knockBack, Projectile.owner,
+                        Projectile.whoAmI, target.whoAmI);
+                    moduleCooldowns[8] = MatrixModuleNumbers.VoronoiCooldown;
+                    SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.30f, Pitch = 0.20f, MaxInstances = 3 }, Projectile.Center);
+                    break;
+
+                case 9: // Torus Knot Bind
+                    Projectile.NewProjectile(src, target.Center, Vector2.Zero,
+                        ModContent.ProjectileType<MatrixTorusKnot>(),
+                        Math.Max(1, (int)(dmg * MatrixModuleNumbers.TorusKnotDamage)),
+                        Projectile.knockBack, Projectile.owner,
+                        Projectile.whoAmI, target.whoAmI);
+                    moduleCooldowns[9] = MatrixModuleNumbers.TorusKnotCooldown;
+                    SoundEngine.PlaySound(new SoundStyle(MatrixModuleNumbers.SndSpaceWarp) { Volume = 0.28f }, target.Center);
+                    break;
+
+                case 10: // Lorenz Attractor Swarm
+                    Projectile.NewProjectile(src, target.Center, Vector2.Zero,
+                        ModContent.ProjectileType<MatrixLorenzSwarm>(),
+                        Math.Max(1, (int)(dmg * MatrixModuleNumbers.LorenzDamage)),
+                        Projectile.knockBack, Projectile.owner,
+                        Projectile.whoAmI, target.whoAmI);
+                    moduleCooldowns[10] = MatrixModuleNumbers.LorenzCooldown;
+                    SoundEngine.PlaySound(new SoundStyle(MatrixModuleNumbers.SndShaderOrbs), target.Center);
+                    break;
+
+                case 11: // Fibonacci Spiral Lance Array
+                    Projectile.NewProjectile(src, target.Center, Vector2.Zero,
+                        ModContent.ProjectileType<MatrixFibonacciSpiral>(),
+                        Math.Max(1, (int)(dmg * MatrixModuleNumbers.FibonacciDamage)),
+                        Projectile.knockBack, Projectile.owner,
+                        Projectile.whoAmI, target.whoAmI);
+                    moduleCooldowns[11] = MatrixModuleNumbers.FibonacciCooldown;
+                    SoundEngine.PlaySound(SoundID.Item117 with { Volume = 0.28f, Pitch = 0.45f, MaxInstances = 3 }, Projectile.Center);
+                    break;
+
+                case 12: // Penrose Tiling Collapse
+                    Projectile.NewProjectile(src, target.Center, Vector2.Zero,
+                        ModContent.ProjectileType<MatrixPenroseTiling>(),
+                        Math.Max(1, (int)(dmg * MatrixModuleNumbers.PenroseDamage)),
+                        Projectile.knockBack, Projectile.owner,
+                        Projectile.whoAmI, target.whoAmI);
+                    moduleCooldowns[12] = MatrixModuleNumbers.PenroseCooldown;
+                    SoundEngine.PlaySound(new SoundStyle(MatrixModuleNumbers.SndFusion), target.Center);
+                    break;
+
+                case 13: // Hyperbolic Paraboloid Warp
+                    Projectile.NewProjectile(src, target.Center, Vector2.Zero,
+                        ModContent.ProjectileType<MatrixParaboloidWarp>(),
+                        Math.Max(1, (int)(dmg * MatrixModuleNumbers.ParaboloidDamage)),
+                        Projectile.knockBack, Projectile.owner,
+                        Projectile.whoAmI, target.whoAmI);
+                    moduleCooldowns[13] = MatrixModuleNumbers.ParaboloidCooldown;
+                    SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.32f, Pitch = -0.1f }, target.Center);
+                    break;
+
+                case 14: // Clifford Torus Hopf Fibration
+                    Projectile.NewProjectile(src, target.Center, Vector2.Zero,
+                        ModContent.ProjectileType<MatrixCliffordTorus>(),
+                        Math.Max(1, (int)(dmg * MatrixModuleNumbers.CliffordDamage)),
+                        Projectile.knockBack, Projectile.owner,
+                        Projectile.whoAmI, target.whoAmI);
+                    moduleCooldowns[14] = MatrixModuleNumbers.CliffordCooldown;
+                    SoundEngine.PlaySound(new SoundStyle(MatrixModuleNumbers.SndShaderOrbs), target.Center);
+                    break;
+
+                case 15: // Gielis Superformula Morph
+                    Projectile.NewProjectile(src, target.Center, Vector2.Zero,
+                        ModContent.ProjectileType<MatrixSuperformulaMorph>(),
+                        Math.Max(1, (int)(dmg * MatrixModuleNumbers.SuperformulaDamage)),
+                        Projectile.knockBack, Projectile.owner,
+                        Projectile.whoAmI, target.whoAmI);
+                    moduleCooldowns[15] = MatrixModuleNumbers.SuperformulaCooldown;
+                    SoundEngine.PlaySound(SoundID.Item117 with { Volume = 0.30f, Pitch = 0.2f }, Projectile.Center);
+                    break;
+
+                case 16: // Sierpinski Gasket Collapse
+                    Projectile.NewProjectile(src, target.Center, Vector2.Zero,
+                        ModContent.ProjectileType<MatrixSierpinskiCollapse>(),
+                        Math.Max(1, (int)(dmg * MatrixModuleNumbers.SierpinskiDamage)),
+                        Projectile.knockBack, Projectile.owner,
+                        Projectile.whoAmI, target.whoAmI);
+                    moduleCooldowns[16] = MatrixModuleNumbers.SierpinskiCooldown;
+                    SoundEngine.PlaySound(new SoundStyle(MatrixModuleNumbers.SndFusion), target.Center);
                     break;
             }
         }
@@ -469,6 +616,17 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             3 => MatrixModuleNumbers.FusionCooldown,
             4 => MatrixModuleNumbers.SpaceWarpCooldown,
             5 => MatrixModuleNumbers.InscriptionCooldown,
+            6 => MatrixModuleNumbers.MobiusRingCooldown,
+            7 => MatrixModuleNumbers.FractalTreeCooldown,
+            8 => MatrixModuleNumbers.VoronoiCooldown,
+            9 => MatrixModuleNumbers.TorusKnotCooldown,
+            10 => MatrixModuleNumbers.LorenzCooldown,
+            11 => MatrixModuleNumbers.FibonacciCooldown,
+            12 => MatrixModuleNumbers.PenroseCooldown,
+            13 => MatrixModuleNumbers.ParaboloidCooldown,
+            14 => MatrixModuleNumbers.CliffordCooldown,
+            15 => MatrixModuleNumbers.SuperformulaCooldown,
+            16 => MatrixModuleNumbers.SierpinskiCooldown,
             _ => 360
         };
 
@@ -480,6 +638,17 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             3 => new Color(200, 220, 255, 0),
             4 => new Color(80,  255, 120, 0),
             5 => new Color(255, 200, 255, 0),
+            6 => new Color(180, 255, 200, 0),   // Möbius — cyan-mint
+            7 => new Color(120, 255, 80,  0),   // Fractal — bright green
+            8 => new Color(255, 160, 200, 0),   // Voronoi — pink
+            9 => new Color(255, 220, 100, 0),   // Torus — gold
+            10 => new Color(200, 120, 255, 0),  // Lorenz — violet
+            11 => new Color(255, 200, 60,  0),  // Fibonacci — amber
+            12 => new Color(100, 180, 255, 0),  // Penrose — steel blue
+            13 => new Color(255, 100, 100, 0),  // Paraboloid — light red
+            14 => new Color(150, 200, 255, 0),  // Clifford — sky blue
+            15 => new Color(200, 255, 100, 0),  // Superformula — chartreuse
+            16 => new Color(255, 100, 255, 0),  // Sierpinski — magenta
             _ => Color.White with { A = 0 }
         };
     }

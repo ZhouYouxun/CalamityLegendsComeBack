@@ -439,7 +439,8 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 {
                     Main.projectile[idx].CritChance = Owner.GetWeaponCrit(Owner.HeldItem);
                     // 标记为辐射子弹（用于击中时添加特效）
-                    Main.projectile[idx].localAI[2] = 1f;
+                    Main.projectile[idx].GetGlobalProjectile<SeasSearingRadiationBulletGlobal>().IsRadiationBullet = true;
+                    Main.projectile[idx].netUpdate = true;
                 }
 
                 SpawnRadiationBulletAura(dir, burstIndex);

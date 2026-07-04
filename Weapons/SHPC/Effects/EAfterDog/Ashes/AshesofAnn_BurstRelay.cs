@@ -1,13 +1,10 @@
 using CalamityMod;
-using CalamityMod.Dusts;
-using CalamityMod.Graphics.Metaballs;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using System;
 using Terraria;
 using Terraria.Audio;
-using Terraria.GameContent;
+using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -15,12 +12,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
 {
     internal sealed class AshesofAnn_BurstRelay : ModProjectile, ILocalizedModType
     {
-        private const int ShotCount = 18;
-        private const int WarmupFrames = 6;
-        private const int FireInterval = 1;
-        private const float HomingAcquireRange = 200f * 16f;
-        private const float MinMuzzleDistance = 42f;
-        private const float MaxMuzzleDistance = 92f;
+        private const int ShotCount = 17;
+        private const int WarmupFrames = 4;
+        private const int FireInterval = 4;
 
         public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
@@ -32,9 +26,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
         {
             get
             {
-                Vector2 storedDirection = new(Projectile.ai[0], Projectile.ai[1]);
-                if (storedDirection.LengthSquared() > 0.0001f)
-                    return storedDirection.SafeNormalize(Vector2.UnitX);
+                Vector2 stored = new(Projectile.ai[0], Projectile.ai[1]);
+                if (stored.LengthSquared() > 0.001f)
+                    return stored.SafeNormalize(Vector2.UnitX);
 
                 return Projectile.velocity.SafeNormalize(Vector2.UnitX);
             }
@@ -42,11 +36,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
 
         public override void SetDefaults()
         {
-            Projectile.width = 36;
-            Projectile.height = 36;
+            Projectile.width = 32;
+            Projectile.height = 32;
             Projectile.friendly = false;
             Projectile.hostile = false;
-            Projectile.timeLeft = WarmupFrames + ShotCount * FireInterval + 24;
+            Projectile.timeLeft = WarmupFrames + ShotCount * FireInterval + 18;
             Projectile.penetrate = -1;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
@@ -54,26 +48,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
         }
 
         public override bool? CanDamage() => false;
-
         public override bool ShouldUpdatePosition() => false;
 
-        public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
+        public override void OnSpawn(IEntitySource source)
         {
-            Player owner = Main.player[Projectile.owner];
-            Vector2 forward = GetOwnerAimDirection(owner, ForwardDirection);
-            Projectile.ai[2] = MathHelper.Clamp(Vector2.Distance(owner.Center, Projectile.Center), MinMuzzleDistance, MaxMuzzleDistance);
-            SetForwardDirection(forward);
-            Projectile.Center = GetAnchoredMuzzlePosition(owner, forward);
-            Projectile.velocity = Vector2.Zero;
-            Projectile.rotation = forward.ToRotation();
-            Projectile.Opacity = 0f;
-            Projectile.netUpdate = true;
-
-            SoundEngine.PlaySound(SoundID.Item103 with { Volume = 0.55f, Pitch = -0.25f, PitchVariance = 0.08f, MaxInstances = 4 }, Projectile.Center);
-            SoundEngine.PlaySound(SoundID.Item20 with { Volume = 0.35f, Pitch = -0.45f, PitchVariance = 0.1f, MaxInstances = 4 }, Projectile.Center);
-
+            SoundEngine.PlaySound(SoundID.Item20 with { Volume = 0.34f, Pitch = -0.18f, PitchVariance = 0.1f, MaxInstances = 4 }, Projectile.Center);
             if (!Main.dedServ)
-                SpawnOpeningFlash(forward);
+                SpawnMuzzleFlash(ForwardDirection);
         }
 
         public override void AI()
@@ -88,67 +69,38 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
             }
 
             Vector2 forward = GetOwnerAimDirection(owner, ForwardDirection);
-            SetForwardDirection(forward);
-            Projectile.Center = GetAnchoredMuzzlePosition(owner, forward);
-            Projectile.velocity = Vector2.Zero;
-            Projectile.rotation = forward.ToRotation() + Timer * 0.045f;
-            Projectile.Opacity = Utils.GetLerpValue(0f, 10f, Timer, true) * Utils.GetLerpValue(0f, 14f, Projectile.timeLeft, true);
+            Projectile.ai[0] = forward.X;
+            Projectile.ai[1] = forward.Y;
+            Projectile.Center = owner.Center + forward * 68f;
+            Projectile.rotation = forward.ToRotation();
 
             if (Projectile.owner == Main.myPlayer && Timer >= WarmupFrames && ShotsFired < ShotCount && (Timer - WarmupFrames) % FireInterval == 0f)
-                FireCurseShot((int)ShotsFired++);
-
-            Lighting.AddLight(Projectile.Center, new Vector3(0.75f, 0.08f, 0.02f) * (0.55f * Projectile.Opacity));
+                FireSoul((int)ShotsFired++);
 
             if (!Main.dedServ)
-                SpawnRelayEffects(forward);
+                SpawnChargeEffects(forward);
         }
 
-        private void SetForwardDirection(Vector2 direction)
-        {
-            Vector2 safeDirection = direction.SafeNormalize(Vector2.UnitX);
-            Projectile.ai[0] = safeDirection.X;
-            Projectile.ai[1] = safeDirection.Y;
-        }
-
-        private Vector2 GetAnchoredMuzzlePosition(Player owner, Vector2 forward)
-        {
-            float muzzleDistance = Projectile.ai[2];
-            if (muzzleDistance <= 0f)
-                muzzleDistance = 68f;
-
-            return owner.Center + forward * MathHelper.Clamp(muzzleDistance, MinMuzzleDistance, MaxMuzzleDistance);
-        }
-
-        private static Vector2 GetOwnerAimDirection(Player owner, Vector2 fallback)
-        {
-            Vector2 mouseWorld = owner.whoAmI == Main.myPlayer && !Main.dedServ ? Main.MouseWorld : owner.Calamity().mouseWorld;
-            return (mouseWorld - owner.Center).SafeNormalize(fallback.SafeNormalize(Vector2.UnitX * owner.direction));
-        }
-
-        private void FireCurseShot(int shotIndex)
+        private void FireSoul(int shotIndex)
         {
             Vector2 forward = ForwardDirection;
             Vector2 normal = forward.RotatedBy(MathHelper.PiOver2);
             bool piercingShot = shotIndex % 3 == 2;
-            NPC target = piercingShot ? null : FindTarget(HomingAcquireRange);
+
             float shotCompletion = shotIndex / (float)(ShotCount - 1);
-            float weave = (float)Math.Sin(shotIndex * 2.399963f) * MathHelper.Lerp(0.48f, 0.1f, shotCompletion);
-            Vector2 direction = forward.RotatedBy(weave);
+            float spreadStrength = MathHelper.Lerp(0.26f, 0.06f, shotCompletion);
+            float wave = (float)System.Math.Sin(shotIndex * 1.83f) * spreadStrength;
+            Vector2 direction = forward.RotatedBy(wave).SafeNormalize(forward);
 
-            if (target is not null)
-            {
-                Vector2 predictedCenter = target.Center + target.velocity * MathHelper.Lerp(8f, 18f, shotCompletion);
-                Vector2 targetDirection = (predictedCenter - Projectile.Center).SafeNormalize(direction);
-                direction = Vector2.Lerp(direction, targetDirection, 0.82f).SafeNormalize(targetDirection);
-            }
-
-            Vector2 spawnPosition = Projectile.Center + forward * 20f + normal * (float)Math.Sin(shotIndex * 1.618034f) * 24f;
+            float sideOffset = (float)System.Math.Sin(shotIndex * 2.41f) * 18f;
+            Vector2 spawnPosition = Projectile.Center + forward * 18f + normal * sideOffset;
             float speed = piercingShot
-                ? MathHelper.Lerp(6.4f, 8.4f, shotCompletion) + Main.rand.NextFloat(-0.25f, 0.25f)
-                : MathHelper.Lerp(13.5f, 18.8f, shotCompletion) + Main.rand.NextFloat(-0.35f, 0.35f);
-            int damage = Math.Max(1, (int)(Projectile.damage * MathHelper.Lerp(0.75f, 0.9f, shotCompletion)));
+                ? MathHelper.Lerp(5.4f, 7.2f, shotCompletion)
+                : Main.rand.NextFloat(13.5f, 16.5f);
+
+            int damage = Math.Max(1, (int)(Projectile.damage * MathHelper.Lerp(0.78f, 0.92f, shotCompletion)));
             if (shotIndex == ShotCount - 1)
-                damage = Math.Max(1, (int)(Projectile.damage * 1.13f));
+                damage = Math.Max(1, (int)(Projectile.damage * 1.08f));
 
             Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
@@ -158,187 +110,71 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                 damage,
                 Projectile.knockBack,
                 Projectile.owner,
-                target?.whoAmI ?? -1f,
-                shotIndex,
-                piercingShot ? -1f : Main.rand.NextFloat(0.7f, 1.3f));
+                piercingShot ? 1f : 0f,
+                shotIndex);
 
-            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/VividClarityBeamAppear") { Pitch = -0.32f }, spawnPosition);
-
-            SpawnShotRelease(spawnPosition, direction, shotIndex);
+            SoundEngine.PlaySound(SoundID.Item73, spawnPosition);
+            SpawnShotGlow(spawnPosition, direction);
         }
 
-        private NPC FindTarget(float range)
+        private static Vector2 GetOwnerAimDirection(Player owner, Vector2 fallback)
         {
-            NPC bestTarget = null;
-            float bestScore = range;
-            Vector2 forward = ForwardDirection;
-
-            foreach (NPC npc in Main.ActiveNPCs)
-            {
-                if (!npc.CanBeChasedBy(Projectile, false))
-                    continue;
-
-                Vector2 toTarget = npc.Center - Projectile.Center;
-                float distance = toTarget.Length();
-                if (distance > range)
-                    continue;
-
-                float angularPenalty = (1f - MathHelper.Clamp(Vector2.Dot(forward, toTarget.SafeNormalize(forward)), -1f, 1f)) * 520f;
-                float score = distance + angularPenalty;
-                if (npc.boss)
-                    score *= 0.7f;
-
-                if (score >= bestScore)
-                    continue;
-
-                bestTarget = npc;
-                bestScore = score;
-            }
-
-            return bestTarget;
+            Vector2 mouseWorld = owner.whoAmI == Main.myPlayer && !Main.dedServ ? Main.MouseWorld : owner.Calamity().mouseWorld;
+            return (mouseWorld - owner.Center).SafeNormalize(fallback.SafeNormalize(Vector2.UnitX * owner.direction));
         }
 
-        private void SpawnOpeningFlash(Vector2 forward)
+        private void SpawnMuzzleFlash(Vector2 forward)
         {
-            Color mainColor = new(255, 64, 32);
-            Color darkColor = new(78, 0, 0);
-            Vector2 normal = forward.RotatedBy(MathHelper.PiOver2);
-
             GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
                 Projectile.Center,
                 Vector2.Zero,
-                mainColor,
-                new Vector2(0.95f, 0.44f),
+                new Color(255, 180, 68),
+                new Vector2(0.82f, 0.28f),
                 forward.ToRotation(),
-                0.08f,
-                1.55f,
-                20));
-
-            for (int i = 0; i < 12; i++)
-            {
-                Vector2 velocity = forward.RotatedByRandom(0.38f) * Main.rand.NextFloat(3.5f, 9f) + normal * Main.rand.NextFloat(-1.6f, 1.6f);
-                GeneralParticleHandler.SpawnParticle(new CustomSpark(
-                    Projectile.Center + normal * Main.rand.NextFloat(-16f, 16f),
-                    velocity,
-                    "CalamityMod/Particles/SmallBloom",
-                    false,
-                    Main.rand.Next(12, 18),
-                    Main.rand.NextFloat(0.18f, 0.32f),
-                    Main.rand.NextBool(3) ? Color.White : mainColor,
-                    new Vector2(Main.rand.NextFloat(1.15f, 2.1f), Main.rand.NextFloat(0.45f, 0.75f)),
-                    true,
-                    false,
-                    0f,
-                    false,
-                    false,
-                    0.65f));
-            }
-
-            for (int i = 0; i < 6; i++)
-                CalamitasMetaball.SpawnParticle(Projectile.Center - forward * i * 5f, -forward * Main.rand.NextFloat(0.4f, 1.4f) + Main.rand.NextVector2Circular(0.7f, 0.7f), Main.rand.NextFloat(24f, 42f));
-
-            for (int i = 0; i < 8; i++)
-            {
-                Dust dust = Dust.NewDustPerfect(
-                    Projectile.Center + Main.rand.NextVector2Circular(18f, 18f),
-                    Main.rand.NextBool(4) ? DustID.Smoke : (int)CalamityDusts.Brimstone,
-                    forward.RotatedByRandom(0.72f) * Main.rand.NextFloat(1.5f, 5.4f),
-                    115,
-                    Main.rand.NextBool() ? mainColor : darkColor,
-                    Main.rand.NextFloat(0.9f, 1.45f));
-                dust.noGravity = !Main.rand.NextBool(4);
-            }
+                0.06f,
+                1.25f,
+                16));
         }
 
-        private void SpawnRelayEffects(Vector2 forward)
+        private void SpawnChargeEffects(Vector2 forward)
         {
             Vector2 normal = forward.RotatedBy(MathHelper.PiOver2);
-            float pulse = 0.5f + 0.5f * (float)Math.Sin(Timer * 0.24f);
-            Color mainColor = Color.Lerp(new Color(160, 6, 10), new Color(255, 96, 38), pulse);
+            Color orange = new(255, 162, 64);
+            Color ember = new(210, 42, 18);
 
-            GeneralParticleHandler.SpawnParticle(new CustomSpark(
-                Projectile.Center + normal * Main.rand.NextFloat(-10f, 10f),
-                -forward * Main.rand.NextFloat(0.25f, 1.2f),
-                "CalamityMod/Particles/VerticalSmear",
-                false,
-                Main.rand.Next(12, 17),
-                Main.rand.NextFloat(0.9f, 1.25f),
-                mainColor,
-                new Vector2(0.18f, 0.74f),
-                true,
-                true,
-                shrinkSpeed: 0.76f,
-                glowOpacity: 0.36f));
-
-            for (int i = 0; i < 7; i++)
+            if ((int)Timer % 2 == 0)
             {
-                float completion = i / 6f;
-                Vector2 ribbonPosition = Projectile.Center
-                    - forward * Main.rand.NextFloat(0f, 48f)
-                    + normal * Main.rand.NextFloat(-24f, 24f) * MathHelper.Lerp(1f, 0.45f, completion)
-                    + Main.rand.NextVector2Circular(3f, 3f);
-
-                CalamitasMetaball.SpawnParticle(
-                    ribbonPosition,
-                    -forward * Main.rand.NextFloat(0.35f, 1.45f) + normal * Main.rand.NextFloat(-0.45f, 0.45f) + Main.rand.NextVector2Circular(0.35f, 0.35f),
-                    Main.rand.NextFloat(24f, 46f) * MathHelper.Lerp(1.08f, 0.72f, completion));
-
-                if (i % 2 == 0)
-                    RancorLavaMetaball.SpawnParticle(ribbonPosition + Main.rand.NextVector2Circular(5f, 5f), Main.rand.NextFloat(18f, 34f));
+                GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                    Projectile.Center + normal * Main.rand.NextFloat(-8f, 8f),
+                    -forward * Main.rand.NextFloat(0.3f, 1.2f),
+                    "CalamityMod/Particles/VerticalSmear",
+                    false,
+                    1,
+                    Main.rand.NextFloat(0.7f, 1.05f),
+                    Color.Lerp(orange, ember, Main.rand.NextFloat(0.2f, 0.7f)),
+                    new Vector2(0.16f, 0.62f),
+                    true,
+                    true,
+                    shrinkSpeed: 0.78f,
+                    glowOpacity: 0.42f));
             }
         }
 
-        private void SpawnShotRelease(Vector2 center, Vector2 direction, int shotIndex)
+        private static void SpawnShotGlow(Vector2 center, Vector2 direction)
         {
-            if (Main.dedServ)
+            if (Main.dedServ || !Main.rand.NextBool(3))
                 return;
 
-            Color mainColor = shotIndex == ShotCount - 1 ? new Color(255, 190, 92) : new Color(255, 72, 32);
-            Color darkColor = new(74, 0, 0);
-
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+            GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
                 center,
-                direction * 0.4f,
-                mainColor,
-                new Vector2(0.72f, 0.24f),
-                direction.ToRotation(),
-                0.05f,
-                1.25f,
-                14));
-
-            for (int i = 0; i < 5; i++)
-            {
-                Dust dust = Dust.NewDustPerfect(
-                    center + Main.rand.NextVector2Circular(8f, 8f),
-                    Main.rand.NextBool(3) ? DustID.CursedTorch : (int)CalamityDusts.Brimstone,
-                    -direction.RotatedByRandom(0.45f) * Main.rand.NextFloat(0.8f, 3.2f),
-                    100,
-                    Main.rand.NextBool() ? mainColor : darkColor,
-                    Main.rand.NextFloat(0.82f, 1.25f));
-                dust.noGravity = true;
-            }
-        }
-
-        public override bool PreDraw(ref Color lightColor)
-        {
-            if (Projectile.Opacity <= 0f)
-                return false;
-
-            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Texture2D star = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/SimpleStar").Value;
-            Vector2 drawPosition = Projectile.Center - Main.screenPosition;
-            float pulse = 0.88f + (float)Math.Sin(Timer * 0.2f) * 0.12f;
-            Color ember = new(255, 74, 30, 0);
-            Color blood = new(146, 0, 0, 0);
-
-            Main.spriteBatch.SetBlendState(BlendState.Additive);
-            Main.EntitySpriteDraw(bloom, drawPosition, null, blood * (0.58f * Projectile.Opacity), Projectile.rotation, bloom.Size() * 0.5f, 0.42f * pulse, SpriteEffects.None);
-            Main.EntitySpriteDraw(bloom, drawPosition, null, ember * (0.38f * Projectile.Opacity), -Projectile.rotation * 0.6f, bloom.Size() * 0.5f, new Vector2(0.18f, 0.46f) * pulse, SpriteEffects.None);
-            Main.EntitySpriteDraw(star, drawPosition, null, Color.White with { A = 0 } * (0.48f * Projectile.Opacity), Projectile.rotation, star.Size() * 0.5f, new Vector2(0.24f, 0.58f) * pulse, SpriteEffects.None);
-            Main.EntitySpriteDraw(star, drawPosition, null, ember * (0.42f * Projectile.Opacity), Projectile.rotation + MathHelper.PiOver2, star.Size() * 0.5f, new Vector2(0.16f, 0.42f) * pulse, SpriteEffects.None);
-            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
-
-            return false;
+                -direction * Main.rand.NextFloat(0.25f, 0.9f) + Main.rand.NextVector2Circular(0.4f, 0.4f),
+                false,
+                Main.rand.Next(7, 12),
+                Main.rand.NextFloat(0.16f, 0.25f),
+                Color.Lerp(new Color(255, 112, 34), new Color(255, 205, 82), Main.rand.NextFloat(0.2f, 0.75f)),
+                true,
+                false,
+                true));
         }
     }
 }

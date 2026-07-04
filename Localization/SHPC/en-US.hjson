@@ -129,7 +129,7 @@ Mods: {
 
 			MatrixChargingBarrier: {
 				DisplayName: Matrix Charging Barrier
-				Tooltip: While holding SHPC, charges a shield equal to 25% of maximum life rounded down to a multiple of 5. Damage resets a 10-second recharge delay, then the shield fully charges over 5 seconds. While active, it reduces pre-defense damage by 10%
+				Tooltip: While holding SHPC, charges a shield equal to 25% of maximum life. Damage resets a 10-second recharge delay, then the shield fully charges over 5 seconds. While active, it reduces pre-defense damage by 10%
 			}
 
 			CtrlChip: {
@@ -157,19 +157,30 @@ Mods: {
 				DisplayName: Heat Sensor
 				Tooltip:
 					'''
-					While equipped, each standard SHPC heat-barrage level fills in only 3 seconds
-					Standard heat-barrage damage scaling is raised from 5% to 7.5% per heat level
-					Forced shutdown vents a wider searing smoke field that repeatedly damages nearby enemies
-					At full Heat V, continued fire constantly vents damaging smoke around the player
-					Forced shutdown cooling runs faster, halving the downtime
+					Laser barrage heat builds much faster
+					Heat levels grant a larger damage boost
+					When the weapon overheats, it burns nearby enemies for heavy damage
+					At Heat V, overheat keeps burning nearby enemies
+					Overheat shutdown time is halved
 					'''
 			}
 
 			AIOC: {
 				DisplayName: AIOC
-				Tooltip:
+				Tooltip: "[GFB]"
+				TooltipCompact:
 					'''
 					Has all the effects of all 4 chips
+					Hold Shift to show the effects provided by each chip
+					No longer inherits any chip's drawbacks
+					"Hello, World"
+					'''
+				TooltipFull:
+					'''
+					Fast Chip: left-click energy orbs grant double ultimate charge, and laser barrage also grants charge
+					Diffusion Chip: +7% magic damage and magic critical strike chance; empowered heat attacks become more focused
+					Control Chip: +7% critical strike chance; while holding SHPC, gain a reticle that latches, tracks, and auto-aims
+					Ascension Chip: while holding SHPC, +70% flight time and improved movement speed, jump speed, and acceleration
 					No longer inherits any chip's drawbacks
 					"Hello, World"
 					'''
@@ -182,8 +193,8 @@ Mods: {
 					While holding SHPC, right click switches to projectile possession mode
 					Hold right click to capture clones of nearby hostile projectiles in a vacuum cone, up to 15 stored
 					The original hostile projectile keeps existing, but its velocity and damage are permanently reduced by 20%
-					The clone is pulled to the player, becomes friendly, and permanently deals 20x damage
-					Release right click to launch the stored friendly clones forward
+					The clone is pulled to the player and becomes friendly
+					Release right click to fire the stored friendly clones forward in a straight burst
 					Projectiles spawned by those clones remain friendly; if they have no damage type, they count as magic damage
 					Projectiles with more than 3600 damage or more than 3600 time left cannot be absorbed
 					Some persistent beams and blacklisted projectiles are ignored
@@ -209,10 +220,9 @@ Mods: {
 					'''
 					+7% SHPC damage
 					SHPC left-click mana cost -8%; right-click mana cost -12%
-					SHPC left click gains 1 extra soul canister and loads 10% more ammo rounded up to a multiple of 5
+					Adds an energy orb canister; ammo capacity +10%
 					While holding SHPC, cease fire to rapidly restore mana
 					Grants Mana Flower automatic mana potion use
-					Halves SHPC right-click forced overheat shutdown time
 					'''
 			}
 
@@ -222,11 +232,10 @@ Mods: {
 					'''
 					+15% SHPC damage
 					SHPC left-click mana cost -10%; right-click mana cost -20%; left click has a 20% chance not to consume ammo
-					SHPC left click gains 2 extra soul canisters and loads 25% more ammo rounded up to a multiple of 5
+					Adds energy orb canisters; ammo capacity +25%
 					While holding SHPC, cease fire to rapidly restore mana
 					Grants Mana Flower automatic mana potion use
 					Shortens right-click startup
-					Halves SHPC right-click forced overheat shutdown time
 					'''
 			}
 
@@ -234,13 +243,11 @@ Mods: {
 				DisplayName: Evolution Energy Core
 				Tooltip:
 					'''
-					+15% SHPC damage, +5% critical strike chance, allows right-click critical hits
-					SHPC left-click mana cost -15%; right-click mana cost -30%; left click has a 20% chance not to consume ammo
-					SHPC left click gains 3 extra soul canisters and loads 50% more ammo rounded up to a multiple of 5
+					+15% SHPC damage, +5% critical strike chance, allows laser barrage to crit, and shortens laser barrage startup
+					Energy orb mana cost -15%; laser barrage energy cost -30%; firing energy orbs has a 20% chance not to consume ammo
+					Adds energy orb canisters; ammo capacity +50%
 					While holding SHPC, cease fire to rapidly restore mana
 					Grants Mana Flower automatic mana potion use
-					Shortens right-click startup
-					Halves SHPC right-click forced overheat shutdown time
 					'''
 			}
 
@@ -248,11 +255,9 @@ Mods: {
 				DisplayName: Exo Energy Core
 				Tooltip:
 					'''
-					+20% SHPC damage, +10% critical strike chance, allows right-click critical hits
-					While holding SHPC, gain infinite mana; left click has a 50% chance not to consume ammo
-					SHPC left click gains 3 extra soul canisters and loads 100% more ammo rounded up to a multiple of 5
-					Shortens right-click startup
-					Halves SHPC right-click forced overheat shutdown time
+					+20% SHPC damage, +10% critical strike chance, allows laser barrage to crit, and shortens laser barrage startup
+					While holding SHPC, gain infinite mana; firing energy orbs has a 50% chance not to consume ammo
+					Adds energy orb canisters; ammo capacity +100%
 					'''
 			}
 		}

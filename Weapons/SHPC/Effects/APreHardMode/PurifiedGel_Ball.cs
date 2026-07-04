@@ -16,8 +16,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
         public new string LocalizationCategory => "Projectiles.SHPC";
 
         private int timer;
-        private const int MaxRicochets = 5;
+        private const int MaxRicochets = 1;
         private const float MinRicochetSpeed = 8f;
+        private const float HomingRange = 920f;
+        private const float MaxHomingSpeed = 16.5f;
+        private const float HomingInertia = 27f;
+        private const float NoTargetDamping = 0.992f;
+        private const float WanderingTurnStrength = 0.006f;
         private static readonly Color PurifiedGelPink = new(255, 140, 200);
         private static readonly Color PurifiedGelBlue = new(120, 200, 255);
 
@@ -80,6 +85,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
             Projectile.frameCounter++;
             Projectile.frame = Projectile.frameCounter / 3 % Main.projFrames[Type];
             Projectile.rotation += 0.22f;
+            if (Projectile.localAI[0] > 0f)
+                HomeTowardRicochetTarget();
 
             Color pink = PurifiedGelPink;
             Color blue = PurifiedGelBlue;
@@ -144,16 +151,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
             if (Projectile.velocity.X != oldVelocity.X) reflected.X = -oldVelocity.X;
             if (Projectile.velocity.Y != oldVelocity.Y) reflected.Y = -oldVelocity.Y;
             if (reflected == Vector2.Zero) reflected = -oldVelocity;
-            return !TryRicochet(Projectile.Center, oldVelocity, reflected);
+            return !TryRicochet(Projectile.Center, oldVelocity, reflected, -1);
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             Vector2 away = (Projectile.Center - target.Center).SafeNormalize(-Projectile.velocity.SafeNormalize(Vector2.UnitX));
-            TryRicochet(Projectile.Center, Projectile.velocity, away);
+            if (!TryRicochet(Projectile.Center, Projectile.velocity, away, target.whoAmI))
+                Projectile.Kill();
         }
 
-        private bool TryRicochet(Vector2 bouncePoint, Vector2 incomingVelocity, Vector2 newDirection)
+        private bool TryRicochet(Vector2 bouncePoint, Vector2 incomingVelocity, Vector2 fallbackDirection, int excludedTarget)
         {
             if (Projectile.localAI[0] >= MaxRicochets)
                 return false;
@@ -161,10 +169,81 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
             Projectile.localAI[0]++;
             SpawnBounceExplosion(bouncePoint);
 
+            NPC target = FindNearestTarget(HomingRange, excludedTarget);
+            if (target != null)
+                Projectile.localAI[1] = target.whoAmI + 1;
+
+            Vector2 newDirection = target != null
+                ? (target.Center - bouncePoint).SafeNormalize(fallbackDirection.SafeNormalize(Vector2.UnitX))
+                : fallbackDirection.SafeNormalize(incomingVelocity.SafeNormalize(Vector2.UnitX));
+
             float speed = Math.Max(MinRicochetSpeed, incomingVelocity.Length());
-            Projectile.velocity = newDirection.SafeNormalize(incomingVelocity.SafeNormalize(Vector2.UnitX)) * speed;
+            Projectile.velocity = newDirection * speed;
             Projectile.netUpdate = true;
             return true;
+        }
+
+        private void HomeTowardRicochetTarget()
+        {
+            NPC target = null;
+            int storedTarget = (int)Projectile.localAI[1] - 1;
+            if (Main.npc.IndexInRange(storedTarget) && Main.npc[storedTarget].CanBeChasedBy(Projectile))
+                target = Main.npc[storedTarget];
+            else
+                target = FindNearestTarget(HomingRange, -1);
+
+            if (target == null)
+            {
+                FreeDrift();
+                return;
+            }
+
+            Vector2 currentVelocity = Projectile.velocity;
+            float currentSpeed = currentVelocity.Length();
+            if (currentSpeed < 0.1f)
+                currentVelocity = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitX) * MinRicochetSpeed;
+
+            Vector2 desiredDirection = (target.Center - Projectile.Center).SafeNormalize(currentVelocity.SafeNormalize(Vector2.UnitX));
+            float closePressure = Utils.GetLerpValue(360f, 70f, Projectile.Distance(target.Center), true);
+            float pullStrength = MathHelper.Lerp(0.45f, 1f, closePressure);
+            float targetSpeed = MathHelper.Lerp(MinRicochetSpeed, MaxHomingSpeed, pullStrength);
+            Vector2 desiredVelocity = desiredDirection * targetSpeed;
+
+            Projectile.velocity = (currentVelocity * HomingInertia + desiredVelocity) / (HomingInertia + 1f);
+
+            float sideSway = MathF.Sin((timer + Projectile.identity * 7f) * 0.075f) *
+                MathHelper.Lerp(0.012f, 0.004f, pullStrength);
+            Projectile.velocity = Projectile.velocity.RotatedBy(sideSway);
+
+            if (Projectile.velocity.Length() > MaxHomingSpeed)
+                Projectile.velocity = Projectile.velocity.SafeNormalize(desiredDirection) * MaxHomingSpeed;
+        }
+
+        private void FreeDrift()
+        {
+            float wander = MathF.Sin((timer + Projectile.identity * 5f) * 0.08f) * WanderingTurnStrength;
+            Projectile.velocity = Projectile.velocity.RotatedBy(wander) * NoTargetDamping;
+        }
+
+        private NPC FindNearestTarget(float maxDistance, int excludedTarget)
+        {
+            NPC closestTarget = null;
+            float closestDistance = maxDistance;
+
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (npc.whoAmI == excludedTarget || !npc.CanBeChasedBy(Projectile))
+                    continue;
+
+                float distance = Projectile.Distance(npc.Center);
+                if (distance >= closestDistance)
+                    continue;
+
+                closestDistance = distance;
+                closestTarget = npc;
+            }
+
+            return closestTarget;
         }
 
         private void SpawnBounceExplosion(Vector2 center)

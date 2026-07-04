@@ -44,15 +44,15 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
 
         public static readonly int[] BaseDamage =
         {
+            60,
             82,
-            96,
-            108,
-            122,
+            95,
+            114,
             150,
             176,
-            224,
-            278,
-            346
+            333,
+            444,
+            777
         };
 
         public int GetCompletedStageIndex()

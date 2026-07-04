@@ -20,6 +20,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.BossProgress
         public override string Texture => "CalamityLegendsComeBack/Weapons/A_Tools/DebugTools/BossProgress/CTRLBoss/CTRLBoss";
 
         private static int PanelType => ModContent.ProjectileType<CTRLBossPanel>();
+        private static int SummonerPanelType => ModContent.ProjectileType<BossSummonerPanel>();
 
         public override void SetDefaults()
         {
@@ -38,6 +39,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.BossProgress
             Item.Calamity().devItem = true;
         }
 
+        public override bool AltFunctionUse(Player player) => true;
+
         public override bool CanUseItem(Player player)
         {
             return Main.myPlayer == player.whoAmI &&
@@ -49,6 +52,19 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.BossProgress
 
         public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
         {
+            if (player.altFunctionUse == 2)
+            {
+                if (BossSummonerPanel.TryClose(player))
+                {
+                    SoundEngine.PlaySound(SoundID.MenuClose with { Volume = 0.58f, Pitch = 0.05f }, player.Center);
+                    return false;
+                }
+
+                Projectile.NewProjectile(source, player.Center, Vector2.Zero, SummonerPanelType, 0, 0f, player.whoAmI);
+                SoundEngine.PlaySound(SoundID.MenuOpen with { Volume = 0.68f, Pitch = 0.08f }, player.Center);
+                return false;
+            }
+
             if (TryCloseExistingPanel(player))
             {
                 SoundEngine.PlaySound(SoundID.MenuClose with { Volume = 0.58f, Pitch = 0.05f }, player.Center);

@@ -20,7 +20,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
 
         public override void SetDefaults()
         {
-            Item.width = 186;
+            Item.width = 36;
             Item.height = 48;
             Item.damage = BalanceMK14EBR.BaseDamage[0];
             Item.DamageType = DamageClass.Ranged;

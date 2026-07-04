@@ -3,6 +3,8 @@ using CalamityLegendsComeBack.Accssory.SHPC.Skill.DiffuChip;
 using CalamityLegendsComeBack.Accssory.SHPC.Skill.FastChip;
 using CalamityLegendsComeBack.Accssory.SHPC.Skill.FlyChip;
 using CalamityLegendsComeBack.Weapons.SHPC;
+using CalamityMod;
+using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -47,6 +49,14 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.AIOC
                                player.HeldItem.ModItem is NewLegendSHPC;
             if (holdingSHPC)
                 player.wingTimeMax += (int)(player.wingTimeMax * 0.7f);
+        }
+
+        public override void ModifyTooltips(List<TooltipLine> tooltips)
+        {
+            string text = Main.keyState.PressingShift()
+                ? this.GetLocalizedValue("TooltipFull")
+                : this.GetLocalizedValue("TooltipCompact");
+            tooltips.FindAndReplace("[GFB]", text);
         }
 
         public override void AddRecipes()

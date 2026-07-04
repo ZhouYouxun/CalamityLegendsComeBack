@@ -67,7 +67,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules
             if (projectile.owner != Main.myPlayer)
                 return;
 
-            int explosionSize = (int)(new BalanceSHPC().GetDefaultLeftClickExplosionRadius() * 1.65f);
+            int explosionSize = new BalanceSHPC().GetDefaultLeftClickNoAmmoExplosionRadius();
             int explosionIndex = Projectile.NewProjectile(
                 projectile.GetSource_FromThis(),
                 projectile.Center,

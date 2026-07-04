@@ -1,5 +1,6 @@
 using CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.CStage2;
 using CalamityLegendsComeBack.Weapons.Vesuvius.Passive;
+using CalamityLegendsComeBack.Weapons.Vesuvius.RightClick.Javelin;
 using CalamityMod;
 using CalamityMod.Graphics.Metaballs;
 using CalamityMod.Particles;
@@ -23,6 +24,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
         private const int FlightState = 0;
         private const int NpcStickState = 1;
         private const int TileStickState = 2;
+        private const int TileFuseTime = 180;
         private const float VisualRotationOffset = MathHelper.PiOver4;
 
         private int Stage => (int)MathHelper.Clamp(Projectile.ai[2] <= 0f ? 1f : Projectile.ai[2], 1f, 5f);
@@ -55,31 +57,6 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
             if (Projectile.ai[0] == FlightState)
             {
                 UpdateFlightRotation();
-
-                // Homing logic: track the closest target while in flight
-                NPC target = null;
-                float maxDistance = 900f;
-                for (int i = 0; i < Main.maxNPCs; i++)
-                {
-                    NPC npc = Main.npc[i];
-                    if (npc.active && !npc.friendly && npc.chaseable && !npc.dontTakeDamage && npc.lifeMax > 5)
-                    {
-                        float distance = Vector2.Distance(Projectile.Center, npc.Center);
-                        if (distance < maxDistance)
-                        {
-                            maxDistance = distance;
-                            target = npc;
-                        }
-                    }
-                }
-
-                if (target != null)
-                {
-                    float homingStrength = 0.08f;
-                    float speed = Projectile.velocity.Length();
-                    Vector2 targetDir = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitX);
-                    Projectile.velocity = Vector2.Normalize(Vector2.Lerp(Projectile.velocity, targetDir * speed, homingStrength)) * speed;
-                }
             }
 
             if (Projectile.ai[0] == NpcStickState)
@@ -155,10 +132,16 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
             Projectile.ai[0] = TileStickState;
             Projectile.velocity = Vector2.Zero;
             Projectile.tileCollide = false;
-            Projectile.timeLeft = 240;
+            Projectile.timeLeft = TileFuseTime;
             Projectile.netUpdate = true;
             SpawnFaultCore(oldVelocity);
             return false;
+        }
+
+        public override void OnKill(int timeLeft)
+        {
+            if (Projectile.ai[0] == TileStickState)
+                SpawnTileFuseExplosion();
         }
 
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
@@ -322,6 +305,61 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
             SpawnSmallImpact(Projectile.Center);
         }
 
+        private void SpawnTileFuseExplosion()
+        {
+            if (Projectile.owner == Main.myPlayer)
+            {
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    Projectile.Center,
+                    Vector2.Zero,
+                    ModContent.ProjectileType<VesuviusRightMeteorExplosion>(),
+                    Math.Max(1, (int)(Projectile.damage * 1.15f)),
+                    Projectile.knockBack,
+                    Projectile.owner,
+                    Stage);
+
+                int fireballCount = 5 + Stage;
+                for (int i = 0; i < fireballCount; i++)
+                {
+                    Vector2 velocity = (MathHelper.TwoPi * i / fireballCount + Main.rand.NextFloat(-0.16f, 0.16f)).ToRotationVector2() * Main.rand.NextFloat(8.5f, 13.5f);
+                    Projectile.NewProjectile(
+                        Projectile.GetSource_FromThis(),
+                        Projectile.Center,
+                        velocity,
+                        ModContent.ProjectileType<VesuviusFaultFireball>(),
+                        Math.Max(1, (int)(Projectile.damage * 0.5f)),
+                        Projectile.knockBack * 0.65f,
+                        Projectile.owner,
+                        Stage);
+                }
+
+                int homingCount = 3 + Stage / 2;
+                for (int i = 0; i < homingCount; i++)
+                {
+                    Vector2 velocity = (-Vector2.UnitY).RotatedBy(MathHelper.Lerp(-0.95f, 0.95f, homingCount == 1 ? 0.5f : i / (float)(homingCount - 1))) * Main.rand.NextFloat(9f, 13f);
+                    Projectile.NewProjectile(
+                        Projectile.GetSource_FromThis(),
+                        Projectile.Center + Main.rand.NextVector2Circular(12f, 8f),
+                        velocity,
+                        ModContent.ProjectileType<VesuviusRightRisingSpark>(),
+                        Math.Max(1, (int)(Projectile.damage * 0.42f)),
+                        Projectile.knockBack * 0.35f,
+                        Projectile.owner,
+                        Stage);
+                }
+            }
+
+            if (Main.dedServ)
+                return;
+
+            SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.7f, Pitch = -0.28f }, Projectile.Center);
+            Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(Main.LocalPlayer.Calamity().GeneralScreenShakePower, 3.5f * Utils.GetLerpValue(1600f, 240f, Main.LocalPlayer.Distance(Projectile.Center), true));
+            VesuviusVolcanicVisuals.SpawnImpactMix(Projectile.Center, 1.45f + Stage * 0.15f);
+            for (int i = 0; i < 4; i++)
+                VesuviusVolcanicVisuals.SpawnHeatPulse(Projectile.Center + Main.rand.NextVector2Circular(24f, 18f), 1.15f + Stage * 0.12f);
+        }
+
         private void SpawnSmallImpact(Vector2 center)
         {
             if (Main.dedServ)
@@ -391,6 +429,8 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
         public new string LocalizationCategory => "Projectiles.Vesuvius";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
+        private const int TileFuseTime = 180;
+
         private int Stage => (int)MathHelper.Clamp(Projectile.ai[0], 1f, 5f);
 
         public override void SetDefaults()
@@ -402,7 +442,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.penetrate = -1;
-            Projectile.timeLeft = 360;
+            Projectile.timeLeft = TileFuseTime;
             Projectile.DamageType = DamageClass.Magic;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = 22;
