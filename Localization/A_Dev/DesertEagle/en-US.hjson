@@ -1,4 +1,4 @@
-Mods: {
+﻿Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
 			Weapons: {
@@ -6,12 +6,9 @@ Mods: {
 					DisplayName: Desert Eagle
 					Tooltip:
 						'''
-						Left-click to fire a single precise shot (300 RPM)
-						The shot's effect depends on the gun chambered in the slot
-						Middle-click the Desert Eagle in inventory to open the chamber slot (or use the bound key)
-						Hold right-click to spin the Desert Eagle, shredding enemies on contact
-						When fully charged, release to fire a powerful piercing round
-						"Used by legendary marksmen"
+						Left-click alternates between scattering kinetic-infused bullets and firing powerful life-stealing shots
+						Hold right-click to spin the Desert Eagle at high speed, shredding enemies on contact
+						When fully charged, left-click unleashes a powerful piercing round
 						'''
 				}
 			}
@@ -19,22 +16,6 @@ Mods: {
 
 		Projectiles: {
 			A_Dev: {
-				DELeftBullet.DisplayName: Desert Eagle Shot
-				DEBullet_FungiSpore.DisplayName: Fungal Spore
-				DEBullet_ShrapnelShard.DisplayName: Shrapnel Shard
-				DEBullet_FireSpark.DisplayName: Fire Spark
-				DEBullet_PestSplit.DisplayName: Plague Round
-				DEBullet_CardSplit.DisplayName: Card Fragment
-				DEBullet_CardHeart.DisplayName: Heart Card
-				DEBullet_CardClub.DisplayName: Club Card
-				DEBullet_CardDiamond.DisplayName: Diamond Card
-				DEBullet_CardSpade.DisplayName: Spade Card
-				DEBullet_AreaBurst.DisplayName: Desert Eagle Burst
-				DEBullet_ThermalZone.DisplayName: Icefire Field
-				DEBullet_PestilentCloud.DisplayName: Pestilent Cloud
-				DEBullet_HydraSnake.DisplayName: Hydra Snake Round
-				DEBullet_NeedleSpike.DisplayName: Needle Spike
-				DEBullet_StellarStar.DisplayName: Stellar Star
 			}
 		}
 	}

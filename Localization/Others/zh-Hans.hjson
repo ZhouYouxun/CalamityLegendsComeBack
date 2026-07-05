@@ -224,7 +224,7 @@ Mods: {
 
 		Keybinds: {
 			LegendarySkill.DisplayName: 传奇技能
-			LegendaryWeaponFormSwitch.DisplayName: 传奇武器形态切换
+			LegendaryWeaponFormSwitch.DisplayName: 传奇武器轮盘
 			SHPCLoadingUI.DisplayName: SHPC界面
 			ExtraBackpack.DisplayName: 额外背包
 		}

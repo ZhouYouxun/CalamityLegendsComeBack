@@ -403,9 +403,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                 target.statLife += healAmount;
                 if (target.statLife > target.statLifeMax2)
                     target.statLife = target.statLifeMax2;
-
-                target.HealEffect(healAmount, true);
             }
+
+            target.HealEffect(maxHealAmount, true);
 
             if (!FromChargedRelease)
                 target.GetModPlayer<BFRecoveryEcologyPlayer>().AddRecoveryLeaf(BFRecoveryLeftBalance.GetStats().LeafTimePerFlash);

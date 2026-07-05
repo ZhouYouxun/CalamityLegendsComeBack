@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using CalamityMod.CalPlayer;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
@@ -319,7 +320,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.BossProgress
                 E("史莱姆王", "PreHardmode/史莱姆王-图标", p => SpawnVanilla(p, NPCID.KingSlime)),
                 E("荒漠灾虫", "PreHardmode/荒漠灾虫-图标", p => SpawnCal(p, "DesertScourgeHead")),
                 E("克苏鲁之眼", "PreHardmode/克苏鲁之眼第一阶段-图标", p => SpawnVanilla(p, NPCID.EyeofCthulhu)),
-                E("菌生蟹", "PreHardmode/菌生蟹-图标", p => SpawnCal(p, "CrabulonIdle")),
+                E("菌生蟹", "PreHardmode/菌生蟹-图标", p => SpawnCal(p, "Crabulon")),
                 E("世界吞噬者", "PreHardmode/世界吞噬怪-图标", p => SpawnVanilla(p, NPCID.EaterofWorldsHead)),
                 E("克苏鲁之脑", "PreHardmode/克苏鲁之脑-图标", p => SpawnVanilla(p, NPCID.BrainofCthulhu)),
                 E("腐巢意志", "PreHardmode/腐巢意志第二阶段-图标", p => SpawnCal(p, "HiveMind")),
@@ -328,7 +329,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.BossProgress
                 E("骷髅王", "PreHardmode/骷髅王-图标", p => SpawnVanilla(p, NPCID.SkeletronHead)),
                 E("独眼巨鹿", "PreHardmode/独眼巨鹿-图标", p => SpawnVanilla(p, NPCID.Deerclops)),
                 E("史莱姆之神", "PreHardmode/史莱姆之神核心-图标", p => SpawnCal(p, "SlimeGodCore")),
-                E("血肉之墙", "PreHardmode/血肉墙-图标", p => SpawnVanilla(p, NPCID.WallofFlesh)),
+                E("血肉之墙", "PreHardmode/血肉墙-图标", SpawnWallOfFlesh),
             };
 
             var hard = new List<BossSpawnEntry>
@@ -389,6 +390,45 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.BossProgress
                 return;
             Vector2 pos = player.Center - Vector2.UnitY * 480f;
             NPC.NewNPC(player.GetSource_Misc("BossSummoner"), (int)pos.X, (int)pos.Y, npcType);
+        }
+
+        private static void SpawnWallOfFlesh(Player player)
+        {
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+                return;
+
+            Vector2 underworldPosition = FindUnderworldPositionAtPlayerX(player);
+            CalamityPlayer.ModTeleport(player, underworldPosition, false, TeleportationStyleID.TeleportationPotion);
+            NPC.SpawnWOF(player.position);
+        }
+
+        private static Vector2 FindUnderworldPositionAtPlayerX(Player player)
+        {
+            bool canSpawn = false;
+            int playerTileX = Utils.Clamp((int)(player.Center.X / 16f), 80, Main.maxTilesX - 80);
+            int teleportStartY = Main.UnderworldLayer + 20;
+            int teleportRangeY = 80;
+            Player.RandomTeleportationAttemptSettings settings = new()
+            {
+                mostlySolidFloor = true,
+                avoidAnyLiquid = true,
+                avoidLava = true,
+                avoidHurtTiles = true,
+                avoidWalls = true,
+                attemptsBeforeGivingUp = 1000,
+                maximumFallDistanceFromOrignalPoint = 30
+            };
+
+            Vector2 position = player.CheckForGoodTeleportationSpot(ref canSpawn, playerTileX - 40, 80, teleportStartY, teleportRangeY, settings);
+            if (!canSpawn)
+                position = player.CheckForGoodTeleportationSpot(ref canSpawn, playerTileX - 80, 160, teleportStartY, teleportRangeY, settings);
+
+            if (canSpawn)
+                return position;
+
+            float fallbackX = MathHelper.Clamp(player.Center.X, 80f * 16f, (Main.maxTilesX - 80f) * 16f);
+            float fallbackY = MathHelper.Clamp((Main.UnderworldLayer + 50f) * 16f, 0f, (Main.maxTilesY - 120f) * 16f);
+            return new Vector2(fallbackX - player.width * 0.5f, fallbackY - player.height);
         }
 
         private static void SpawnCal(Player player, string npcName)

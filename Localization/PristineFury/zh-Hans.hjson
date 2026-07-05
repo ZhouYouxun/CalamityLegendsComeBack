@@ -91,6 +91,7 @@ Mods: {
 						[c/BB55FF:左键射击时：每 16 帧水晶同时射出 5 枚彩虹碎片，80° 扇形展开后全部收束追踪同一目标。]
 						[c/BB55FF:右键蓄力时：水晶持续释放两道缓缓交叉旋转的剪刀激光。]
 						'''
+					Ultimate: "[c/FF9340:大招（P 键）：按键蓄力锚定当前印记队列，再点击左键引燃『劫火重燃』——队列中的每一枚印记依次化作一道圣焰立柱轰击目标周围，最终汇聚成一场超新星终焉，并将命中的敌人纯化等级顶满上限。]"
 					Tooltip: "[GFB]"
 					LegendaryHint: "[c/BABABA:按住 Shift 键以读取记录]"
 					LegendaryText:
@@ -209,6 +210,7 @@ Mods: {
 				PFMoonhaloStamp.DisplayName: 月华烙印
 				PFMarkSelectionWheel.DisplayName: 纯元怒焰印记轮盘
 				PFIdleGroundBurn.DisplayName: 纯元怒焰地火
+				PristineFuryUltimateEchoPillar.DisplayName: 劫火回响立柱
 			}
 
 			TacticalComputerReticle.DisplayName: 战术计算机准星

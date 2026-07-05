@@ -235,7 +235,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
                     Projectile.GetSource_FromThis(),
                     GunTipPosition,
                     shotDirection * 22f,
-                    weaponSettings.ChargedRoundProjectileType,
+                    ModContent.ProjectileType<DesertEagleHeavyRound>(),
                     (int)(Projectile.damage * weaponSettings.HoldoutFullChargeRoundDamageMultiplier),
                     Projectile.knockBack * 3f,
                     Projectile.owner);

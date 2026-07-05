@@ -1,5 +1,6 @@
 using System;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;
+using CalamityLegendsComeBack.Weapons.PristineFury.UI;
 using CalamityLegendsComeBack.Weapons.SHPC;
 using Microsoft.Xna.Framework;
 using ReLogic.Utilities;
@@ -72,7 +73,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle.SlowDown
                 return false;
 
             return HasActiveWheel(player, ModContent.ProjectileType<SHPCAmmoSelectionPanel>()) ||
-                HasActiveWheel(player, ModContent.ProjectileType<BFSelectionPanel>());
+                HasActiveWheel(player, ModContent.ProjectileType<BFSelectionPanel>()) ||
+                HasActiveWheel(player, ModContent.ProjectileType<PFMarkSelectionWheel>());
         }
 
         private static bool HasActiveWheel(Player player, int projectileType)

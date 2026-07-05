@@ -12,19 +12,23 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
     {
         public const int SpinChargeMax = 60 * 5 / 2;
         public const int RightHoldThresholdFrames = 9;
+        private const int SilverVolleyTarget = 3;
+        private const int SilverVolleyPause = 18;
         private const int BarFadeInFrames = 15;
         private const int BarFadeOutFrames = 14;
         private const int BarDropFrames = 18;
 
+        private int silverVolleyCounter;
+        private int volleyPauseTimer;
         private int rightPressFrames;
         private float chargeBarProgress;
         private float chargeBarOpacity;
         private bool chargeReadyLastFrame;
         private bool trackingRightPress;
         private ulong lastRightClickFrame;
-        private int hellbornOverdriveTime;
 
         public bool HoldingDesertEagle { get; private set; }
+        public bool PendingLifeRound { get; private set; }
         public float ChargeBarProgress => chargeBarProgress;
         public float ChargeBarOpacity => chargeBarOpacity;
         public int RightPressFrames => rightPressFrames;
@@ -32,7 +36,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
         public bool LongHoldReachedThisFrame { get; private set; }
         public bool LongHoldReleasedThisFrame { get; private set; }
         public bool LongHoldActive => trackingRightPress && rightPressFrames > RightHoldThresholdFrames;
-        public bool HellbornOverdriveActive => hellbornOverdriveTime > 0;
 
         public override void ResetEffects()
         {
@@ -41,6 +44,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
 
         public override void UpdateDead()
         {
+            silverVolleyCounter = 0;
+            volleyPauseTimer = 0;
+            PendingLifeRound = false;
             chargeBarProgress = 0f;
             chargeBarOpacity = 0f;
             chargeReadyLastFrame = false;
@@ -49,8 +55,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
 
         public override void PostUpdate()
         {
-            if (hellbornOverdriveTime > 0)
-                hellbornOverdriveTime--;
+            if (volleyPauseTimer > 0)
+                volleyPauseTimer--;
 
             if (!HoldingDesertEagle && chargeBarOpacity > 0f)
             {
@@ -74,9 +80,25 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
             HoldingDesertEagle = true;
         }
 
-        public void ActivateHellbornOverdrive(int frames)
+        public bool CanUsePrimaryFire() => volleyPauseTimer <= 0;
+
+        public void RegisterSilverVolley()
         {
-            hellbornOverdriveTime = Math.Max(hellbornOverdriveTime, frames);
+            if (PendingLifeRound)
+                return;
+
+            silverVolleyCounter++;
+            if (silverVolleyCounter < SilverVolleyTarget)
+                return;
+
+            silverVolleyCounter = 0;
+            PendingLifeRound = true;
+            volleyPauseTimer = SilverVolleyPause;
+        }
+
+        public void ConsumeLifeRound()
+        {
+            PendingLifeRound = false;
         }
 
         public void UpdateChargeBar(bool active, float progress)

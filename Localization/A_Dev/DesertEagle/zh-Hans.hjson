@@ -1,4 +1,4 @@
-Mods: {
+﻿Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
 			Weapons: {
@@ -6,12 +6,9 @@ Mods: {
 					DisplayName: 沙漠之鹰
 					Tooltip:
 						'''
-						左键以300RPM射速发射单发精准子弹
-						子弹效果取决于格子槽中装填的手枪
-						在背包中对沙漠之鹰按中键可打开弹仓格子槽（或使用绑定按键）
+						左键轮流散射动能灌注弹，以及强力吸血弹
 						按住右键将高速旋转手里的沙漠之鹰，切碎撞到它的敌人
-						充能满时松开右键将释放一枚强力的穿甲弹
-						"传奇神射手同款"
+						充能满时点击左键将释放一枚强力的闪光爆弹
 						'''
 				}
 			}
@@ -19,22 +16,6 @@ Mods: {
 
 		Projectiles: {
 			A_Dev: {
-				DELeftBullet.DisplayName: 沙漠之鹰弹幕
-				DEBullet_FungiSpore.DisplayName: 真菌孢子
-				DEBullet_ShrapnelShard.DisplayName: 碎石片
-				DEBullet_FireSpark.DisplayName: 追踪火星
-				DEBullet_PestSplit.DisplayName: 瘟疫弹片
-				DEBullet_CardSplit.DisplayName: 梅花牌碎片
-				DEBullet_CardHeart.DisplayName: 红心牌
-				DEBullet_CardClub.DisplayName: 梅花牌
-				DEBullet_CardDiamond.DisplayName: 方块牌
-				DEBullet_CardSpade.DisplayName: 黑桃牌
-				DEBullet_AreaBurst.DisplayName: 沙漠之鹰冲击
-				DEBullet_ThermalZone.DisplayName: 冰火领域
-				DEBullet_PestilentCloud.DisplayName: 疫病污染云
-				DEBullet_HydraSnake.DisplayName: 九头蛇蛇弹
-				DEBullet_NeedleSpike.DisplayName: 叶针尖刺
-				DEBullet_StellarStar.DisplayName: 新星星体
 			}
 		}
 	}

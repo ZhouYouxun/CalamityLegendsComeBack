@@ -30,12 +30,23 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         internal int HookChargeFrames;
         internal float HookChargeOpacity;
 
+        // Ultimate ("劫火重燃") energy meter. Charges only while marks are queued, spent in full on activation.
+        internal const int UltimateEnergyMax = 3600;
+        internal int UltimateEnergy;
+        internal bool UltimateReady => UltimateEnergy >= UltimateEnergyMax;
+
         public override void ResetEffects()
         {
             HoldingPristineFury = false;
             DebugCycleEquipped = false;
             HookChargeFrames = 0;
             HookChargeOpacity = MathHelper.Clamp(HookChargeOpacity - 0.04f, 0f, 1f);
+        }
+
+        public override void PostUpdate()
+        {
+            if (HoldingPristineFury && MarkQueueCount > 0 && UltimateEnergy < UltimateEnergyMax)
+                UltimateEnergy = Math.Min(UltimateEnergyMax, UltimateEnergy + 1 + MarkQueueCount);
         }
 
         // Pushes a new mark to the back of the queue. If full, evicts the oldest (index 0).

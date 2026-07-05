@@ -185,7 +185,6 @@ Mods: {
 			// SkyfinTorpedo.DisplayName: Skyfin Torpedo
 			// SkyfinTorpedoExplosion.DisplayName: Skyfin Torpedo Explosion
 			// AegisSparkExplosion.DisplayName: Aegis Spark Explosion
-			// BossSummonerPanel.DisplayName: Boss Summoner Panel
 		}
 
 		Cooldowns: {

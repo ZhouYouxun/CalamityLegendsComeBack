@@ -77,6 +77,14 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             6.00f  // Overheat contact field
         };
 
+        // Ultimate ("劫火重燃"): index 0 scales each per-mark echo pillar (stacks with the left-click mark multiplier),
+        // index 1 scales the closing supernova finisher (applied directly to base weapon damage).
+        private static readonly float[] DefaultUltimateDamageMultipliers =
+        {
+            2.40f, // Echo pillar
+            4.20f  // Finisher supernova
+        };
+
         public static int GetInitialBaseDamage() => GetProgressBaseDamage(0);
 
         public static int GetBaseDamage() => GetProgressBaseDamage(GetCompletedStageIndex());
@@ -106,6 +114,10 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
         public static float GetRightOverheatContactDamageMultiplier() =>
             GetRightClickDamageMultiplier(RightClickOverheatContactIndex);
+
+        public static float GetUltimateEchoDamageMultiplier() => GetUltimateDamageMultiplier(0);
+
+        public static float GetUltimateFinisherDamageMultiplier() => GetUltimateDamageMultiplier(1);
 
         internal static int GetCompletedStageIndex()
         {
@@ -158,6 +170,15 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             return System.Math.Max(0f, values[index]);
         }
 
+        private static float GetUltimateDamageMultiplier(int index)
+        {
+            float[] values = GetUltimateDamageMultiplierValues();
+            if (index < 0 || index >= values.Length)
+                return 1f;
+
+            return System.Math.Max(0f, values[index]);
+        }
+
         private static int[] GetProgressBaseDamageValues() =>
             RuntimeBalanceData.GetSourceIntArray(SourceFile, nameof(DefaultProgressBaseDamage), DefaultProgressBaseDamage);
 
@@ -166,5 +187,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
         private static float[] GetRightClickDamageMultiplierValues() =>
             RuntimeBalanceData.GetSourceFloatArray(SourceFile, nameof(DefaultRightClickDamageMultipliers), DefaultRightClickDamageMultipliers);
+
+        private static float[] GetUltimateDamageMultiplierValues() =>
+            RuntimeBalanceData.GetSourceFloatArray(SourceFile, nameof(DefaultUltimateDamageMultipliers), DefaultUltimateDamageMultipliers);
     }
 }

@@ -102,6 +102,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             string right = this.GetLocalizedValue("RightClick");
             string hook = this.GetLocalizedValue("Hook");
             string passive = this.GetLocalizedValue("Passive").TrimEnd('\r', '\n');
+            string ultimate = this.GetLocalizedValue("Ultimate");
             bool shiftPressed = Main.keyState.PressingShift();
             string legendarySection = shiftPressed
                 ? this.GetLocalizedValue("LegendaryText")
@@ -118,7 +119,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                     left.TrimEnd('\r', '\n') + "\n" +
                     right.TrimEnd('\r', '\n') + "\n" +
                     hook.TrimEnd('\r', '\n') + "\n" +
-                    passive.TrimEnd('\r', '\n') + "\n";
+                    passive.TrimEnd('\r', '\n') + "\n" +
+                    ultimate.TrimEnd('\r', '\n') + "\n";
 
                 tooltips.FindAndReplace("[GFB]", finalText);
             }

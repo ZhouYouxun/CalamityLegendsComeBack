@@ -20,20 +20,20 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.PeaShooter
 
         public static readonly string[,] StageStats =
         {
-            { "Initial", "6", "14.5" },
-            { "Eye of Cthulhu", "8", "14.8" },
-            { "Evil Boss", "10", "15.1" },
-            { "Skeletron", "13", "15.6" },
-            { "Hardmode", "18", "16.2" },
-            { "Any Mechanical Boss", "24", "16.8" },
-            { "Plantera", "32", "17.4" },
-            { "Golem", "42", "18.0" },
-            { "Moon Lord", "58", "18.8" },
-            { "Providence", "76", "19.6" },
-            { "Polterghast", "98", "20.4" },
-            { "Devourer of Gods", "128", "21.2" },
-            { "Yharon", "168", "22.0" },
-            { "Exo Mechs and Supreme Calamitas", "220", "22.8" }
+            { "Initial",                          "30",  "14.5" },
+            { "Eye of Cthulhu",                   "30",  "14.8" },
+            { "Evil Boss",                        "30",  "15.1" },
+            { "Skeletron",                        "30",  "15.6" },
+            { "Hardmode",                         "30",  "16.2" },
+            { "Any Mechanical Boss",              "30",  "16.8" },
+            { "Plantera",                         "30",  "17.4" },
+            { "Golem",                            "30",  "18.0" },
+            { "Moon Lord",                        "50",  "18.8" },
+            { "Providence",                       "76",  "19.6" },
+            { "Polterghast",                      "98",  "20.4" },
+            { "Devourer of Gods",                 "128", "21.2" },
+            { "Yharon",                           "168", "22.0" },
+            { "Exo Mechs and Supreme Calamitas",  "220", "22.8" }
         };
 
         public const int BaseBurstInterval = 90;

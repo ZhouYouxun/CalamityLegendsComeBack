@@ -61,6 +61,18 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         private float leftVisualPower;
         private int dragonEyeTimer;
 
+        // 大招「劫火重燃」：0 空闲，1 蓄力锚定，2 就绪待左键确认，3 群芒齐发，4 收尾恢复。
+        private const int UltimateChargeFrames = 48;
+        private const int UltimateReleaseFrames = 100;
+        private const int UltimateRecoveryFrames = 20;
+        private const int UltimateEchoSpreadFrames = 68;
+
+        private int ultimatePhase;
+        private int ultimateTimer;
+        private int ultimateEchoesFired;
+        private PristineFuryMark[] ultimateMarkSnapshot = Array.Empty<PristineFuryMark>();
+        private Vector2 ultimateAnchor;
+
         internal int LeftTimer;
         internal int LeftChargeTimer;
         internal int LeftAuxTimer;
@@ -129,6 +141,22 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
             // 弧形 HUD：debug 模式下关闭弹夹显示，正常模式下保证存在。
             UpdateMarkArcVisibility(debugCycleEquipped);
+
+            if (ultimatePhase != 0)
+            {
+                UpdateUltimate(leftHeld, rightHeld);
+                leftHeldLastFrame = leftHeld;
+                rightHeldLastFrame = rightHeld;
+                return;
+            }
+
+            if (!debugCycleEquipped && !bothHeld && KeybindSystem.LegendarySkill.JustPressed && CanStartUltimate())
+            {
+                StartUltimateCharge();
+                leftHeldLastFrame = leftHeld;
+                rightHeldLastFrame = rightHeld;
+                return;
+            }
 
             // 轮盘键：debug 模式下禁用。
             if (!debugCycleEquipped && KeybindSystem.LegendaryWeaponFormSwitch?.JustPressed == true)
@@ -573,6 +601,218 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             }
         }
 
+        private bool CanStartUltimate()
+        {
+            PristineFuryPlayer pfPlayer = Owner.GetModPlayer<PristineFuryPlayer>();
+            return pfPlayer.MarkQueueCount > 0 && pfPlayer.UltimateReady;
+        }
+
+        private void StartUltimateCharge()
+        {
+            PristineFuryPlayer pfPlayer = Owner.GetModPlayer<PristineFuryPlayer>();
+            ultimateMarkSnapshot = new PristineFuryMark[pfPlayer.MarkQueueCount];
+            Array.Copy(pfPlayer.MarkQueue, ultimateMarkSnapshot, pfPlayer.MarkQueueCount);
+            pfPlayer.UltimateEnergy = 0;
+
+            ultimatePhase = 1;
+            ultimateTimer = 0;
+            ultimateEchoesFired = 0;
+
+            ResetRightCharge();
+            hookChargeTimer = 0;
+            hookChargeReady = false;
+            hookFiredForThisHold = false;
+            pfPlayer.HookChargeFrames = 0;
+            pfPlayer.HookChargeOpacity = 0f;
+
+            Owner.SetScreenshake(5f);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/Providence/ProvidenceBurn") { Volume = 0.7f, Pitch = -0.35f }, Projectile.Center);
+            SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.8f, Pitch = -0.3f }, Projectile.Center);
+        }
+
+        private void UpdateUltimate(bool leftHeld, bool rightHeld)
+        {
+            Owner.velocity.X *= 0.5f;
+            Owner.itemTime = 2;
+            Owner.itemAnimation = 2;
+
+            switch (ultimatePhase)
+            {
+                case 1:
+                    UltimateChargeTick();
+                    break;
+                case 2:
+                    UltimateReadyTick(leftHeld, rightHeld);
+                    break;
+                case 3:
+                    UltimateReleaseTick();
+                    break;
+                default:
+                    UltimateRecoveryTick();
+                    break;
+            }
+        }
+
+        private void UltimateChargeTick()
+        {
+            ultimateTimer++;
+            SpawnUltimateGatherVfx(ultimateTimer / (float)UltimateChargeFrames);
+
+            if (ultimateTimer >= UltimateChargeFrames)
+            {
+                ultimatePhase = 2;
+                ultimateTimer = 0;
+                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ArcNovaDiffuserCompleteCharge") { Volume = 0.6f, Pitch = 0.15f }, Projectile.Center);
+
+                if (Owner.whoAmI == Main.myPlayer)
+                    CombatText.NewText(Owner.getRect(), new Color(255, 224, 92), "劫火已锚定，按左键释放", true);
+            }
+        }
+
+        private void UltimateReadyTick(bool leftHeld, bool rightHeld)
+        {
+            ultimateTimer++;
+            SpawnUltimateGatherVfx(1f);
+
+            if (rightHeld && !rightHeldLastFrame)
+            {
+                CancelUltimate();
+                return;
+            }
+
+            if (leftHeld && !leftHeldLastFrame)
+                BeginUltimateRelease();
+        }
+
+        private void CancelUltimate()
+        {
+            ultimatePhase = 0;
+            ultimateTimer = 0;
+            ultimateMarkSnapshot = Array.Empty<PristineFuryMark>();
+            SoundEngine.PlaySound(SoundID.Item27 with { Volume = 0.5f, Pitch = -0.4f }, Projectile.Center);
+        }
+
+        private void BeginUltimateRelease()
+        {
+            ultimatePhase = 3;
+            ultimateTimer = 0;
+            ultimateEchoesFired = 0;
+            ultimateAnchor = GetMouseWorld();
+
+            if (Owner.whoAmI == Main.myPlayer)
+                CombatText.NewText(Owner.getRect(), new Color(255, 90, 30), "劫火重燃！", true);
+
+            Owner.SetScreenshake(7f);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/Providence/ProvidenceHolyBlastShoot") { Volume = 0.9f, Pitch = -0.05f }, Projectile.Center);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ArcNovaDiffuserBigShot") { Volume = 0.8f }, Projectile.Center);
+            ApplyRecoil(20f);
+            TriggerMuzzleFlash(30);
+        }
+
+        private void UltimateReleaseTick()
+        {
+            ultimateTimer++;
+
+            int markCount = ultimateMarkSnapshot.Length;
+            if (ultimateEchoesFired < markCount)
+            {
+                int triggerFrame = markCount <= 1 ? 0 : ultimateEchoesFired * UltimateEchoSpreadFrames / markCount;
+                if (ultimateTimer >= triggerFrame)
+                {
+                    SpawnUltimateEchoPillar(ultimateMarkSnapshot[ultimateEchoesFired], ultimateEchoesFired, markCount);
+                    ultimateEchoesFired++;
+                }
+            }
+
+            if (ultimateTimer == UltimateReleaseFrames - 12)
+                SpawnUltimateFinisher();
+
+            if (ultimateTimer >= UltimateReleaseFrames)
+            {
+                ultimatePhase = 4;
+                ultimateTimer = 0;
+            }
+        }
+
+        private void UltimateRecoveryTick()
+        {
+            ultimateTimer++;
+            if (ultimateTimer >= UltimateRecoveryFrames)
+            {
+                ultimatePhase = 0;
+                ultimateTimer = 0;
+                ultimateMarkSnapshot = Array.Empty<PristineFuryMark>();
+            }
+        }
+
+        private void SpawnUltimateEchoPillar(PristineFuryMark mark, int index, int count)
+        {
+            float angle = MathHelper.TwoPi * index / count + MathHelper.PiOver4;
+            float radius = count <= 1 ? 0f : MathHelper.Lerp(120f, 46f, index / (float)(count - 1));
+            Vector2 spot = ultimateAnchor + angle.ToRotationVector2() * radius;
+            // NewProjectile treats the given position as the projectile's center, so offset upward
+            // by half the column height here to make the column's bottom (its impact point) land on spot.
+            Vector2 spawnCenter = new(spot.X, spot.Y - PristineFuryUltimateEchoPillar.ColumnHeight * 0.5f);
+
+            int damage = GetScaledDamage(PF_Balance.GetUltimateEchoDamageMultiplier(), mark);
+            int pillarIndex = Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                spawnCenter,
+                Vector2.Zero,
+                ModContent.ProjectileType<PristineFuryUltimateEchoPillar>(),
+                damage,
+                Projectile.knockBack,
+                Projectile.owner);
+            PFLeftEffectRules.ApplyTheme(pillarIndex, mark);
+
+            if (!Main.dedServ && Owner.whoAmI == Main.myPlayer)
+            {
+                Rectangle textArea = new((int)spot.X - 10, (int)spot.Y - 60, 20, 20);
+                CombatText.NewText(textArea, PristineFuryMarkHelper.GetColor(mark), PristineFuryMarkHelper.GetName(mark), dramatic: false);
+            }
+        }
+
+        private void SpawnUltimateFinisher()
+        {
+            int damage = GetRightScaledDamage(PF_Balance.GetUltimateFinisherDamageMultiplier());
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                ultimateAnchor,
+                Vector2.Zero,
+                ModContent.ProjectileType<PristineFuryImpactExplosion>(),
+                damage,
+                Projectile.knockBack * 2f,
+                Projectile.owner,
+                240f);
+
+            Owner.SetScreenshake(10f);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/Providence/ProvidenceBurn") { Volume = 0.9f, Pitch = -0.15f }, ultimateAnchor);
+        }
+
+        private void SpawnUltimateGatherVfx(float progress)
+        {
+            if (Main.dedServ)
+                return;
+
+            Vector2 core = Owner.Center;
+
+            if (ultimateMarkSnapshot.Length > 0 && Main.rand.NextBool(2))
+            {
+                Color accent = PristineFuryMarkHelper.GetColor(ultimateMarkSnapshot[Main.rand.Next(ultimateMarkSnapshot.Length)]);
+                float angle = Main.rand.NextFloat(MathHelper.TwoPi);
+                float radius = MathHelper.Lerp(120f, 10f, progress);
+                Vector2 pos = core + angle.ToRotationVector2() * radius;
+                Vector2 vel = (core - pos).SafeNormalize(Vector2.Zero) * MathHelper.Lerp(1f, 4f, progress);
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(pos, vel, false, 16, 0.32f, Color.Lerp(accent, Color.White, 0.3f), true, false, true));
+            }
+
+            Color gold = new(255, 224, 92);
+            Lighting.AddLight(core, gold.ToVector3() * (0.4f + progress * 0.8f));
+
+            if (progress >= 0.999f && Main.rand.NextBool(6))
+                SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.18f, Pitch = 0.4f, MaxInstances = 2 }, core);
+        }
+
         private void ResetLeftStateIfMarkChanged()
         {
             int key = (int)CurrentMark;
@@ -830,7 +1070,57 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             DrawFakeCalamityArcNovaCharge();
             DrawRightArcNovaCharge();
             DrawHookChargeBar();
+            DrawUltimateCore();
             return false;
+        }
+
+        private void DrawUltimateCore()
+        {
+            if (ultimatePhase == 0 || ultimatePhase >= 4 || Main.dedServ || ultimateMarkSnapshot.Length == 0)
+                return;
+
+            float charge = ultimatePhase == 1 ? MathHelper.Clamp(ultimateTimer / (float)UltimateChargeFrames, 0f, 1f) : 1f;
+            if (charge <= 0.02f)
+                return;
+
+            Texture2D bloom = ModContent.Request<Texture2D>(NewLegendPristineFuryHoldOut_DragonDrawData.DragonMouthChargeBloomTexturePath()).Value;
+            Texture2D smear = ModContent.Request<Texture2D>(NewLegendPristineFuryHoldOut_DragonDrawData.DragonMouthChargeSmearTexturePath()).Value;
+            Texture2D ring = ModContent.Request<Texture2D>(NewLegendPristineFuryHoldOut_DragonDrawData.DragonMouthChargeRingTexturePath()).Value;
+
+            Vector2 tip = GunTipPosition - Main.screenPosition;
+            Color gold = new(255, 224, 92);
+            int cycle = (int)(Main.GlobalTimeWrappedHourly * 2.2f) % ultimateMarkSnapshot.Length;
+            Color accent = PristineFuryMarkHelper.GetColor(ultimateMarkSnapshot[cycle]);
+            Color theme = (Color.Lerp(accent, gold, 0.5f) with { A = 0 }) * charge;
+            Color white = (Color.White with { A = 0 }) * charge;
+            float pulse = 0.9f + 0.1f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * (ultimatePhase == 2 ? 9f : 5f));
+
+            PFLeftEffectRules.BeginAdditive();
+
+            for (int i = 0; i < 4; i++)
+            {
+                Color layerColor = Color.Lerp(theme, white, i * 0.22f);
+                Vector2 layerScale = new Vector2(1.5f, 1.05f) * charge * (1f - 0.2f * i) * 0.17f * pulse;
+                Main.EntitySpriteDraw(bloom, tip, null, layerColor * (0.9f - i * 0.14f), Projectile.rotation + Main.rand.NextFloat(-4f, 4f), bloom.Size() * 0.5f, layerScale, SpriteEffects.None, 0f);
+            }
+
+            Main.EntitySpriteDraw(ring, tip, null, theme * (0.3f + charge * 0.2f), Projectile.rotation + Main.GlobalTimeWrappedHourly * 1.1f, ring.Size() * 0.5f, (0.12f + charge * 0.3f) * pulse, SpriteEffects.None, 0f);
+
+            for (int i = 0; i < ultimateMarkSnapshot.Length; i++)
+            {
+                float angle = MathHelper.TwoPi * i / ultimateMarkSnapshot.Length + Main.GlobalTimeWrappedHourly * 1.6f;
+                Vector2 orbit = angle.ToRotationVector2() * (14f + charge * 10f);
+                Color markColor = (PristineFuryMarkHelper.GetColor(ultimateMarkSnapshot[i]) with { A = 0 }) * charge;
+                Main.EntitySpriteDraw(bloom, tip + orbit, null, markColor * 0.75f, angle, bloom.Size() * 0.5f, charge * 0.05f * pulse, SpriteEffects.None, 0f);
+            }
+
+            if (ultimatePhase == 2)
+            {
+                Vector2 smearPos = tip + AimDirection * 14f;
+                Main.EntitySpriteDraw(smear, smearPos, null, theme * 0.6f, AimDirection.ToRotation() - MathHelper.PiOver2, new Vector2(smear.Width * 0.5f, smear.Height), new Vector2(0.2f, 0.08f) * pulse, SpriteEffects.None, 0f);
+            }
+
+            PFLeftEffectRules.EndAdditive();
         }
 
         private void DrawDragonMouthSmoke(float power)
