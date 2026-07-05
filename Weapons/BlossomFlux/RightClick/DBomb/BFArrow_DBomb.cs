@@ -399,7 +399,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                 Projectile.tileCollide = false;
                 Projectile.friendly = false;
                 if (ReturnDelayTimer % 6f == 0f)
-                    BFArrowCommon.EmitPresetTrail(Projectile, BlossomFluxChloroplastPresetType.Chlo_DBomb, 0.55f);
+                    BFArrowCommon.EmitPresetTrail(Projectile, BlossomFluxChloroplastPresetType.Chlo_DBomb, 0.55f);//damage
 
                 if (ReturnDelayTimer <= 0f)
                 {
@@ -698,7 +698,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                     Projectile.GetSource_FromThis(),
                     spawnPosition, velocity,
                     ModContent.ProjectileType<BFLeafProj>(),
-                    Math.Max(1, (int)(storedRainDamage * 0.42f)),
+                    Math.Max(1, (int)(storedRainDamage * 1.02f)),
                     storedAmmoKnockback,
                     Projectile.owner,
                     (float)BlossomFluxChloroplastPresetType.Chlo_DBomb,

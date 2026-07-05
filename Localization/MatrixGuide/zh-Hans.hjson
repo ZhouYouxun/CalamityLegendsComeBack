@@ -7,8 +7,6 @@ Mods: {
 			}
 
 			TestWeapon: {
-				// DisplayName: Test Weapon
-				// Tooltip: ""
 			}
 		}
 
@@ -19,8 +17,6 @@ Mods: {
 			// CtrlChipReticle.DisplayName: Ctrl Chip Reticle
 			// LegendaryCodexPanel.DisplayName: Legendary Codex Panel
 			// BossSummonerPanel.DisplayName: Boss Summoner Panel
-			// TestWeaponProj.DisplayName: Test Weapon Proj
-			// Magic.AnodizedWulfrumShard.DisplayName: Anodized Wulfrum Shard
 			// PurifiedGel_Ball.DisplayName: Purified Gel_ Ball
 			// NewSHPS.DisplayName: New S H P S
 			// DepthCells_Drop.DisplayName: Depth Cells_ Drop
