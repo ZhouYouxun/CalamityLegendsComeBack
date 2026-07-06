@@ -19,8 +19,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
     {
         private const int ChargeFrames = 180;
         private const int BarrageFrames = 180;
-        private const float MinChargeScreenshake = 3f;
-        private const float MaxChargeScreenshake = 30f;
+        private const float MinChargeScreenshake = 1.5f;
+        private const float MaxChargeScreenshake = 15f;
         private const float IdleHoldOffset = 22f;
         private const float ChargedHoldOffset = 14f;
         private const int BarrageVolleyCount = 5;
@@ -33,9 +33,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
         private const float BarrageTargetRange = 2200f;
         private const float BarrageTargetHalfWidth = 420f;
         private const float ChargeScreenEdgeMargin = 96f;
+        private const float GoldenAngle = 2.399963f;
+        private const float GoldenRatioConjugate = 0.6180339887f;
 
         private int timer;
         private int fireSoundTimer;
+        private int barrageShotCounter;
         private bool leftHeldLastFrame;
         private float holdOffsetFromArm = IdleHoldOffset;
         private float extraFrontArmRotation;
@@ -87,7 +90,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
             Projectile.damage = Owner.GetWeaponDamage(Owner.HeldItem);
             Projectile.knockBack = Owner.HeldItem.knockBack;
 
-            UpdateHeldProjectileVariables(State != 2);
+            UpdateHeldProjectileVariables();
             ManipulatePlayerVariables();
 
             switch (State)
@@ -197,6 +200,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
             State = 2;
             timer = 0;
             fireSoundTimer = 0;
+            barrageShotCounter = 0;
             leftHeldLastFrame = false;
             Projectile.velocity = AimDirection;
             Projectile.netUpdate = true;
@@ -207,8 +211,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
 
             if (Main.myPlayer == Projectile.owner)
             {
-                Owner.SetScreenshake(18f);
-                Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, 14f);
+                Owner.SetScreenshake(9f);
+                Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, 7f);
                 FireBarrageVolley();
             }
 
@@ -227,13 +231,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
 
             for (int i = 0; i < BarrageVolleyCount; i++)
             {
-                float laneRatio = BarrageVolleyCount <= 1
-                    ? 0f
-                    : (i - (BarrageVolleyCount - 1f) * 0.5f) / ((BarrageVolleyCount - 1f) * 0.5f);
-
-                float sideOffset = laneRatio * BarrageSpawnHalfHeight + Main.rand.NextFloat(-28f, 28f);
+                // 用黄金角/黄金比 Weyl 序列生成向日葵式的准随机分布，替代原先对称的等分车道
+                int shotIndex = barrageShotCounter++;
+                float weylFraction = shotIndex * GoldenRatioConjugate % 1f;
+                float sideUnit = weylFraction * 2f - 1f;
+                float sideOffset = Math.Sign(sideUnit) * MathF.Pow(Math.Abs(sideUnit), 0.85f) * BarrageSpawnHalfHeight;
                 float sideCompletion = MathHelper.Clamp(Math.Abs(sideOffset) / BarrageSpawnHalfHeight, 0f, 1f);
-                float depthOffset = Main.rand.NextFloat(-BarrageSpawnDepth * 0.5f, BarrageSpawnDepth * 0.5f);
+                float depthOffset = MathF.Sin(shotIndex * GoldenAngle) * BarrageSpawnDepth * 0.5f;
                 float shotSpeed = MathHelper.Lerp(BarrageCenterShotSpeed, BarrageSideShotSpeed, MathHelper.SmoothStep(0f, 1f, sideCompletion)) * BarrageShotSpeedMultiplier;
                 Vector2 spawnPosition =
                     backfieldCenter +
@@ -553,10 +557,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
                 Main.rand.Next(10, 16)));
         }
 
-        private void UpdateHeldProjectileVariables(bool allowTurning)
+        private void UpdateHeldProjectileVariables()
         {
             Vector2 armPosition = Owner.RotatedRelativePoint(Owner.MountedCenter, true);
-            if (Main.myPlayer == Projectile.owner && allowTurning)
+            if (Main.myPlayer == Projectile.owner)
             {
                 Vector2 aimTarget = Owner.Calamity().mouseWorld;
                 if (aimTarget == Vector2.Zero)

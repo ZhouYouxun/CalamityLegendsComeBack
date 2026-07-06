@@ -54,12 +54,18 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
         public override void HoldItem(Player player)
         {
-            player.GetModPlayer<PristineFuryPlayer>().HoldingPristineFury = true;
+            PristineFuryPlayer pfPlayer = player.GetModPlayer<PristineFuryPlayer>();
+            pfPlayer.HoldingPristineFury = true;
             player.GetModPlayer<PristineFuryPassivePlayer>().SetHoldingPristineFury();
             player.Calamity().mouseWorldListener = true;
 
             if (Main.myPlayer == player.whoAmI)
                 player.Calamity().rightClickListener = true;
+
+            if (player.Calamity().cooldowns.TryGetValue(PristineFuryUltimateCooldown.ID, out var ultimateCooldown))
+                ultimateCooldown.timeLeft = pfPlayer.UltimateEnergy;
+            else
+                player.AddCooldown(PristineFuryUltimateCooldown.ID, 0).timeLeft = pfPlayer.UltimateEnergy;
 
             if (Main.myPlayer == player.whoAmI && !HasActiveHoldout(player))
             {

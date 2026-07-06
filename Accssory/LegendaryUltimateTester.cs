@@ -8,6 +8,7 @@ using Terraria.Audio;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash;
 using CalamityLegendsComeBack.Weapons.CosmicDischarge;
 using CalamityLegendsComeBack.Weapons.Malachite.EXSkill;
+using CalamityLegendsComeBack.Weapons.PristineFury;
 using CalamityLegendsComeBack.Weapons.SHPC.EXSkill;
 using CalamityLegendsComeBack.Weapons.Vesuvius.EXSkill;
 using CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill;
@@ -69,6 +70,14 @@ namespace CalamityLegendsComeBack.Accssory
             ChargeCosmicDischarge();
             ChargeMalachite();
             ChargeAzureThunder();
+            ChargePristineFury();
+        }
+
+        private void ChargePristineFury()
+        {
+            PristineFuryPlayer pfPlayer = Player.GetModPlayer<PristineFuryPlayer>();
+            pfPlayer.UltimateEnergy = Math.Min(PristineFuryPlayer.UltimateEnergyMax, pfPlayer.UltimateEnergy + FramesPerTick(PristineFuryPlayer.UltimateEnergyMax));
+            SetCooldownProgress(PristineFuryUltimateCooldown.ID, PristineFuryPlayer.UltimateEnergyMax, pfPlayer.UltimateEnergy);
         }
 
         private void ChargeSHPC()

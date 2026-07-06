@@ -91,7 +91,14 @@ Mods: {
 						[c/BB55FF:Left Click: crystal fires rapid homing shards toward the nearest enemy.]
 						[c/BB55FF:Right Click (charging): crystal unleashes two slowly rotating scissor lasers.]
 						'''
-					Ultimate: "[c/FF9340:Ultimate (P): channel to anchor the current imprint queue, then click to unleash Rekindled Calamity - every anchored imprint detonates in sequence as a pillar of holy fire around the target, then converges into one closing supernova that maxes out purification on anything it hits.]"
+					Ultimate:
+						'''
+						[c/FF9340:Ultimate (P): channel to anchor the current]
+						[c/FF9340:imprint queue, then click to unleash Rekindled Calamity.]
+						[c/FF9340:Every anchored imprint detonates in sequence as]
+						[c/FF9340:a pillar of holy fire, maxing out purification on hit.]
+						[c/FF9340:All pillars then converge into one closing supernova.]
+						'''
 					Tooltip: "[GFB]"
 					LegendaryHint: "[c/BABABA:Hold Shift to access the record]"
 					LegendaryText:
@@ -246,5 +253,7 @@ Mods: {
 				Dragon: Yharon
 			}
 		}
+
+		Cooldowns.PristineFury_Ultimate: Rekindled Calamity
 	}
 }
