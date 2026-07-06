@@ -19,11 +19,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             { "Evil Boss",                                  17,     8,     1,    1,      1 },
             { "Queen Bee",                                  21,    12,     5,    1,      1 },
             { "Skeletron",                                  23,    17,     8,    1,      1 },
-            { "Hardmode",                                   37,    36,     7,    6,      1 },
-            { "Any Mechanical Boss",                        45,    48,     9,    8,      1 },
-            { "Plantera",                                   48,    52,    14,   12,      1 },
-            { "Golem",                                      52,    21,    18,   24,     21 },
-            { "Plaguebringer Goliath",                      60,    27,    22,   30,     27 },
+            { "Hardmode",                                   39,    40,    12,   12,      1 },
+            { "Any Mechanical Boss",                        48,    42,    16,   16,      1 },//改成2王后
+            { "Plantera",                                   36,    24,    14,   15,      1 },
+            { "Golem",                                      42,    30,    15,   20,     21 },
+            { "Plaguebringer Goliath",                      52,    40,    23,   30,     27 },
             { "Moon Lord",                                  68,    36,    30,   35,     36 },
             { "Providence",                                 77,    48,    37,   40,     48 },
             { "Polterghast",                                89,    56,    43,   46,     56 },
@@ -271,9 +271,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         public static BFBreakthroughRightStats GetStats()
         {
             return new BFBreakthroughRightStats(
-                framesPerArrow: 40,
+                framesPerArrow: 30,
                 maxLoadedArrows: MathMax(1, BFBalanceTable.Get(BFStat.Breakthrough_Right_MaxArrows)),
-                penetrate: 5,
+                penetrate: 7,
                 ignorePenetrationDamageFalloff: false,
                 projectileSpeedMultiplier: 1f,
                 damagePerChargeStack: 0f);
