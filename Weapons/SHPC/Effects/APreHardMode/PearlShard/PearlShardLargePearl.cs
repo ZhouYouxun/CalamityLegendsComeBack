@@ -76,7 +76,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
                     Main.rand.NextFloat(MathHelper.TwoPi));
 
                 if (Main.projectile.IndexInRange(small))
+                {
                     Main.projectile[small].CritChance = Projectile.CritChance;
+                    Main.projectile[small].netUpdate = true;
+                }
             }
         }
 

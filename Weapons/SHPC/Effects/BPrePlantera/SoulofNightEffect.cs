@@ -28,25 +28,31 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX);
 
             // ===== 箭头形6发 =====
-            for (int i = 0; i < 6; i++)
+            if (projectile.owner == Main.myPlayer)
             {
-                float offset = (i - 2.5f) * 0.25f;
+                for (int i = 0; i < 6; i++)
+                {
+                    float offset = (i - 2.5f) * 0.25f;
 
-                Vector2 dir = forward.RotatedBy(offset);
+                    Vector2 dir = forward.RotatedBy(offset);
 
-                // 中间更快，两侧更慢
-                float speed = MathHelper.Lerp(20f, 14f, Math.Abs(offset) / 0.625f);
+                    // 中间更快，两侧更慢
+                    float speed = MathHelper.Lerp(20f, 14f, Math.Abs(offset) / 0.625f);
 
-                Projectile.NewProjectile(
-                    projectile.GetSource_FromThis(),
-                    projectile.Center,
-                    dir * speed,
-                    ModContent.ProjectileType<NewSHPS>(),
-                    (int)(projectile.damage * 0.88),
-                    projectile.knockBack,
-                    projectile.owner,
-                    1 // 套用第1套预设
-                );
+                    int arrow = Projectile.NewProjectile(
+                        projectile.GetSource_FromThis(),
+                        projectile.Center,
+                        dir * speed,
+                        ModContent.ProjectileType<NewSHPS>(),
+                        (int)(projectile.damage * 0.88),
+                        projectile.knockBack,
+                        projectile.owner,
+                        1 // 套用第1套预设
+                    );
+
+                    if (Main.projectile.IndexInRange(arrow))
+                        Main.projectile[arrow].netUpdate = true;
+                }
             }
 
 
