@@ -277,58 +277,58 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.Passive
 
             GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
                 center, Vector2.Zero, color with { A = 0 },
-                new Vector2(1.05f, 0.58f), baseRotation, 0.08f, 0.34f, 9));
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
-                center, Vector2.Zero, ShardOrange with { A = 0 },
-                new Vector2(0.46f, 1.08f), baseRotation + MathHelper.PiOver2, 0.12f, 0.42f, 10));
+                new Vector2(1.1f, 1.1f), baseRotation, 0.1f, 0.3f, 10));
             GeneralParticleHandler.SpawnParticle(new CustomPulse(
                 center, Vector2.Zero, ShardWhite with { A = 0 },
                 "CalamityMod/Particles/BloomCircle",
-                Vector2.One, 0f, 0.3f, 0.02f, 6));
+                Vector2.One, 0f, 0.32f, 0.03f, 7));
 
             float crystalAngle = baseRotation + Hue * MathHelper.PiOver2 + Main.rand.NextFloat(-0.08f, 0.08f);
-            for (int i = 0; i < 6; i++)
-            {
-                float spin = crystalAngle + i * MathHelper.TwoPi / 6f;
-                float scaleWave = 0.85f + 0.18f * (float)Math.Sin(i * MathHelper.PiOver2 + Hue * MathHelper.TwoPi);
-                GeneralParticleHandler.SpawnParticle(new CustomSpark(
-                    center,
-                    spin.ToRotationVector2() * Main.rand.NextFloat(0.18f, 0.55f),
-                    "CalamityMod/Particles/BloomLineAngled",
-                    false,
-                    Main.rand.Next(6, 9),
-                    Main.rand.NextFloat(0.24f, 0.36f) * scaleWave,
-                    Color.Lerp(color, Color.White, 0.45f) with { A = 0 },
-                    new Vector2(0.16f, 0.95f),
-                    true,
-                    false,
-                    shrinkSpeed: 1.35f));
-            }
-
             const float goldenAngle = 2.3999631f;
+
             for (int i = 0; i < 7; i++)
             {
                 float angle = crystalAngle + i * goldenAngle;
-                float speed = MathHelper.Lerp(0.9f, 2.7f, (i + 1f) / 7f);
-                Vector2 velocity = angle.ToRotationVector2().RotatedBy(Main.rand.NextFloat(-0.06f, 0.06f)) * speed;
+                float speed = MathHelper.Lerp(2.4f, 6.2f, (i + 1f) / 7f) * Main.rand.NextFloat(0.75f, 1.1f);
+                Vector2 velocity = angle.ToRotationVector2().RotatedBy(Main.rand.NextFloat(-0.16f, 0.16f)) * speed;
+                GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                    center,
+                    velocity,
+                    Texture,
+                    true,
+                    Main.rand.Next(28, 42),
+                    Main.rand.NextFloat(0.14f, 0.24f) * Projectile.scale,
+                    Color.Lerp(color, ShardWhite, Main.rand.NextFloat(0.05f, 0.35f)),
+                    new Vector2(0.55f, 0.55f),
+                    false,
+                    glowCenter: true,
+                    glowOpacity: 0.4f,
+                    spin: Main.rand.NextFloat(-0.3f, 0.3f)));
+            }
+
+            for (int i = 0; i < 4; i++)
+            {
+                float angle = crystalAngle + i * goldenAngle + goldenAngle * 3.5f;
+                float speed = MathHelper.Lerp(0.9f, 2.2f, (i + 1f) / 4f);
+                Vector2 velocity = angle.ToRotationVector2().RotatedBy(Main.rand.NextFloat(-0.1f, 0.1f)) * speed;
                 GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
                     center + velocity.SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(2f, 6f), velocity, false,
-                    Main.rand.Next(6, 11), Main.rand.NextFloat(0.22f, 0.36f),
-                    Color.Lerp(color, Color.White, Main.rand.NextFloat(0.25f, 0.55f)) with { A = 0 },
+                    Main.rand.Next(6, 10), Main.rand.NextFloat(0.18f, 0.3f),
+                    Color.Lerp(color, Color.White, Main.rand.NextFloat(0.25f, 0.5f)) with { A = 0 },
                     false, false, false));
             }
 
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 4; i++)
             {
                 int dustType = Main.rand.NextBool(3) ? ModContent.DustType<DiamondDust>() : ModContent.DustType<LightDust>();
                 float angle = crystalAngle + i * goldenAngle + Main.rand.NextFloat(-0.12f, 0.12f);
                 Dust dust = Dust.NewDustPerfect(
                     center + Main.rand.NextVector2Circular(3f, 3f),
                     dustType,
-                    angle.ToRotationVector2() * Main.rand.NextFloat(1.4f, 3.6f),
+                    angle.ToRotationVector2() * Main.rand.NextFloat(1.2f, 3f),
                     Main.rand.Next(90, 180),
                     Main.rand.NextBool(3) ? ShardWhite : color,
-                    Main.rand.NextFloat(0.36f, 0.62f));
+                    Main.rand.NextFloat(0.32f, 0.56f));
                 dust.noGravity = true;
                 dust.noLight = true;
                 dust.noLightEmittence = true;
@@ -375,24 +375,31 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.Passive
             }
 
             Main.EntitySpriteDraw(bloom, drawPos, null,
-                shardColor with { A = 0 } * (0.42f * opacity),
-                0f, bloom.Size() * 0.5f, Projectile.scale * 0.24f, SpriteEffects.None);
-            Main.EntitySpriteDraw(star, drawPos, null,
-                Color.White with { A = 0 } * (0.34f * opacity),
-                Projectile.rotation + MathHelper.PiOver2, star.Size() * 0.5f,
-                new Vector2(Projectile.scale * 0.18f, Projectile.scale * 0.06f), SpriteEffects.None);
+                shardColor with { A = 0 } * (0.26f * opacity),
+                0f, bloom.Size() * 0.5f, Projectile.scale * 0.14f, SpriteEffects.None);
 
-            float prismPulse = 1f + (float)Math.Sin(Timer * 0.32f + Hue * MathHelper.TwoPi) * 0.12f;
-            for (int i = 0; i < 2; i++)
+            for (int i = 0; i < 3; i++)
             {
-                float side = i == 0 ? -1f : 1f;
-                Main.EntitySpriteDraw(square, drawPos, null,
-                    Color.Lerp(shardColor, Color.White, 0.55f) with { A = 0 } * (0.28f * opacity),
-                    Projectile.rotation + side * 0.18f,
-                    square.Size() * 0.5f,
-                    new Vector2(Projectile.scale * 0.1f, Projectile.scale * (0.78f + prismPulse * 0.14f)),
-                    SpriteEffects.None);
+                float phase = Timer * 0.05f + i * MathHelper.TwoPi / 3f + Hue * MathHelper.TwoPi;
+                float twinkle = MathHelper.Clamp((float)Math.Sin(phase * 2.3f) * 1.6f, -1f, 1f) * 0.5f + 0.5f;
+                if (twinkle < 0.05f)
+                    continue;
+
+                float orbitRadius = Projectile.scale * MathHelper.Lerp(9f, 14f, 0.5f + 0.5f * (float)Math.Sin(phase * 0.6f));
+                Vector2 facetPos = drawPos + phase.ToRotationVector2() * orbitRadius;
+                float facetScale = Projectile.scale * MathHelper.Lerp(0.05f, 0.1f, twinkle);
+
+                Main.EntitySpriteDraw(star, facetPos, null,
+                    Color.Lerp(shardColor, Color.White, 0.6f) with { A = 0 } * (twinkle * 0.5f * opacity),
+                    phase * 1.7f, star.Size() * 0.5f,
+                    new Vector2(facetScale, facetScale * 0.35f), SpriteEffects.None);
             }
+
+            float spin = Timer * 0.045f + Hue * MathHelper.TwoPi;
+            Main.EntitySpriteDraw(square, drawPos, null,
+                Color.Lerp(shardColor, Color.White, 0.5f) with { A = 0 } * (0.22f * opacity),
+                spin, square.Size() * 0.5f,
+                new Vector2(Projectile.scale * 0.07f, Projectile.scale * 0.62f), SpriteEffects.None);
 
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend,

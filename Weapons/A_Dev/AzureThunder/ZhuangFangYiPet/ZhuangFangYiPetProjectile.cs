@@ -4,7 +4,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.Audio;
-using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -20,11 +19,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.ZhuangFangYiPet
             Transform
         }
 
-        private const string TexturePath = "CalamityLegendsComeBack/Weapons/A_Dev/AzureThunder/ZhuangFangYiPet/";
+        private const string TexturePath = "CalamityLegendsComeBack/Weapons/A_Dev/AzureThunder/ZhuangFangYiPet/新版贴图/";
         private const int TransformFrameTime = 5;
         private const int TransformFrames = 13;
         private const int StrongAttackReleaseFrame = 18;
         private const int WeakAttackReleaseFrame = 14;
+        private const int BlinkFrames = 5;
+        private const int BlinkFrameTime = 3;
+        private const int BlinkDuration = BlinkFrames * BlinkFrameTime;
 
         public new string LocalizationCategory => "Projectiles.AzureThunder";
         public override string Texture => TexturePath + "庄方宜宠物_待机";
@@ -39,7 +41,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.ZhuangFangYiPet
 
         public override void SetStaticDefaults()
         {
-            Main.projFrames[Type] = 9;
+            Main.projFrames[Type] = 8;
             Main.projPet[Type] = true;
             ProjectileID.Sets.MinionTargettingFeature[Type] = true;
         }
@@ -70,7 +72,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.ZhuangFangYiPet
             }
 
             ZhuangFangYiPetPlayer petPlayer = owner.GetModPlayer<ZhuangFangYiPetPlayer>();
-            if (!petPlayer.HasAzureThunderInInventory())
+            if (!petPlayer.IsHoldingAzureThunder())
             {
                 Projectile.Kill();
                 return;
@@ -185,7 +187,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.ZhuangFangYiPet
         {
             actionTimer++;
             NPC target = ResolveTarget();
-            Vector2 focus = target?.Center ?? owner.Center + Vector2.UnitX * owner.direction * 360f;
+            Vector2 focus = target?.Center ?? owner.Center + Vector2.UnitX * owner.direction * 420f;
             Vector2 fromTarget = (Projectile.Center - focus).SafeNormalize(new Vector2(-owner.direction, -0.35f));
             Vector2 side = Math.Sign(fromTarget.X) == 0 ? new Vector2(-owner.direction, 0f) : new Vector2(Math.Sign(fromTarget.X), 0f);
             Vector2 destination = focus + side * 170f - Vector2.UnitY * 82f;
@@ -233,56 +235,26 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.ZhuangFangYiPet
             if (Main.myPlayer != Projectile.owner)
                 return;
 
-            if (currentAction == PetAction.StrongAttack)
-            {
-                int damage = petPlayer.GetAzureThunderDamage(5.4f);
-                Projectile.NewProjectile(
-                    Projectile.GetSource_FromThis(),
-                    Projectile.Center,
-                    Vector2.Zero,
-                    ModContent.ProjectileType<ZhuangFangYiSwordFlash>(),
-                    0,
-                    0f,
-                    Projectile.owner,
-                    (target?.Center ?? focus).X,
-                    (target?.Center ?? focus).Y,
-                    1.35f);
-
-                Projectile.NewProjectile(
-                    Projectile.GetSource_FromThis(),
-                    target?.Center ?? focus,
-                    Vector2.Zero,
-                    ModContent.ProjectileType<ZhuangFangYiConvergenceController>(),
-                    damage,
-                    petPlayer.GetAzureThunderKnockback(),
-                    Projectile.owner,
-                    target?.whoAmI ?? -1,
-                    owner.HasBuff(ModContent.BuffType<AzureThunderHarmonyBuff>()) ? 1f : 0f);
-                return;
-            }
+            bool harmony = owner.HasBuff(ModContent.BuffType<AzureThunderHarmonyBuff>());
+            bool strong = currentAction == PetAction.StrongAttack;
+            float damageMultiplier = strong ? (harmony ? 4.15f : 3.2f) : 1.45f;
+            float lightningScale = strong ? (harmony ? 1.45f : 1.18f) : 0.82f;
+            Vector2 muzzle = Projectile.Center + new Vector2(18f * Projectile.spriteDirection, -8f);
+            Vector2 aimPoint = target?.Center ?? focus;
+            Vector2 direction = (aimPoint - muzzle).SafeNormalize(Vector2.UnitX * Projectile.spriteDirection);
+            aimPoint += direction * (strong ? 90f : 55f);
 
             Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
-                Projectile.Center,
-                Vector2.Zero,
-                ModContent.ProjectileType<ZhuangFangYiSwordFlash>(),
-                0,
-                0f,
-                Projectile.owner,
-                focus.X,
-                focus.Y,
-                0.88f);
-
-            Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(),
-                Projectile.Center,
+                muzzle,
                 Vector2.Zero,
                 ModContent.ProjectileType<ZhuangFangYiWeakLightning>(),
-                petPlayer.GetAzureThunderDamage(2.4f),
-                petPlayer.GetAzureThunderKnockback() * 0.35f,
+                petPlayer.GetAzureThunderDamage(damageMultiplier),
+                petPlayer.GetAzureThunderKnockback() * (strong ? 0.65f : 0.35f),
                 Projectile.owner,
-                focus.X,
-                focus.Y);
+                aimPoint.X,
+                aimPoint.Y,
+                lightningScale);
         }
 
         private void FollowOwnerAI(Player owner)
@@ -363,7 +335,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.ZhuangFangYiPet
                 return;
             }
 
-            blinkTimer = 12;
+            blinkTimer = BlinkDuration;
             blinkCooldown = Main.rand.Next(150, 280);
         }
 
@@ -411,81 +383,78 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.ZhuangFangYiPet
 
         private void DrawIdle(Vector2 drawPosition, Color drawColor, SpriteEffects effects)
         {
-            Texture2D texture = ModContent.Request<Texture2D>(TexturePath + "庄方宜宠物_待机").Value;
-            int bodyFrame = LoopFrame(9, 4);
-            int tailFrame = LoopFrame(9, 6);
-            DrawFrame(texture, 2, 11, 1, tailFrame, drawPosition, drawColor, effects);
-            DrawFrame(texture, 2, 11, 0, bodyFrame, drawPosition, drawColor, effects);
-
-            if (blinkTimer > 0)
-            {
-                int blinkFrame = 9 + Math.Min(2, (12 - blinkTimer) / 4);
-                DrawFrame(texture, 2, 11, 0, blinkFrame, drawPosition, drawColor, effects);
-            }
+            DrawNormalTail(drawPosition, drawColor, effects, 6);
+            DrawVerticalFrame(RequestTexture("庄方宜宠物_待机"), 8, LoopFrame(8, 5), drawPosition, drawColor, effects);
+            DrawNormalBlink(drawPosition, drawColor, effects);
         }
 
         private void DrawMoving(Vector2 drawPosition, Color drawColor, SpriteEffects effects)
         {
-            Texture2D texture = ModContent.Request<Texture2D>(TexturePath + "庄方宜宠物_移动").Value;
-            DrawFrame(texture, 2, 8, 1, LoopFrame(8, 6), drawPosition, drawColor, effects);
-            DrawFrame(texture, 2, 8, 0, LoopFrame(8, 4), drawPosition, drawColor, effects);
+            DrawNormalTail(drawPosition, drawColor, effects, 5);
+            DrawVerticalFrame(RequestTexture("庄方宜宠物_移动"), 8, LoopFrame(8, 4), drawPosition, drawColor, effects);
+            DrawNormalBlink(drawPosition, drawColor, effects);
         }
 
         private void DrawFlying(Vector2 drawPosition, Color drawColor, SpriteEffects effects)
         {
-            Texture2D texture = ModContent.Request<Texture2D>(TexturePath + "庄方宜宠物_飞行").Value;
-            DrawFrame(texture, 2, 7, 1, LoopFrame(7, 6), drawPosition, drawColor, effects);
-            DrawFrame(texture, 2, 7, 0, LoopFrame(7, 4), drawPosition, drawColor, effects);
+            DrawNormalTail(drawPosition, drawColor, effects, 5);
+            DrawVerticalFrame(RequestTexture("庄方宜宠物_飞行"), 7, LoopFrame(7, 4), drawPosition, drawColor, effects);
+            DrawNormalBlink(drawPosition, drawColor, effects);
         }
 
         private void DrawAttack(Vector2 drawPosition, Color drawColor, SpriteEffects effects)
         {
-            Texture2D texture = ModContent.Request<Texture2D>(TexturePath + "庄方宜宠物_攻击").Value;
-            int bodyFrames = currentAction == PetAction.WeakAttack ? 2 : 7;
-            int bodyFrame = Math.Min(bodyFrames - 1, actionTimer / 4 % bodyFrames);
-            int tailFrame = Math.Min(7, actionTimer / 4 % 8);
-            int hairFrame = 8 + Math.Min(2, actionTimer / 3 % 3);
-
-            DrawFrame(texture, 2, 11, 1, tailFrame, drawPosition, drawColor, effects);
-            DrawFrame(texture, 2, 11, 0, bodyFrame, drawPosition, drawColor, effects);
-            DrawFrame(texture, 2, 11, 1, hairFrame, drawPosition, drawColor, effects);
-
-            if (currentAction == PetAction.StrongAttack)
-            {
-                int faceFrame = 7 + Math.Min(3, actionTimer / 3 % 4);
-                DrawFrame(texture, 2, 11, 0, faceFrame, drawPosition, drawColor, effects);
-            }
+            DrawNormalTail(drawPosition, drawColor, effects, 4);
+            int bodyFrame = Math.Min(6, actionTimer / 4);
+            DrawVerticalFrame(RequestTexture("庄方宜宠物_攻击"), 7, bodyFrame, drawPosition, drawColor, effects);
         }
 
         private void DrawHarmony(Vector2 drawPosition, Color drawColor, SpriteEffects effects)
         {
-            Texture2D texture = ModContent.Request<Texture2D>(TexturePath + "小庄终结技").Value;
-            bool attacking = currentAction == PetAction.StrongAttack;
-            int bodyFrame = attacking ? Math.Min(4, actionTimer / 6 % 5) : 0;
-            int tailFrame = actionTimer / 6 % 8;
-            int hairFrame = 5 + actionTimer / 6 % 6;
-            int ribbonFrame = 8 + actionTimer / 4 % 6;
+            bool attacking = currentAction == PetAction.StrongAttack || currentAction == PetAction.WeakAttack;
+            int bodyFrame = attacking ? Math.Min(4, actionTimer / 5) : 0;
 
-            DrawFrame(texture, 2, 14, 1, tailFrame, drawPosition, drawColor, effects);
-            DrawFrame(texture, 2, 14, 0, bodyFrame, drawPosition, drawColor, effects);
-            DrawFrame(texture, 2, 14, 0, hairFrame, drawPosition, drawColor, effects);
-            DrawFrame(texture, 2, 14, 1, ribbonFrame, drawPosition, drawColor, effects);
+            DrawVerticalFrame(RequestTexture("庄方宜宠物_天理真和_尾巴"), 8, LoopFrame(8, 6), drawPosition, drawColor, effects);
+            DrawVerticalFrame(RequestTexture("庄方宜宠物_天理真和_飘带"), 6, LoopFrame(6, 5, 2), drawPosition, drawColor, effects);
+            DrawVerticalFrame(RequestTexture("庄方宜宠物_天理真和_攻击（非攻击情况只用第一帧）"), 5, bodyFrame, drawPosition, drawColor, effects);
+            DrawVerticalFrame(RequestTexture("庄方宜宠物_天理真和_头发"), 6, LoopFrame(6, 6, 4), drawPosition, drawColor, effects);
+            DrawHarmonyExpression(drawPosition, drawColor, effects);
         }
 
         private void DrawTransform(Vector2 drawPosition, Color drawColor, SpriteEffects effects)
         {
-            Texture2D texture = ModContent.Request<Texture2D>(TexturePath + "庄方宜宠物终结技变身动画").Value;
             int frame = Math.Min(TransformFrames - 1, actionTimer / TransformFrameTime);
-            DrawFrame(texture, 1, TransformFrames, 0, frame, drawPosition, drawColor, effects);
+            DrawVerticalFrame(RequestTexture("庄方宜宠物_终结技变身动画（96x70）"), TransformFrames, frame, drawPosition, drawColor, effects);
         }
 
-        private void DrawFrame(Texture2D texture, int columns, int rows, int column, int row, Vector2 drawPosition, Color drawColor, SpriteEffects effects)
+        private void DrawNormalTail(Vector2 drawPosition, Color drawColor, SpriteEffects effects, int interval)
         {
-            column = Utils.Clamp(column, 0, columns - 1);
+            DrawVerticalFrame(RequestTexture("庄方宜宠物_尾巴"), 8, LoopFrame(8, interval, 3), drawPosition, drawColor, effects);
+        }
+
+        private void DrawNormalBlink(Vector2 drawPosition, Color drawColor, SpriteEffects effects)
+        {
+            int frame = blinkTimer > 0 ? Math.Min(BlinkFrames - 1, (BlinkDuration - blinkTimer) / BlinkFrameTime) : 0;
+            DrawVerticalFrame(RequestTexture("庄方宜宠物_眨眼"), BlinkFrames, frame, drawPosition, drawColor, effects);
+        }
+
+        private void DrawHarmonyExpression(Vector2 drawPosition, Color drawColor, SpriteEffects effects)
+        {
+            int frame = blinkTimer > 0 ? Math.Min(BlinkFrames - 1, (BlinkDuration - blinkTimer) / BlinkFrameTime) : 0;
+            DrawVerticalFrame(RequestTexture("庄方宜宠物_天理真和_表情"), BlinkFrames, frame, drawPosition, drawColor, effects);
+        }
+
+        private static Texture2D RequestTexture(string name)
+        {
+            return ModContent.Request<Texture2D>(TexturePath + name).Value;
+        }
+
+        private void DrawVerticalFrame(Texture2D texture, int rows, int row, Vector2 drawPosition, Color drawColor, SpriteEffects effects)
+        {
+            rows = Math.Max(1, rows);
             row = Utils.Clamp(row, 0, rows - 1);
-            int frameWidth = texture.Width / columns;
             int frameHeight = texture.Height / rows;
-            Rectangle frame = new(column * frameWidth, row * frameHeight, frameWidth, frameHeight);
+            Rectangle frame = new(0, row * frameHeight, texture.Width, frameHeight);
             Vector2 origin = frame.Size() * 0.5f;
 
             Main.EntitySpriteDraw(
@@ -499,11 +468,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.ZhuangFangYiPet
                 effects);
         }
 
-        private int LoopFrame(int frameCount, int frameInterval)
+        private int LoopFrame(int frameCount, int frameInterval, int phase = 0)
         {
             frameCount = Math.Max(1, frameCount);
             ulong tick = Main.GameUpdateCount / (uint)Math.Max(1, frameInterval);
-            return (int)((tick + (ulong)(Projectile.identity % frameCount)) % (ulong)frameCount);
+            return (int)((tick + (ulong)((Projectile.identity + phase) % frameCount)) % (ulong)frameCount);
         }
     }
 }

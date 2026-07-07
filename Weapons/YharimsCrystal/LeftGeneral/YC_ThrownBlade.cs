@@ -4,6 +4,7 @@ using CalamityMod;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using ReLogic.Utilities;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
@@ -18,24 +19,26 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
         private const int StateDirectedThrow = 2;
         private const int StateRightThrow = 3;
 
-        // StateRightThrow sub-phases: launch up, hunt the nearest enemy with hard homing,
-        // dive-slam onto them, then impale into the target for repeated ticks.
-        // 只在未命中时追踪；一旦真正命中就钉入敌人（参考 MiracleMatterJav），不再追踪。
+        // StateRightThrow sub-phases mirror NeptunesBountyProjectile's spinMode/spinMode2
+        // structure exactly: thrown out, arcs under gravity while spinning (rotation speed
+        // tied to fall speed, exact same formula), then once Time>=75 && vel.Y>=22 (Neptune's
+        // literal trigger) it gets extraUpdates=3, doubled damage, a burst of particles/sound,
+        // and a single redirect toward the nearest enemy at fixed speed — after that it just
+        // flies straight (no further re-aiming), same as Neptune's spinMode2. On real contact
+        // it impales into the target for repeated ticks (our own addition beyond Neptune).
         private const int RightThrowRising = 0;
         private const int RightThrowTracking = 1;
-        private const int RightThrowSlamming = 2;
-        private const int RightThrowCutting = 3;
-        private const int RightThrowImpaled = 4;
+        private const int RightThrowImpaled = 2;
         private const int ImpaleTickCount = 10;
         private const int ImpaleTickInterval = 12;
-        private const int RightThrowRiseFrames = 58;
-        private const int RightThrowMaxTrackingFrames = 96;
-        private const float RightThrowSlamTriggerDistance = 220f;
-        private const int RightThrowSlamFrames = 16;
-        private const int RightThrowCutFrames = 110;
+        private const float RightThrowGravity = 0.42f;
+        private const float RightThrowGravityCap = 22f;
+        private const float RightThrowAirDrag = 0.975f;
+        private const int RightThrowTriggerTime = 75;
+        private const float RightThrowLaunchSpeed = 28f;
+        private const float RightThrowRedirectSpeed = 25f;
+        private const int RightThrowExtraUpdates = 3;
         private const int RightThrowJudgementCharges = 9;
-        private const float RightThrowPeakSpeed = 28f;
-        private const float RightThrowSpinSmearScale = 1.12f;
         private static float UpwardBladeAngle => -MathHelper.PiOver4;
 
         public new string LocalizationCategory => "Projectiles.YharimsCrystal";
@@ -43,6 +46,9 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
 
         // 钉入时刀刃相对目标中心的偏移（视觉用，不参与netcode）
         private Vector2 impaleOffset;
+        private int startDamage;
+        private SlotId spinSoundSlot;
+        private bool hasExploded;
 
         public override void SetStaticDefaults()
         {
@@ -71,11 +77,13 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                 int size = (int)(110 * Projectile.scale);
                 Projectile.Resize(size, size);
                 Projectile.penetrate = -1;
-                Projectile.timeLeft = RightThrowRiseFrames + RightThrowMaxTrackingFrames + RightThrowSlamFrames + RightThrowCutFrames + 30;
+                Projectile.timeLeft = 300; // matches NeptunesBounty's own Lifetime literally
                 Projectile.localAI[0] = 0f;
                 Projectile.localAI[1] = 0f;
                 Projectile.rotation = Projectile.ai[2];
                 Projectile.ai[2] = -1f; // repurposed after spawn: locked target NPC index
+                startDamage = Projectile.damage;
+                spinSoundSlot = SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/SpinningWoosh") { Volume = 0.65f, Pitch = -0.1f }, Projectile.Center);
             }
         }
 
@@ -87,16 +95,10 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             if (Projectile.ai[0] == StateDirectedThrow && Projectile.localAI[0] <= 48f)
                 return false;
 
-            // No damage while it's still traveling to position — only once it's diving in or impaled.
-            if (Projectile.ai[0] == StateRightThrow)
-            {
-                if (Projectile.ai[1] < RightThrowSlamming)
-                    return false;
-
-                // 钉入后只对被钉住的目标持续跳伤
-                if (Projectile.ai[1] == RightThrowImpaled && target.whoAmI != (int)Projectile.ai[2])
-                    return false;
-            }
+            // Neptune's blade can damage anything in its path the instant it's thrown —
+            // no positioning-only grace period. 钉入后只对被钉住的目标持续跳伤。
+            if (Projectile.ai[0] == StateRightThrow && Projectile.ai[1] == RightThrowImpaled && target.whoAmI != (int)Projectile.ai[2])
+                return false;
 
             return null;
         }
@@ -263,7 +265,15 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                 return;
             }
 
-            Lighting.AddLight(Projectile.Center, new Vector3(1f, 0.85f, 0.35f) * 0.65f);
+            if (SoundEngine.TryGetActiveSound(spinSoundSlot, out ActiveSound spinSound) && spinSound.IsPlaying)
+                spinSound.Position = Projectile.Center;
+
+            // Dimmer before the power surge, brighter after — mirrors Neptune's
+            // spinMode/spinMode2 light color swap.
+            Vector3 lightColor = Projectile.ai[1] == RightThrowTracking
+                ? new Vector3(1f, 0.85f, 0.35f) * 0.9f
+                : new Vector3(1f, 0.85f, 0.35f) * 0.5f;
+            Lighting.AddLight(Projectile.Center, lightColor);
 
             if (Projectile.ai[1] == RightThrowImpaled)
             {
@@ -274,143 +284,87 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             PlayTravelWhoosh();
 
             if (Projectile.ai[1] == RightThrowRising)
-            {
                 RunRightThrowRising();
-                return;
-            }
-
-            if (Projectile.ai[1] == RightThrowTracking)
-            {
-                RunRightThrowTracking(owner);
-                return;
-            }
-
-            if (Projectile.ai[1] == RightThrowSlamming)
-            {
-                RunRightThrowSlamming(owner);
-                return;
-            }
-
-            RunRightThrowCutting(owner);
+            else
+                RunRightThrowTracking();
         }
 
+        // Faithful port of NeptunesBounty's pre-trigger "spinMode": thrown toward the aim
+        // direction at speed 28, arcs under gravity (0.42/frame, capped at 22), bleeds X
+        // speed via 0.975 drag once falling, and spins at a rate tied to fall speed —
+        // exactly Neptune's formulas, just with our own particle trail.
         private void RunRightThrowRising()
         {
-            Projectile.localAI[0]++;
-            float progress = MathHelper.Clamp(Projectile.localAI[0] / RightThrowRiseFrames, 0f, 1f);
-            float easedProgress = SmootherStep(progress);
-            Player owner = Main.player[Projectile.owner];
+            Projectile.localAI[0]++; // Time
+
             if (Projectile.localAI[0] == 1f)
             {
-                Vector2 aim = owner.Calamity().mouseWorld - Projectile.Center;
-                float xSign = Math.Sign(aim.X);
-                if (xSign == 0f)
-                    xSign = owner.direction == 0 ? 1f : owner.direction;
-
-                Projectile.velocity = new Vector2(xSign * 13f, -23f);
+                Player launchOwner = Main.player[Projectile.owner];
+                Vector2 aimDirection = (launchOwner.Calamity().mouseWorld - Projectile.Center).SafeNormalize(Vector2.UnitX * launchOwner.direction);
+                Projectile.velocity = aimDirection * RightThrowLaunchSpeed;
             }
 
-            Projectile.velocity.X *= 0.986f;
-            Projectile.velocity.Y = MathHelper.Clamp(Projectile.velocity.Y + 0.58f, -28f, 24f);
-            Projectile.rotation += 0.5f * Math.Sign(Projectile.velocity.X == 0f ? owner.direction : Projectile.velocity.X);
+            if (Projectile.velocity.Y < RightThrowGravityCap)
+                Projectile.velocity.Y += RightThrowGravity;
+            if (Projectile.velocity.Y > 0f)
+                Projectile.velocity.X *= RightThrowAirDrag;
 
-            EmitRightThrowFX(easedProgress);
+            Projectile.direction = Projectile.velocity.X > 0f ? 1 : -1;
+            Projectile.rotation += (0.6f * (MathF.Abs(Projectile.velocity.Y) * 0.03f + 0.85f)) * Projectile.direction;
 
-            if (progress >= 1f || Projectile.velocity.Y >= 14f)
+            EmitRightThrowSpinTrail(postTrigger: false);
+
+            if (Projectile.localAI[0] >= RightThrowTriggerTime && Projectile.velocity.Y >= RightThrowGravityCap)
             {
                 Projectile.ai[1] = RightThrowTracking;
                 Projectile.localAI[0] = 0f;
                 Projectile.netUpdate = true;
-                SoundEngine.PlaySound(SoundID.Item74 with { Volume = 0.7f, Pitch = -0.05f }, Projectile.Center);
+                TriggerRightThrowPowerSurge();
             }
         }
 
-        // Hard, ever-tightening homing: the closer it gets, the faster it turns and the
-        // faster it flies, so a dodging target can't simply outrun the lock-on.
-        private void RunRightThrowTracking(Player owner)
+        // Neptune's Time>=75 event, ported 1:1: extraUpdates=3, damage doubles, a single
+        // redirect toward the nearest enemy at fixed speed (no further re-aiming after
+        // this — matches Neptune's spinMode2, which never touches velocity again), a
+        // burst of particles, and the spin sound restarts pitched up.
+        private void TriggerRightThrowPowerSurge()
         {
-            Projectile.localAI[0]++;
-            NPC target = GetRightThrowTarget();
+            Player owner = Main.player[Projectile.owner];
+            Projectile.extraUpdates = RightThrowExtraUpdates;
+            Projectile.damage = startDamage * 2;
+            Projectile.numHits = 0;
 
-            if (target == null)
-            {
-                Vector2 groundPoint = GetNoTargetSlamPoint(owner);
-                Vector2 fallbackDirection = (groundPoint - Projectile.Center).SafeNormalize(Vector2.UnitY);
-                Vector2 fallbackCurrent = Projectile.velocity.SafeNormalize(fallbackDirection);
-                float fallbackAngle = fallbackCurrent.ToRotation().AngleTowards(fallbackDirection.ToRotation(), MathHelper.ToRadians(18f));
-                float fallbackSpeed = MathHelper.Lerp(28f, 48f, Utils.GetLerpValue(0f, 20f, Projectile.localAI[0], true));
-                Projectile.velocity = fallbackAngle.ToRotationVector2() * fallbackSpeed;
-                Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
-                EmitRightTrackingFX(0f);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/VividClarityBeamAppear") { Volume = 0.65f, PitchVariance = 0.3f }, Projectile.Center);
+            SoundEngine.PlaySound(SoundID.ShimmerWeak1 with { Pitch = 0.15f }, Projectile.Center);
 
-                if (Vector2.Distance(Projectile.Center, groundPoint) <= 90f || Projectile.localAI[0] >= 24f)
-                {
-                    Projectile.ai[1] = RightThrowSlamming;
-                    Projectile.localAI[0] = 0f;
-                    Projectile.netUpdate = true;
-                    SoundEngine.PlaySound(SoundID.Item84 with { Volume = 0.78f, Pitch = -0.28f }, Projectile.Center);
-                }
+            if (SoundEngine.TryGetActiveSound(spinSoundSlot, out ActiveSound previousSpin))
+                previousSpin.Stop();
+            spinSoundSlot = SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/SpinningWoosh") { Volume = 0.65f, Pitch = 0.2f }, Projectile.Center);
+
+            NPC target = FindNearestTarget(1000f);
+            Vector2 desiredDirection = target != null
+                ? (target.Center + target.velocity * 5f - Projectile.Center).SafeNormalize(Vector2.UnitX * Projectile.direction)
+                : (owner.Calamity().mouseWorld - Projectile.Center).SafeNormalize(Vector2.UnitX * Projectile.direction);
+            Projectile.velocity = desiredDirection * RightThrowRedirectSpeed;
+
+            if (Main.dedServ)
                 return;
-            }
 
-            float distance = Vector2.Distance(Projectile.Center, target.Center);
-            float closeFactor = Utils.GetLerpValue(900f, 150f, distance, true);
-            float turnRate = MathHelper.ToRadians(MathHelper.Lerp(9f, 32f, closeFactor));
-            float speed = MathHelper.Lerp(20f, 42f, closeFactor);
-
-            Vector2 desiredDirection = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY);
-            Vector2 currentDirection = Projectile.velocity.SafeNormalize(-Vector2.UnitY);
-            float newAngle = currentDirection.ToRotation().AngleTowards(desiredDirection.ToRotation(), turnRate);
-            Projectile.velocity = newAngle.ToRotationVector2() * speed;
-            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
-
-            EmitRightTrackingFX(closeFactor);
-
-            if (distance <= RightThrowSlamTriggerDistance || Projectile.localAI[0] >= RightThrowMaxTrackingFrames)
-            {
-                Projectile.ai[1] = RightThrowSlamming;
-                Projectile.localAI[0] = 0f;
-                Projectile.netUpdate = true;
-                SoundEngine.PlaySound(SoundID.Item84 with { Volume = 0.78f, Pitch = -0.28f }, Projectile.Center);
-            }
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Vector2.Zero, new Color(255, 214, 88), new Vector2(2f, 2f), Main.rand.NextFloat(MathHelper.TwoPi), 0.01f, 0.9f, 22));
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Vector2.Zero, new Color(255, 111, 34), new Vector2(2f, 2f), Main.rand.NextFloat(MathHelper.TwoPi), 0.01f, 0.83f, 15));
         }
 
-        // A short, decisive dive burst straight into the target — the "slam" impact.
-        // 命中判定交给 OnHitNPC：真正撞到敌人才会钉入，不再切入持续切割/追踪。
-        private void RunRightThrowSlamming(Player owner)
+        // Neptune's spinMode2: once redirected, velocity is never touched again — it just
+        // flies straight at the fixed speed (with extraUpdates=3 making it feel very fast),
+        // spinning at the same fall-speed-tied rate, until it collides or times out.
+        private void RunRightThrowTracking()
         {
-            Projectile.localAI[0]++;
-            NPC target = GetRightThrowTarget();
-            Vector2 fallbackPoint = GetNoTargetSlamPoint(owner);
+            Projectile.localAI[0]++; // Time, reset at the trigger like Neptune's
 
-            if (target != null)
-            {
-                Vector2 desiredDirection = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY);
-                Vector2 currentDirection = Projectile.velocity.SafeNormalize(desiredDirection);
-                float newAngle = currentDirection.ToRotation().AngleTowards(desiredDirection.ToRotation(), MathHelper.ToRadians(34f));
-                float speed = MathHelper.Lerp(38f, 58f, MathHelper.Clamp(Projectile.localAI[0] / RightThrowSlamFrames, 0f, 1f));
-                Projectile.velocity = newAngle.ToRotationVector2() * speed;
-            }
-            else
-            {
-                Vector2 desiredDirection = (fallbackPoint - Projectile.Center).SafeNormalize(Vector2.UnitY);
-                Vector2 currentDirection = Projectile.velocity.SafeNormalize(desiredDirection);
-                float newAngle = currentDirection.ToRotation().AngleTowards(desiredDirection.ToRotation(), MathHelper.ToRadians(36f));
-                float speed = MathHelper.Lerp(42f, 62f, MathHelper.Clamp(Projectile.localAI[0] / RightThrowSlamFrames, 0f, 1f));
-                Projectile.velocity = newAngle.ToRotationVector2() * speed;
-            }
+            Projectile.direction = Projectile.velocity.X > 0f ? 1 : -1;
+            Projectile.rotation += (0.6f * (MathF.Abs(Projectile.velocity.Y) * 0.03f + 0.85f)) * Projectile.direction;
 
-            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
-            EmitRightSlamFX();
-
-            bool groundArrived = target == null && (Vector2.Distance(Projectile.Center, fallbackPoint) <= 92f || Projectile.localAI[0] >= RightThrowSlamFrames);
-            bool missedTooLong = target != null && Projectile.localAI[0] >= RightThrowSlamFrames * 4f;
-            if (groundArrived || missedTooLong)
-            {
-                TriggerSlamImpact(owner, target);
-                SelfDestructIntoFireballs(owner);
-                Projectile.Kill();
-            }
+            EmitRightThrowSpinTrail(postTrigger: true);
         }
 
         // 钉入阶段：锁死在被命中的敌人身上，靠本地无敌帧持续跳伤（共10跳），期间完全不追踪。
@@ -459,69 +413,6 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             }
         }
 
-        // Keeps chasing and carving the same target (or the nearest replacement) for a
-        // fixed window, then detonates into a burst of the blade's own burning shards.
-        private void RunRightThrowCutting(Player owner)
-        {
-            Projectile.localAI[0]++;
-            NPC target = GetRightThrowTarget();
-
-            Vector2 desiredDirection = target != null
-                ? (target.Center - Projectile.Center).SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitY))
-                : Projectile.velocity.SafeNormalize(Vector2.UnitY);
-
-            float turnRate = MathHelper.ToRadians(target != null ? 22f : 6f);
-            float currentAngle = Projectile.velocity.SafeNormalize(Vector2.UnitY).ToRotation();
-            float newAngle = currentAngle.AngleTowards(desiredDirection.ToRotation(), turnRate);
-            float speed = MathHelper.Lerp(24f, 40f, Utils.GetLerpValue(0f, 16f, Projectile.localAI[0], true));
-            Projectile.velocity = newAngle.ToRotationVector2() * speed;
-            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
-
-            EmitRightSlamFX();
-
-            if (Projectile.localAI[0] >= RightThrowCutFrames)
-            {
-                SelfDestructIntoFireballs(owner);
-                Projectile.Kill();
-            }
-        }
-
-        private NPC GetRightThrowTarget()
-        {
-            int index = (int)Projectile.ai[2];
-            if (index >= 0 && index < Main.maxNPCs)
-            {
-                NPC candidate = Main.npc[index];
-                if (candidate.active && candidate.CanBeChasedBy(Projectile))
-                    return candidate;
-            }
-
-            NPC fresh = FindNearestTarget(1400f);
-            if (Projectile.owner == Main.myPlayer)
-            {
-                int freshIndex = fresh?.whoAmI ?? -1;
-                if ((int)Projectile.ai[2] != freshIndex)
-                {
-                    Projectile.ai[2] = freshIndex;
-                    Projectile.netUpdate = true;
-                }
-            }
-            return fresh;
-        }
-
-        private Vector2 GetNoTargetSlamPoint(Player owner)
-        {
-            Vector2 mouse = owner.Calamity().mouseWorld;
-            if (mouse == Vector2.Zero)
-                mouse = Main.MouseWorld;
-
-            float x = Math.Abs(mouse.X - owner.Center.X) > 80f
-                ? mouse.X
-                : owner.Center.X + (owner.direction == 0 ? 1f : owner.direction) * 340f;
-            float y = Math.Max(mouse.Y, owner.Center.Y + 520f);
-            return new Vector2(x, y);
-        }
-
         private void TriggerSlamImpact(Player owner, NPC target)
         {
             owner.Calamity().GeneralScreenShakePower = Math.Max(owner.Calamity().GeneralScreenShakePower, 9f);
@@ -546,6 +437,10 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
 
         private void SelfDestructIntoFireballs(Player owner)
         {
+            if (hasExploded)
+                return;
+            hasExploded = true;
+
             owner.Calamity().GeneralScreenShakePower = Math.Max(owner.Calamity().GeneralScreenShakePower, 7f);
             SoundEngine.PlaySound(SoundID.Item62 with { Volume = 0.85f, Pitch = -0.1f }, Projectile.Center);
             SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/DeadSunExplosion") { Volume = 0.6f, Pitch = -0.15f }, Projectile.Center);
@@ -617,78 +512,55 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             }
         }
 
-        private void EmitRightTrackingFX(float intensity)
+        // Faithful port of Neptune's two-point spark trail: two points diametrically
+        // opposite the blade (radius scaled to our sprite) sweep around as Projectile.rotation
+        // spins, throwing off tangential sparks — the actual mechanism behind Neptune's
+        // "spinning blade" look. Pre/post trigger use a different texture/density, exactly
+        // like Neptune's WaterFoam-vs-SmallBloom+Sparkle split.
+        private void EmitRightThrowSpinTrail(bool postTrigger)
         {
             if (Main.dedServ)
                 return;
 
-            if ((int)Projectile.localAI[0] % 6 == 0)
-                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Vector2.Zero, new Color(255, 214, 88), Vector2.One, Projectile.rotation, 0.035f, 1.1f + intensity * 0.6f, 14));
-
-            if (Main.rand.NextBool(2))
-            {
-                Vector2 velocity = -Projectile.velocity.SafeNormalize(-Vector2.UnitY).RotatedByRandom(0.4f) * Main.rand.NextFloat(2f, 5f + intensity * 5f);
-                Dust dust = Dust.NewDustPerfect(Projectile.Center + Main.rand.NextVector2Circular(18f, 14f), DustID.GoldFlame, velocity, 0, Main.rand.NextBool(4) ? Color.White : new Color(255, 214, 88), Main.rand.NextFloat(0.9f, 1.45f));
-                dust.noGravity = true;
-            }
-        }
-
-        private void EmitRightSlamFX()
-        {
-            if (Main.dedServ)
+            Player owner = Main.player[Projectile.owner];
+            if (Vector2.Distance(owner.Center, Projectile.Center) >= 1400f)
                 return;
 
-            if (Main.rand.NextBool(2))
-            {
-                Vector2 vel = -Projectile.velocity.SafeNormalize(Vector2.UnitY).RotatedByRandom(0.3f) * Main.rand.NextFloat(4f, 9f);
-                Dust d = Dust.NewDustPerfect(Projectile.Center + Main.rand.NextVector2Circular(12f, 12f), DustID.GoldFlame, vel, 0, Main.rand.NextBool(3) ? Color.White : new Color(255, 214, 88), Main.rand.NextFloat(1.1f, 1.7f));
-                d.noGravity = true;
-            }
+            float radius = 75f * Projectile.scale;
+            float directionSign = Projectile.velocity.X == 0f ? Projectile.direction : Math.Sign(Projectile.velocity.X);
 
-            if ((int)Projectile.localAI[0] % 3 == 0)
+            for (int i = 0; i < 2; i++)
             {
+                Vector2 linePos = Projectile.Center + (i * MathHelper.Pi + Projectile.rotation + MathHelper.PiOver2).ToRotationVector2() * radius;
+                Vector2 tangentVelocity = (i * MathHelper.Pi + Projectile.rotation * directionSign).ToRotationVector2().RotatedByRandom(postTrigger ? 0.25f : 0.4f) * Main.rand.NextFloat(5f, 22f);
+                if (postTrigger)
+                    tangentVelocity -= Projectile.velocity * 2f;
+
                 GeneralParticleHandler.SpawnParticle(new CustomSpark(
-                    Projectile.Center + Main.rand.NextVector2Circular(10f, 10f),
-                    -Projectile.velocity.SafeNormalize(Vector2.UnitY).RotatedByRandom(0.3f) * Main.rand.NextFloat(2f, 6f),
+                    linePos,
+                    tangentVelocity,
                     "CalamityMod/Particles/Sparkle",
                     false,
-                    Main.rand.Next(12, 18),
-                    Main.rand.NextFloat(0.42f, 0.78f),
-                    Main.rand.NextBool(3) ? Color.White : new Color(255, 190, 54),
-                    new Vector2(0.24f, 0.95f),
+                    postTrigger ? Main.rand.Next(10, 13) : Main.rand.Next(7, 16),
+                    postTrigger ? Main.rand.NextFloat(0.2f, 0.55f) : Main.rand.NextFloat(0.4f, 0.7f),
+                    (postTrigger ? new Color(255, 214, 88) : new Color(255, 111, 34)) * (postTrigger ? 0.3f : 0.45f),
+                    new Vector2(1f, 1f),
                     true,
-                    true,
-                    shrinkSpeed: 0.16f));
-            }
-        }
-
-        private void EmitRightThrowFX(float intensity)
-        {
-            if (Main.dedServ)
-                return;
-
-            Vector2 travelDirection = GetTravelDirectionForDraw();
-            if (Main.rand.NextBool(2))
-            {
-                Vector2 vel = -travelDirection.RotatedByRandom(0.4f) * Main.rand.NextFloat(3f, 7f + intensity * 6f);
-                Dust d = Dust.NewDustPerfect(Projectile.Center + Main.rand.NextVector2Circular(14f, 14f), DustID.GoldFlame, vel, 0, Main.rand.NextBool(3) ? Color.White : new Color(255, 214, 88), Main.rand.NextFloat(1.1f, 1.7f));
-                d.noGravity = true;
+                    false,
+                    Main.rand.NextFloat(-10, 10)));
             }
 
-            if ((int)Projectile.localAI[0] % 3 == 0)
+            if (postTrigger && Main.rand.NextBool(3))
             {
                 GeneralParticleHandler.SpawnParticle(new CustomSpark(
-                    Projectile.Center + Main.rand.NextVector2Circular(10f, 10f),
-                    -travelDirection.RotatedByRandom(0.3f) * Main.rand.NextFloat(2f, 6f),
+                    Projectile.Center + Main.rand.NextVector2Circular(60f, 60f),
+                    -Projectile.velocity * Main.rand.NextFloat(0.2f, 1f),
                     "CalamityMod/Particles/Sparkle",
                     false,
-                    Main.rand.Next(12, 18),
-                    Main.rand.NextFloat(0.42f, 0.78f),
-                    Main.rand.NextBool(3) ? Color.White : new Color(255, 190, 54),
-                    new Vector2(0.24f, 0.95f),
-                    true,
-                    true,
-                    shrinkSpeed: 0.16f));
+                    Main.rand.Next(24, 36),
+                    Main.rand.NextFloat(1.0f, 1.2f),
+                    new Color(255, 214, 88),
+                    new Vector2(0.4f, 1f)));
             }
         }
 
@@ -867,6 +739,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                     Projectile.localNPCHitCooldown = ImpaleTickInterval;
                     Projectile.timeLeft = ImpaleTickInterval * (ImpaleTickCount + 3);
                     Projectile.netUpdate = true;
+                    if (SoundEngine.TryGetActiveSound(spinSoundSlot, out ActiveSound impaleSpin))
+                        impaleSpin.Stop();
                     TriggerSlamImpact(owner, target);
                 }
                 else
@@ -919,6 +793,17 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             }
         }
 
+        public override void OnKill(int timeLeft)
+        {
+            if (SoundEngine.TryGetActiveSound(spinSoundSlot, out ActiveSound spin))
+                spin.Stop();
+
+            // Neptune's OnKill always bursts dust regardless of cause (hit vs. timing out);
+            // hasExploded guards against double-firing when a state already triggered it.
+            if (Projectile.ai[0] == StateRightThrow)
+                SelfDestructIntoFireballs(Main.player[Projectile.owner]);
+        }
+
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D texture = ModContent.Request<Texture2D>(Texture).Value;
@@ -937,7 +822,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
 
                 Main.spriteBatch.SetBlendState(BlendState.Additive);
                 if (Projectile.ai[0] == StateRightThrow)
-                    DrawRightThrowSpinDisc(drawPos, travelDirection);
+                    DrawRightThrowSpinDisc(drawPos);
 
                 for (int i = 0; i < 5; i++)
                 {
@@ -1004,26 +889,30 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             return false;
         }
 
-        private void DrawRightThrowSpinDisc(Vector2 drawPos, Vector2 travelDirection)
+        // Ports Neptune's PreDraw spin-smear exactly: the smear rotation is a multiple of
+        // Projectile.rotation itself (not wall-clock time), so it visibly spins faster as
+        // the blade's own spin rate (tied to fall speed) climbs. Same two textures Neptune
+        // uses (CircularSmearSmokey + SemiCircularSmearSwipe), recolored to our own palette,
+        // brighter/bigger once past the power-surge trigger — matching spinMode2.
+        private void DrawRightThrowSpinDisc(Vector2 drawPos)
         {
-            Texture2D circular = ModContent.Request<Texture2D>("CalamityMod/Particles/CircularSmearFire3").Value;
-            Texture2D semi = ModContent.Request<Texture2D>("CalamityMod/Particles/SemiCircularSmearSwipe").Value;
-            float spin = Main.GlobalTimeWrappedHourly * 7.2f + Projectile.rotation;
-            float intensity = Projectile.ai[1] >= RightThrowSlamming ? 1.1f : 0.78f;
+            Texture2D smoke = ModContent.Request<Texture2D>("CalamityMod/Particles/CircularSmearSmokey").Value;
+            Texture2D swipe = ModContent.Request<Texture2D>("CalamityMod/Particles/SemiCircularSmearSwipe").Value;
+            bool postTrigger = Projectile.ai[1] == RightThrowTracking;
             Color gold = new Color(255, 214, 88) with { A = 0 };
-            Color white = Color.White with { A = 0 };
+            Color orange = new Color(255, 111, 34) with { A = 0 };
 
-            Main.EntitySpriteDraw(semi, drawPos, null,
-                gold * 0.54f * intensity * Projectile.Opacity,
-                spin * 1.45f,
-                semi.Size() * 0.5f,
-                RightThrowSpinSmearScale * Projectile.scale * 0.95f,
-                travelDirection.X < 0f ? SpriteEffects.FlipHorizontally : SpriteEffects.None);
-            Main.EntitySpriteDraw(circular, drawPos, null,
-                white * 0.28f * intensity * Projectile.Opacity,
-                -spin * 1.15f,
-                circular.Size() * 0.5f,
-                RightThrowSpinSmearScale * Projectile.scale * 0.78f,
+            Main.EntitySpriteDraw(swipe, drawPos, null,
+                (postTrigger ? gold : orange) * 0.55f,
+                Projectile.rotation * Main.rand.NextFloat(1.6f, 1.7f),
+                swipe.Size() * 0.5f,
+                (postTrigger ? 1.6f : 1.4f) * Main.rand.NextFloat(0.8f, 1.15f) * Projectile.scale,
+                SpriteEffects.None);
+            Main.EntitySpriteDraw(smoke, drawPos, null,
+                (postTrigger ? gold : orange) * 0.75f,
+                Projectile.rotation * Main.rand.NextFloat(1.2f, 1.3f),
+                smoke.Size() * 0.5f,
+                (postTrigger ? 1.4f : 1.2f) * Projectile.scale,
                 SpriteEffects.None);
         }
     }

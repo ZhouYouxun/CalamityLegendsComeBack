@@ -45,8 +45,9 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
         public override void PostUpdate()
         {
-            if (HoldingPristineFury && MarkQueueCount > 0 && UltimateEnergy < UltimateEnergyMax)
-                UltimateEnergy = Math.Min(UltimateEnergyMax, UltimateEnergy + 1 + MarkQueueCount);
+            // Charges purely from holding the weapon; deliberately independent of the left-click mark queue.
+            if (HoldingPristineFury && UltimateEnergy < UltimateEnergyMax)
+                UltimateEnergy = Math.Min(UltimateEnergyMax, UltimateEnergy + 1);
         }
 
         // Pushes a new mark to the back of the queue. If full, evicts the oldest (index 0).

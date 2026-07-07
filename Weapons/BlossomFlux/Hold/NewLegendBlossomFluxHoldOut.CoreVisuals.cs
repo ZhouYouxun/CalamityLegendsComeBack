@@ -100,7 +100,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             DrawSHPCMagicCore(CurrentPreset, 0.18f, 0f, false, true);
 
             if (rightChargeActive && reloadTimer <= 0)
+            {
                 DrawSHPCRightChargeVisuals(CurrentPreset, chargeGlow);
+                UpdateRightChargeHaloSpawning(ChargeCompletion);
+            }
             else
                 DrawSHPCLeftAttackVisuals(CurrentPreset, leftFlash);
 

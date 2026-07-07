@@ -16,7 +16,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.ZhuangFangYiPet
     {
         private const int StrongAttackCooldown = 17 * 60;
         private const int HarmonyAttackCooldown = 3 * 60;
-        private const int WeakAttackInterval = 25 * 60;
+        private const int WeakAttackInterval = 90;
         private const int CandidateResolveDelay = 4;
 
         private readonly List<int> strongAttackCandidates = new List<int>();
@@ -43,7 +43,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.ZhuangFangYiPet
 
         public override void PostUpdateEquips()
         {
-            if (!HasAzureThunderInInventory() || Player.dead)
+            if (!IsHoldingAzureThunder() || Player.dead)
                 return;
 
             if (!AnyBossAlive() && ModContent.TryFind<ModBuff>("CalamityMod", "DoGExtremeGravity", out ModBuff extremeGravity))
@@ -59,7 +59,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.ZhuangFangYiPet
             if (StrongAttackCooldownTimer > 0)
                 StrongAttackCooldownTimer--;
 
-            if (!HasAzureThunderInInventory() || Player.dead)
+            if (!IsHoldingAzureThunder() || Player.dead)
             {
                 ResetPetRuntimeState();
                 return;
@@ -78,19 +78,21 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.ZhuangFangYiPet
 
         public bool HasAzureThunderInInventory()
         {
+            return IsHoldingAzureThunder();
+        }
+
+        public bool IsHoldingAzureThunder()
+        {
             return TryGetAzureThunderItem(out _);
         }
 
         public bool TryGetAzureThunderItem(out Item azureThunder)
         {
-            for (int i = 0; i < Player.inventory.Length; i++)
+            Item item = Player.HeldItem;
+            if (item != null && !item.IsAir && item.type == ModContent.ItemType<AzureThunder>())
             {
-                Item item = Player.inventory[i];
-                if (item != null && !item.IsAir && item.type == ModContent.ItemType<AzureThunder>())
-                {
-                    azureThunder = item;
-                    return true;
-                }
+                azureThunder = item;
+                return true;
             }
 
             azureThunder = null;
@@ -181,6 +183,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.ZhuangFangYiPet
         public void QueueStrongAttackCandidate(NPC target)
         {
             if (Main.myPlayer != Player.whoAmI ||
+                !IsHoldingAzureThunder() ||
                 StrongAttackCooldownTimer > 0 ||
                 target == null ||
                 !target.active ||
@@ -234,13 +237,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.ZhuangFangYiPet
 
         private void HandleWeakAttackTimer()
         {
-            if (Player.HeldItem != null && !Player.HeldItem.IsAir && Player.HeldItem.type == ModContent.ItemType<AzureThunder>())
-            {
-                weakAttackTimer = WeakAttackInterval;
-                return;
-            }
-
-            if (transformRequested || Player.HasBuff(ModContent.BuffType<AzureThunderHarmonyBuff>()))
+            if (!IsHoldingAzureThunder() || transformRequested)
             {
                 weakAttackTimer = WeakAttackInterval;
                 return;
@@ -255,7 +252,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.ZhuangFangYiPet
                 return;
             }
 
-            NPC target = FindNearestPetTarget(Player.Center, 1600f, requireElectricDebuff: true);
+            NPC target = FindNearestPetTarget(Player.Center, 1600f, requireElectricDebuff: false);
             if (target != null)
             {
                 queuedWeakTarget = target.whoAmI;

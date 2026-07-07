@@ -6,6 +6,7 @@ using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Generic;
 using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
@@ -67,10 +68,17 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         private const int UltimateRecoveryFrames = 20;
         private const int UltimateEchoSpreadFrames = 68;
 
+        // 目标选取：boss 在场时优先在其身上密集轰炸，否则按屏幕内敌人挑选目标点，两两之间尽量保持间距。
+        private const int MaxBossEchoes = 6;
+        private const int MaxCrowdEchoes = 8;
+        private const float MinEchoSpacing = 64f;
+
+        private static readonly Color UltimateThemeColor = new(255, 224, 92);
+
         private int ultimatePhase;
         private int ultimateTimer;
         private int ultimateEchoesFired;
-        private PristineFuryMark[] ultimateMarkSnapshot = Array.Empty<PristineFuryMark>();
+        private List<Vector2> ultimateImpactSpots = new();
         private Vector2 ultimateAnchor;
 
         internal int LeftTimer;
@@ -604,19 +612,18 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         private bool CanStartUltimate()
         {
             PristineFuryPlayer pfPlayer = Owner.GetModPlayer<PristineFuryPlayer>();
-            return pfPlayer.MarkQueueCount > 0 && pfPlayer.UltimateReady;
+            return pfPlayer.UltimateReady;
         }
 
         private void StartUltimateCharge()
         {
             PristineFuryPlayer pfPlayer = Owner.GetModPlayer<PristineFuryPlayer>();
-            ultimateMarkSnapshot = new PristineFuryMark[pfPlayer.MarkQueueCount];
-            Array.Copy(pfPlayer.MarkQueue, ultimateMarkSnapshot, pfPlayer.MarkQueueCount);
             pfPlayer.UltimateEnergy = 0;
 
             ultimatePhase = 1;
             ultimateTimer = 0;
             ultimateEchoesFired = 0;
+            ultimateImpactSpots = new List<Vector2>();
 
             ResetRightCharge();
             hookChargeTimer = 0;
@@ -663,9 +670,6 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 ultimatePhase = 2;
                 ultimateTimer = 0;
                 SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ArcNovaDiffuserCompleteCharge") { Volume = 0.6f, Pitch = 0.15f }, Projectile.Center);
-
-                if (Owner.whoAmI == Main.myPlayer)
-                    CombatText.NewText(Owner.getRect(), new Color(255, 224, 92), "劫火已锚定，按左键释放", true);
             }
         }
 
@@ -688,7 +692,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         {
             ultimatePhase = 0;
             ultimateTimer = 0;
-            ultimateMarkSnapshot = Array.Empty<PristineFuryMark>();
+            ultimateImpactSpots = new List<Vector2>();
             SoundEngine.PlaySound(SoundID.Item27 with { Volume = 0.5f, Pitch = -0.4f }, Projectile.Center);
         }
 
@@ -697,10 +701,8 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             ultimatePhase = 3;
             ultimateTimer = 0;
             ultimateEchoesFired = 0;
-            ultimateAnchor = GetMouseWorld();
-
-            if (Owner.whoAmI == Main.myPlayer)
-                CombatText.NewText(Owner.getRect(), new Color(255, 90, 30), "劫火重燃！", true);
+            ultimateImpactSpots = ComputeUltimateImpactSpots();
+            ultimateAnchor = ComputeImpactCentroid(ultimateImpactSpots);
 
             Owner.SetScreenshake(7f);
             SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/Providence/ProvidenceHolyBlastShoot") { Volume = 0.9f, Pitch = -0.05f }, Projectile.Center);
@@ -713,13 +715,13 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         {
             ultimateTimer++;
 
-            int markCount = ultimateMarkSnapshot.Length;
-            if (ultimateEchoesFired < markCount)
+            int targetCount = ultimateImpactSpots.Count;
+            if (ultimateEchoesFired < targetCount)
             {
-                int triggerFrame = markCount <= 1 ? 0 : ultimateEchoesFired * UltimateEchoSpreadFrames / markCount;
+                int triggerFrame = targetCount <= 1 ? 0 : ultimateEchoesFired * UltimateEchoSpreadFrames / targetCount;
                 if (ultimateTimer >= triggerFrame)
                 {
-                    SpawnUltimateEchoPillar(ultimateMarkSnapshot[ultimateEchoesFired], ultimateEchoesFired, markCount);
+                    SpawnUltimateEchoPillar(ultimateImpactSpots[ultimateEchoesFired]);
                     ultimateEchoesFired++;
                 }
             }
@@ -741,21 +743,128 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             {
                 ultimatePhase = 0;
                 ultimateTimer = 0;
-                ultimateMarkSnapshot = Array.Empty<PristineFuryMark>();
+                ultimateImpactSpots = new List<Vector2>();
             }
         }
 
-        private void SpawnUltimateEchoPillar(PristineFuryMark mark, int index, int count)
+        // 释放瞬间根据屏幕内的敌人分布挑选落点：场上有 boss 就在其身上密集轰炸多枚，
+        // 否则从屏幕内的敌人里挑选最多 MaxCrowdEchoes 个目标，两两之间通过统一的间距算法保持距离。
+        private List<Vector2> ComputeUltimateImpactSpots()
         {
-            float angle = MathHelper.TwoPi * index / count + MathHelper.PiOver4;
-            float radius = count <= 1 ? 0f : MathHelper.Lerp(120f, 46f, index / (float)(count - 1));
-            Vector2 spot = ultimateAnchor + angle.ToRotationVector2() * radius;
+            Rectangle screenRect = new(
+                (int)Main.screenPosition.X, (int)Main.screenPosition.Y,
+                Main.screenWidth, Main.screenHeight);
+
+            List<NPC> onScreenEnemies = new();
+            for (int i = 0; i < Main.maxNPCs; i++)
+            {
+                NPC npc = Main.npc[i];
+                if (npc.CanBeChasedBy(Owner) && npc.Hitbox.Intersects(screenRect))
+                    onScreenEnemies.Add(npc);
+            }
+
+            if (onScreenEnemies.Count == 0)
+                return new List<Vector2> { GetMouseWorld() };
+
+            NPC boss = null;
+            foreach (NPC npc in onScreenEnemies)
+            {
+                if (npc.boss && (boss == null || npc.lifeMax > boss.lifeMax))
+                    boss = npc;
+            }
+
+            List<Vector2> candidates = new();
+            int desiredCount;
+            float spacing;
+
+            if (boss != null)
+            {
+                desiredCount = MaxBossEchoes;
+                Rectangle hitbox = boss.Hitbox;
+                spacing = Math.Max(36f, Math.Min(hitbox.Width, hitbox.Height) / (desiredCount * 0.7f));
+
+                for (int i = 0; i < desiredCount * 3; i++)
+                {
+                    Vector2 jitter = new(
+                        Main.rand.NextFloat(hitbox.Width * -0.42f, hitbox.Width * 0.42f),
+                        Main.rand.NextFloat(hitbox.Height * -0.3f, hitbox.Height * 0.3f));
+                    candidates.Add(boss.Center + jitter);
+                }
+            }
+            else
+            {
+                desiredCount = Math.Min(MaxCrowdEchoes, onScreenEnemies.Count);
+                spacing = MinEchoSpacing;
+                onScreenEnemies.Sort((a, b) =>
+                    Vector2.DistanceSquared(a.Center, Owner.Center).CompareTo(Vector2.DistanceSquared(b.Center, Owner.Center)));
+
+                foreach (NPC npc in onScreenEnemies)
+                    candidates.Add(npc.Bottom);
+            }
+
+            List<Vector2> spots = SelectSpacedPoints(candidates, desiredCount, spacing);
+            return spots.Count > 0 ? spots : new List<Vector2> { GetMouseWorld() };
+        }
+
+        // 贪心挑选：按候选顺序依次纳入，只要与已选点的距离达到 minSpacing 就采用；
+        // 若因间距限制凑不够数量，再从剩余候选里补齐，保证一定命中足够多的目标。
+        private static List<Vector2> SelectSpacedPoints(List<Vector2> candidates, int desiredCount, float minSpacing)
+        {
+            List<Vector2> selected = new();
+            float spacingSq = minSpacing * minSpacing;
+
+            foreach (Vector2 candidate in candidates)
+            {
+                if (selected.Count >= desiredCount)
+                    break;
+
+                bool farEnough = true;
+                foreach (Vector2 chosen in selected)
+                {
+                    if (Vector2.DistanceSquared(candidate, chosen) < spacingSq)
+                    {
+                        farEnough = false;
+                        break;
+                    }
+                }
+
+                if (farEnough)
+                    selected.Add(candidate);
+            }
+
+            if (selected.Count < desiredCount)
+            {
+                foreach (Vector2 candidate in candidates)
+                {
+                    if (selected.Count >= desiredCount)
+                        break;
+                    if (!selected.Contains(candidate))
+                        selected.Add(candidate);
+                }
+            }
+
+            return selected;
+        }
+
+        private static Vector2 ComputeImpactCentroid(List<Vector2> spots)
+        {
+            if (spots.Count == 0)
+                return Vector2.Zero;
+
+            Vector2 sum = Vector2.Zero;
+            foreach (Vector2 spot in spots)
+                sum += spot;
+            return sum / spots.Count;
+        }
+
+        private void SpawnUltimateEchoPillar(Vector2 spot)
+        {
             // NewProjectile treats the given position as the projectile's center, so offset upward
             // by half the column height here to make the column's bottom (its impact point) land on spot.
             Vector2 spawnCenter = new(spot.X, spot.Y - PristineFuryUltimateEchoPillar.ColumnHeight * 0.5f);
 
-            int damage = GetScaledDamage(PF_Balance.GetUltimateEchoDamageMultiplier(), mark);
-            int pillarIndex = Projectile.NewProjectile(
+            int damage = GetRightScaledDamage(PF_Balance.GetUltimateEchoDamageMultiplier());
+            Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
                 spawnCenter,
                 Vector2.Zero,
@@ -763,13 +872,6 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 damage,
                 Projectile.knockBack,
                 Projectile.owner);
-            PFLeftEffectRules.ApplyTheme(pillarIndex, mark);
-
-            if (!Main.dedServ && Owner.whoAmI == Main.myPlayer)
-            {
-                Rectangle textArea = new((int)spot.X - 10, (int)spot.Y - 60, 20, 20);
-                CombatText.NewText(textArea, PristineFuryMarkHelper.GetColor(mark), PristineFuryMarkHelper.GetName(mark), dramatic: false);
-            }
         }
 
         private void SpawnUltimateFinisher()
@@ -796,17 +898,17 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
             Vector2 core = Owner.Center;
 
-            if (ultimateMarkSnapshot.Length > 0 && Main.rand.NextBool(2))
+            if (Main.rand.NextBool(2))
             {
-                Color accent = PristineFuryMarkHelper.GetColor(ultimateMarkSnapshot[Main.rand.Next(ultimateMarkSnapshot.Length)]);
+                Color accent = Color.Lerp(UltimateThemeColor, Color.White, Main.rand.NextFloat(0.15f, 0.5f));
                 float angle = Main.rand.NextFloat(MathHelper.TwoPi);
                 float radius = MathHelper.Lerp(120f, 10f, progress);
                 Vector2 pos = core + angle.ToRotationVector2() * radius;
                 Vector2 vel = (core - pos).SafeNormalize(Vector2.Zero) * MathHelper.Lerp(1f, 4f, progress);
-                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(pos, vel, false, 16, 0.32f, Color.Lerp(accent, Color.White, 0.3f), true, false, true));
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(pos, vel, false, 16, 0.32f, accent, true, false, true));
             }
 
-            Color gold = new(255, 224, 92);
+            Color gold = UltimateThemeColor;
             Lighting.AddLight(core, gold.ToVector3() * (0.4f + progress * 0.8f));
 
             if (progress >= 0.999f && Main.rand.NextBool(6))
@@ -1076,7 +1178,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
         private void DrawUltimateCore()
         {
-            if (ultimatePhase == 0 || ultimatePhase >= 4 || Main.dedServ || ultimateMarkSnapshot.Length == 0)
+            if (ultimatePhase == 0 || ultimatePhase >= 4 || Main.dedServ)
                 return;
 
             float charge = ultimatePhase == 1 ? MathHelper.Clamp(ultimateTimer / (float)UltimateChargeFrames, 0f, 1f) : 1f;
@@ -1088,10 +1190,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             Texture2D ring = ModContent.Request<Texture2D>(NewLegendPristineFuryHoldOut_DragonDrawData.DragonMouthChargeRingTexturePath()).Value;
 
             Vector2 tip = GunTipPosition - Main.screenPosition;
-            Color gold = new(255, 224, 92);
-            int cycle = (int)(Main.GlobalTimeWrappedHourly * 2.2f) % ultimateMarkSnapshot.Length;
-            Color accent = PristineFuryMarkHelper.GetColor(ultimateMarkSnapshot[cycle]);
-            Color theme = (Color.Lerp(accent, gold, 0.5f) with { A = 0 }) * charge;
+            Color theme = (UltimateThemeColor with { A = 0 }) * charge;
             Color white = (Color.White with { A = 0 }) * charge;
             float pulse = 0.9f + 0.1f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * (ultimatePhase == 2 ? 9f : 5f));
 
@@ -1106,12 +1205,13 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
             Main.EntitySpriteDraw(ring, tip, null, theme * (0.3f + charge * 0.2f), Projectile.rotation + Main.GlobalTimeWrappedHourly * 1.1f, ring.Size() * 0.5f, (0.12f + charge * 0.3f) * pulse, SpriteEffects.None, 0f);
 
-            for (int i = 0; i < ultimateMarkSnapshot.Length; i++)
+            const int satelliteCount = 6;
+            for (int i = 0; i < satelliteCount; i++)
             {
-                float angle = MathHelper.TwoPi * i / ultimateMarkSnapshot.Length + Main.GlobalTimeWrappedHourly * 1.6f;
+                float angle = MathHelper.TwoPi * i / satelliteCount + Main.GlobalTimeWrappedHourly * 1.6f;
                 Vector2 orbit = angle.ToRotationVector2() * (14f + charge * 10f);
-                Color markColor = (PristineFuryMarkHelper.GetColor(ultimateMarkSnapshot[i]) with { A = 0 }) * charge;
-                Main.EntitySpriteDraw(bloom, tip + orbit, null, markColor * 0.75f, angle, bloom.Size() * 0.5f, charge * 0.05f * pulse, SpriteEffects.None, 0f);
+                Color satelliteColor = Color.Lerp(theme, white, 0.25f) * 0.75f;
+                Main.EntitySpriteDraw(bloom, tip + orbit, null, satelliteColor, angle, bloom.Size() * 0.5f, charge * 0.05f * pulse, SpriteEffects.None, 0f);
             }
 
             if (ultimatePhase == 2)

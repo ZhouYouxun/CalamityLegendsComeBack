@@ -202,9 +202,9 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
                 direction = 1;
 
             Projectile.spriteDirection = Projectile.direction = direction;
-            Projectile.rotation = velocity.ToRotation() +
-                (Projectile.spriteDirection == 1 ? 0f : MathHelper.Pi) +
-                Projectile.spriteDirection * VisualRotationOffset;
+            // Direction-independent base rotation — mirroring is handled by an actual
+            // horizontal flip at draw time (see PreDraw), not by faking it with rotation.
+            Projectile.rotation = velocity.ToRotation() + VisualRotationOffset;
         }
 
         private void StickToNPC(NPC target, int maxStick)
@@ -383,6 +383,14 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
             Texture2D texture = TextureAssets.Projectile[Type].Value;
             Texture2D glow = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/Vesuvius/NewVesuviusGlow").Value;
 
+            // Mirror via an actual horizontal flip (matching the holdout) instead of faking
+            // it with rotation — otherwise leftward throws end up rotated 180 degrees off.
+            bool facingLeft = Projectile.spriteDirection == -1;
+            SpriteEffects flip = facingLeft ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+            float rotationCorrection = facingLeft ? MathHelper.PiOver2 : 0f;
+            float drawRotation = Projectile.rotation + rotationCorrection;
+            Vector2 origin = texture.Size() * 0.5f;
+
             Main.spriteBatch.SetBlendState(BlendState.Additive);
 
             // Spinning fire trail — staff tumbles through the air leaving molten streaks
@@ -393,8 +401,8 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
                 Color trailC = VesuviusProjectileVisuals.LavaOrange * (t * 0.42f);
                 Main.EntitySpriteDraw(texture, oldCenter - Main.screenPosition, null,
                     trailC,
-                    Projectile.oldRot[i], texture.Size() * 0.5f,
-                    MathHelper.Lerp(0.6f, 1f, t) * Projectile.scale, SpriteEffects.None);
+                    Projectile.oldRot[i] + rotationCorrection, origin,
+                    MathHelper.Lerp(0.6f, 1f, t) * Projectile.scale, flip);
             }
 
             // Golden outline/border effect (Additive blending with LavaGold)
@@ -405,7 +413,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
             {
                 Vector2 offset = (MathHelper.TwoPi * i / borderCopies + Main.GlobalTimeWrappedHourly * 1.6f).ToRotationVector2() * borderRadius;
                 Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition + offset, null,
-                    goldBorderC * 0.25f, Projectile.rotation, texture.Size() * 0.5f, 1.05f * Projectile.scale, SpriteEffects.None);
+                    goldBorderC * 0.25f, drawRotation, origin, 1.05f * Projectile.scale, flip);
             }
 
             // Main weapon sprite — spinning staff
@@ -413,12 +421,12 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
             Color glowC = VesuviusProjectileVisuals.LavaGold * 0.75f;
             Main.EntitySpriteDraw(glow, Projectile.Center - Main.screenPosition, null,
                 glowC,
-                Projectile.rotation, glow.Size() * 0.5f, 1.05f * Projectile.scale, SpriteEffects.None);
+                drawRotation, glow.Size() * 0.5f, 1.05f * Projectile.scale, flip);
 
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
 
             Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null,
-                lightColor, Projectile.rotation, texture.Size() * 0.5f, 1.05f * Projectile.scale, SpriteEffects.None);
+                lightColor, drawRotation, origin, 1.05f * Projectile.scale, flip);
 
             return false;
         }

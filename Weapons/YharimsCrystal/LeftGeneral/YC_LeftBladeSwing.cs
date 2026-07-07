@@ -7,6 +7,7 @@ using CalamityMod.Projectiles.BaseProjectiles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
+using ReLogic.Utilities;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
@@ -66,6 +67,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
         // Right-click charge-to-throw (1 second hold)
         private int rightChargeTimer = 0;
         private const int RightChargeFrames = 60;
+        private float chargeSpinAngle;
+        private SlotId chargeSpinSoundSlot;
 
         // Rotation/positioning. bladeAngle is the single authority for the visible sword angle.
         private float bladeAngle;
@@ -216,6 +219,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             idleTimer = 0;
             willDie = false;
             rightChargeTimer = 0;
+            chargeSpinAngle = 0f;
             auricJudgementQueued = false;
             auricJudgementReleased = false;
 
@@ -348,7 +352,10 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                 }
             }
             else if (rightChargeTimer > 0)
+            {
                 rightChargeTimer = 0;
+                StopChargeSpinSound();
+            }
 
             chargeBorderIntensity = MathHelper.Lerp(chargeBorderIntensity, rightChargeTimer / (float)RightChargeFrames, 0.3f);
 
@@ -437,15 +444,73 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             CanHit = false;
             postSwing = false;
             rightChargeTimer = 0;
+            StopChargeSpinSound();
         }
 
         private void RunChargeHold()
         {
+            if (rightChargeTimer == 1)
+            {
+                chargeSpinAngle = 0f;
+                chargeSpinSoundSlot = SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/SpinningWoosh") { Volume = 0.01f, Pitch = -0.35f, IsLooped = true }, Projectile.Center);
+            }
+
             CanHit = false;
             postSwing = false;
             fadeIn = MathHelper.Lerp(fadeIn, 0f, 0.22f);
             SmoothBladeToward(DownwardPrepBladeAngle, ChargeMaxTurnSpeed);
             ApplyChargeArmPose();
+            EmitChargeSpinFX();
+        }
+
+        private void StopChargeSpinSound()
+        {
+            if (SoundEngine.TryGetActiveSound(chargeSpinSoundSlot, out ActiveSound spin))
+                spin.Stop();
+        }
+
+        // Rotating vortex telegraph for the 3-second right-click hold: a pair of
+        // counter-spinning smears orbiting the blade's aim point, speeding up and
+        // brightening from BladeOrange toward BladeGold as the throw nears.
+        private void EmitChargeSpinFX()
+        {
+            float chargeProgress = rightChargeTimer / (float)RightChargeFrames;
+
+            if (SoundEngine.TryGetActiveSound(chargeSpinSoundSlot, out ActiveSound spin) && spin.IsPlaying)
+            {
+                spin.Position = Projectile.Center;
+                spin.Volume = MathHelper.Lerp(0.05f, 0.75f, chargeProgress);
+                spin.Pitch = MathHelper.Lerp(-0.35f, 0.35f, chargeProgress);
+            }
+
+            if (Main.dedServ)
+                return;
+
+            chargeSpinAngle += MathHelper.Lerp(0.16f, 0.62f, chargeProgress);
+            Vector2 vortexCenter = Owner.MountedCenter + CurrentAimDirection.SafeNormalize(Vector2.UnitX * lockedFacingDirection) * (60f + chargeProgress * 40f);
+
+            GeneralParticleHandler.SpawnParticle(new CircularSmearVFX(
+                vortexCenter,
+                Color.Lerp(BladeOrange, BladeGold, chargeProgress) with { A = 0 } * (0.35f + chargeProgress * 0.5f),
+                chargeSpinAngle,
+                (0.55f + chargeProgress * 0.85f) * Projectile.scale));
+
+            GeneralParticleHandler.SpawnParticle(new CircularSmearVFX(
+                vortexCenter,
+                BladeWhite with { A = 0 } * (0.18f + chargeProgress * 0.3f),
+                -chargeSpinAngle * 1.4f,
+                (0.32f + chargeProgress * 0.5f) * Projectile.scale));
+
+            if (Main.rand.NextBool(3))
+            {
+                Vector2 orbitOffset = chargeSpinAngle.ToRotationVector2() * (26f + chargeProgress * 30f);
+                Vector2 tangent = orbitOffset.RotatedBy(MathHelper.PiOver2).SafeNormalize(Vector2.Zero);
+                Dust dust = Dust.NewDustPerfect(vortexCenter + orbitOffset, DustID.GoldFlame, tangent * Main.rand.NextFloat(2f, 5f + chargeProgress * 6f), 0, Main.rand.NextBool(3) ? BladeWhite : BladeGold, Main.rand.NextFloat(0.8f, 1.3f));
+                dust.noGravity = true;
+            }
+
+            if (rightChargeTimer > 0 && rightChargeTimer % 60 == 0)
+                SoundEngine.PlaySound(SoundID.Item74 with { Volume = 0.55f, Pitch = MathHelper.Lerp(-0.3f, 0.2f, chargeProgress) }, Projectile.Center);
         }
 
         private void RunIdle()
@@ -617,6 +682,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
 
         private void ThrowBlade()
         {
+            StopChargeSpinSound();
+
             Vector2 launchDirection = -Vector2.UnitY;
             Vector2 launchPosition = GetBladeReleasePosition();
 
@@ -625,8 +692,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                 launchPosition,
                 Vector2.Zero,
                 ModContent.ProjectileType<YC_ThrownBlade>(),
-                (int)(Projectile.damage * 1.85f),
-                Projectile.knockBack * 1.5f,
+                (int)(Projectile.damage * 2.3f),
+                Projectile.knockBack * 2f,
                 Projectile.owner,
                 3f,
                 0f,
@@ -640,18 +707,26 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                 Main.projectile[thrown].rotation = bladeAngle;
             }
 
-            Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, 8f);
+            Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, 10f);
             SoundEngine.PlaySound(SoundID.Item84 with { Volume = 1f, Pitch = -0.35f }, Owner.Center);
             SoundEngine.PlaySound(SoundID.Item74 with { Volume = 0.6f, Pitch = 0.12f }, Owner.Center);
 
             if (!Main.dedServ)
             {
                 GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(launchPosition, Vector2.Zero, BladeGold, Vector2.One, launchDirection.ToRotation(), 0.12f, 2.4f, 22));
-                for (int i = 0; i < 42; i++)
+                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(launchPosition, Vector2.Zero, BladeOrange, Vector2.One, launchDirection.ToRotation(), 0.07f, 1.7f, 16));
+                for (int i = 0; i < 48; i++)
                 {
-                    Vector2 vel = launchDirection.RotatedByRandom(0.72f) * Main.rand.NextFloat(4f, 19f);
+                    Vector2 vel = launchDirection.RotatedByRandom(0.85f) * Main.rand.NextFloat(4f, 22f);
                     Dust d = Dust.NewDustPerfect(launchPosition + Main.rand.NextVector2Circular(18f, 18f), DustID.GoldFlame, vel, 0, Main.rand.NextBool(3) ? BladeWhite : BladeGold, Main.rand.NextFloat(1.0f, 1.6f));
                     d.noGravity = true;
+                }
+
+                for (int i = 0; i < 10; i++)
+                {
+                    float angle = MathHelper.TwoPi * i / 10;
+                    Vector2 sparkVel = angle.ToRotationVector2() * Main.rand.NextFloat(6f, 12f);
+                    GeneralParticleHandler.SpawnParticle(new CustomSpark(launchPosition, sparkVel, "CalamityMod/Particles/Sparkle", false, Main.rand.Next(16, 24), Main.rand.NextFloat(0.6f, 1.05f), BladeGold, new Vector2(0.3f, 1f), true, true, shrinkSpeed: 0.14f));
                 }
             }
 
