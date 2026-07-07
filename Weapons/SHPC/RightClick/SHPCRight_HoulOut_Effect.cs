@@ -672,7 +672,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 float speedFactor = (float)Math.Pow(1f - distFromCenter, 1.5f);
                 float speed = MathHelper.Lerp(10f, 18f, speedFactor);
 
-                Projectile.NewProjectile(
+                int orb = Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
                     GunTipPosition,
                     dir.RotatedBy(angle) * speed,
@@ -682,6 +682,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                     Projectile.owner,
                     effectID
                 );
+
+                if (Main.projectile.IndexInRange(orb))
+                    Main.projectile[orb].netUpdate = true;
             }
 
             NewLegendSHPC.GainEXFromLeftShot(player, orbCount);

@@ -150,7 +150,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             if (Main.projectile.IndexInRange(explosion))
             {
                 Projectile exp = Main.projectile[explosion];
-                exp.Resize(500, 500);
+                exp.Resize(300, 300);
                 exp.Center = Projectile.Center;
                 exp.DamageType = DamageClass.Magic;
                 exp.netUpdate = true;

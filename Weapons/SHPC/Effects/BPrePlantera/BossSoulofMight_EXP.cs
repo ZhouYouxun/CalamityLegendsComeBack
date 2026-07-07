@@ -18,8 +18,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
         public override void SetDefaults()
         {
-            Projectile.width = 550;
-            Projectile.height = 550;
+            Projectile.width = 300;
+            Projectile.height = 300;
             Projectile.friendly = true;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
@@ -27,7 +27,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             Projectile.penetrate = -1;
             Projectile.timeLeft = 60;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = 8;
+            Projectile.localNPCHitCooldown = 16;
         }
 
         public override void AI()
@@ -37,7 +37,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             Lighting.AddLight(Projectile.Center, 0.45f * lightFactor, 0.7f * lightFactor, 1.9f * lightFactor);
 
             // ===== 2. 生命周期控制 =====
-            float spawnCount = 42f;
+            float spawnCount = 14f;
 
             if (Projectile.ai[0] > 180f)
                 spawnCount -= (Projectile.ai[0] - 180f) / 2f;
@@ -69,7 +69,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
                 Vector2 dir = angle.ToRotationVector2();
 
                 // ===== 半径（保持原本范围，但带一点波动）=====
-                float radius = Main.rand.NextFloat(18f, 56f);
+                float radius = Main.rand.NextFloat(9f, 28f);
 
                 // ===== 速度（保持原有强度）=====
                 Vector2 velocity = dir * radius;
@@ -104,9 +104,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
             if (Projectile.ai[0] % 12f == 0f)
             {
-                for (int i = 0; i < 18; i++)
+                for (int i = 0; i < 6; i++)
                 {
-                    Vector2 velocity = (MathHelper.TwoPi * i / 18f + Main.rand.NextFloat(-0.18f, 0.18f)).ToRotationVector2() * Main.rand.NextFloat(10f, 38f);
+                    Vector2 velocity = (MathHelper.TwoPi * i / 6f + Main.rand.NextFloat(-0.18f, 0.18f)).ToRotationVector2() * Main.rand.NextFloat(5f, 19f);
                     Dust arcDust = Dust.NewDustPerfect(
                         Projectile.Center + Main.rand.NextVector2Circular(24f, 24f),
                         DustID.Electric,

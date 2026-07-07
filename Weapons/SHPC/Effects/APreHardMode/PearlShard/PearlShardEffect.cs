@@ -99,7 +99,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode.PearlShard
                     projectile.owner);
 
                 if (Main.projectile.IndexInRange(pearl))
+                {
                     Main.projectile[pearl].CritChance = projectile.CritChance;
+                    Main.projectile[pearl].netUpdate = true;
+                }
             }
 
             SpawnMuzzlePearls(projectile.Center, forward);
