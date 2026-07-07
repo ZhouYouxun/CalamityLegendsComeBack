@@ -32,7 +32,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
         {
             Item.width = 64;
             Item.height = 64;
-            Item.damage = 22;
+            Item.damage = 17;
             Item.DamageType = DamageClass.Summon;
             Item.mana = 10;
             Item.useTime = 24;
