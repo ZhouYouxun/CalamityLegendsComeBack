@@ -23,13 +23,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             { "Any Mechanical Boss",                        48,    42,    16,   16,      1 },//改成2王后
             { "Plantera",                                   36,    24,    14,   15,      1 },
             { "Golem",                                      42,    30,    15,   20,     21 },
-            { "Plaguebringer Goliath",                      52,    40,    23,   30,     27 },
-            { "Moon Lord",                                  68,    36,    30,   35,     36 },
-            { "Providence",                                 77,    48,    37,   40,     48 },
-            { "Polterghast",                                89,    56,    43,   46,     56 },
-            { "Devourer of Gods",                          103,    70,    50,   53,     70 },
-            { "Yharon",                                    120,    88,    60,   62,     88 },
-            { "Exo Mechs and Supreme Calamitas",           140,   109,    69,   75,    109 }
+            { "Plaguebringer Goliath",                      52,    44,    23,   30,     27 },
+            { "Moon Lord",                                  79,    84,    52,   32,     36 },
+            { "Providence",                                102,   106,    65,   49,     48 },
+            { "Polterghast",                               137,   142,    90,   99,     73 },
+            { "Devourer of Gods",                          153,   169,   102,  115,    106 },
+            { "Yharon",                                    169,   186,   121,  133,    109 },
+            { "Exo Mechs and Supreme Calamitas",           252,   229,   149,  160,    109 }
         };
 
         // Edit primary non-damage knobs here. Columns are:
