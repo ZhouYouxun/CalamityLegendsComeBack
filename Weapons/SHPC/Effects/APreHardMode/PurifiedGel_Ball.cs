@@ -6,6 +6,7 @@ using Terraria.ModLoader;
 using CalamityMod.Dusts;
 using CalamityMod.Particles;
 using Terraria.Audio;
+using Terraria.DataStructures;
 using System;
 using CalamityLegendsComeBack.Weapons.SHPC.RightClick;
 
@@ -15,13 +16,21 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
     {
         public new string LocalizationCategory => "Projectiles.SHPC";
 
+        private const int PhaseStraightFlight = 0;
+        private const int PhaseSlowdown = 1;
+        private const int PhaseHoming = 2;
+        private const int StraightFlightPenetrate = 3;
+        private const int HomingPenetrate = 1;
+        private const int StraightFlightFrames = 40;
+        private const int SlowdownFrames = 12;
+        private const float SlowdownFactor = 0.98f;
+        private const float BounceSpeedRetention = 1f;
         private int timer;
-        private const int MaxRicochets = 1;
-        private const float MinRicochetSpeed = 8f;
-        private const float HomingRange = 920f;
-        private const float MaxHomingSpeed = 16.5f;
-        private const float HomingInertia = 27f;
-        private const float NoTargetDamping = 0.992f;
+        private const float HomingRange = 1280f;
+        private const float MinHomingSpeed = 10.5f;
+        private const float MaxHomingSpeed = 19.5f;
+        private const float HomingInertia = 16f;
+        private const float NoTargetDamping = 0.99f;
         private const float WanderingTurnStrength = 0.006f;
         private static readonly Color PurifiedGelPink = new(255, 140, 200);
         private static readonly Color PurifiedGelBlue = new(120, 200, 255);
@@ -38,13 +47,21 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
             Projectile.width = 20;
             Projectile.height = 20;
             Projectile.friendly = true;
-            Projectile.penetrate = -1;
+            Projectile.penetrate = StraightFlightPenetrate;
             Projectile.timeLeft = 380;
             Projectile.DamageType = DamageClass.Magic;
+            Projectile.tileCollide = true;
             Projectile.ignoreWater = true;
             Projectile.extraUpdates = 1;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = 10;
+        }
+
+        public override void OnSpawn(IEntitySource source)
+        {
+            Projectile.ai[0] = PhaseStraightFlight;
+            Projectile.ai[1] = 0f;
+            Projectile.penetrate = StraightFlightPenetrate;
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -85,8 +102,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
             Projectile.frameCounter++;
             Projectile.frame = Projectile.frameCounter / 3 % Main.projFrames[Type];
             Projectile.rotation += 0.22f;
-            if (Projectile.localAI[0] > 0f)
-                HomeTowardRicochetTarget();
+            UpdateMovementPhase();
 
             Color pink = PurifiedGelPink;
             Color blue = PurifiedGelBlue;
@@ -147,66 +163,102 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
 
         public override bool OnTileCollide(Vector2 oldVelocity)
         {
+            if ((int)Projectile.ai[0] != PhaseStraightFlight)
+                return false;
+
             Vector2 reflected = Projectile.velocity;
             if (Projectile.velocity.X != oldVelocity.X) reflected.X = -oldVelocity.X;
             if (Projectile.velocity.Y != oldVelocity.Y) reflected.Y = -oldVelocity.Y;
             if (reflected == Vector2.Zero) reflected = -oldVelocity;
-            return !TryRicochet(Projectile.Center, oldVelocity, reflected, -1);
+
+            Projectile.velocity = reflected * BounceSpeedRetention;
+            SpawnBounceExplosion(Projectile.Center);
+            EnterSlowdownPhase();
+            return false;
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            Vector2 away = (Projectile.Center - target.Center).SafeNormalize(-Projectile.velocity.SafeNormalize(Vector2.UnitX));
-            if (!TryRicochet(Projectile.Center, Projectile.velocity, away, target.whoAmI))
-                Projectile.Kill();
+            if ((int)Projectile.ai[0] != PhaseStraightFlight)
+                return;
+
+            Vector2 bounceDirection = (Projectile.Center - target.Center).SafeNormalize(-Projectile.velocity.SafeNormalize(Vector2.UnitX));
+            float speed = Math.Max(Projectile.velocity.Length(), 0.1f);
+            Projectile.velocity = bounceDirection * speed * BounceSpeedRetention;
+            SpawnBounceExplosion(Projectile.Center);
+            EnterSlowdownPhase();
         }
 
-        private bool TryRicochet(Vector2 bouncePoint, Vector2 incomingVelocity, Vector2 fallbackDirection, int excludedTarget)
+        private void UpdateMovementPhase()
         {
-            if (Projectile.localAI[0] >= MaxRicochets)
-                return false;
+            int phase = (int)Projectile.ai[0];
 
-            Projectile.localAI[0]++;
-            SpawnBounceExplosion(bouncePoint);
+            if (Projectile.numUpdates != 0)
+            {
+                if (phase == PhaseHoming)
+                    HomeTowardTarget();
 
-            NPC target = FindNearestTarget(HomingRange, excludedTarget);
-            if (target != null)
-                Projectile.localAI[1] = target.whoAmI + 1;
+                return;
+            }
 
-            Vector2 newDirection = target != null
-                ? (target.Center - bouncePoint).SafeNormalize(fallbackDirection.SafeNormalize(Vector2.UnitX))
-                : fallbackDirection.SafeNormalize(incomingVelocity.SafeNormalize(Vector2.UnitX));
+            Projectile.ai[1]++;
 
-            float speed = Math.Max(MinRicochetSpeed, incomingVelocity.Length());
-            Projectile.velocity = newDirection * speed;
+            if (phase == PhaseStraightFlight)
+            {
+                if (Projectile.ai[1] >= StraightFlightFrames)
+                    EnterSlowdownPhase();
+
+                return;
+            }
+
+            if (phase == PhaseSlowdown)
+            {
+                Projectile.velocity *= SlowdownFactor;
+                if (Projectile.ai[1] >= SlowdownFrames)
+                    EnterHomingPhase();
+
+                return;
+            }
+
+            HomeTowardTarget();
+        }
+
+        private void EnterSlowdownPhase()
+        {
+            Projectile.ai[0] = PhaseSlowdown;
+            Projectile.ai[1] = 0f;
+            Projectile.tileCollide = false;
             Projectile.netUpdate = true;
-            return true;
         }
 
-        private void HomeTowardRicochetTarget()
+        private void EnterHomingPhase()
         {
-            NPC target = null;
-            int storedTarget = (int)Projectile.localAI[1] - 1;
-            if (Main.npc.IndexInRange(storedTarget) && Main.npc[storedTarget].CanBeChasedBy(Projectile))
-                target = Main.npc[storedTarget];
-            else
-                target = FindNearestTarget(HomingRange, -1);
+            Projectile.ai[0] = PhaseHoming;
+            Projectile.ai[1] = 0f;
+            Projectile.penetrate = HomingPenetrate;
+            Projectile.tileCollide = false;
+            Projectile.netUpdate = true;
+        }
 
+        private void HomeTowardTarget()
+        {
+            NPC target = FindNearestTarget(HomingRange);
             if (target == null)
             {
-                FreeDrift();
+                FreeDrift(NoTargetDamping);
                 return;
             }
 
             Vector2 currentVelocity = Projectile.velocity;
             float currentSpeed = currentVelocity.Length();
             if (currentSpeed < 0.1f)
-                currentVelocity = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitX) * MinRicochetSpeed;
+                currentVelocity = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitX) * 4f;
 
             Vector2 desiredDirection = (target.Center - Projectile.Center).SafeNormalize(currentVelocity.SafeNormalize(Vector2.UnitX));
+            float warmup = Utils.GetLerpValue(0f, 36f, Projectile.ai[1], true);
             float closePressure = Utils.GetLerpValue(360f, 70f, Projectile.Distance(target.Center), true);
-            float pullStrength = MathHelper.Lerp(0.45f, 1f, closePressure);
-            float targetSpeed = MathHelper.Lerp(MinRicochetSpeed, MaxHomingSpeed, pullStrength);
+            float pullStrength = MathHelper.Lerp(0.35f, 1f, MathHelper.Max(warmup, closePressure * 0.75f));
+            float targetSpeed = MathHelper.Lerp(MinHomingSpeed, MaxHomingSpeed, pullStrength);
             Vector2 desiredVelocity = desiredDirection * targetSpeed;
 
             Projectile.velocity = (currentVelocity * HomingInertia + desiredVelocity) / (HomingInertia + 1f);
@@ -219,20 +271,20 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
                 Projectile.velocity = Projectile.velocity.SafeNormalize(desiredDirection) * MaxHomingSpeed;
         }
 
-        private void FreeDrift()
+        private void FreeDrift(float damping)
         {
             float wander = MathF.Sin((timer + Projectile.identity * 5f) * 0.08f) * WanderingTurnStrength;
-            Projectile.velocity = Projectile.velocity.RotatedBy(wander) * NoTargetDamping;
+            Projectile.velocity = Projectile.velocity.RotatedBy(wander) * damping;
         }
 
-        private NPC FindNearestTarget(float maxDistance, int excludedTarget)
+        private NPC FindNearestTarget(float maxDistance)
         {
             NPC closestTarget = null;
             float closestDistance = maxDistance;
 
             foreach (NPC npc in Main.ActiveNPCs)
             {
-                if (npc.whoAmI == excludedTarget || !npc.CanBeChasedBy(Projectile))
+                if (!npc.CanBeChasedBy(Projectile))
                     continue;
 
                 float distance = Projectile.Distance(npc.Center);
@@ -244,6 +296,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
             }
 
             return closestTarget;
+        }
+
+        public override void OnKill(int timeLeft)
+        {
+            SoundEngine.PlaySound(SoundID.Item27 with { Volume = 0.28f, Pitch = 0.55f }, Projectile.Center);
+
+            if (!Main.dedServ)
+                SpawnDeathVisual(Projectile.Center, Projectile.velocity.SafeNormalize(Vector2.UnitY));
         }
 
         private void SpawnBounceExplosion(Vector2 center)
@@ -304,6 +364,47 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.APreHardMode
             }
 
             Lighting.AddLight(center, Color.Lerp(PurifiedGelPink, PurifiedGelBlue, 0.5f).ToVector3() * 0.9f);
+        }
+
+        private static void SpawnDeathVisual(Vector2 center, Vector2 forward)
+        {
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                center, Vector2.Zero,
+                Color.Lerp(PurifiedGelPink, PurifiedGelBlue, 0.45f),
+                "CalamityMod/Particles/BloomCircle",
+                Vector2.One, 0f, 0.038f, 0.095f, 10));
+
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                center, Vector2.Zero,
+                new Color(255, 140, 200),
+                "CalamityMod/Particles/BloomRing",
+                Vector2.One, 0f, 0.026f, 0.12f, 12));
+
+            Vector2 side = forward.RotatedBy(MathHelper.PiOver2);
+            for (int i = 0; i < 8; i++)
+            {
+                float spread = Main.rand.NextFloat(-0.9f, 0.9f);
+                Vector2 velocity = (forward.RotatedBy(spread) * Main.rand.NextFloat(1.1f, 3.2f) + side * Main.rand.NextFloat(-0.7f, 0.7f)) * 0.45f;
+                Color color = Color.Lerp(PurifiedGelPink, PurifiedGelBlue, Main.rand.NextFloat());
+                Dust dust = Dust.NewDustPerfect(
+                    center + Main.rand.NextVector2Circular(5f, 5f),
+                    DustID.GemDiamond,
+                    velocity,
+                    100, color, Main.rand.NextFloat(0.55f, 0.95f));
+                dust.noGravity = true;
+            }
+
+            for (int i = 0; i < 3; i++)
+            {
+                GeneralParticleHandler.SpawnParticle(new PointParticle(
+                    center + Main.rand.NextVector2Circular(4f, 4f),
+                    Main.rand.NextVector2Circular(2.2f, 2.2f) * 0.35f,
+                    false, 9,
+                    Main.rand.NextFloat(0.38f, 0.72f),
+                    Main.rand.NextBool() ? PurifiedGelPink : PurifiedGelBlue));
+            }
+
+            Lighting.AddLight(center, Color.Lerp(PurifiedGelPink, PurifiedGelBlue, 0.5f).ToVector3() * 0.35f);
         }
     }
 }
