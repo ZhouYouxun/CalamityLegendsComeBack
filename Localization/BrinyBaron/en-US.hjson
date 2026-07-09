@@ -277,8 +277,8 @@ Mods: {
 		}
 
 		Cooldowns: {
-			BrinyBaron_Tide: Briny Baron Tide
-			BrinyBaron_SuperDash: Tidal Jail Execution
+			BrinyBaron_Tide: Tide
+			BrinyBaron_SuperDash: Jail Execution
 		}
 	}
 }

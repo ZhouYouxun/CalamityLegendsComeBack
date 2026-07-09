@@ -19,11 +19,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             if (Main.dedServ)
                 return;
 
-            // 蓄满之后不再生成新的光环，交给已经存在的那些自己减速、自己淡出。
-            if (ChargeReady)
-                return;
-
-            float charge = MathHelper.Clamp(chargeCompletion, 0f, 1f);
+            // 蓄满后继续生成光环，直到右键松开；已有光环仍按自己的生命周期淡出。
+            float charge = ChargeReady ? 1f : MathHelper.Clamp(chargeCompletion, 0f, 1f);
             if (charge <= 0.001f)
                 return;
 
@@ -43,7 +40,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 float zRot = Main.rand.NextFromList(0.6f, MathHelper.Pi - 0.6f) + Main.rand.NextFloat(-0.4f, 0.4f);
                 float exRot = Main.rand.Next(4) * MathHelper.TwoPi * 0.6f + Main.rand.NextFloat(-0.4f, 0.4f);
 
-                BFRightChargeHaloParticle.Spawn(Projectile, radius, startRot, zRot, exRot, Color.Lerp(mainColor, Color.White, 0.15f) * charge, charge);
+                BFRightChargeHaloParticle.Spawn(Projectile, radius, startRot, zRot, exRot, Color.Lerp(mainColor, accentColor, 0.24f) * charge, charge);
             }
 
             if (tick % 20 == 0)

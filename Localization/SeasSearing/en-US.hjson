@@ -87,5 +87,7 @@ Mods: {
 				Description: Pressure, poison, and unstable deep-sea radiation are accumulating
 			}
 		}
+
+		Cooldowns.SeasSearing_Ultimate: Deep-Sea Thermonuclear Strike
 	}
 }

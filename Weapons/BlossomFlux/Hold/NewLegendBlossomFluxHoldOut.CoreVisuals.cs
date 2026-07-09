@@ -4,7 +4,6 @@ using CalamityLegendsComeBack.Weapons.BlossomFlux;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;
-using CalamityLegendsComeBack.Weapons.Visuals;
 using CalamityMod;
 using CalamityMod.Projectiles.BaseProjectiles;
 using Microsoft.Xna.Framework;
@@ -32,8 +31,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
         // ================= 描边颜色配置 =================
         // 外层/内层描边与白色的混合比（0=纯主题色，1=纯白）；值越小颜色越纯、越跟随战术主题色
-        public static float OutlineOuterWhiteMix = 0.15f;
-        public static float OutlineInnerWhiteMix = 0.20f;
         // =================================================
 
         // 旋转速度基数
@@ -104,8 +101,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 DrawSHPCRightChargeVisuals(CurrentPreset, chargeGlow);
                 UpdateRightChargeHaloSpawning(ChargeCompletion);
             }
-            else
-                DrawSHPCLeftAttackVisuals(CurrentPreset, leftFlash);
 
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(
@@ -143,48 +138,60 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
         private void DrawSHPCWeaponOutline(Texture2D weaponTexture, Vector2 drawPosition, float rotation, Vector2 origin, SpriteEffects effects, float leftFlash, float chargeGlow)
         {
-            float leftPulse = MathHelper.SmoothStep(0f, 1f, MathHelper.Clamp(leftFlash, 0f, 1f));
-            float leftBuild = GetLeftAttackBuildGlow();
-            float rightPulse = rightOutlinePulseTimer / (float)RightOutlinePulseFrames;
-            float activity = MathHelper.Clamp(Math.Max(Math.Max(leftPulse * 0.65f, leftBuild), chargeGlow), 0f, 1f);
+            float rightPulse = MathHelper.Clamp(rightOutlinePulseTimer / (float)RightOutlinePulseFrames, 0f, 1f);
+            float activity = MathHelper.Clamp(Math.Max(chargeGlow, rightPulse * 0.72f), 0f, 1f);
+            if (activity <= 0.02f && rightPulse <= 0.05f)
+                return;
+
             float time = Main.GlobalTimeWrappedHourly;
             float idlePulse = 0.78f + 0.22f * (float)Math.Sin(time * 5.1f + Projectile.identity * 0.37f);
             float outlineDistance = 1.35f + activity * 2.65f + rightPulse * 2.2f;
             int outlineDraws = 8 + (int)(activity * 5f);
             float outerAlpha = (0.18f + activity * 0.34f) * idlePulse;
             float innerAlpha = 0.12f + activity * 0.22f;
+            Color themeColor = BFArrowCommon.GetPresetColor(CurrentPreset);
+            Color accentColor = BFArrowCommon.GetPresetAccentColor(CurrentPreset);
+            Color chargedOuter = Color.Lerp(themeColor, accentColor, 0.28f);
+            Color chargedInner = Color.Lerp(accentColor, Color.White, 0.18f);
 
             // 外层描边：每个拷贝按角度索引循环取5种形态颜色，形成"各色亮纯色"包边
             for (int i = 0; i < outlineDraws; i++)
             {
-                float colorT = ((float)i / outlineDraws + time * 0.10f) % 1f;
-                Color cycledOuter = Color.Lerp(SampleAllPresetColors(colorT), Color.White, OutlineOuterWhiteMix) * outerAlpha;
                 Vector2 offset = (MathHelper.TwoPi * i / outlineDraws + time * 0.75f).ToRotationVector2() * outlineDistance;
-                Main.EntitySpriteDraw(weaponTexture, drawPosition + offset, null, cycledOuter, rotation, origin, Projectile.scale, effects, 0);
+                Main.EntitySpriteDraw(weaponTexture, drawPosition + offset, null, chargedOuter * outerAlpha, rotation, origin, Projectile.scale, effects, 0);
             }
 
             for (int i = 0; i < 4; i++)
             {
-                float colorT = ((float)i / 4f + time * 0.08f) % 1f;
-                Color cycledInner = Color.Lerp(SampleAllPresetAccentColors(colorT), Color.White, OutlineInnerWhiteMix) * innerAlpha;
                 Vector2 offset = (MathHelper.PiOver2 * i - time * 0.5f).ToRotationVector2() * (0.8f + activity * 0.9f);
-                Main.EntitySpriteDraw(weaponTexture, drawPosition + offset, null, cycledInner, rotation, origin, Projectile.scale * (1f + activity * 0.02f), effects, 0);
+                Main.EntitySpriteDraw(weaponTexture, drawPosition + offset, null, chargedInner * innerAlpha, rotation, origin, Projectile.scale * (1f + activity * 0.02f), effects, 0);
             }
 
             if (rightPulse > 0.05f)
             {
-                HoldoutOutlineHelper.DrawStarmadaRainbowOutline(
-                    weaponTexture,
-                    drawPosition,
-                    rotation,
-                    origin,
-                    Vector2.One * Projectile.scale,
-                    effects,
-                    2.4f + rightPulse * 4.2f,
-                    rightPulse * 0.38f,
-                    time + Projectile.identity * 0.17f,
-                    18,
-                    manageBlendState: false);
+                float pulseRadius = 2.4f + rightPulse * 4.2f;
+                float pulseOpacity = rightPulse * 0.42f;
+                int pulseDraws = 18;
+                for (int i = 0; i < pulseDraws; i++)
+                {
+                    float completion = i / (float)pulseDraws;
+                    float angle = MathHelper.TwoPi * completion + time * 1.45f;
+                    float wave = 0.9f + 0.1f * (float)Math.Sin(time * 7.5f + i * 0.73f);
+                    Vector2 offset = angle.ToRotationVector2() * pulseRadius * wave;
+                    Color pulseColor = Color.Lerp(themeColor, accentColor, 0.35f + 0.25f * completion);
+                    pulseColor.A = 0;
+
+                    Main.EntitySpriteDraw(
+                        weaponTexture,
+                        drawPosition + offset,
+                        null,
+                        pulseColor * pulseOpacity,
+                        rotation,
+                        origin,
+                        Projectile.scale,
+                        effects,
+                        0f);
+                }
             }
         }
 

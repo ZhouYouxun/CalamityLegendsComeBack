@@ -276,8 +276,8 @@ Mods: {
 		}
 
 		Cooldowns: {
-			BrinyBaron_Tide: 海爵潮汐
-			BrinyBaron_SuperDash: 海爵潮狱处刑
+			BrinyBaron_Tide: 潮汐
+			BrinyBaron_SuperDash: 潮狱处刑
 		}
 	}
 }

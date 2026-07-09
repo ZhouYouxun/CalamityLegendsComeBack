@@ -431,7 +431,7 @@ Mods: {
 		}
 
 		Cooldowns: {
-			SHPC_EX: SHPC Cooldown
+			SHPC_EX: Super Laser
 			SHPC_BarrierDurability: Matrix Charging Barrier Durability
 			SHPC_BarrierRecharge: Matrix Charging Barrier Recharge
 		}

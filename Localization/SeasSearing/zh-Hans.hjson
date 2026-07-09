@@ -87,5 +87,7 @@ Mods: {
 				Description: 水压、毒素与不稳定深海辐射正在累积
 			}
 		}
+
+		Cooldowns.SeasSearing_Ultimate: 深海热核打击
 	}
 }

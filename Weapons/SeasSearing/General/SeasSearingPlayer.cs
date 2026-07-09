@@ -1,5 +1,6 @@
 using Microsoft.Xna.Framework;
 using System;
+using CalamityMod;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -34,6 +35,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         public override void PostUpdate()
         {
             if (UltimateCooldown > 0) UltimateCooldown--;
+            SyncUltimateCooldownDisplay();
 
             UpdateRadiationBuff();
 
@@ -121,6 +123,27 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         public bool CanUseUltimate => UltimateCooldown <= 0;
 
         public void StartUltimateCooldown() => UltimateCooldown = UltimateCooldownFrames;
+
+        public void FastForwardUltimateCooldown(int frames)
+        {
+            UltimateCooldown = Math.Max(0, UltimateCooldown - Math.Max(0, frames));
+            SyncUltimateCooldownDisplay();
+        }
+
+        private void SyncUltimateCooldownDisplay()
+        {
+            if (!HoldingSeasSearing && UltimateCooldown <= 0)
+                return;
+
+            if (Player.Calamity().cooldowns.TryGetValue(SeasSearingUltimateCooldown.ID, out var cooldown))
+            {
+                cooldown.duration = UltimateCooldownFrames;
+                cooldown.timeLeft = UltimateCooldown;
+                return;
+            }
+
+            Player.AddCooldown(SeasSearingUltimateCooldown.ID, UltimateCooldownFrames).timeLeft = UltimateCooldown;
+        }
 
         private void ApplyPressureField(float pollutionFactor)
         {
