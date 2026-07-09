@@ -92,6 +92,28 @@ Mods: {
 					'''
 			}
 
+			Overclock: {
+				DisplayName: 过速
+				Tooltip:
+					'''
+					小庄的攻击冷却由17秒缩短至7秒
+					命中带有电系减益的敌人时，最终伤害 x2
+					青霆剑右键非终段伤害降低20%，最后一击保持600%倍率
+					'''
+			}
+
+			WorldSplitter: {
+				DisplayName: 开天
+				Tooltip:
+					'''
+					+8% 暴击率
+					手持青霆剑时额外 +5% 魔法暴击率
+					小庄释放攻击后，生成弭弗冲向敌人，对敌人及其后方敌人造成青霆剑面板540%伤害并施加粉碎
+					弭弗释放时，为玩家生成持续10秒、生命值为玩家生命上限20%的护盾
+					如果小庄释放的是主要攻击，则玩家在10秒内增加9%伤害
+					'''
+			}
+
 			QingDianFa: {
 				DisplayName: 青电法
 				Tooltip:
@@ -175,6 +197,7 @@ Mods: {
 				AzureThunderGroundSwordMatrix.DisplayName: Azure Thunder Ground Sword Matrix
 				AzureThunderHarmonyImpactMark.DisplayName: 青霆真和印
 				AzureThunderFinalJudgementBolt.DisplayName: 青霆终裁雷柱
+				WorldSplitterMifu.DisplayName: 弭弗
 			}
 
 			// SeasSearingMissile.DisplayName: Seas Searing Missile

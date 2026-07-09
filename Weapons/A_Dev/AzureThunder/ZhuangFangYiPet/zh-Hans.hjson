@@ -10,12 +10,7 @@ Mods: {
 		Projectiles: {
 			AzureThunder: {
 				ZhuangFangYiPetProjectile.DisplayName: 庄方宜
-				ZhuangFangYiConvergenceController.DisplayName: 庄方宜青雷聚合
-				ZhuangFangYiConvergenceBlock.DisplayName: 庄方宜青雷方块
-				ZhuangFangYiLightningExplosion.DisplayName: 庄方宜雷爆
-				ZhuangFangYiSquareShockwave.DisplayName: 庄方宜方形冲击波
-				ZhuangFangYiWeakLightning.DisplayName: 庄方宜弱雷
-				ZhuangFangYiSwordFlash.DisplayName: 庄方宜青雷刀光
+				ZhuangFangYiWeakLightning.DisplayName: 庄方宜青雷
 			}
 		}
 	}

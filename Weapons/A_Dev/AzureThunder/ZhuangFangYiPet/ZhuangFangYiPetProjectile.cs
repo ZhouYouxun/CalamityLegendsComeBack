@@ -1,4 +1,5 @@
 using System;
+using CalamityLegendsComeBack.Accssory.TS;
 using CalamityMod;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -255,6 +256,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.ZhuangFangYiPet
                 aimPoint.X,
                 aimPoint.Y,
                 lightningScale);
+
+            AzureThunderAccessoryPlayer.TryReleaseWorldSplitter(owner, muzzle, target, focus, strong);
         }
 
         private void FollowOwnerAI(Player owner)

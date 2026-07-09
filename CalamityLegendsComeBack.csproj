@@ -20,6 +20,7 @@
 	  <Folder Include="Accssory\CD\" />
 	  <Folder Include="Accssory\VV\" />
 	  <Folder Include="BossAI\ReBack\Prime2041\" />
+	  <Folder Include="BossAI\NewDiff\" />
 	  <Folder Include="Sound\SHPC\" />
 	  <Folder Include="Sound\YC\" />
 	  <Folder Include="Weapons\A_Dev\DesertEagle\SlowDown\" />

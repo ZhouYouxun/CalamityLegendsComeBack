@@ -91,6 +91,28 @@ Mods: {
 					'''
 			}
 
+			Overclock: {
+				DisplayName: Overclock
+				Tooltip:
+					'''
+					Zhuang Fangyi's attack cooldown is reduced from 17 seconds to 7 seconds
+					Hits against enemies suffering electric debuffs deal x2 final damage
+					SunderBlade right-click non-final strikes deal 20% less damage; the final strike remains at 600%
+					'''
+			}
+
+			WorldSplitter: {
+				DisplayName: World Splitter
+				Tooltip:
+					'''
+					+8% critical strike chance
+					While holding SunderBlade, gain an additional +5% magic critical strike chance
+					After Zhuang Fangyi attacks, summons Mifu to rush at an enemy, dealing 540% of SunderBlade's displayed damage to that enemy and enemies behind it and inflicting Crumbling
+					When Mifu is released, creates a 10-second shield with durability equal to 20% of the player's maximum life
+					If Zhuang Fangyi used her main attack, the player gains +9% damage for 10 seconds
+					'''
+			}
+
 			QingDianFa: {
 				DisplayName: Azure Lightning Arts
 				Tooltip:
@@ -174,6 +196,7 @@ Mods: {
 				AzureThunderGroundSwordMatrix.DisplayName: Azure Thunder Ground Sword Matrix
 				AzureThunderHarmonyImpactMark.DisplayName: SunderBlade Empyrean Mark
 				AzureThunderFinalJudgementBolt.DisplayName: SunderBlade Final Judgement
+				WorldSplitterMifu.DisplayName: Mifu
 			}
 
 			SeasSearingMissile.DisplayName: Seas Searing Missile

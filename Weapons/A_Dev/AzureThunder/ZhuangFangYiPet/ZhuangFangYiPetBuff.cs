@@ -17,7 +17,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.ZhuangFangYiPet
         public override void Update(Player player, ref int buffIndex)
         {
             ZhuangFangYiPetPlayer petPlayer = player.GetModPlayer<ZhuangFangYiPetPlayer>();
-            if (!petPlayer.HasAzureThunderInInventory())
+            if (!petPlayer.IsHoldingAzureThunder())
             {
                 player.DelBuff(buffIndex);
                 buffIndex--;

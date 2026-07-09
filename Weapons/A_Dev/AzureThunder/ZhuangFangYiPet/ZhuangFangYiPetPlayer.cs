@@ -76,11 +76,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.ZhuangFangYiPet
             ResolveStrongAttackCandidates();
         }
 
-        public bool HasAzureThunderInInventory()
-        {
-            return IsHoldingAzureThunder();
-        }
-
         public bool IsHoldingAzureThunder()
         {
             return TryGetAzureThunderItem(out _);
@@ -114,7 +109,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.ZhuangFangYiPet
 
         public bool TryStartHarmonyTransform(int duration)
         {
-            if (!HasAzureThunderInInventory() || transformRequested || Player.HasBuff(ModContent.BuffType<AzureThunderHarmonyBuff>()))
+            if (!IsHoldingAzureThunder() || transformRequested || Player.HasBuff(ModContent.BuffType<AzureThunderHarmonyBuff>()))
                 return false;
 
             requestedHarmonyDuration = Math.Max(1, duration);
@@ -287,7 +282,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.ZhuangFangYiPet
             queuedStrongTarget = chosen.whoAmI;
             StrongAttackCooldownTimer = Player.HasBuff(ModContent.BuffType<AzureThunderHarmonyBuff>())
                 ? HarmonyAttackCooldown
-                : StrongAttackCooldown;
+                : AzureThunderAccessoryPlayer.GetZhuangFangYiStrongAttackCooldown(Player, StrongAttackCooldown);
         }
 
         private void ResetPetRuntimeState()

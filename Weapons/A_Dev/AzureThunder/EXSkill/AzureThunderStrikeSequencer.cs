@@ -146,6 +146,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             else
                 damageFactor = HarmonyMode ? 0.81f : 0.45f;
 
+            if (!finalStrike && AzureThunderAccessoryPlayer.ShouldReduceAzureThunderRightClickDamage(Main.player[Projectile.owner]))
+                damageFactor *= 0.8f;
+
             Vector2 strikePoint = target.Center + Main.rand.NextVector2Circular(HarmonyMode ? 95f : 55f, HarmonyMode ? 55f : 35f);
             if (HarmonyMode && finalStrike)
             {
@@ -179,7 +182,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 lightningScale: HarmonyMode ? 1.5f : 0.72f);
 
             if (HarmonyMode)
-                SpawnGrandSword(target, strikePoint);
+                SpawnGrandSword(target, strikePoint, finalStrike);
 
             // 终极右键前三发落雷额外补透明 AOE；最终段已经在上方改走审判雷柱。
             if (HarmonyMode)
@@ -188,18 +191,22 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             }
         }
 
-        private void SpawnGrandSword(NPC target, Vector2 impactPosition)
+        private void SpawnGrandSword(NPC target, Vector2 impactPosition, bool finalStrike)
         {
             if (Main.myPlayer != Projectile.owner)
                 return;
 
             Vector2 refinedImpact = target.Center + Main.rand.NextVector2Circular(34f, 22f);
+            float damageFactor = AzureThunderProgression.UltimateGrandSwordDamageFactor * 0.62f;
+            if (!finalStrike && AzureThunderAccessoryPlayer.ShouldReduceAzureThunderRightClickDamage(Main.player[Projectile.owner]))
+                damageFactor *= 0.8f;
+
             int grandSword = Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
                 refinedImpact - Vector2.UnitY * 780f,
                 Vector2.Zero,
                 ModContent.ProjectileType<AzureThunderGrandSword>(),
-                Math.Max(1, (int)(Projectile.damage * AzureThunderProgression.UltimateGrandSwordDamageFactor * 0.62f)),
+                Math.Max(1, (int)(Projectile.damage * damageFactor)),
                 Projectile.knockBack,
                 Projectile.owner,
                 target.whoAmI,
@@ -249,6 +256,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             // NewLegendSHPE 是透明伤害弹幕，这里只负责设置中心和尺寸。
             int aoeDamage = Math.Max(1, (int)(Projectile.damage * (finalStrike ? 0.95f : 0.38f)));
+            if (!finalStrike && AzureThunderAccessoryPlayer.ShouldReduceAzureThunderRightClickDamage(Main.player[Projectile.owner]))
+                aoeDamage = Math.Max(1, (int)(aoeDamage * 0.8f));
+
             int aoe = Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
                 strikePoint,
