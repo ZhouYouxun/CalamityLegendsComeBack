@@ -52,11 +52,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.DragoonDrizzlefish
         {
             time++;
             if (time == 1)
-                DrizzlefishProjectileHelpers.ApplyInitialStats(Projectile);
+                DragoonDrizzlefishFoods.ApplyFishflameStats(Projectile);
 
             Projectile.velocity.X *= 0.98f;
             Projectile.velocity.Y += 0.5f;
-            DrizzlefishProjectileHelpers.ApplyMealMotion(Projectile, time, 1.15f);
 
             int dustType = GetFireDust();
             for (int i = 0; i < 2; i++)
@@ -66,7 +65,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.DragoonDrizzlefish
                 dust.velocity *= 0f;
                 dust.scale = Main.rand.NextFloat(0.4f, 0.8f) * Projectile.scale;
             }
-            DrizzlefishProjectileHelpers.SpawnMealDust(Projectile, 1, 0.7f);
+            DragoonDrizzlefishFoods.SpawnFoodDust(Projectile, 1, 0.7f);
 
             Lighting.AddLight(Projectile.Center, 0.25f, 0f, 0f);
             if (Projectile.timeLeft > 90)
@@ -77,8 +76,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.DragoonDrizzlefish
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            DrizzlefishProjectileHelpers.ApplyBaseDebuff(Projectile, target, 30, 60);
-            DrizzlefishProjectileHelpers.ApplyMealOnHit(Projectile, target, damageDone);
+            DragoonDrizzlefishFoods.ApplyBaseDebuff(Projectile, target, 30, 60);
         }
 
         public override void OnKill(int timeLeft)

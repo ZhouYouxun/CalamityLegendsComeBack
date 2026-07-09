@@ -1,6 +1,6 @@
 using System;
-using CalamityMod.Items.Placeables.Furniture;
-using CalamityMod.Items.Potions.Food;
+using System.Collections.Generic;
+using CalamityMod.Buffs.DamageOverTime;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
@@ -8,297 +8,319 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.A_Upgrade.DragoonDrizzlefish
 {
-    internal enum DragoonDrizzlefishMealType
+    internal enum DragoonDrizzlefishFoodType
     {
         None = 0,
         Gel = 1,
-        Staple = 2,
+        Fruit = 2,
         Meat = 3,
-        Seafood = 4,
-        Plant = 5,
-        Sweet = 6,
-        Spicy = 7,
-        Drink = 8,
-        Weird = 9,
-        HadalStew = 10,
-        DeliciousMeat = 11,
-        BlasphemousDonut = 12,
-        LavaChickenBroth = 13,
-        TheSandwich = 14,
-        OddMushroom = 15
+        Fish = 4,
+        Alcohol = 5,
+        Feast = 6,
+        Snack = 7,
+        Superfood = 8,
+        OddMushroom = 9
     }
 
-    internal static class DragoonDrizzlefishMeals
+    internal static class DragoonDrizzlefishFoods
     {
-        private const int MealMask = 31;
-        private const int OverfedFlag = 32;
-        private const int SecondaryFlag = 64;
+        public const int MagazineSize = 50;
 
-        public static bool TryClassify(Item item, out DragoonDrizzlefishMealType meal)
+        private const int FoodMask = 31;
+        private const int SecondaryFlag = 32;
+
+        private static readonly HashSet<string> GelNames = new(StringComparer.OrdinalIgnoreCase)
         {
-            meal = DragoonDrizzlefishMealType.None;
+            "Gel", "PinkGel"
+        };
+
+        private static readonly HashSet<string> FruitNames = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "Apple", "Apricot", "Banana", "Blackcurrant", "BlackCurrant", "BloodOrange",
+            "Cherry", "Coconut", "Dragonfruit", "DragonFruit", "Elderberry", "ElderBerry",
+            "Grapefruit", "GrapeFruit", "Grapes", "Lemon", "Mango", "Peach", "Pineapple",
+            "Plum", "Pomegranate", "Rambutan", "Starfruit", "StarFruit",
+            "Barberry", "Cometfruit", "Jackfruit", "Lotus", "Mangosteen", "Salak"
+        };
+
+        private static readonly HashSet<string> MeatNames = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "Bacon", "ChickenNugget", "FriedEgg", "GrilledSquirrel", "RoastedBird",
+            "RoastedDuck", "Steak"
+        };
+
+        private static readonly HashSet<string> FishNames = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "BlackenedFish", "CookedFish", "CookedShrimp", "LobsterTail", "Sashimi",
+            "ShuckedOyster"
+        };
+
+        private static readonly HashSet<string> AlcoholNames = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "Ale", "Sake", "Wiesnbrau", "Wiesnbräu", "BloodyMoscato",
+            "FrozenBananaDaiquiri", "PeachSangria", "PinaColada",
+            "BaconOil", "BloodyMary", "CaribbeanRum", "CinnamonRoll", "Everclear",
+            "EvergreenGin", "Fireball", "GrapeBeer", "Manhattan", "Margarita",
+            "Moonshine", "MoscowMule", "OldFashioned", "PurpleHaze", "RedWine",
+            "Rum", "Screwdriver", "StarBeamRye", "Tequila", "TequilaSunrise",
+            "Vodka", "Whiskey", "WhiteWine"
+        };
+
+        private static readonly HashSet<string> FeastNames = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "ApplePie", "BananaSplit", "BBQRibs", "BowlOfSoup", "BunnyStew", "Burger",
+            "CookedMarshmallow", "ChristmasPudding", "Escargot", "FroggleBunwich",
+            "FruitSalad", "GrubSoup", "Hotdog", "MonsterLasagna", "PadThai", "Pho",
+            "Pizza", "PumpkinPie", "SauteedFrogLegs", "SeafoodDinner", "ShrimpPoBoy",
+            "Spaghetti",
+            "Baguette", "BlasphemousDonut", "DeliciousMeat", "HadalStew",
+            "LavaChickenBroth", "ShroomBowl", "TheSandwich"
+        };
+
+        private static readonly HashSet<string> SnackNames = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "AppleJuice", "CartonOfMilk", "MilkCarton", "ChocolateChipCookie",
+            "Coffee", "CoffeeCup", "CreamSoda", "Eggnog", "Fries", "FruitJuice",
+            "GingerbreadCookie", "GrapeJuice", "IceCream", "JojaCola", "JungleJuice",
+            "Lemonade", "Marshmallow", "Milkshake", "Nachos", "PotatoChips",
+            "PrismaticPunch", "RockCandy", "SmoothieofDarkness", "SmoothieOfDarkness",
+            "SpicyPepper", "SugarCookie", "Teacup", "TropicalSmoothie"
+        };
+
+        private static readonly HashSet<string> SuperfoodNames = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "GoldenDelight"
+        };
+
+        private static readonly HashSet<string> UniqueNames = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "OddMushroom"
+        };
+
+        private static readonly HashSet<string> ExcludedNames = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "ApplePieSlice", "Seafood", "WormFood", "BloodyWormFood",
+            "SparklingEmpress", "GacruxianMollusk", "DragoonDrizzlefish",
+            "PolarisParrotfish", "SerpentsBite", "SerpentBite", "QualitySlop"
+        };
+
+        public static bool TryClassify(Item item, out DragoonDrizzlefishFoodType food)
+        {
+            food = DragoonDrizzlefishFoodType.None;
             if (item is null || item.IsAir || item.stack <= 0)
                 return false;
 
-            if (item.type == ItemID.Gel)
+            string name = StableName(item);
+            if (ExcludedNames.Contains(name))
+                return false;
+
+            if (GelNames.Contains(name))
             {
-                meal = DragoonDrizzlefishMealType.Gel;
+                food = DragoonDrizzlefishFoodType.Gel;
                 return true;
             }
 
-            if (!IsFoodLike(item))
-                return false;
+            if (UniqueNames.Contains(name))
+                food = DragoonDrizzlefishFoodType.OddMushroom;
+            else if (SuperfoodNames.Contains(name))
+                food = DragoonDrizzlefishFoodType.Superfood;
+            else if (AlcoholNames.Contains(name))
+                food = DragoonDrizzlefishFoodType.Alcohol;
+            else if (FeastNames.Contains(name))
+                food = DragoonDrizzlefishFoodType.Feast;
+            else if (FishNames.Contains(name))
+                food = DragoonDrizzlefishFoodType.Fish;
+            else if (MeatNames.Contains(name))
+                food = DragoonDrizzlefishFoodType.Meat;
+            else if (FruitNames.Contains(name))
+                food = DragoonDrizzlefishFoodType.Fruit;
+            else if (SnackNames.Contains(name))
+                food = DragoonDrizzlefishFoodType.Snack;
 
-            meal = ClassifyFood(item);
-            return true;
+            return food != DragoonDrizzlefishFoodType.None;
         }
 
-        public static DragoonDrizzlefishMealType ResolveRandomSlopMeal()
+        public static int Pack(DragoonDrizzlefishFoodType food, bool secondary = false)
         {
-            return Main.rand.Next(7) switch
-            {
-                0 => DragoonDrizzlefishMealType.Staple,
-                1 => DragoonDrizzlefishMealType.Meat,
-                2 => DragoonDrizzlefishMealType.Seafood,
-                3 => DragoonDrizzlefishMealType.Plant,
-                4 => DragoonDrizzlefishMealType.Sweet,
-                5 => DragoonDrizzlefishMealType.Spicy,
-                _ => DragoonDrizzlefishMealType.Drink
-            };
-        }
-
-        public static int Pack(DragoonDrizzlefishMealType meal, bool overfed, bool secondary = false)
-        {
-            int packed = (int)meal & MealMask;
-            if (overfed)
-                packed |= OverfedFlag;
+            int packed = (int)food & FoodMask;
             if (secondary)
                 packed |= SecondaryFlag;
             return packed;
         }
 
-        public static DragoonDrizzlefishMealType GetMeal(Projectile projectile)
-            => (DragoonDrizzlefishMealType)((int)projectile.ai[0] & MealMask);
-
-        public static bool IsOverfed(Projectile projectile)
-            => (((int)projectile.ai[0] & OverfedFlag) != 0);
+        public static DragoonDrizzlefishFoodType GetFood(Projectile projectile)
+            => (DragoonDrizzlefishFoodType)((int)projectile.ai[0] & FoodMask);
 
         public static bool IsSecondary(Projectile projectile)
             => (((int)projectile.ai[0] & SecondaryFlag) != 0);
 
-        public static int MealDuration(DragoonDrizzlefishMealType meal)
+        public static int UseTime(DragoonDrizzlefishFoodType food)
         {
-            return meal switch
+            return food switch
             {
-                DragoonDrizzlefishMealType.HadalStew => 18 * 60,
-                DragoonDrizzlefishMealType.DeliciousMeat => 16 * 60,
-                DragoonDrizzlefishMealType.BlasphemousDonut => 11 * 60,
-                DragoonDrizzlefishMealType.LavaChickenBroth => 16 * 60,
-                DragoonDrizzlefishMealType.TheSandwich => 8 * 60,
-                DragoonDrizzlefishMealType.OddMushroom => 14 * 60,
-                DragoonDrizzlefishMealType.Gel => 8 * 60,
-                _ => 12 * 60
-            };
-        }
-
-        public static int MealShots(DragoonDrizzlefishMealType meal)
-        {
-            return meal switch
-            {
-                DragoonDrizzlefishMealType.HadalStew => 36,
-                DragoonDrizzlefishMealType.DeliciousMeat => 28,
-                DragoonDrizzlefishMealType.BlasphemousDonut => 24,
-                DragoonDrizzlefishMealType.LavaChickenBroth => 30,
-                DragoonDrizzlefishMealType.TheSandwich => 16,
-                DragoonDrizzlefishMealType.OddMushroom => 26,
-                DragoonDrizzlefishMealType.Gel => 14,
+                DragoonDrizzlefishFoodType.Fruit => 9,
+                DragoonDrizzlefishFoodType.Alcohol => 14,
+                DragoonDrizzlefishFoodType.Fish => 17,
+                DragoonDrizzlefishFoodType.Snack => 18,
+                DragoonDrizzlefishFoodType.Gel => 20,
+                DragoonDrizzlefishFoodType.Feast => 22,
+                DragoonDrizzlefishFoodType.Meat => 24,
+                DragoonDrizzlefishFoodType.OddMushroom => 27,
+                DragoonDrizzlefishFoodType.Superfood => 32,
                 _ => 24
             };
         }
 
-        public static int FullnessGain(DragoonDrizzlefishMealType meal)
+        public static float DamageMultiplier(DragoonDrizzlefishFoodType food)
         {
-            return meal switch
+            return food switch
             {
-                DragoonDrizzlefishMealType.HadalStew or
-                DragoonDrizzlefishMealType.DeliciousMeat or
-                DragoonDrizzlefishMealType.LavaChickenBroth or
-                DragoonDrizzlefishMealType.TheSandwich => 3,
-                DragoonDrizzlefishMealType.Gel => 1,
-                _ => 2
-            };
-        }
-
-        public static int UseTime(DragoonDrizzlefishMealType meal, bool overfed)
-        {
-            int useTime = meal switch
-            {
-                DragoonDrizzlefishMealType.Sweet or
-                DragoonDrizzlefishMealType.BlasphemousDonut => 15,
-                DragoonDrizzlefishMealType.Drink => 16,
-                DragoonDrizzlefishMealType.Staple => 18,
-                DragoonDrizzlefishMealType.Meat or
-                DragoonDrizzlefishMealType.DeliciousMeat => 24,
-                DragoonDrizzlefishMealType.TheSandwich => 17,
-                _ => 20
-            };
-
-            return overfed ? useTime + 4 : useTime;
-        }
-
-        public static int BigFireInterval(DragoonDrizzlefishMealType meal)
-        {
-            return meal switch
-            {
-                DragoonDrizzlefishMealType.Sweet or
-                DragoonDrizzlefishMealType.BlasphemousDonut => 3,
-                DragoonDrizzlefishMealType.Meat or
-                DragoonDrizzlefishMealType.DeliciousMeat => 5,
-                _ => 4
-            };
-        }
-
-        public static float SpreadRadians(DragoonDrizzlefishMealType meal, bool overfed)
-        {
-            float spread = meal switch
-            {
-                DragoonDrizzlefishMealType.Staple => MathHelper.ToRadians(2.5f),
-                DragoonDrizzlefishMealType.Drink => MathHelper.ToRadians(13f),
-                DragoonDrizzlefishMealType.OddMushroom or
-                DragoonDrizzlefishMealType.TheSandwich => MathHelper.ToRadians(11f),
-                _ => MathHelper.ToRadians(5.5f)
-            };
-
-            return overfed ? spread + MathHelper.ToRadians(5f) : spread;
-        }
-
-        public static float DamageMultiplier(DragoonDrizzlefishMealType meal)
-        {
-            return meal switch
-            {
-                DragoonDrizzlefishMealType.Gel => 1.06f,
-                DragoonDrizzlefishMealType.Staple => 1.07f,
-                DragoonDrizzlefishMealType.Meat => 1.18f,
-                DragoonDrizzlefishMealType.DeliciousMeat => 1.32f,
-                DragoonDrizzlefishMealType.Seafood => 1.08f,
-                DragoonDrizzlefishMealType.HadalStew => 1.14f,
-                DragoonDrizzlefishMealType.Spicy => 1.16f,
-                DragoonDrizzlefishMealType.LavaChickenBroth => 1.24f,
-                DragoonDrizzlefishMealType.Sweet => 0.94f,
-                DragoonDrizzlefishMealType.BlasphemousDonut => 0.98f,
-                DragoonDrizzlefishMealType.Drink => 0.95f,
-                DragoonDrizzlefishMealType.TheSandwich => 1.05f,
+                DragoonDrizzlefishFoodType.Gel => 1f,
+                DragoonDrizzlefishFoodType.Meat => 1.12f,
+                DragoonDrizzlefishFoodType.Feast => 1.22f,
+                DragoonDrizzlefishFoodType.Superfood => 2f,
                 _ => 1f
             };
         }
 
-        public static float ScaleMultiplier(DragoonDrizzlefishMealType meal)
+        public static Color FoodColor(DragoonDrizzlefishFoodType food)
         {
-            return meal switch
+            return food switch
             {
-                DragoonDrizzlefishMealType.Meat => 1.14f,
-                DragoonDrizzlefishMealType.DeliciousMeat => 1.25f,
-                DragoonDrizzlefishMealType.HadalStew => 1.08f,
-                DragoonDrizzlefishMealType.LavaChickenBroth => 1.12f,
-                DragoonDrizzlefishMealType.Sweet or
-                DragoonDrizzlefishMealType.BlasphemousDonut => 0.9f,
-                _ => 1f
-            };
-        }
-
-        public static Color MealColor(DragoonDrizzlefishMealType meal)
-        {
-            return meal switch
-            {
-                DragoonDrizzlefishMealType.Gel => Color.SkyBlue,
-                DragoonDrizzlefishMealType.Staple => new Color(255, 220, 150),
-                DragoonDrizzlefishMealType.Meat or
-                DragoonDrizzlefishMealType.DeliciousMeat => new Color(255, 120, 70),
-                DragoonDrizzlefishMealType.Seafood or
-                DragoonDrizzlefishMealType.HadalStew => new Color(85, 210, 255),
-                DragoonDrizzlefishMealType.Plant => new Color(95, 240, 95),
-                DragoonDrizzlefishMealType.Sweet or
-                DragoonDrizzlefishMealType.BlasphemousDonut => new Color(255, 150, 235),
-                DragoonDrizzlefishMealType.Spicy or
-                DragoonDrizzlefishMealType.LavaChickenBroth => new Color(255, 70, 20),
-                DragoonDrizzlefishMealType.Drink => new Color(190, 120, 255),
-                DragoonDrizzlefishMealType.Weird or
-                DragoonDrizzlefishMealType.OddMushroom => new Color(175, 255, 70),
-                DragoonDrizzlefishMealType.TheSandwich => new Color(255, 255, 120),
+                DragoonDrizzlefishFoodType.Gel => new Color(115, 210, 255),
+                DragoonDrizzlefishFoodType.Fruit => new Color(115, 255, 150),
+                DragoonDrizzlefishFoodType.Meat => new Color(255, 115, 65),
+                DragoonDrizzlefishFoodType.Fish => new Color(90, 225, 255),
+                DragoonDrizzlefishFoodType.Alcohol => new Color(200, 110, 255),
+                DragoonDrizzlefishFoodType.Feast => new Color(255, 205, 90),
+                DragoonDrizzlefishFoodType.Snack => new Color(255, 145, 225),
+                DragoonDrizzlefishFoodType.Superfood => new Color(255, 230, 70),
+                DragoonDrizzlefishFoodType.OddMushroom => new Color(220, 150, 85),
                 _ => Color.OrangeRed
             };
         }
 
-        private static bool IsFoodLike(Item item)
+        public static void ApplyFishflameStats(Projectile projectile)
         {
-            if (item.type > ItemID.None && item.type < ItemID.Sets.IsFood.Length && ItemID.Sets.IsFood[item.type])
-                return true;
+            DragoonDrizzlefishFoodType food = GetFood(projectile);
+            projectile.damage = Math.Max(1, (int)(projectile.damage * DamageMultiplier(food)));
 
-            if (item.useStyle == ItemUseStyleID.EatFood)
-                return true;
-
-            string internalName = StableName(item);
-            return item.ModItem?.GetType().Namespace?.Contains(".Potions.Food", StringComparison.Ordinal) == true ||
-                internalName.Contains("Food", StringComparison.OrdinalIgnoreCase) ||
-                internalName.Contains("Stew", StringComparison.OrdinalIgnoreCase) ||
-                internalName.Contains("Soup", StringComparison.OrdinalIgnoreCase);
-        }
-
-        private static DragoonDrizzlefishMealType ClassifyFood(Item item)
-        {
-            int type = item.type;
-            if (type == ModContent.ItemType<HadalStew>())
-                return DragoonDrizzlefishMealType.HadalStew;
-            if (type == ModContent.ItemType<DeliciousMeat>())
-                return DragoonDrizzlefishMealType.DeliciousMeat;
-            if (type == ModContent.ItemType<BlasphemousDonut>())
-                return DragoonDrizzlefishMealType.BlasphemousDonut;
-            if (type == ModContent.ItemType<LavaChickenBroth>())
-                return DragoonDrizzlefishMealType.LavaChickenBroth;
-            if (type == ModContent.ItemType<TheSandwich>())
-                return DragoonDrizzlefishMealType.TheSandwich;
-            if (type == ModContent.ItemType<QualitySlop>())
-                return ResolveRandomSlopMeal();
-            if (type == ModContent.ItemType<CalamityMod.Items.Potions.Alcohol.OddMushroom>())
-                return DragoonDrizzlefishMealType.OddMushroom;
-
-            string stableName = StableName(item);
-            string lowered = stableName.ToLowerInvariant();
-            string ns = item.ModItem?.GetType().Namespace ?? string.Empty;
-
-            if (ns.Contains(".Alcohol", StringComparison.Ordinal) || ContainsAny(lowered, "ale", "beer", "wine", "rum", "vodka", "tequila", "whiskey", "gin", "margarita", "coffee", "tea", "juice", "mule", "moonshine", "screwdriver"))
-                return DragoonDrizzlefishMealType.Drink;
-
-            if (ContainsAny(lowered, "lava", "brimstone", "fireball", "pepper", "spicy", "curry", "salsa"))
-                return DragoonDrizzlefishMealType.Spicy;
-
-            if (ContainsAny(lowered, "donut", "cake", "cookie", "pie", "cinnamon", "roll", "chocolate", "pudding", "marshmallow", "icecream", "milkshake"))
-                return DragoonDrizzlefishMealType.Sweet;
-
-            if (ContainsAny(lowered, "fish", "sushi", "sashimi", "seafood", "clam", "shrimp", "lobster", "oyster", "crab", "tuna", "salmon"))
-                return DragoonDrizzlefishMealType.Seafood;
-
-            if (ContainsAny(lowered, "meat", "bacon", "burger", "steak", "chicken", "ribs", "sausage"))
-                return DragoonDrizzlefishMealType.Meat;
-
-            if (ContainsAny(lowered, "fruit", "apple", "banana", "grape", "berry", "mango", "peach", "pineapple", "coconut", "lemon", "lotus", "melon", "plum"))
-                return DragoonDrizzlefishMealType.Plant;
-
-            if (ContainsAny(lowered, "mushroom", "slop", "strange", "odd"))
-                return DragoonDrizzlefishMealType.Weird;
-
-            return DragoonDrizzlefishMealType.Staple;
-        }
-
-        private static bool ContainsAny(string value, params string[] needles)
-        {
-            foreach (string needle in needles)
+            if (food == DragoonDrizzlefishFoodType.Meat)
             {
-                if (value.Contains(needle, StringComparison.OrdinalIgnoreCase))
-                    return true;
+                projectile.scale *= 1.55f;
+                projectile.knockBack += 2.25f;
+                projectile.width = Math.Max(projectile.width, (int)(projectile.width * 1.35f));
+                projectile.height = Math.Max(projectile.height, (int)(projectile.height * 1.35f));
+                if (projectile.penetrate > 0)
+                    projectile.penetrate += 5;
+                projectile.velocity *= 0.94f;
+            }
+            else if (food == DragoonDrizzlefishFoodType.Feast)
+            {
+                projectile.scale *= 1.22f;
+                projectile.knockBack += 0.8f;
+                if (projectile.penetrate > 0)
+                    projectile.penetrate += 2;
+            }
+        }
+
+        public static int SplitCount(DragoonDrizzlefishFoodType food)
+        {
+            return food switch
+            {
+                DragoonDrizzlefishFoodType.Meat => 5,
+                DragoonDrizzlefishFoodType.Feast => 6,
+                _ => 3
+            };
+        }
+
+        public static float SplitRotation(DragoonDrizzlefishFoodType food)
+        {
+            float degrees = food switch
+            {
+                DragoonDrizzlefishFoodType.Meat => 22f,
+                DragoonDrizzlefishFoodType.Feast => 34f,
+                _ => Main.rand.Next(15, 26)
+            };
+
+            return MathHelper.ToRadians(degrees);
+        }
+
+        public static int SplitTimer(DragoonDrizzlefishFoodType food)
+        {
+            return food switch
+            {
+                DragoonDrizzlefishFoodType.Meat => 54,
+                DragoonDrizzlefishFoodType.Feast => 40,
+                _ => 45
+            };
+        }
+
+        public static void ApplyBaseDebuff(Projectile projectile, NPC target, int brimstoneTime, int hellfireTime)
+        {
+            if (projectile.ai[1] == 1f)
+                target.AddBuff(BuffID.OnFire3, hellfireTime);
+            else
+                target.AddBuff(ModContent.BuffType<BrimstoneFlames>(), brimstoneTime);
+        }
+
+        public static void SpawnFoodDust(Projectile projectile, int count, float scale)
+        {
+            DragoonDrizzlefishFoodType food = GetFood(projectile);
+            if (food == DragoonDrizzlefishFoodType.None || Main.rand.NextBool(3))
+                return;
+
+            Color color = FoodColor(food);
+            for (int i = 0; i < count; i++)
+            {
+                Dust dust = Dust.NewDustPerfect(projectile.Center + Main.rand.NextVector2Circular(7f, 7f), DustID.RainbowMk2, -projectile.velocity * 0.12f, 0, color, scale);
+                dust.noGravity = true;
+                dust.velocity += Main.rand.NextVector2Circular(0.8f, 0.8f);
+            }
+        }
+
+        public static NPC FindTarget(Projectile projectile, float range, bool ignoreTiles = false)
+        {
+            NPC target = null;
+            float bestDistance = range * range;
+            for (int i = 0; i < Main.maxNPCs; i++)
+            {
+                NPC npc = Main.npc[i];
+                if (!npc.CanBeChasedBy(projectile))
+                    continue;
+
+                float distance = Vector2.DistanceSquared(projectile.Center, npc.Center);
+                if (distance >= bestDistance)
+                    continue;
+
+                if (!ignoreTiles && !Collision.CanHitLine(projectile.Center, 1, 1, npc.Center, 1, 1))
+                    continue;
+
+                bestDistance = distance;
+                target = npc;
             }
 
-            return false;
+            return target;
+        }
+
+        public static void HomeTowardTarget(Projectile projectile, float range, float turnPower, float maxSpeed, bool ignoreTiles = false)
+        {
+            NPC target = FindTarget(projectile, range, ignoreTiles);
+            if (target is null)
+                return;
+
+            float speed = MathHelper.Clamp(projectile.velocity.Length(), 4f, maxSpeed);
+            Vector2 desiredVelocity = (target.Center - projectile.Center).SafeNormalize(projectile.velocity.SafeNormalize(Vector2.UnitX)) * speed;
+            projectile.velocity = Vector2.Lerp(projectile.velocity, desiredVelocity, turnPower);
+        }
+
+        public static void SpawnImpactDust(Vector2 center, Color color, int count, float speed, float scale)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                Dust dust = Dust.NewDustPerfect(center, DustID.RainbowMk2, Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(speed * 0.35f, speed), 0, color, Main.rand.NextFloat(scale * 0.75f, scale * 1.25f));
+                dust.noGravity = true;
+            }
         }
 
         private static string StableName(Item item)

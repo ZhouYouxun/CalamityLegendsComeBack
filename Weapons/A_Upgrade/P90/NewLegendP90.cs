@@ -145,4 +145,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.P90
             return mouseWorld == Vector2.Zero ? Main.MouseWorld : mouseWorld;
         }
     }
+
+    internal sealed class NewLegendP90Shop : GlobalNPC
+    {
+        public override void ModifyShop(NPCShop shop)
+        {
+            if (shop.NpcType == NPCID.ArmsDealer)
+                shop.AddWithCustomValue<NewLegendP90>(Item.buyPrice(gold: 20));
+        }
+    }
 }
