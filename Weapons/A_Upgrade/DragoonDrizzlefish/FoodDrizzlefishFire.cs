@@ -59,11 +59,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.DragoonDrizzlefish
             time++;
             if (time == 1)
             {
-                DrizzlefishProjectileHelpers.ApplyInitialStats(Projectile);
+                DragoonDrizzlefishFoods.ApplyFishflameStats(Projectile);
                 Projectile.scale *= 1.5f;
-                splitTimer = DrizzlefishProjectileHelpers.SplitTimer(
-                    DragoonDrizzlefishMeals.GetMeal(Projectile),
-                    DragoonDrizzlefishMeals.IsOverfed(Projectile));
+                splitTimer = DragoonDrizzlefishFoods.SplitTimer(DragoonDrizzlefishFoods.GetFood(Projectile));
             }
 
             int dustType = GetFireDust();
@@ -79,7 +77,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.DragoonDrizzlefish
                     dust.velocity *= 0f;
                     dust.scale = Main.rand.NextFloat(1.2f, 1.9f) * Projectile.scale;
                 }
-                DrizzlefishProjectileHelpers.SpawnMealDust(Projectile, 2, 0.95f);
+                DragoonDrizzlefishFoods.SpawnFoodDust(Projectile, 2, 0.95f);
             }
             else
                 Projectile.alpha = 255;
@@ -95,7 +93,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.DragoonDrizzlefish
                 }
             }
 
-            DrizzlefishProjectileHelpers.ApplyMealMotion(Projectile, time, 0.75f);
             splitTimer--;
             if (splitTimer <= 0)
                 SplitAndDie();
@@ -109,16 +106,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.DragoonDrizzlefish
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            DrizzlefishProjectileHelpers.ApplyBaseDebuff(Projectile, target, 60, 120);
-            DrizzlefishProjectileHelpers.ApplyMealOnHit(Projectile, target, damageDone);
+            DragoonDrizzlefishFoods.ApplyBaseDebuff(Projectile, target, 60, 120);
         }
 
         private void SplitAndDie()
         {
-            DragoonDrizzlefishMealType meal = DragoonDrizzlefishMeals.GetMeal(Projectile);
-            bool overfed = DragoonDrizzlefishMeals.IsOverfed(Projectile);
-            int splitCount = DrizzlefishProjectileHelpers.SplitCount(meal, overfed);
-            float rotation = DrizzlefishProjectileHelpers.SplitRotation(meal, overfed);
+            DragoonDrizzlefishFoodType food = DragoonDrizzlefishFoods.GetFood(Projectile);
+            int splitCount = DragoonDrizzlefishFoods.SplitCount(food);
+            float rotation = DragoonDrizzlefishFoods.SplitRotation(food);
 
             if (Projectile.owner == Main.myPlayer)
             {

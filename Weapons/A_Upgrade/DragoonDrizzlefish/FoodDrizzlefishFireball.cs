@@ -37,11 +37,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.DragoonDrizzlefish
         {
             time++;
             if (time == 1)
-                DrizzlefishProjectileHelpers.ApplyInitialStats(Projectile);
+                DragoonDrizzlefishFoods.ApplyFishflameStats(Projectile);
 
             Projectile.velocity.X *= 0.995f;
             Projectile.velocity.Y -= 0.065f;
-            DrizzlefishProjectileHelpers.ApplyMealMotion(Projectile, time);
             Lighting.AddLight(Projectile.Center, 0.25f, 0f, 0f);
 
             int dustType = GetFireDust();
@@ -57,7 +56,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.DragoonDrizzlefish
                     dust.velocity *= 0f;
                     dust.scale = Main.rand.NextFloat(0.9f, 1.5f) * Projectile.scale;
                 }
-                DrizzlefishProjectileHelpers.SpawnMealDust(Projectile, 1, 0.75f);
+                DragoonDrizzlefishFoods.SpawnFoodDust(Projectile, 1, 0.75f);
             }
             else
                 Projectile.alpha = 255;
@@ -72,8 +71,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.DragoonDrizzlefish
                     dust.noGravity = true;
                 }
             }
-
-            DrizzlefishProjectileHelpers.MaybeSpawnSweetChild(Projectile, time);
         }
 
         public override bool OnTileCollide(Vector2 oldVelocity)
@@ -103,8 +100,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.DragoonDrizzlefish
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            DrizzlefishProjectileHelpers.ApplyBaseDebuff(Projectile, target, 20, 40);
-            DrizzlefishProjectileHelpers.ApplyMealOnHit(Projectile, target, damageDone);
+            DragoonDrizzlefishFoods.ApplyBaseDebuff(Projectile, target, 20, 40);
         }
 
         private int GetFireDust()
