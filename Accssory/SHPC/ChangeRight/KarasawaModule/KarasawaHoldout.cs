@@ -8,6 +8,7 @@ using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Utilities;
+#if KARASAWA_MODULE_ENABLED
 using System;
 using Terraria;
 using Terraria.Audio;
@@ -526,3 +527,4 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.KarasawaModule
         }
     }
 }
+#endif

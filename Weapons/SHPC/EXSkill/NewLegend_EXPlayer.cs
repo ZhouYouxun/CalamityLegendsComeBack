@@ -1,6 +1,5 @@
 using Terraria;
 using Terraria.ModLoader;
-using CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.KarasawaModule;
 using CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.ProjectilePossessionModule;
 using CalamityLegendsComeBack.Accssory.SHPC.Skill.FastChip;
 using CalamityLegendsComeBack.Weapons;
@@ -110,8 +109,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             return Player.ownedProjectileCounts[ModContent.ProjectileType<SHPCRight_HoulOut>()] > 0 ||
                 Player.ownedProjectileCounts[ModContent.ProjectileType<RightClickMortar_HoldOut>()] > 0 ||
                 Player.ownedProjectileCounts[ModContent.ProjectileType<MilitaryCaller_HoldOut>()] > 0 ||
-                Player.ownedProjectileCounts[ModContent.ProjectileType<ProjectilePossessionHoldout>()] > 0 ||
-                Player.ownedProjectileCounts[ModContent.ProjectileType<KarasawaHoldout>()] > 0;
+                Player.ownedProjectileCounts[ModContent.ProjectileType<ProjectilePossessionHoldout>()] > 0;
         }
     }
 }

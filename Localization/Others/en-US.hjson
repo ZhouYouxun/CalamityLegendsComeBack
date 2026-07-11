@@ -70,7 +70,7 @@ Mods: {
 
 				LegendaryCodex: {
 					DisplayName: Legendary Codex
-					Tooltip: Left click to open the legendary weapon codex.
+					Tooltip: Left-click to open the legendary weapon codex panel.
 				}
 
 				CTRLBoss: {

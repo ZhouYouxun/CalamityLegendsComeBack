@@ -71,7 +71,7 @@ Mods: {
 
 				LegendaryCodex: {
 					DisplayName: 传奇图鉴
-					Tooltip: Left click to open the legendary weapon codex.
+					Tooltip: 左键点击以打开传奇武器图鉴面板。
 				}
 
 				CTRLBoss: {
