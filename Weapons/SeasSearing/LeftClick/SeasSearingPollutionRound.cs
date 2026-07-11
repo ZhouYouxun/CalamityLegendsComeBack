@@ -21,7 +21,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         private int Stage      => (int)Projectile.ai[1];
 
         public new string LocalizationCategory => "Projectiles.SeasSearing";
-        public override string Texture          => "Terraria/Images/Projectile_14";
+        public override string Texture          => "CalamityLegendsComeBack/Texture/Calamity/RangePROJ/PlagueTaintedProjectile";
 
         public override void SetStaticDefaults()
         {
@@ -31,8 +31,8 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
         public override void SetDefaults()
         {
-            Projectile.width          = 10;
-            Projectile.height         = 4;
+            Projectile.width          = 14;
+            Projectile.height         = 14;
             Projectile.friendly       = true;
             Projectile.DamageType     = DamageClass.Ranged;
             Projectile.tileCollide    = true;
@@ -47,6 +47,8 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
         public override void AI()
         {
+            Projectile.rotation = Projectile.velocity.ToRotation();
+
             if (Projectile.localAI[0] == 0f)
             {
                 int stage = Stage;
@@ -55,7 +57,6 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 Projectile.netUpdate  = true;
             }
 
-            Projectile.rotation     = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
             Projectile.spriteDirection = Projectile.direction;
 
             int stage2 = Stage;
@@ -179,7 +180,6 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             Texture2D bloom      = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Vector2   origin     = texture.Size() * 0.5f;
             Vector2   bloomOrigin = bloom.Size() * 0.5f;
-            float     velRot    = Projectile.velocity.ToRotation();
             float     rawBoost  = Projectile.localAI[1];
             float     boost     = rawBoost > 0f ? MathHelper.Clamp(rawBoost, 0.82f, 1.38f) : 1f;
 
@@ -198,12 +198,21 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 Color   color        = Color.Lerp(tailColor, headColor, completion) * (0.08f + completion * 0.42f * boost);
                 color.A = 0;
 
-                Main.EntitySpriteDraw(bloom, drawPosition, null, color * 0.72f, velRot, bloomOrigin, new Vector2(0.12f, 0.038f) * Projectile.scale, SpriteEffects.None, 0);
-                Main.EntitySpriteDraw(texture, drawPosition, null, color, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0);
+                Main.EntitySpriteDraw(bloom, drawPosition, null, color * 0.72f, 0f, bloomOrigin, new Vector2(0.12f, 0.038f) * Projectile.scale, SpriteEffects.None, 0);
+                Main.EntitySpriteDraw(texture, drawPosition, null, color, Projectile.oldRot[i], origin, Projectile.scale * MathHelper.Lerp(0.72f, 1f, completion), SpriteEffects.None, 0);
             }
 
             Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition, null,
-                (headColor with { A = 0 }) * (0.6f * boost), velRot, bloomOrigin, new Vector2(0.15f, 0.045f), SpriteEffects.None, 0);
+                (headColor with { A = 0 }) * (0.6f * boost), 0f, bloomOrigin, new Vector2(0.15f, 0.045f), SpriteEffects.None, 0);
+
+            Color outline = (Color.Lerp(headColor, SeasSearingPalette.ToxicGreen, 0.35f) with { A = 0 }) * (0.42f * boost);
+            for (int i = 0; i < 8; i++)
+            {
+                Vector2 offset = (MathHelper.TwoPi * i / 8f).ToRotationVector2() * (1.5f + 0.6f * boost);
+                Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition + offset, null,
+                    outline, Projectile.rotation, origin, Projectile.scale * 1.05f, SpriteEffects.None, 0);
+            }
+
             Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null,
                 Color.White, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0);
             return false;

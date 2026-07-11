@@ -149,8 +149,8 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
 
             if (sunflowerEmpowered && preset == BlossomFluxChloroplastPresetType.Chlo_ABreak)
             {
-                modifiers.FinalDamage *= 1.3f;
-                if (Main.rand.NextFloat() < 0.15f)
+                modifiers.FinalDamage *= 1.35f;
+                if (Main.rand.NextFloat() < 0.25f)
                     modifiers.FinalDamage *= 1.5f;
             }
         }

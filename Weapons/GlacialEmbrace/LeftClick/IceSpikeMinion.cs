@@ -29,6 +29,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
         public int hibernateTimer;
         public bool smashing;
         public float smashProgress;
+        public bool returning;
 
         private bool activeAttacking;
         private int activeAttackTimer;
@@ -57,6 +58,8 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
         private const int StrikeAttackCooldown = 104;
         private const int StrikeHibernateTime = 240;
         private const int WhipFrenzyDuration = 150;
+        private const float ReturnHomeSnapDistance = 26f;
+        private const float SafetyReturnDistance = 2200f;
 
         public override void SetStaticDefaults()
         {
@@ -83,11 +86,11 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
             Projectile.localNPCHitCooldown = 45;
         }
 
-        public override bool ShouldUpdatePosition() => flying || smashing || activeAttacking;
+        public override bool ShouldUpdatePosition() => flying || smashing || activeAttacking || returning;
 
         public bool IsCirclingPlayer()
         {
-            return !embedded && !flying && !smashing && !activeAttacking && !IsUltimateActive();
+            return !embedded && !flying && !smashing && !activeAttacking && !returning && !IsUltimateActive();
         }
 
         public bool IsLargeSlashSpike => Projectile.ai[1] == 1f;
@@ -114,6 +117,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
             activeTargetIndex = -1;
             activeAttackCooldown = 24;
             whipFrenzyTimer = 0;
+            returning = false;
             Projectile.velocity = Vector2.Zero;
             Projectile.friendly = true;
             Projectile.penetrate = -1;
@@ -163,6 +167,21 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
                 return;
             }
 
+            // 安全网：玩家瞬移/传送门/大幅移动导致冰刺与玩家距离过远时强制归位，
+            // 防止在 flying/activeAttacking 等物理位移状态下与玩家彻底失联（说明书 14.1）
+            if (Vector2.DistanceSquared(Projectile.Center, player.Center) > SafetyReturnDistance * SafetyReturnDistance)
+            {
+                embedded = false;
+                flying = false;
+                isThrusting = false;
+                activeAttacking = false;
+                smashing = false;
+                returning = false;
+                Projectile.velocity = Vector2.Zero;
+                Projectile.Center = player.Center;
+                Projectile.netUpdate = true;
+            }
+
             if (hibernating)
                 UpdateHibernate();
 
@@ -180,6 +199,12 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
             if (activeAttacking)
             {
                 HandleActiveAttack(player, modPlayer);
+                return;
+            }
+
+            if (returning)
+            {
+                HandleReturning(player, modPlayer);
                 return;
             }
 
@@ -322,14 +347,14 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
         {
             if (!Main.npc.IndexInRange(embedNPCIndex))
             {
-                ResetForModeChange(1);
+                ReturnToOrbit();
                 return;
             }
 
             NPC target = Main.npc[embedNPCIndex];
             if (!target.active || target.life <= 0 || !target.CanBeChasedBy(Projectile, false))
             {
-                ResetForModeChange(1);
+                ReturnToOrbit();
                 return;
             }
 
@@ -357,7 +382,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
             pierceTimer++;
             int maxTime = isThrusting ? TriggeredPierceTime : PierceMaxFlightTime;
             if (pierceTimer >= maxTime)
-                ReturnToOrbit(player);
+                ReturnToOrbit();
 
             for (int i = 0; i < (isThrusting ? 3 : 1); i++)
             {
@@ -386,16 +411,60 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
                 TryStartActiveAttack(player, 2, StrikeAttackCooldown + spikeIndex * 6, 1050f);
         }
 
-        private void ReturnToOrbit(Player player)
+        private void ReturnToOrbit()
         {
             embedded = false;
             flying = false;
             isThrusting = false;
             pierceTimer = 0;
-            Projectile.velocity = Vector2.Zero;
+            activeAttacking = false;
+            smashing = false;
             Projectile.friendly = true;
-            Projectile.Center = Vector2.Lerp(Projectile.Center, player.Center + Projectile.ai[0].ToRotationVector2() * PierceOrbitRadius, 0.65f);
+            returning = true;
             Projectile.netUpdate = true;
+        }
+
+        // 归位所在的目标轨道点，与各 Handle*Orbit() 中使用的公式保持一致
+        private Vector2 GetOrbitHome(Player player, GlacialEmbracePlayer modPlayer)
+        {
+            float radius = modPlayer.CurrentMode switch
+            {
+                0 => IsLargeSlashSpike ? SlashOuterRadius : SlashInnerRadius,
+                1 => PierceOrbitRadius,
+                _ => StrikeOrbitRadius,
+            };
+            return player.Center + Projectile.ai[0].ToRotationVector2() * radius + Vector2.UnitY * player.gfxOffY;
+        }
+
+        // 攻击/追击结束后的归位状态：用距离自适应的惯性速度平滑滑回轨道，
+        // 到达后无缝衔接 Handle*Orbit() 的刚性轨道公式（说明书 5.2 / 5.5 / 6.1）
+        private void HandleReturning(Player player, GlacialEmbracePlayer modPlayer)
+        {
+            Projectile.friendly = true;
+            Vector2 home = GetOrbitHome(player, modPlayer);
+            Vector2 toHome = home - Projectile.Center;
+            float dist = toHome.Length();
+
+            if (dist < ReturnHomeSnapDistance)
+            {
+                returning = false;
+                Projectile.velocity = Vector2.Zero;
+                Projectile.netUpdate = true;
+                return;
+            }
+
+            float speed = MathHelper.Clamp(dist * 0.12f, 6f, 22f);
+            Vector2 desired = (toHome / dist) * speed;
+            Projectile.velocity = (Projectile.velocity * 9f + desired) / 10f;
+            Projectile.rotation = Projectile.velocity.SafeNormalize(Vector2.UnitY).ToRotation() + MathHelper.PiOver2;
+
+            if (Main.rand.NextBool(4))
+            {
+                Dust d = Dust.NewDustDirect(Projectile.Center, 0, 0, DustID.Ice);
+                d.velocity = -Projectile.velocity * 0.12f;
+                d.scale = 0.65f;
+                d.noGravity = true;
+            }
         }
 
         private void TryStartActiveAttack(Player player, int style, int cooldown, float range)
@@ -446,30 +515,25 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
             activeAttackTimer++;
 
             NPC target = GetActiveAttackTarget();
-            float homeRadius = modPlayer.CurrentMode == 0
-                ? IsLargeSlashSpike ? SlashOuterRadius : SlashInnerRadius
-                : StrikeOrbitRadius;
-            Vector2 home = player.Center + Projectile.ai[0].ToRotationVector2() * homeRadius + Vector2.UnitY * player.gfxOffY;
 
             if (target == null && activeAttackTimer < 18)
             {
-                EndActiveAttack(home);
+                EndActiveAttack();
                 return;
             }
 
             if (activeAttackStyle == 2)
-                HandleStrikeActiveAttack(player, target, home);
+                HandleStrikeActiveAttack(target);
             else
-                HandleSlashActiveAttack(target, home);
+                HandleSlashActiveAttack(target);
 
             Projectile.rotation = Projectile.velocity.SafeNormalize(activeAttackDirection).ToRotation() + MathHelper.PiOver2;
             EmitActiveAttackTrail(activeAttackStyle == 2 ? DustID.Electric : DustID.Ice);
         }
 
-        private void HandleSlashActiveAttack(NPC target, Vector2 home)
+        private void HandleSlashActiveAttack(NPC target)
         {
             int driveFrames = whipFrenzyTimer > 0 ? 20 : 16;
-            int maxFrames = whipFrenzyTimer > 0 ? 38 : 42;
             if (activeAttackTimer <= driveFrames)
             {
                 if (target != null)
@@ -479,19 +543,20 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
                 if (whipFrenzyTimer > 0)
                     speed += 5f;
 
+                // 起手渐进加速：前5帧目标速度从35%爬升到100%，避免第一帧就顶格造成的瞬移感
+                speed *= MathHelper.Clamp(activeAttackTimer / 5f, 0.35f, 1f);
+
                 Vector2 tangent = activeAttackDirection.RotatedBy(MathHelper.PiOver2 * (IsLargeSlashSpike ? -1f : 1f));
                 Vector2 curvedDirection = (activeAttackDirection * 0.92f + tangent * 0.18f).SafeNormalize(activeAttackDirection);
-                Projectile.velocity = (Projectile.velocity * 2f + curvedDirection * speed) / 3f;
+                // 惯性系数从2提升到8：说明书建议的"灵敏但平滑"区间，弧线不再是瞬间掰头
+                Projectile.velocity = (Projectile.velocity * 8f + curvedDirection * speed) / 9f;
                 return;
             }
 
-            Vector2 returnDirection = (home - Projectile.Center).SafeNormalize(-activeAttackDirection);
-            Projectile.velocity = (Projectile.velocity * 5f + returnDirection * 18f) / 6f;
-            if (Vector2.DistanceSquared(Projectile.Center, home) < 30f * 30f || activeAttackTimer >= maxFrames)
-                EndActiveAttack(home);
+            EndActiveAttack();
         }
 
-        private void HandleStrikeActiveAttack(Player player, NPC target, Vector2 home)
+        private void HandleStrikeActiveAttack(NPC target)
         {
             int windupFrames = whipFrenzyTimer > 0 ? 6 : 10;
             int impactFrames = whipFrenzyTimer > 0 ? 26 : 30;
@@ -505,7 +570,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
                 Vector2 sideVector = activeAttackDirection.RotatedBy(MathHelper.PiOver2) * side * 54f;
                 Vector2 stagingPoint = target.Center - activeAttackDirection * 155f + sideVector;
                 Vector2 toStage = (stagingPoint - Projectile.Center).SafeNormalize(activeAttackDirection);
-                Projectile.velocity = (Projectile.velocity * 4f + toStage * 22f) / 5f;
+                Projectile.velocity = (Projectile.velocity * 8f + toStage * 22f) / 9f;
                 Projectile.friendly = false;
                 return;
             }
@@ -514,25 +579,21 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
             if (activeAttackTimer <= impactFrames)
             {
                 float speed = whipFrenzyTimer > 0 ? 34f : 29f;
-                Projectile.velocity = (Projectile.velocity + activeAttackDirection * speed) / 2f;
+                // 惯性系数从1提升到3：冲击依旧凌厉，但不再是单帧内速度平均掉的硬切
+                Projectile.velocity = (Projectile.velocity * 3f + activeAttackDirection * speed) / 4f;
                 return;
             }
 
-            Vector2 returnDirection = (home - Projectile.Center).SafeNormalize(-activeAttackDirection);
-            Projectile.velocity = (Projectile.velocity * 6f + returnDirection * 20f) / 7f;
-            if (Vector2.DistanceSquared(Projectile.Center, home) < 34f * 34f || activeAttackTimer >= 52)
-                EndActiveAttack(home);
+            EndActiveAttack();
         }
 
-        private void EndActiveAttack(Vector2 home)
+        private void EndActiveAttack()
         {
             activeAttacking = false;
             activeAttackTimer = 0;
             activeTargetIndex = -1;
-            Projectile.velocity = Vector2.Zero;
             Projectile.friendly = true;
-            if (Vector2.DistanceSquared(Projectile.Center, home) < 60f * 60f)
-                Projectile.Center = Vector2.Lerp(Projectile.Center, home, 0.55f);
+            returning = true;
             Projectile.netUpdate = true;
         }
 
@@ -876,7 +937,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
             if (modPlayer.CurrentMode == 1 && flying && !isThrusting)
             {
                 if (!TryEmbed(target, player))
-                    ReturnToOrbit(player);
+                    ReturnToOrbit();
             }
 
             if (activeAttacking && activeAttackStyle == 2 && activeAttackTimer > 10)
@@ -912,6 +973,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
             writer.Write(activeAttackDirection.X);
             writer.Write(activeAttackDirection.Y);
             writer.Write(whipFrenzyTimer);
+            writer.Write(returning);
         }
 
         public override void ReceiveExtraAI(BinaryReader reader)
@@ -937,6 +999,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
             activeAttackCooldown = reader.ReadInt32();
             activeAttackDirection = new Vector2(reader.ReadSingle(), reader.ReadSingle());
             whipFrenzyTimer = reader.ReadInt32();
+            returning = reader.ReadBoolean();
         }
 
         public override void OnKill(int timeLeft)
@@ -979,7 +1042,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
                 color = Color.Lerp(new Color(0, 185, 255), Color.White, 0.45f + 0.25f * MathF.Sin(time * 7f));
                 scale = 1.32f;
             }
-            else if (flying || smashing || activeAttacking)
+            else if (flying || smashing || activeAttacking || returning)
             {
                 color = Color.Lerp(new Color(110, 235, 255), Color.White, 0.55f);
                 scale = 1.12f;

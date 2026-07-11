@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.BossProgress;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
@@ -134,6 +135,7 @@ namespace CalamityLegendsComeBack.BossAI.ReBack.Prime2041
 
             bool bossRush = BossRushEvent.BossRushActive;
             bool death = CalamityWorld.death || bossRush;
+            bool ctrlBossSuppressesDespawn = CTRLBossAntiDespawnSystem.IsActive;
 
             // Percent life remaining
             float lifeRatio = NPC.life / (float)NPC.lifeMax;
@@ -255,11 +257,11 @@ namespace CalamityLegendsComeBack.BossAI.ReBack.Prime2041
             }
 
             // Despawn
-            if (Main.npc[(int)NPC.ai[0]].ai[1] == 3f)
+            if (!ctrlBossSuppressesDespawn && Main.npc[(int)NPC.ai[0]].ai[1] == 3f)
                 NPC.ai[1] = 3f;
 
             // Activate daytime enrage
-            if (Main.IsItDay() && !bossRush && NPC.ai[1] != 3f && NPC.ai[1] != 2f)
+            if (!ctrlBossSuppressesDespawn && Main.IsItDay() && !bossRush && NPC.ai[1] != 3f && NPC.ai[1] != 2f)
             {
                 // Heal
                 if (Main.netMode != NetmodeID.MultiplayerClient)
@@ -277,6 +279,9 @@ namespace CalamityLegendsComeBack.BossAI.ReBack.Prime2041
                 NPC.ai[1] = 2f;
                 SoundEngine.PlaySound(SoundID.ForceRoar, NPC.Center);
             }
+
+            if (ctrlBossSuppressesDespawn && (NPC.ai[1] == 2f || NPC.ai[1] == 3f))
+                NPC.ai[1] = 0f;
 
             // Adjust slowing debuff immunity
             bool immuneToSlowingDebuffs = NPC.ai[1] == 5f;

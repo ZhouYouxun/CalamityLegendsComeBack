@@ -47,18 +47,18 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.DragoonDrizzlefish
         public override bool CanUseItem(Player player)
         {
             DragoonDrizzlefishPlayer foodPlayer = player.GetModPlayer<DragoonDrizzlefishPlayer>();
-            bool feeding = player.altFunctionUse == 2;
+            bool charming = player.altFunctionUse == 2;
 
             Item.useStyle = ItemUseStyleID.Shoot;
             Item.noMelee = true;
-            Item.UseSound = feeding ? null : SoundID.Item20;
+            Item.UseSound = charming ? null : SoundID.Item20;
             Item.shoot = ModContent.ProjectileType<FoodDrizzlefishFireball>();
             Item.shootSpeed = 11f;
 
-            if (feeding)
+            if (charming)
             {
-                Item.useTime = 24;
-                Item.useAnimation = 24;
+                Item.useTime = 20;
+                Item.useAnimation = 20;
                 return true;
             }
 
@@ -85,10 +85,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.DragoonDrizzlefish
             Vector2 position, Vector2 velocity, int type, int damage, float knockback)
         {
             if (player.altFunctionUse == 2)
-                return Feed(player);
+                return Charm(player);
 
             DragoonDrizzlefishPlayer foodPlayer = player.GetModPlayer<DragoonDrizzlefishPlayer>();
-            if (!foodPlayer.HasFood)
+            if (!foodPlayer.HasFood && !TryFeed(player))
             {
                 foodPlayer.HungryFeedback();
                 return false;
@@ -222,7 +222,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.DragoonDrizzlefish
                 Main.projectile[projectile].CritChance = player.GetWeaponCrit(Item);
         }
 
-        private static bool Feed(Player player)
+        private static bool Charm(Player player)
+        {
+            player.GetModPlayer<DragoonDrizzlefishPlayer>().Charm();
+            return false;
+        }
+
+        private static bool TryFeed(Player player)
         {
             int slot = FindFoodSlot(player);
             DragoonDrizzlefishPlayer foodPlayer = player.GetModPlayer<DragoonDrizzlefishPlayer>();
@@ -239,7 +245,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.DragoonDrizzlefish
             if (food.stack <= 0)
                 food.TurnToAir();
 
-            return false;
+            return true;
         }
 
         private static int FindFoodSlot(Player player)

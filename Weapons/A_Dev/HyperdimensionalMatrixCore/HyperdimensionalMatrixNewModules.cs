@@ -225,9 +225,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
     // ──────────────────────────────────────────────────────
 
     /// <summary>
-    /// 分形递归树模块：从目标方向生长一棵 L-System 分形树，
-    /// 逐层展开到最大深度后，所有叶节点同时向目标发射 MatrixGeoShard。
-    /// 共 2^4 = 16 条碎片。
+    /// 分形递归树模块：在目标脚下生长一棵笔直向上的 L-System 分形树，
+    /// 逐层展开到最大深度后，所有叶节点同时向目标发射 MatrixGeoShard——
+    /// 如同地刺破土而出。共 2^4 = 16 条碎片。
     /// </summary>
     public sealed class MatrixFractalTree : ModProjectile, ILocalizedModType
     {
@@ -283,11 +283,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
 
         private void SpawnLeafParticles()
         {
-            NPC target = GetTarget();
-            Vector2 anchor = target?.Center ?? Projectile.Center;
-            float baseAngle = target != null
-                ? (anchor - Projectile.Center).ToRotation()
-                : -MathHelper.PiOver2;
+            const float baseAngle = -MathHelper.PiOver2; // tree always grows straight up from underground
 
             List<(Vector2 pos, float angle)> leaves = new();
             CollectLeaves(Projectile.Center, baseAngle, InitialLength, 0, leaves);
@@ -306,18 +302,18 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
 
         private void SpawnShards()
         {
+            const float baseAngle = -MathHelper.PiOver2; // tree always grows straight up from underground
             NPC target = GetTarget();
-            Vector2 anchor = target?.Center ?? Projectile.Center;
-            float baseAngle = target != null
-                ? (anchor - Projectile.Center).ToRotation()
-                : -MathHelper.PiOver2;
 
             List<(Vector2 pos, float angle)> leaves = new();
             CollectLeaves(Projectile.Center, baseAngle, InitialLength, 0, leaves);
 
             foreach (var (pos, angle) in leaves)
             {
-                Vector2 dir = angle.ToRotationVector2();
+                // Aim each spike at the target directly so the below-ground origin always connects
+                Vector2 dir = target != null
+                    ? (target.Center - pos).SafeNormalize(angle.ToRotationVector2())
+                    : angle.ToRotationVector2();
                 Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
                     pos,
@@ -356,11 +352,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             float visibleDepth = MathHelper.Clamp((float)age / BuildEnd * MaxDepth, 0f, MaxDepth);
             bool flashing = age >= FlashEnd;
 
-            NPC target = GetTarget();
-            Vector2 anchor = target?.Center ?? Projectile.Center;
-            float baseAngle = target != null
-                ? (anchor - Projectile.Center).ToRotation()
-                : -MathHelper.PiOver2;
+            const float baseAngle = -MathHelper.PiOver2; // tree always grows straight up from underground
 
             DrawBranch(Projectile.Center, baseAngle, InitialLength, 0, visibleDepth, opacity, flashing);
 
@@ -1225,16 +1217,19 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
     // ──────────────────────────────────────────────────────
 
     /// <summary>
-    /// 彭罗斯镶嵌坍缩模块：构建一个准晶体彭罗斯菱形镶嵌图案，
-    /// 菱形从中心向外展开再从外向内坍缩，最终在中心引爆一次强力
-    /// MatrixFusionExplosion。这是稀有的高伤害攻击模块。
+    /// 彭罗斯镶嵌陨落模块：在目标上空构建一个准晶体彭罗斯菱形镶嵌图案，
+    /// 菱形从中心向外展开再向内坍缩为一枚致密晶核，随后从天而降砸向目标，
+    /// 落地引爆一次强力 MatrixFusionExplosion。这是稀有的高伤害攻击模块。
     /// </summary>
     public sealed class MatrixPenroseTiling : ModProjectile, ILocalizedModType
     {
         private const int BuildEnd    = 75;
         private const int CollapseEnd = 115;
-        private const int FireFrame   = 117;
-        private const int Lifetime    = 140;
+        private const int PlungeEnd   = CollapseEnd + 16;
+        private const int FireFrame   = PlungeEnd;
+        private const int Lifetime    = 148;
+
+        private const float SkyHeight = 340f; // how high above the target the tiling forms before falling
 
         private static readonly float Phi = (1f + MathF.Sqrt(5f)) * 0.5f;
 
@@ -1248,6 +1243,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
 
         private int Age => Lifetime - Projectile.timeLeft;
         private int TargetIndex => (int)Projectile.ai[1];
+
+        private Vector2 _skyAnchor;
+        private Vector2 _impactPoint;
+        private bool _anchorSet;
 
         public override void SetStaticDefaults()
         {
@@ -1272,6 +1271,15 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
 
         public override void AI()
         {
+            if (!_anchorSet)
+            {
+                NPC initialTarget = GetTarget();
+                Vector2 basePos = initialTarget?.Center ?? Projectile.Center;
+                _impactPoint = basePos;
+                _skyAnchor = basePos + new Vector2(0f, -SkyHeight);
+                _anchorSet = true;
+            }
+
             int age = Age;
 
             if (age == FireFrame && Main.myPlayer == Projectile.owner)
@@ -1280,7 +1288,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             if (age == FireFrame && !Main.dedServ)
                 SpawnCollapseParticles();
 
-            Lighting.AddLight(Projectile.Center, HyperdimensionalMatrixVisuals.GetDataColor(age * 0.008f).ToVector3() * 0.3f);
+            Lighting.AddLight(GetAnchor(), HyperdimensionalMatrixVisuals.GetDataColor(age * 0.008f).ToVector3() * 0.3f);
         }
 
         private void SpawnCollapseParticles()
@@ -1421,7 +1429,34 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
                     HyperdimensionalMatrixVisuals.GetDataColor(0.45f, opacity * 0.35f), 24, 1.5f);
             }
 
+            // Ground telegraph: warns the player where the crystal will land before it plunges
+            if (age < PlungeEnd && _anchorSet)
+            {
+                float telegraphPulse = 0.5f + 0.5f * MathF.Sin(time * 5f);
+                Color telegraphColor = HyperdimensionalMatrixVisuals.GetDataColor(0.05f, opacity * 0.35f * telegraphPulse);
+                HyperdimensionalMatrixVisuals.DrawScanRing(_impactPoint, 46f, time * 1.1f, telegraphColor, 20, 1.5f);
+                HyperdimensionalMatrixVisuals.DrawScanRing(_impactPoint, 30f, -time * 1.6f, telegraphColor * 0.7f, 14, 1.2f);
+            }
+
             return false;
+        }
+
+        /// <summary>
+        /// 图案的绘制中心：坍缩完成前固定在目标上空的锚点，
+        /// 坍缩完成后加速俯冲向落点（目标被锁定时的位置）。
+        /// </summary>
+        private Vector2 GetAnchor()
+        {
+            if (!_anchorSet)
+                return Projectile.Center;
+
+            int age = Age;
+            if (age <= CollapseEnd)
+                return _skyAnchor;
+
+            float plungePct = MathHelper.Clamp((age - CollapseEnd) / (float)(PlungeEnd - CollapseEnd), 0f, 1f);
+            plungePct *= plungePct; // ease-in: accelerates as it falls
+            return Vector2.Lerp(_skyAnchor, _impactPoint, plungePct);
         }
 
         /// <summary>生成彭罗斯式菱形中心点，使用五重旋转对称和黄金比例间距。</summary>
@@ -1456,12 +1491,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             }
 
             return centers.ToArray();
-        }
-
-        private Vector2 GetAnchor()
-        {
-            NPC target = GetTarget();
-            return target?.Center ?? Projectile.Center;
         }
 
         private NPC GetTarget()
@@ -1694,7 +1723,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
 
     /// <summary>
     /// 克利福德环面霍普夫纤维化模块：在目标周围投影克利福德环面的 4D 投影圆环，
-    /// 三个圆环交织并倾斜，周期性脱离发光数据结点作为 MatrixGridCell 发射。
+    /// 三个圆环交织并倾斜，周期性从环面节点射出贯穿式激光扫射目标。
     /// </summary>
     public sealed class MatrixCliffordTorus : ModProjectile, ILocalizedModType
     {
@@ -1749,24 +1778,25 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             Vector2 aimPos = target?.Center ?? Projectile.Center;
             float time = Main.GlobalTimeWrappedHourly;
             Vector2 center = Projectile.Center;
+            IEntitySource src = Projectile.GetSource_FromThis();
 
             for (int r = 0; r < RingCount; r++)
             {
                 float flow = (time * 1.5f + r * 0.33f) % 1f;
                 Vector2 nodePos = GetRingPoint(center, r, flow, time);
                 Vector2 dir = (aimPos - nodePos).SafeNormalize(Vector2.UnitY);
+                Vector2 origin = MatrixDataLaser.GetCenteredOrigin(aimPos, dir);
                 Projectile.NewProjectile(
-                    Projectile.GetSource_FromThis(),
-                    nodePos,
-                    dir * 22f,
-                    ModContent.ProjectileType<MatrixGridCell>(),
+                    src,
+                    origin,
+                    dir,
+                    ModContent.ProjectileType<MatrixDataLaser>(),
                     Projectile.damage,
                     Projectile.knockBack,
-                    Projectile.owner,
-                    TargetIndex);
+                    Projectile.owner);
             }
 
-            SoundEngine.PlaySound(SoundID.Item117 with { Volume = 0.3f, Pitch = 0.4f }, Projectile.Center);
+            SoundEngine.PlaySound(new SoundStyle(MatrixModuleNumbers.SndSpaceWarp) { Volume = 0.3f, Pitch = 0.3f }, Projectile.Center);
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -1842,7 +1872,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
 
     /// <summary>
     /// 超配方形态渐变模块：以 Gielis 超配方公式进行极坐标实时形态过渡，
-    /// 角对称数在 3, 5, 8 之间平滑渐变，蓄力时向核心边缘发射 MatrixGeoShard。
+    /// 角对称数在 3, 5, 8 之间平滑渐变，同时周期性地在目标周围各处依次
+    /// 具现化数据碎片并射向目标。
     /// </summary>
     public sealed class MatrixSuperformulaMorph : ModProjectile, ILocalizedModType
     {
@@ -1890,18 +1921,33 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
         {
             NPC target = GetTarget();
             if (target == null) return;
-            Vector2 dir = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY);
+
+            // A fragment materializes at a random point around the target and streaks inward
+            float angle = Main.rand.NextFloat(MathHelper.TwoPi);
+            float dist = Main.rand.NextFloat(170f, 260f);
+            Vector2 spawnPos = target.Center + angle.ToRotationVector2() * dist;
+            Vector2 dir = (target.Center - spawnPos).SafeNormalize(Vector2.UnitY);
+
             Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
-                Projectile.Center,
-                dir * 18f,
+                spawnPos,
+                dir * 19f,
                 ModContent.ProjectileType<MatrixGeoShard>(),
                 Projectile.damage,
                 Projectile.knockBack,
                 Projectile.owner,
                 TargetIndex);
-            
-            SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.28f, Pitch = 0.35f, MaxInstances = 3 }, Projectile.Center);
+
+            if (!Main.dedServ)
+            {
+                Color c = HyperdimensionalMatrixVisuals.GetDataColor(Main.rand.NextFloat());
+                for (int i = 0; i < 4; i++)
+                    GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                        spawnPos, Main.rand.NextVector2Unit() * Main.rand.NextFloat(0.5f, 2f),
+                        false, 8 + Main.rand.Next(6), 0.4f, c, true, false, false));
+            }
+
+            SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.28f, Pitch = 0.35f, MaxInstances = 3 }, spawnPos);
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -1971,7 +2017,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
 
     /// <summary>
     /// 谢尔宾斯基三角网格塌缩模块：投影一个递归 3 层的分形等边三角形，
-    /// 在蓄力过程中细分小三角形开始向中心收缩，最终在中心引爆 MatrixFusionExplosion。
+    /// 蓄力过程中不断有细分三角碎片从目标周围依次具现化并射向目标，
+    /// 网格本体持续向中心收缩，最终在中心引爆 MatrixFusionExplosion。
     /// </summary>
     public sealed class MatrixSierpinskiCollapse : ModProjectile, ILocalizedModType
     {
@@ -2011,6 +2058,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
         {
             int age = Age;
 
+            if (Main.myPlayer == Projectile.owner && age > 15 && age <= CollapseEnd && age % 15 == 0)
+                SpawnFragment();
+
             if (age == FireFrame && Main.myPlayer == Projectile.owner)
                 SpawnExplosion();
 
@@ -2018,6 +2068,40 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
                 SpawnParticles();
 
             Lighting.AddLight(Projectile.Center, HyperdimensionalMatrixVisuals.GetDataColor(age * 0.01f).ToVector3() * 0.35f);
+        }
+
+        /// <summary>细分三角碎片从目标周围随机点依次具现化并射向目标。</summary>
+        private void SpawnFragment()
+        {
+            NPC target = GetTarget();
+            if (target == null)
+                return;
+
+            float angle = Main.rand.NextFloat(MathHelper.TwoPi);
+            float dist = Main.rand.NextFloat(150f, 230f);
+            Vector2 spawnPos = target.Center + angle.ToRotationVector2() * dist;
+            Vector2 dir = (target.Center - spawnPos).SafeNormalize(Vector2.UnitY);
+
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                spawnPos,
+                dir * 20f,
+                ModContent.ProjectileType<MatrixGeoShard>(),
+                Math.Max(1, (int)(Projectile.damage * MatrixModuleNumbers.SierpinskiFragmentDamage)),
+                Projectile.knockBack,
+                Projectile.owner,
+                TargetIndex);
+
+            if (!Main.dedServ)
+            {
+                Color c = HyperdimensionalMatrixVisuals.GetDataColor(Main.rand.NextFloat());
+                for (int i = 0; i < 5; i++)
+                    GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                        spawnPos, Main.rand.NextVector2Unit() * Main.rand.NextFloat(0.5f, 2f),
+                        false, 8 + Main.rand.Next(6), 0.4f, c, true, false, false));
+            }
+
+            SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.2f, Pitch = 0.5f, MaxInstances = 2 }, spawnPos);
         }
 
         private void SpawnParticles()

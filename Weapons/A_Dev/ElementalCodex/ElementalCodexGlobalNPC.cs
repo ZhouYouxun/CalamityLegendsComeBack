@@ -221,50 +221,58 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.ElementalCodex
             {
                 case ElementalCodexReaction.SteamBurst:
                     StrikeNPC(npc, panelDamage * 4, owner);
-                    SpawnBurst(npc.Center, ElementalCodexContent.GetReactionColor(reaction), 28, 7f);
+                    ElementalCodexVFX.EmitReactionEffect(npc, reaction);
                     break;
 
                 case ElementalCodexReaction.MeltingImpact:
                     StrikeNPC(npc, Math.Max(1, panelDamage / 2), owner);
                     meltingTimer = Math.Max(meltingTimer, 3 * 60);
                     meltingPower = Math.Max(meltingPower, panelDamage);
+                    ElementalCodexVFX.EmitReactionEffect(npc, reaction);
                     break;
 
                 case ElementalCodexReaction.Overload:
                     StrikeArea(npc.Center, ElementalCodexBalance.OverloadRadius, panelDamage * 5, owner, 9f);
-                    SpawnBurst(npc.Center, ElementalCodexContent.GetReactionColor(reaction), 54, 10f);
+                    ElementalCodexVFX.EmitReactionEffect(npc, reaction);
                     break;
 
                 case ElementalCodexReaction.Scorch:
                     scorchTimer = Math.Max(scorchTimer, 6 * 60);
                     scorchPower = Math.Max(scorchPower, panelDamage);
+                    ElementalCodexVFX.EmitReactionEffect(npc, reaction);
                     break;
 
                 case ElementalCodexReaction.Paralysis:
                     paralysisTimer = Math.Max(paralysisTimer, 2 * 60);
+                    ElementalCodexVFX.EmitReactionEffect(npc, reaction);
                     break;
 
                 case ElementalCodexReaction.Freeze:
                     freezeTimer = Math.Max(freezeTimer, 90);
+                    ElementalCodexVFX.EmitReactionEffect(npc, reaction);
                     break;
 
                 case ElementalCodexReaction.Electrified:
                     electrifiedTimer = Math.Max(electrifiedTimer, 5 * 60);
                     electrifiedPower = Math.Max(electrifiedPower, panelDamage);
+                    ElementalCodexVFX.EmitReactionEffect(npc, reaction);
                     break;
 
                 case ElementalCodexReaction.Growth:
                     growthTimer = Math.Max(growthTimer, 6 * 60);
                     growthRollTimer = 0;
+                    ElementalCodexVFX.EmitReactionEffect(npc, reaction);
                     break;
 
                 case ElementalCodexReaction.Wither:
                     witherTimer = Math.Max(witherTimer, 5 * 60);
+                    ElementalCodexVFX.EmitReactionEffect(npc, reaction);
                     break;
 
                 case ElementalCodexReaction.Condensation:
                     StrikeNPC(npc, GetCondensationDamage(npc, panelDamage), owner);
                     condensationHasteTimer = Math.Max(condensationHasteTimer, 4 * 60);
+                    ElementalCodexVFX.EmitReactionEffect(npc, reaction);
                     break;
 
                 case ElementalCodexReaction.ColdStorage:
@@ -273,29 +281,34 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.ElementalCodex
                         coldStorageApplied = true;
                         npc.value *= 3f;
                     }
+                    ElementalCodexVFX.EmitReactionEffect(npc, reaction);
                     break;
 
                 case ElementalCodexReaction.CorruptFreeze:
-                    if (Main.rand.NextFloat() < 0.62f)
+                    bool corruptFreezeCritical = Main.rand.NextFloat() < 0.62f;
+                    if (corruptFreezeCritical)
                         StrikeNPC(npc, panelDamage * 8, owner);
                     else
                         npc.life = Math.Min(npc.lifeMax, npc.life + Math.Max(1, panelDamage * 3));
-                    SpawnBurst(npc.Center, ElementalCodexContent.GetReactionColor(reaction), 34, 7f);
+                    ElementalCodexVFX.EmitReactionEffect(npc, reaction, corruptFreezeCritical);
                     break;
 
                 case ElementalCodexReaction.Flourish:
                     flourishTimer = Math.Max(flourishTimer, 8 * 60);
                     flourishOwner = owner?.whoAmI ?? -1;
+                    ElementalCodexVFX.EmitReactionEffect(npc, reaction);
                     break;
 
                 case ElementalCodexReaction.Control:
                     controlTimer = Math.Max(controlTimer, 5 * 60);
                     controlOwner = owner?.whoAmI ?? -1;
                     owner?.GetModPlayer<ElementalCodexPlayer>().ApplyControl(npc, 5 * 60);
+                    ElementalCodexVFX.EmitReactionEffect(npc, reaction);
                     break;
 
                 case ElementalCodexReaction.Neutralization:
                     owner?.GetModPlayer<ElementalCodexPlayer>().ApplyNeutralization(7 * 60);
+                    ElementalCodexVFX.EmitReactionEffect(npc, reaction);
                     break;
             }
         }
@@ -416,7 +429,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.ElementalCodex
                 ElementalCodexGlobalNPC state = other.GetGlobalNPC<ElementalCodexGlobalNPC>();
                 state.electrifiedTimer = Math.Max(state.electrifiedTimer, 3 * 60);
                 state.electrifiedPower = Math.Max(state.electrifiedPower, Math.Max(1, electrifiedPower / 2));
-                SpawnArc(npc.Center, other.Center, ElementalCodexContent.GetReactionColor(ElementalCodexReaction.Electrified));
+                ElementalCodexVFX.EmitElectrifiedArc(npc.Center, other.Center);
                 return;
             }
         }
@@ -485,94 +498,17 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.ElementalCodex
                 return;
 
             if (primedTimeLeft > 0)
-                EmitBaseElementVisual(npc, primedElement);
+                ElementalCodexVFX.EmitElementAura(npc, primedElement);
 
             if (scorchTimer > 0)
-                EmitBaseElementVisual(npc, ElementalCodexElement.Fire);
+                ElementalCodexVFX.EmitScorchAura(npc);
             if (electrifiedTimer > 0)
-                EmitBaseElementVisual(npc, ElementalCodexElement.Lightning);
+                ElementalCodexVFX.EmitElectrifiedAura(npc);
             if (flourishTimer > 0)
-                EmitBaseElementVisual(npc, ElementalCodexElement.Nature);
+                ElementalCodexVFX.EmitFlourishAura(npc);
             if (freezeTimer > 0)
-                EmitBaseElementVisual(npc, ElementalCodexElement.Ice);
+                ElementalCodexVFX.EmitFreezeAura(npc);
         }
 
-        private static void EmitBaseElementVisual(NPC npc, ElementalCodexElement element)
-        {
-            Color color = ElementalCodexContent.GetElementColor(element);
-            Vector2 center = npc.Center + Main.rand.NextVector2Circular(npc.width * 0.45f, npc.height * 0.45f);
-            Vector2 velocity;
-            int dustType;
-
-            switch (element)
-            {
-                case ElementalCodexElement.Fire:
-                    dustType = DustID.Torch;
-                    velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2f, 5f);
-                    break;
-
-                case ElementalCodexElement.Water:
-                    dustType = DustID.BlueTorch;
-                    velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.5f, 4.2f);
-                    break;
-
-                case ElementalCodexElement.Ice:
-                    dustType = DustID.IceTorch;
-                    velocity = new Vector2(Main.rand.NextFloat(-4.5f, 4.5f), Main.rand.NextFloat(-0.35f, 0.35f));
-                    break;
-
-                case ElementalCodexElement.Lightning:
-                    dustType = DustID.PurpleTorch;
-                    velocity = new Vector2(Main.rand.NextFloat(-0.45f, 0.45f), Main.rand.NextFloat(-5.2f, 5.2f));
-                    break;
-
-                case ElementalCodexElement.Nature:
-                    dustType = Main.rand.NextBool() ? DustID.GrassBlades : DustID.GemEmerald;
-                    float angle = Main.rand.NextFloat(MathHelper.TwoPi);
-                    velocity = new Vector2((float)Math.Cos(angle * 2.3f), (float)Math.Sin(angle * 1.7f)) * Main.rand.NextFloat(1.5f, 4f);
-                    break;
-
-                case ElementalCodexElement.Disease:
-                    dustType = Main.rand.NextBool() ? DustID.Shadowflame : DustID.Smoke;
-                    velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.2f, 5.6f);
-                    color = new Color(32, 28, 36);
-                    break;
-
-                default:
-                    return;
-            }
-
-            Dust dust = Dust.NewDustPerfect(center, dustType, velocity, 120, color, Main.rand.NextFloat(0.85f, 1.35f));
-            dust.noGravity = true;
-            Lighting.AddLight(npc.Center, color.ToVector3() * 0.18f);
-        }
-
-        private static void SpawnBurst(Vector2 center, Color color, int count, float speed)
-        {
-            if (Main.dedServ)
-                return;
-
-            for (int i = 0; i < count; i++)
-            {
-                Vector2 velocity = (MathHelper.TwoPi * i / count).ToRotationVector2() * Main.rand.NextFloat(speed * 0.45f, speed);
-                Dust dust = Dust.NewDustPerfect(center, DustID.Electric, velocity, 90, color, Main.rand.NextFloat(0.9f, 1.7f));
-                dust.noGravity = true;
-            }
-        }
-
-        private static void SpawnArc(Vector2 from, Vector2 to, Color color)
-        {
-            if (Main.dedServ)
-                return;
-
-            Vector2 line = to - from;
-            int steps = Math.Max(4, (int)(line.Length() / 42f));
-            for (int i = 0; i <= steps; i++)
-            {
-                Vector2 point = Vector2.Lerp(from, to, i / (float)steps) + Main.rand.NextVector2Circular(10f, 10f);
-                Dust dust = Dust.NewDustPerfect(point, DustID.Electric, Main.rand.NextVector2Circular(1.2f, 1.2f), 110, color, 1.1f);
-                dust.noGravity = true;
-            }
-        }
     }
 }

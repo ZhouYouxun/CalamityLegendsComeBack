@@ -273,10 +273,13 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
 
             bool holdingAssignedItem = Owner.HeldItem.type == AssignedItemID;
             if (!holdingAssignedItem)
-                BeginDyingFade();
+            {
+                CancelBecauseWeaponChanged();
+                return;
+            }
 
             Owner.Calamity().mouseWorldListener = true;
-            bool shouldOccupyHands = holdingAssignedItem && !willDie;
+            bool shouldOccupyHands = !willDie;
             if (shouldOccupyHands)
             {
                 Owner.heldProj = Projectile.whoAmI;
@@ -445,6 +448,25 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             postSwing = false;
             rightChargeTimer = 0;
             StopChargeSpinSound();
+        }
+
+        private void CancelBecauseWeaponChanged()
+        {
+            CanHit = false;
+            postSwing = false;
+            willDie = true;
+            rightChargeTimer = 0;
+            auricJudgementQueued = false;
+            auricJudgementReleased = false;
+            StopChargeSpinSound();
+            DrawUnconditionally = false;
+
+            if (Owner.heldProj == Projectile.whoAmI)
+                Owner.heldProj = -1;
+
+            Projectile.velocity = Vector2.Zero;
+            Projectile.netUpdate = true;
+            Projectile.Kill();
         }
 
         private void RunChargeHold()

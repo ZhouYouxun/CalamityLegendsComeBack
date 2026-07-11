@@ -20,9 +20,11 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         private static readonly Color BombWhite = new(255, 246, 196);
 
         private const int FuseFrames = 64;
+        private const float FlightDamping = 0.98f;
 
         public new string LocalizationCategory => "Projectiles.YharimsCrystal";
-        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+        // The former normal-fire missile silhouette now belongs exclusively to the heavy attack.
+        public override string Texture => "CalamityMod/Projectiles/Ranged/ScorpioLargeRocket";
 
         private bool Exploding
         {
@@ -32,6 +34,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
 
         public override void SetStaticDefaults()
         {
+            Main.projFrames[Type] = 4;
             ProjectileID.Sets.TrailCacheLength[Type] = 16;
             ProjectileID.Sets.TrailingMode[Type] = 2;
         }
@@ -79,10 +82,15 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             }
             else
             {
-                Projectile.velocity *= 0.991f;
+                Projectile.velocity *= FlightDamping;
             }
 
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
+            if (++Projectile.frameCounter >= 24)
+            {
+                Projectile.frameCounter = 0;
+                Projectile.frame = (Projectile.frame + 1) % Main.projFrames[Type];
+            }
             Lighting.AddLight(Projectile.Center, Color.Lerp(BombOrange, BombGold, 0.4f).ToVector3() * 0.7f);
 
             if (!Main.dedServ && Projectile.timeLeft % 2 == 0 && (Exploding || Main.rand.NextBool()))
@@ -110,14 +118,60 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero, BombWhite, "CalamityMod/Particles/HighResHollowCircleHardEdge", Vector2.One, Main.rand.NextFloat(-10f, 10f), 0f, 0.17f * Projectile.scale, 18));
             GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero, Color.Lerp(BombGold, Color.White, 0.4f), "CalamityMod/Particles/BloomCircle", Vector2.One, Main.rand.NextFloat(-10f, 10f), 4.1f * Projectile.scale, 0f, 30));
 
-            // Own-style finish: a radial starburst of bloom streaks, distinct from the purple pulse-ring look it replaces.
-            int rays = 20;
+            // Own-style finish: a restrained golden-angle starburst around the unchanged shockwave.
+            int rays = 13;
+            float goldenAngle = MathHelper.Pi * (3f - System.MathF.Sqrt(5f));
             for (int i = 0; i < rays; i++)
             {
-                float angle = MathHelper.TwoPi * i / rays + Main.rand.NextFloat(-0.05f, 0.05f);
+                float angle = goldenAngle * i + Main.rand.NextFloat(-0.035f, 0.035f);
                 Vector2 dir = angle.ToRotationVector2();
-                Particle ray = new CustomSpark(Projectile.Center, dir * Main.rand.NextFloat(3f, 6f), "CalamityMod/Particles/BloomLineAngled", false, 26, Main.rand.NextFloat(1.1f, 1.55f), i % 2 == 0 ? BombGold : BombOrange, new Vector2(0.22f, 1.12f), true, false, 0f, false, false, 0.9f);
+                Particle ray = new CustomSpark(Projectile.Center, dir * Main.rand.NextFloat(2.3f, 4.4f), "CalamityMod/Particles/BloomLineAngled", false, 20, Main.rand.NextFloat(0.62f, 0.95f), i % 2 == 0 ? BombGold : BombOrange, new Vector2(0.16f, 0.82f), true, false, 0f, false, false, 0.72f);
                 GeneralParticleHandler.SpawnParticle(ray);
+            }
+
+            // Three exact rotational symmetries expand at different rates: hexagon, octagon, dodecagon.
+            int[] polygonSides = { 6, 8, 12 };
+            for (int ring = 0; ring < polygonSides.Length; ring++)
+            {
+                int sides = polygonSides[ring];
+                float radius = (38f + ring * 30f) * Projectile.scale;
+                float phase = ring * MathHelper.Pi / sides + Projectile.identity * 0.017f;
+                for (int vertex = 0; vertex < sides; vertex++)
+                {
+                    float angle = MathHelper.TwoPi * vertex / sides + phase;
+                    Vector2 radial = angle.ToRotationVector2();
+                    Vector2 tangent = radial.RotatedBy(MathHelper.PiOver2);
+                    Color color = ring == 1 ? BombWhite : Color.Lerp(BombOrange, BombGold, ring * 0.42f);
+                    GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                        Projectile.Center + radial * radius,
+                        radial * (2.2f + ring * 1.15f) + tangent * (ring == 1 ? -1.2f : 1.2f),
+                        "CalamityMod/Particles/BloomCircle",
+                        false,
+                        20 + ring * 4,
+                        0.28f + ring * 0.08f,
+                        color,
+                        new Vector2(0.72f, 1.3f),
+                        true));
+                }
+            }
+
+            // Fermat spiral: sqrt radius spacing keeps the points evenly packed while the
+            // golden angle prevents visible radial clumping.
+            for (int i = 1; i <= 21; i++)
+            {
+                float angle = goldenAngle * i;
+                float radius = System.MathF.Sqrt(i / 21f) * 118f * Projectile.scale;
+                Vector2 radial = angle.ToRotationVector2();
+                GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                    Projectile.Center + radial * radius,
+                    radial.RotatedBy(MathHelper.PiOver2) * (1.4f + radius * 0.012f),
+                    "CalamityMod/Particles/BloomCircle",
+                    false,
+                    24,
+                    MathHelper.Lerp(0.22f, 0.48f, i / 21f),
+                    Color.Lerp(BombOrange, BombWhite, i / 21f),
+                    new Vector2(0.62f, 1.08f),
+                    true));
             }
 
             for (int i = 0; i < 48; i++)
@@ -154,13 +208,15 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             if (Exploding)
                 return false;
 
-            Texture2D texture = ModContent.Request<Texture2D>("CalamityMod/Particles/Light").Value;
+            Texture2D texture = ModContent.Request<Texture2D>(Texture).Value;
+            Texture2D glow = ModContent.Request<Texture2D>("CalamityMod/Projectiles/Ranged/ScorpioLargeRocket_Glow").Value;
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
-            Vector2 rotationPoint = texture.Size() * 0.5f;
+            Rectangle frame = texture.Frame(1, Main.projFrames[Type], 0, Projectile.frame);
+            Vector2 rotationPoint = frame.Size() * 0.5f;
 
             CalamityUtils.DrawAfterimagesCentered(Projectile, ProjectileID.Sets.TrailingMode[Type], Color.Lerp(BombOrange, BombGold, 0.5f) * 0.55f, 1);
-            Main.EntitySpriteDraw(texture, drawPosition, null, BombGold with { A = 0 }, Projectile.rotation, rotationPoint, Projectile.scale * 0.42f, SpriteEffects.None);
-            Main.EntitySpriteDraw(texture, drawPosition, null, Color.White with { A = 0 }, Projectile.rotation, rotationPoint, Projectile.scale * 0.22f, SpriteEffects.None);
+            Main.EntitySpriteDraw(texture, drawPosition, frame, Projectile.GetAlpha(Color.Lerp(lightColor, BombGold, 0.34f)), Projectile.rotation, rotationPoint, Projectile.scale, SpriteEffects.None);
+            Main.EntitySpriteDraw(glow, drawPosition, frame, Color.White * Projectile.Opacity, Projectile.rotation, rotationPoint, Projectile.scale, SpriteEffects.None);
 
             return false;
         }

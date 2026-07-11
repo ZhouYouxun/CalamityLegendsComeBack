@@ -311,14 +311,14 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             if (!Main.dedServ)
             {
                 SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/LargeWeaponFire") { Volume = 0.5f, Pitch = -0.1f, MaxInstances = 3 }, Projectile.Center);
-                GeneralParticleHandler.SpawnParticle(new StrongBloom(Projectile.Center, Vector2.Zero, LaserGold, 1.15f, 18));
-                GeneralParticleHandler.SpawnParticle(new StrongBloom(endPoint, Vector2.Zero, Color.Lerp(LaserRed, LaserGold, 0.4f), 1.4f, 22));
+                GeneralParticleHandler.SpawnParticle(new StrongBloom(Projectile.Center, Vector2.Zero, LaserGold, 0.9f, 14));
+                GeneralParticleHandler.SpawnParticle(new StrongBloom(endPoint, Vector2.Zero, Color.Lerp(LaserRed, LaserGold, 0.4f), 1.02f, 16));
                 GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(endPoint, Vector2.Zero, LaserGold, Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.1f, 1.6f, 20));
 
-                for (int i = 0; i < 26; i++)
+                for (int i = 0; i < 16; i++)
                 {
-                    Vector2 sparkVelocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(5f, 17f);
-                    Dust dust = Dust.NewDustPerfect(endPoint, Main.rand.NextBool(4) ? 267 : DustID.GoldFlame, sparkVelocity, 0, Main.rand.NextBool(3) ? Color.White : LaserGold, Main.rand.NextFloat(1.2f, 1.9f));
+                    Vector2 sparkVelocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(3.5f, 11f);
+                    Dust dust = Dust.NewDustPerfect(endPoint, Main.rand.NextBool(4) ? 267 : DustID.GoldFlame, sparkVelocity, 0, Main.rand.NextBool(3) ? Color.White : LaserGold, Main.rand.NextFloat(0.9f, 1.35f));
                     dust.noGravity = true;
                 }
             }
@@ -702,18 +702,18 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
                 return;
 
             SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.45f, Pitch = -0.1f }, Projectile.Center);
-            GeneralParticleHandler.SpawnParticle(new StrongBloom(Projectile.Center, Vector2.Zero, Color.Lerp(BlastRed, BlastGold, 0.45f), 1.05f, 17));
+            GeneralParticleHandler.SpawnParticle(new StrongBloom(Projectile.Center, Vector2.Zero, Color.Lerp(BlastRed, BlastGold, 0.45f), 0.82f, 13));
             GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Vector2.Zero, BlastGold, Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.1f, 1.35f, 19));
 
-            for (int i = 0; i < 16; i++)
+            for (int i = 0; i < 10; i++)
             {
                 Dust dust = Dust.NewDustPerfect(
                     Projectile.Center,
                     Main.rand.NextBool(4) ? 267 : DustID.GoldFlame,
-                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(3f, 11f),
+                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.4f, 7.5f),
                     0,
                     Main.rand.NextBool(3) ? Color.White : BlastGold,
-                    Main.rand.NextFloat(1.1f, 1.75f));
+                    Main.rand.NextFloat(0.8f, 1.25f));
                 dust.noGravity = true;
             }
         }

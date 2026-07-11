@@ -7,11 +7,6 @@ Mods: {
 			}
 		}
 
-		Projectiles: {
-			AzureThunder: {
-				ZhuangFangYiPetProjectile.DisplayName: Zhuang Fangyi
-				ZhuangFangYiWeakLightning.DisplayName: Fangyi Azure Bolt
-			}
-		}
+		Projectiles.AzureThunder.ZhuangFangYiPetProjectile.DisplayName: Zhuang Fangyi
 	}
 }

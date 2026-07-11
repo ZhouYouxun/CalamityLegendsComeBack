@@ -30,6 +30,7 @@ Mods: {
 						[c/FF8A30:The 4th torpedo is replaced by a Seeking Missile — 2× damage, 200×200 explosion, and spike barrage.]
 						[c/FF8A30:Last bullet in burst triggers a Nukesplosion.]
 						'''
+					LeftClick_ReconSoul: "[c/7DFFE8:Each bullet also releases a +/-1 degree reconnaissance soul that locks onto nearby enemies.]"
 					RightClick:
 						'''
 						[c/58FFDA:Right Click · 3-stage Pressure Protocol: Hold to Charge → release for a Pressure Bolt that spawns homing satellites.]
@@ -76,6 +77,7 @@ Mods: {
 				SeasSearingPollutionBubble.DisplayName: Abyssal Pollution Bubble
 				SeasSearingPollutionRocket.DisplayName: Abyssal Pollution Rocket
 				SeasSearingMissile.DisplayName: Abyssal Seeking Missile
+				SeasSearingReconSoul.DisplayName: Abyssal Recon Soul
 				SeasSearingMissileExplosion.DisplayName: Abyssal Missile Detonation
 				SeasSearingNukesplosion.DisplayName: Abyssal Nukesplosion
 			}

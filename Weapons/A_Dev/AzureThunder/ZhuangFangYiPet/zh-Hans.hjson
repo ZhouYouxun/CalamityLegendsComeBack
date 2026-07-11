@@ -7,11 +7,6 @@ Mods: {
 			}
 		}
 
-		Projectiles: {
-			AzureThunder: {
-				ZhuangFangYiPetProjectile.DisplayName: 庄方宜
-				ZhuangFangYiWeakLightning.DisplayName: 庄方宜青雷
-			}
-		}
+		Projectiles.AzureThunder.ZhuangFangYiPetProjectile.DisplayName: 庄方宜
 	}
 }

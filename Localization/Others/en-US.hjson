@@ -146,6 +146,8 @@ Mods: {
 				DisplayName: Legendary Emblem
 				Tooltip: Permanently unlocks every legendary weapon ultimate for this character
 				AlreadyConsumed: This character has already received the Legendary Emblem's permanent boost.
+				UnconsumedStatus: This character has not received the Legendary Emblem's permanent boost yet.
+				ConsumedStatus: This character has already received the Legendary Emblem's permanent boost.
 			}
 
 			LegendaryUltimateTester: {

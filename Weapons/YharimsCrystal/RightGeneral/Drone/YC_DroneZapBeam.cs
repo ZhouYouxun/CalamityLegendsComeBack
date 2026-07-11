@@ -8,13 +8,12 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
 {
-    // Fired by the rear pair of the drone battery: an instant raycast zap, not a sustained
-    // beam. Same "flash and gone" reference as the flanking gun's burst laser, but the
-    // line-art and color story are entirely our gold/red palette instead of blue/white.
+    // AlphaRay-inspired attached ray. One lives on every ship for the full channel and
+    // continuously follows that ship's deliberately lazy aim instead of flashing once.
     internal sealed class YC_DroneZapBeam : ModProjectile, ILocalizedModType
     {
-        private const float VisualLength = 2200f;
-        private const float CollisionWidth = 20f;
+        private const float VisualLength = 2600f;
+        private const float CollisionWidth = 18f;
         private static readonly Color ZapGold = new(255, 220, 92);
         private static readonly Color ZapRed = new(255, 80, 36);
 
@@ -22,6 +21,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         private ref float SpinSeed => ref Projectile.localAI[0];
+        private ref float Timer => ref Projectile.localAI[1];
+        private int ParentIndex => (int)Projectile.ai[0];
 
         public override void SetStaticDefaults()
         {
@@ -37,8 +38,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             Projectile.DamageType = DamageClass.Magic;
             Projectile.penetrate = -1;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = 9;
-            Projectile.timeLeft = 14;
+            Projectile.localNPCHitCooldown = 12;
+            Projectile.timeLeft = 2;
             Projectile.tileCollide = false;
         }
 
@@ -52,8 +53,25 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
 
         public override void AI()
         {
-            Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            if (ParentIndex < 0 || ParentIndex >= Main.maxProjectiles)
+            {
+                Projectile.Kill();
+                return;
+            }
+
+            Projectile parent = Main.projectile[ParentIndex];
+            if (!parent.active || parent.owner != Projectile.owner || parent.type != ModContent.ProjectileType<YC_RightDrone>())
+            {
+                Projectile.Kill();
+                return;
+            }
+
+            Vector2 direction = parent.rotation.ToRotationVector2();
+            Projectile.Center = parent.Center + direction * 22f;
+            Projectile.velocity = direction;
             Projectile.rotation = Projectile.velocity.ToRotation();
+            Projectile.timeLeft = 2;
+            Timer++;
             Lighting.AddLight(Projectile.Center, Color.Lerp(ZapRed, ZapGold, 0.5f).ToVector3() * 0.6f * FadeOpacity());
         }
 
@@ -76,9 +94,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
 
         private float FadeOpacity()
         {
-            float fadeIn = Utils.GetLerpValue(0f, 3f, 14f - Projectile.timeLeft, true);
-            float fadeOut = Utils.GetLerpValue(0f, 4f, Projectile.timeLeft, true);
-            return fadeIn * fadeOut;
+            return Utils.GetLerpValue(0f, 8f, Timer, true);
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -97,20 +113,29 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             Vector2 lineCenter = start + unit * VisualLength * 0.5f;
             float lengthScale = VisualLength / 1000f;
 
-            Color outerColor = ZapRed with { A = 0 } * opacity;
+            float breathing = 0.88f + System.MathF.Sin(Timer * 0.19f + SpinSeed) * 0.12f;
+            Color outerColor = Color.Lerp(ZapRed, ZapGold, 0.28f) with { A = 0 } * opacity;
             Color innerColor = Color.White with { A = 0 } * opacity;
 
-            Main.EntitySpriteDraw(outerLine, lineCenter, null, outerColor, Projectile.rotation + MathHelper.PiOver2, outerLine.Size() * 0.5f, new Vector2(1.2f, 46f * lengthScale) * 0.01f, SpriteEffects.FlipVertically);
-            Main.EntitySpriteDraw(innerLine, lineCenter, null, innerColor, Projectile.rotation + MathHelper.PiOver2, innerLine.Size() * 0.5f, new Vector2(0.26f, 46f * lengthScale) * 0.01f, SpriteEffects.FlipVertically);
+            Main.EntitySpriteDraw(outerLine, lineCenter, null, outerColor * 0.72f, Projectile.rotation + MathHelper.PiOver2, outerLine.Size() * 0.5f, new Vector2(1.55f * breathing, 54f * lengthScale) * 0.01f, SpriteEffects.FlipVertically);
+            Main.EntitySpriteDraw(outerLine, lineCenter, null, ZapGold with { A = 0 } * 0.38f * opacity, Projectile.rotation + MathHelper.PiOver2, outerLine.Size() * 0.5f, new Vector2(0.72f * breathing, 54f * lengthScale) * 0.01f, SpriteEffects.FlipVertically);
+            Main.EntitySpriteDraw(innerLine, lineCenter, null, innerColor, Projectile.rotation + MathHelper.PiOver2, innerLine.Size() * 0.5f, new Vector2(0.2f * breathing, 54f * lengthScale) * 0.01f, SpriteEffects.FlipVertically);
 
             for (int i = 0; i < 3; i++)
             {
-                float spin = SpinSeed + Main.GlobalTimeWrappedHourly * (2.2f + i * 0.6f);
-                Main.EntitySpriteDraw(ring, start, null, ZapGold with { A = 0 } * 0.5f * opacity, spin, ring.Size() * 0.5f, 0.12f + i * 0.03f, SpriteEffects.None);
+                float spin = SpinSeed + Main.GlobalTimeWrappedHourly * (2.2f + i * 0.6f) * (i % 2 == 0 ? 1f : -1f);
+                Main.EntitySpriteDraw(ring, start, null, ZapGold with { A = 0 } * 0.46f * opacity, spin, ring.Size() * 0.5f, (0.1f + i * 0.035f) * breathing, SpriteEffects.None);
             }
 
-            Main.EntitySpriteDraw(bloom, start, null, Color.White with { A = 0 } * 0.65f * opacity, 0f, bloom.Size() * 0.5f, 0.1f, SpriteEffects.None);
-            Main.EntitySpriteDraw(bloom, start + unit * (VisualLength - 16f), null, ZapGold with { A = 0 } * 0.55f * opacity, 0f, bloom.Size() * 0.5f, 0.16f, SpriteEffects.None);
+            for (int i = 0; i < 5; i++)
+            {
+                float orbitAngle = SpinSeed + Timer * (0.045f + i * 0.006f) + MathHelper.TwoPi * i / 5f;
+                Vector2 orbit = orbitAngle.ToRotationVector2() * (5f + i * 1.3f) * breathing;
+                Main.EntitySpriteDraw(bloom, start + orbit, null, (i % 2 == 0 ? ZapGold : Color.White) with { A = 0 } * 0.32f * opacity, orbitAngle, bloom.Size() * 0.5f, 0.07f + i * 0.012f, SpriteEffects.None);
+            }
+
+            Main.EntitySpriteDraw(bloom, start, null, Color.White with { A = 0 } * 0.72f * opacity, 0f, bloom.Size() * 0.5f, 0.11f * breathing, SpriteEffects.None);
+            Main.EntitySpriteDraw(bloom, start + unit * (VisualLength - 16f), null, ZapGold with { A = 0 } * 0.48f * opacity, 0f, bloom.Size() * 0.5f, 0.14f * breathing, SpriteEffects.None);
 
             return false;
         }

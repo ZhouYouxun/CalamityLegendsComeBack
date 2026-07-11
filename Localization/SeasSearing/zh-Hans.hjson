@@ -30,6 +30,7 @@ Mods: {
 						[c/FF8A30:第 4 枚鱼雷升级为追踪导弹：2× 伤害，200×200 爆炸，并释放尖刺弹幕。]
 						[c/FF8A30:最后一颗子弹命中触发核爆。]
 						'''
+					LeftClick_ReconSoul: "[c/7DFFE8:每发子弹还会释放一枚 +/-1 度偏移的侦查灵魂弹，自动锁定附近敌人。]"
 					RightClick:
 						'''
 						[c/58FFDA:右键·三段压力协议：蓄力→松开=压力炮弹(击中生成追踪卫星气泡)；]
@@ -76,6 +77,7 @@ Mods: {
 				SeasSearingPollutionBubble.DisplayName: 深渊污染气泡
 				SeasSearingPollutionRocket.DisplayName: 深渊污染火箭弹
 				SeasSearingMissile.DisplayName: 深渊追踪导弹
+				SeasSearingReconSoul.DisplayName: 深渊侦查灵魂弹
 				SeasSearingMissileExplosion.DisplayName: 深渊导弹引爆
 				SeasSearingNukesplosion.DisplayName: 深渊核爆圈
 			}

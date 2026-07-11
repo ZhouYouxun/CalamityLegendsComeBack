@@ -20,7 +20,7 @@
 	  <Folder Include="Accssory\CD\" />
 	  <Folder Include="Accssory\VV\" />
 	  <Folder Include="BossAI\ReBack\Prime2041\" />
-	  <Folder Include="BossAI\NewDiff\" />
+	  <Folder Include="BossAI\HDMC\" />
 	  <Folder Include="Sound\SHPC\" />
 	  <Folder Include="Sound\YC\" />
 	  <Folder Include="Weapons\A_Dev\DesertEagle\SlowDown\" />
@@ -93,7 +93,6 @@
 	  <Compile Remove="Weapons\PristineFury\特效参考总文件夹\**\*.cs" />
 	  <Compile Remove="Weapons\PristineFury\LeftEffect\**\*.cs" />
 	  <Compile Include="Weapons\PristineFury\LeftEffect\**\PF*.cs" />
-	  <Compile Include="Weapons\A_Olds\DesertEagle\**\*.cs" />
 	  <Compile Include="Weapons\A_Olds\TheEnforcer\**\*.cs" />
 	  <None Include="Weapons\A_Olds\TheEnforcer\**\*.png" />
 	  <Compile Include="Weapons\A_Olds\PhoenixBlade\**\*.cs" />
@@ -139,9 +138,6 @@
 	<ItemGroup>
 	  <Content Include="Weapons\A_Olds\AstralBlade\幻星刀.png" />
 	  <Content Include="Weapons\A_Olds\ChargedDartBlaster\蓄能飞镖发射器.png" />
-	  <Content Include="Weapons\A_Olds\DesertEagle\猎象者.png" />
-	  <Content Include="Weapons\A_Olds\DesertEagle\闪电鹰.png" />
-	  <Content Include="Weapons\A_Olds\DesertEagle\马格南.png" />
 	</ItemGroup>
 
 	<!-- References -->

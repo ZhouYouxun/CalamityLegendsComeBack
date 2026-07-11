@@ -5,21 +5,15 @@ Mods: {
 				NewLegendMK14EBR: {
 					DisplayName: MK14EBR-缄花
 					Tooltip: "[GFB]"
-					MK14_Intro: "[c/85D7FF:A fully automatic legendary marksman rifle. Default spread linearly rises from 1 degree to 5 degrees during sustained fire.]"
-					MK14_Ammo: "[c/F7D87C:Fires the player's bullets; Musket Balls become M61 armor-piercing rounds.]"
-					MK14_RightClick: "[c/F7D87C:Right click opens or closes the modification panel.]"
-					LegendaryHint: "[c/BABABA:Hold Shift to read the full legendary record]"
-					LegendaryText:
-						'''
-						[c/85D7FF:An old precision rifle was rebuilt inside a modern chassis.]
-						[c/85D7FF:It does not need a semi-auto switch, because the trigger only asks whether suppression can continue.]
-						[c/85D7FF:Attachments do not turn it into another gun; they push the same ballistic line toward different extremes.]
-						'''
+					MK14_Intro: Hear the roar of traditionalism
+					MK14_Ammo: Fires bullets, converting Musket Balls into M61 armor-piercing rounds
+					MK14_RightClick: Right click to call up the modification panel
+					MK14_LoadoutHint: Hold Shift to read the current modification setup
 				}
 
 				NewLegendM14: {
 					DisplayName: M14
-					Tooltip: "[c/F7D87C:Fully automatic fire. Spread linearly rises from 1 degree to 15 degrees across 100 sustained shots, then resets immediately when released.]"
+					Tooltip: Fires fully automatically, gradually speeding up while becoming less accurate
 				}
 			}
 		}

@@ -1,4 +1,6 @@
 using System;
+using CalamityLegendsComeBack.Weapons.AegisBlade;
+using CalamityLegendsComeBack.Weapons.AegisBlade.EXSkill;
 using CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder;
 using CalamityLegendsComeBack.Weapons.BlossomFlux;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill;
@@ -7,6 +9,8 @@ using CalamityLegendsComeBack.Weapons.BrinyBaron.TideValue;
 using Terraria.Audio;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash;
 using CalamityLegendsComeBack.Weapons.CosmicDischarge;
+using CalamityLegendsComeBack.Weapons.LeonidProgenitor;
+using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core;
 using CalamityLegendsComeBack.Weapons.Malachite.EXSkill;
 using CalamityLegendsComeBack.Weapons.PristineFury;
 using CalamityLegendsComeBack.Weapons.SeasSearing;
@@ -70,6 +74,8 @@ namespace CalamityLegendsComeBack.Accssory
             ChargeYharimsCrystal();
             ChargeCosmicDischarge();
             ChargeMalachite();
+            ChargeAegisBlade();
+            ChargeLeonidProgenitor();
             ChargeAzureThunder();
             ChargePristineFury();
             ChargeSeasSearing();
@@ -190,10 +196,38 @@ namespace CalamityLegendsComeBack.Accssory
                 cooldown.timeLeft = Math.Max(0, cooldown.timeLeft - FramesPerTick(MalachiteEXCooldown.CooldownFrames));
         }
 
+        private void ChargeAegisBlade()
+        {
+            AegisBladePlayer aegisPlayer = Player.GetModPlayer<AegisBladePlayer>();
+            aegisPlayer.AegisEnergy = Math.Min(
+                BalanceAegisBlade.EnergyMax,
+                aegisPlayer.AegisEnergy + BalanceAegisBlade.EnergyMax / FullChargeFrames);
+
+            SetCooldownProgress(AegisEXCooldown.ID, (int)BalanceAegisBlade.EnergyMax, (int)Math.Ceiling(aegisPlayer.AegisEnergy));
+        }
+
+        private void ChargeLeonidProgenitor()
+        {
+            LeonidProgenitorPlayer leonidPlayer = Player.GetModPlayer<LeonidProgenitorPlayer>();
+            CalamityMod.CalPlayer.CalamityPlayer calamityPlayer = Player.Calamity();
+            if (calamityPlayer.rogueStealthMax <= 0f)
+                calamityPlayer.rogueStealthMax = 1f;
+
+            if (Player.HeldItem.type == ModContent.ItemType<LeonidProgenitor>())
+            {
+                calamityPlayer.rogueStealth = Math.Min(
+                    calamityPlayer.rogueStealthMax,
+                    calamityPlayer.rogueStealth + calamityPlayer.rogueStealthMax / FullChargeFrames);
+            }
+
+            leonidPlayer.AddUltimateEnergy(FramesPerTick(100));
+            SetCooldownProgress(LeonidEXCooldown.ID, 100, leonidPlayer.UltimateEnergy);
+        }
+
         private void ChargeAzureThunder()
         {
             AzureThunderPlayer thunderPlayer = Player.GetModPlayer<AzureThunderPlayer>();
-            thunderPlayer.UltimateEnergy = Math.Min(AzureThunderPlayer.UltimateEnergyMax, thunderPlayer.UltimateEnergy + FramesPerTick(AzureThunderPlayer.UltimateEnergyMax));
+            thunderPlayer.AddUltimateEnergy(FramesPerTick(AzureThunderPlayer.UltimateEnergyMax));
             SetCooldownProgress(AzureThunderUltimateCooldown.ID, AzureThunderPlayer.UltimateEnergyMax, thunderPlayer.UltimateEnergy);
         }
 

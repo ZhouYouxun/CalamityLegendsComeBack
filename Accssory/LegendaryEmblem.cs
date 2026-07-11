@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
 using Terraria.Localization;
@@ -43,6 +45,19 @@ namespace CalamityLegendsComeBack.Accssory
             }
 
             return true;
+        }
+
+        public override void ModifyTooltips(List<TooltipLine> tooltips)
+        {
+            bool permanentUnlock = Main.LocalPlayer.GetModPlayer<LegendaryEmblemPlayer>().PermanentEXUnlock;
+            string statusKey = permanentUnlock ? "ConsumedStatus" : "UnconsumedStatus";
+            Color statusColor = permanentUnlock ? new Color(255, 80, 80) : new Color(80, 220, 120);
+
+            tooltips.Add(new TooltipLine(Mod, "LegendaryEmblemPermanentStatus",
+                Language.GetTextValue("Mods.CalamityLegendsComeBack.Items.LegendaryEmblem." + statusKey))
+            {
+                OverrideColor = statusColor
+            });
         }
 
         public override void AddRecipes()

@@ -211,9 +211,8 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             Asset<Texture2D> iconAsset = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/Myown/IonizingRadiation");
             if (!iconAsset.IsLoaded) return;
             Texture2D icon = iconAsset.Value;
-
-            const float iconScale = 0.03f;   // 贴图 ~1000px，3% ≈ 30px
-            const float spacing   = 36f;    // 图标宽 30px + 6px 间隙
+            const float iconScale = 0.0075f;
+            const float spacing   = 10f;
             int   count           = grade;        // 几级显示几个标志
             float totalWidth      = (count - 1) * spacing;
             float startX          = npc.Center.X - totalWidth * 0.5f;

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.BossProgress;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -135,6 +136,7 @@ namespace CalamityLegendsComeBack.BossAI.ReBack.Prime2041
             bool bossRush = BossRushEvent.BossRushActive;
             bool masterMode = Main.masterMode || bossRush;
             bool death = CalamityWorld.death || bossRush;
+            bool ctrlBossSuppressesDespawn = CTRLBossAntiDespawnSystem.IsActive;
 
             // Get a target
             if (NPC.target < 0 || NPC.target == Main.maxPlayers || Main.player[NPC.target].dead || !Main.player[NPC.target].active)
@@ -323,7 +325,7 @@ namespace CalamityLegendsComeBack.BossAI.ReBack.Prime2041
             }
 
             // Despawn
-            if (Main.player[NPC.target].dead || Math.Abs(NPC.Center.X - Main.player[NPC.target].Center.X) > 6000f || Math.Abs(NPC.Center.Y - Main.player[NPC.target].Center.Y) > 6000f)
+            if (!ctrlBossSuppressesDespawn && (Main.player[NPC.target].dead || Math.Abs(NPC.Center.X - Main.player[NPC.target].Center.X) > 6000f || Math.Abs(NPC.Center.Y - Main.player[NPC.target].Center.Y) > 6000f))
             {
                 NPC.TargetClosest();
                 if (Main.player[NPC.target].dead || Math.Abs(NPC.Center.X - Main.player[NPC.target].Center.X) > 6000f || Math.Abs(NPC.Center.Y - Main.player[NPC.target].Center.Y) > 6000f)
@@ -331,7 +333,7 @@ namespace CalamityLegendsComeBack.BossAI.ReBack.Prime2041
             }
 
             // Activate daytime enrage
-            if (Main.IsItDay() && !bossRush && NPC.ai[1] != 3f && NPC.ai[1] != 2f)
+            if (!ctrlBossSuppressesDespawn && Main.IsItDay() && !bossRush && NPC.ai[1] != 3f && NPC.ai[1] != 2f)
             {
                 // Heal
                 if (Main.netMode != NetmodeID.MultiplayerClient)
@@ -349,6 +351,9 @@ namespace CalamityLegendsComeBack.BossAI.ReBack.Prime2041
                 NPC.ai[1] = 2f;
                 SoundEngine.PlaySound(SoundID.ForceRoar, NPC.Center);
             }
+
+            if (ctrlBossSuppressesDespawn && (NPC.ai[1] == 2f || NPC.ai[1] == 3f))
+                NPC.ai[1] = 0f;
 
             // Adjust slowing debuff immunity
             bool immuneToSlowingDebuffs = NPC.ai[1] == 5f;

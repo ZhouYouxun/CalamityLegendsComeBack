@@ -38,6 +38,7 @@ namespace CalamityLegendsComeBack
         private const int RisingTime = 58;
         private const int SlamWindupTime = 16;
         private const int ImpactFlashTime = 34;
+        private const float DropStuntLaunchSpeedSquared = 1.4f;
 
         public new string LocalizationCategory => "Items.Weapons";
         public override string Texture => "CalamityLegendsComeBack/LegendaryCodex";
@@ -82,6 +83,16 @@ namespace CalamityLegendsComeBack
 
         public override void OnSpawn(IEntitySource source)
         {
+            ResetDropStunt();
+        }
+
+        public override void UpdateInventory(Player player)
+        {
+            ResetDropStunt();
+        }
+
+        private void ResetDropStunt()
+        {
             dropStuntState = DropStuntState.Dormant;
             worldTimer = 0;
             dropStuntTimer = 0;
@@ -98,7 +109,7 @@ namespace CalamityLegendsComeBack
 
             if (dropStuntState == DropStuntState.Dormant)
             {
-                if (worldTimer <= 16 && Item.velocity.LengthSquared() > 1.4f)
+                if (worldTimer <= 16 && Item.velocity.LengthSquared() > DropStuntLaunchSpeedSquared)
                     StartDropStunt();
 
                 previousWorldVelocity = Item.velocity;
@@ -107,6 +118,12 @@ namespace CalamityLegendsComeBack
 
             if (dropStuntState == DropStuntState.Complete)
             {
+                if (Item.noGrabDelay > 0 && Item.velocity.LengthSquared() > DropStuntLaunchSpeedSquared)
+                {
+                    StartDropStunt();
+                    return;
+                }
+
                 previousWorldVelocity = Item.velocity;
                 return;
             }
@@ -166,7 +183,7 @@ namespace CalamityLegendsComeBack
 
             DrawWorldOutline(spriteBatch, texture, drawPosition, rotation, scale, deepOutline, 5f + activeOpacity * 2f);
             DrawWorldOutline(spriteBatch, texture, drawPosition, rotation, scale, outline, 2f + pulse * 1.5f);
-            DrawScannerBrackets(spriteBatch, drawPosition, texture.Size() * scale, outline * activeOpacity, pulse);
+            DrawScannerBrackets(spriteBatch, drawPosition, texture.Size() * scale, outline * activeOpacity, pulse, activeOpacity);
             DrawDropStuntBeam(spriteBatch, drawPosition, texture.Height * scale, activeOpacity);
             return true;
         }
@@ -322,7 +339,7 @@ namespace CalamityLegendsComeBack
             }
         }
 
-        private static void DrawScannerBrackets(SpriteBatch spriteBatch, Vector2 center, Vector2 textureSize, Color color, float pulse)
+        private static void DrawScannerBrackets(SpriteBatch spriteBatch, Vector2 center, Vector2 textureSize, Color color, float pulse, float opacity)
         {
             float width = textureSize.X + 28f + pulse * 8f;
             float height = textureSize.Y + 22f + pulse * 7f;
@@ -332,6 +349,8 @@ namespace CalamityLegendsComeBack
             Vector2 topRight = center + new Vector2(width, -height) * 0.5f;
             Vector2 bottomLeft = center + new Vector2(-width, height) * 0.5f;
             Vector2 bottomRight = center + new Vector2(width, height) * 0.5f;
+            Color innerColor = new Color(122, 255, 220) * (0.42f * opacity);
+            Color nodeColor = Color.Lerp(new Color(70, 255, 190), new Color(255, 226, 112), pulse) * (0.72f * opacity);
 
             DrawUiLine(spriteBatch, topLeft, Vector2.UnitX, cornerLength, thickness, color);
             DrawUiLine(spriteBatch, topLeft, Vector2.UnitY, cornerLength, thickness, color);
@@ -341,6 +360,24 @@ namespace CalamityLegendsComeBack
             DrawUiLine(spriteBatch, bottomLeft, -Vector2.UnitY, cornerLength, thickness, color);
             DrawUiLine(spriteBatch, bottomRight, -Vector2.UnitX, cornerLength, thickness, color);
             DrawUiLine(spriteBatch, bottomRight, -Vector2.UnitY, cornerLength, thickness, color);
+
+            float innerOffset = 7f + pulse * 3f;
+            float innerLength = cornerLength * 0.56f;
+            DrawScannerNode(spriteBatch, topLeft + new Vector2(innerOffset), Vector2.UnitX, Vector2.UnitY, innerLength, innerColor, nodeColor);
+            DrawScannerNode(spriteBatch, topRight + new Vector2(-innerOffset, innerOffset), -Vector2.UnitX, Vector2.UnitY, innerLength, innerColor, nodeColor);
+            DrawScannerNode(spriteBatch, bottomLeft + new Vector2(innerOffset, -innerOffset), Vector2.UnitX, -Vector2.UnitY, innerLength, innerColor, nodeColor);
+            DrawScannerNode(spriteBatch, bottomRight - new Vector2(innerOffset), -Vector2.UnitX, -Vector2.UnitY, innerLength, innerColor, nodeColor);
+        }
+
+        private static void DrawScannerNode(SpriteBatch spriteBatch, Vector2 corner, Vector2 horizontal, Vector2 vertical, float length, Color lineColor, Color nodeColor)
+        {
+            DrawUiLine(spriteBatch, corner, horizontal, length, 1, lineColor);
+            DrawUiLine(spriteBatch, corner, vertical, length, 1, lineColor);
+            DrawUiLine(spriteBatch, corner + horizontal * (length * 0.45f), vertical, length * 0.48f, 1, lineColor * 0.72f);
+            DrawUiLine(spriteBatch, corner + vertical * (length * 0.45f), horizontal, length * 0.48f, 1, lineColor * 0.72f);
+
+            Rectangle node = new((int)corner.X - 2, (int)corner.Y - 2, 4, 4);
+            spriteBatch.Draw(TextureAssets.MagicPixel.Value, node, nodeColor);
         }
 
         private static void DrawDropStuntBeam(SpriteBatch spriteBatch, Vector2 position, float textureHeight, float opacity)
@@ -650,23 +687,70 @@ namespace CalamityLegendsComeBack
         private static void DrawMatrixRain(Rectangle panelArea, float opacity)
         {
             DynamicSpriteFont font = FontAssets.MouseText.Value;
-            Color rainColor = new Color(56, 255, 168) * (opacity * 0.2f);
-            float time = Main.GlobalTimeWrappedHourly * 22f;
+            Rectangle rainArea = new(panelArea.X + 18, panelArea.Y + 18, panelArea.Width - 36, panelArea.Height - 36);
+            if (rainArea.Width <= 0 || rainArea.Height <= 0)
+                return;
 
-            for (int i = 0; i < 22; i++)
+            string[] glyphs = { "01", "10", "SH", "PC", "EX", "[]", "//", ">>" };
+            int columnCount = Math.Max(10, rainArea.Width / 30);
+            float time = Main.GlobalTimeWrappedHourly;
+            for (int column = 0; column < columnCount; column++)
             {
-                int x = panelArea.X + 24 + i * 32;
-                int y = panelArea.Y + 22 + (int)((time + i * 17) % (PanelHeight - 44));
-                string glyph = (i % 4) switch
-                {
-                    0 => "01",
-                    1 => "SH",
-                    2 => "PC",
-                    _ => "??"
-                };
+                float columnRatio = columnCount <= 1 ? 0f : column / (float)(columnCount - 1);
+                float x = MathHelper.Lerp(rainArea.X + 6f, rainArea.Right - 24f, columnRatio) +
+                    MathF.Sin(time * 2.4f + column * 1.73f) * 3f;
+                int streamLength = 3 + column % 4;
+                float lineStep = 17f;
+                float speed = 24f + column % 5 * 6f;
+                float loopHeight = rainArea.Height + streamLength * lineStep;
+                float headY = rainArea.Y + ((time * speed + column * 37f) % loopHeight) - streamLength * lineStep;
 
-                ChatManager.DrawColorCodedString(Main.spriteBatch, font, glyph, new Vector2(x, y), rainColor, 0f, Vector2.Zero, Vector2.One * 0.56f);
+                for (int row = 0; row < streamLength; row++)
+                {
+                    string glyph = glyphs[(column * 3 + row + (int)(Main.GameUpdateCount / 8)) % glyphs.Length];
+                    float scale = 0.45f + (row == streamLength - 1 ? 0.08f : 0f);
+                    Vector2 size = font.MeasureString(glyph) * scale;
+                    Vector2 position = new(x, headY + row * lineStep);
+                    if (position.X < rainArea.X || position.X + size.X > rainArea.Right ||
+                        position.Y < rainArea.Y || position.Y + size.Y > rainArea.Bottom)
+                    {
+                        continue;
+                    }
+
+                    float rowFade = (row + 1f) / streamLength;
+                    Color rainColor = Color.Lerp(new Color(34, 132, 92), new Color(118, 255, 204), rowFade) * (opacity * (0.1f + rowFade * 0.18f));
+                    ChatManager.DrawColorCodedString(Main.spriteBatch, font, glyph, position, rainColor, 0f, Vector2.Zero, Vector2.One * scale);
+                }
             }
+
+            DrawMatrixCornerNode(panelArea, new Vector2(panelArea.X + 72, panelArea.Y + 72), opacity, time + 0.00f);
+            DrawMatrixCornerNode(panelArea, new Vector2(panelArea.Right - 72, panelArea.Y + 72), opacity, time + 0.25f);
+            DrawMatrixCornerNode(panelArea, new Vector2(panelArea.X + 72, panelArea.Bottom - 72), opacity, time + 0.50f);
+            DrawMatrixCornerNode(panelArea, new Vector2(panelArea.Right - 72, panelArea.Bottom - 72), opacity, time + 0.75f);
+        }
+
+        private static void DrawMatrixCornerNode(Rectangle panelArea, Vector2 center, float opacity, float phase)
+        {
+            const int nodeSize = 42;
+            Rectangle outer = new((int)center.X - nodeSize / 2, (int)center.Y - nodeSize / 2, nodeSize, nodeSize);
+            Rectangle clipArea = Rectangle.Intersect(panelArea, outer);
+            if (clipArea.Width <= 0 || clipArea.Height <= 0)
+            {
+                return;
+            }
+
+            float pulse = 0.5f + 0.5f * MathF.Sin(phase * MathHelper.TwoPi);
+            Color border = Color.Lerp(new Color(54, 220, 154), new Color(166, 255, 224), pulse) * (0.32f * opacity);
+            Color scan = new Color(92, 255, 190) * (0.45f * opacity);
+            DrawBorder(outer, border, 1);
+            DrawBorder(new Rectangle(outer.X + 7, outer.Y + 7, outer.Width - 14, outer.Height - 14), border * 0.65f, 1);
+
+            int scanY = outer.Y + 5 + (int)((outer.Height - 10) * ((phase * 1.7f) % 1f));
+            DrawRectangle(new Rectangle(outer.X + 5, scanY, outer.Width - 10, 1), scan);
+            DrawClippedPanelLine(clipArea, new Vector2(outer.X + 8, outer.Y + 8), Vector2.One.SafeNormalize(Vector2.UnitX), 28f, 1, border * 0.55f);
+            DrawClippedPanelLine(clipArea, new Vector2(outer.Right - 8, outer.Y + 8), new Vector2(-1f, 1f).SafeNormalize(Vector2.UnitX), 28f, 1, border * 0.55f);
+            DrawClippedPanelLine(clipArea, new Vector2(outer.X + 8, outer.Bottom - 8), new Vector2(1f, -1f).SafeNormalize(Vector2.UnitX), 22f, 1, border * 0.38f);
+            DrawClippedPanelLine(clipArea, new Vector2(outer.Right - 8, outer.Bottom - 8), -Vector2.One.SafeNormalize(Vector2.UnitX), 22f, 1, border * 0.38f);
         }
 
         private void PlayHoverSound(Player owner, int hoveredControl)
@@ -723,6 +807,74 @@ namespace CalamityLegendsComeBack
         private static void DrawRectangle(Rectangle rectangle, Color color)
         {
             Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, rectangle, color);
+        }
+
+        private static void DrawPanelLine(Vector2 start, Vector2 direction, float length, int thickness, Color color)
+        {
+            Vector2 size = new(length, thickness);
+            Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, start, null, color, direction.ToRotation(), Vector2.Zero, size, SpriteEffects.None, 0f);
+        }
+
+        private static void DrawClippedPanelLine(Rectangle bounds, Vector2 start, Vector2 direction, float length, int thickness, Color color)
+        {
+            if (length <= 0f || direction == Vector2.Zero)
+                return;
+
+            direction.Normalize();
+            Vector2 end = start + direction * length;
+            if (!ClipLineToRectangle(bounds, ref start, ref end))
+                return;
+
+            float clippedLength = Vector2.Distance(start, end);
+            if (clippedLength <= 0.5f)
+                return;
+
+            DrawPanelLine(start, direction, clippedLength, thickness, color);
+        }
+
+        private static bool ClipLineToRectangle(Rectangle bounds, ref Vector2 start, ref Vector2 end)
+        {
+            float t0 = 0f;
+            float t1 = 1f;
+            Vector2 delta = end - start;
+
+            if (!ClipLineEdge(-delta.X, start.X - bounds.Left, ref t0, ref t1) ||
+                !ClipLineEdge(delta.X, bounds.Right - start.X, ref t0, ref t1) ||
+                !ClipLineEdge(-delta.Y, start.Y - bounds.Top, ref t0, ref t1) ||
+                !ClipLineEdge(delta.Y, bounds.Bottom - start.Y, ref t0, ref t1))
+            {
+                return false;
+            }
+
+            end = start + delta * t1;
+            start += delta * t0;
+            return true;
+        }
+
+        private static bool ClipLineEdge(float p, float q, ref float t0, ref float t1)
+        {
+            if (Math.Abs(p) < 0.0001f)
+                return q >= 0f;
+
+            float ratio = q / p;
+            if (p < 0f)
+            {
+                if (ratio > t1)
+                    return false;
+
+                if (ratio > t0)
+                    t0 = ratio;
+            }
+            else
+            {
+                if (ratio < t0)
+                    return false;
+
+                if (ratio < t1)
+                    t1 = ratio;
+            }
+
+            return true;
         }
 
         private static void DrawBorder(Rectangle rectangle, Color color, int thickness)

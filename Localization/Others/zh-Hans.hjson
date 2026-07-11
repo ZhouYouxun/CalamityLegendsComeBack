@@ -151,6 +151,8 @@ Mods: {
 				DisplayName: 黄金饰章
 				Tooltip: 使用后永久解锁此角色手持所有传奇武器的大招
 				AlreadyConsumed: 这个角色已经获得了黄金饰章的永久强化。
+				UnconsumedStatus: 这个角色尚未获得黄金饰章的永久强化。
+				ConsumedStatus: 这个角色已经获得黄金饰章的永久强化。
 			}
 
 			LegendaryUltimateTester: {

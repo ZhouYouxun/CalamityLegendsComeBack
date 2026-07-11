@@ -50,6 +50,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         public const int AuricRebukeFlag = 2048;
         public const int ShortElectrifiedFlag = 4096;
         public const int ShortStaticDischargeFlag = 8192;
+        public const int PetLightningFlag = 16384;
+        public const int PetStrongLightningFlag = 32768;
 
         public new string LocalizationCategory => "Projectiles.AzureThunder";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
@@ -70,6 +72,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         private bool ApplyAuricRebuke => (Flags & AuricRebukeFlag) != 0;
         private bool ShortElectrified => (Flags & ShortElectrifiedFlag) != 0;
         private bool ShortStaticDischarge => (Flags & ShortStaticDischargeFlag) != 0;
+        private bool PetLightning => (Flags & PetLightningFlag) != 0;
+        private bool PetStrongLightning => (Flags & PetStrongLightningFlag) != 0;
         private float RequestedScale => MathHelper.Clamp(Projectile.ai[1] <= 0f ? 1f : Math.Abs(Projectile.ai[1]), 0.1f, 3f);
         private float VisualIntensityMultiplier => OneThirdVisualIntensity ? 0.33f : 1f;
         private float VisualScale => NormalVisualIntensity ? 1f : RequestedScale * VisualIntensityMultiplier;
@@ -100,11 +104,16 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         }
 
         // 纯视觉模式完全关闭伤害判定。
-        public override bool? CanDamage() => VisualOnly ? false : null;
+        public override bool? CanDamage() => VisualOnly || (PetLightning && !PetOwnerStillHoldingAzureThunder()) ? false : null;
 
         public override void AI()
         {
             Player owner = Main.player[Projectile.owner];
+            if (PetLightning && !PetOwnerStillHoldingAzureThunder())
+            {
+                Projectile.Kill();
+                return;
+            }
 
             // colorValue 逐渐推向 50，用于在青绿和浅青之间漂移。
             colorValue = MathHelper.Lerp(colorValue, 50f, 0.025f);
@@ -204,6 +213,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             // 饰品联动统一在命中点触发。
             AzureThunderAccessoryPlayer.ApplyAzureThunderAccessoryOnHit(Projectile, target);
+            if (PetLightning)
+                ApplyPetLightningEffects(target, thunderPlayer);
+
             if (Projectile.numHits == 0)
             {
                 // 第一次命中后快速消失并生成主爆点，后续穿透不重复播放完整爆炸。
@@ -254,6 +266,32 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 owner.GetModPlayer<AzureThunderPlayer>().AddUltimateEnergy((int)Projectile.ai[2]);
 
             colorValue += 18f;
+        }
+
+        private void ApplyPetLightningEffects(NPC target, AzureThunderPlayer thunderPlayer)
+        {
+            target.AddBuff(BuffID.Electrified, PetStrongLightning ? 360 : 240);
+            target.AddBuff(ModContent.BuffType<StaticDischarge>(), PetStrongLightning ? 240 : 120);
+
+            if (PetStrongLightning && thunderPlayer.HarmonyActive)
+                AzureThunderPlayer.ApplyUltimateDot(target, 180);
+
+            if (Projectile.numHits == 0 && Main.myPlayer == Projectile.owner)
+            {
+                float markScale = 0.75f + RequestedScale * 0.28f;
+                AzureThunderPlayer.SpawnHarmonyHitMark(Projectile.GetSource_FromThis(), target.Center, Projectile.owner, target.whoAmI, markScale);
+            }
+        }
+
+        private bool PetOwnerStillHoldingAzureThunder()
+        {
+            if (!Main.player.IndexInRange(Projectile.owner))
+                return false;
+
+            Player owner = Main.player[Projectile.owner];
+            return owner.active &&
+                !owner.dead &&
+                owner.GetModPlayer<ZhuangFangYiPetPlayer>().IsHoldingAzureThunder();
         }
 
         private void SpawnSpeedLines(Vector2 position, Color usedColor)

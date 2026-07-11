@@ -128,17 +128,15 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
             string intro = this.GetLocalizedValue("MK14_Intro");
             string right = this.GetLocalizedValue("MK14_RightClick");
             string ammo = this.GetLocalizedValue("MK14_Ammo");
-            string loadout = BuildLoadoutTooltip();
-            string legendarySection = Main.keyState.PressingShift()
-                ? this.GetLocalizedValue("LegendaryText")
-                : this.GetLocalizedValue("LegendaryHint");
+            string loadout = Main.keyState.PressingShift()
+                ? BuildLoadoutTooltip()
+                : this.GetLocalizedValue("MK14_LoadoutHint");
 
             string finalText =
                 intro + "\n" +
                 ammo + "\n" +
                 right + "\n" +
-                loadout + "\n" +
-                legendarySection + "\n";
+                loadout + "\n";
 
             tooltips.FindAndReplace("[GFB]", finalText);
         }

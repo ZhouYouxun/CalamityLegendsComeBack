@@ -1,7 +1,9 @@
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using Terraria;
 using Terraria.Audio;
+using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -13,7 +15,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
     {
         public override string Texture => "CalamityMod/Projectiles/Ranged/AcidRocket";
 
-        private static readonly int TrailLength = 14;
+        private static readonly int TrailLength = 18;
 
         public override void SetStaticDefaults()
         {
@@ -39,9 +41,9 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         public override void AI()
         {
             Projectile.rotation  = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
-            Projectile.velocity += Vector2.UnitY * 0.08f;
+            Projectile.velocity += Vector2.UnitY * 0.04f;
 
-            Lighting.AddLight(Projectile.Center, SeasSearingPalette.ToxicGreen.ToVector3() * 0.35f);
+            Lighting.AddLight(Projectile.Center, SeasSearingPalette.ToxicGreen.ToVector3() * 0.44f);
 
             if (!Main.dedServ && Main.GameUpdateCount % 2 == 0)
             {
@@ -53,6 +55,41 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                     Main.rand.NextFloat(0.45f, 0.85f));
                 trail.noGravity = true;
             }
+
+            if (!Main.dedServ && Main.GameUpdateCount % 12 == 0)
+                SeasSearingVisualUtility.SpawnPressureRing(Projectile.Center, 1.05f, 8f, 8, SeasSearingPalette.ToxicGreen);
+        }
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            Texture2D texture = TextureAssets.Projectile[Type].Value;
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Vector2 origin = texture.Size() * 0.5f;
+            Vector2 bloomOrigin = bloom.Size() * 0.5f;
+
+            for (int i = 1; i < Projectile.oldPos.Length; i++)
+            {
+                if (Projectile.oldPos[i] == Vector2.Zero)
+                    continue;
+
+                float completion = 1f - i / (float)Projectile.oldPos.Length;
+                Vector2 drawPosition = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
+                Color color = Color.Lerp(SeasSearingPalette.ToxicGreen, SeasSearingPalette.RadioactiveCyan, completion) * (completion * completion * 0.58f);
+                color.A = 0;
+
+                Main.EntitySpriteDraw(bloom, drawPosition, null, color * 0.72f, 0f,
+                    bloomOrigin, 0.05f * completion, SpriteEffects.None, 0);
+                Main.EntitySpriteDraw(texture, drawPosition, null, color, Projectile.oldRot[i],
+                    origin, Projectile.scale * MathHelper.Lerp(0.35f, 0.9f, completion), SpriteEffects.None, 0);
+            }
+
+            Color main = Color.Lerp(SeasSearingPalette.RadioactiveCyan, SeasSearingPalette.ToxicGreen, 0.62f);
+            main.A = 0;
+            Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition, null, main * 0.62f, 0f,
+                bloomOrigin, 0.085f, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, main, Projectile.rotation,
+                origin, Projectile.scale, SpriteEffects.None, 0);
+            return false;
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)

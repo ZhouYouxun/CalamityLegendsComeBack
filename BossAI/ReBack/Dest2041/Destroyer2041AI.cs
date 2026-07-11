@@ -1,4 +1,5 @@
 using System;
+using CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.BossProgress;
 using CalamityMod;
 using CalamityMod.Events;
 using CalamityMod.NPCs;
@@ -69,6 +70,7 @@ namespace CalamityLegendsComeBack.BossAI.ReBack.Prime2041
             bool bossRush = BossRushEvent.BossRushActive;
             bool masterMode = Main.masterMode || bossRush;
             bool death = CalamityWorld.death || bossRush;
+            bool ctrlBossSuppressesDespawn = CTRLBossAntiDespawnSystem.IsActive;
 
             // 10 seconds of resistance to prevent spawn killing
             if (calamityGlobalNPC.newAI[1] < DRIncraeseTime)
@@ -134,7 +136,7 @@ namespace CalamityLegendsComeBack.BossAI.ReBack.Prime2041
                 npc.TargetClosest();
 
             float enrageScale = bossRush ? 1f : 0f;
-            if (Main.IsItDay() || bossRush)
+            if (bossRush || (!ctrlBossSuppressesDespawn && Main.IsItDay()))
             {
                 calamityGlobalNPC.CurrentlyEnraged = !bossRush;
                 enrageScale += 2f;
@@ -806,7 +808,7 @@ namespace CalamityLegendsComeBack.BossAI.ReBack.Prime2041
             // Despawn
             bool oblivionWasAlive = npc.localAI[3] == 1f && !oblivionAlive;
             bool oblivionFightDespawn = (oblivionAlive && lifeRatio < 0.75f) || oblivionWasAlive;
-            if (player.dead || oblivionFightDespawn)
+            if (!ctrlBossSuppressesDespawn && (player.dead || oblivionFightDespawn))
             {
                 shouldFly = false;
                 npc.velocity.Y += 2f;

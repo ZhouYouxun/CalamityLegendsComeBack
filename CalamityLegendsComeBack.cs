@@ -1,6 +1,7 @@
 using CalamityLegendsComeBack.Weapons.A_Tools.Toys.PlayerLocker;
 using CalamityLegendsComeBack.Weapons.A_Tools.Toys.PlayerSaddle;
 using CalamityLegendsComeBack.Weapons.A_Tools.Toys.RetroGames;
+using CalamityLegendsComeBack.BossAI.NewDiff.Core.Netcode;
 using System.IO;
 using Terraria;
 using Terraria.Graphics.Effects;
@@ -55,6 +56,12 @@ namespace CalamityLegendsComeBack
                     break;
                 case GamePacketType.PlayerSaddleDismount:
                     PlayerSaddlePackets.HandleDismount(reader, whoAmI);
+                    break;
+                case GamePacketType.NewDiffSyncMode:
+                    IUMWPacketHandler.HandleModeSyncPacket(reader, whoAmI);
+                    break;
+                case GamePacketType.NewDiffYharonState:
+                    IUMWPacketHandler.HandleYharonStatePacket(reader, whoAmI);
                     break;
                 default:
                     TetrisMultiplayerPackets.HandlePacket(packetType, reader, whoAmI);

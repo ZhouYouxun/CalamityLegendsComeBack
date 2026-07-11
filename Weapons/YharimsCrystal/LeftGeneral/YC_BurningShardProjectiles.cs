@@ -318,11 +318,12 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
 
         private void ReleaseRainbowBolts()
         {
-            int count = 7;
+            int count = 8;
+            float phase = Main.rand.NextFloat(MathHelper.TwoPi / count);
             for (int i = 0; i < count; i++)
             {
-                float angle = -MathHelper.PiOver2 + MathHelper.Lerp(-0.72f, 0.72f, i / (float)(count - 1));
-                Vector2 velocity = angle.ToRotationVector2() * 10.8f;
+                float angle = phase + MathHelper.TwoPi * i / count;
+                Vector2 velocity = angle.ToRotationVector2() * 16.2f;
                 int bolt = Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
                     Projectile.Center,
@@ -626,10 +627,10 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
         public override string Texture => "CalamityLegendsComeBack/Texture/Calamity/RangePROJ/UltimaBolt";
 
         private ref float Timer => ref Projectile.localAI[0];
-        private const int LeftTurnFrames = 42;
-        private const int RightTurnFrames = 42;
+        private const int LeftTurnFrames = 21;
+        private const int RightTurnFrames = 21;
         private const float HomingRange = 1650f;
-        private const float MaxSpeed = 21f;
+        private const float MaxSpeed = 31.5f;
 
         public override void SetStaticDefaults()
         {
@@ -684,13 +685,13 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
         {
             if (Timer <= LeftTurnFrames)
             {
-                Projectile.velocity = Projectile.velocity.RotatedBy(-0.035f);
+                Projectile.velocity = Projectile.velocity.RotatedBy(-0.024f);
                 return;
             }
 
             if (Timer <= LeftTurnFrames + RightTurnFrames)
             {
-                Projectile.velocity = Projectile.velocity.RotatedBy(0.041f);
+                Projectile.velocity = Projectile.velocity.RotatedBy(0.028f);
                 return;
             }
 
@@ -703,10 +704,10 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
 
             Vector2 currentDirection = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 desired = (target.Center - Projectile.Center).SafeNormalize(currentDirection);
-            float warmup = Utils.GetLerpValue(LeftTurnFrames + RightTurnFrames, LeftTurnFrames + RightTurnFrames + 36f, Timer, true);
+            float warmup = Utils.GetLerpValue(LeftTurnFrames + RightTurnFrames, LeftTurnFrames + RightTurnFrames + 18f, Timer, true);
             float closePressure = Utils.GetLerpValue(420f, 80f, Projectile.Distance(target.Center), true);
-            float turn = MathHelper.Lerp(MathHelper.ToRadians(10f), MathHelper.ToRadians(24f), MathHelper.Max(warmup, closePressure));
-            float speed = MathHelper.Clamp(Projectile.velocity.Length() + 0.16f, 10f, MaxSpeed);
+            float turn = MathHelper.Lerp(MathHelper.ToRadians(12f), MathHelper.ToRadians(30f), MathHelper.Max(warmup, closePressure));
+            float speed = MathHelper.Clamp(Projectile.velocity.Length() + 0.24f, 15f, MaxSpeed);
 
             Projectile.velocity = currentDirection.ToRotation().AngleTowards(desired.ToRotation(), turn).ToRotationVector2() * speed;
         }

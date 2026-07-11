@@ -1,10 +1,13 @@
 using System;
 using CalamityLegendsComeBack.Accssory.TS;
+using CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.General;
 using CalamityMod;
+using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.Audio;
+using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -63,6 +66,28 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.ZhuangFangYiPet
 
         public override bool? CanDamage() => false;
 
+        public override void OnSpawn(IEntitySource source)
+        {
+            if (Main.dedServ)
+                return;
+
+            SpawnTransitionEffects(appearing: true);
+            SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.42f, Pitch = 0.48f }, Projectile.Center);
+        }
+
+        public override void OnKill(int timeLeft)
+        {
+            if (Main.dedServ || !Main.player.IndexInRange(Projectile.owner))
+                return;
+
+            Player owner = Main.player[Projectile.owner];
+            if (!owner.active || owner.dead || owner.GetModPlayer<ZhuangFangYiPetPlayer>().IsHoldingAzureThunder())
+                return;
+
+            SpawnTransitionEffects(appearing: false);
+            SoundEngine.PlaySound(SoundID.Item15 with { Volume = 0.3f, Pitch = 0.58f }, Projectile.Center);
+        }
+
         public override void AI()
         {
             Player owner = Main.player[Projectile.owner];
@@ -75,6 +100,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.ZhuangFangYiPet
             ZhuangFangYiPetPlayer petPlayer = owner.GetModPlayer<ZhuangFangYiPetPlayer>();
             if (!petPlayer.IsHoldingAzureThunder())
             {
+                ClearActionState();
                 Projectile.Kill();
                 return;
             }
@@ -218,12 +244,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.ZhuangFangYiPet
                 ? (owner.HasBuff(ModContent.BuffType<AzureThunderHarmonyBuff>()) ? 46 : 42)
                 : 34;
             if (actionTimer >= actionLength)
-            {
-                currentAction = PetAction.None;
-                actionTimer = 0;
-                actionTarget = -1;
-                actionReleased = false;
-            }
+                ClearActionState();
         }
 
         private int GetReleaseFrame()
@@ -233,7 +254,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.ZhuangFangYiPet
 
         private void ReleaseAttack(Player owner, ZhuangFangYiPetPlayer petPlayer, NPC target, Vector2 focus)
         {
-            if (Main.myPlayer != Projectile.owner)
+            if (Main.myPlayer != Projectile.owner || !petPlayer.IsHoldingAzureThunder())
                 return;
 
             bool harmony = owner.HasBuff(ModContent.BuffType<AzureThunderHarmonyBuff>());
@@ -245,19 +266,87 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.ZhuangFangYiPet
             Vector2 direction = (aimPoint - muzzle).SafeNormalize(Vector2.UnitX * Projectile.spriteDirection);
             aimPoint += direction * (strong ? 90f : 55f);
 
-            Projectile.NewProjectile(
+            ZhuangFangYiPetAttacks.SpawnAzureLightning(
                 Projectile.GetSource_FromThis(),
+                owner,
                 muzzle,
-                Vector2.Zero,
-                ModContent.ProjectileType<ZhuangFangYiWeakLightning>(),
+                aimPoint,
                 petPlayer.GetAzureThunderDamage(damageMultiplier),
                 petPlayer.GetAzureThunderKnockback() * (strong ? 0.65f : 0.35f),
-                Projectile.owner,
-                aimPoint.X,
-                aimPoint.Y,
+                strong,
+                harmony,
                 lightningScale);
 
             AzureThunderAccessoryPlayer.TryReleaseWorldSplitter(owner, muzzle, target, focus, strong);
+        }
+
+        private void ClearActionState()
+        {
+            currentAction = PetAction.None;
+            actionTimer = 0;
+            actionTarget = -1;
+            actionReleased = false;
+            transformDuration = 0;
+        }
+
+        private void SpawnTransitionEffects(bool appearing)
+        {
+            Vector2 center = Projectile.Center;
+            int arcCount = appearing ? 6 : 7;
+            float angleOffset = Main.rand.NextFloat(MathHelper.TwoPi);
+
+            for (int i = 0; i < arcCount; i++)
+            {
+                Vector2 direction = (angleOffset + MathHelper.TwoPi * i / arcCount + Main.rand.NextFloat(-0.16f, 0.16f)).ToRotationVector2();
+                Vector2 edge = center + direction * Main.rand.NextFloat(46f, 72f);
+                Vector2 inner = center + Main.rand.NextVector2Circular(7f, 9f);
+                Color color = i % 3 == 0 ? AzureThunderColors.PaleYellow : AzureThunderColors.Azure;
+                Vector2 start = appearing ? edge : inner;
+                Vector2 end = appearing ? inner : edge;
+
+                GeneralParticleHandler.SpawnParticle(new AzureThunderArcParticle(
+                    start,
+                    end,
+                    color,
+                    Main.rand.Next(10, 15),
+                    Main.rand.NextFloat(1.15f, 1.75f),
+                    jaggedness: 0.72f,
+                    allowBranch: false));
+
+                Vector2 linePosition = appearing ? edge : center + direction * Main.rand.NextFloat(6f, 14f);
+                Vector2 lineVelocity = direction * (appearing ? -1f : 1f) * Main.rand.NextFloat(2.8f, 5.2f);
+                GeneralParticleHandler.SpawnParticle(new LineParticle(
+                    linePosition,
+                    lineVelocity,
+                    false,
+                    Main.rand.Next(10, 16),
+                    Main.rand.NextFloat(0.5f, 0.82f),
+                    color));
+            }
+
+            float ringStart = appearing ? 0f : 0.075f;
+            float ringEnd = appearing ? 0.075f : 0f;
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                center,
+                Vector2.Zero,
+                AzureThunderColors.Azure,
+                "CalamityMod/Particles/HighResFoggyCircleHardEdge",
+                Vector2.One,
+                0f,
+                ringStart,
+                ringEnd,
+                10));
+
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                center,
+                Vector2.Zero,
+                appearing ? AzureThunderColors.PaleYellow : AzureThunderColors.Azure,
+                "CalamityMod/Particles/BloomCircle",
+                Vector2.One,
+                0f,
+                appearing ? 0.72f : 0.56f,
+                appearing ? 0.16f : 0f,
+                12));
         }
 
         private void FollowOwnerAI(Player owner)

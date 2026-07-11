@@ -148,7 +148,6 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         private void HandleRightStateMachine(bool rightHeld)
         {
             bool justPressed       =  rightHeld && !rightHeldLastFrame;
-            bool rightJustReleased = !rightHeld &&  rightHeldLastFrame;
 
             switch (rightState)
             {
@@ -159,9 +158,9 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 case RightState.Charging:
                     if (!rightHeld)
                     {
-                        if (rightStateTimer >= 20) FirePressureBolt(strong: false);
                         rightState      = RightState.Idle;
                         rightStateTimer = 0;
+                        chargeGlow      = 0f;
                         break;
                     }
                     rightStateTimer++;
@@ -172,14 +171,14 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 case RightState.Locked:
                     if (!rightHeld)
                     {
-                        FirePressureBolt(strong: true);
-                        StartReleaseDoubleSpray();
-                        EnterVentCooldown();
+                        rightState      = RightState.Idle;
+                        rightStateTimer = 0;
+                        chargeGlow      = 0f;
                         break;
                     }
                     rightStateTimer++;
                     UpdateLockedVisuals();
-                    if (rightStateTimer >= LockedToRuptureFrames) TriggerAbyssalRupture();
+                    if (rightStateTimer >= LockedToRuptureFrames) TriggerFullChargeRelease();
                     break;
 
                 case RightState.VentCooldown:
@@ -225,6 +224,12 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             rightState = RightState.AbyssalRupture; rightStateTimer = AbyssalRuptureFrames; ruptureHeat = 1f;
             SeasSearingVisualUtility.SpawnAbyssDust(GunTipPosition, 40, 9f, 22f, 1.6f);
             SeasSearingVisualUtility.SpawnPressureRing(GunTipPosition, 7f, 16f, 36, SeasSearingPalette.WarningOrange);
+        }
+
+        private void TriggerFullChargeRelease()
+        {
+            TriggerAbyssalRupture();
+            StartReleaseDoubleSpray();
         }
 
         // ── Left-click ───────────────────────────────────────────────────────
@@ -336,6 +341,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 Main.projectile[idx].ArmorPenetration += 18;
             }
 
+            FireReconSoul(dir, burstIndex, stage);
             ApplyRecoil(5.2f + burstIndex * 1.3f);
             TriggerMuzzleFlash(8);
             SpawnMuzzleBurst(dir, burstIndex, Color.Lerp(SeasSearingPalette.RadioactiveCyan, SeasSearingPalette.ToxicGreen, 0.3f));
@@ -443,6 +449,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                     Main.projectile[idx].netUpdate = true;
                 }
 
+                FireReconSoul(dir, burstIndex, stage);
                 SpawnRadiationBulletAura(dir, burstIndex);
                 ApplyRecoil(4.8f + burstIndex * 1.2f);
                 TriggerMuzzleFlash(12);
@@ -489,12 +496,60 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             if (Main.projectile.IndexInRange(idx))
                 Main.projectile[idx].CritChance = Owner.GetWeaponCrit(Owner.HeldItem);
 
+            FireReconSoul(dir, burstIndex, stage);
             ApplyRecoil(4.8f + burstIndex * 1.1f);
             TriggerMuzzleFlash(13);
             SpawnMuzzleBurst(dir, burstIndex, SeasSearingPalette.PressureBlue);
             SeasSearingVisualUtility.PlayDeepShot(GunTipPosition, -0.08f + burstIndex * 0.06f);
             if (!Main.dedServ)
                 SeasSearingVisualUtility.SpawnAbyssDust(GunTipPosition, 6, 3.5f, 8f, 0.9f);
+        }
+
+        private void FireReconSoul(Vector2 baseDirection, int burstIndex, int stage)
+        {
+            float offset = MathHelper.ToRadians(Main.rand.NextBool() ? -1f : 1f);
+            Vector2 direction = baseDirection.RotatedBy(offset).SafeNormalize(baseDirection);
+            Vector2 side = direction.RotatedBy(MathHelper.PiOver2);
+            NPC target = FindReconSoulTarget(GunTipPosition);
+            int damage = Math.Max(1, (int)(Projectile.damage * (stage >= 4 ? 0.42f : 0.36f)));
+
+            int idx = Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                GunTipPosition + direction * 14f + side * Main.rand.NextFloat(-2.5f, 2.5f),
+                direction * Main.rand.NextFloat(17.5f, 19.5f),
+                ModContent.ProjectileType<SeasSearingReconSoul>(),
+                damage,
+                Projectile.knockBack * 0.25f,
+                Projectile.owner,
+                target?.whoAmI ?? -1f,
+                burstIndex % 3);
+
+            if (Main.projectile.IndexInRange(idx))
+            {
+                Main.projectile[idx].CritChance = Owner.GetWeaponCrit(Owner.HeldItem);
+                Main.projectile[idx].netUpdate = true;
+            }
+        }
+
+        private NPC FindReconSoulTarget(Vector2 origin)
+        {
+            NPC best = null;
+            float bestDistance = 920f * 920f;
+
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (!npc.CanBeChasedBy())
+                    continue;
+
+                float distance = Vector2.DistanceSquared(origin, npc.Center);
+                if (distance < bestDistance)
+                {
+                    bestDistance = distance;
+                    best = npc;
+                }
+            }
+
+            return best;
         }
 
         private void FireTorrentShot()
@@ -567,7 +622,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         private void FireSkyfinTorpedo()
         {
             Vector2 dir = AimDirection;
-            Vector2 vel = dir.RotatedByRandom(MathHelper.ToRadians(3f)) * 16f;
+            Vector2 vel = dir.RotatedByRandom(MathHelper.ToRadians(3f)) * 20f;
 
             Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
@@ -583,7 +638,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         private void FirePollutionRocket()
         {
             Vector2 dir = AimDirection.RotatedByRandom(MathHelper.ToRadians(5f));
-            Vector2 vel = dir * 22f;
+            Vector2 vel = dir * 27f;
 
             Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
@@ -595,7 +650,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         private void FireMissile()
         {
             Vector2 dir = AimDirection;
-            Vector2 vel = dir.RotatedByRandom(MathHelper.ToRadians(2f)) * 18f;
+            Vector2 vel = dir.RotatedByRandom(MathHelper.ToRadians(2f)) * 23f;
 
             Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
@@ -974,9 +1029,9 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                     ? SeasSearingPalette.PressureBlue
                     : SeasSearingPalette.RadioactiveCyan;
 
-            Color cyan  = (fieldColor with { A = 0 }) * (0.12f + power * 0.22f);
-            Color deep  = (SeasSearingPalette.DeepBlue with { A = 0 }) * (0.1f + power * 0.18f);
-            float pulse = 0.95f + 0.05f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 4.5f);
+            const float fieldOpacity = 0.5f;
+            Color cyan  = (fieldColor with { A = 0 }) * ((0.12f + power * 0.22f) * fieldOpacity);
+            Color deep  = (SeasSearingPalette.DeepBlue with { A = 0 }) * ((0.1f + power * 0.18f) * fieldOpacity);
 
             Main.EntitySpriteDraw(bloom, center, null, deep * 0.55f, 0f, bloom.Size() * 0.5f,
                 new Vector2(1.9f, 1.25f) * power * 0.72f, SpriteEffects.None, 0);
@@ -985,7 +1040,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             {
                 float local    = i / 3f;
                 float rotation = Main.GlobalTimeWrappedHourly * (0.28f + local * 0.14f);
-                float scale    = (1.65f + local * 0.74f + power * 0.35f) * pulse;
+                float scale    = 1.65f + local * 0.74f + power * 0.35f;
                 Main.EntitySpriteDraw(ring, center, null, (i == 0 ? cyan : deep) * (1f - local * 0.22f),
                     rotation, ring.Size() * 0.5f, scale, SpriteEffects.None, 0);
             }

@@ -7,8 +7,9 @@ Mods: {
 					Tooltip: "[GFB]"
 					FunctionalTooltip:
 						'''
-						[c/FFD966:Left Click] [c/DCD6C8:Custom greatsword swings slightly faster than Aegis Blade; true-melee hits build Dark Embers and can erupt into blood-fire echoes]
-						[c/8DB8FF:Right Click] [c/DCD6C8:Sacrificial Plunge: leap toward the cursor for heavy damage and extra Embers; for 45 frames after use, your next left click becomes a horizontal cleave]
+						[c/FFD966:Left Click] [c/DCD6C8:Custom greatsword swings slightly faster than Aegis Blade; each swing cycles through blood skulls, brimstone darts, vengeful souls, catastrophe slashes, and condemnation arrows]
+						[c/8DB8FF:Right Click] [c/DCD6C8:Hold to raise the blade and guard; taking damage while guarding halves that hit, breaks the guard, knocks you back, and starts a 5-second cooldown]
+						[c/8DB8FF:Cooldown Right Click] [c/DCD6C8:While guard is cooling down, right click becomes a vertical plunge from 10 tiles above the recorded cursor point, exploding into souls on impact]
 						[c/7B5CFF:Dark Soul] [c/DCD6C8:Before Hardmode, steadily restores Calamity Rage and grants slow fall; boss progression upgrades it into short flight]
 						[c/A01A2A:Blood and Fire] [c/DCD6C8:At 50% life or lower, or at 75% Rage or higher, gain Dark Blood; left-click hit windows consume life, increase damage, and kindle Embers]
 						[c/A01A2A:Dark Blood] [c/DCD6C8:Lasts 3 seconds after leaving its trigger threshold]
@@ -21,8 +22,8 @@ Mods: {
 						'''
 						[c/8B6CFF:The first Gael's Greatsword only needed to keep one thing: an old blade still swinging forward at the end.]
 						[c/8B6CFF:But if it only copied the swing, it would remain a tribute, not a weapon that could keep fighting in this world.]
-						[c/8B6CFF:After the rebuild, left click became a heavy three-part sword sequence, tying close-range cuts to distant aftershocks.]
-						[c/A01A2A:Right click is no longer just a heavy drop. It stitches sacrifice, Ember bursts, and the next cleave into one counterattack.]
+						[c/8B6CFF:After the rebuild, left click became a rotating sequence of old SCal weapon echoes, tying close-range cuts to distant aftershocks.]
+						[c/A01A2A:Right click is no longer just a heavy drop. It is a guarded stance first, and a brutal vertical answer only after that stance breaks.]
 						[c/8B6CFF:It is still not a noble sword. It only drags blood, fire, and late anger back to the center of the battlefield again and again.]
 						'''
 					FinisherLocked: Gael reaches the end of the world only after the Wall of Flesh
@@ -34,9 +35,14 @@ Mods: {
 		Projectiles: {
 			GaelGreatswordSwingHoldout.DisplayName: Gael Greatsword Swing
 			GaelGreatswordPlungeHoldout.DisplayName: Sacrificial Plunge
+			GaelGreatswordGuardHoldout.DisplayName: Gael Guard
 			GaelGreatswordCapeFinisher.DisplayName: Dark Soul Cloak
 			GaelGreatswordEmberUI.DisplayName: Dark Embers
 			GaelGreatswordBloodEcho.DisplayName: Blood-Fire Echo
+			GaelGreatswordBrimstoneDart.DisplayName: Brimstone Memory
+			GaelGreatswordVengefulSoul.DisplayName: Vengeful Dark Soul
+			GaelGreatswordCatastropheSlash.DisplayName: Catastrophe Memory
+			GaelGreatswordCondemnationArrow.DisplayName: Condemned Arrow
 			GaelGreatswordDarkSoul.DisplayName: Blood Skull
 		}
 

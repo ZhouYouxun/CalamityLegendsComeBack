@@ -38,7 +38,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
 
         // Damage multipliers
         public const float DataGridDamage    = 0.18f;
-        public const float GeoBurstDamage    = 1.04f;
+        public const float GeoBurstDamage    = 0.36f; // fires 3 simultaneous multi-point bursts around the target
         public const float ShaderOrbDamage   = 0.38f;
         public const float FusionDamage      = 3.70f;
         public const float SpaceWarpDamage   = 0.26f;
@@ -55,6 +55,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
         public const float CliffordDamage    = 0.20f;
         public const float SuperformulaDamage = 0.35f;
         public const float SierpinskiDamage  = 1.50f;
+        public const float SierpinskiFragmentDamage = 0.15f; // relative to the Sierpinski instance's own damage
 
         // 模组自定义音效路径（使用时不调音量 / 音调）
         public const string SndGeoBurst     = "CalamityLegendsComeBack/Sound/Other/Helldiver2/磁轨炮-开火";
@@ -342,14 +343,23 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
                     SoundEngine.PlaySound(SoundID.Item117 with { Volume = 0.36f, Pitch = 0.24f, MaxInstances = 3 }, Projectile.Center);
                     break;
 
-                case 1: // Geometry Burst
-                    Projectile.NewProjectile(src, Projectile.Center, Vector2.Zero,
-                        ModContent.ProjectileType<MatrixGeoBurst>(),
-                        Math.Max(1, (int)(dmg * MatrixModuleNumbers.GeoBurstDamage)),
-                        Projectile.knockBack, Projectile.owner,
-                        Projectile.whoAmI, target.whoAmI);
+                case 1: // Geometry Burst — multi-point detonation ring around the target
+                    const int geoBurstPoints = 3;
+                    for (int b = 0; b < geoBurstPoints; b++)
+                    {
+                        float burstAngle = MathHelper.TwoPi * b / geoBurstPoints + Main.rand.NextFloat(-0.2f, 0.2f);
+                        Vector2 burstOffset = burstAngle.ToRotationVector2() * 110f;
+                        int burstIdx = Projectile.NewProjectile(src, target.Center + burstOffset, Vector2.Zero,
+                            ModContent.ProjectileType<MatrixGeoBurst>(),
+                            Math.Max(1, (int)(dmg * MatrixModuleNumbers.GeoBurstDamage)),
+                            Projectile.knockBack, Projectile.owner,
+                            Projectile.whoAmI, target.whoAmI);
+                        // Slight negative head-start staggers the ripple between the three bursts
+                        if (Main.projectile.IndexInRange(burstIdx))
+                            Main.projectile[burstIdx].timeLeft -= b * 5;
+                    }
                     moduleCooldowns[1] = MatrixModuleNumbers.GeoBurstCooldown;
-                    SoundEngine.PlaySound(new SoundStyle(MatrixModuleNumbers.SndGeoBurst), Projectile.Center);
+                    SoundEngine.PlaySound(new SoundStyle(MatrixModuleNumbers.SndGeoBurst), target.Center);
                     break;
 
                 case 2: // Shader Orbs (5 types)
@@ -405,8 +415,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
                     SoundEngine.PlaySound(SoundID.Item117 with { Volume = 0.32f, Pitch = 0.35f, MaxInstances = 3 }, Projectile.Center);
                     break;
 
-                case 7: // Fractal Recursion Tree
-                    Projectile.NewProjectile(src, Projectile.Center, Vector2.Zero,
+                case 7: // Fractal Recursion Tree — erupts upward from underground beneath the target
+                    Projectile.NewProjectile(src, target.Center + new Vector2(0f, 150f), Vector2.Zero,
                         ModContent.ProjectileType<MatrixFractalTree>(),
                         Math.Max(1, (int)(dmg * MatrixModuleNumbers.FractalTreeDamage)),
                         Projectile.knockBack, Projectile.owner,

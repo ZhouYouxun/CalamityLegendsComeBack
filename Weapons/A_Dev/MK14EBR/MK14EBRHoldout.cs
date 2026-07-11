@@ -49,6 +49,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
             MaxInstances = 4
         };
 
+        private const float HoldoutForwardOffset = 64f;
+        private const float HoldoutVerticalOffset = 9f;
+
         private float shotAccumulator;
         private int consecutiveShots;
         private int underbarrelCooldown;
@@ -167,7 +170,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
             Projectile.velocity = aimDirection;
             Projectile.rotation = aimDirection.ToRotation();
             Projectile.spriteDirection = direction;
-            Projectile.Center = Owner.MountedCenter + aimDirection * (64f - recoilOffset) + new Vector2(0f, -7f * Owner.gravDir);
+            Projectile.Center = Owner.MountedCenter + aimDirection * (HoldoutForwardOffset - recoilOffset) + new Vector2(0f, HoldoutVerticalOffset * Owner.gravDir);
 
             Owner.ChangeDir(direction);
             Owner.heldProj = Projectile.whoAmI;

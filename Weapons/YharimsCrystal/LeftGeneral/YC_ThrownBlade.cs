@@ -48,6 +48,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
         private Vector2 impaleOffset;
         private int startDamage;
         private SlotId spinSoundSlot;
+        private int spinSoundRefreshDelay;
         private bool hasExploded;
 
         public override void SetStaticDefaults()
@@ -265,9 +266,6 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                 return;
             }
 
-            if (SoundEngine.TryGetActiveSound(spinSoundSlot, out ActiveSound spinSound) && spinSound.IsPlaying)
-                spinSound.Position = Projectile.Center;
-
             // Dimmer before the power surge, brighter after — mirrors Neptune's
             // spinMode/spinMode2 light color swap.
             Vector3 lightColor = Projectile.ai[1] == RightThrowTracking
@@ -281,6 +279,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                 return;
             }
 
+            MaintainRightThrowSpinSound(Projectile.ai[1] == RightThrowTracking ? 0.2f : -0.1f);
             PlayTravelWhoosh();
 
             if (Projectile.ai[1] == RightThrowRising)
@@ -390,7 +389,6 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             Projectile.velocity = Vector2.Zero;
             Projectile.Center = npc.Center - impaleOffset;
             Projectile.gfxOffY = npc.gfxOffY;
-            Projectile.rotation += (float)Math.Sin(Projectile.localAI[0] * 0.55f) * 0.02f;
             Projectile.timeLeft = Math.Max(Projectile.timeLeft, 10);
 
             if (!Main.dedServ)
@@ -562,6 +560,33 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                     new Color(255, 214, 88),
                     new Vector2(0.4f, 1f)));
             }
+        }
+
+        private void MaintainRightThrowSpinSound(float pitch)
+        {
+            if (Main.dedServ)
+                return;
+
+            if (SoundEngine.TryGetActiveSound(spinSoundSlot, out ActiveSound spinSound) && spinSound.IsPlaying)
+            {
+                spinSound.Position = Projectile.Center;
+                spinSoundRefreshDelay = 10;
+                return;
+            }
+
+            if (spinSoundRefreshDelay > 0)
+            {
+                spinSoundRefreshDelay--;
+                return;
+            }
+
+            spinSoundSlot = SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/SpinningWoosh")
+            {
+                Volume = 0.72f,
+                Pitch = pitch,
+                MaxInstances = 4
+            }, Projectile.Center);
+            spinSoundRefreshDelay = 18;
         }
 
         private Vector2 GetTravelDirectionForDraw()
@@ -901,6 +926,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             bool postTrigger = Projectile.ai[1] == RightThrowTracking;
             Color gold = new Color(255, 214, 88) with { A = 0 };
             Color orange = new Color(255, 111, 34) with { A = 0 };
+            float goldenAngle = MathHelper.Pi * (3f - MathF.Sqrt(5f));
+            float phase = Projectile.rotation * (postTrigger ? 1.45f : 1.2f);
 
             Main.EntitySpriteDraw(swipe, drawPos, null,
                 (postTrigger ? gold : orange) * 0.55f,
@@ -914,6 +941,18 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                 smoke.Size() * 0.5f,
                 (postTrigger ? 1.4f : 1.2f) * Projectile.scale,
                 SpriteEffects.None);
+
+            for (int i = 0; i < 5; i++)
+            {
+                float ratio = i / 4f;
+                Color color = Color.Lerp(orange, gold, ratio);
+                Main.EntitySpriteDraw(swipe, drawPos, null,
+                    color * MathHelper.Lerp(0.22f, 0.38f, ratio),
+                    phase + goldenAngle * i,
+                    swipe.Size() * 0.5f,
+                    Projectile.scale * MathHelper.Lerp(0.72f, postTrigger ? 1.18f : 1f, ratio),
+                    SpriteEffects.None);
+            }
         }
     }
 }

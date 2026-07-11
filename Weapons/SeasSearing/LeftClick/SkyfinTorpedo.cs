@@ -15,9 +15,9 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         public override string Texture => "CalamityMod/Items/Weapons/Rogue/SkyfinBombers";
 
         private const float HomingRange  = 850f;
-        private const float TurnFactor   = 0.12f;
-        private const float MaxSpeed     = 18f;
-        private const float MinSpeed     = 8f;
+        private const float TurnFactor   = 0.15f;
+        private const float MaxSpeed     = 24f;
+        private const float MinSpeed     = 11f;
 
         private static readonly int TrailLength = 12;
 
@@ -55,14 +55,14 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 Projectile.velocity = Vector2.Lerp(
                     Projectile.velocity.SafeNormalize(Vector2.UnitY),
                     toTarget,
-                    TurnFactor).SafeNormalize(Vector2.UnitY) * (Speed + 0.2f);
+                    TurnFactor).SafeNormalize(Vector2.UnitY) * (Speed + 0.35f);
             }
             else
             {
                 Projectile.velocity += Vector2.UnitY * 0.1f;
             }
 
-            Lighting.AddLight(Projectile.Center, SeasSearingPalette.BiohazardLime.ToVector3() * 0.32f);
+            Lighting.AddLight(Projectile.Center, SeasSearingPalette.BiohazardLime.ToVector3() * 0.42f);
 
             if (!Main.dedServ && Main.GameUpdateCount % 2 == 0)
             {
@@ -74,6 +74,9 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                     Main.rand.NextFloat(0.5f, 0.9f));
                 trail.noGravity = true;
             }
+
+            if (!Main.dedServ && Main.GameUpdateCount % 14 == 0)
+                SeasSearingVisualUtility.SpawnPressureRing(Projectile.Center, 1.15f, 9f, 8, SeasSearingPalette.BiohazardLime);
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
@@ -97,7 +100,9 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D tex    = ModContent.Request<Texture2D>(Texture).Value;
+            Texture2D bloom  = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Vector2   origin = tex.Size() * 0.5f;
+            Vector2   bloomOrigin = bloom.Size() * 0.5f;
 
             for (int i = 1; i < TrailLength; i++)
             {
@@ -105,6 +110,10 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 float t    = 1f - (float)i / TrailLength;
                 Color tc   = Color.Lerp(SeasSearingPalette.ToxicGreen, SeasSearingPalette.BiohazardLime, t) * (t * t * 0.55f);
                 tc.A       = 0;
+                Main.EntitySpriteDraw(bloom,
+                    Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition,
+                    null, tc * 0.65f, 0f,
+                    bloomOrigin, 0.055f * t, SpriteEffects.None, 0);
                 Main.EntitySpriteDraw(tex,
                     Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition,
                     null, tc, Projectile.oldRot[i],
@@ -113,6 +122,8 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
             Color main = SeasSearingPalette.BiohazardLime;
             main.A     = 0;
+            Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition,
+                null, main * 0.58f, 0f, bloomOrigin, 0.09f, SpriteEffects.None, 0);
             Main.EntitySpriteDraw(tex, Projectile.Center - Main.screenPosition,
                 null, main, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0);
             return false;

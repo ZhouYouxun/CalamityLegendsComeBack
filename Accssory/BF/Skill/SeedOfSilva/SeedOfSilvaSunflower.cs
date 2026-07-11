@@ -1,6 +1,7 @@
 using CalamityLegendsComeBack.Accssory.BF.Common;
 using CalamityLegendsComeBack.Weapons.BlossomFlux;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick;
+using CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -56,6 +57,52 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
                     BlossomFluxSounds.LeftBreakthroughProjKill with { Volume = 0.38f, Pitch = 0.12f },
                     Projectile.Center);
             }
+        }
+
+        public static bool ShouldBoostSeedOrbit(Player owner, BFAccessoryPlayer accessoryPlayer)
+        {
+            if (owner is null ||
+                !owner.active ||
+                !accessoryPlayer.HoldingBlossomFlux ||
+                accessoryPlayer.CurrentPreset != BlossomFluxChloroplastPresetType.Chlo_ABreak)
+            {
+                return false;
+            }
+
+            SeedOfSilvaSunflower sunflower = null;
+            foreach (Projectile projectile in Main.ActiveProjectiles)
+            {
+                if (projectile.active &&
+                    projectile.owner == owner.whoAmI &&
+                    projectile.ModProjectile is SeedOfSilvaSunflower candidate &&
+                    candidate.IsBlooming)
+                {
+                    sunflower = candidate;
+                    break;
+                }
+            }
+
+            if (sunflower is null)
+                return false;
+
+            float ringRadiusSquared = SunflowerRingRadius * SunflowerRingRadius;
+            foreach (Projectile projectile in Main.ActiveProjectiles)
+            {
+                if (!projectile.active ||
+                    projectile.owner != owner.whoAmI ||
+                    !projectile.friendly ||
+                    !BFAccessorySystem.TryGetBlossomFluxPreset(projectile, out BlossomFluxChloroplastPresetType preset) ||
+                    preset != BlossomFluxChloroplastPresetType.Chlo_ABreak ||
+                    !projectile.GetGlobalProjectile<BFArrow_CDetecEffect>().BlossomFluxLeftArrow)
+                {
+                    continue;
+                }
+
+                if (Vector2.DistanceSquared(projectile.Center, sunflower.Projectile.Center) <= ringRadiusSquared)
+                    return false;
+            }
+
+            return true;
         }
 
         protected override void UpdateCommon(Player owner, BFAccessoryPlayer accessoryPlayer)

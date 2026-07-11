@@ -15,9 +15,10 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         public override string Texture => "Terraria/Images/Projectile_134";
 
         private const float HomingRange = 950f;
-        private const float TurnFactor  = 0.20f;
-        private const float MaxSpeed    = 22f;
-        private const float MinSpeed    = 10f;
+        private const float MinTurnFactor = 0.10f;
+        private const float MaxTurnFactor = 0.36f;
+        private const float MaxSpeed    = 30f;
+        private const float MinSpeed    = 14f;
 
         private static readonly int TrailLength = 16;
 
@@ -51,16 +52,20 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             NPC target = FindTarget();
             if (target != null)
             {
+                float ageProgress = Utils.GetLerpValue(18f, 150f, Projectile.localAI[0], true);
+                float turnFactor  = MathHelper.Lerp(MinTurnFactor, MaxTurnFactor, ageProgress * ageProgress);
                 Vector2 toTarget   = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY);
                 Projectile.velocity = Vector2.Lerp(
                     Projectile.velocity.SafeNormalize(Vector2.UnitY),
                     toTarget,
-                    TurnFactor).SafeNormalize(Vector2.UnitY) * (Speed + 0.35f);
+                    turnFactor).SafeNormalize(Vector2.UnitY) * (Speed + 0.55f);
             }
             else
             {
-                Projectile.velocity += Vector2.UnitY * 0.06f;
+                Projectile.velocity += Vector2.UnitY * 0.04f;
             }
+
+            Projectile.localAI[0]++;
 
             Color thrustColor = Color.Lerp(SeasSearingPalette.WarningOrange, SeasSearingPalette.BiohazardLime,
                 MathF.Sin(Main.GameUpdateCount * 0.22f) * 0.5f + 0.5f);
@@ -92,6 +97,10 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                         Main.rand.NextFloat(0.45f, 0.75f));
                     smoke.noGravity = true;
                 }
+
+                if (Main.GameUpdateCount % 12 == 0)
+                    SeasSearingVisualUtility.SpawnPressureRing(Projectile.Center, 1.45f, 10f, 10,
+                        Color.Lerp(SeasSearingPalette.WarningOrange, SeasSearingPalette.BiohazardLime, 0.45f));
             }
         }
 
@@ -116,7 +125,9 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D tex    = ModContent.Request<Texture2D>(Texture).Value;
+            Texture2D bloom  = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Vector2   origin = tex.Size() * 0.5f;
+            Vector2   bloomOrigin = bloom.Size() * 0.5f;
 
             for (int i = 1; i < TrailLength; i++)
             {
@@ -124,6 +135,10 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 float t  = 1f - (float)i / TrailLength;
                 Color tc = Color.Lerp(SeasSearingPalette.WarningOrange, SeasSearingPalette.BiohazardLime, t) * (t * t * 0.65f);
                 tc.A     = 0;
+                Main.EntitySpriteDraw(bloom,
+                    Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition,
+                    null, tc * 0.72f, 0f,
+                    bloomOrigin, 0.065f * t, SpriteEffects.None, 0);
                 Main.EntitySpriteDraw(tex,
                     Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition,
                     null, tc, Projectile.oldRot[i],
@@ -132,6 +147,8 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
             Color main = SeasSearingPalette.BiohazardLime;
             main.A     = 0;
+            Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition,
+                null, main * 0.72f, 0f, bloomOrigin, 0.12f, SpriteEffects.None, 0);
             Main.EntitySpriteDraw(tex, Projectile.Center - Main.screenPosition,
                 null, main, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0);
             return false;

@@ -575,7 +575,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             if (!impactTriggeredThisStrike && target is not null && SegmentHitsTarget(target, previousCenter, currentCenter))
             {
                 HandleStrikeImpact(target);
-                if (phase == SuperDashPhase.ImpactDrifting)
+                if (phase != SuperDashPhase.Striking)
                     return;
             }
 
@@ -738,6 +738,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
         {
             impactTriggeredThisStrike = true;
             executionGlowIntensity = ExecutionGlowMax;
+            SpawnImpactAfterimage(Owner, lockedDirection * FinalStrikeExitSpeed);
             SpawnFinalMark(target);
             BBSD_Strike_Effects.SpawnFinalExecutionImpactEffects(Projectile, target.Center, lockedDirection);
 
@@ -843,6 +844,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             Vector2 strikeDirection = lockedDirection.SafeNormalize(DefaultDirection);
             executionGlowIntensity = MathHelper.Clamp(executionGlowIntensity + ExecutionGlowGain, 0f, ExecutionGlowMax);
             SpawnImpactShurikenBurst(target, strikeDirection);
+            Vector2 afterimageVelocity = Projectile.velocity * HitSlowStartFactor;
+            SpawnImpactAfterimage(Owner, afterimageVelocity);
 
             BBSD_Strike_Effects.SpawnStrikeImpactEffects(Projectile, target.Center, strikeDirection, strikeIndex, totalStrikes);
             BBSD_Strike_Effects.SpawnStrikeSlowdownEffects(Projectile, target.Center, strikeDirection, GetStrikeProgress(), executionGlowIntensity);
@@ -866,11 +869,25 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                 Pitch = -0.34f
             }, target.Center);
 
-            impactDriftVelocity = Projectile.velocity * HitSlowStartFactor;
-            phase = SuperDashPhase.ImpactDrifting;
-            phaseTimer = 0;
-            Projectile.friendly = true;
-            Projectile.netUpdate = true;
+            AdvanceAfterStrike(Owner, target);
+        }
+
+        private void SpawnImpactAfterimage(Player owner, Vector2 driftVelocity)
+        {
+            if (Main.dedServ)
+                return;
+
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                owner.Center,
+                driftVelocity,
+                ModContent.ProjectileType<BBSuperDashAfterimage>(),
+                0,
+                0f,
+                Projectile.owner,
+                Projectile.rotation,
+                Projectile.scale,
+                owner.direction == 0 ? 1 : owner.direction);
         }
 
         private void FireForwardShuriken(Player owner, Vector2 dashDir)

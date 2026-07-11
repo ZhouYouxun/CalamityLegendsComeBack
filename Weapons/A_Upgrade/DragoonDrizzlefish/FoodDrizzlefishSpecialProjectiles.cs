@@ -1,3 +1,4 @@
+using CalamityMod;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -718,7 +719,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.DragoonDrizzlefish
         internal static void DrawTexture(string path, Vector2 position, Color color, float rotation, float scale)
         {
             Texture2D texture = ModContent.Request<Texture2D>(path).Value;
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
             Main.EntitySpriteDraw(texture, position - Main.screenPosition, null, color, rotation, texture.Size() * 0.5f, scale, SpriteEffects.None, 0);
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
         }
 
         internal static void DrawSoftTrail(Projectile projectile, string texturePath, Color color, float scale, float opacity)
@@ -739,8 +742,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.DragoonDrizzlefish
             direction = direction.SafeNormalize(Vector2.UnitX);
             Texture2D body = ModContent.Request<Texture2D>(BeamBody).Value;
             Vector2 scale = new(length / body.Width, width / body.Height);
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
             Main.EntitySpriteDraw(body, start - Main.screenPosition, null, outer, direction.ToRotation(), new Vector2(0f, body.Height * 0.5f), scale, SpriteEffects.None, 0);
             Main.EntitySpriteDraw(body, start - Main.screenPosition, null, inner, direction.ToRotation(), new Vector2(0f, body.Height * 0.5f), new Vector2(length / body.Width, width * 0.28f / body.Height), SpriteEffects.None, 0);
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
 
             DrawTexture(BloomCircle, start, outer * 0.75f, 0f, width / 70f);
             DrawTexture(BloomCircle, start + direction * length, outer * 0.5f, 0f, width / 95f);

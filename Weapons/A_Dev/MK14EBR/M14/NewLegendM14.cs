@@ -13,7 +13,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
     public class NewLegendM14 : ModItem, ILocalizedModType
     {
         private static int HoldoutType => ModContent.ProjectileType<MK14EBRHoldout>();
-        private readonly BalanceMK14EBR balance = new();
 
         public new string LocalizationCategory => "Items.Weapons";
         public override string Texture => "CalamityLegendsComeBack/Weapons/A_Dev/MK14EBR/M14/m14";
@@ -22,7 +21,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
         {
             Item.width = 36;
             Item.height = 48;
-            Item.damage = BalanceMK14EBR.BaseDamage[0];
+            Item.damage = 45;
             Item.DamageType = DamageClass.Ranged;
             Item.useTime = 2;
             Item.useAnimation = 2;
@@ -76,18 +75,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
             Item.noUseGraphic = true;
         }
 
-        public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
-        {
-            damage.Base += balance.GetBaseDamage() - Item.damage;
-        }
-
         public override void AddRecipes()
         {
             CreateRecipe()
                 .AddIngredient<M1Garand>()
-                .AddIngredient(ItemID.SoulofSight)
-                .AddIngredient(ItemID.SoulofFright)
-                .AddIngredient(ItemID.SoulofMight)
+                .AddIngredient(ItemID.SoulofLight)
+                .AddIngredient(ItemID.SoulofNight)
                 .AddTile(TileID.MythrilAnvil)
                 .Register();
         }

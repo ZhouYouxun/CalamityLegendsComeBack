@@ -1,0 +1,650 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		DifficultyUI: {
+			Name: IUMW
+			ShortDescription: Enables IUMW Mode.
+			ExpandedDescription: IUMW Mode adds prototype AI layers for selected Calamity bosses. Current implementation is a development shell with phase switching, motion overlays, and debug text.
+		}
+
+		Items: {
+			IUMWMatrixTablet: {
+				DisplayName: IUMW Matrix Tablet
+				Tooltip: Left-click toggles IUMW Mode. Right-click opens the guide panel.
+			}
+
+			BossSummonerItem: {
+				DisplayName: Boss Summoner
+				Tooltip: Right-click to open the boss list. Click any boss icon to spawn it.
+			}
+		}
+
+		Projectiles: {
+			IUMWMatrixPanel.DisplayName: IUMW Matrix Panel
+			BossSummonerPanel.DisplayName: Boss Summoner Panel
+		}
+
+		UI: {
+			GuideTitle: IUMW MATRIX
+			GuideSubtitle: Prototype boss AI control system
+			GuideBody: IUMW Mode is a Calamity difficulty module. Enable it from Calamity's difficulty indicator or left-click the matrix tablet to toggle it directly. While active, selected bosses receive an IUMW AI layer with staged phase changes, themed attack cycles, motion pressure, projectile overlays, and bottom-left debug output. Turning the mode off returns those bosses to their normal behavior.
+			BossListTitle: Tracked bosses
+			BossList: Yharon, The Old Duke, Polterghast, Storm Weaver, Ceaseless Void, Signus, Providence, Astrum Deus, The Plaguebringer Goliath, Astrum Aureus, Cryogen, Aquatic Scourge, The Hive Mind, The Perforators.
+			CloseHint: Use the tablet again or click outside this panel to close.
+			ModeEnabled: IUMW Mode enabled.
+			ModeDisabled: IUMW Mode disabled.
+			StatusOn: Current state: ON
+			StatusOff: Current state: OFF
+		}
+
+		Configs: {
+			IUMWClientConfig: {
+				DisplayName: Client Settings
+
+				ShowBossAIDebugText: {
+					Label: Show boss AI debug text
+					Tooltip: Shows the current tracked boss, phase, attack, timer, and life in the bottom-left corner while IUMW Mode is active.
+				}
+			}
+		}
+	}
+}
+
+Items: {
+	IUMWMatrixTablet: {
+	}
+
+	BossSummonerItem: {
+		DisplayName: Boss Summoner Item
+		Tooltip: ""
+	}
+}
+
+Projectiles: {
+	IUMWWeaponHostileBolt.DisplayName: I U M W Weapon Hostile Bolt
+	IUMWWeaponLineHazard.DisplayName: I U M W Weapon Line Hazard
+	IUMWWeaponSummonCore.DisplayName: I U M W Weapon Summon Core
+	IUMWWeaponTelegraphProjectile.DisplayName: I U M W Weapon Telegraph Projectile
+	IUMWWeaponSpriteProjectile.DisplayName: I U M W Weapon Sprite Projectile
+	AquaticScourgeBarinauticalProjectile.DisplayName: Aquatic Scourge Barinautical Projectile
+	AquaticScourgeSubmarineShockerProjectile.DisplayName: Aquatic Scourge Submarine Shocker Projectile
+	AquaticScourgeDeepseaStaffProjectile.DisplayName: Aquatic Scourge Deepsea Staff Projectile
+	AquaticScourgeDownpourProjectile.DisplayName: Aquatic Scourge Downpour Projectile
+	AquaticScourgeFlakToxicannonProjectile.DisplayName: Aquatic Scourge Flak Toxicannon Projectile
+	AquaticScourgeScourgeoftheSeasProjectile.DisplayName: Aquatic Scourge Scourgeofthe Seas Projectile
+	AquaticScourgeCausticCroakerStaffProjectile.DisplayName: Aquatic Scourge Caustic Croaker Staff Projectile
+	AquaticScourgeSlitheringEelsProjectile.DisplayName: Aquatic Scourge Slithering Eels Projectile
+	AquaticScourgeSkyfinBombersProjectile.DisplayName: Aquatic Scourge Skyfin Bombers Projectile
+	AquaticScourgeSpentFuelContainerProjectile.DisplayName: Aquatic Scourge Spent Fuel Container Projectile
+	AquaticScourgeSulphurousGrabberProjectile.DisplayName: Aquatic Scourge Sulphurous Grabber Projectile
+	AstrumAureusAuroraBlazerProjectile.DisplayName: Astrum Aureus Aurora Blazer Projectile
+	AstrumAureusNebulashProjectile.DisplayName: Astrum Aureus Nebulash Projectile
+	AstrumAureusAlulaAustralisProjectile.DisplayName: Astrum Aureus Alula Australis Projectile
+	AstrumAureusBorealisBomberProjectile.DisplayName: Astrum Aureus Borealis Bomber Projectile
+	AstrumAureusAstralScytheProjectile.DisplayName: Astrum Aureus Astral Scythe Projectile
+	AstrumAureusAuroradicalThrowProjectile.DisplayName: Astrum Aureus Auroradical Throw Projectile
+	AstrumAureusStellarCannonProjectile.DisplayName: Astrum Aureus Stellar Cannon Projectile
+	AstrumAureusTitanArmProjectile.DisplayName: Astrum Aureus Titan Arm Projectile
+	AstrumAureusAstralachneaStaffProjectile.DisplayName: Astrum Aureus Astralachnea Staff Projectile
+	AstrumAureusStellarKnifeProjectile.DisplayName: Astrum Aureus Stellar Knife Projectile
+	AstrumAureusAbandonedSlimeStaffProjectile.DisplayName: Astrum Aureus Abandoned Slime Staff Projectile
+	AstrumAureusHivePodProjectile.DisplayName: Astrum Aureus Hive Pod Projectile
+	AstrumDeusStarSputterProjectile.DisplayName: Astrum Deus Star Sputter Projectile
+	AstrumDeusTheMicrowaveProjectile.DisplayName: Astrum Deus The Microwave Projectile
+	AstrumDeusStarShowerProjectile.DisplayName: Astrum Deus Star Shower Projectile
+	AstrumDeusStarspawnHelixStaffProjectile.DisplayName: Astrum Deus Starspawn Helix Staff Projectile
+	AstrumDeusRegulusRiotProjectile.DisplayName: Astrum Deus Regulus Riot Projectile
+	AstrumDeusAstralBlasterProjectile.DisplayName: Astrum Deus Astral Blaster Projectile
+	AstrumDeusAstralPikeProjectile.DisplayName: Astrum Deus Astral Pike Projectile
+	AstrumDeusAstralStaffProjectile.DisplayName: Astrum Deus Astral Staff Projectile
+	AstrumDeusRadiantStarProjectile.DisplayName: Astrum Deus Radiant Star Projectile
+	AstrumDeusTrueBiomeBladeProjectile.DisplayName: Astrum Deus True Biome Blade Projectile
+	CalamitasCloneOblivionProjectile.DisplayName: Calamitas Clone Oblivion Projectile
+	CalamitasCloneAnimosityProjectile.DisplayName: Calamitas Clone Animosity Projectile
+	CalamitasCloneLashesofChaosProjectile.DisplayName: Calamitas Clone Lashesof Chaos Projectile
+	CalamitasCloneEntropysVigilProjectile.DisplayName: Calamitas Clone Entropys Vigil Projectile
+	CalamitasCloneCrushsawCrasherProjectile.DisplayName: Calamitas Clone Crushsaw Crasher Projectile
+	CalamitasCloneHavocsBreathProjectile.DisplayName: Calamitas Clone Havocs Breath Projectile
+	CeaselessVoidMirrorBladeProjectile.DisplayName: Ceaseless Void Mirror Blade Projectile
+	CeaselessVoidVoidConcentrationStaffProjectile.DisplayName: Ceaseless Void Void Concentration Staff Projectile
+	CeaselessVoidDarkSparkProjectile.DisplayName: Ceaseless Void Dark Spark Projectile
+	CeaselessVoidEventHorizonProjectile.DisplayName: Ceaseless Void Event Horizon Projectile
+	CeaselessVoidMistlestormProjectile.DisplayName: Ceaseless Void Mistlestorm Projectile
+	CeaselessVoidOntologicalDespoilerProjectile.DisplayName: Ceaseless Void Ontological Despoiler Projectile
+	CeaselessVoidSealedSingularityProjectile.DisplayName: Ceaseless Void Sealed Singularity Projectile
+	CeaselessVoidTacticiansTrumpCardProjectile.DisplayName: Ceaseless Void Tacticians Trump Card Projectile
+	CeaselessVoidEternityProjectile.DisplayName: Ceaseless Void Eternity Projectile
+	CeaselessVoidPhantasmalFuryProjectile.DisplayName: Ceaseless Void Phantasmal Fury Projectile
+	CeaselessVoidFourSeasonsGalaxiaProjectile.DisplayName: Ceaseless Void Four Seasons Galaxia Projectile
+	CeaselessVoidRealityRuptureProjectile.DisplayName: Ceaseless Void Reality Rupture Projectile
+	CryogenAvalancheProjectile.DisplayName: Cryogen Avalanche Projectile
+	CryogenHoarfrostBowProjectile.DisplayName: Cryogen Hoarfrost Bow Projectile
+	CryogenIcebreakerProjectile.DisplayName: Cryogen Icebreaker Projectile
+	CryogenIcebreaker.DisplayName: Cryogen Icebreaker
+	CryogenSnowstormStaffProjectile.DisplayName: Cryogen Snowstorm Staff Projectile
+	CryogenSoulofCryogenProjectile.DisplayName: Cryogen Soulof Cryogen Projectile
+	CryogenCryoStoneProjectile.DisplayName: Cryogen Cryo Stone Projectile
+	CryogenFrostFlareProjectile.DisplayName: Cryogen Frost Flare Projectile
+	CryogenGlacialEmbraceProjectile.DisplayName: Cryogen Glacial Embrace Projectile
+	CryogenDarklightGreatswordProjectile.DisplayName: Cryogen Darklight Greatsword Projectile
+	CryogenStarnightLanceProjectile.DisplayName: Cryogen Starnight Lance Projectile
+	CryogenDarkechoGreatbowProjectile.DisplayName: Cryogen Darkecho Greatbow Projectile
+	CryogenShadecrystalBarrageProjectile.DisplayName: Cryogen Shadecrystal Barrage Projectile
+	CryogenShadecrystal.DisplayName: Cryogen Shadecrystal
+	CryogenShimmersparkProjectile.DisplayName: Cryogen Shimmerspark Projectile
+	CryogenCrystalPiercerProjectile.DisplayName: Cryogen Crystal Piercer Projectile
+	CryogenDaedalusGolemStaffProjectile.DisplayName: Cryogen Daedalus Golem Staff Projectile
+	DragonfollyGildedProboscisProjectile.DisplayName: Dragonfolly Gilded Proboscis Projectile
+	DragonfollyGoldenEagleProjectile.DisplayName: Dragonfolly Golden Eagle Projectile
+	DragonfollyRougeSlashProjectile.DisplayName: Dragonfolly Rouge Slash Projectile
+	LeviathanAnahitaGreentideProjectile.DisplayName: Leviathan Anahita Greentide Projectile
+	LeviathanAnahitaLeviatitanProjectile.DisplayName: Leviathan Anahita Leviatitan Projectile
+	LeviathanAnahitaAnahitasArpeggioProjectile.DisplayName: Leviathan Anahita Anahitas Arpeggio Projectile
+	LeviathanAnahitaAtlantisProjectile.DisplayName: Leviathan Anahita Atlantis Projectile
+	LeviathanAnahitaGastricBelcherStaffProjectile.DisplayName: Leviathan Anahita Gastric Belcher Staff Projectile
+	LeviathanAnahitaWhitewaterProjectile.DisplayName: Leviathan Anahita Whitewater Projectile
+	LeviathanAnahitaLeviathanTeethProjectile.DisplayName: Leviathan Anahita Leviathan Teeth Projectile
+	OldDukeFetidEmesisProjectile.DisplayName: Old Duke Fetid Emesis Projectile
+	OldDukeInsidiousImpalerProjectile.DisplayName: Old Duke Insidious Impaler Projectile
+	OldDukeSepticSkewerProjectile.DisplayName: Old Duke Septic Skewer Projectile
+	OldDukeCadaverousCarrionProjectile.DisplayName: Old Duke Cadaverous Carrion Projectile
+	OldDukeMutatedTruffleProjectile.DisplayName: Old Duke Mutated Truffle Projectile
+	OldDukeVitriolicViperProjectile.DisplayName: Old Duke Vitriolic Viper Projectile
+	OldDukeTheOldReaperProjectile.DisplayName: Old Duke The Old Reaper Projectile
+	OldDukeToxicantTwisterProjectile.DisplayName: Old Duke Toxicant Twister Projectile
+	OldDukeGammaHeartProjectile.DisplayName: Old Duke Gamma Heart Projectile
+	OldDukePhosphorescentGauntletProjectile.DisplayName: Old Duke Phosphorescent Gauntlet Projectile
+	OldDukeSulphuricAcidCannonProjectile.DisplayName: Old Duke Sulphuric Acid Cannon Projectile
+	OldDukeFlakToxicannonProjectile.DisplayName: Old Duke Flak Toxicannon Projectile
+	OldDukeSkyfinBombersProjectile.DisplayName: Old Duke Skyfin Bombers Projectile
+	OldDukeSlitheringEelsProjectile.DisplayName: Old Duke Slithering Eels Projectile
+	OldDukeSpentFuelContainerProjectile.DisplayName: Old Duke Spent Fuel Container Projectile
+	OldDukeSulphurousGrabberProjectile.DisplayName: Old Duke Sulphurous Grabber Projectile
+	PlaguebringerGoliathMalevolenceProjectile.DisplayName: Plaguebringer Goliath Malevolence Projectile
+	PlaguebringerGoliathPlagueStaffProjectile.DisplayName: Plaguebringer Goliath Plague Staff Projectile
+	PlaguebringerGoliathVirulenceProjectile.DisplayName: Plaguebringer Goliath Virulence Projectile
+	PlaguebringerGoliathFuelCellBundleProjectile.DisplayName: Plaguebringer Goliath Fuel Cell Bundle Projectile
+	PlaguebringerGoliathInfectedRemoteProjectile.DisplayName: Plaguebringer Goliath Infected Remote Projectile
+	PlaguebringerGoliathTheHiveProjectile.DisplayName: Plaguebringer Goliath The Hive Projectile
+	PlaguebringerGoliathTheSyringeProjectile.DisplayName: Plaguebringer Goliath The Syringe Projectile
+	PlaguebringerGoliathMalachiteProjectile.DisplayName: Plaguebringer Goliath Malachite Projectile
+	PlaguebringerGoliathPestilentDefilerProjectile.DisplayName: Plaguebringer Goliath Pestilent Defiler Projectile
+	PlaguebringerGoliathToxicHeartProjectile.DisplayName: Plaguebringer Goliath Toxic Heart Projectile
+	PlaguebringerGoliathBlightSpewerProjectile.DisplayName: Plaguebringer Goliath Blight Spewer Projectile
+	PlaguebringerGoliathPlagueCallerProjectile.DisplayName: Plaguebringer Goliath Plague Caller Projectile
+	PlaguebringerGoliathPandemicProjectile.DisplayName: Plaguebringer Goliath Pandemic Projectile
+	PlaguebringerGoliathPlagueTaintedSMGProjectile.DisplayName: Plaguebringer Goliath Plague Tainted S M G Projectile
+	PolterghastBansheeHookProjectile.DisplayName: Polterghast Banshee Hook Projectile
+	PolterghastDaemonsFlameProjectile.DisplayName: Polterghast Daemons Flame Projectile
+	PolterghastTerrorBladeProjectile.DisplayName: Polterghast Terror Blade Projectile
+	PolterghastFatesRevealProjectile.DisplayName: Polterghast Fates Reveal Projectile
+	PolterghastGhastlyVisageProjectile.DisplayName: Polterghast Ghastly Visage Projectile
+	PolterghastEtherealSubjugatorProjectile.DisplayName: Polterghast Ethereal Subjugator Projectile
+	PolterghastGalileoGladiusProjectile.DisplayName: Polterghast Galileo Gladius Projectile
+	PolterghastGhoulishGougerProjectile.DisplayName: Polterghast Ghoulish Gouger Projectile
+	PolterghastCrescentMoonProjectile.DisplayName: Polterghast Crescent Moon Projectile
+	PolterghastHalleysInfernoProjectile.DisplayName: Polterghast Halleys Inferno Projectile
+	PolterghastAlphaDraconisProjectile.DisplayName: Polterghast Alpha Draconis Projectile
+	PolterghastSiriusProjectile.DisplayName: Polterghast Sirius Projectile
+	PolterghastStratusSphereProjectile.DisplayName: Polterghast Stratus Sphere Projectile
+	PolterghastVegaProjectile.DisplayName: Polterghast Vega Projectile
+	PolterghastWarloksMoonFistProjectile.DisplayName: Polterghast Warloks Moon Fist Projectile
+	ProvidenceBlissfulBombardierProjectile.DisplayName: Providence Blissful Bombardier Projectile
+	ProvidenceBurningRevelationProjectile.DisplayName: Providence Burning Revelation Projectile
+	ProvidenceHolyColliderProjectile.DisplayName: Providence Holy Collider Projectile
+	ProvidenceTelluricGlareProjectile.DisplayName: Providence Telluric Glare Projectile
+	ProvidenceDazzlingStabberStaffProjectile.DisplayName: Providence Dazzling Stabber Staff Projectile
+	ProvidenceMoltenAmputatorProjectile.DisplayName: Providence Molten Amputator Projectile
+	ProvidencePurgeGuzzlerProjectile.DisplayName: Providence Purge Guzzler Projectile
+	ProvidenceAetherfluxCannonProjectile.DisplayName: Providence Aetherflux Cannon Projectile
+	ProvidenceAngelicShotgunProjectile.DisplayName: Providence Angelic Shotgun Projectile
+	ProvidencePristineFuryProjectile.DisplayName: Providence Pristine Fury Projectile
+	ProvidenceDarkSparkProjectile.DisplayName: Providence Dark Spark Projectile
+	ProvidenceGalactusBladeProjectile.DisplayName: Providence Galactus Blade Projectile
+	ProvidenceHandheldTankProjectile.DisplayName: Providence Handheld Tank Projectile
+	ProvidenceMirrorofKalandraProjectile.DisplayName: Providence Mirrorof Kalandra Projectile
+	ProvidenceMourningstarProjectile.DisplayName: Providence Mourningstar Projectile
+	ProvidenceShatteredDawnProjectile.DisplayName: Providence Shattered Dawn Projectile
+	ProvidenceSeekingScorcherProjectile.DisplayName: Providence Seeking Scorcher Projectile
+	ProvidenceTheMaelstromProjectile.DisplayName: Providence The Maelstrom Projectile
+	ProvidenceThePrinceProjectile.DisplayName: Providence The Prince Projectile
+	RavagerHematemesisProjectile.DisplayName: Ravager Hematemesis Projectile
+	RavagerRealmRavagerProjectile.DisplayName: Ravager Realm Ravager Projectile
+	RavagerUltimusCleaverProjectile.DisplayName: Ravager Ultimus Cleaver Projectile
+	RavagerCraniumSmasherProjectile.DisplayName: Ravager Cranium Smasher Projectile
+	RavagerSpikecragStaffProjectile.DisplayName: Ravager Spikecrag Staff Projectile
+	RavagerVesuviusProjectile.DisplayName: Ravager Vesuvius Projectile
+	RavagerCorpusAvertorProjectile.DisplayName: Ravager Corpus Avertor Projectile
+	RavagerFleshTotemProjectile.DisplayName: Ravager Flesh Totem Projectile
+	RavagerTheMutilatorProjectile.DisplayName: Ravager The Mutilator Projectile
+	RavagerArterialAssaultProjectile.DisplayName: Ravager Arterial Assault Projectile
+	RavagerClaretCannonProjectile.DisplayName: Ravager Claret Cannon Projectile
+	RavagerLaceratorProjectile.DisplayName: Ravager Lacerator Projectile
+	RavagerBloodBoilerProjectile.DisplayName: Ravager Blood Boiler Projectile
+	RavagerSanguineFlareProjectile.DisplayName: Ravager Sanguine Flare Projectile
+	RavagerVisceraProjectile.DisplayName: Ravager Viscera Projectile
+	RavagerBloodsoakedCrasherProjectile.DisplayName: Ravager Bloodsoaked Crasher Projectile
+	RavagerDragonbloodDisgorgerProjectile.DisplayName: Ravager Dragonblood Disgorger Projectile
+	SignusCosmicKunaiProjectile.DisplayName: Signus Cosmic Kunai Projectile
+	SignusCosmilampProjectile.DisplayName: Signus Cosmilamp Projectile
+	SignusAethersWhisperProjectile.DisplayName: Signus Aethers Whisper Projectile
+	SignusDeathsAscensionProjectile.DisplayName: Signus Deaths Ascension Projectile
+	SignusEmpyreanKnivesProjectile.DisplayName: Signus Empyrean Knives Projectile
+	SignusKingofConstellationsTenryuProjectile.DisplayName: Signus Kingof Constellations Tenryu Projectile
+	SignusMagneticMeltdownProjectile.DisplayName: Signus Magnetic Meltdown Projectile
+	SignusNadirProjectile.DisplayName: Signus Nadir Projectile
+	SignusTheSevensStrikerProjectile.DisplayName: Signus The Sevens Striker Projectile
+	SignusVenusianTridentProjectile.DisplayName: Signus Venusian Trident Projectile
+	SignusFourSeasonsGalaxiaProjectile.DisplayName: Signus Four Seasons Galaxia Projectile
+	SignusRealityRuptureProjectile.DisplayName: Signus Reality Rupture Projectile
+	StormWeaverSkytideDragoonProjectile.DisplayName: Storm Weaver Skytide Dragoon Projectile
+	StormWeaverTheStormProjectile.DisplayName: Storm Weaver The Storm Projectile
+	StormWeaverVolterionProjectile.DisplayName: Storm Weaver Volterion Projectile
+	StormWeaverAquasScepterProjectile.DisplayName: Storm Weaver Aquas Scepter Projectile
+	StormWeaverCorinthPrimeProjectile.DisplayName: Storm Weaver Corinth Prime Projectile
+	StormWeaverStellarTorusStaffProjectile.DisplayName: Storm Weaver Stellar Torus Staff Projectile
+	StormWeaverTeslastaffProjectile.DisplayName: Storm Weaver Teslastaff Projectile
+	StormWeaverThePackProjectile.DisplayName: Storm Weaver The Pack Projectile
+	StormWeaverTwistingThunderProjectile.DisplayName: Storm Weaver Twisting Thunder Projectile
+	StormWeaverSeadragonProjectile.DisplayName: Storm Weaver Seadragon Projectile
+	StormWeaverShadowboltStaffProjectile.DisplayName: Storm Weaver Shadowbolt Staff Projectile
+	StormWeaverFourSeasonsGalaxiaProjectile.DisplayName: Storm Weaver Four Seasons Galaxia Projectile
+	StormWeaverRealityRuptureProjectile.DisplayName: Storm Weaver Reality Rupture Projectile
+	CryogenCrystalDart.DisplayName: Cryogen Crystal Dart
+	CryogenDaedalusLightning.DisplayName: Cryogen Daedalus Lightning
+	CryogenDaedalusPellet.DisplayName: Cryogen Daedalus Pellet
+	CryogenDarkBeam.DisplayName: Cryogen Dark Beam
+	CryogenDarkechoArrow.DisplayName: Cryogen Darkecho Arrow
+	CryogenFrostMist.DisplayName: Cryogen Frost Mist
+	CryogenGlbraceSpike.DisplayName: Cryogen Glbrace Spike
+	CryogenIceBomb.DisplayName: Cryogen Ice Bomb
+	CryogenIceShard.DisplayName: Cryogen Ice Shard
+	CryogenIceStar.DisplayName: Cryogen Ice Star
+	CryogenJavelin.DisplayName: Cryogen Javelin
+	CryogenJavelinShard.DisplayName: Cryogen Javelin Shard
+	CryogenLightBeam.DisplayName: Cryogen Light Beam
+	CryogenMistArrow.DisplayName: Cryogen Mist Arrow
+	CryogenShimmersparkYoyo.DisplayName: Cryogen Shimmerspark Yoyo
+	CryogenSnowflake.DisplayName: Cryogen Snowflake
+	CryogenSoulShard.DisplayName: Cryogen Soul Shard
+	CryogenStarnightBeam.DisplayName: Cryogen Starnight Beam
+	CryogenYoyoStar.DisplayName: Cryogen Yoyo Star
+	CryoStoneBarrier.DisplayName: Cryo Stone Barrier
+	CryogenFrostColumnTelegraph.DisplayName: Cryogen Frost Column Telegraph
+	CryogenFrostSpear.DisplayName: Cryogen Frost Spear
+	CryogenIceEruption.DisplayName: Cryogen Ice Eruption
+	CryogenHeldAvalanche.DisplayName: Cryogen Held Avalanche
+	CryogenHeldDarklight.DisplayName: Cryogen Held Darklight
+	CryogenHeldHoarfrostBow.DisplayName: Cryogen Held Hoarfrost Bow
+	CryogenHeldStarnightLance.DisplayName: Cryogen Held Starnight Lance
+	CryogenHeldCrystalPiercer.DisplayName: Cryogen Held Crystal Piercer
+	CryogenHeldDaedalusStaff.DisplayName: Cryogen Held Daedalus Staff
+	CryogenHeldDarkechoBow.DisplayName: Cryogen Held Darkecho Bow
+	CryogenHeldIcebreaker.DisplayName: Cryogen Held Icebreaker
+	CryogenHeldShadecrystal.DisplayName: Cryogen Held Shadecrystal
+	CryogenHeldSnowstormStaff.DisplayName: Cryogen Held Snowstorm Staff
+	AcidGlobProj.DisplayName: Acid Glob Proj
+	AnglerfishProj.DisplayName: Anglerfish Proj
+	BarbedTendrilProj.DisplayName: Barbed Tendril Proj
+	BomberFishProj.DisplayName: Bomber Fish Proj
+	CroakerSentryProj.DisplayName: Croaker Sentry Proj
+	EelBoltProj.DisplayName: Eel Bolt Proj
+	FlakShellProj.DisplayName: Flak Shell Proj
+	FuelBarrelProj.DisplayName: Fuel Barrel Proj
+	HarpoonBoomerangProj.DisplayName: Harpoon Boomerang Proj
+	RainCloudProj.DisplayName: Rain Cloud Proj
+	ScourgeHeldBarinautical.DisplayName: Scourge Held Barinautical
+	ScourgeHeldCausticCroaker.DisplayName: Scourge Held Caustic Croaker
+	ScourgeHeldDeepseaStaff.DisplayName: Scourge Held Deepsea Staff
+	ScourgeHeldDownpour.DisplayName: Scourge Held Downpour
+	ScourgeHeldFlakToxicannon.DisplayName: Scourge Held Flak Toxicannon
+	ScourgeHeldScourgeSeas.DisplayName: Scourge Held Scourge Seas
+	ScourgeHeldSkyfinBombers.DisplayName: Scourge Held Skyfin Bombers
+	ScourgeHeldSlitheringEels.DisplayName: Scourge Held Slithering Eels
+	ScourgeHeldSpentFuel.DisplayName: Scourge Held Spent Fuel
+	ScourgeHeldSubmarineShocker.DisplayName: Scourge Held Submarine Shocker
+	ScourgeHeldSulphurousGrabber.DisplayName: Scourge Held Sulphurous Grabber
+	ShockAnchorProj.DisplayName: Shock Anchor Proj
+	SulphurTideWallProj.DisplayName: Sulphur Tide Wall Proj
+	ToxicBombProj.DisplayName: Toxic Bomb Proj
+	ToxicCloudHazardProj.DisplayName: Toxic Cloud Hazard Proj
+	ToxicShardProj.DisplayName: Toxic Shard Proj
+	WaterBoltDropProj.DisplayName: Water Bolt Drop Proj
+	AbandonedSlimeCoreProj.DisplayName: Abandoned Slime Core Proj
+	AlulaFeatherProj.DisplayName: Alula Feather Proj
+	AstralScytheProj.DisplayName: Astral Scythe Proj
+	AstralWebProj.DisplayName: Astral Web Proj
+	AureusHeldAbandonedSlime.DisplayName: Aureus Held Abandoned Slime
+	AureusHeldAlulaAustralis.DisplayName: Aureus Held Alula Australis
+	AureusHeldAstralachnea.DisplayName: Aureus Held Astralachnea
+	AureusHeldAstralScythe.DisplayName: Aureus Held Astral Scythe
+	AureusHeldAuroraBlazer.DisplayName: Aureus Held Aurora Blazer
+	AureusHeldAuroradical.DisplayName: Aureus Held Auroradical
+	AureusHeldBorealisBomber.DisplayName: Aureus Held Borealis Bomber
+	AureusHeldHivePod.DisplayName: Aureus Held Hive Pod
+	AureusHeldNebulash.DisplayName: Aureus Held Nebulash
+	AureusHeldStellarCannon.DisplayName: Aureus Held Stellar Cannon
+	AureusHeldStellarKnife.DisplayName: Aureus Held Stellar Knife
+	AureusHeldTitanArm.DisplayName: Aureus Held Titan Arm
+	AuroraBoltProj.DisplayName: Aurora Bolt Proj
+	AuroradicalBoomerangProj.DisplayName: Auroradical Boomerang Proj
+	BorealisBombProj.DisplayName: Borealis Bomb Proj
+	BorealisSweepLineProj.DisplayName: Borealis Sweep Line Proj
+	HivelingProj.DisplayName: Hiveling Proj
+	HivePodProj.DisplayName: Hive Pod Proj
+	NebulashExplosionProj.DisplayName: Nebulash Explosion Proj
+	NebulashLashProj.DisplayName: Nebulash Lash Proj
+	StellarBeamProj.DisplayName: Stellar Beam Proj
+	StellarKnifeHoverProj.DisplayName: Stellar Knife Hover Proj
+	StellarPlasmaPoolProj.DisplayName: Stellar Plasma Pool Proj
+	TitanFistProj.DisplayName: Titan Fist Proj
+	AstralCrystalProj.DisplayName: Astral Crystal Proj
+	AstralPikeProj.DisplayName: Astral Pike Proj
+	AstralRoundProj.DisplayName: Astral Round Proj
+	ColumnStarProj.DisplayName: Column Star Proj
+	DeusHeldAstralBlaster.DisplayName: Deus Held Astral Blaster
+	DeusHeldAstralPike.DisplayName: Deus Held Astral Pike
+	DeusHeldAstralStaff.DisplayName: Deus Held Astral Staff
+	DeusHeldMicrowave.DisplayName: Deus Held Microwave
+	DeusHeldRadiantStar.DisplayName: Deus Held Radiant Star
+	DeusHeldRegulusRiot.DisplayName: Deus Held Regulus Riot
+	DeusHeldStarShower.DisplayName: Deus Held Star Shower
+	DeusHeldStarspawnHelix.DisplayName: Deus Held Starspawn Helix
+	DeusHeldStarSputter.DisplayName: Deus Held Star Sputter
+	DeusHeldTrueBiomeBlade.DisplayName: Deus Held True Biome Blade
+	MicrowaveBeamProj.DisplayName: Microwave Beam Proj
+	RadiantStarKnifeProj.DisplayName: Radiant Star Knife Proj
+	RegulusCoreProj.DisplayName: Regulus Core Proj
+	RegulusEnergyProj.DisplayName: Regulus Energy Proj
+	StarspawnHelixProj.DisplayName: Starspawn Helix Proj
+	StarSputterProj.DisplayName: Star Sputter Proj
+	TrueBiomeRiftProj.DisplayName: True Biome Rift Proj
+	AcidFogWallProj.DisplayName: Acid Fog Wall Proj
+	AnimosityBulletProj.DisplayName: Animosity Bullet Proj
+	BrimstoneFireFriendlyProj.DisplayName: Brimstone Fire Friendly Proj
+	BrimstoneHellfireballProj.DisplayName: Brimstone Hellfireball Proj
+	CalHeldAnimosity.DisplayName: Cal Held Animosity
+	CalHeldCrushsaw.DisplayName: Cal Held Crushsaw
+	CalHeldHavoc.DisplayName: Cal Held Havoc
+	CalHeldLashes.DisplayName: Cal Held Lashes
+	CalHeldOblivion.DisplayName: Cal Held Oblivion
+	CalHeldVigil.DisplayName: Cal Held Vigil
+	CrushaxProj.DisplayName: Crushax Proj
+	HellfireStarExplosionProj.DisplayName: Hellfire Star Explosion Proj
+	HellfireVortexProj.DisplayName: Hellfire Vortex Proj
+	MiniAmplifiedLaserProj.DisplayName: Mini Amplified Laser Proj
+	OblivionFireRingProj.DisplayName: Oblivion Fire Ring Proj
+	OblivionYoyoProj.DisplayName: Oblivion Yoyo Proj
+	RotatingBrimstoneLaserProj.DisplayName: Rotating Brimstone Laser Proj
+	AnahitaHeldArpeggio.DisplayName: Anahita Held Arpeggio
+	AnahitaHeldAtlantis.DisplayName: Anahita Held Atlantis
+	AnahitaHeldGreentide.DisplayName: Anahita Held Greentide
+	AnahitaNoteProj.DisplayName: Anahita Note Proj
+	AtlantisPillarProj.DisplayName: Atlantis Pillar Proj
+	AtlantisRingBeamProj.DisplayName: Atlantis Ring Beam Proj
+	GastricAcidDropProj.DisplayName: Gastric Acid Drop Proj
+	GastricAcidPoolProj.DisplayName: Gastric Acid Pool Proj
+	GreentideSlamProj.DisplayName: Greentide Slam Proj
+	LeviathanHeldGastricBelcher.DisplayName: Leviathan Held Gastric Belcher
+	LeviathanHeldLeviatitan.DisplayName: Leviathan Held Leviatitan
+	LeviathanHeldTeeth.DisplayName: Leviathan Held Teeth
+	LeviathanToothProj.DisplayName: Leviathan Tooth Proj
+	LeviatitanBubbleProj.DisplayName: Leviatitan Bubble Proj
+	TsunamiWaveProj.DisplayName: Tsunami Wave Proj
+	WhitewaterNeedleProj.DisplayName: Whitewater Needle Proj
+	WhitewaterWallProj.DisplayName: Whitewater Wall Proj
+	AcidPoolProj.DisplayName: Acid Pool Proj
+	BlightFlameProj.DisplayName: Blight Flame Proj
+	FuelCellFlaskProj.DisplayName: Fuel Cell Flask Proj
+	HiveNukeProj.DisplayName: Hive Nuke Proj
+	MalachiteDaggerProj.DisplayName: Malachite Dagger Proj
+	PandemicYoyoProj.DisplayName: Pandemic Yoyo Proj
+	PlagueArrowProj.DisplayName: Plague Arrow Proj
+	PlagueFangProj.DisplayName: Plague Fang Proj
+	PlagueHeldBlightSpewer.DisplayName: Plague Held Blight Spewer
+	PlagueHeldDefiler.DisplayName: Plague Held Defiler
+	PlagueHeldFuelCell.DisplayName: Plague Held Fuel Cell
+	PlagueHeldHive.DisplayName: Plague Held Hive
+	PlagueHeldMalachite.DisplayName: Plague Held Malachite
+	PlagueHeldMalevolence.DisplayName: Plague Held Malevolence
+	PlagueHeldPandemic.DisplayName: Plague Held Pandemic
+	PlagueHeldRemote.DisplayName: Plague Held Remote
+	PlagueHeldSMG.DisplayName: Plague Held S M G
+	PlagueHeldStaff.DisplayName: Plague Held Staff
+	PlagueHeldSyringe.DisplayName: Plague Held Syringe
+	PlagueHeldVirulence.DisplayName: Plague Held Virulence
+	PlagueTaintedBulletProj.DisplayName: Plague Tainted Bullet Proj
+	SicknessRoundProj.DisplayName: Sickness Round Proj
+	TheSyringeProj.DisplayName: The Syringe Proj
+	VirulentShardProj.DisplayName: Virulent Shard Proj
+	VirulentWaveProj.DisplayName: Virulent Wave Proj
+	ArterialColumnProj.DisplayName: Arterial Column Proj
+	BloodBoilerFlameProj.DisplayName: Blood Boiler Flame Proj
+	BloodDropletProj.DisplayName: Blood Droplet Proj
+	BloodsoakedWaveProj.DisplayName: Bloodsoaked Wave Proj
+	ClaretBoltProj.DisplayName: Claret Bolt Proj
+	CorpusAvertorProj.DisplayName: Corpus Avertor Proj
+	CraniumFlailProj.DisplayName: Cranium Flail Proj
+	DragonbloodLavaProj.DisplayName: Dragonblood Lava Proj
+	DragonbloodPoolProj.DisplayName: Dragonblood Pool Proj
+	HematemesisBloodProj.DisplayName: Hematemesis Blood Proj
+	LaceratorThreadProj.DisplayName: Lacerator Thread Proj
+	LaceratorYoyoProj.DisplayName: Lacerator Yoyo Proj
+	MutilatorWaveProj.DisplayName: Mutilator Wave Proj
+	RavagerHeldArterialAssault.DisplayName: Ravager Held Arterial Assault
+	RavagerHeldBloodBoiler.DisplayName: Ravager Held Blood Boiler
+	RavagerHeldBloodsoakedCrasher.DisplayName: Ravager Held Bloodsoaked Crasher
+	RavagerHeldClaretCannon.DisplayName: Ravager Held Claret Cannon
+	RavagerHeldCorpusAvertor.DisplayName: Ravager Held Corpus Avertor
+	RavagerHeldCraniumSmasher.DisplayName: Ravager Held Cranium Smasher
+	RavagerHeldDragonbloodDisgorger.DisplayName: Ravager Held Dragonblood Disgorger
+	RavagerHeldHematemesis.DisplayName: Ravager Held Hematemesis
+	RavagerHeldLacerator.DisplayName: Ravager Held Lacerator
+	RavagerHeldMutilator.DisplayName: Ravager Held Mutilator
+	RavagerHeldRealmRavager.DisplayName: Ravager Held Realm Ravager
+	RavagerHeldSanguineFlare.DisplayName: Ravager Held Sanguine Flare
+	RavagerHeldUltimusCleaver.DisplayName: Ravager Held Ultimus Cleaver
+	RavagerHeldVesuvius.DisplayName: Ravager Held Vesuvius
+	RavagerHeldViscera.DisplayName: Ravager Held Viscera
+	RealmRiftProj.DisplayName: Realm Rift Proj
+	RiftWallProj.DisplayName: Rift Wall Proj
+	SanguineFlareProj.DisplayName: Sanguine Flare Proj
+	SpikecragSpireProj.DisplayName: Spikecrag Spire Proj
+	VesuviusEmberProj.DisplayName: Vesuvius Ember Proj
+	VisceraSpireProj.DisplayName: Viscera Spire Proj
+	EternityBeamProj.DisplayName: Eternity Beam Proj
+	MirrorBladeSwordProj.DisplayName: Mirror Blade Sword Proj
+	MistlestormLeafProj.DisplayName: Mistlestorm Leaf Proj
+	OntologicalBulletProj.DisplayName: Ontological Bullet Proj
+	PhantasmalPhantomProj.DisplayName: Phantasmal Phantom Proj
+	SealedSingularityCoreProj.DisplayName: Sealed Singularity Core Proj
+	SingularityPillarProj.DisplayName: Singularity Pillar Proj
+	TacticianCardLaserProj.DisplayName: Tactician Card Laser Proj
+	VoidAbsorbHoleProj.DisplayName: Void Absorb Hole Proj
+	VoidDarkSparkCoreProj.DisplayName: Void Dark Spark Core Proj
+	VoidHeldDarkSpark.DisplayName: Void Held Dark Spark
+	VoidHeldEternity.DisplayName: Void Held Eternity
+	VoidHeldEventHorizon.DisplayName: Void Held Event Horizon
+	VoidHeldMirrorBlade.DisplayName: Void Held Mirror Blade
+	VoidHeldMistlestorm.DisplayName: Void Held Mistlestorm
+	VoidHeldOntologicalDespoiler.DisplayName: Void Held Ontological Despoiler
+	VoidHeldPhantasmalFury.DisplayName: Void Held Phantasmal Fury
+	VoidHeldRealityRupture.DisplayName: Void Held Reality Rupture
+	VoidHeldSealedSingularity.DisplayName: Void Held Sealed Singularity
+	VoidHeldTacticiansTrump.DisplayName: Void Held Tacticians Trump
+	VoidHeldVoidConcentration.DisplayName: Void Held Void Concentration
+	VoidOrbProj.DisplayName: Void Orb Proj
+	VoidRiftProj.DisplayName: Void Rift Proj
+	VoidShrinkRingProj.DisplayName: Void Shrink Ring Proj
+	VoidSplitLaserProj.DisplayName: Void Split Laser Proj
+	DraconicDroneProj.DisplayName: Draconic Drone Proj
+	FollyHeldGoldenEagle.DisplayName: Folly Held Golden Eagle
+	FollyHeldProboscis.DisplayName: Folly Held Proboscis
+	FollyHeldRougeSlash.DisplayName: Folly Held Rouge Slash
+	GoldenEagleBoltProj.DisplayName: Golden Eagle Bolt Proj
+	LightningWaterfallProj.DisplayName: Lightning Waterfall Proj
+	ProboscisFlameProj.DisplayName: Proboscis Flame Proj
+	RougeSlashProj.DisplayName: Rouge Slash Proj
+	SonicBoomRingProj.DisplayName: Sonic Boom Ring Proj
+	TeslaTrailProj.DisplayName: Tesla Trail Proj
+	ThunderboltArrowProj.DisplayName: Thunderbolt Arrow Proj
+	AcidOrbProj.DisplayName: Acid Orb Proj
+	BurrowerMinionProj.DisplayName: Burrower Minion Proj
+	CarrionDiveProj.DisplayName: Carrion Dive Proj
+	DukeHeldCadaverousCarrion.DisplayName: Duke Held Cadaverous Carrion
+	DukeHeldFetidEmesis.DisplayName: Duke Held Fetid Emesis
+	DukeHeldGammaHeart.DisplayName: Duke Held Gamma Heart
+	DukeHeldInsidiousImpaler.DisplayName: Duke Held Insidious Impaler
+	DukeHeldMutatedTruffle.DisplayName: Duke Held Mutated Truffle
+	DukeHeldOldReaper.DisplayName: Duke Held Old Reaper
+	DukeHeldPhosphorescentGauntlet.DisplayName: Duke Held Phosphorescent Gauntlet
+	DukeHeldSepticSkewer.DisplayName: Duke Held Septic Skewer
+	DukeHeldSulphuricAcid.DisplayName: Duke Held Sulphuric Acid
+	DukeHeldToxicantTwister.DisplayName: Duke Held Toxicant Twister
+	DukeHeldVitriolicViper.DisplayName: Duke Held Vitriolic Viper
+	ExhaustFireProj.DisplayName: Exhaust Fire Proj
+	ExhaustTrailProj.DisplayName: Exhaust Trail Proj
+	ExpandingRingProj.DisplayName: Expanding Ring Proj
+	TwisterDiskProj.DisplayName: Twister Disk Proj
+	BansheeChainProj.DisplayName: Banshee Chain Proj
+	CrescentPendulumProj.DisplayName: Crescent Pendulum Proj
+	DaemonsFireballProj.DisplayName: Daemons Fireball Proj
+	DraconisFireballProj.DisplayName: Draconis Fireball Proj
+	FatesRevealSigilProj.DisplayName: Fates Reveal Sigil Proj
+	GalileoSlashProj.DisplayName: Galileo Slash Proj
+	GhastHeldAlphaDraconis.DisplayName: Ghast Held Alpha Draconis
+	GhastHeldBansheeHook.DisplayName: Ghast Held Banshee Hook
+	GhastHeldCrescentMoon.DisplayName: Ghast Held Crescent Moon
+	GhastHeldDaemonsFlame.DisplayName: Ghast Held Daemons Flame
+	GhastHeldEtherealSubjugator.DisplayName: Ghast Held Ethereal Subjugator
+	GhastHeldFatesReveal.DisplayName: Ghast Held Fates Reveal
+	GhastHeldGalileoGladius.DisplayName: Ghast Held Galileo Gladius
+	GhastHeldGhastlyVisage.DisplayName: Ghast Held Ghastly Visage
+	GhastHeldGhoulishGouger.DisplayName: Ghast Held Ghoulish Gouger
+	GhastHeldHalleysInferno.DisplayName: Ghast Held Halleys Inferno
+	GhastHeldSirius.DisplayName: Ghast Held Sirius
+	GhastHeldStratusSphere.DisplayName: Ghast Held Stratus Sphere
+	GhastHeldTerrorBlade.DisplayName: Ghast Held Terror Blade
+	GhastHeldVega.DisplayName: Ghast Held Vega
+	GhastHeldWarloksMoon.DisplayName: Ghast Held Warloks Moon
+	GhastlyVisageFaceProj.DisplayName: Ghastly Visage Face Proj
+	GhostFireProj.DisplayName: Ghost Fire Proj
+	GougerDrillProj.DisplayName: Gouger Drill Proj
+	HalleysCometProj.DisplayName: Halleys Comet Proj
+	MoonFistProj.DisplayName: Moon Fist Proj
+	SiriusStarProj.DisplayName: Sirius Star Proj
+	StratusCloudProj.DisplayName: Stratus Cloud Proj
+	SubjugatorMiniProj.DisplayName: Subjugator Mini Proj
+	TerrorBladeWaveProj.DisplayName: Terror Blade Wave Proj
+	ToothShardProj.DisplayName: Tooth Shard Proj
+	VegaLightNetProj.DisplayName: Vega Light Net Proj
+	WraithProj.DisplayName: Wraith Proj
+	AetherfluxLaserProj.DisplayName: Aetherflux Laser Proj
+	AngelicPelletProj.DisplayName: Angelic Pellet Proj
+	BombardierMiniRocketProj.DisplayName: Bombardier Mini Rocket Proj
+	BombardierRocketProj.DisplayName: Bombardier Rocket Proj
+	DarkSparkProj.DisplayName: Dark Spark Proj
+	DazzlingSpearProj.DisplayName: Dazzling Spear Proj
+	DebrisWallProj.DisplayName: Debris Wall Proj
+	GalactusMeteorProj.DisplayName: Galactus Meteor Proj
+	HolyColliderTrailProj.DisplayName: Holy Collider Trail Proj
+	HolyFirePillarProj.DisplayName: Holy Fire Pillar Proj
+	KalandraMirrorProj.DisplayName: Kalandra Mirror Proj
+	KalandraSpearProj.DisplayName: Kalandra Spear Proj
+	MaelstromVortexProj.DisplayName: Maelstrom Vortex Proj
+	MoltenDripProj.DisplayName: Molten Drip Proj
+	MoltenPoolProj.DisplayName: Molten Pool Proj
+	MoltenSickleProj.DisplayName: Molten Sickle Proj
+	MourningstarLineProj.DisplayName: Mourningstar Line Proj
+	PristineFlameProj.DisplayName: Pristine Flame Proj
+	ProvHeldAetherfluxCannon.DisplayName: Prov Held Aetherflux Cannon
+	ProvHeldAngelicShotgun.DisplayName: Prov Held Angelic Shotgun
+	ProvHeldBlissfulBombardier.DisplayName: Prov Held Blissful Bombardier
+	ProvHeldBurningRevelation.DisplayName: Prov Held Burning Revelation
+	ProvHeldDarkSpark.DisplayName: Prov Held Dark Spark
+	ProvHeldDazzlingStabber.DisplayName: Prov Held Dazzling Stabber
+	ProvHeldGalactusBlade.DisplayName: Prov Held Galactus Blade
+	ProvHeldHolyCollider.DisplayName: Prov Held Holy Collider
+	ProvHeldMaelstrom.DisplayName: Prov Held Maelstrom
+	ProvHeldMirrorOfKalandra.DisplayName: Prov Held Mirror Of Kalandra
+	ProvHeldMoltenAmputator.DisplayName: Prov Held Molten Amputator
+	ProvHeldMourningstar.DisplayName: Prov Held Mourningstar
+	ProvHeldPrince.DisplayName: Prov Held Prince
+	ProvHeldPristineFury.DisplayName: Prov Held Pristine Fury
+	ProvHeldPurgeGuzzler.DisplayName: Prov Held Purge Guzzler
+	ProvHeldSeekingScorcher.DisplayName: Prov Held Seeking Scorcher
+	ProvHeldShatteredDawn.DisplayName: Prov Held Shattered Dawn
+	ProvHeldTelluricGlare.DisplayName: Prov Held Telluric Glare
+	PurgeCoreProj.DisplayName: Purge Core Proj
+	RevelationCoreProj.DisplayName: Revelation Core Proj
+	RevelationRingFireProj.DisplayName: Revelation Ring Fire Proj
+	SeekingScorcherRingProj.DisplayName: Seeking Scorcher Ring Proj
+	ShatteredDiscProj.DisplayName: Shattered Disc Proj
+	TelluricBeamProj.DisplayName: Telluric Beam Proj
+	ConstellationGridProj.DisplayName: Constellation Grid Proj
+	CosmicMineProj.DisplayName: Cosmic Mine Proj
+	CosmilampLanternProj.DisplayName: Cosmilamp Lantern Proj
+	DeathsAscensionScytheProj.DisplayName: Deaths Ascension Scythe Proj
+	EmpyreanKnifeProj.DisplayName: Empyrean Knife Proj
+	MagneticSphereProj.DisplayName: Magnetic Sphere Proj
+	NadirGearProj.DisplayName: Nadir Gear Proj
+	ReflectKunaiProj.DisplayName: Reflect Kunai Proj
+	SevensStrikerBulletProj.DisplayName: Sevens Striker Bullet Proj
+	SignusHeldAethersWhisper.DisplayName: Signus Held Aethers Whisper
+	SignusHeldCosmicKunai.DisplayName: Signus Held Cosmic Kunai
+	SignusHeldCosmilamp.DisplayName: Signus Held Cosmilamp
+	SignusHeldDeathsAscension.DisplayName: Signus Held Deaths Ascension
+	SignusHeldEmpyreanKnives.DisplayName: Signus Held Empyrean Knives
+	SignusHeldKingConstellations.DisplayName: Signus Held King Constellations
+	SignusHeldMagneticMeltdown.DisplayName: Signus Held Magnetic Meltdown
+	SignusHeldNadir.DisplayName: Signus Held Nadir
+	SignusHeldRealityRupture.DisplayName: Signus Held Reality Rupture
+	SignusHeldSevensStriker.DisplayName: Signus Held Sevens Striker
+	SignusHeldVenusianTrident.DisplayName: Signus Held Venusian Trident
+	SignusKunaiProj.DisplayName: Signus Kunai Proj
+	SignusRiftProj.DisplayName: Signus Rift Proj
+	VenusianFireRainProj.DisplayName: Venusian Fire Rain Proj
+	VenusianTridentProj.DisplayName: Venusian Trident Proj
+	WhisperBulletProj.DisplayName: Whisper Bullet Proj
+	AquasSteamProj.DisplayName: Aquas Steam Proj
+	CorinthNukeProj.DisplayName: Corinth Nuke Proj
+	PackRocketProj.DisplayName: Pack Rocket Proj
+	SeadragonWallProj.DisplayName: Seadragon Wall Proj
+	SeasonStarProj.DisplayName: Season Star Proj
+	ShadowboltStrikeProj.DisplayName: Shadowbolt Strike Proj
+	SkytideBeaconProj.DisplayName: Skytide Beacon Proj
+	StellarTorusRingProj.DisplayName: Stellar Torus Ring Proj
+	StormArcProj.DisplayName: Storm Arc Proj
+	TeslaConductionProj.DisplayName: Tesla Conduction Proj
+	TwistingHelixProj.DisplayName: Twisting Helix Proj
+	VolterionSphereProj.DisplayName: Volterion Sphere Proj
+	WeaverDarkCloudProj.DisplayName: Weaver Dark Cloud Proj
+	WeaverHeldAquasScepter.DisplayName: Weaver Held Aquas Scepter
+	WeaverHeldCorinthPrime.DisplayName: Weaver Held Corinth Prime
+	WeaverHeldFourSeasons.DisplayName: Weaver Held Four Seasons
+	WeaverHeldPack.DisplayName: Weaver Held Pack
+	WeaverHeldRealityRupture.DisplayName: Weaver Held Reality Rupture
+	WeaverHeldSeadragon.DisplayName: Weaver Held Seadragon
+	WeaverHeldShadowboltStaff.DisplayName: Weaver Held Shadowbolt Staff
+	WeaverHeldSkytideDragoon.DisplayName: Weaver Held Skytide Dragoon
+	WeaverHeldStellarTorus.DisplayName: Weaver Held Stellar Torus
+	WeaverHeldStorm.DisplayName: Weaver Held Storm
+	WeaverHeldTeslaStaff.DisplayName: Weaver Held Tesla Staff
+	WeaverHeldTwistingThunder.DisplayName: Weaver Held Twisting Thunder
+	WeaverHeldVolterion.DisplayName: Weaver Held Volterion
+	WeaverRiftProj.DisplayName: Weaver Rift Proj
+	WeaverStormNodeProj.DisplayName: Weaver Storm Node Proj
+	BBSuperDashAfterimage.DisplayName: B B Super Dash Afterimage
+}
+
+Configs: {
+	IUMWClientConfig: {
+		DisplayName: I U M W Client Config
+
+		ShowBossAIDebugText: {
+			Label: Show Boss A I Debug Text
+			Tooltip: ""
+		}
+	}
+}
+
+NPCs.CryogenDaedalusMinion.DisplayName: Cryogen Daedalus Minion

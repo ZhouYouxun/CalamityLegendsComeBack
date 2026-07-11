@@ -5,16 +5,15 @@ Mods: {
 				NewLegendMK14EBR: {
 					DisplayName: MK14EBR-缄花
 					Tooltip: "[GFB]"
-					MK14_Intro: "[c/85D7FF:聆听传统主义的轰鸣]"
-					MK14_Ammo: "[c/F7D87C:发射玩家的子弹；火枪子弹会转化为 M61 穿甲弹。]"
-					MK14_RightClick: "[c/F7D87C:右键打开或关闭改枪界面。]"
-					LegendaryHint: "[c/BABABA:按住 Shift 阅读完整传奇记录]"
-					LegendaryText: "[c/85D7FF:一把旧时代的精确射手步枪被重新装进现代化枪身。]"
+					MK14_Intro: 聆听传统主义的轰鸣
+					MK14_Ammo: 射出子弹，将火枪子弹转化为M61穿甲弹
+					MK14_RightClick: 右键呼出改枪界面
+					MK14_LoadoutHint: 按住 Shift 阅读当前改枪方案
 				}
 
 				NewLegendM14: {
 					DisplayName: M14
-					Tooltip: "[c/F7D87C:全自动射击。持续射击 100 发内散射从 1 度线性提高到 15 度，松开左键后立刻恢复。]"
+					Tooltip: 进行全自动且逐渐加速但却逐渐不精准的开火
 				}
 			}
 		}

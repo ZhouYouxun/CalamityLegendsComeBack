@@ -93,13 +93,14 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             string keyText  = KeybindSystem.LegendarySkill.GetAssignedKeys().FirstOrDefault() ?? "Unbound";
             string intro    = this.GetLocalizedValue("Intro");
             string left     = this.GetLocalizedValue($"LeftClick_Stage{stage}");
+            string soul     = this.GetLocalizedValue("LeftClick_ReconSoul");
             string right    = this.GetLocalizedValue("RightClick");
             string passive  = this.GetLocalizedValue("Passive");
             string ultimate = string.Format(this.GetLocalizedValue("Ultimate"), keyText);
             bool   shifted  = Main.keyState.PressingShift();
             string legendary = shifted ? this.GetLocalizedValue("LegendaryText") : this.GetLocalizedValue("LegendaryHint");
 
-            string finalText = intro + "\n" + left + "\n" + right + "\n" + passive + "\n" + ultimate + "\n";
+            string finalText = intro + "\n" + left + "\n" + soul + "\n" + right + "\n" + passive + "\n" + ultimate + "\n";
 
             if (shifted)
                 tooltips.RemoveAll(t => t.Text == "[GFB]");

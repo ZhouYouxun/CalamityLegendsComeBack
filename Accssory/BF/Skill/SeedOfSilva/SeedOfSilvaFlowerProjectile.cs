@@ -30,6 +30,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
         public int CurrentSlot => FlowerSlot;
         public bool IsBlooming { get; private set; }
         protected float VisualBloomProgress { get; private set; }
+        private float orbitAngle;
 
         protected abstract int FlowerSlot { get; }
         protected abstract BlossomFluxChloroplastPresetType FlowerPreset { get; }
@@ -70,7 +71,12 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
             VisualBloomProgress = MathHelper.Clamp(VisualBloomProgress + (IsBlooming ? BlossomTransitionStep : -BlossomTransitionStep), 0f, 1f);
             Projectile.damage = GetSeedContactDamage(owner, accessoryPlayer.HoldingBlossomFlux);
 
-            float angle = Main.GameUpdateCount * OrbitSpeed + MathHelper.TwoPi * FlowerSlot / FlowerCount;
+            if (orbitAngle == 0f)
+                orbitAngle = (Main.GameUpdateCount * OrbitSpeed) % MathHelper.TwoPi;
+            orbitAngle += OrbitSpeed * GetOrbitSpeedMultiplier(owner, accessoryPlayer);
+            if (orbitAngle >= MathHelper.TwoPi)
+                orbitAngle -= MathHelper.TwoPi;
+            float angle = orbitAngle + MathHelper.TwoPi * FlowerSlot / FlowerCount;
             float pulseRadius = OrbitRadius + (float)System.Math.Sin(Main.GlobalTimeWrappedHourly * 1.1f + FlowerSlot) * 5f;
             Projectile.Center = owner.Center + angle.ToRotationVector2() * pulseRadius + new Vector2(0f, owner.gfxOffY - 8f);
             Projectile.rotation = angle + MathHelper.PiOver2;
@@ -98,6 +104,9 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
         protected virtual void UpdateDormant(Player owner, BFAccessoryPlayer accessoryPlayer)
         {
         }
+
+        protected virtual float GetOrbitSpeedMultiplier(Player owner, BFAccessoryPlayer accessoryPlayer) =>
+            SeedOfSilvaSunflower.ShouldBoostSeedOrbit(owner, accessoryPlayer) ? 1.25f : 1f;
 
         public override bool PreDraw(ref Color lightColor)
         {

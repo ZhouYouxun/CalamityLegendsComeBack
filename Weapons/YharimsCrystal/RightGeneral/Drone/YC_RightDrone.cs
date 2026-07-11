@@ -14,13 +14,10 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
 {
-    // Six-unit air-defense battery: slots 0-1 are forward tracking-rocket interceptors,
-    // slots 2-3 are mid-line penetrator autocannons, slots 4-5 are rear precision zap lasers.
-    // Every slot shares the same heavy-attack ordnance (twin gold bombs).
+    // Six-unit laser battery. Every ship maintains a primary ray, peppers the aim line with
+    // staggered light rounds, and reserves the missile silhouette for the coordinated heavy attack.
     internal sealed class YC_RightDrone : ModProjectile, ILocalizedModType
     {
-        private enum DroneRole { Rocket, Penetrator, Beam }
-
         private static readonly Color DroneGold = new(255, 218, 88);
         private static readonly Color DroneOrange = new(255, 104, 36);
 
@@ -34,19 +31,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         public int ParentHoldoutIndex => (int)Projectile.ai[1];
         public bool HeavyCommanded => Projectile.ai[2] == 1f;
 
-        private DroneRole Role => SlotIndex switch
-        {
-            0 or 1 => DroneRole.Rocket,
-            2 or 3 => DroneRole.Penetrator,
-            _ => DroneRole.Beam,
-        };
-
-        private float FiringTime => Role switch
-        {
-            DroneRole.Rocket => 26f,
-            DroneRole.Penetrator => 13f,
-            _ => 20f,
-        };
+        private float LightRoundInterval => 54f + SlotIndex * 5f;
 
         // Omicron-style recoil offset. Firing pulls the drone back along its barrel,
         // then it eases back to the formation distance.
@@ -59,6 +44,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         private float postFireCooldown;
         private bool movingUp = true;
         private float yOffset;
+        private int laserIndex = -1;
 
         public override void SetStaticDefaults()
         {
@@ -118,7 +104,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             firingDelay--;
             if (postFireCooldown > 0f)
                 PostFiringCooldown();
-            else if (firingDelay <= 0 && ShootingTimer >= FiringTime)
+            else if (firingDelay <= 0 && ShootingTimer >= LightRoundInterval)
             {
                 if (Projectile.owner == Main.myPlayer && Owner.CheckMana(Owner.HeldItem, -1, false, false))
                     Shoot(false);
@@ -130,6 +116,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
 
             Vector2 ownerToMouse = NewLegendYharimsCrystal.GetMouseWorld(Owner) - Owner.MountedCenter;
             UpdateFormationPosition(ownerToMouse, holdout);
+            EnsureLaser();
 
             ShootingTimer++;
             time++;
@@ -162,7 +149,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             if (time % 30 == 0)
                 movingUp = !movingUp;
 
-            float hoverResponse = 0.085f - FiringTime * 0.0012f;
+            float hoverResponse = 0.065f - SlotIndex * 0.0025f;
             yOffset = MathHelper.Lerp(yOffset, maxPerp * (movingUp ? -1f : 1f), hoverResponse);
 
             Vector2 oldRotationVector = Projectile.rotation.ToRotationVector2();
@@ -173,7 +160,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             Vector2 formationDirection = Projectile.velocity.SafeNormalize(Vector2.UnitX * direction);
             Vector2 placementOffset = formationDirection.RotatedBy(MathHelper.PiOver2) * yOffset;
             Projectile.Center = Owner.MountedCenter + formationDirection * along + placementOffset + recoilOffset;
-            Projectile.rotation = (NewLegendYharimsCrystal.GetMouseWorld(Owner) - Projectile.Center).SafeNormalize(Vector2.UnitX * direction).ToRotation();
+            Projectile.rotation = aimDir.ToRotation();
             Projectile.spriteDirection = Projectile.direction = direction;
         }
 
@@ -201,18 +188,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             }
             else
             {
-                switch (Role)
-                {
-                    case DroneRole.Rocket:
-                        FireRocket(shootDirection, tipPosition);
-                        break;
-                    case DroneRole.Penetrator:
-                        FirePenetratorStream(shootDirection, tipPosition);
-                        break;
-                    default:
-                        FireZapBeam(shootDirection, tipPosition);
-                        break;
-                }
+                FireLightRound(shootDirection, tipPosition);
             }
 
             OffsetLength -= isGrenade ? 27f : 5f;
@@ -235,56 +211,51 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
 
         }
 
-        private void FireRocket(Vector2 direction, Vector2 origin)
-        {
-            SoundEngine.PlaySound(SoundID.Item38 with { Volume = 0.4f, Pitch = -0.15f }, Projectile.Center);
-
-            if (Main.myPlayer != Projectile.owner)
-                return;
-
-            int rocket = Projectile.NewProjectile(Projectile.GetSource_FromThis(), origin, direction * 9f,
-                ModContent.ProjectileType<YC_TrackingRocket>(), Projectile.damage, Projectile.knockBack, Projectile.owner);
-            if (Main.projectile.IndexInRange(rocket))
-            {
-                YharimsCrystalHellBladeGlobalProjectile.Mark(Main.projectile[rocket], YCWeaponForm.Crystal);
-                Main.projectile[rocket].CritChance = Projectile.CritChance;
-            }
-        }
-
-        // Three rounds at descending speed instead of a symmetric instant fan — they string
-        // out into a stuttering stream rather than arriving as one synchronized volley.
-        private void FirePenetratorStream(Vector2 direction, Vector2 origin)
+        private void FireLightRound(Vector2 direction, Vector2 origin)
         {
             SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/MagnaCannonShot")
-            { Volume = 0.25f, Pitch = 1f, PitchVariance = 0.35f }, Projectile.Center);
+            { Volume = 0.16f, Pitch = 1.15f, PitchVariance = 0.28f, MaxInstances = 5 }, Projectile.Center);
 
             if (Main.myPlayer != Projectile.owner)
                 return;
 
-            for (int i = 0; i < 3; i++)
+            float stagger = MathHelper.ToRadians((SlotIndex - 2.5f) * 0.7f);
+            int shot = Projectile.NewProjectile(Projectile.GetSource_FromThis(), origin,
+                direction.RotatedBy(stagger) * 16f,
+                ModContent.ProjectileType<YC_DroneShot>(),
+                (int)(Projectile.damage * 0.7f),
+                Projectile.knockBack * 0.65f,
+                Projectile.owner);
+            if (Main.projectile.IndexInRange(shot))
             {
-                float speed = MathHelper.Lerp(17f, 10f, i / 2f);
-                float curve = MathHelper.ToRadians(i - 1) * 2.2f;
-                Projectile.NewProjectile(Projectile.GetSource_FromThis(), origin, (direction * speed).RotatedBy(curve),
-                    ModContent.ProjectileType<YC_DroneShot>(), Projectile.damage, Projectile.knockBack, Projectile.owner);
+                YharimsCrystalHellBladeGlobalProjectile.Mark(Main.projectile[shot], YCWeaponForm.Crystal);
+                Main.projectile[shot].CritChance = Projectile.CritChance;
             }
         }
 
-        private void FireZapBeam(Vector2 direction, Vector2 origin)
+        private void EnsureLaser()
         {
-            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/PlasmaBolt") { Volume = 0.4f, Pitch = 0.15f }, Projectile.Center);
-
-            if (Main.myPlayer != Projectile.owner)
+            if (Projectile.owner != Main.myPlayer)
                 return;
 
-            float crossfireAngle = MathHelper.ToRadians(SlotIndex == 4 ? -3f : 3f);
-            int beam = Projectile.NewProjectile(Projectile.GetSource_FromThis(), origin, direction.RotatedBy(crossfireAngle),
-                ModContent.ProjectileType<YC_DroneZapBeam>(), Projectile.damage, Projectile.knockBack, Projectile.owner);
-            if (Main.projectile.IndexInRange(beam))
+            int laserType = ModContent.ProjectileType<YC_DroneZapBeam>();
+            if (laserIndex >= 0 && laserIndex < Main.maxProjectiles &&
+                Main.projectile[laserIndex].active && Main.projectile[laserIndex].type == laserType)
+                return;
+
+            laserIndex = Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, Projectile.velocity,
+                laserType, Math.Max(1, (int)(Projectile.damage * 0.42f)), Projectile.knockBack, Projectile.owner, Projectile.whoAmI);
+            if (Main.projectile.IndexInRange(laserIndex))
             {
-                YharimsCrystalHellBladeGlobalProjectile.Mark(Main.projectile[beam], YCWeaponForm.Crystal);
-                Main.projectile[beam].CritChance = Projectile.CritChance;
+                YharimsCrystalHellBladeGlobalProjectile.Mark(Main.projectile[laserIndex], YCWeaponForm.Crystal);
+                Main.projectile[laserIndex].CritChance = Projectile.CritChance;
             }
+        }
+
+        public override void OnKill(int timeLeft)
+        {
+            if (laserIndex >= 0 && laserIndex < Main.maxProjectiles && Main.projectile[laserIndex].active)
+                Main.projectile[laserIndex].Kill();
         }
 
         private void FireHeavyBombs(Vector2 direction, Vector2 origin)
