@@ -210,6 +210,7 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
     {
         public const int DarkEmberMax = 100;
         public const int GuardCooldownMax = 5 * 60;
+        public const int ParryWindowFrames = 14;
         private const int LeftComboLength = 6;
 
         public int FollowupSlashWindow;
@@ -218,9 +219,14 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
         public int DarkEmberFlashTimer;
         public int GuardCooldown;
         public int GuardFlashTimer;
+        public int ParryFlashTimer;
 
         private int holdingTimer;
         private int guardActiveTimer;
+        private int guardStanceAge;
+        private bool parryConsumedThisStance;
+        private int parryPendingTimer;
+        private Vector2 parryPendingSource;
         private int blackBloodAfterglowTimer;
         private int darkSoulFlightTime;
         private int blackBloodLifeCostCooldown;
@@ -252,6 +258,10 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
                 GuardCooldown--;
             if (GuardFlashTimer > 0)
                 GuardFlashTimer--;
+            if (ParryFlashTimer > 0)
+                ParryFlashTimer--;
+            if (parryPendingTimer > 0)
+                parryPendingTimer--;
             if (guardActiveTimer > 0)
                 guardActiveTimer--;
             if (leftComboResetTimer > 0)
@@ -285,10 +295,15 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
             FinisherCooldown = 0;
             GuardCooldown = 0;
             GuardFlashTimer = 0;
+            ParryFlashTimer = 0;
             DarkEmbers = 0;
             DarkEmberFlashTimer = 0;
             holdingTimer = 0;
             guardActiveTimer = 0;
+            guardStanceAge = 0;
+            parryConsumedThisStance = false;
+            parryPendingTimer = 0;
+            parryPendingSource = Vector2.Zero;
             blackBloodAfterglowTimer = 0;
             darkSoulFlightTime = 0;
             blackBloodLifeCostCooldown = 0;
@@ -322,10 +337,15 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
             return combo;
         }
 
-        public void SetGuardActive(Vector2 sourceCenter)
+        public bool ParryWindowOpen => GuardActive && !parryConsumedThisStance && guardStanceAge <= ParryWindowFrames;
+
+        public void SetGuardActive(Vector2 sourceCenter, int stanceAge)
         {
             guardActiveTimer = 2;
             guardSourceCenter = sourceCenter;
+            guardStanceAge = stanceAge;
+            if (stanceAge <= 1)
+                parryConsumedThisStance = false;
             holdingTimer = 2;
             Player.noKnockback = true;
             Lighting.AddLight(Player.Center, 0.26f, 0.04f, 0.34f);
@@ -539,13 +559,96 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
             }
         }
 
+        public override bool FreeDodge(Player.HurtInfo info)
+        {
+            if (parryPendingTimer <= 0)
+                return false;
+
+            parryPendingTimer = 0;
+            ExecutePerfectParry(parryPendingSource);
+            return true;
+        }
+
         private void TryBreakGuard(Vector2 sourceCenter, ref Player.HurtModifiers modifiers)
         {
             if (!GuardActive)
                 return;
 
+            Vector2 resolvedSource = sourceCenter == Vector2.Zero ? guardSourceCenter : sourceCenter;
+
+            // 举剑瞬间的完美格挡窗口：完全格开这次攻击，姿态不中断，也不进入冷却。
+            if (ParryWindowOpen)
+            {
+                parryConsumedThisStance = true;
+                parryPendingTimer = 2;
+                parryPendingSource = resolvedSource;
+                return;
+            }
+
             modifiers.FinalDamage *= 0.5f;
-            BreakGuard(sourceCenter == Vector2.Zero ? guardSourceCenter : sourceCenter);
+            BreakGuard(resolvedSource);
+        }
+
+        private void ExecutePerfectParry(Vector2 sourceCenter)
+        {
+            GuardFlashTimer = 26;
+            ParryFlashTimer = 30;
+            Player.immune = true;
+            Player.immuneTime = Math.Max(Player.immuneTime, 30);
+
+            AddDarkEmbers(18 + GaelGreatswordProgression.GetStage() * 2, true);
+            FollowupSlashWindow = 45;
+
+            CombatText.NewText(Player.Hitbox, new Color(238, 214, 250), Language.GetTextValue("Mods.CalamityLegendsComeBack.Items.Weapons.NewLegendGaelsGreatsword.ParryText"));
+            SoundEngine.PlaySound(SoundID.Item37 with { Volume = 0.95f, Pitch = 0.48f }, Player.Center);
+            SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.6f, Pitch = -0.15f }, Player.Center);
+
+            Vector2 counterDirection = Player.Center.DirectionTo(sourceCenter);
+            if (counterDirection == Vector2.Zero || float.IsNaN(counterDirection.X))
+                counterDirection = Vector2.UnitX * Player.direction;
+            counterDirection = counterDirection.SafeNormalize(Vector2.UnitX * Player.direction);
+
+            SpawnParryEffects(counterDirection);
+
+            if (Main.myPlayer != Player.whoAmI || Player.HeldItem == null)
+                return;
+
+            Player.Calamity().GeneralScreenShakePower = Math.Max(Player.Calamity().GeneralScreenShakePower, 5f);
+
+            int weaponDamage = Player.GetWeaponDamage(Player.HeldItem);
+            Vector2 novaCenter = Player.Center + counterDirection * 64f;
+            Projectile.NewProjectile(Player.GetSource_FromThis(), novaCenter, Vector2.Zero,
+                ModContent.ProjectileType<GaelGreatswordBloodEcho>(), Math.Max(1, (int)(weaponDamage * 0.85f)),
+                6f, Player.whoAmI, 1f);
+
+            for (int i = 0; i < 3; i++)
+            {
+                float spread = MathHelper.Lerp(-0.3f, 0.3f, i / 2f);
+                Vector2 velocity = counterDirection.RotatedBy(spread) * Main.rand.NextFloat(9.5f, 12f);
+                Projectile.NewProjectile(Player.GetSource_FromThis(), Player.Center + counterDirection * 30f, velocity,
+                    ModContent.ProjectileType<GaelGreatswordVengefulSoul>(), Math.Max(1, (int)(weaponDamage * 0.4f)),
+                    2f, Player.whoAmI);
+            }
+        }
+
+        private void SpawnParryEffects(Vector2 counterDirection)
+        {
+            if (Main.dedServ)
+                return;
+
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Player.Center + counterDirection * 48f,
+                counterDirection * 3f, new Color(238, 214, 250), new Vector2(1.35f, 0.6f),
+                counterDirection.ToRotation(), 0.14f, 0.9f, 22));
+            GeneralParticleHandler.SpawnParticle(new StrongBloom(Player.Center + counterDirection * 40f, Vector2.Zero,
+                new Color(238, 214, 250) * 0.7f, 0.85f, 14));
+
+            for (int i = 0; i < 14; i++)
+            {
+                Vector2 velocity = counterDirection.RotatedByRandom(0.9f) * Main.rand.NextFloat(3f, 11f);
+                GeneralParticleHandler.SpawnParticle(new CritSpark(Player.Center + counterDirection * 44f + Main.rand.NextVector2Circular(14f, 14f),
+                    velocity, Color.White, Main.rand.NextBool() ? new Color(190, 18, 42) : new Color(122, 52, 182),
+                    Main.rand.NextFloat(0.4f, 0.85f), Main.rand.Next(10, 18)));
+            }
         }
 
         private void BreakGuard(Vector2 sourceCenter)
@@ -741,6 +844,7 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
         private float windupAngle;
         private float endAngle;
         private float slashOpacity;
+        private float outlinePulse;
         private Vector2 lockedDirection = Vector2.UnitX;
 
         public override void SetDefaults()
@@ -807,6 +911,10 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
             GaelGreatswordPlayer gaelPlayer = Owner.GetModPlayer<GaelGreatswordPlayer>();
             gaelPlayer.RegisterGreatswordHit(target, FollowupSlash ? 11 : 7, bloodDamageMultiplier > 1f);
 
+            outlinePulse = 1f;
+            Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, FollowupSlash ? 3f : 2.2f);
+            SpawnHitImpactEffects(target, hit.Crit);
+
             if (Main.myPlayer == Projectile.owner && Main.rand.NextBool(FollowupSlash ? 1 : 2))
             {
                 Vector2 spawnPosition = target.Center + Main.rand.NextVector2Circular(70f, 70f);
@@ -819,12 +927,38 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
             SoundEngine.PlaySound(SoundID.NPCHit4 with { Volume = 0.45f, Pitch = -0.25f }, target.Center);
         }
 
+        private void SpawnHitImpactEffects(NPC target, bool crit)
+        {
+            if (Main.dedServ)
+                return;
+
+            Vector2 direction = currentAngle.ToRotationVector2();
+            Color impactColor = bloodDamageMultiplier > 1f ? BloodRed : DarkPurple;
+
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(target.Center, Vector2.Zero,
+                impactColor, new Vector2(1.05f, 0.62f), direction.ToRotation(), 0.1f, crit ? 0.86f : 0.68f, 13));
+            GeneralParticleHandler.SpawnParticle(new StrongBloom(target.Center, Vector2.Zero,
+                PaleCore * (crit ? 0.62f : 0.45f), crit ? 0.62f : 0.44f, 10));
+
+            int sparkCount = crit ? 10 : 6;
+            for (int i = 0; i < sparkCount; i++)
+            {
+                Vector2 velocity = direction.RotatedByRandom(0.75f) * Main.rand.NextFloat(3f, crit ? 11f : 8.5f);
+                GeneralParticleHandler.SpawnParticle(new CritSpark(target.Center + Main.rand.NextVector2Circular(12f, 12f),
+                    velocity, Color.White, Main.rand.NextBool() ? impactColor : PaleCore,
+                    Main.rand.NextFloat(0.35f, 0.75f), Main.rand.Next(9, 15)));
+            }
+        }
+
         private void DoSwing()
         {
             if (swingTimer == 0)
                 StartSwing();
 
             swingTimer++;
+            if (outlinePulse > 0f)
+                outlinePulse = Math.Max(0f, outlinePulse - 0.09f);
+
             float progress = GetProgress();
             if (progress <= 0.2f)
             {
@@ -835,6 +969,10 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
             {
                 float strikeProgress = MathHelper.Clamp((progress - 0.2f) / 0.8f, 0f, 1f);
                 currentAngle = MathHelper.Lerp(windupAngle, endAngle, CalamityUtils.EaseInOutExp(strikeProgress, 6f, 2f));
+
+                // 斩击正中的正弦膨胀：大剑在挥击高潮瞬间胀大，剑更重、更狠。
+                float swellBell = MathF.Sin(strikeProgress * MathHelper.Pi);
+                scale *= 1f + swellBell * (FollowupSlash ? 0.19f : 0.13f);
             }
 
             bool hitWindow = progress >= 0.24f && progress <= 0.9f;
@@ -1051,6 +1189,16 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
                     DustID.Blood, perpendicular * Main.rand.NextFloat(1f, 3.5f), 80, BloodRed, 1.2f);
                 dust.noGravity = true;
             }
+
+            // 剑尖闪星：斩击弧线的最外缘随行一缕苍白星光。
+            if (Main.rand.NextBool(3))
+            {
+                Vector2 tipPosition = Owner.MountedCenter + direction * BladeReach * scale * Main.rand.NextFloat(0.88f, 1f);
+                GeneralParticleHandler.SpawnParticle(new GenericSparkle(tipPosition,
+                    perpendicular * Main.rand.NextFloat(1.5f, 4f), Color.White,
+                    bloodDamageMultiplier > 1f ? BloodRed : DarkPurple,
+                    Main.rand.NextFloat(0.4f, 0.7f), Main.rand.Next(9, 14), Main.rand.NextFloat(-0.1f, 0.1f), 2.2f));
+            }
         }
 
         private void DrawBladeTrail()
@@ -1119,12 +1267,52 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
                 Vector2 bladeTip = Owner.MountedCenter + currentAngle.ToRotationVector2() * BladeReach * scale - Main.screenPosition;
                 Main.EntitySpriteDraw(bloomTexture, bladeTip, null, PaleCore with { A = 0 } * slashOpacity * 0.48f,
                     0f, bloomTexture.Size() * 0.5f, scale * 0.44f, SpriteEffects.None);
+
+                DrawBladeRim(bloomTexture);
+                Main.spriteBatch.ExitShaderRegion();
+            }
+
+            // 命中脉冲包边：击中目标的一瞬，剑身向外扩散一层苍白轮廓光。
+            if (outlinePulse > 0.01f)
+            {
+                Color pulseColor = bloodDamageMultiplier > 1f ? BloodRed : PaleCore;
+                float pulseRadius = MathHelper.Lerp(3.5f, 7.5f, outlinePulse) * scale;
+                Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
+                for (int i = 0; i < 12; i++)
+                {
+                    Vector2 offset = (MathHelper.TwoPi * i / 12f).ToRotationVector2() * pulseRadius;
+                    Main.EntitySpriteDraw(swordTexture, drawPosition + offset, null,
+                        pulseColor with { A = 0 } * outlinePulse * 0.22f, drawRotation, origin, scale, SpriteEffects.None);
+                }
                 Main.spriteBatch.ExitShaderRegion();
             }
 
             Main.EntitySpriteDraw(swordTexture, drawPosition, null, lightColor, drawRotation, origin, scale, SpriteEffects.None);
             DrawBladeTrail();
             return false;
+        }
+
+        private void DrawBladeRim(Texture2D bloomTexture)
+        {
+            // 沿剑身铺一条由暗紫渐亮到苍白的流光棱线（参考庇护之刃 DrawForwardLightRim）。
+            const int rimDraws = 30;
+            Color rimBase = bloodDamageMultiplier > 1f ? BloodRed : DarkPurple;
+            Vector2 forward = currentAngle.ToRotationVector2();
+            Vector2 drawBase = Owner.MountedCenter + forward * (BladeReach * 0.1f * scale) - Main.screenPosition + new Vector2(0f, Owner.gfxOffY);
+            float step = BladeReach * 0.9f / rimDraws * scale;
+
+            for (int i = 0; i < rimDraws; i++)
+            {
+                float colorT = i / (float)rimDraws;
+                bool nearTip = i > rimDraws * 0.72f;
+                float tipTaper = nearTip ? Utils.Remap(i, (int)(rimDraws * 0.72f), rimDraws, 0.9f, 0.35f) : 1f;
+                Color rimColor = Color.Lerp(rimBase, PaleCore, 0.2f + 0.55f * colorT) with { A = 0 };
+                Vector2 offset = forward * (i * step) + Main.rand.NextVector2Circular(1.4f, 1.4f);
+                Vector2 rimScale = new Vector2(0.5f * tipTaper, 0.2f) * 0.6f * tipTaper * scale;
+
+                Main.EntitySpriteDraw(bloomTexture, drawBase + offset, null, rimColor * 0.3f * slashOpacity,
+                    currentAngle, bloomTexture.Size() * 0.5f, rimScale, SpriteEffects.None);
+            }
         }
     }
 
@@ -1200,6 +1388,9 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
 
             Projectile.Center = Owner.MountedCenter;
             currentAngle = MathHelper.PiOver2 + MathHelper.Lerp(-0.42f * Owner.direction, 0.08f * Owner.direction, easedDescent);
+
+            if (!impactEffectsPlayed && timer > TelegraphFrames)
+                EmitDescentEffects(descentProgress);
 
             if (!impactEffectsPlayed && timer >= TelegraphFrames + DescentFrames)
             {
@@ -1306,6 +1497,33 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
             }
         }
 
+        private void EmitDescentEffects(float descentProgress)
+        {
+            if (Main.dedServ)
+                return;
+
+            // 坠落拖尾：剑身两侧的血紫流线随下坠速度拉长，剑尖曳出火花。
+            Vector2 bladeDirection = currentAngle.ToRotationVector2();
+            for (int i = 0; i < 2; i++)
+            {
+                Vector2 position = Owner.MountedCenter + bladeDirection * Main.rand.NextFloat(30f, BladeReach * 0.9f) * scale +
+                    Main.rand.NextVector2Circular(14f, 6f);
+                Vector2 velocity = -Vector2.UnitY * Main.rand.NextFloat(3f, 7f) * (0.4f + descentProgress);
+                GeneralParticleHandler.SpawnParticle(new LineParticle(position, velocity, false,
+                    Main.rand.Next(10, 17), Main.rand.NextFloat(0.4f, 0.75f),
+                    Main.rand.NextBool(3) ? BloodRed : DarkPurple));
+            }
+
+            if (Main.rand.NextBool(2))
+            {
+                Vector2 tipPosition = Owner.MountedCenter + bladeDirection * BladeReach * scale * Main.rand.NextFloat(0.85f, 1f);
+                GeneralParticleHandler.SpawnParticle(new CritSpark(tipPosition,
+                    -Vector2.UnitY * Main.rand.NextFloat(2f, 5f) + Main.rand.NextVector2Circular(1.5f, 1.5f),
+                    Color.White, Main.rand.NextBool() ? BloodRed : DarkPurple,
+                    Main.rand.NextFloat(0.35f, 0.7f), Main.rand.Next(8, 14)));
+            }
+        }
+
         private void SpawnImpactEffects()
         {
             if (Main.dedServ)
@@ -1322,6 +1540,24 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
 
             GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(targetPoint, -Vector2.UnitY * 4f,
                 BloodRed, new Vector2(1.2f, 2.6f), -MathHelper.PiOver2, 0.22f, 0.04f, 28));
+
+            // 落点冲击补强：白炽核心强光 + 沿地面两侧喷溅的火花与闪星。
+            GeneralParticleHandler.SpawnParticle(new StrongBloom(targetPoint, Vector2.Zero, PaleCore * 0.75f, 1.1f, 16));
+            for (int i = 0; i < 14; i++)
+            {
+                float side = Main.rand.NextBool() ? 1f : -1f;
+                Vector2 velocity = new Vector2(side * Main.rand.NextFloat(2f, 9f), -Main.rand.NextFloat(2f, 7.5f));
+                GeneralParticleHandler.SpawnParticle(new CritSpark(targetPoint + new Vector2(side * Main.rand.NextFloat(0f, 46f), Main.rand.NextFloat(-10f, 6f)),
+                    velocity, Color.White, Main.rand.NextBool() ? BloodRed : DarkPurple,
+                    Main.rand.NextFloat(0.45f, 0.9f), Main.rand.Next(11, 19)));
+            }
+
+            for (int i = 0; i < 4; i++)
+            {
+                GeneralParticleHandler.SpawnParticle(new GenericSparkle(targetPoint + Main.rand.NextVector2Circular(52f, 22f),
+                    -Vector2.UnitY * Main.rand.NextFloat(1f, 3.5f), Color.White, BloodRed,
+                    Main.rand.NextFloat(0.5f, 0.85f), Main.rand.Next(12, 18), Main.rand.NextFloat(-0.12f, 0.12f), 2.4f));
+            }
 
             if (Main.myPlayer != Projectile.owner)
                 return;
@@ -1438,7 +1674,12 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
             Owner.SetCompositeArmBack(true, Player.CompositeArmStretchAmount.Full, guardAngle - MathHelper.ToRadians(152f));
 
             Vector2 guardCenter = Projectile.Center + guardAngle.ToRotationVector2() * BladeReach * scale * 0.52f;
-            gaelPlayer.SetGuardActive(guardCenter);
+            gaelPlayer.SetGuardActive(guardCenter, timer);
+
+            // 持续举剑会缓慢积攒黑暗余烬，奖励沉住气的防守。
+            if (timer % 45 == 0)
+                gaelPlayer.AddDarkEmbers(1);
+
             EmitGuardEffects(guardCenter);
         }
 
@@ -1477,11 +1718,18 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
             Texture2D swordTexture = ModContent.Request<Texture2D>(Texture).Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Texture2D slash = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/SwordSlashTexture").Value;
+            Texture2D ring = ModContent.Request<Texture2D>("CalamityMod/Particles/HollowCircleHardEdge").Value;
             Vector2 origin = new(0f, swordTexture.Height);
             Vector2 drawPosition = Projectile.Center - Main.screenPosition + new Vector2(0f, Owner.gfxOffY);
             float drawRotation = guardAngle + MathHelper.PiOver4;
             float opacity = Utils.GetLerpValue(0f, 8f, timer, true);
             Vector2 bladeCenter = Projectile.Center + guardAngle.ToRotationVector2() * BladeReach * scale * 0.58f - Main.screenPosition;
+
+            GaelGreatswordPlayer gaelPlayer = Owner.GetModPlayer<GaelGreatswordPlayer>();
+            float parryWindow = gaelPlayer.ParryWindowOpen
+                ? Utils.GetLerpValue(GaelGreatswordPlayer.ParryWindowFrames, 0f, timer, true)
+                : 0f;
+            float parryFlash = Utils.GetLerpValue(0f, 30f, gaelPlayer.ParryFlashTimer, true);
 
             Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
             Main.EntitySpriteDraw(slash, bladeCenter, null, DarkPurple with { A = 0 } * opacity * 0.32f,
@@ -1490,6 +1738,35 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
                 0f, bloom.Size() * 0.5f, scale * 0.5f, SpriteEffects.None);
             Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition, null, PaleCore with { A = 0 } * opacity * 0.18f,
                 0f, bloom.Size() * 0.5f, scale * 0.34f, SpriteEffects.None);
+
+            // 完美格挡窗口：剑身泛起苍白流光，一圈收缩的光环提示时机正在流逝。
+            if (parryWindow > 0.01f)
+            {
+                for (int i = 0; i < 8; i++)
+                {
+                    Vector2 offset = (MathHelper.TwoPi * i / 8f).ToRotationVector2() * 3.4f * parryWindow;
+                    Main.EntitySpriteDraw(swordTexture, drawPosition + offset, null, PaleCore with { A = 0 } * parryWindow * 0.24f,
+                        drawRotation, origin, scale, SpriteEffects.None);
+                }
+
+                float ringScale = MathHelper.Lerp(0.42f, 1.15f, parryWindow) * scale;
+                Main.EntitySpriteDraw(ring, bladeCenter, null, PaleCore with { A = 0 } * parryWindow * 0.55f,
+                    timer * 0.12f, ring.Size() * 0.5f, ringScale * 0.4f, SpriteEffects.None);
+            }
+
+            // 弹反成功的瞬间：整把剑爆发白炽闪光。
+            if (parryFlash > 0.01f)
+            {
+                for (int i = 0; i < 10; i++)
+                {
+                    Vector2 offset = (MathHelper.TwoPi * i / 10f).ToRotationVector2() * 5.5f * parryFlash;
+                    Main.EntitySpriteDraw(swordTexture, drawPosition + offset, null, Color.White with { A = 0 } * parryFlash * 0.3f,
+                        drawRotation, origin, scale, SpriteEffects.None);
+                }
+
+                Main.EntitySpriteDraw(bloom, bladeCenter, null, Color.White with { A = 0 } * parryFlash * 0.6f,
+                    0f, bloom.Size() * 0.5f, scale * (0.6f + parryFlash * 0.5f), SpriteEffects.None);
+            }
             Main.spriteBatch.ExitShaderRegion();
 
             Main.EntitySpriteDraw(swordTexture, drawPosition, null, lightColor, drawRotation, origin, scale, SpriteEffects.None);
@@ -1548,8 +1825,51 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
             EmitCapeParticles();
             FireDarkSouls();
 
+            if (timer == Duration - 12)
+                ReleaseFinaleBurst();
+
             if (timer >= Duration)
                 Projectile.Kill();
+        }
+
+        private void ReleaseFinaleBurst()
+        {
+            // 斗篷旋至终点并不悄然散去，而是把积攒的血与火一次性掀出去。
+            Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, 9f);
+            SoundEngine.PlaySound(SoundID.Item74 with { Volume = 0.9f, Pitch = -0.35f }, Projectile.Center);
+            SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.65f, Pitch = -0.4f }, Projectile.Center);
+
+            if (!Main.dedServ)
+            {
+                GeneralParticleHandler.SpawnParticle(new StrongBloom(Projectile.Center, Vector2.Zero, new Color(238, 214, 250) * 0.8f, 1.6f, 18));
+                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Vector2.Zero,
+                    BloodRed, new Vector2(1f, 1f), 0f, 0.3f, 1.4f, 26));
+
+                for (int i = 0; i < 24; i++)
+                {
+                    Vector2 velocity = (MathHelper.TwoPi * i / 24f).ToRotationVector2().RotatedByRandom(0.16f) * Main.rand.NextFloat(4f, 12f);
+                    GeneralParticleHandler.SpawnParticle(new CritSpark(Projectile.Center + Main.rand.NextVector2Circular(30f, 30f),
+                        velocity, Color.White, Main.rand.NextBool() ? BloodRed : SoulPurple,
+                        Main.rand.NextFloat(0.45f, 0.95f), Main.rand.Next(12, 20)));
+                }
+            }
+
+            if (Main.myPlayer != Projectile.owner)
+                return;
+
+            Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, Vector2.Zero,
+                ModContent.ProjectileType<GaelGreatswordBloodEcho>(), Math.Max(1, (int)(Projectile.damage * 1.45f)),
+                Projectile.knockBack + 3f, Projectile.owner, 1f);
+
+            for (int i = 0; i < 8; i++)
+            {
+                Vector2 velocity = (spinRotation + MathHelper.TwoPi * i / 8f).ToRotationVector2() * Main.rand.NextFloat(9f, 12f);
+                int soulType = i % 2 == 0
+                    ? ModContent.ProjectileType<GaelGreatswordDarkSoul>()
+                    : ModContent.ProjectileType<GaelGreatswordVengefulSoul>();
+                Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center + velocity.SafeNormalize(Vector2.UnitY) * 40f,
+                    velocity, soulType, Math.Max(1, (int)(Projectile.damage * 0.5f)), 1.5f, Projectile.owner);
+            }
         }
 
         public override bool? CanDamage() => timer >= 12 && timer <= Duration - 10 ? null : false;

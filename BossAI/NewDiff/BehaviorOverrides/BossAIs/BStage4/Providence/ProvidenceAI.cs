@@ -554,8 +554,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     if (idx >= 0) Main.projectile[idx].netUpdate = true;
                 }
                 SoundEngine.PlaySound(SoundID.Item71 with { Volume = 0.9f, Pitch = -0.2f }, npc.Center);
-                ProvFx.Burst(npc.Center, 5f, 12);
-                FindHeldWeapon<ProvHeldHolyCollider>(npc)?.Pulse(16f);
+                ProvFx.Burst(npc.Center, 5f, 12); // the held greatsword is a SwingWeapon — it animates its own strike
             }
 
             if (timer > 40 && timer < 110)
