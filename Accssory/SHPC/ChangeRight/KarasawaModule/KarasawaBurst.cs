@@ -1,3 +1,4 @@
+#if KARASAWA_MODULE_ENABLED
 using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Enums;
@@ -338,3 +339,4 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.KarasawaModule
         }
     }
 }
+#endif

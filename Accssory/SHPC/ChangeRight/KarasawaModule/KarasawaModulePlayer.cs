@@ -1,3 +1,4 @@
+#if KARASAWA_MODULE_ENABLED
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.KarasawaModule
@@ -12,3 +13,4 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.KarasawaModule
         }
     }
 }
+#endif
