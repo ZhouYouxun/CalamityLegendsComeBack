@@ -429,7 +429,7 @@ Mods: {
 		}
 
 		Cooldowns: {
-			SHPC_EX: SHPC冷却
+			SHPC_EX: 超级激光
 			SHPC_BarrierDurability: 矩阵充能屏障耐久
 			SHPC_BarrierRecharge: 矩阵充能屏障充能
 		}
