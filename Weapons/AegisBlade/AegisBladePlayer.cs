@@ -34,6 +34,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
 
         // ── 挥剑状态（由 AegisSwingHoldout 写入） ────────────────────────
         public bool IsSwinging = false;
+        public bool BarrierThrowComboActive = false;
 
         // ── 终结技状态 ────────────────────────────────────────────────────
         public bool UltimateActive = false;

@@ -23,13 +23,14 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         private const int ChargeStartTime = BalanceAegisBlade.ShieldRaiseFrames + BalanceAegisBlade.ChargeHoldDelay;
         private const int FullChargeTime = ChargeStartTime + BalanceAegisBlade.ChargeDuration;
         private const int DashDuration = BalanceAegisBlade.ShieldDashDuration;
-        private const int BashDamageFrames = 15;
+        private const int BashDamageFrames = DashDuration;
 
         private Player Owner => Main.player[Projectile.owner];
         private AegisBladePlayer BladePlayer => Owner.GetModPlayer<AegisBladePlayer>();
         private ref float Charge => ref Projectile.ai[0];
         private ref float DashTime => ref Projectile.ai[1];
         private bool IsDashing => DashDestination != Vector2.Zero;
+        private Vector2 DashDirection => Projectile.velocity.SafeNormalize(Vector2.UnitX * Owner.direction);
         private bool ChargeUnlocked => BalanceAegisBlade.ChargeUnlocked();
         private float MaximumGuardCharge => ChargeUnlocked ? FullChargeTime : ChargeStartTime;
         private float ChargeRatio => ChargeUnlocked
@@ -41,9 +42,9 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         // Non-zero = in bash mode. Not synced over network (owner-driven).
         private Vector2 DashDestination;
         private float dashDistance;
+        private float dashSpeed;
         private bool perfectParryFired;
         private bool fullChargeFired;
-        private bool previousLeftDown;
         private bool shieldRaisedFired;
 
         private static readonly Color ShieldGold = new(255, 200, 60);
@@ -70,6 +71,8 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             Projectile.timeLeft = 4;
         }
 
+        public override bool ShouldUpdatePosition() => false;
+
         public override void AI()
         {
             if (!Owner.active || Owner.dead || Owner.HeldItem.type != ModContent.ItemType<AegisBlade>())
@@ -89,9 +92,6 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             Projectile.timeLeft = 4;
 
             bool rightHeld = IsRightHeld();
-            bool leftHeld = IsLeftHeld();
-            bool leftJustPressed = leftHeld && !previousLeftDown;
-            previousLeftDown = leftHeld;
 
             if (!rightHeld)
             {
@@ -122,11 +122,6 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 OnFullCharge();
             }
 
-            // 按住右键时点击左键：直接投掷刀片，盾牌保持举起（不 Kill，
-            // 否则下一帧盾牌状态标志被清空、左键仍按住会漏出左键挥舞弹幕）
-            if (leftJustPressed && Main.myPlayer == Projectile.owner)
-                TriggerBladePlunge();
-
             EmitGuardFlames();
         }
 
@@ -136,14 +131,6 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 return true;
 
             return Owner.Calamity().mouseRight && !Main.mapFullscreen && !Main.blockMouse && !Owner.mouseInterface;
-        }
-
-        private bool IsLeftHeld()
-        {
-            if (Main.myPlayer != Projectile.owner)
-                return false;
-
-            return Main.mouseLeft && !Main.mapFullscreen && !Main.blockMouse && !Owner.mouseInterface;
         }
 
         private void UpdateGuardState()
@@ -177,13 +164,23 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             dashDistance = MathHelper.Lerp(BalanceAegisBlade.ShieldDashMinimumDistance,
                 BalanceAegisBlade.ShieldDashMaximumDistance, DashPower);
 
-            // 速度 = 原冲刺速度的33%，不强制停止，交由物理减速
-            // 蓄满力后冲刺加速度提升200%（×3）
-            float fullChargeAccelMultiplier = ChargeUnlocked && Charge >= FullChargeTime ? 3f : 1f;
-            Owner.velocity = dashDirection * dashDistance / DashDuration * 0.33f * fullChargeAccelMultiplier;
+            Vector2 destination = Owner.MountedCenter + dashDirection * dashDistance;
+            bool destinationOutOfBounds = destination.X < 660f || destination.Y < 660f ||
+                destination.X > Main.maxTilesX * 16f - 680f || destination.Y > Main.maxTilesY * 16f - 680f;
+            if (destinationOutOfBounds)
+            {
+                Projectile.Kill();
+                return;
+            }
+
+            // Charge selects distance; the bash then maintains a Stygian-style fixed speed.
+            dashSpeed = dashDistance / DashDuration;
+            Projectile.Center = Owner.MountedCenter;
+            Projectile.velocity = dashDirection * dashSpeed;
+            Owner.velocity = Vector2.Zero;
 
             // DashDestination 存储方向单位向量（非零即代表处于冲刺中）
-            DashDestination = dashDirection;
+            DashDestination = destination;
 
             float damageMultiplier = MathHelper.Lerp(1f, BalanceAegisBlade.ShieldDashMaxDamageMultiplier, DashPower);
             if (perfectParryFired)
@@ -213,18 +210,32 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         private void DoDash()
         {
             DashTime++;
-            Projectile.Center = Owner.MountedCenter;
             Projectile.timeLeft = 4;
 
+            Vector2 nextCenter = Projectile.Center + Projectile.velocity;
+            Vector2 nextTopLeft = nextCenter - Projectile.Size * 0.5f;
+            if (Collision.SolidCollision(nextTopLeft, Projectile.width, Projectile.height) || DashTime > DashDuration)
+            {
+                Projectile.Kill();
+                return;
+            }
+
+            Projectile.Center = nextCenter;
+            Owner.Center = nextCenter;
+            Owner.velocity = Vector2.Zero;
+
             Vector2 direction = DashDestination;  // 已是单位方向向量
+            direction = DashDirection;
             Owner.ChangeDir(direction.X >= 0f ? 1 : -1);
             Owner.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full,
                 direction.ToRotation() - MathHelper.PiOver2);
 
-            if (!Main.dedServ && (int)DashTime % 2 == 0)
+            Owner.velocity = Vector2.Zero;
+
+            if (!Main.dedServ)
                 EmitDashFlames(direction);
 
-            if (DashTime >= BashDamageFrames)
+            if (DashTime >= DashDuration || Vector2.DistanceSquared(Projectile.Center, DashDestination) <= 1f)
                 Projectile.Kill();
         }
 
@@ -251,7 +262,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 return;
 
             Vector2 direction = DashDestination != Vector2.Zero
-                ? DashDestination
+                ? DashDirection
                 : Owner.velocity.SafeNormalize(Vector2.UnitX * Owner.direction);
             GeneralParticleHandler.SpawnParticle(new DetailedExplosion(target.Center, Vector2.Zero,
                 ShieldFire, new Vector2(1.15f, 0.72f), direction.ToRotation(), 0f, 0.72f, 20));
@@ -304,16 +315,6 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 ShieldGold, new Vector2(1.35f, 1.35f), MathHelper.PiOver4, 0.1f, 1.9f, 24));
         }
 
-        private void TriggerBladePlunge()
-        {
-            int damage = new BalanceAegisBlade().GetBladePlungeDamage();
-            Vector2 throwDirection = Owner.MountedCenter.DirectionTo(AegisBlade.GetMouseWorld(Owner))
-                .SafeNormalize(Vector2.UnitX * Owner.direction);
-            Projectile.NewProjectile(Projectile.GetSource_FromThis(), Owner.MountedCenter, throwDirection * 18f,
-                ModContent.ProjectileType<AegisBladeThrown>(), damage, 6f, Projectile.owner);
-            SoundEngine.PlaySound(SoundID.Item74 with { Volume = 1f, Pitch = -0.35f }, Owner.Center);
-        }
-
         private void EmitGuardFlames()
         {
             if (Main.dedServ || !Main.rand.NextBool(2))
@@ -360,11 +361,29 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 
         private void EmitDashFlames(Vector2 direction)
         {
+            if (Main.dedServ)
+                return;
+
             Vector2 rear = Projectile.Center - direction * Main.rand.NextFloat(16f, 42f);
-            GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
-                rear + Main.rand.NextVector2Circular(10f, 10f), -direction.RotatedByRandom(0.34f) * Main.rand.NextFloat(2f, 5f),
-                Color.Lerp(ShieldFire, ShieldLight, Main.rand.NextFloat(0.15f, 0.7f)), Color.Transparent,
-                Main.rand.NextFloat(0.4f, 0.68f), Main.rand.Next(18, 28), Main.rand.NextFloat(-0.08f, 0.08f)));
+            for (int i = 0; i < 3; i++)
+            {
+                Vector2 trailVelocity = -direction.RotatedByRandom(0.34f) * Main.rand.NextFloat(2f, 5f);
+                GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
+                    rear + Main.rand.NextVector2Circular(10f, 10f), trailVelocity,
+                    Color.Lerp(ShieldFire, ShieldLight, Main.rand.NextFloat(0.15f, 0.7f)), Color.Transparent,
+                    Main.rand.NextFloat(0.4f, 0.68f), Main.rand.Next(18, 28), Main.rand.NextFloat(-0.08f, 0.08f)));
+                GeneralParticleHandler.SpawnParticle(new LineParticle(
+                    Projectile.Center + direction * Main.rand.NextFloat(-10f, 28f) + Main.rand.NextVector2Circular(12f, 12f),
+                    trailVelocity * Main.rand.NextFloat(0.7f, 1.3f), false, Main.rand.Next(10, 17),
+                    Main.rand.NextFloat(0.32f, 0.58f), Color.Lerp(ShieldGold, ShieldLight, Main.rand.NextFloat(0.2f, 0.8f))));
+            }
+
+            if ((int)DashTime % 3 == 0)
+            {
+                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                    Projectile.Center - direction * 18f, -direction * 0.8f, ShieldGold,
+                    new Vector2(0.52f, 1.4f), direction.ToRotation(), 0.1f, 0.52f, 13));
+            }
         }
 
         private void SpawnDashFlash(Vector2 position, Vector2 direction, float strength)
@@ -432,7 +451,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 Main.EntitySpriteDraw(bloom, drawPosition, null, ShieldFire with { A = 0 } * (1f - dashProgress) * 0.8f,
                     0f, bloom.Size() * 0.5f, 1.15f + DashPower * 0.45f, SpriteEffects.None);
                 Main.EntitySpriteDraw(ring, drawPosition, null, ShieldLight with { A = 0 } * (1f - dashProgress) * 0.45f,
-                    DashDestination.ToRotation(), ring.Size() * 0.5f,
+                    DashDirection.ToRotation(), ring.Size() * 0.5f,
                     new Vector2(0.34f, 1.55f) * (1f + DashPower * 0.3f), SpriteEffects.None);
                 Main.spriteBatch.ExitShaderRegion();
                 return false;
@@ -529,7 +548,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             }
 
             Vector2 direction = DashDestination != Vector2.Zero
-                ? DashDestination
+                ? DashDirection
                 : Owner.velocity.SafeNormalize(Vector2.UnitX * Owner.direction);
             SpawnDashFlash(Owner.Center, direction, 1.15f + DashPower * 0.35f);
         }

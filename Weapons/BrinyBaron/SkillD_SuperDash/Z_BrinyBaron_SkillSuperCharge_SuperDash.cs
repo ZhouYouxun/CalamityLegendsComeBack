@@ -844,7 +844,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             Vector2 strikeDirection = lockedDirection.SafeNormalize(DefaultDirection);
             executionGlowIntensity = MathHelper.Clamp(executionGlowIntensity + ExecutionGlowGain, 0f, ExecutionGlowMax);
             SpawnImpactShurikenBurst(target, strikeDirection);
-            Vector2 afterimageVelocity = Projectile.velocity * HitSlowStartFactor;
+            Vector2 afterimageVelocity = Projectile.velocity;
             SpawnImpactAfterimage(Owner, afterimageVelocity);
 
             BBSD_Strike_Effects.SpawnStrikeImpactEffects(Projectile, target.Center, strikeDirection, strikeIndex, totalStrikes);
@@ -885,9 +885,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                 0,
                 0f,
                 Projectile.owner,
-                Projectile.rotation,
+                lockedDirection.ToRotation() + MathHelper.PiOver4,
                 Projectile.scale,
-                owner.direction == 0 ? 1 : owner.direction);
+                lockedDirection.X >= 0f ? 1 : -1);
         }
 
         private void FireForwardShuriken(Player owner, Vector2 dashDir)

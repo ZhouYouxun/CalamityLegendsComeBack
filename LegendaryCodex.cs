@@ -747,10 +747,7 @@ namespace CalamityLegendsComeBack
 
             int scanY = outer.Y + 5 + (int)((outer.Height - 10) * ((phase * 1.7f) % 1f));
             DrawRectangle(new Rectangle(outer.X + 5, scanY, outer.Width - 10, 1), scan);
-            DrawClippedPanelLine(clipArea, new Vector2(outer.X + 8, outer.Y + 8), Vector2.One.SafeNormalize(Vector2.UnitX), 28f, 1, border * 0.55f);
-            DrawClippedPanelLine(clipArea, new Vector2(outer.Right - 8, outer.Y + 8), new Vector2(-1f, 1f).SafeNormalize(Vector2.UnitX), 28f, 1, border * 0.55f);
-            DrawClippedPanelLine(clipArea, new Vector2(outer.X + 8, outer.Bottom - 8), new Vector2(1f, -1f).SafeNormalize(Vector2.UnitX), 22f, 1, border * 0.38f);
-            DrawClippedPanelLine(clipArea, new Vector2(outer.Right - 8, outer.Bottom - 8), -Vector2.One.SafeNormalize(Vector2.UnitX), 22f, 1, border * 0.38f);
+            DrawMatrixCornerBrackets(clipArea, border * 0.55f);
         }
 
         private void PlayHoverSound(Player owner, int hoveredControl)
@@ -809,72 +806,29 @@ namespace CalamityLegendsComeBack
             Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, rectangle, color);
         }
 
-        private static void DrawPanelLine(Vector2 start, Vector2 direction, float length, int thickness, Color color)
+        // Use only axis-aligned rectangles for the node brackets. Unlike rotated SpriteBatch
+        // line scaling, every pixel of these accents is constrained by an explicit rectangle.
+        private static void DrawMatrixCornerBrackets(Rectangle bounds, Color color)
         {
-            Vector2 size = new(length, thickness);
-            Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, start, null, color, direction.ToRotation(), Vector2.Zero, size, SpriteEffects.None, 0f);
-        }
-
-        private static void DrawClippedPanelLine(Rectangle bounds, Vector2 start, Vector2 direction, float length, int thickness, Color color)
-        {
-            if (length <= 0f || direction == Vector2.Zero)
+            const int inset = 7;
+            const int length = 9;
+            const int thickness = 1;
+            if (bounds.Width < inset * 2 + length || bounds.Height < inset * 2 + length)
                 return;
 
-            direction.Normalize();
-            Vector2 end = start + direction * length;
-            if (!ClipLineToRectangle(bounds, ref start, ref end))
-                return;
+            int left = bounds.Left + inset;
+            int top = bounds.Top + inset;
+            int right = bounds.Right - inset;
+            int bottom = bounds.Bottom - inset;
 
-            float clippedLength = Vector2.Distance(start, end);
-            if (clippedLength <= 0.5f)
-                return;
-
-            DrawPanelLine(start, direction, clippedLength, thickness, color);
-        }
-
-        private static bool ClipLineToRectangle(Rectangle bounds, ref Vector2 start, ref Vector2 end)
-        {
-            float t0 = 0f;
-            float t1 = 1f;
-            Vector2 delta = end - start;
-
-            if (!ClipLineEdge(-delta.X, start.X - bounds.Left, ref t0, ref t1) ||
-                !ClipLineEdge(delta.X, bounds.Right - start.X, ref t0, ref t1) ||
-                !ClipLineEdge(-delta.Y, start.Y - bounds.Top, ref t0, ref t1) ||
-                !ClipLineEdge(delta.Y, bounds.Bottom - start.Y, ref t0, ref t1))
-            {
-                return false;
-            }
-
-            end = start + delta * t1;
-            start += delta * t0;
-            return true;
-        }
-
-        private static bool ClipLineEdge(float p, float q, ref float t0, ref float t1)
-        {
-            if (Math.Abs(p) < 0.0001f)
-                return q >= 0f;
-
-            float ratio = q / p;
-            if (p < 0f)
-            {
-                if (ratio > t1)
-                    return false;
-
-                if (ratio > t0)
-                    t0 = ratio;
-            }
-            else
-            {
-                if (ratio < t0)
-                    return false;
-
-                if (ratio < t1)
-                    t1 = ratio;
-            }
-
-            return true;
+            DrawRectangle(new Rectangle(left, top, length, thickness), color);
+            DrawRectangle(new Rectangle(left, top, thickness, length), color);
+            DrawRectangle(new Rectangle(right - length, top, length, thickness), color);
+            DrawRectangle(new Rectangle(right - thickness, top, thickness, length), color);
+            DrawRectangle(new Rectangle(left, bottom - thickness, length, thickness), color);
+            DrawRectangle(new Rectangle(left, bottom - length, thickness, length), color);
+            DrawRectangle(new Rectangle(right - length, bottom - thickness, length, thickness), color);
+            DrawRectangle(new Rectangle(right - thickness, bottom - length, thickness, length), color);
         }
 
         private static void DrawBorder(Rectangle rectangle, Color color, int thickness)

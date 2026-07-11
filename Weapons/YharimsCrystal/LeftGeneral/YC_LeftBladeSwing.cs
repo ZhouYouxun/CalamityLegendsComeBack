@@ -464,6 +464,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             if (Owner.heldProj == Projectile.whoAmI)
                 Owner.heldProj = -1;
 
+            Owner.itemTime = 0;
+            Owner.itemAnimation = 0;
             Projectile.velocity = Vector2.Zero;
             Projectile.netUpdate = true;
             Projectile.Kill();

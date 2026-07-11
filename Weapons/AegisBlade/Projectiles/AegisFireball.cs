@@ -14,7 +14,11 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
     {
         public override string Texture => "CalamityMod/ExtraTextures/TinyGreyscaleCircle";
 
-        private const float VelocityRetention = 0.99f;
+        private const float ScatterVelocityRetention = 0.86f;
+        private const int ScatterPhaseUpdates = 28;
+        private const float HomingSpeed = 25f;
+        private const float HomingStrength = 0.18f;
+        private const float HomingRange = 95f * 16f;
         private const int   MaxLifetime      = 240;
         private const float VisualScale      = 0.55f;
 
@@ -37,7 +41,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             Projectile.width  = Projectile.height = 22;
             Projectile.friendly    = true;
             Projectile.DamageType  = DamageClass.Melee;
-            Projectile.tileCollide = true;
+            Projectile.tileCollide = false;
             Projectile.penetrate   = 3;
             Projectile.timeLeft    = MaxLifetime;
             Projectile.extraUpdates = 1;
@@ -48,11 +52,50 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         public override void AI()
         {
             Timer++;
-            Projectile.velocity *= VelocityRetention;
+            if (Timer < ScatterPhaseUpdates)
+                Projectile.velocity *= ScatterVelocityRetention;
+            else
+                HomeInOnClosestTarget();
+
             Projectile.rotation += Projectile.velocity.X * 0.02f;
 
             Lighting.AddLight(Projectile.Center, FlameColor.ToVector3() * 0.82f);
             EmitFlameTrail();
+        }
+
+        private void HomeInOnClosestTarget()
+        {
+            NPC target = FindClosestTarget();
+            if (target is null)
+            {
+                Projectile.velocity *= 0.94f;
+                return;
+            }
+
+            Vector2 desiredVelocity = Projectile.SafeDirectionTo(target.Center, Projectile.velocity.SafeNormalize(Vector2.UnitX)) * HomingSpeed;
+            Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, HomingStrength);
+        }
+
+        private NPC FindClosestTarget()
+        {
+            NPC bestTarget = null;
+            float bestDistanceSquared = HomingRange * HomingRange;
+
+            for (int i = 0; i < Main.maxNPCs; i++)
+            {
+                NPC npc = Main.npc[i];
+                if (!npc.CanBeChasedBy(Projectile))
+                    continue;
+
+                float distanceSquared = Vector2.DistanceSquared(Projectile.Center, npc.Center);
+                if (distanceSquared >= bestDistanceSquared)
+                    continue;
+
+                bestDistanceSquared = distanceSquared;
+                bestTarget = npc;
+            }
+
+            return bestTarget;
         }
 
         public override bool OnTileCollide(Vector2 oldVelocity)

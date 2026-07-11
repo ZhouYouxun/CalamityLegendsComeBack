@@ -74,10 +74,10 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
                 if (Projectile.timeLeft == FuseFrames)
                     Detonate();
 
-                if (Projectile.timeLeft % 4 == 0)
+                if (Projectile.timeLeft % 12 == 0)
                 {
-                    Vector2 ringPos = Projectile.Center + Main.rand.NextVector2CircularEdge(104f, 104f) * Main.rand.NextFloat(0.75f, 1.15f);
-                    GeneralParticleHandler.SpawnParticle(new CustomPulse(ringPos, Vector2.Zero, BombGold, "CalamityMod/Particles/HighResHollowCircleHardEdge", Vector2.One, Main.rand.NextFloat(-10f, 10f), 0f, Main.rand.NextFloat(0.055f, 0.09f), 15));
+                    Vector2 ringPos = Projectile.Center + Main.rand.NextVector2CircularEdge(68f, 68f) * Main.rand.NextFloat(0.72f, 1f);
+                    GeneralParticleHandler.SpawnParticle(new CustomPulse(ringPos, Vector2.Zero, BombGold, "CalamityMod/Particles/HighResHollowCircleHardEdge", Vector2.One, Main.rand.NextFloat(-6f, 6f), 0f, Main.rand.NextFloat(0.035f, 0.05f), 10));
                 }
             }
             else
@@ -93,7 +93,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             }
             Lighting.AddLight(Projectile.Center, Color.Lerp(BombOrange, BombGold, 0.4f).ToVector3() * 0.7f);
 
-            if (!Main.dedServ && Projectile.timeLeft % 2 == 0 && (Exploding || Main.rand.NextBool()))
+            if (!Main.dedServ && Projectile.timeLeft % (Exploding ? 6 : 2) == 0 && (Exploding || Main.rand.NextBool()))
             {
                 Vector2 dustVel = new Vector2(4f, 4f).RotatedByRandom(100) * Main.rand.NextFloat(0.1f, 0.8f) * (Exploding ? 1.4f : 1f);
                 Dust dust = Dust.NewDustPerfect(Projectile.Center + dustVel * (Exploding ? 5f : 1f), DustID.GoldFlame, dustVel * (Exploding ? 5f : 1f), 0, default, Main.rand.NextFloat(0.9f, 1.2f) * (Exploding ? 1.5f : 1f));
@@ -115,69 +115,23 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             if (Main.dedServ)
                 return;
 
-            GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero, BombWhite, "CalamityMod/Particles/HighResHollowCircleHardEdge", Vector2.One, Main.rand.NextFloat(-10f, 10f), 0f, 0.17f * Projectile.scale, 18));
-            GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero, Color.Lerp(BombGold, Color.White, 0.4f), "CalamityMod/Particles/BloomCircle", Vector2.One, Main.rand.NextFloat(-10f, 10f), 4.1f * Projectile.scale, 0f, 30));
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero, BombWhite, "CalamityMod/Particles/HighResHollowCircleHardEdge", Vector2.One, Main.rand.NextFloat(-6f, 6f), 0f, 0.08f * Projectile.scale, 12));
 
-            // Own-style finish: a restrained golden-angle starburst around the unchanged shockwave.
-            int rays = 13;
+            // Keep a small directional read without covering the encounter in geometry.
+            int rays = 5;
             float goldenAngle = MathHelper.Pi * (3f - System.MathF.Sqrt(5f));
             for (int i = 0; i < rays; i++)
             {
                 float angle = goldenAngle * i + Main.rand.NextFloat(-0.035f, 0.035f);
                 Vector2 dir = angle.ToRotationVector2();
-                Particle ray = new CustomSpark(Projectile.Center, dir * Main.rand.NextFloat(2.3f, 4.4f), "CalamityMod/Particles/BloomLineAngled", false, 20, Main.rand.NextFloat(0.62f, 0.95f), i % 2 == 0 ? BombGold : BombOrange, new Vector2(0.16f, 0.82f), true, false, 0f, false, false, 0.72f);
+                Particle ray = new CustomSpark(Projectile.Center, dir * Main.rand.NextFloat(1.6f, 2.8f), "CalamityMod/Particles/BloomLineAngled", false, 14, Main.rand.NextFloat(0.34f, 0.52f), i % 2 == 0 ? BombGold : BombOrange, new Vector2(0.12f, 0.48f), true, false, 0f, false, false, 0.72f);
                 GeneralParticleHandler.SpawnParticle(ray);
             }
 
-            // Three exact rotational symmetries expand at different rates: hexagon, octagon, dodecagon.
-            int[] polygonSides = { 6, 8, 12 };
-            for (int ring = 0; ring < polygonSides.Length; ring++)
+            for (int i = 0; i < 14; i++)
             {
-                int sides = polygonSides[ring];
-                float radius = (38f + ring * 30f) * Projectile.scale;
-                float phase = ring * MathHelper.Pi / sides + Projectile.identity * 0.017f;
-                for (int vertex = 0; vertex < sides; vertex++)
-                {
-                    float angle = MathHelper.TwoPi * vertex / sides + phase;
-                    Vector2 radial = angle.ToRotationVector2();
-                    Vector2 tangent = radial.RotatedBy(MathHelper.PiOver2);
-                    Color color = ring == 1 ? BombWhite : Color.Lerp(BombOrange, BombGold, ring * 0.42f);
-                    GeneralParticleHandler.SpawnParticle(new CustomSpark(
-                        Projectile.Center + radial * radius,
-                        radial * (2.2f + ring * 1.15f) + tangent * (ring == 1 ? -1.2f : 1.2f),
-                        "CalamityMod/Particles/BloomCircle",
-                        false,
-                        20 + ring * 4,
-                        0.28f + ring * 0.08f,
-                        color,
-                        new Vector2(0.72f, 1.3f),
-                        true));
-                }
-            }
-
-            // Fermat spiral: sqrt radius spacing keeps the points evenly packed while the
-            // golden angle prevents visible radial clumping.
-            for (int i = 1; i <= 21; i++)
-            {
-                float angle = goldenAngle * i;
-                float radius = System.MathF.Sqrt(i / 21f) * 118f * Projectile.scale;
-                Vector2 radial = angle.ToRotationVector2();
-                GeneralParticleHandler.SpawnParticle(new CustomSpark(
-                    Projectile.Center + radial * radius,
-                    radial.RotatedBy(MathHelper.PiOver2) * (1.4f + radius * 0.012f),
-                    "CalamityMod/Particles/BloomCircle",
-                    false,
-                    24,
-                    MathHelper.Lerp(0.22f, 0.48f, i / 21f),
-                    Color.Lerp(BombOrange, BombWhite, i / 21f),
-                    new Vector2(0.62f, 1.08f),
-                    true));
-            }
-
-            for (int i = 0; i < 48; i++)
-            {
-                Vector2 vel = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(5f, 18f);
-                Dust dust = Dust.NewDustPerfect(Projectile.Center, DustID.GoldFlame, vel, 0, Main.rand.NextBool(3) ? BombWhite : BombGold, Main.rand.NextFloat(1.25f, 2f));
+                Vector2 vel = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(3f, 9f);
+                Dust dust = Dust.NewDustPerfect(Projectile.Center, DustID.GoldFlame, vel, 0, Main.rand.NextBool(3) ? BombWhite : BombGold, Main.rand.NextFloat(0.8f, 1.2f));
                 dust.noGravity = true;
             }
         }

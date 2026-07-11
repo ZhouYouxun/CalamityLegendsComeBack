@@ -527,20 +527,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.ZhuangFangYiPet
         private void DrawNormalBlink(Vector2 drawPosition, Color drawColor, SpriteEffects effects)
         {
             int frame = blinkTimer > 0 ? Math.Min(BlinkFrames - 1, (BlinkDuration - blinkTimer) / BlinkFrameTime) : 0;
-            DrawVerticalFrame(RequestTexture("庄方宜宠物_眨眼"), BlinkFrames, frame, drawPosition, drawColor, InvertHorizontalFlip(effects));
+            DrawVerticalFrame(RequestTexture("庄方宜宠物_眨眼"), BlinkFrames, frame, drawPosition, drawColor, effects);
         }
 
         private void DrawHarmonyExpression(Vector2 drawPosition, Color drawColor, SpriteEffects effects)
         {
             int frame = blinkTimer > 0 ? Math.Min(BlinkFrames - 1, (BlinkDuration - blinkTimer) / BlinkFrameTime) : 0;
-            DrawVerticalFrame(RequestTexture("庄方宜宠物_天理真和_表情"), BlinkFrames, frame, drawPosition, drawColor, InvertHorizontalFlip(effects));
-        }
-
-        private static SpriteEffects InvertHorizontalFlip(SpriteEffects effects)
-        {
-            return (effects & SpriteEffects.FlipHorizontally) != 0
-                ? effects & ~SpriteEffects.FlipHorizontally
-                : effects | SpriteEffects.FlipHorizontally;
+            DrawVerticalFrame(RequestTexture("庄方宜宠物_天理真和_表情"), BlinkFrames, frame, drawPosition, drawColor, effects);
         }
 
         private static Texture2D RequestTexture(string name)

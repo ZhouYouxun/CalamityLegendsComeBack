@@ -12,7 +12,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
     internal sealed class BBSuperDashAfterimage : ModProjectile
     {
         private const int Lifetime = 25;
-        private const float VelocityRetention = 0.84f;
+        private const float VelocityRetention = 0.9f;
 
         public new string LocalizationCategory => "Projectiles.BrinyBaron";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";

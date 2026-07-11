@@ -1,0 +1,35 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		NPCs.HDMCSovereign.DisplayName: 超维矩阵主宰
+
+		Items: {
+			HDMCUncompiledCore: {
+				DisplayName: 未编译的矩阵核心
+				Tooltip:
+					'''
+					[c/7EB8FF:召唤超维矩阵主宰]
+					[c/AA88FF:五个编译阶段——每个阶段解锁新的攻击模组池]
+					[c/FF3030:生命临界时，它将执行最后一次编译]
+					[c/787888:"三维生物，让我看看你的运算能力"]
+					'''
+			}
+		}
+
+		Projectiles: {
+			HDMCLanceHostile.DisplayName: 敌对数据矛
+			HDMCShardHostile.DisplayName: 敌对几何碎片
+			HDMCLaserHostile.DisplayName: 敌对数据激光
+			HDMCFusionBlastHostile.DisplayName: 敌对聚合爆炸
+			HDMCRingWaveHostile.DisplayName: 环形数据冲击波
+			HDMCGridPanelHostile.DisplayName: 敌对数据面板
+			HDMCGeoBurstHostile.DisplayName: 敌对几何爆裂体
+			HDMCHeptagramHostile.DisplayName: 七芒星封印
+			HDMCFractalTreeHostile.DisplayName: 分形地刺树
+			HDMCPenroseHostile.DisplayName: 彭罗斯陨晶
+			HDMCVoronoiHostile.DisplayName: 沃罗诺伊囚笼
+			HDMCSierpinskiHostile.DisplayName: 谢尔宾斯基坍缩阵
+			HDMCLorenzHostile.DisplayName: 洛伦兹乱流
+			HDMCSingularityHostile.DisplayName: 数据奇点
+		}
+	}
+}

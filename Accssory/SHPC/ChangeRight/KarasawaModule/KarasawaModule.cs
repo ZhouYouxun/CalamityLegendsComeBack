@@ -10,7 +10,7 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.KarasawaModule
 {
     public sealed class KarasawaModule : ModItem
     {
-        public override string Texture => "CalamityLegendsComeBack/Accssory/SHPC/ChangeRight/MilitaryCaller/MilitaryCaller";
+        //public override string Texture => "CalamityLegendsComeBack/Accssory/SHPC/ChangeRight/MilitaryCaller/MilitaryCaller";
 
         public override void SetDefaults()
         {

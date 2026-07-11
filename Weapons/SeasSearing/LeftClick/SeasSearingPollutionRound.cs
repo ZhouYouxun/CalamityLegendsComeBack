@@ -14,6 +14,8 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
     {
         private static readonly Color CoreColor  = new(170, 255, 238);
         private static readonly Color TrailColor = new(26, 128, 190);
+        private const int HiddenVisualFrames = 5;
+        private int visualFrameAge;
 
         // ai[0] = burst index (0-based, which shot in the current burst)
         // ai[1] = left-click stage at fire time
@@ -47,7 +49,10 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
         public override void AI()
         {
-            Projectile.rotation = Projectile.velocity.ToRotation();
+            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
+
+            if (Projectile.numUpdates == 0)
+                visualFrameAge++;
 
             if (Projectile.localAI[0] == 0f)
             {
@@ -176,6 +181,9 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
         public override bool PreDraw(ref Color lightColor)
         {
+            if (visualFrameAge < HiddenVisualFrames)
+                return false;
+
             Texture2D texture    = TextureAssets.Projectile[Type].Value;
             Texture2D bloom      = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Vector2   origin     = texture.Size() * 0.5f;

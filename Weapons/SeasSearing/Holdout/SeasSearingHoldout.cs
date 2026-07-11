@@ -2,6 +2,7 @@ using CalamityMod;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.IO;
 using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
@@ -21,6 +22,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         private const int ReleaseSprayCount = 2;
         private const int ReleaseSpraySpacing = 7;
         private const int ReleaseSprayPellets = 12;
+        private const int UltimateChargeFrames = 60;
 
         // ── Right-click state thresholds (frames) ───────────────────────────
         private const int ChargeToLockedFrames  = 60;
@@ -33,9 +35,12 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
         // ── Right-click state ────────────────────────────────────────────────
         private enum RightState { Idle, Charging, Locked, VentCooldown, AbyssalRupture }
+        private enum UltimateState { Idle, Charging, Ready }
 
         private RightState rightState;
         private int        rightStateTimer;
+        private UltimateState ultimateState;
+        private int           ultimateStateTimer;
 
         // ── Left-click timers ────────────────────────────────────────────────
         private int burstShotsRemaining;
@@ -56,7 +61,9 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         private float resonanceGlow;
         private float ruptureHeat;
         private float orbitAngle;
+        private float ultimateChargeVisual;
 
+        private bool leftHeldLastFrame;
         private bool rightHeldLastFrame;
 
         public new string LocalizationCategory => "Projectiles.SeasSearing";
@@ -80,6 +87,18 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
         public override bool ShouldUpdatePosition() => false;
         public override bool? CanDamage() => false;
+
+        public override void SendExtraAI(BinaryWriter writer)
+        {
+            writer.Write((byte)ultimateState);
+            writer.Write((byte)ultimateStateTimer);
+        }
+
+        public override void ReceiveExtraAI(BinaryReader reader)
+        {
+            ultimateState = (UltimateState)reader.ReadByte();
+            ultimateStateTimer = reader.ReadByte();
+        }
 
         public override void AI()
         {
@@ -137,9 +156,10 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             bool rightHeld = valid && (Main.mouseRight || Owner.Calamity().mouseRight);
 
             HandleRightStateMachine(rightHeld);
-            HandleLeftClick(leftHeld, rightHeld);
-            HandleUltimateInput(valid);
+            bool ultimateConsumesLeftClick = HandleUltimateInput(valid, leftHeld && !leftHeldLastFrame);
+            HandleLeftClick(ultimateConsumesLeftClick ? false : leftHeld, rightHeld);
 
+            leftHeldLastFrame = leftHeld;
             rightHeldLastFrame = rightHeld;
         }
 
@@ -236,6 +256,13 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
         private void HandleLeftClick(bool leftHeld, bool rightHeld)
         {
+            if (ultimateState != UltimateState.Idle)
+            {
+                burstShotsRemaining = 0;
+                burstShotTimer = 0;
+                return;
+            }
+
             if (rightHeld || rightState == RightState.Charging || rightState == RightState.Locked)
             {
                 burstShotsRemaining = 0; burstShotTimer = 0;
@@ -665,17 +692,83 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             SoundEngine.PlaySound(SoundID.Item62 with { Volume = 0.75f, Pitch = -0.18f }, GunTipPosition);
         }
 
-        private void HandleUltimateInput(bool validMouse)
+        private bool HandleUltimateInput(bool validMouse, bool justLeftPressed)
         {
-            if (!validMouse || KeybindSystem.LegendarySkill?.JustPressed != true) return;
+            if (ultimateState == UltimateState.Charging)
+                return true;
+
+            if (ultimateState == UltimateState.Ready)
+            {
+                if (validMouse && justLeftPressed)
+                    FireUltimateDesignator();
+
+                return true;
+            }
+
+            if (!validMouse || KeybindSystem.LegendarySkill?.JustPressed != true)
+                return false;
 
             SeasSearingPlayer ssPlayer = Owner.GetModPlayer<SeasSearingPlayer>();
             if (!ssPlayer.CanUseUltimate)
             {
                 SoundEngine.PlaySound(SoundID.MenuTick with { Volume = 0.32f, Pitch = -0.25f }, Owner.Center);
+                return false;
+            }
+
+            StartUltimateCharge();
+            return true;
+        }
+
+        private void StartUltimateCharge()
+        {
+            ultimateState = UltimateState.Charging;
+            ultimateStateTimer = 0;
+            ultimateChargeVisual = 0f;
+            burstShotsRemaining = 0;
+            burstShotTimer = 0;
+            useAnimationTimer = Math.Max(useAnimationTimer, UltimateChargeFrames + 4);
+            Projectile.netUpdate = true;
+
+            SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.48f, Pitch = -0.58f }, GunTipPosition);
+            SeasSearingVisualUtility.SpawnPressureRing(GunTipPosition, 2.6f, 26f, 18, SeasSearingPalette.DeepBlue);
+        }
+
+        private void UpdateUltimateChargeState()
+        {
+            if (ultimateState == UltimateState.Idle)
+            {
+                ultimateChargeVisual = MathHelper.Clamp(ultimateChargeVisual - 0.06f, 0f, 1f);
                 return;
             }
 
+            if (ultimateState == UltimateState.Charging)
+            {
+                ultimateStateTimer++;
+                float charge = MathHelper.Clamp(ultimateStateTimer / (float)UltimateChargeFrames, 0f, 1f);
+                ultimateChargeVisual = charge;
+                useAnimationTimer = Math.Max(useAnimationTimer, 2);
+                UpdateUltimateChargeVisuals(charge);
+
+                if (ultimateStateTimer >= UltimateChargeFrames)
+                {
+                    ultimateState = UltimateState.Ready;
+                    ultimateStateTimer = 0;
+                    ultimateChargeVisual = 1f;
+                    resonanceGlow = Math.Max(resonanceGlow, 1.15f);
+                    Projectile.netUpdate = true;
+                    SoundEngine.PlaySound(SoundID.Item92 with { Volume = 0.62f, Pitch = -0.28f }, GunTipPosition);
+                    SeasSearingVisualUtility.SpawnPressureRing(GunTipPosition, 5.4f, 20f, 36, SeasSearingPalette.RadioactiveCyan);
+                }
+                return;
+            }
+
+            ultimateChargeVisual = 1f;
+            useAnimationTimer = Math.Max(useAnimationTimer, 2);
+        }
+
+        private void FireUltimateDesignator()
+        {
+            SeasSearingPlayer ssPlayer = Owner.GetModPlayer<SeasSearingPlayer>();
             Vector2 direction = (GetMouseWorld() - GunTipPosition).SafeNormalize(AimDirection);
             int beamIndex = Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
@@ -687,6 +780,10 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             if (Main.projectile.IndexInRange(beamIndex))
                 Main.projectile[beamIndex].CritChance = Owner.GetWeaponCrit(Owner.HeldItem);
 
+            ultimateState = UltimateState.Idle;
+            ultimateStateTimer = 0;
+            ultimateChargeVisual = 0.7f;
+            Projectile.netUpdate = true;
             ssPlayer.StartUltimateCooldown();
             useAnimationTimer = Math.Max(useAnimationTimer, 16);
             ApplyRecoil(18f); TriggerMuzzleFlash(26);
@@ -721,6 +818,12 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 float vib = rightStateTimer / (float)LockedToRuptureFrames * 2.8f;
                 vibOffset = Main.rand.NextVector2Circular(vib, vib * 0.5f);
             }
+            else if (ultimateState == UltimateState.Charging && !Main.dedServ)
+            {
+                float charge = MathHelper.Clamp(ultimateStateTimer / (float)UltimateChargeFrames, 0f, 1f);
+                float vib = 0.35f + MathHelper.SmoothStep(0f, 1f, charge) * 4.25f;
+                vibOffset = Main.rand.NextVector2Circular(vib, vib * 0.55f);
+            }
 
             Projectile.Center = armPosition + aim * (HoldoutDistance - recoilOffset) + new Vector2(0f, -6f * Owner.gravDir) + vibOffset;
 
@@ -729,7 +832,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             Owner.itemRotation = (aim * dir).ToRotation();
             Owner.HeldItem.noUseGraphic = true;
 
-            if (useAnimationTimer > 0 || rightState == RightState.Charging || rightState == RightState.Locked)
+            if (useAnimationTimer > 0 || rightState == RightState.Charging || rightState == RightState.Locked || ultimateState != UltimateState.Idle)
             {
                 Owner.itemTime      = Math.Max(Owner.itemTime, 2);
                 Owner.itemAnimation = Math.Max(Owner.itemAnimation, 2);
@@ -748,6 +851,8 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             if (muzzleFlashTimer  > 0) muzzleFlashTimer--;
             if (useAnimationTimer > 0) useAnimationTimer--;
 
+            UpdateUltimateChargeState();
+
             recoilOffset  = MathHelper.Lerp(recoilOffset, 0f, 0.26f);
             resonanceGlow = MathHelper.Clamp(resonanceGlow - 0.035f, 0f, 1.5f);
             orbitAngle   += 0.055f;
@@ -755,18 +860,20 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             float heatDecay = rightState == RightState.AbyssalRupture ? 0.005f : 0.04f;
             ruptureHeat = MathHelper.Clamp(ruptureHeat - heatDecay, 0f, 1f);
 
+            float rightChargeGlow;
             switch (rightState)
             {
                 case RightState.Charging:
-                    chargeGlow = rightStateTimer / (float)ChargeToLockedFrames;
+                    rightChargeGlow = rightStateTimer / (float)ChargeToLockedFrames;
                     break;
                 case RightState.Locked:
-                    chargeGlow = 1f + (float)Math.Sin(Main.GlobalTimeWrappedHourly * 8f) * 0.1f;
+                    rightChargeGlow = 1f + (float)Math.Sin(Main.GlobalTimeWrappedHourly * 8f) * 0.1f;
                     break;
                 default:
-                    chargeGlow = MathHelper.Clamp(chargeGlow - 0.03f, 0f, 1f);
+                    rightChargeGlow = MathHelper.Clamp(chargeGlow - 0.03f, 0f, 1f);
                     break;
             }
+            chargeGlow = Math.Max(rightChargeGlow, ultimateChargeVisual);
 
             if (!Main.dedServ)
                 Lighting.AddLight(Owner.Center, new Vector3(0.02f, 0.12f, 0.18f) * Owner.GetModPlayer<SeasSearingPlayer>().PressureVisualPower);
@@ -793,6 +900,37 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             if ((int)(Main.GlobalTimeWrappedHourly * 60f) % 18 == 0 && charge > 0.3f)
                 SeasSearingVisualUtility.SpawnPressureRing(GunTipPosition, 2.8f, 20f + charge * 14f, 16,
                     Color.Lerp(SeasSearingPalette.DeepBlue, SeasSearingPalette.PressureBlue, charge));
+        }
+
+        private void UpdateUltimateChargeVisuals(float charge)
+        {
+            if (Main.dedServ) return;
+
+            Vector2 center = GunTipPosition + AimDirection * (10f + charge * 14f);
+            if (Main.GameUpdateCount % 2 == 0)
+            {
+                float angle = Main.GlobalTimeWrappedHourly * (4f + charge * 8f) + Main.rand.NextFloat(MathHelper.TwoPi);
+                float radius = MathHelper.Lerp(58f, 12f, charge) + Main.rand.NextFloat(-5f, 5f);
+                Vector2 offset = angle.ToRotationVector2() * radius;
+                Dust dust = Dust.NewDustPerfect(
+                    center + offset,
+                    Main.rand.NextBool(3) ? DustID.Water : DustID.GemEmerald,
+                    -offset.SafeNormalize(Vector2.UnitY) * MathHelper.Lerp(1.6f, 8.5f, charge),
+                    105,
+                    Color.Lerp(SeasSearingPalette.PressureBlue, SeasSearingPalette.RadioactiveCyan, charge),
+                    MathHelper.Lerp(0.55f, 1.05f, charge));
+                dust.noGravity = true;
+            }
+
+            if (Main.GameUpdateCount % 12 == 0)
+            {
+                float pitch = MathHelper.Lerp(-0.52f, 0.12f, charge);
+                SoundEngine.PlaySound(SoundID.Item29 with { Volume = MathHelper.Lerp(0.18f, 0.46f, charge), Pitch = pitch }, GunTipPosition);
+                SeasSearingVisualUtility.SpawnPressureRing(center, 2.3f + charge * 2.2f, 58f - charge * 32f, 18,
+                    Color.Lerp(SeasSearingPalette.DeepBlue, SeasSearingPalette.RadioactiveCyan, charge));
+            }
+
+            Lighting.AddLight(center, SeasSearingPalette.RadioactiveCyan.ToVector3() * (0.12f + charge * 0.42f));
         }
 
         private void UpdateLockedVisuals()
@@ -925,6 +1063,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             Main.EntitySpriteDraw(texture, drawPos, null, Projectile.GetAlpha(lightColor), Projectile.rotation, origin, Projectile.scale, fx, 0);
             DrawMuzzleGlow(flash);
             DrawLockedOrbitCrown();
+            DrawUltimateChargeCrown();
             return false;
         }
 
@@ -949,7 +1088,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             float alpha = MathHelper.Clamp(chargeGlow * 0.5f + resonanceGlow * 0.45f + flash * 0.65f + ruptureHeat * 0.35f, 0f, 0.95f);
             Color color = (baseGlow with { A = 0 }) * alpha;
 
-            int   draws = rightState == RightState.Locked ? 16 : 10;
+            int   draws = rightState == RightState.Locked || ultimateState == UltimateState.Ready ? 16 : 10;
             float rad   = 2.2f + chargeGlow * 5.5f + resonanceGlow * 4f + flash * 5.5f;
             for (int i = 0; i < draws; i++)
             {
@@ -976,7 +1115,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             Main.EntitySpriteDraw(bloom, muzzle, null, c * 0.72f, Projectile.rotation, bloom.Size() * 0.5f,
                 new Vector2(0.24f + power * 0.38f, 0.12f + power * 0.24f), SpriteEffects.None, 0);
 
-            int starCount = rightState == RightState.Locked ? 5 : 3;
+            int starCount = rightState == RightState.Locked || ultimateState == UltimateState.Ready ? 5 : 3;
             for (int i = 0; i < starCount; i++)
             {
                 float rot = Projectile.rotation + MathHelper.TwoPi * i / starCount + Main.GlobalTimeWrappedHourly * 2.2f;
@@ -1010,6 +1149,37 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 Color     warn  = (SeasSearingPalette.WarningOrange with { A = 0 }) * ((progress - 0.7f) / 0.3f * 0.7f);
                 Main.EntitySpriteDraw(ring, GunTipPosition - Main.screenPosition, null, warn, Main.GlobalTimeWrappedHourly * 3f,
                     ring.Size() * 0.5f, (0.18f + progress * 0.24f) * pulse, SpriteEffects.None, 0);
+            }
+        }
+
+        private void DrawUltimateChargeCrown()
+        {
+            if (ultimateState == UltimateState.Idle || Main.dedServ) return;
+
+            float charge = ultimateState == UltimateState.Charging
+                ? MathHelper.Clamp(ultimateStateTimer / (float)UltimateChargeFrames, 0f, 1f)
+                : 1f;
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D ring = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
+            Vector2 muzzle = GunTipPosition - Main.screenPosition;
+            Color cyan = (Color.Lerp(SeasSearingPalette.PressureBlue, SeasSearingPalette.RadioactiveCyan, charge) with { A = 0 });
+
+            float ringScale = MathHelper.Lerp(0.42f, 0.16f, charge);
+            float spin = Main.GlobalTimeWrappedHourly * MathHelper.Lerp(1.5f, 7f, charge);
+            Main.EntitySpriteDraw(ring, muzzle, null, cyan * (0.25f + charge * 0.38f), spin,
+                ring.Size() * 0.5f, ringScale, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(ring, muzzle, null, cyan * (0.16f + charge * 0.28f), -spin * 1.35f,
+                ring.Size() * 0.5f, ringScale * 0.72f, SpriteEffects.None, 0);
+
+            int coreCount = ultimateState == UltimateState.Ready ? 6 : 3;
+            float coreRadius = ultimateState == UltimateState.Ready ? 18f : MathHelper.Lerp(46f, 16f, charge);
+            for (int i = 0; i < coreCount; i++)
+            {
+                float angle = -spin * 1.7f + MathHelper.TwoPi * i / coreCount;
+                Vector2 position = muzzle + angle.ToRotationVector2() * coreRadius;
+                float scale = ultimateState == UltimateState.Ready ? 0.075f : 0.05f + charge * 0.025f;
+                Main.EntitySpriteDraw(bloom, position, null, cyan * (0.45f + charge * 0.28f), 0f,
+                    bloom.Size() * 0.5f, scale, SpriteEffects.None, 0);
             }
         }
 

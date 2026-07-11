@@ -5,7 +5,7 @@ Mods: {
 				NewLegendMK14EBR: {
 					DisplayName: MK14EBR-缄花
 					Tooltip: "[GFB]"
-					MK14_Intro: 聆听传统主义的轰鸣
+					MK14_Intro: 缄花不语 荣耀相随
 					MK14_Ammo: 射出子弹，将火枪子弹转化为M61穿甲弹
 					MK14_RightClick: 右键呼出改枪界面
 					MK14_LoadoutHint: 按住 Shift 阅读当前改枪方案

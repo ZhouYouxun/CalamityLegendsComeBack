@@ -1,3 +1,5 @@
+using Microsoft.Xna.Framework;
+using Terraria;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.Passive
@@ -32,6 +34,27 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.Passive
                 RightClickCooldown--;
             if (LeftClickCooldown > 0)
                 LeftClickCooldown--;
+
+            EnsureAuricJudgementMatrix();
+        }
+
+        private void EnsureAuricJudgementMatrix()
+        {
+            if (AuricJudgementCharges <= 0 || Player.whoAmI != Main.myPlayer)
+                return;
+
+            int matrixType = ModContent.ProjectileType<YCAuricJudgementMatrix>();
+            if (Player.ownedProjectileCounts[matrixType] > 0)
+                return;
+
+            Projectile.NewProjectile(
+                Player.GetSource_Misc("YharimsCrystalAuricJudgementMatrix"),
+                Player.Center,
+                Vector2.Zero,
+                matrixType,
+                0,
+                0f,
+                Player.whoAmI);
         }
 
         public void SetLastWeapon(YCWeaponForm form)

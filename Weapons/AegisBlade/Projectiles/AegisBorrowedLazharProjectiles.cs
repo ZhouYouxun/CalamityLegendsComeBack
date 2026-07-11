@@ -20,7 +20,10 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         public GeneralDrawLayer LayerToRenderTo => GeneralDrawLayer.BeforeProjectiles;
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
-        private const float MinimumHomingSpeed = 26f * 0.67f;
+        private const float MinimumHomingSpeed = 30f * 0.67f;
+        private const float HomingRange = 1200f;
+        private const float HomingStrength = 0.14f;
+        private const int HomingDelayUpdates = 60;
         private int timer;
 
         public override void SetStaticDefaults()
@@ -52,11 +55,11 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             Projectile.alpha = Math.Max(0, Projectile.alpha - 35);
 
             float currentSpeed = Math.Max(Projectile.velocity.Length(), MinimumHomingSpeed);
-            NPC target = FindTargetInFront(950f, MathHelper.ToRadians(58f));
+            NPC target = timer >= HomingDelayUpdates ? FindClosestTarget(HomingRange) : null;
             if (target != null)
             {
                 Vector2 desiredDirection = Projectile.SafeDirectionTo(target.Center, Projectile.velocity.SafeNormalize(Vector2.UnitX));
-                Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredDirection * currentSpeed, 0.045f);
+                Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredDirection * currentSpeed, HomingStrength);
             }
 
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
@@ -76,11 +79,10 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             }
         }
 
-        private NPC FindTargetInFront(float range, float coneHalfAngle)
+        private NPC FindClosestTarget(float range)
         {
             NPC bestTarget = null;
             float bestDistance = range;
-            Vector2 heading = Projectile.velocity.SafeNormalize(Vector2.UnitX);
 
             for (int i = 0; i < Main.maxNPCs; i++)
             {
@@ -90,11 +92,6 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 
                 float distance = Vector2.Distance(Projectile.Center, npc.Center);
                 if (distance >= bestDistance)
-                    continue;
-
-                Vector2 toNpc = Projectile.SafeDirectionTo(npc.Center, heading);
-                float angleDifference = Math.Abs(MathHelper.WrapAngle(toNpc.ToRotation() - heading.ToRotation()));
-                if (angleDifference > coneHalfAngle)
                     continue;
 
                 bestDistance = distance;

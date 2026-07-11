@@ -30,8 +30,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         private const int TrackingSoulBurstCount = 2;
         private const float TrackingSoulSpeed = 30f * 0.67f;
         private const float SpinAcceleration = 0.075f;
-        private const float SpinDeceleration = 0.085f;
-        private const float FadeOutStartSpeed = 0.12f;
+        private const int ReleaseFadeFrames = 10;
         private const float DiscBrightness = 0.67f;
         private const float LoopSweepDegrees = 1080f;   // 每次挥动 3 圈，线性匀速
 
@@ -56,6 +55,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         private float discRingOpacity;   // 刀盘环形光圈强度
         private float discFadeIn;        // 刀盘整体淡入（20帧内透明度逐渐降低至完全显示）
         private bool releaseEnding;
+        private int releaseTimer;
         private const int DiscFadeInFrames = 20;
 
         private static readonly Color BladeGold = new(255, 205, 80);
@@ -90,18 +90,35 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 
         public override void AI()
         {
-            if (!Owner.active || Owner.dead || Owner.HeldItem.type != ModContent.ItemType<AegisBlade>())
+            if (!Owner.active || Owner.dead)
             {
+                Projectile.Kill();
+                return;
+            }
+
+            if (Owner.HeldItem.type != ModContent.ItemType<AegisBlade>())
+            {
+                if (Owner.heldProj == Projectile.whoAmI)
+                    Owner.heldProj = -1;
+
+                Owner.itemTime = 0;
+                Owner.itemAnimation = 0;
                 Projectile.Kill();
                 return;
             }
 
             discFadeIn = Math.Min(discFadeIn + 1f / DiscFadeInFrames, 1f);
             scale = Owner.GetMeleeScale() * SwordVisualScale;
-            Owner.heldProj = Projectile.whoAmI;
             Owner.GetModPlayer<AegisBladePlayer>().IsSwinging = true;
-            Owner.itemTime = Math.Max(Owner.itemTime, 2);
-            Owner.itemAnimation = Math.Max(Owner.itemAnimation, 2);
+            if (!IsLeftHeld())
+                releaseEnding = true;
+
+            if (!releaseEnding)
+            {
+                Owner.heldProj = Projectile.whoAmI;
+                Owner.itemTime = Math.Max(Owner.itemTime, 2);
+                Owner.itemAnimation = Math.Max(Owner.itemAnimation, 2);
+            }
             Projectile.timeLeft = 4;
             Projectile.Center = Owner.MountedCenter;
 
@@ -119,6 +136,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             stateTimer = 0;
             swingProgress = 0f;
             fireballSpawned = false;
+            releaseTimer = 0;
             lockedMouseDirection = GetMouseDirection();
 
             if (swingCount == 0)
@@ -143,18 +161,24 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             if (!IsLeftHeld())
                 releaseEnding = true;
 
-            float targetSpeed = releaseEnding ? 0f : 1f;
-            float speedResponse = releaseEnding ? SpinDeceleration : SpinAcceleration;
-            spinSpeedFactor = MathHelper.Lerp(spinSpeedFactor, targetSpeed, speedResponse);
-            if (!releaseEnding && spinSpeedFactor > 0.985f)
-                spinSpeedFactor = 1f;
-            if (releaseEnding && spinSpeedFactor < 0.01f)
-                spinSpeedFactor = 0f;
+            if (releaseEnding)
+            {
+                releaseTimer++;
+                spinSpeedFactor = MathHelper.Lerp(spinSpeedFactor, 0f, 0.4f);
+                visualOpacity = 1f - MathHelper.Clamp(releaseTimer / (float)ReleaseFadeFrames, 0f, 1f);
+                TrackBladeTrail(false);
+                stateTimer++;
 
-            if (releaseEnding && spinSpeedFactor <= FadeOutStartSpeed)
-                visualOpacity = MathHelper.Lerp(visualOpacity, 0f, 0.07f);
-            else
-                visualOpacity = MathHelper.Lerp(visualOpacity, 1f, 0.18f);
+                if (releaseTimer >= ReleaseFadeFrames)
+                    Projectile.Kill();
+
+                return;
+            }
+
+            spinSpeedFactor = MathHelper.Lerp(spinSpeedFactor, 1f, SpinAcceleration);
+            if (spinSpeedFactor > 0.985f)
+                spinSpeedFactor = 1f;
+            visualOpacity = MathHelper.Lerp(visualOpacity, 1f, 0.18f);
 
             swingProgress = MathHelper.Clamp(swingProgress + spinSpeedFactor / SwingDuration, 0f, 1f);
             float progress = GetCurrentSwingProgress();
@@ -221,18 +245,21 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             int fireballType = ModContent.ProjectileType<AegisFireball>();
             int damage = Math.Max(1, (int)(Projectile.damage * 0.6f));
 
-            // Four orbs leave as a wide fan. The old 0.9-1.25 speed read as drifting sparks.
-            Vector2 mouseDir = Owner.MountedCenter.DirectionTo(AegisBlade.GetMouseWorld(Owner))
-                .SafeNormalize(Vector2.UnitX * Owner.direction);
-
-            for (int i = 0; i < 4; i++)
+            int fireballCount = Main.rand.Next(8, 11);
+            for (int i = 0; i < fireballCount; i++)
             {
-                float centeredIndex = i - 1.5f;
-                float speed       = Main.rand.NextFloat(10.8f, 15f);
-                float angleOffset = MathHelper.ToRadians(centeredIndex * (5f / 3f) + Main.rand.NextFloat(-0.4f, 0.4f));
-                Vector2 velocity  = mouseDir.RotatedBy(angleOffset) * speed;
-                Projectile.NewProjectile(Projectile.GetSource_FromThis(), Owner.MountedCenter,
+                Vector2 scatterDirection = Main.rand.NextFloat(MathHelper.TwoPi).ToRotationVector2();
+                Vector2 spawnPosition = Owner.MountedCenter + scatterDirection * Main.rand.NextFloat(22f, 84f) +
+                    Main.rand.NextVector2Circular(12f, 12f);
+                Vector2 velocity = scatterDirection.RotatedByRandom(MathHelper.ToRadians(16f)) * Main.rand.NextFloat(8f, 17f);
+                int fireballIndex = Projectile.NewProjectile(Projectile.GetSource_FromThis(), spawnPosition,
                     velocity, fireballType, damage, 2f, Projectile.owner);
+
+                if (Main.projectile.IndexInRange(fireballIndex))
+                {
+                    Main.projectile[fireballIndex].scale = Main.rand.NextFloat(0.72f, 1.3f);
+                    Main.projectile[fireballIndex].netUpdate = true;
+                }
             }
         }
 
@@ -240,13 +267,17 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         {
             int laserType = ModContent.ProjectileType<AegisBorrowedLazharLaser>();
             int laserDamage = Math.Max(1, (int)(Projectile.damage * 0.42f));
+            Vector2 mousePosition = AegisBlade.GetMouseWorld(Owner);
 
             for (int i = 0; i < TrackingSoulBurstCount; i++)
             {
-                Vector2 shootDirection = Main.rand.NextFloat(MathHelper.TwoPi).ToRotationVector2();
+                Vector2 spawnDirection = Main.rand.NextFloat(MathHelper.TwoPi).ToRotationVector2();
+                Vector2 spawnPosition = mousePosition + spawnDirection * Main.rand.NextFloat(10f * 16f, 15f * 16f);
+                Vector2 shootDirection = spawnPosition.DirectionTo(mousePosition)
+                    .SafeNormalize(Vector2.UnitX * Owner.direction);
                 Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
-                    Owner.MountedCenter + shootDirection * 44f * scale,
+                    spawnPosition,
                     shootDirection * TrackingSoulSpeed,
                     laserType,
                     laserDamage,
@@ -265,7 +296,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 int targetIndex = FindOrbitalTargetIndex();
                 Vector2 destination = targetIndex >= 0
                     ? Main.npc[targetIndex].Center + Main.rand.NextVector2Circular(42f, 34f)
-                    : Owner.Center + Main.rand.NextVector2Circular(900f, 520f);
+                    : AegisBlade.GetMouseWorld(Owner);
 
                 Vector2 spawnPosition = new(
                     destination.X,

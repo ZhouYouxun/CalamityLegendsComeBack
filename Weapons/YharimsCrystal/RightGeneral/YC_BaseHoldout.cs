@@ -45,8 +45,19 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
 
         public override void AI()
         {
-            if (!Owner.active || Owner.dead || Owner.noItems || Owner.CCed || Owner.HeldItem.type != ModContent.ItemType<NewLegendYharimsCrystal>())
+            if (!Owner.active || Owner.dead || Owner.noItems || Owner.CCed)
             {
+                Projectile.Kill();
+                return;
+            }
+
+            if (Owner.HeldItem.type != ModContent.ItemType<NewLegendYharimsCrystal>())
+            {
+                if (Owner.heldProj == Projectile.whoAmI)
+                    Owner.heldProj = -1;
+
+                Owner.itemTime = 0;
+                Owner.itemAnimation = 0;
                 Projectile.Kill();
                 return;
             }

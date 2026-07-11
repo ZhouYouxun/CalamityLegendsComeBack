@@ -36,10 +36,13 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
     }
 
     // COSMIC MINE — Twisting Mine Grid node; pull-lines connect adjacent mines, self-detonates after 5s.
+    // Mines take 20 frames to materialize (growing in, harmless) so the grid never spawns on top of the player armed.
     public class CosmicMineProj : ModProjectile
     {
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
         private const int Lifetime = 300; // 5s
+        private const int ArmTime = 20;
+        public override bool? CanDamage() => Projectile.localAI[0] >= ArmTime ? null : (bool?)false;
 
         public override void SetDefaults()
         {
@@ -51,7 +54,16 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
         public override void AI()
         {
+            Projectile.localAI[0]++;
             Projectile.rotation += 0.05f;
+            Projectile.scale = MathHelper.Clamp(Projectile.localAI[0] / ArmTime, 0f, 1f);
+            if (Projectile.localAI[0] < ArmTime && Main.rand.NextBool(2))
+            {
+                // Materialization: void-dust condensing onto the node
+                Vector2 around = Projectile.Center + Main.rand.NextVector2CircularEdge(40f, 40f);
+                Dust dIn = Dust.NewDustPerfect(around, DustID.PurpleTorch, (Projectile.Center - around) * 0.1f, 100, default, 1f);
+                dIn.fadeIn = 1.1f; dIn.noGravity = true;
+            }
             if (Main.rand.NextBool(3))
             {
                 Dust d = Dust.NewDustPerfect(Projectile.Center, DustID.PurpleTorch, Vector2.Zero, 100, default, 0.9f);
@@ -69,43 +81,71 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         {
             Vector2 pos = Projectile.Center - Main.screenPosition;
             Texture2D pixel = TextureAssets.MagicPixel.Value;
-            float flicker = 0.6f + 0.4f * MathF.Sin(Projectile.timeLeft * 0.3f);
+            // Flicker accelerates in the last second — the detonation counts itself down
+            float flickerRate = Projectile.timeLeft < 60 ? 0.7f : 0.3f;
+            float flicker = 0.6f + 0.4f * MathF.Sin(Projectile.timeLeft * flickerRate);
             Color c = Color.Lerp(new Color(255, 60, 60), new Color(160, 60, 220), flicker);
-            Main.spriteBatch.Draw(pixel, pos, new Rectangle(0, 0, 1, 1), c, Projectile.rotation, new Vector2(0.5f), new Vector2(18f, 18f), SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(pixel, pos, new Rectangle(0, 0, 1, 1), c, Projectile.rotation, new Vector2(0.5f), new Vector2(18f, 18f) * Projectile.scale, SpriteEffects.None, 0f);
             return false;
         }
     }
 
-    // COSMIC KUNAI — knives hold in a fan, then turn 90 degrees and stab from behind.
+    // COSMIC KUNAI — 设计文档"两翼直角回切": 直线掠过玩家身侧 (ai[0]=飞行帧数) -> 空中冻结0.4秒
+    // (自旋+光晕胀大, 冻结本身就是直角刺的预警) -> 直角变轨, 化为射线急速刺回玩家.
+    // 五段行为: 掷出/直飞/冻结/瞄准闪光/刺入 — 只有刺入段有伤害判定.
     public class SignusKunaiProj : ModProjectile
     {
         public override string Texture => "CalamityMod/Items/Weapons/Rogue/CosmicKunai";
-        public override bool? CanDamage() => Projectile.localAI[1] >= 1f ? null : (bool?)false;
+        public override bool? CanDamage() => Projectile.localAI[1] >= 2f ? null : (bool?)false;
+
+        private const int FreezeTime = 24; // 0.4s hang, per design doc
 
         public override void SetDefaults()
         {
             Projectile.width = 20; Projectile.height = 20;
             Projectile.hostile = true; Projectile.friendly = false;
-            Projectile.penetrate = 1; Projectile.timeLeft = 200;
+            Projectile.penetrate = 1; Projectile.timeLeft = 220;
             Projectile.tileCollide = false; Projectile.ignoreWater = true;
         }
 
         public override void AI()
         {
             Projectile.localAI[0]++;
+            float flightFrames = Projectile.ai[0] > 0f ? Projectile.ai[0] : 24f;
+
             if (Projectile.localAI[1] == 0f)
             {
-                Projectile.velocity *= 0.92f;
-                if (Projectile.localAI[0] >= 24f)
+                // Straight flight past the player's flank
+                if (Projectile.localAI[0] >= flightFrames)
                 {
                     Projectile.localAI[1] = 1f;
-                    Player target = Main.player[Player.FindClosest(Projectile.Center, 1, 1)];
-                    Vector2 dir = target.active ? (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY) : Vector2.UnitY;
-                    Projectile.velocity = dir * 20f;
-                    SoundEngine.PlaySound(SoundID.Item18 with { Volume = 0.4f }, Projectile.Center);
+                    Projectile.localAI[0] = 0f;
                 }
             }
-            Projectile.rotation = Projectile.localAI[1] >= 1f ? Projectile.velocity.ToRotation() : Projectile.rotation + 0.15f;
+            else if (Projectile.localAI[1] == 1f)
+            {
+                // Freeze: whip to a stop midair, spin, glow flare — the right-angle stab telegraphs itself
+                Projectile.velocity *= 0.78f;
+                if (Main.rand.NextBool(2))
+                {
+                    Dust d = Dust.NewDustPerfect(Projectile.Center + Main.rand.NextVector2Circular(14f, 14f), DustID.PurpleTorch, Vector2.Zero, 100, default, 1f);
+                    d.fadeIn = 1.2f; d.noGravity = true;
+                }
+                if (Projectile.localAI[0] >= FreezeTime)
+                {
+                    Projectile.localAI[1] = 2f;
+                    Player target = Main.player[Player.FindClosest(Projectile.Center, 1, 1)];
+                    Vector2 dir = target.active ? (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY) : Vector2.UnitY;
+                    Projectile.velocity = dir * 24f;
+                    SoundEngine.PlaySound(SoundID.Item18 with { Volume = 0.4f }, Projectile.Center);
+                    for (int i = 0; i < 6; i++)
+                    {
+                        Dust d = Dust.NewDustPerfect(Projectile.Center, DustID.PurpleTorch, dir.RotatedBy(Main.rand.NextFloat(-0.5f, 0.5f)) * Main.rand.NextFloat(2f, 5f), 100, new Color(220, 160, 255), 1.25f);
+                        d.noGravity = true;
+                    }
+                }
+            }
+            Projectile.rotation = Projectile.localAI[1] >= 2f ? Projectile.velocity.ToRotation() : Projectile.rotation + 0.15f;
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -113,26 +153,44 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             Texture2D tex = ModContent.Request<Texture2D>(Texture).Value;
             Vector2 origin = tex.Size() * 0.5f;
             Vector2 pos = Projectile.Center - Main.screenPosition;
-            SignusFx.DrawBackglow(Main.spriteBatch, tex, pos, null, Projectile.rotation, origin, 1f, new Color(160, 60, 220));
+            // The glow swells through the freeze so the stab moment is readable at a glance
+            float glowScale = 1f;
+            if (Projectile.localAI[1] == 1f)
+                glowScale = 1f + 0.5f * (Projectile.localAI[0] / FreezeTime);
+            SignusFx.DrawBackglow(Main.spriteBatch, tex, pos, null, Projectile.rotation, origin, glowScale, new Color(160, 60, 220));
             Main.spriteBatch.Draw(tex, pos, null, Color.White, Projectile.rotation, origin, 1f, SpriteEffects.None, 0f);
             return false;
         }
     }
 
     // COSMILAMP — a hovering lantern fires a rotating cross-beam.
+    // ai[0] = spin direction (+1 clockwise / -1 counter-clockwise, variant B reverses).
+    // First 30 frames are a thin warning line with no hitbox; the beams then flash to full power.
     public class CosmilampLanternProj : ModProjectile
     {
         public override string Texture => "CalamityMod/Items/Weapons/Summon/Cosmilamp";
+        private const int TelegraphTime = 30;
+        public override bool? CanDamage() => Projectile.localAI[0] >= TelegraphTime ? null : (bool?)false;
 
         public override void SetDefaults()
         {
             Projectile.width = 26; Projectile.height = 26;
             Projectile.hostile = true; Projectile.friendly = false;
-            Projectile.penetrate = -1; Projectile.timeLeft = 130;
+            Projectile.penetrate = -1; Projectile.timeLeft = TelegraphTime + 130;
             Projectile.tileCollide = false; Projectile.ignoreWater = true;
         }
 
-        public override void AI() { Projectile.rotation += 0.015f; }
+        public override void AI()
+        {
+            Projectile.localAI[0]++;
+            float spinDir = Projectile.ai[0] >= 0f ? 1f : -1f;
+            Projectile.rotation += 0.015f * spinDir;
+            if (Projectile.localAI[0] == TelegraphTime)
+            {
+                SoundEngine.PlaySound(SoundID.Item72 with { Volume = 0.5f, Pitch = 0.3f }, Projectile.Center);
+                SignusFx.Burst(Projectile.Center, 3.5f, 10);
+            }
+        }
 
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
         {
@@ -151,8 +209,15 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             Vector2 origin = tex.Size() * 0.5f;
             Vector2 pos = Projectile.Center - Main.screenPosition;
             Texture2D pixel = TextureAssets.MagicPixel.Value;
-            Main.spriteBatch.Draw(pixel, pos, new Rectangle(0, 0, 1, 1), new Color(160, 60, 220) * 0.6f, Projectile.rotation, new Vector2(0.5f), new Vector2(1800f, 12f), SpriteEffects.None, 0f);
-            Main.spriteBatch.Draw(pixel, pos, new Rectangle(0, 0, 1, 1), new Color(160, 60, 220) * 0.6f, Projectile.rotation + MathHelper.PiOver2, new Vector2(0.5f), new Vector2(1800f, 12f), SpriteEffects.None, 0f);
+
+            // Warning: thin dim lines growing toward full width; armed: bright full beams
+            float t = MathHelper.Clamp(Projectile.localAI[0] / TelegraphTime, 0f, 1f);
+            bool armed = Projectile.localAI[0] >= TelegraphTime;
+            float beamWidth = armed ? 12f : MathHelper.Lerp(1.5f, 5f, t);
+            Color beamColor = armed ? new Color(160, 60, 220) * 0.6f : Color.Lerp(new Color(90, 30, 140), new Color(200, 120, 255), t) * 0.45f;
+
+            Main.spriteBatch.Draw(pixel, pos, new Rectangle(0, 0, 1, 1), beamColor, Projectile.rotation, new Vector2(0.5f), new Vector2(1800f, beamWidth), SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(pixel, pos, new Rectangle(0, 0, 1, 1), beamColor, Projectile.rotation + MathHelper.PiOver2, new Vector2(0.5f), new Vector2(1800f, beamWidth), SpriteEffects.None, 0f);
             SignusFx.DrawBackglow(Main.spriteBatch, tex, pos, null, 0f, origin, 1f, new Color(160, 60, 220));
             Main.spriteBatch.Draw(tex, pos, null, Color.White, 0f, origin, 1f, SpriteEffects.None, 0f);
             return false;
@@ -404,7 +469,8 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         }
     }
 
-    // NADIR — a singularity beneath the player spits rotating gear-blades upward.
+    // NADIR — a singularity spits rotating gear-blades. ai[0] = 0: erupts upward from below the player
+    // (rises, hangs, keeps drifting up); ai[0] = 1: rains down from above (variant B), accelerating with gravity.
     public class NadirGearProj : ModProjectile
     {
         public override string Texture => "CalamityMod/Items/Weapons/Melee/Nadir";
@@ -420,7 +486,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         public override void AI()
         {
             Projectile.rotation += 0.25f;
-            Projectile.velocity.Y -= 0.05f;
+            Projectile.velocity.Y += Projectile.ai[0] >= 1f ? 0.14f : -0.05f;
             if (Main.rand.NextBool(2))
             {
                 Dust d = Dust.NewDustPerfect(Projectile.Center, DustID.PurpleTorch, -Projectile.velocity * 0.05f, 100, default, 1f);

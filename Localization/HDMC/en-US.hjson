@@ -1,0 +1,35 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		NPCs.HDMCSovereign.DisplayName: Hyperdimensional Matrix Sovereign
+
+		Items: {
+			HDMCUncompiledCore: {
+				DisplayName: Uncompiled Matrix Core
+				Tooltip:
+					'''
+					[c/7EB8FF:Summons the Hyperdimensional Matrix Sovereign]
+					[c/AA88FF:Five compilation phases — each unlocks a new pool of attack modules]
+					[c/FF3030:At critical health it will execute one final compilation]
+					[c/787888:"Show me your computational power, three-dimensional organism."]
+					'''
+			}
+		}
+
+		Projectiles: {
+			HDMCLanceHostile.DisplayName: Hostile Data Lance
+			HDMCShardHostile.DisplayName: Hostile Geometry Shard
+			HDMCLaserHostile.DisplayName: Hostile Data Laser
+			HDMCFusionBlastHostile.DisplayName: Hostile Fusion Blast
+			HDMCRingWaveHostile.DisplayName: Data Ring Shockwave
+			HDMCGridPanelHostile.DisplayName: Hostile Data Panel
+			HDMCGeoBurstHostile.DisplayName: Hostile Geometry Burst
+			HDMCHeptagramHostile.DisplayName: Heptagram Seal
+			HDMCFractalTreeHostile.DisplayName: Fractal Spike Tree
+			HDMCPenroseHostile.DisplayName: Penrose Meteor Crystal
+			HDMCVoronoiHostile.DisplayName: Voronoi Prison
+			HDMCSierpinskiHostile.DisplayName: Sierpinski Collapse Array
+			HDMCLorenzHostile.DisplayName: Lorenz Turbulence
+			HDMCSingularityHostile.DisplayName: Data Singularity
+		}
+	}
+}

@@ -50,7 +50,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
         };
 
         private const float HoldoutForwardOffset = 64f;
-        private const float HoldoutVerticalOffset = 9f;
+        private const float HoldoutVerticalOffset = 1f;
 
         private float shotAccumulator;
         private int consecutiveShots;
