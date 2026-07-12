@@ -50,7 +50,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 
         public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
         {
-            orbitIndex = Projectile.ai[2] >= 0f ? (int)Projectile.ai[2] : Projectile.identity % ReleaseCap;
+            // ai[2] stores the monotonically increasing spawn order.  Keep only its
+            // slot for the visual orbit, while the full value is used by the owner to
+            // release the oldest souls first.
+            orbitIndex = Projectile.ai[2] >= 0f ? (int)Projectile.ai[2] % ReleaseCap : Projectile.identity % ReleaseCap;
 
             if (State == 1f)
             {
@@ -111,6 +114,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 
             if (Main.npc.IndexInRange(targetIndex) && Main.npc[targetIndex].active)
                 targeted = Main.npc[targetIndex];
+
+            // An orbiting soul has usually been damped almost to a halt.  Give it an
+            // immediate outward velocity when it is released, otherwise it can look
+            // as if it stayed in the orbit until the homing code catches up.
+            Player owner = Main.player[Projectile.owner];
+            Vector2 destination = targeted?.Center ?? owner.Calamity().mouseWorld;
+            Vector2 direction = (destination - Projectile.Center).SafeNormalize(
+                (Projectile.Center - owner.Center).SafeNormalize(Vector2.UnitX));
+            Projectile.velocity = direction * 10f;
 
             Projectile.netUpdate = true;
         }
@@ -226,7 +238,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
-            modifiers.SourceDamage *= launched ? 1f : 0.3f;
+            // Orbiting souls retain their charge damage; released souls are primarily
+            // a visual/utility follow-up and should only deal 17% damage.
+            modifiers.SourceDamage *= launched ? 0.17f : 0.3f;
 
             Player owner = Main.player[Projectile.owner];
             Vector2 launchVelocity = (owner.Center - target.Center).SafeNormalize(Vector2.UnitY) * -10f * (launched ? 0.5f : 1f);

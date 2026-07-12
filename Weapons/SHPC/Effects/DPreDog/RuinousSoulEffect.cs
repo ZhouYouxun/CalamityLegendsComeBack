@@ -340,7 +340,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
             int ghostsToRelease = orbitGhosts.Count + RuinousSoul_OrbitGhost.SpawnBatchSize - RuinousSoul_OrbitGhost.ReleaseCap;
             if (ghostsToRelease > 0)
             {
-                orbitGhosts.Sort((a, b) => a.localAI[0].CompareTo(b.localAI[0]));
+                // localAI is not synchronized.  Using it here made the release order
+                // undefined outside of the owner client, so a full orbit could keep
+                // selecting the wrong ghosts. ai[2] is the synchronized spawn order.
+                orbitGhosts.Sort((a, b) => a.ai[2].CompareTo(b.ai[2]));
 
                 int targetIndex = FindReleaseTarget(projectile);
                 for (int i = 0; i < ghostsToRelease && i < orbitGhosts.Count; i++)
@@ -358,7 +361,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                 float spawnAngle = MathHelper.TwoPi * orbitSlot / RuinousSoul_OrbitGhost.ReleaseCap;
                 Vector2 spawnOffset = new Vector2(0f, -30f).RotatedBy(spawnAngle);
 
-                int ghostIndex = Projectile.NewProjectile(
+                Projectile.NewProjectile(
                     projectile.GetSource_FromThis(),
                     owner.Center + spawnOffset,
                     Vector2.Zero,
@@ -368,10 +371,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
                     projectile.owner,
                     0f,
                     -1f,
-                    orbitSlot);
-
-                if (Main.projectile.IndexInRange(ghostIndex))
-                    Main.projectile[ghostIndex].localAI[0] = orbitOrder;
+                    orbitOrder);
             }
         }
 
