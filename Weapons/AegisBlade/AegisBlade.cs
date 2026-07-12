@@ -131,7 +131,8 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
 
         private bool TryThrowBarrierCombo(Player player, AegisBladePlayer bp)
         {
-            if (!Main.mouseLeft || !player.Calamity().mouseRight || !Main.mouseRightRelease ||
+            if (bp.BarrierThrowCooldown > 0 ||
+                !Main.mouseLeft || !player.Calamity().mouseRight || !Main.mouseRightRelease ||
                 Main.mapFullscreen || Main.blockMouse || player.mouseInterface)
             {
                 return false;
@@ -149,6 +150,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
                 player.whoAmI);
 
             bp.BarrierThrowComboActive = true;
+            bp.BarrierThrowCooldown = BalanceAegisBlade.BarrierThrowCooldown;
             Main.mouseRightRelease = false;
             SoundEngine.PlaySound(SoundID.Item74 with { Volume = 1f, Pitch = -0.35f }, player.Center);
             return true;

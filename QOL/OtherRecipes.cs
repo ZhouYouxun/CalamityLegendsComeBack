@@ -103,6 +103,56 @@ namespace CalamityLegendsComeBack.QOL
 
                 RegisterReaperWeaponRecipe(calamity, "SoulEdge");
                 RegisterReaperWeaponRecipe(calamity, "DeepSeaDumbbell");
+
+                // 阴影商人饰品：均为开局可收集材料的稳定获取途径。
+                if (calamity.TryFind<ModItem>("LuxorsGift", out ModItem luxorsGift) &&
+                    calamity.TryFind<ModItem>("UnstableGraniteCore", out ModItem unstableGraniteCore) &&
+                    calamity.TryFind<ModItem>("GladiatorsLocket", out ModItem gladiatorsLocket) &&
+                    calamity.TryFind<ModItem>("TrinketofChi", out ModItem trinketOfChi))
+                {
+                    Recipe.Create(luxorsGift.Type)
+                        .AddIngredient(ItemID.Sandstone, 25)
+                        .AddIngredient(ItemID.DesertFossil, 5)
+                        .AddIngredient(ItemID.Amber)
+                        .AddTile(TileID.WorkBenches)
+                        .Register();
+
+                    Recipe.Create(unstableGraniteCore.Type)
+                        .AddIngredient(ItemID.Granite, 25)
+                        .AddIngredient(ItemID.Topaz, 5)
+                        .AddIngredient(ItemID.FallenStar, 3)
+                        .AddTile(TileID.WorkBenches)
+                        .Register();
+
+                    Recipe.Create(gladiatorsLocket.Type)
+                        .AddIngredient(ItemID.Shackle)
+                        .AddRecipeGroup(RecipeGroupID.IronBar, 5)
+                        .AddIngredient(ItemID.Chain, 10)
+                        .AddTile(TileID.Anvils)
+                        .Register();
+
+                    Recipe.Create(trinketOfChi.Type)
+                        .AddIngredient(ItemID.BambooBlock, 10)
+                        .AddIngredient(ItemID.Daybloom, 3)
+                        .AddIngredient(ItemID.BottledWater)
+                        .AddTile(TileID.WorkBenches)
+                        .Register();
+                }
+
+                // 甲壳与巨壳为等效饰品，允许玩家无成本互相转换。
+                if (calamity.TryFind<ModItem>("CrawCarapace", out ModItem crawCarapace) &&
+                    calamity.TryFind<ModItem>("GiantShell", out ModItem giantShell))
+                {
+                    Recipe.Create(crawCarapace.Type)
+                        .AddIngredient(giantShell.Type)
+                        .AddTile(TileID.WorkBenches)
+                        .Register();
+
+                    Recipe.Create(giantShell.Type)
+                        .AddIngredient(crawCarapace.Type)
+                        .AddTile(TileID.WorkBenches)
+                        .Register();
+                }
             }
         }
 

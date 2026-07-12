@@ -40,8 +40,19 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
         public override void AI()
         {
+            Projectile.localAI[0]++;
             Projectile.rotation  = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
-            Projectile.velocity += Vector2.UnitY * 0.04f;
+            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            float weave = (float)Math.Sin(Projectile.localAI[0] * 0.24f + Projectile.ai[0] * 2.5f) * 0.11f;
+            Projectile.velocity += direction.RotatedBy(MathHelper.PiOver2) * weave;
+
+            if (Projectile.localAI[0] < 20f)
+                Projectile.velocity += Vector2.UnitY * 0.04f;
+            else if (FindTarget() is NPC target)
+            {
+                Vector2 desiredVelocity = (target.Center - Projectile.Center).SafeNormalize(direction) * Math.Max(13f, Projectile.velocity.Length());
+                Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, 0.045f);
+            }
 
             Lighting.AddLight(Projectile.Center, SeasSearingPalette.ToxicGreen.ToVector3() * 0.44f);
 
@@ -115,6 +126,25 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                     ModContent.ProjectileType<SeasSearingFalloutCloud>(),
                     Math.Max(1, Projectile.damage / 2), 0f, Projectile.owner, 8f);
             }
+        }
+
+        private NPC FindTarget()
+        {
+            NPC best = null;
+            float bestDistance = 760f * 760f;
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (!npc.CanBeChasedBy())
+                    continue;
+
+                float distance = Vector2.DistanceSquared(Projectile.Center, npc.Center);
+                if (distance < bestDistance)
+                {
+                    bestDistance = distance;
+                    best = npc;
+                }
+            }
+            return best;
         }
     }
 }

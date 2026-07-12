@@ -134,12 +134,17 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 npc.netUpdate = true;
             }
 
-            // Stun from stellar-core overload
+            // Stun from stellar-core overload — the god-worm sheds star-motes while dazed
             if (npc.localAI[3] > 0f)
             {
                 npc.localAI[3]--;
                 npc.velocity *= 0.85f;
                 npc.rotation = npc.velocity.ToRotation() + MathHelper.PiOver2;
+                if (Main.rand.NextBool(2))
+                {
+                    Dust d = Dust.NewDustPerfect(npc.Center + Main.rand.NextVector2Circular(50f, 50f), DustID.PurpleTorch, new Vector2(Main.rand.NextFloat(-1f, 1f), Main.rand.NextFloat(1f, 2.5f)), 100, default, 1.2f);
+                    d.noGravity = true;
+                }
                 return false;
             }
 
@@ -150,8 +155,21 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 float baseSpeed = IsP1(state) ? 14f : 20f;
                 float speed = baseSpeed + (1f - lifeRatio) * 6f;
                 float turnSpeed = 0.05f + (1f - lifeRatio) * 0.03f;
-                Vector2 desiredVel = SafeNormalize(target.Center - npc.Center, Vector2.Zero) * speed;
-                npc.velocity = Vector2.Lerp(npc.velocity, desiredVel, turnSpeed);
+
+                // 星神游龙的分寸感: 贴近后咬定直线掠过(34帧不转向), 平时以正弦蜿蜒追踪 — 神龙划过星空,
+                // 不做像素级黏着. carve窗口就是玩家的侧移机会.
+                if (npc.localAI[2] > 0f)
+                {
+                    npc.localAI[2]--;
+                    npc.velocity = Vector2.Lerp(npc.velocity, npc.velocity.SafeNormalize(Vector2.UnitX) * speed, 0.05f);
+                }
+                else
+                {
+                    Vector2 pursueDir = SafeNormalize(target.Center - npc.Center, Vector2.Zero).RotatedBy((float)Math.Sin(Main.GameUpdateCount * 0.05f) * 0.3f);
+                    npc.velocity = Vector2.Lerp(npc.velocity, pursueDir * speed, turnSpeed);
+                    if (Vector2.Distance(npc.Center, target.Center) < 200f)
+                        npc.localAI[2] = 34f;
+                }
                 npc.rotation = npc.velocity.ToRotation() + MathHelper.PiOver2;
             }
 

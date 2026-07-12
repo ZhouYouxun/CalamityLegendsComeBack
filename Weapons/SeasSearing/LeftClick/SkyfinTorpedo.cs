@@ -22,6 +22,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         private static readonly int TrailLength = 12;
 
         private float Speed => Math.Clamp(Projectile.velocity.Length(), MinSpeed, MaxSpeed);
+        private float LaunchCurve => Projectile.ai[0];
 
         public override void SetStaticDefaults()
         {
@@ -47,11 +48,13 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         public override void AI()
         {
             Projectile.rotation = Projectile.velocity.ToRotation();
+            Projectile.localAI[0]++;
 
             NPC target = FindTarget();
             if (target != null)
             {
-                Vector2 toTarget  = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY);
+                float curve = LaunchCurve * MathHelper.Lerp(0.26f, 0f, Utils.GetLerpValue(0f, 52f, Projectile.localAI[0], true));
+                Vector2 toTarget  = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY).RotatedBy(curve);
                 Projectile.velocity = Vector2.Lerp(
                     Projectile.velocity.SafeNormalize(Vector2.UnitY),
                     toTarget,
@@ -59,7 +62,8 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             }
             else
             {
-                Projectile.velocity += Vector2.UnitY * 0.1f;
+                Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+                Projectile.velocity += Vector2.UnitY * 0.1f + direction.RotatedBy(MathHelper.PiOver2) * LaunchCurve * 0.05f;
             }
 
             Lighting.AddLight(Projectile.Center, SeasSearingPalette.BiohazardLime.ToVector3() * 0.42f);

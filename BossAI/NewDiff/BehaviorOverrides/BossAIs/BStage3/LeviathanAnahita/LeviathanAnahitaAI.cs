@@ -279,10 +279,19 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
             if (shieldStunTimer > 0)
             {
+                // Shield shattered: the leviathan wallows, venting brine — the punish window is visible
                 shieldStunTimer--;
                 npc.defense = 0;
+                if (Main.rand.NextBool(2))
+                {
+                    Dust d = Dust.NewDustPerfect(npc.Center + Main.rand.NextVector2Circular(110f, 70f), DustID.DungeonWater, new Vector2(Main.rand.NextFloat(-1f, 1f), Main.rand.NextFloat(1f, 3f)), 120, default, 1.4f);
+                    d.noGravity = true;
+                }
                 if (shieldStunTimer == 0)
+                {
                     shieldRegenTimer = 900; // 15s regen (design doc)
+                    SoundEngine.PlaySound(SoundID.Zombie92 with { Volume = 0.6f }, npc.Center);
+                }
             }
             else if (shieldRegenTimer > 0)
             {

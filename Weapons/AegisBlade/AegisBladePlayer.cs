@@ -35,6 +35,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
         // ── 挥剑状态（由 AegisSwingHoldout 写入） ────────────────────────
         public bool IsSwinging = false;
         public bool BarrierThrowComboActive = false;
+        public int BarrierThrowCooldown = 0;
 
         // ── 终结技状态 ────────────────────────────────────────────────────
         public bool UltimateActive = false;
@@ -105,6 +106,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
             if (PerfectParryDefenseTimer > 0) PerfectParryDefenseTimer--;
             if (tenacityImmunityTimer  > 0) tenacityImmunityTimer--;
             if (tenacityCooldown       > 0) tenacityCooldown--;
+            if (BarrierThrowCooldown   > 0) BarrierThrowCooldown--;
 
             UpdateEnergy();
             UpdateUltimate();

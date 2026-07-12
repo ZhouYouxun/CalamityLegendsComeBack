@@ -98,6 +98,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
         public const int   WallDurationBoss = 10 * 60;   // BOSS战10秒
         public const int   WallRiseTime     = 24;        // 土墙升起帧数
         public const int   WallSpreadPixels = 100;       // 墙距下插点的水平距离
+        public const int   BarrierThrowCooldown = 60;    // 左键期间右键投掷掩体的冷却（1秒）
 
         // ── 能量系统 ──────────────────────────────────────────────────────
         public const float EnergyMax                      = 100f;

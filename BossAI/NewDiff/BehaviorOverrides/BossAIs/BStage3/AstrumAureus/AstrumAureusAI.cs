@@ -248,6 +248,24 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             gravityCycleTimer++;
             int highDuration = currentPhase <= 1 ? 300 : 120;
             int lowDuration = currentPhase <= 1 ? 180 : 120;
+            int activeDuration = superGravity ? highDuration : lowDuration;
+
+            // Ongoing mode indicator: faint astral motes drift the way gravity currently pulls the player
+            if (Main.rand.NextBool(4))
+            {
+                Vector2 driftDir = superGravity ? Vector2.UnitY : -Vector2.UnitY;
+                Dust d = Dust.NewDustPerfect(target.Center + Main.rand.NextVector2Circular(70f, 70f), DustID.PurpleTorch, driftDir * Main.rand.NextFloat(1.5f, 3f), 160, default, 0.85f);
+                d.noGravity = true;
+            }
+
+            // Pre-flip warning: 40 frames out, gold motes stream the way gravity is ABOUT to pull — the flip announces itself
+            if (gravityCycleTimer > activeDuration - 40 && Main.rand.NextBool(2))
+            {
+                Vector2 nextDir = superGravity ? -Vector2.UnitY : Vector2.UnitY;
+                Dust warn = Dust.NewDustPerfect(target.Center + Main.rand.NextVector2Circular(90f, 90f), DustID.GoldFlame, nextDir * Main.rand.NextFloat(2f, 4f), 100, default, 1.2f);
+                warn.noGravity = true;
+                warn.fadeIn = 1.1f;
+            }
 
             if (superGravity)
             {

@@ -14,9 +14,6 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
     {
         private static readonly Color CoreColor  = new(170, 255, 238);
         private static readonly Color TrailColor = new(26, 128, 190);
-        private const int HiddenVisualFrames = 5;
-        private int visualFrameAge;
-
         // ai[0] = burst index (0-based, which shot in the current burst)
         // ai[1] = left-click stage at fire time
         private int BurstIndex => (int)Projectile.ai[0];
@@ -49,10 +46,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
         public override void AI()
         {
-            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
-
-            if (Projectile.numUpdates == 0)
-                visualFrameAge++;
+            Projectile.rotation = Projectile.velocity.ToRotation();
 
             if (Projectile.localAI[0] == 0f)
             {
@@ -181,9 +175,6 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
         public override bool PreDraw(ref Color lightColor)
         {
-            if (visualFrameAge < HiddenVisualFrames)
-                return false;
-
             Texture2D texture    = TextureAssets.Projectile[Type].Value;
             Texture2D bloom      = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Vector2   origin     = texture.Size() * 0.5f;
@@ -207,7 +198,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 color.A = 0;
 
                 Main.EntitySpriteDraw(bloom, drawPosition, null, color * 0.72f, 0f, bloomOrigin, new Vector2(0.12f, 0.038f) * Projectile.scale, SpriteEffects.None, 0);
-                Main.EntitySpriteDraw(texture, drawPosition, null, color, Projectile.oldRot[i], origin, Projectile.scale * MathHelper.Lerp(0.72f, 1f, completion), SpriteEffects.None, 0);
+                Main.EntitySpriteDraw(texture, drawPosition, null, color, 0f, origin, Projectile.scale * MathHelper.Lerp(0.72f, 1f, completion), SpriteEffects.None, 0);
             }
 
             Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition, null,
@@ -216,13 +207,13 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             Color outline = (Color.Lerp(headColor, SeasSearingPalette.ToxicGreen, 0.35f) with { A = 0 }) * (0.42f * boost);
             for (int i = 0; i < 8; i++)
             {
-                Vector2 offset = (MathHelper.TwoPi * i / 8f).ToRotationVector2() * (1.5f + 0.6f * boost);
+                Vector2 offset = (MathHelper.TwoPi * i / 8f).ToRotationVector2() * (2f + 0.8f * boost);
                 Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition + offset, null,
-                    outline, Projectile.rotation, origin, Projectile.scale * 1.05f, SpriteEffects.None, 0);
+                    outline, 0f, origin, Projectile.scale * 1.08f, SpriteEffects.None, 0);
             }
 
             Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null,
-                Color.White, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0);
+                Color.White, 0f, origin, Projectile.scale, SpriteEffects.None, 0);
             return false;
         }
 

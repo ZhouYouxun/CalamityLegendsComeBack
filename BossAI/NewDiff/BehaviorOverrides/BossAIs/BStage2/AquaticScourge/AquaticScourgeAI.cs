@@ -88,6 +88,10 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         private int pustuleRespawnTimer = 0;
 
         private int tideTimer = 0;
+        private int ticksRunning = 0;
+
+        // 穿过式咬合: while > 0 the head keeps its line and refuses to re-track — the dodge window.
+        private int carvePassTimer = 0;
         #endregion
 
         #region Core AI Hooks
@@ -104,6 +108,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 return false;
             }
 
+            ticksRunning++;
             if (npc.ai[0] == 0f)
                 SpawnWormChain(npc);
 
@@ -130,8 +135,11 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
             if (pustuleStunTimer > 0)
             {
+                // 破疮虚脱: the serpent thrashes weakly, venting bubbles in rhythm
                 pustuleStunTimer--;
                 npc.velocity *= 0.85f;
+                if (ticksRunning % 20 == 0)
+                    ScourgeFx.Burst(npc.Center, 2.5f, 6, DustID.ToxicBubble);
             }
             else if (state != AttackState.Transition)
             {
@@ -139,8 +147,21 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 float baseSpeed = IsP1(state) ? 13f : 19f;
                 float speed = (baseSpeed + (1f - lifeRatio) * 5f) * speedPenalty;
                 float turnSpeed = (0.045f + (1f - lifeRatio) * 0.02f) * speedPenalty;
-                Vector2 desiredVel = SafeNormalize(target.Center - npc.Center, Vector2.Zero) * speed;
-                npc.velocity = Vector2.Lerp(npc.velocity, desiredVel, turnSpeed);
+
+                // 蠕虫的分寸感: 贴近后咬定直线动量穿过玩家(36帧不再转向) — 蛇是掠过的, 不是像素级黏着的.
+                if (carvePassTimer > 0)
+                {
+                    carvePassTimer--;
+                    npc.velocity = Vector2.Lerp(npc.velocity, npc.velocity.SafeNormalize(Vector2.UnitX) * speed, 0.05f);
+                }
+                else
+                {
+                    // Slither: the pursuit direction weaves sinusoidally, so the body draws living S-curves
+                    Vector2 pursueDir = SafeNormalize(target.Center - npc.Center, Vector2.Zero).RotatedBy(MathF.Sin(ticksRunning * 0.045f) * 0.32f);
+                    npc.velocity = Vector2.Lerp(npc.velocity, pursueDir * speed, turnSpeed);
+                    if (Vector2.Distance(npc.Center, target.Center) < 190f)
+                        carvePassTimer = 36;
+                }
             }
             npc.rotation = npc.velocity.SafeNormalize(Vector2.UnitY).ToRotation() + MathHelper.PiOver2;
 
@@ -281,9 +302,16 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         private void UpdateSulphurTide(NPC npc, Player target)
         {
             tideTimer++;
+            // Pre-tide churn: the water froths for a second before the wall rises, so the tide never ambushes
+            if (tideTimer >= 420 && tideTimer < 480 && Main.rand.NextBool(2))
+            {
+                Dust d = Dust.NewDustPerfect(target.Center + new Vector2(Main.rand.NextFloat(-500f, 500f), Main.rand.NextFloat(200f, 320f)), DustID.ToxicBubble, -Vector2.UnitY * Main.rand.NextFloat(1f, 3f), 120, default, 1.2f);
+                d.noGravity = true;
+            }
             if (tideTimer >= 480) // 8s cycle
             {
                 tideTimer = 0;
+                SoundEngine.PlaySound(SoundID.Item21 with { Volume = 0.6f, Pitch = -0.4f }, target.Center);
                 if (Main.netMode != NetmodeID.MultiplayerClient)
                 {
                     float sign = Main.rand.NextBool() ? 1f : -1f;

@@ -29,7 +29,6 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         private const int LockedToRuptureFrames = 90;
         private const int VentCooldownFrames    = 80;
         private const int AbyssalRuptureFrames  = 130;
-        private const int RapidFireInterval     = 10;
 
         private const float HoldoutDistance = 44f;
 
@@ -46,10 +45,10 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         private int burstShotsRemaining;
         private int burstShotTimer;
         private int burstLockoutTimer;
-        private int rapidFireTimer;
         private int torpedoPendingTimer;
         private int cachedBurstStage;
         private int cachedBurstTotal;
+        private int companionPatternIndex;
         private int releaseSpraysRemaining;
         private int releaseSprayTimer;
 
@@ -137,7 +136,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 if (torpedoPendingTimer == 0)
                 {
                     int st = cachedBurstStage;
-                    if (st == 3 || st == 4)
+                    if (st >= 3)
                         FirePostBurstWeapons(st);
                 }
             }
@@ -269,18 +268,6 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 return;
             }
 
-            if (rightState == RightState.AbyssalRupture)
-            {
-                if (leftHeld && burstLockoutTimer <= 0)
-                {
-                    rapidFireTimer++;
-                    if (rapidFireTimer >= RapidFireInterval) { rapidFireTimer = 0; FireTorrentShot(); }
-                }
-                else
-                    rapidFireTimer = 0;
-                return;
-            }
-
             bool enhanced   = rightState == RightState.VentCooldown;
             int  stage      = SS_Balance.GetLeftClickStage();
             int  burstCount = enhanced ? VentBurstCount : SS_Balance.GetBurstCount(stage);
@@ -322,20 +309,10 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             else
                 FirePollutionRound(index, stage);
 
-            // Stage 5: per-shot torpedoes; last shot fires missile instead
-            if (stage == 5 && !enhanced)
-            {
-                bool isLastShot = burstShotsRemaining == 1;
-                if (isLastShot)
-                    FireMissile();
-                else
-                    FireSkyfinTorpedo();
-            }
-
             burstShotsRemaining--;
             burstShotTimer = burstShotsRemaining > 0 ? BurstShotSpacing : 0;
 
-            if (burstShotsRemaining == 0 && (stage == 3 || stage == 4))
+            if (burstShotsRemaining == 0 && stage >= 3 && !enhanced)
                 torpedoPendingTimer = TorpedoDelay;
         }
 
@@ -350,7 +327,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 return;
 
             // 无子弹或火枪弹 → 使用标准辐射弹幕
-            float   speed = 24f + Math.Clamp(stage, 0, 5) * 2f;
+            float   speed = (24f + Math.Clamp(stage, 0, 5) * 2f) * SS_Balance.PollutionRoundSpeedMultiplier;
             Vector2 dir   = AimDirection;
             Vector2 vel   = dir.RotatedByRandom(MathHelper.ToRadians(0.65f + burstIndex * 0.22f)) * speed;
 
@@ -399,7 +376,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             int stage = SS_Balance.GetLeftClickStage();
             Vector2 dir = AimDirection;
             Vector2 perpendicular = dir.RotatedBy(MathHelper.PiOver2);
-            float speed = 24f + Math.Clamp(stage, 0, 5) * 2f;
+            float speed = (24f + Math.Clamp(stage, 0, 5) * 2f) * SS_Balance.PollutionRoundSpeedMultiplier;
             float arc = MathHelper.ToRadians(9.5f);
             float centerBias = sprayIndex == 0 ? -0.35f : 0.35f;
 
@@ -579,26 +556,6 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             return best;
         }
 
-        private void FireTorrentShot()
-        {
-            Vector2 dir = AimDirection;
-            Vector2 vel = dir.RotatedByRandom(MathHelper.ToRadians(1.2f)) * 32f;
-            int damage  = (int)(Projectile.damage * 0.82f);
-
-            int idx = Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(),
-                GunTipPosition + dir * 8f, vel,
-                ModContent.ProjectileType<SeasSearingTorrentShot>(),
-                damage, Projectile.knockBack * 0.5f, Projectile.owner);
-
-            if (Main.projectile.IndexInRange(idx))
-                Main.projectile[idx].CritChance = Owner.GetWeaponCrit(Owner.HeldItem);
-
-            ApplyRecoil(3.5f); TriggerMuzzleFlash(7);
-            SpawnMuzzleBurst(dir, 0, SeasSearingPalette.WarningOrange);
-            SoundEngine.PlaySound(SoundID.Item11 with { Volume = 0.52f, Pitch = 0.18f, PitchVariance = 0.07f, MaxInstances = 8 }, GunTipPosition);
-        }
-
         private void FirePressureBolt(bool strong)
         {
             Vector2 dir   = AimDirection;
@@ -639,11 +596,76 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             }
         }
 
-        // Fired after last burst shot in stage 3-4 (delayed by TorpedoPendingTimer)
+        // Fired after a completed left-click burst. Companion combinations rotate to avoid a fixed script.
         private void FirePostBurstWeapons(int stage)
         {
-            FireSkyfinTorpedo();
-            FirePollutionRocket();
+            int pattern = companionPatternIndex++ % 4;
+            switch (stage)
+            {
+                case 3:
+                    FireSingleCompanion(pattern % 3);
+                    break;
+
+                case 4:
+                    FireStageFourCompanions(pattern % 3);
+                    break;
+
+                default:
+                    FireStageFiveCompanions(pattern);
+                    break;
+            }
+        }
+
+        private void FireSingleCompanion(int pattern)
+        {
+            switch (pattern)
+            {
+                case 0: FireSkyfinTorpedo(); break;
+                case 1: FirePollutionRocket(); break;
+                default: FirePressureDepthCharge(); break;
+            }
+        }
+
+        private void FireStageFourCompanions(int pattern)
+        {
+            switch (pattern)
+            {
+                case 0:
+                    FireSkyfinTorpedo();
+                    FirePollutionRocket();
+                    break;
+                case 1:
+                    FireSkyfinTorpedo();
+                    FirePressureDepthCharge();
+                    break;
+                default:
+                    FirePollutionRocket();
+                    FirePressureDepthCharge();
+                    break;
+            }
+        }
+
+        private void FireStageFiveCompanions(int pattern)
+        {
+            switch (pattern)
+            {
+                case 0:
+                    FireMissile();
+                    FireSkyfinTorpedo();
+                    break;
+                case 1:
+                    FireMissile();
+                    FirePressureDepthCharge();
+                    break;
+                case 2:
+                    FireSkyfinTorpedo();
+                    FirePollutionRocket();
+                    break;
+                default:
+                    FirePollutionRocket();
+                    FirePressureDepthCharge();
+                    break;
+            }
         }
 
         private void FireSkyfinTorpedo()
@@ -655,7 +677,8 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 Projectile.GetSource_FromThis(),
                 GunTipPosition + dir * 16f, vel,
                 ModContent.ProjectileType<SkyfinTorpedo>(),
-                Projectile.damage, Projectile.knockBack * 0.6f, Projectile.owner);
+                Projectile.damage, Projectile.knockBack * 0.6f, Projectile.owner,
+                Main.rand.NextFloat(-1f, 1f));
 
             TriggerMuzzleFlash(10);
             SpawnMuzzleBurst(dir, 0, SeasSearingPalette.BiohazardLime);
@@ -671,7 +694,25 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 Projectile.GetSource_FromThis(),
                 GunTipPosition + AimDirection * 16f, vel,
                 ModContent.ProjectileType<SeasSearingPollutionRocket>(),
-                (int)(Projectile.damage * 0.85f), Projectile.knockBack * 0.5f, Projectile.owner);
+                (int)(Projectile.damage * 0.85f), Projectile.knockBack * 0.5f, Projectile.owner,
+                Main.rand.NextFloat(-1f, 1f));
+        }
+
+        private void FirePressureDepthCharge()
+        {
+            Vector2 dir = AimDirection.RotatedByRandom(MathHelper.ToRadians(6f));
+            int damage = Math.Max(1, (int)(Projectile.damage * 1.15f));
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                GunTipPosition + dir * 14f, dir * Main.rand.NextFloat(14f, 17f),
+                ModContent.ProjectileType<SeasSearingPressureDepthCharge>(),
+                damage, Projectile.knockBack * 0.65f, Projectile.owner,
+                Main.rand.NextFloat(-1f, 1f));
+
+            TriggerMuzzleFlash(12);
+            ApplyRecoil(7f);
+            SpawnMuzzleBurst(dir, 1, SeasSearingPalette.PressureBlue);
+            SoundEngine.PlaySound(SoundID.Item92 with { Volume = 0.54f, Pitch = -0.46f, PitchVariance = 0.08f }, GunTipPosition);
         }
 
         private void FireMissile()

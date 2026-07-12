@@ -38,6 +38,9 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         public static int GetInitialBaseDamage() =>
             RuntimeBalanceData.GetSourceIntArray(SourceFile, nameof(DefaultBaseDamage), DefaultBaseDamage)[0];
 
+        // 火枪弹被转换为污染弹后的初始速度倍率；只在生成时应用，不会逐帧减速。
+        public const float PollutionRoundSpeedMultiplier = 0.8f;
+
         public static int GetCompletedStageIndex()
         {
             bool[] clearedStages =

@@ -16,18 +16,18 @@ Mods: {
 					LeftClick_Stage3:
 						'''
 						[c/9AEAFF:左键：三连点射。每次命中叠加污染并散布污染气泡。]
-						[c/58FFDA:射击结束后：发射一枚天鳍鱼雷 + 污染火箭弹。]
+						[c/58FFDA:射击结束后：轮换部署一枚伴随弹——天鳍鱼雷、污染火箭弹或压力深水雷。]
 						'''
 					LeftClick_Stage4:
 						'''
 						[c/9AEAFF:左键：四连点射。每次命中散布污染气泡。]
-						[c/58FFDA:射击结束后：发射一枚天鳍鱼雷 + 污染火箭弹。]
+						[c/58FFDA:射击结束后：从天鳍鱼雷、污染火箭弹与压力深水雷中轮换部署两枚。]
 						[c/FF8A30:最后一颗子弹命中触发核爆，造成 2× 弹药伤害，拥有独立无敌帧。]
 						'''
 					LeftClick_Stage5:
 						'''
-						[c/9AEAFF:左键：四连点射。每发子弹同时发射一枚天鳍鱼雷。]
-						[c/FF8A30:第 4 枚鱼雷升级为追踪导弹：2× 伤害，200×200 爆炸，并释放尖刺弹幕。]
+						[c/9AEAFF:左键：四连点射。每轮射击结束后部署两枚轮换伴随弹。]
+						[c/FF8A30:组合会在天鳍鱼雷、污染火箭弹、压力深水雷与追踪导弹之间轮换。]
 						[c/FF8A30:最后一颗子弹命中触发核爆。]
 						'''
 					LeftClick_ReconSoul: "[c/7DFFE8:每发子弹还会释放一枚 +/-1 度偏移的侦查灵魂弹，自动锁定附近敌人。]"
@@ -35,7 +35,7 @@ Mods: {
 						'''
 						[c/58FFDA:右键·三段压力协议：蓄力→松开=压力炮弹(击中生成追踪卫星气泡)；]
 						[c/58FFDA:继续蓄力锁定→松开=强化炮弹+80帧增强连射窗口；]
-						[c/58FFDA:蓄力至极限→深渊裂变：三道海渊喷柱引爆全场污染，左键变为快速酸液连射模式持续2秒。]
+						[c/58FFDA:蓄力至极限→深渊裂变：三道海渊喷柱引爆全场污染，随后双管喷射；松开右键后立刻恢复正常左键连发。]
 						'''
 					Passive: "[c/4CD268:手持：释放深渊水压领域，迟滞附近敌人并缓慢播撒污染。]"
 					Ultimate: "[c/FF8A30:大招（空对地核导弹）：按下] [[c/FF8A30:{0}]] [c/FF8A30:进行一秒蓄力；充能完成后左键标定目标，引导深海热核打击。核爆会让幸存者获得巨量污染。]"
@@ -76,6 +76,7 @@ Mods: {
 				SkyfinTorpedoExplosion.DisplayName: 天鳍鱼雷爆炸
 				SeasSearingPollutionBubble.DisplayName: 深渊污染气泡
 				SeasSearingPollutionRocket.DisplayName: 深渊污染火箭弹
+				SeasSearingPressureDepthCharge.DisplayName: 深渊压力深水雷
 				SeasSearingMissile.DisplayName: 深渊追踪导弹
 				SeasSearingReconSoul.DisplayName: 深渊侦查灵魂弹
 				SeasSearingMissileExplosion.DisplayName: 深渊导弹引爆

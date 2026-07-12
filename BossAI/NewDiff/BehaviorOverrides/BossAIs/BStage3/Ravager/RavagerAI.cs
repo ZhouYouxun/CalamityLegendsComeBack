@@ -285,8 +285,16 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             {
                 totemSlowTimer = 240; // 4s action delay (design doc)
                 RavagerFx.Burst(totemCenter, 6f, 24);
+                SoundEngine.PlaySound(SoundID.NPCDeath12 with { Volume = 0.8f, Pitch = -0.4f }, totemCenter);
             }
             wasTotemAlive = totemAlive;
+
+            // Staggered: rusted smoke coughs off the frame while the machine reboots
+            if (totemSlowTimer > 0 && Main.rand.NextBool(2))
+            {
+                Dust smoke = Dust.NewDustPerfect(npc.Center + Main.rand.NextVector2Circular(100f, 80f), DustID.Smoke, new Vector2(Main.rand.NextFloat(-0.5f, 0.5f), -Main.rand.NextFloat(1f, 2.5f)), 130, default, 1.5f);
+                smoke.noGravity = true;
+            }
 
             if (!totemAlive)
             {
@@ -309,7 +317,23 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             }
             else
             {
+                // The totem's 700px leash ring must be visible: crimson motes trace the circle,
+                // denser on the side the player is drifting toward
+                for (int i = 0; i < 2; i++)
+                {
+                    float a = Main.rand.NextFloat(MathHelper.TwoPi);
+                    Dust ring = Dust.NewDustPerfect(totemCenter + a.ToRotationVector2() * 700f, DustID.CrimsonTorch, Vector2.Zero, 160, default, 1.05f);
+                    ring.noGravity = true;
+                    ring.fadeIn = 1f;
+                }
                 Vector2 dist = target.Center - totemCenter;
+                if (dist.Length() > 560f && Main.rand.NextBool(2))
+                {
+                    Vector2 edge = totemCenter + dist.SafeNormalize(Vector2.UnitX) * 700f;
+                    Dust warn = Dust.NewDustPerfect(edge + Main.rand.NextVector2Circular(60f, 60f), DustID.CrimsonTorch, Vector2.Zero, 100, default, 1.35f);
+                    warn.fadeIn = 1.2f;
+                    warn.noGravity = true;
+                }
                 if (dist.Length() > 700f)
                 {
                     target.AddBuff(BuffID.Poisoned, 180);

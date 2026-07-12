@@ -126,8 +126,21 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 float baseSpeed = IsP1(state) ? 14f : 22f;
                 float speed = baseSpeed + (1f - lifeRatio) * 6f;
                 float turnSpeed = 0.045f + (1f - lifeRatio) * 0.03f;
-                Vector2 desiredVel = SafeNormalize(target.Center - npc.Center, Vector2.Zero) * speed;
-                npc.velocity = Vector2.Lerp(npc.velocity, desiredVel, turnSpeed);
+
+                // 风暴编织者的分寸感: 贴近后咬定直线掠过(34帧不转向), 平时以正弦蜿蜒编行 —
+                // 它在风里织弧线, 不做像素级黏着. 掠过窗口就是玩家的侧移机会.
+                if (npc.localAI[2] > 0f)
+                {
+                    npc.localAI[2]--;
+                    npc.velocity = Vector2.Lerp(npc.velocity, npc.velocity.SafeNormalize(Vector2.UnitX) * speed, 0.05f);
+                }
+                else
+                {
+                    Vector2 pursueDir = SafeNormalize(target.Center - npc.Center, Vector2.Zero).RotatedBy((float)Math.Sin(Main.GameUpdateCount * 0.05f) * 0.3f);
+                    npc.velocity = Vector2.Lerp(npc.velocity, pursueDir * speed, turnSpeed);
+                    if (Vector2.Distance(npc.Center, target.Center) < 200f)
+                        npc.localAI[2] = 34f;
+                }
                 npc.rotation = npc.velocity.ToRotation() + MathHelper.PiOver2;
             }
 
@@ -258,16 +271,36 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             float abLen = ab.Length();
             if (abLen <= 0f) return;
 
+            // The head-tail arc is a live wire — it must be SEEN. Electric motes crackle along its length,
+            // denser near the player so the threat reads exactly where it matters.
+            for (int i = 0; i < 3; i++)
+            {
+                float lerp = Main.rand.NextFloat();
+                Vector2 onLine = Vector2.Lerp(npc.Center, tail.Center, lerp);
+                Dust d = Dust.NewDustPerfect(onLine + Main.rand.NextVector2Circular(8f, 8f), DustID.Electric, Main.rand.NextVector2Circular(1.2f, 1.2f), 120, default, Main.rand.NextFloat(0.7f, 1.1f));
+                d.noGravity = true;
+            }
+
             float proj = Vector2.Dot(ac, ab) / abLen;
             proj = Math.Clamp(proj, 0f, abLen);
             Vector2 closest = npc.Center + SafeNormalize(ab, Vector2.Zero) * proj;
-            if (Vector2.Distance(target.Center, closest) < 24f)
+            float playerDist = Vector2.Distance(target.Center, closest);
+
+            if (playerDist < 130f && Main.rand.NextBool(2))
+            {
+                // Proximity warning: the wire arcs toward whatever comes close
+                Dust warn = Dust.NewDustPerfect(closest, DustID.Electric, SafeNormalize(target.Center - closest, Vector2.Zero) * Main.rand.NextFloat(1f, 3f), 100, default, 1.3f);
+                warn.noGravity = true;
+            }
+
+            if (playerDist < 24f)
             {
                 target.AddBuff(BuffID.Electrified, 120);
                 target.velocity *= 0.92f;
                 if (teslaHurtCooldown <= 0)
                 {
                     teslaHurtCooldown = 30;
+                    SoundEngine.PlaySound(SoundID.Item94 with { Volume = 0.5f }, closest);
                     target.Hurt(Terraria.DataStructures.PlayerDeathReason.ByNPC(npc.whoAmI), 18, 0);
                 }
             }

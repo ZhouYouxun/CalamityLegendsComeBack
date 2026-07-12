@@ -134,6 +134,24 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             float borderSize = currentPhase == 1 ? 1300f : 900f;
             if (arenaHurtCooldown > 0) arenaHurtCooldown--;
             Vector2 dist = target.Center - npc.Center;
+
+            // The void boundary must be visible: dark motes trace the square edge
+            {
+                float half = borderSize / 2f;
+                for (int i = 0; i < 3; i++)
+                {
+                    float t = Main.rand.NextFloat(4f);
+                    Vector2 pos;
+                    if (t < 1f) pos = npc.Center + new Vector2(MathHelper.Lerp(-half, half, t), -half);
+                    else if (t < 2f) pos = npc.Center + new Vector2(half, MathHelper.Lerp(-half, half, t - 1f));
+                    else if (t < 3f) pos = npc.Center + new Vector2(MathHelper.Lerp(half, -half, t - 2f), half);
+                    else pos = npc.Center + new Vector2(-half, MathHelper.Lerp(half, -half, t - 3f));
+                    Dust d = Dust.NewDustPerfect(pos, DustID.PurpleTorch, Vector2.Zero, 160, default, 1.05f);
+                    d.noGravity = true;
+                    d.fadeIn = 1f;
+                }
+            }
+
             if (Math.Abs(dist.X) > borderSize / 2f || Math.Abs(dist.Y) > borderSize / 2f)
             {
                 target.AddBuff(BuffID.Darkness, 180);
@@ -153,12 +171,26 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
             if (stunTimer > 0)
             {
+                // Orbiters all shattered: the void core sputters, leaking dark matter
                 stunTimer--;
                 npc.velocity *= 0.85f;
+                npc.damage = 0;
+                if (Main.rand.NextBool(2))
+                {
+                    Dust d = Dust.NewDustPerfect(npc.Center + Main.rand.NextVector2Circular(60f, 60f), DustID.PurpleTorch, new Vector2(Main.rand.NextFloat(-1f, 1f), Main.rand.NextFloat(1f, 2.5f)), 100, default, 1.3f);
+                    d.noGravity = true;
+                }
+                if (stunTimer == 0)
+                {
+                    SoundEngine.PlaySound(SoundID.Item103 with { Volume = 0.8f, Pitch = -0.3f }, npc.Center);
+                    VoidFx.Burst(npc.Center, 6f, 24);
+                }
             }
             else if (state != AttackState.Transition)
             {
-                Vector2 desiredPos = target.Center + new Vector2((float)Math.Cos(ticksRunning * 0.02f) * 200f, -150f);
+                npc.damage = npc.defDamage;
+                // The Void keeps its distance — a higher, wider standoff arc instead of camping the player's head
+                Vector2 desiredPos = target.Center + new Vector2((float)Math.Cos(ticksRunning * 0.02f) * 280f, -230f);
                 Vector2 desiredVel = (desiredPos - npc.Center) * 0.03f;
                 npc.velocity = Vector2.Lerp(npc.velocity, desiredVel, 0.1f);
             }
@@ -204,15 +236,46 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 Vector2 pullDir = SafeNormalize(npc.Center - target.Center, Vector2.Zero);
                 float dist = Vector2.Distance(npc.Center, target.Center);
                 target.velocity += pullDir * (60000f / (dist * dist + 1000f));
+
+                // The siphon must be SEEN: void-dust streams from around the player toward the maw
+                if (Main.rand.NextBool(2))
+                {
+                    Vector2 around = target.Center + Main.rand.NextVector2CircularEdge(120f, 120f);
+                    Dust d = Dust.NewDustPerfect(around, DustID.PurpleTorch, pullDir * Main.rand.NextFloat(2f, 5f), 120, default, 1.1f);
+                    d.noGravity = true;
+                }
+                // Final second of the siphon: warning ring tightens — the stasis is coming
+                if (timer > siphonEnd - 60 && Main.rand.NextBool(2))
+                {
+                    float a = Main.rand.NextFloat(MathHelper.TwoPi);
+                    Dust warn = Dust.NewDustPerfect(target.Center + a.ToRotationVector2() * MathHelper.Lerp(90f, 40f, (timer - (siphonEnd - 60)) / 60f), DustID.ShadowbeamStaff, Vector2.Zero, 100, default, 1.2f);
+                    warn.noGravity = true;
+                }
             }
             else if (timer < holdEnd)
             {
                 target.velocity = Vector2.Zero;
+
+                // Stasis shell: a visible cage of void-light holds the player — the freeze has a CAUSE
+                if (timer == siphonEnd)
+                    SoundEngine.PlaySound(SoundID.Item103 with { Volume = 0.7f, Pitch = -0.5f }, target.Center);
+                for (int i = 0; i < 2; i++)
+                {
+                    float a = ticksRunning * 0.2f + i * MathHelper.Pi;
+                    Dust d = Dust.NewDustPerfect(target.Center + a.ToRotationVector2() * 46f, DustID.ShadowbeamStaff, Vector2.Zero, 100, default, 1.3f);
+                    d.noGravity = true;
+                }
             }
             else
             {
                 Vector2 pushDir = SafeNormalize(target.Center - npc.Center, Vector2.Zero);
                 target.velocity += pushDir * 8f;
+                // Expulsion wake trailing the thrown player
+                if (Main.rand.NextBool(2))
+                {
+                    Dust d = Dust.NewDustPerfect(target.Center - pushDir * 30f, DustID.PurpleTorch, pushDir * 3f, 120, default, 1.15f);
+                    d.noGravity = true;
+                }
 
                 if (timer == holdEnd && Main.netMode != NetmodeID.MultiplayerClient)
                 {

@@ -90,6 +90,15 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             int headSlot = EquipLoader.GetEquipSlot(Mod, "AzureThunderHarmonyHead", EquipType.Head);
             if (headSlot >= 0)
                 ArmorIDs.Head.Sets.DrawHead[headSlot] = false;
+
+            // 这套临时外观甲必须完全覆盖玩家自身皮肤；否则在飞行等特殊腿帧中会露出原始身体或脚部。
+            int bodySlot = EquipLoader.GetEquipSlot(Mod, "AzureThunderHarmonyBody", EquipType.Body);
+            if (bodySlot >= 0)
+                ArmorIDs.Body.Sets.HidesTopSkin[bodySlot] = true;
+
+            int legsSlot = EquipLoader.GetEquipSlot(Mod, "AzureThunderHarmonyLegs", EquipType.Legs);
+            if (legsSlot >= 0)
+                ArmorIDs.Legs.Sets.HidesBottomSkin[legsSlot] = true;
         }
 
         public override void Unload()

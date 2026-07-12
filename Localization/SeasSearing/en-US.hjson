@@ -16,18 +16,18 @@ Mods: {
 					LeftClick_Stage3:
 						'''
 						[c/9AEAFF:Left Click: 3-round burst. Each hit applies Pollution and scatters Pollution Bubbles.]
-						[c/58FFDA:After the burst: fires a Skyfin Torpedo + Pollution Rocket.]
+						[c/58FFDA:After the burst: deploys one rotating companion — Skyfin Torpedo, Pollution Rocket, or Pressure Depth Charge.]
 						'''
 					LeftClick_Stage4:
 						'''
 						[c/9AEAFF:Left Click: 4-round burst. Each hit scatters Pollution Bubbles.]
-						[c/58FFDA:After the burst: fires a Skyfin Torpedo + Pollution Rocket.]
+						[c/58FFDA:After the burst: deploys a rotating pair of Skyfin Torpedoes, Pollution Rockets, and Pressure Depth Charges.]
 						[c/FF8A30:Last bullet in burst triggers a Nukesplosion, dealing 2× bullet damage with independent iframes.]
 						'''
 					LeftClick_Stage5:
 						'''
-						[c/9AEAFF:Left Click: 4-round burst. Each shot simultaneously launches a Skyfin Torpedo.]
-						[c/FF8A30:The 4th torpedo is replaced by a Seeking Missile — 2× damage, 200×200 explosion, and spike barrage.]
+						[c/9AEAFF:Left Click: 4-round burst. Each burst deploys a rotating pair of companion ordnance.]
+						[c/FF8A30:The pair cycles between Skyfin Torpedoes, Pollution Rockets, Pressure Depth Charges, and Seeking Missiles.]
 						[c/FF8A30:Last bullet in burst triggers a Nukesplosion.]
 						'''
 					LeftClick_ReconSoul: "[c/7DFFE8:Each bullet also releases a +/-1 degree reconnaissance soul that locks onto nearby enemies.]"
@@ -35,7 +35,7 @@ Mods: {
 						'''
 						[c/58FFDA:Right Click · 3-stage Pressure Protocol: Hold to Charge → release for a Pressure Bolt that spawns homing satellites.]
 						[c/58FFDA:Hold longer to Lock → release for a powerful bolt + 80-frame enhanced bursts.]
-						[c/58FFDA:Hold to maximum to trigger Abyssal Rupture: 3 geysers detonate all pollution; left-click becomes rapid-fire acid torrent for 2+ seconds.]
+						[c/58FFDA:Hold to maximum to trigger Abyssal Rupture: 3 geysers detonate all pollution, followed by a double spray; normal left-click bursts resume immediately.]
 						'''
 					Passive: "[c/4CD268:Held: emits an abyssal pressure field that slows nearby enemies and slowly seeds pollution.]"
 					Ultimate: "[c/FF8A30:Ultimate (Air-to-Ground Nuclear Missile): Press] [[c/FF8A30:{0}]] [c/FF8A30: to charge for one second, then left-click to designate a target for a deep-sea thermonuclear strike. The blast heavily pollutes survivors.]"
@@ -76,6 +76,7 @@ Mods: {
 				SkyfinTorpedoExplosion.DisplayName: Skyfin Torpedo Explosion
 				SeasSearingPollutionBubble.DisplayName: Abyssal Pollution Bubble
 				SeasSearingPollutionRocket.DisplayName: Abyssal Pollution Rocket
+				SeasSearingPressureDepthCharge.DisplayName: Abyssal Pressure Depth Charge
 				SeasSearingMissile.DisplayName: Abyssal Seeking Missile
 				SeasSearingReconSoul.DisplayName: Abyssal Recon Soul
 				SeasSearingMissileExplosion.DisplayName: Abyssal Missile Detonation
