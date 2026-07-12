@@ -8,8 +8,7 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.SeasSearing
 {
-    // Stage 5 only: replaces the 4th SkyfinTorpedo with a more spectacular missile.
-    // 2× torpedo damage, tighter tracking, 200×200 explosion.
+    // Stage-5 paired missile: fast, strongly homing, with a 200x200 detonation.
     internal sealed class SeasSearingMissile : ModProjectile
     {
         public override string Texture => "Terraria/Images/Projectile_134";

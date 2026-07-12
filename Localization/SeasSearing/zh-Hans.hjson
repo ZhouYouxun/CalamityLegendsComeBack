@@ -56,6 +56,7 @@ Mods: {
 			SeasSearing: {
 				SeasSearingHoldout.DisplayName: 海之烧灼手持弹幕
 				SeasSearingPollutionRound.DisplayName: 深渊污染弹
+				SeasSearingPollutionJuice.DisplayName: 荧光污染汁液
 				SeasSearingResonancePulse.DisplayName: 深海共振脉冲
 				SeasSearingDetonationBlast.DisplayName: 污染崩坏
 				SeasSearingFalloutCloud.DisplayName: 深渊污染云

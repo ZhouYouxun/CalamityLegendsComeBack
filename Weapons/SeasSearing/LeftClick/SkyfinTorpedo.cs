@@ -8,16 +8,15 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.SeasSearing
 {
-    // Homing air-torpedo spawned post-burst (stages 3-4) or per-shot (stage 5).
-    // In stage 5 the 4th shot spawns SeasSearingMissile instead of this.
+    // Slow, weakly-homing air torpedo fired by the post-burst companion system.
     internal sealed class SkyfinTorpedo : ModProjectile
     {
         public override string Texture => "CalamityMod/Items/Weapons/Rogue/SkyfinBombers";
 
-        private const float HomingRange  = 850f;
-        private const float TurnFactor   = 0.15f;
-        private const float MaxSpeed     = 24f;
-        private const float MinSpeed     = 11f;
+        private const float HomingRange  = 700f;
+        private const float TurnFactor   = 0.045f;
+        private const float MaxSpeed     = 16f;
+        private const float MinSpeed     = 8.5f;
 
         private static readonly int TrailLength = 12;
 
@@ -58,7 +57,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 Projectile.velocity = Vector2.Lerp(
                     Projectile.velocity.SafeNormalize(Vector2.UnitY),
                     toTarget,
-                    TurnFactor).SafeNormalize(Vector2.UnitY) * (Speed + 0.35f);
+                    TurnFactor).SafeNormalize(Vector2.UnitY) * (Speed + 0.12f);
             }
             else
             {
@@ -91,6 +90,16 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
             if (Main.myPlayer == Projectile.owner)
             {
+                SeasSearingPollutionJuice.SpawnRadial(
+                    Projectile.GetSource_OnHit(target),
+                    Projectile.Center,
+                    Main.rand.Next(5, 11),
+                    5.5f,
+                    10.5f,
+                    Math.Max(1, (int)(Projectile.damage * 0.28f)),
+                    Projectile.knockBack * 0.2f,
+                    Projectile.owner);
+
                 Projectile.NewProjectile(
                     Projectile.GetSource_OnHit(target),
                     Projectile.Center, Vector2.Zero,

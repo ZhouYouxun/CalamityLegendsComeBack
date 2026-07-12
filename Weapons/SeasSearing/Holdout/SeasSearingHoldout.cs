@@ -304,10 +304,15 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
             int index = totalCount - burstShotsRemaining;
 
+            bool firedPollutionRound = false;
             if (enhanced)
                 FireVentShot(index);
             else
-                FirePollutionRound(index, stage);
+                firedPollutionRound = FirePollutionRound(index, stage);
+
+            // A full four-round burst vents accumulated waste after rounds two and four.
+            if (totalCount == 4 && firedPollutionRound && (index + 1) % 2 == 0)
+                FirePollutionJuiceSpray(index);
 
             burstShotsRemaining--;
             burstShotTimer = burstShotsRemaining > 0 ? BurstShotSpacing : 0;
@@ -320,11 +325,11 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         // PROJECTILE FIRE METHODS
         // ────────────────────────────────────────────────────────────────────
 
-        private void FirePollutionRound(int burstIndex, int stage)
+        private bool FirePollutionRound(int burstIndex, int stage)
         {
             // 检查是否持有特殊子弹（非火枪弹且非无子弹）
             if (TryFireWithSpecialAmmo(burstIndex, stage))
-                return;
+                return false;
 
             // 无子弹或火枪弹 → 使用标准辐射弹幕
             float   speed = (24f + Math.Clamp(stage, 0, 5) * 2f) * SS_Balance.PollutionRoundSpeedMultiplier;
@@ -350,6 +355,36 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             TriggerMuzzleFlash(8);
             SpawnMuzzleBurst(dir, burstIndex, Color.Lerp(SeasSearingPalette.RadioactiveCyan, SeasSearingPalette.ToxicGreen, 0.3f));
             SeasSearingVisualUtility.PlayDeepShot(GunTipPosition, burstIndex * 0.06f);
+            return true;
+        }
+
+        private void FirePollutionJuiceSpray(int burstIndex)
+        {
+            Vector2 direction = AimDirection;
+            int damage = Math.Max(1, (int)(Projectile.damage * 0.28f));
+
+            SeasSearingPollutionJuice.SpawnCone(
+                Projectile.GetSource_FromThis(),
+                GunTipPosition + direction * 10f,
+                direction,
+                Main.rand.Next(3, 6),
+                8f,
+                13f,
+                MathHelper.ToRadians(22f),
+                damage,
+                Projectile.knockBack * 0.25f,
+                Projectile.owner);
+
+            TriggerMuzzleFlash(10);
+            resonanceGlow = Math.Max(resonanceGlow, 0.75f);
+            SpawnMuzzleBurst(direction, burstIndex, SeasSearingPalette.BiohazardLime);
+            SoundEngine.PlaySound(SoundID.SplashWeak with
+            {
+                Volume = 0.42f,
+                Pitch = 0.28f,
+                PitchVariance = 0.12f,
+                MaxInstances = 5
+            }, GunTipPosition);
         }
 
         // Right-release double spray: same projectile family as a normal left-click round.
@@ -671,7 +706,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         private void FireSkyfinTorpedo()
         {
             Vector2 dir = AimDirection;
-            Vector2 vel = dir.RotatedByRandom(MathHelper.ToRadians(3f)) * 20f;
+            Vector2 vel = dir.RotatedByRandom(MathHelper.ToRadians(4f)) * 11.5f;
 
             Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
@@ -718,13 +753,20 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         private void FireMissile()
         {
             Vector2 dir = AimDirection;
-            Vector2 vel = dir.RotatedByRandom(MathHelper.ToRadians(2f)) * 23f;
+            Vector2 perpendicular = dir.RotatedBy(MathHelper.PiOver2);
 
-            Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(),
-                GunTipPosition + dir * 16f, vel,
-                ModContent.ProjectileType<SeasSearingMissile>(),
-                (int)(Projectile.damage * 2f), Projectile.knockBack, Projectile.owner);
+            for (int i = 0; i < 2; i++)
+            {
+                float side = i == 0 ? -1f : 1f;
+                Vector2 missileDirection = dir.RotatedBy(MathHelper.ToRadians(4.5f) * side);
+                Vector2 spawnPosition = GunTipPosition + dir * 16f + perpendicular * side * 5f;
+
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    spawnPosition, missileDirection * 23f,
+                    ModContent.ProjectileType<SeasSearingMissile>(),
+                    (int)(Projectile.damage * 2f), Projectile.knockBack, Projectile.owner);
+            }
 
             ApplyRecoil(12f); TriggerMuzzleFlash(18);
             SpawnMuzzleBurst(dir, 3, Color.Lerp(SeasSearingPalette.WarningOrange, SeasSearingPalette.BiohazardLime, 0.5f));

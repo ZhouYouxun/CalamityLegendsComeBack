@@ -56,6 +56,7 @@ Mods: {
 			SeasSearing: {
 				SeasSearingHoldout.DisplayName: Sea's Searing Holdout
 				SeasSearingPollutionRound.DisplayName: Abyssal Pollution Round
+				SeasSearingPollutionJuice.DisplayName: Fluorescent Pollution Sludge
 				SeasSearingResonancePulse.DisplayName: Abyssal Resonance Pulse
 				SeasSearingDetonationBlast.DisplayName: Pollution Collapse
 				SeasSearingFalloutCloud.DisplayName: Abyssal Fallout Cloud
