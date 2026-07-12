@@ -21,7 +21,6 @@
 
 [h1]需要前置[/h1]
 Calamity Mod
-VeluriyamLib
 
 [h1]反馈与建议[/h1]
 反馈、报错、平衡建议都欢迎。
@@ -57,7 +56,6 @@ ideally as if it belonged in this world from the start.
 
 [h1]Requirements[/h1]
 Calamity Mod
-VeluriyamLib
 
 [h1]Credits[/h1]
 Lead Creator: 犽戎
