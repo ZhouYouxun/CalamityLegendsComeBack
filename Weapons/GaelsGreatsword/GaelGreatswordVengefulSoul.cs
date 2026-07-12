@@ -52,8 +52,12 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
         public override void AI()
         {
             Projectile.ai[0]++;
-            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
+            // 贴图为水平朝向：与灾厄原版 RedirectingVengefulSoul 一致，
+            // 面朝速度方向，向左飞时旋转半圈并交由 DrawAfterimagesCentered 水平翻转。
             Projectile.spriteDirection = Projectile.velocity.X >= 0f ? 1 : -1;
+            Projectile.rotation = Projectile.velocity.ToRotation();
+            if (Projectile.spriteDirection == -1)
+                Projectile.rotation += MathHelper.Pi;
             Lighting.AddLight(Projectile.Center, 0.18f, 0.04f, 0.32f);
 
             if (Projectile.ai[0] > 14f)

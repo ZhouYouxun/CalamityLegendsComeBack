@@ -316,8 +316,9 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
                     break;
 
                 case 4:
+                    // ai1 是灾厄斩击的存活计时器，必须从 0 起跳；朝向完全由 ai0 的锁定角决定。
                     SpawnComboProjectile(ModContent.ProjectileType<GaelGreatswordCatastropheSlash>(),
-                        basePosition + aim * 58f, aim * 9.4f, 0.62f, 1.05f, aim.ToRotation(), Math.Sign(endAngle - startAngle));
+                        basePosition + aim * 58f, aim * 9.4f, 0.62f, 1.05f, aim.ToRotation(), 0f);
                     SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ExobladeBeamSlash") { Volume = 0.52f, Pitch = -0.18f }, basePosition);
                     break;
 

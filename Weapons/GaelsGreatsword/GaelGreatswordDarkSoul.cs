@@ -51,8 +51,18 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
         public override void AI()
         {
             Projectile.ai[1]++;
-            Projectile.rotation += (MathF.Abs(Projectile.velocity.X) + MathF.Abs(Projectile.velocity.Y)) * 0.018f * Math.Sign(Projectile.velocity.X == 0f ? 1f : Projectile.velocity.X);
-            Projectile.spriteDirection = Projectile.velocity.X >= 0f ? 1 : -1;
+            // 骷髅面朝飞行方向：与灾厄原版 GaelSkull 一致，向左飞时用反向角配合水平翻转，
+            // 避免累积自旋 + 镜像组合在变向瞬间产生贴图跳变。
+            if (Projectile.velocity.X < 0f)
+            {
+                Projectile.spriteDirection = -1;
+                Projectile.rotation = (-Projectile.velocity).ToRotation();
+            }
+            else
+            {
+                Projectile.spriteDirection = 1;
+                Projectile.rotation = Projectile.velocity.ToRotation();
+            }
             Lighting.AddLight(Projectile.Center, 0.22f, 0.04f, 0.32f);
 
             if (Projectile.ai[1] > 12f)
@@ -122,10 +132,14 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
             Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
             for (int i = 0; i < Projectile.oldPos.Length; i++)
             {
+                // TrailingMode 2 会记录 oldRot/oldSpriteDirection，残影用各自历史帧的朝向，
+                // 转向时尾迹才能贴合真实轨迹而不是整条一起扭头。
                 float completion = 1f - i / (float)Projectile.oldPos.Length;
                 Vector2 drawPosition = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
+                float afterimageRotation = Projectile.oldRot[i];
+                SpriteEffects afterimageEffects = Projectile.oldSpriteDirection[i] == -1 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
                 Main.EntitySpriteDraw(texture, drawPosition, frame, drawColor with { A = 0 } * completion * 0.35f,
-                    Projectile.rotation, origin, Projectile.scale * (0.75f + completion * 0.35f), effects);
+                    afterimageRotation, origin, Projectile.scale * (0.75f + completion * 0.35f), afterimageEffects);
             }
 
             Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition, null, drawColor with { A = 0 } * 0.42f,

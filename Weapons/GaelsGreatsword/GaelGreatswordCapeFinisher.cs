@@ -207,13 +207,31 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
             if (Main.dedServ)
                 return false;
 
-            Texture2D capeTexture = GetCapeTexture().Value;
+            (Asset<Texture2D> capeAsset, int capeVerticalFrames) = GetCapeTexture();
+            Texture2D capeTexture = capeAsset.Value;
+            // 装备动画表（如披风 40x1120 = 20 帧、翅膀 86x248 = 4 帧）只能取单帧绘制，
+            // 直接整张绘制会把整条动画长带画出来。取第 0 帧（站立姿态）。
+            Rectangle capeFrame = capeTexture.Frame(1, capeVerticalFrames, 0, 0);
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Vector2 center = Projectile.Center - Main.screenPosition + new Vector2(0f, Owner.gfxOffY);
-            Vector2 origin = capeTexture.Size() * 0.5f;
+            Vector2 origin = capeFrame.Size() * 0.5f;
+            // 依据实际帧尺寸把斗篷影像归一到约 110 像素长边，再叠加环形缩放，
+            // 无论候选贴图哪张命中，视觉体量都一致。
+            float normalizeScale = 110f / Math.Max(capeFrame.Width, capeFrame.Height);
             float fadeIn = Utils.GetLerpValue(0f, 18f, timer, true);
             float fadeOut = Utils.GetLerpValue(Duration, Duration - 24f, timer, true);
             float opacity = fadeIn * fadeOut;
+
+            // 普通混合层：披风剪影本体。披风贴图整体偏暗，纯加算混合下黑色像素
+            // 几乎不可见，先用常规混合铺出旋转的布面形体。
+            for (int i = 0; i < 6; i++)
+            {
+                float angle = spinRotation + MathHelper.TwoPi * i / 6f;
+                Vector2 offset = angle.ToRotationVector2() * 34f;
+                Color silhouette = Color.Lerp(i % 2 == 0 ? BloodRed : SoulPurple, Color.White, 0.22f);
+                Main.EntitySpriteDraw(capeTexture, center + offset, capeFrame, silhouette * opacity * 0.6f,
+                    angle + MathHelper.PiOver2, origin, normalizeScale * (1.25f + i * 0.035f), SpriteEffects.None);
+            }
 
             Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
             for (int i = 0; i < 6; i++)
@@ -221,8 +239,8 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
                 float angle = spinRotation + MathHelper.TwoPi * i / 6f;
                 Vector2 offset = angle.ToRotationVector2() * 34f;
                 Color color = i % 2 == 0 ? BloodRed : SoulPurple;
-                Main.EntitySpriteDraw(capeTexture, center + offset, null, color with { A = 0 } * opacity * 0.28f,
-                    angle + MathHelper.PiOver2, origin, 1.25f + i * 0.035f, SpriteEffects.None);
+                Main.EntitySpriteDraw(capeTexture, center + offset, capeFrame, color with { A = 0 } * opacity * 0.28f,
+                    angle + MathHelper.PiOver2, origin, normalizeScale * (1.25f + i * 0.035f), SpriteEffects.None);
             }
 
             Main.EntitySpriteDraw(bloom, center, null, SoulPurple with { A = 0 } * opacity * 0.46f,
@@ -231,24 +249,26 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
             return false;
         }
 
-        private static Asset<Texture2D> GetCapeTexture()
+        private static (Asset<Texture2D> Asset, int VerticalFrames) GetCapeTexture()
         {
-            string[] candidates =
+            // 候选贴图与其纵向帧数：装备表按 tML 玩家动画布局（40x1120 = 20 帧 56px），
+            // 翼类装备表为 4 帧，物品贴图与本模组剑图为单帧。
+            (string Path, int VerticalFrames)[] candidates =
             {
-                "CalamityMod/Items/Armor/Empyrean/EmpyreanCloak_Back",
-                "CalamityMod/Items/Accessories/SandCloak",
-                "CalamityMod/Items/Accessories/Wings/SilvaWings_Wings",
-                "CalamityMod/Items/Accessories/Wings/TarragonWings_Wings",
-                "CalamityLegendsComeBack/Weapons/GaelsGreatsword/NewLegendGaelsGreatsword",
+                ("CalamityMod/Items/Armor/Empyrean/EmpyreanCloak_Back", 20),
+                ("CalamityMod/Items/Accessories/SandCloak", 1),
+                ("CalamityMod/Items/Accessories/Wings/SilvaWings_Wings", 4),
+                ("CalamityMod/Items/Accessories/Wings/TarragonWings_Wings", 4),
+                ("CalamityLegendsComeBack/Weapons/GaelsGreatsword/NewLegendGaelsGreatsword", 1),
             };
 
-            foreach (string candidate in candidates)
+            foreach ((string path, int verticalFrames) in candidates)
             {
-                if (ModContent.RequestIfExists(candidate, out Asset<Texture2D> asset))
-                    return asset;
+                if (ModContent.RequestIfExists(path, out Asset<Texture2D> asset))
+                    return (asset, verticalFrames);
             }
 
-            return ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/GaelsGreatsword/NewLegendGaelsGreatsword");
+            return (ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/GaelsGreatsword/NewLegendGaelsGreatsword"), 1);
         }
     }
 }

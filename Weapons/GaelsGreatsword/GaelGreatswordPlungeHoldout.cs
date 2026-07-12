@@ -295,8 +295,10 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
             float opacity = Utils.GetLerpValue(0f, 6f, timer, true) * Utils.GetLerpValue(Duration, Duration - 8f, timer, true);
 
             Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
+            // VerticalSmearLarge 是弧顶朝上的拱形弧光（rotation=0 时弧顶指向 -PiOver2），
+            // 加 PiOver2 让弧顶对准剑尖坠落方向，作为下坠的破空前缘。
             Main.EntitySpriteDraw(smear, drawPosition, null, BloodRed with { A = 0 } * opacity * 0.78f,
-                drawRotation, smear.Size() * 0.5f, scale * 1.15f, SpriteEffects.None);
+                currentAngle + MathHelper.PiOver2, smear.Size() * 0.5f, scale * 1.15f, SpriteEffects.None);
             Vector2 tip = Owner.MountedCenter + currentAngle.ToRotationVector2() * BladeReach * scale - Main.screenPosition;
             Main.EntitySpriteDraw(bloom, tip, null, Color.White with { A = 0 } * opacity * 0.5f,
                 0f, bloom.Size() * 0.5f, scale * 0.56f, SpriteEffects.None);
