@@ -22,7 +22,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         private const int RightChargeMaxFrames = 120;
         private const int RightChargeCooldown = 42;
         private const float RightFireballSpeed = 15.5f;
-        private const float HoldoutDistance = 34f;
+        private const float HoldoutDistance = 34f; // 持枪前后距离：数值越小，枪越靠近玩家身体。
 
         // Debug 模式下的完整印记顺序（按难度顺序，包含 Idle 作为默认）。
         private static readonly PristineFuryMark[] TemporaryDebugMarkCycle =

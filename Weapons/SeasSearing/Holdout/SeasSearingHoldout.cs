@@ -30,7 +30,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         private const int VentCooldownFrames    = 80;
         private const int AbyssalRuptureFrames  = 130;
 
-        private const float HoldoutDistance = 44f;
+        private const float HoldoutDistance = 34f; // 持枪前后距离：数值越小，枪越靠近玩家身体。
 
         // ── Right-click state ────────────────────────────────────────────────
         private enum RightState { Idle, Charging, Locked, VentCooldown, AbyssalRupture }

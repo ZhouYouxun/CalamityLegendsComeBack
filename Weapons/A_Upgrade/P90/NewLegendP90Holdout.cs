@@ -20,7 +20,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.P90
 
     internal sealed class NewLegendP90Holdout : ModProjectile, ILocalizedModType
     {
-        private const float HoldoutDistance = 34f;
+        private const float HoldoutDistance = 34f; // 持枪前后距离：数值越小，枪越靠近玩家身体。
         private const float CloseRange = 10f * 16f;
         private const float FarRange = 15f * 16f;
 
@@ -227,7 +227,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.P90
             Projectile.direction = dir;
             Projectile.rotation = P90Player.IsReloading ? (dir == 1 ? 0f : MathHelper.Pi) : aim.ToRotation();
 
-            Projectile.Center = Owner.MountedCenter + aim * (HoldoutDistance - recoilOffset) + new Vector2(0f, -5f * Owner.gravDir);
+            Projectile.Center = Owner.MountedCenter + aim * (HoldoutDistance - recoilOffset) + new Vector2(0f, -13f * Owner.gravDir);
 
             Owner.ChangeDir(dir);
             Owner.heldProj = Projectile.whoAmI;
