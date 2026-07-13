@@ -1,4 +1,6 @@
+using System;
 using Terraria;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.SeasSearing
@@ -11,6 +13,14 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         public override void SetStaticDefaults()
         {
             Main.buffNoSave[Type] = true;
+        }
+
+        public override void ModifyBuffText(ref string buffName, ref string tip, ref int rare)
+        {
+            int level = Math.Clamp(Main.LocalPlayer.GetModPlayer<SeasSearingPlayer>().RadiationLevel, 1, 4);
+            string key = "Mods.CalamityLegendsComeBack.Buffs.SeasSearingPlayerRadiationBuff";
+            buffName = Language.GetTextValue($"{key}.DisplayName_Level{level}");
+            tip = Language.GetTextValue($"{key}.Description_Level{level}");
         }
 
         public override void Update(Player player, ref int buffIndex)

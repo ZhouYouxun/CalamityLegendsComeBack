@@ -94,6 +94,42 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
                     Main.rand.NextBool(4) ? BloodRed : SoulPurple, Main.rand.NextFloat(0.8f, 1.25f));
                 dust.noGravity = true;
             }
+
+            EmitBloodRing();
+            EmitSoulTrail();
+        }
+
+        private void EmitBloodRing()
+        {
+            // 灾厄原版 GaelSkull 的标志性血环：每 20 帧沿骷髅轮廓生成一圈
+            // 血月雨尘埃并向速度后方收束，像被骷髅拖行的血雾罩。
+            if (Projectile.ai[1] % 20 != 0f)
+                return;
+
+            for (int i = 0; i < 14; i++)
+            {
+                Vector2 ringOffset = Vector2.UnitX * -Projectile.width * 0.5f;
+                ringOffset += -Vector2.UnitY.RotatedBy(i * MathHelper.TwoPi / 14f) * new Vector2(8f, 16f) * Projectile.scale;
+                ringOffset = ringOffset.RotatedBy(Projectile.rotation);
+
+                Dust ring = Dust.NewDustPerfect(Projectile.Center + ringOffset, DustID.Rain_BloodMoon,
+                    Vector2.Zero, 0, new Color(188, 126, 154), 1.5f);
+                ring.noGravity = true;
+                // 原版公式：尘埃朝"中心 - 速度×3"的滞后点收束，速度 1.25。
+                ring.velocity = ((Projectile.Center - Projectile.velocity * 3f) - ring.position).SafeNormalize(Vector2.Zero) * 1.25f;
+            }
+        }
+
+        private void EmitSoulTrail()
+        {
+            // 锁定目标后骷髅尾部曳出暗紫灵珠，提示它正在死咬着谁。
+            if (Main.dedServ || GetStoredTarget() == null || !Main.rand.NextBool(4))
+                return;
+
+            Vector2 tail = Projectile.Center - Projectile.velocity.SafeNormalize(Vector2.UnitY) * 14f;
+            GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(tail + Main.rand.NextVector2Circular(5f, 5f),
+                -Projectile.velocity * 0.06f + Main.rand.NextVector2Circular(0.5f, 0.5f), false,
+                Main.rand.Next(14, 22), Main.rand.NextFloat(0.1f, 0.18f), Main.rand.NextBool(3) ? BloodRed : SoulPurple));
         }
 
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)

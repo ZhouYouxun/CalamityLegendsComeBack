@@ -178,6 +178,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
             npc.rotation = npc.velocity.X * 0.04f;
             npc.scale = 1f + (float)Math.Sin(ticksRunning * 0.06f) * 0.03f;
+            npc.damage = npc.defDamage; // per-frame normalization; blink/transition re-zero it after this line
 
             if (shieldFxCooldown > 0)
                 shieldFxCooldown--;
@@ -321,6 +322,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             {
                 blinkDuration = 0;
                 npc.Opacity = 1f;
+                npc.damage = npc.defDamage; // restore contact damage — without this the zero sticks forever
             }
         }
 

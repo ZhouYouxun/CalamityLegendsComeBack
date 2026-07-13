@@ -1089,8 +1089,9 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 target.Calamity().GeneralScreenShakePower = 9f;
             }
 
-            // Five overload dashes as the exhaust cage collapses down to its phase-2 size (design doc: 恒定5次)
-            if (timer <= 150 && timer % 30f == 1f && timer > 1f)
+            // Five overload dashes as the exhaust cage collapses down to its phase-2 size (design doc: 恒定5次).
+            // First launch at t=8 (after the roar), then every 30f: t = 8, 38, 68, 98, 128 — exactly five.
+            if (timer <= 150 && timer % 30f == 8f)
             {
                 LaunchDash(npc, target, 22f, layExhaust: true, lead: 4f);
                 // Lightning burst along the launch (design doc: 冲刺轨迹附带闪电爆裂)

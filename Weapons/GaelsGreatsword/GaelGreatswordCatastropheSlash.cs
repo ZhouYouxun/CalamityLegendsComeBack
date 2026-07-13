@@ -70,6 +70,28 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
                     Main.rand.NextBool() ? BloodRed : SoulPurple, Main.rand.NextFloat(1f, 1.45f));
                 dust.noGravity = true;
             }
+
+            // 灾厄原版 SupremeCatastropheSlash 的炬火拖尾：染色彩虹炬尘埃向后飘散，
+            // 原版是深空蓝，这里换成至尊灾厄的血红。
+            if (Main.rand.NextBool(2))
+            {
+                Dust torch = Dust.NewDustPerfect(Projectile.Center + Main.rand.NextVector2Circular(40f, 20f),
+                    DustID.RainbowTorch, -Projectile.velocity * Main.rand.NextFloat(0.2f, 1.2f));
+                torch.noGravity = true;
+                torch.scale = Main.rand.NextFloat(0.5f, 0.7f);
+                torch.color = BloodRed;
+            }
+
+            // 刃缘速度线：沿斩击前后两端拉出血色流线，读出刀刃的走向。
+            if (!Main.dedServ && Main.rand.NextBool(3))
+            {
+                Vector2 forward = Projectile.rotation.ToRotationVector2();
+                Vector2 edge = Projectile.Center + forward * (Main.rand.NextBool() ? 96f : -76f) * Projectile.scale;
+                GeneralParticleHandler.SpawnParticle(new LineParticle(edge,
+                    forward * Main.rand.NextFloat(2f, 5f) * (Main.rand.NextBool() ? 1f : -1f), false,
+                    Main.rand.Next(9, 16), Main.rand.NextFloat(0.35f, 0.6f),
+                    Main.rand.NextBool() ? BloodRed : SoulPurple));
+            }
         }
 
         public override bool? CanDamage() => Projectile.ai[1] >= 3f && Projectile.ai[1] <= 34f ? null : false;

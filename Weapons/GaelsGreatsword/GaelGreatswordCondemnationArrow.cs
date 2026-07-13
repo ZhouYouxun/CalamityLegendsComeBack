@@ -51,7 +51,7 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
         {
             Projectile.ai[0]++;
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
-            Lighting.AddLight(Projectile.Center, 0.2f, 0.02f, 0.16f);
+            Lighting.AddLight(Projectile.Center, 0.28f, 0.04f, 0.3f);
 
             if (Projectile.ai[0] > 18f)
                 CalamityUtils.HomeInOnNPC(Projectile, true, 860f, 18f, 14f);
@@ -62,11 +62,32 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
                     DustID.Blood, -Projectile.velocity * 0.12f, 100, BloodRed, Main.rand.NextFloat(0.8f, 1.1f));
                 dust.noGravity = true;
             }
+
+            // 箭尾星闪：裁决的天罚箭矢曳出细碎星光。
+            if (!Main.dedServ && Main.rand.NextBool(4))
+            {
+                Vector2 tail = Projectile.Center - Projectile.velocity.SafeNormalize(Vector2.UnitY) * 20f;
+                GeneralParticleHandler.SpawnParticle(new GenericSparkle(tail + Main.rand.NextVector2Circular(5f, 5f),
+                    -Projectile.velocity * Main.rand.NextFloat(0.04f, 0.12f), Color.White,
+                    Main.rand.NextBool() ? BloodRed : new Color(150, 40, 170),
+                    Main.rand.NextFloat(0.35f, 0.6f), Main.rand.Next(9, 15), Main.rand.NextFloat(-0.08f, 0.08f), 2f));
+            }
+        }
+
+        public override Color? GetAlpha(Color lightColor)
+        {
+            // 灾厄原版 CondemnationArrow 的红↔紫脉动染色：每支箭以自身 identity
+            // 为相位错开闪烁，箭体像烧着裁决之火一样明灭。
+            Color bloodGlow = new(226, 40, 40, 0);
+            Color violetGlow = new(205, 0, 194, 0);
+            Color fadeColor = Color.Lerp(bloodGlow, violetGlow,
+                MathF.Cos(Projectile.identity * 1.41f + Main.GlobalTimeWrappedHourly * 8f) * 0.5f + 0.5f);
+            return Color.Lerp(lightColor, fadeColor, 0.5f);
         }
 
         public override bool PreDraw(ref Color lightColor)
         {
-            CalamityUtils.DrawAfterimagesCentered(Projectile, ProjectileID.Sets.TrailingMode[Type], Color.Lerp(lightColor, BloodRed, 0.3f), 1);
+            CalamityUtils.DrawAfterimagesCentered(Projectile, ProjectileID.Sets.TrailingMode[Type], Projectile.GetAlpha(lightColor), 1);
             return false;
         }
     }

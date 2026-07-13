@@ -71,6 +71,19 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.DragoonDrizzlefish
             }
         }
 
+        public override void PostUpdate()
+        {
+            if (Player.dead || Player.HeldItem.type != ModContent.ItemType<NewDragoonDrizzlefish>() || Main.myPlayer != Player.whoAmI)
+                return;
+
+            int barType = ModContent.ProjectileType<FoodDrizzlefishStatusBar>();
+            if (Player.ownedProjectileCounts[barType] == 0)
+            {
+                Projectile.NewProjectile(Player.GetSource_FromThis(), Player.Center, Vector2.Zero, barType,
+                    0, 0f, Player.whoAmI);
+            }
+        }
+
         internal void Feed(Item food)
         {
             if (!DragoonDrizzlefishFoods.TryClassify(food, out DragoonDrizzlefishFoodType meal))
@@ -111,6 +124,30 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.DragoonDrizzlefish
                 ShotsRemaining = 0;
                 ShotCounter = 0;
                 HungryFeedback(force: true);
+            }
+        }
+
+        internal void DiscardFood()
+        {
+            if (!HasFood)
+            {
+                HungryFeedback(force: true);
+                return;
+            }
+
+            Color color = DragoonDrizzlefishFoods.FoodColor(ActiveFood);
+            CurrentFood = DragoonDrizzlefishFoodType.None;
+            ShotsRemaining = 0;
+            ShotCounter = 0;
+            CuteText("...", color);
+            PlayCuteSound(-0.2f, 0.55f);
+
+            for (int i = 0; i < 10; i++)
+            {
+                Dust dust = Dust.NewDustPerfect(Player.Center + Main.rand.NextVector2Circular(15f, 15f),
+                    DustID.RainbowMk2, Main.rand.NextVector2Circular(2f, 2f) - Vector2.UnitY * Main.rand.NextFloat(0.4f, 1.6f),
+                    0, color, Main.rand.NextFloat(0.65f, 1.05f));
+                dust.noGravity = true;
             }
         }
 

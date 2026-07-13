@@ -477,21 +477,18 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.ZhuangFangYiPet
         {
             DrawNormalTail(drawPosition, drawColor, effects, 6);
             DrawVerticalFrame(RequestTexture("庄方宜宠物_待机"), 8, LoopFrame(8, 5), drawPosition, drawColor, effects);
-            DrawNormalBlink(drawPosition, drawColor, effects);
         }
 
         private void DrawMoving(Vector2 drawPosition, Color drawColor, SpriteEffects effects)
         {
             DrawNormalTail(drawPosition, drawColor, effects, 5);
             DrawVerticalFrame(RequestTexture("庄方宜宠物_移动"), 8, LoopFrame(8, 4), drawPosition, drawColor, effects);
-            DrawNormalBlink(drawPosition, drawColor, effects);
         }
 
         private void DrawFlying(Vector2 drawPosition, Color drawColor, SpriteEffects effects)
         {
             DrawNormalTail(drawPosition, drawColor, effects, 5);
             DrawVerticalFrame(RequestTexture("庄方宜宠物_飞行"), 7, LoopFrame(7, 4), drawPosition, drawColor, effects);
-            DrawNormalBlink(drawPosition, drawColor, effects);
         }
 
         private void DrawAttack(Vector2 drawPosition, Color drawColor, SpriteEffects effects)

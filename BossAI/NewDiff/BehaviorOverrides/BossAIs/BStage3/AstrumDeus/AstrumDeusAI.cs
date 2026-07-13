@@ -92,6 +92,9 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         private readonly Dictionary<int, float> segmentCoreHP = new();
         private const float CoreMaxHP = 250f;
 
+        // 穿过式咬合 timer, per-head (Deus can split into two Heads; all four localAI slots are taken).
+        private readonly Dictionary<int, int> carveTimers = new();
+
         private float transitionFlashAlpha = 0f;
         #endregion
 
@@ -157,10 +160,11 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 float turnSpeed = 0.05f + (1f - lifeRatio) * 0.03f;
 
                 // 星神游龙的分寸感: 贴近后咬定直线掠过(34帧不转向), 平时以正弦蜿蜒追踪 — 神龙划过星空,
-                // 不做像素级黏着. carve窗口就是玩家的侧移机会.
-                if (npc.localAI[2] > 0f)
+                // 不做像素级黏着. carve窗口就是玩家的侧移机会. (localAI四槽全被占用, 用whoAmI字典per-head)
+                int carve = carveTimers.TryGetValue(npc.whoAmI, out int c) ? c : 0;
+                if (carve > 0)
                 {
-                    npc.localAI[2]--;
+                    carveTimers[npc.whoAmI] = carve - 1;
                     npc.velocity = Vector2.Lerp(npc.velocity, npc.velocity.SafeNormalize(Vector2.UnitX) * speed, 0.05f);
                 }
                 else
@@ -168,7 +172,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     Vector2 pursueDir = SafeNormalize(target.Center - npc.Center, Vector2.Zero).RotatedBy((float)Math.Sin(Main.GameUpdateCount * 0.05f) * 0.3f);
                     npc.velocity = Vector2.Lerp(npc.velocity, pursueDir * speed, turnSpeed);
                     if (Vector2.Distance(npc.Center, target.Center) < 200f)
-                        npc.localAI[2] = 34f;
+                        carveTimers[npc.whoAmI] = 34;
                 }
                 npc.rotation = npc.velocity.ToRotation() + MathHelper.PiOver2;
             }

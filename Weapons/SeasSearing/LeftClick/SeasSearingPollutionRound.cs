@@ -194,26 +194,27 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
                 float   completion   = 1f - i / (float)Projectile.oldPos.Length;
                 Vector2 drawPosition = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
+                float   rotation     = Projectile.oldRot[i] + MathHelper.PiOver2;
                 Color   color        = Color.Lerp(tailColor, headColor, completion) * (0.08f + completion * 0.42f * boost);
                 color.A = 0;
 
-                Main.EntitySpriteDraw(bloom, drawPosition, null, color * 0.72f, 0f, bloomOrigin, new Vector2(0.12f, 0.038f) * Projectile.scale, SpriteEffects.None, 0);
-                Main.EntitySpriteDraw(texture, drawPosition, null, color, 0f, origin, Projectile.scale * MathHelper.Lerp(0.72f, 1f, completion), SpriteEffects.None, 0);
+                Main.EntitySpriteDraw(bloom, drawPosition, null, color * 0.72f, rotation, bloomOrigin, new Vector2(0.12f, 0.038f) * Projectile.scale, SpriteEffects.None, 0);
+                Main.EntitySpriteDraw(texture, drawPosition, null, color, rotation, origin, Projectile.scale * MathHelper.Lerp(0.72f, 1f, completion), SpriteEffects.None, 0);
             }
 
             Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition, null,
-                (headColor with { A = 0 }) * (0.6f * boost), 0f, bloomOrigin, new Vector2(0.15f, 0.045f), SpriteEffects.None, 0);
+                (headColor with { A = 0 }) * (0.6f * boost), Projectile.rotation + MathHelper.PiOver2, bloomOrigin, new Vector2(0.15f, 0.045f), SpriteEffects.None, 0);
 
             Color outline = (Color.Lerp(headColor, SeasSearingPalette.ToxicGreen, 0.35f) with { A = 0 }) * (0.42f * boost);
             for (int i = 0; i < 8; i++)
             {
                 Vector2 offset = (MathHelper.TwoPi * i / 8f).ToRotationVector2() * (2f + 0.8f * boost);
                 Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition + offset, null,
-                    outline, 0f, origin, Projectile.scale * 1.08f, SpriteEffects.None, 0);
+                    outline, Projectile.rotation + MathHelper.PiOver2, origin, Projectile.scale * 1.08f, SpriteEffects.None, 0);
             }
 
             Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null,
-                Color.White, 0f, origin, Projectile.scale, SpriteEffects.None, 0);
+                Color.White, Projectile.rotation + MathHelper.PiOver2, origin, Projectile.scale, SpriteEffects.None, 0);
             return false;
         }
 

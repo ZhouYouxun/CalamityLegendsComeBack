@@ -56,12 +56,12 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
         private int bladeHitFireballsThisSpin = 0;
         private const int MaxBladeHitFireballs = 5;
 
-        // Idle auto-dismiss (3 seconds of no swing input)
+        // Idle auto-dismiss: wait 1 second without a swing input, then fade over 30 frames.
         private int idleTimer = 0;
-        private const int IdleDismissFrames = 180;
+        private const int IdleDismissFrames = 60;
         private bool willDie = false;
         private int dyingTimer = 0;
-        private const int DyingFadeFrames = 24;
+        private const int DyingFadeFrames = 30;
         private float dyingFade = 1f;
 
         // Right-click charge-to-throw (1 second hold)
@@ -381,6 +381,15 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                 return;
             }
 
+            if (isOwner && leftHeld)
+                idleTimer = 0;
+            else if (isOwner && ++idleTimer >= IdleDismissFrames)
+            {
+                BeginDyingFade();
+                RunDyingFade();
+                return;
+            }
+
             if (isOwner && leftHeld && motionState == BladeMotionState.Idle && postSwingCooldown <= 0)
             {
                 mousePos = GetMouseWorld();
@@ -448,6 +457,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             postSwing = false;
             rightChargeTimer = 0;
             StopChargeSpinSound();
+            Projectile.netUpdate = true;
         }
 
         private void CancelBecauseWeaponChanged()
@@ -545,9 +555,6 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             fadeIn = MathHelper.Lerp(fadeIn, 0f, 0.22f);
             TurnIdleBladeTowardMouse();
 
-            idleTimer++;
-            if (idleTimer >= IdleDismissFrames)
-                BeginDyingFade();
         }
 
         private void RunRecovery()

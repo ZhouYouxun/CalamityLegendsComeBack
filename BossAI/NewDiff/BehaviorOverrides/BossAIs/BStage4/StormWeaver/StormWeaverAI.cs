@@ -81,6 +81,9 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         }
 
         private int teslaHurtCooldown = 0;
+
+        // 穿过式咬合 timer — private field, not npc.localAI, to avoid colliding with vanilla worm bookkeeping.
+        private int carvePassTimer = 0;
         private float transitionFlashAlpha = 0f;
         #endregion
 
@@ -129,9 +132,9 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
                 // 风暴编织者的分寸感: 贴近后咬定直线掠过(34帧不转向), 平时以正弦蜿蜒编行 —
                 // 它在风里织弧线, 不做像素级黏着. 掠过窗口就是玩家的侧移机会.
-                if (npc.localAI[2] > 0f)
+                if (carvePassTimer > 0)
                 {
-                    npc.localAI[2]--;
+                    carvePassTimer--;
                     npc.velocity = Vector2.Lerp(npc.velocity, npc.velocity.SafeNormalize(Vector2.UnitX) * speed, 0.05f);
                 }
                 else
@@ -139,7 +142,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     Vector2 pursueDir = SafeNormalize(target.Center - npc.Center, Vector2.Zero).RotatedBy((float)Math.Sin(Main.GameUpdateCount * 0.05f) * 0.3f);
                     npc.velocity = Vector2.Lerp(npc.velocity, pursueDir * speed, turnSpeed);
                     if (Vector2.Distance(npc.Center, target.Center) < 200f)
-                        npc.localAI[2] = 34f;
+                        carvePassTimer = 34;
                 }
                 npc.rotation = npc.velocity.ToRotation() + MathHelper.PiOver2;
             }

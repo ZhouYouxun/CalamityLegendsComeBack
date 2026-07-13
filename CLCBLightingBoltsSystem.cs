@@ -1884,6 +1884,55 @@ namespace CalamityLegendsComeBack
             }
         }
 
+        // Dragoon Drizzlefish - Golden Delight: compact travelling gold starfield.
+        // This stays in the PrettySparkleParticle system and is deliberately kept
+        // separate from the Calamity particle and Dust layers used by the projectile.
+        public static void Spawn_DrizzlefishGoldenStarfield(Vector2 center, Vector2 forward, float intensity = 1f)
+        {
+            forward = forward.SafeNormalize(Vector2.UnitX);
+            Vector2 side = forward.RotatedBy(MathHelper.PiOver2);
+            Color gold = new(255, 214, 62);
+            Color cream = new(255, 245, 184);
+            float rotation = forward.ToRotation();
+
+            for (int i = 0; i < 4; i++)
+            {
+                float lateral = (i - 1.5f) * 5f + Main.rand.NextFloat(-1.5f, 1.5f);
+                PrettySparkleParticle streak = _poolPrettySparkle.RequestParticle();
+                streak.ColorTint = i % 2 == 0 ? gold : cream;
+                streak.LocalPosition = center - forward * Main.rand.NextFloat(1f, 10f) + side * lateral;
+                streak.Velocity = -forward * Main.rand.NextFloat(0.8f, 2.1f) + side * Main.rand.NextFloat(-0.18f, 0.18f);
+                streak.Rotation = rotation;
+                streak.Scale = new Vector2(Main.rand.NextFloat(1.05f, 1.75f), Main.rand.NextFloat(0.16f, 0.28f)) * intensity;
+                streak.FadeInNormalizedTime = 0.02f;
+                streak.FadeOutNormalizedTime = 0.82f;
+                streak.TimeToLive = Main.rand.Next(16, 25);
+                streak.FadeInEnd = 3;
+                streak.FadeOutStart = 11;
+                streak.FadeOutEnd = streak.TimeToLive;
+                streak.AdditiveAmount = 0.78f;
+                Main.ParticleSystem_World_OverPlayers.Add(streak);
+            }
+
+            for (int axis = 0; axis < 2; axis++)
+            {
+                PrettySparkleParticle star = _poolPrettySparkle.RequestParticle();
+                star.ColorTint = axis == 0 ? cream : gold;
+                star.LocalPosition = center + Main.rand.NextVector2Circular(5f, 5f);
+                star.Velocity = -forward * Main.rand.NextFloat(0.2f, 0.65f) + side * Main.rand.NextFloat(-0.35f, 0.35f);
+                star.Rotation = rotation + axis * MathHelper.PiOver2;
+                star.Scale = new Vector2(1.35f, 0.28f) * intensity;
+                star.FadeInNormalizedTime = 0.02f;
+                star.FadeOutNormalizedTime = 0.78f;
+                star.TimeToLive = Main.rand.Next(18, 28);
+                star.FadeInEnd = 3;
+                star.FadeOutStart = 12;
+                star.FadeOutEnd = star.TimeToLive;
+                star.AdditiveAmount = 0.9f;
+                Main.ParticleSystem_World_OverPlayers.Add(star);
+            }
+        }
+
     }
 }
 

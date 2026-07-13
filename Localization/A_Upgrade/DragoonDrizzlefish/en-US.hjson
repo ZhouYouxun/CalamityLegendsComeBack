@@ -48,6 +48,7 @@ Mods: {
 				FoodDrizzlefishOddSpore.DisplayName: Odd Spore
 				FoodDrizzlefishFeastComet.DisplayName: Feast Comet
 				FoodDrizzlefishMealBurst.DisplayName: Banquet Burst
+				FoodDrizzlefishStatusBar.DisplayName: Food Drizzlefish Status Bar
 			}
 		}
 	}

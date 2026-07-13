@@ -86,6 +86,19 @@ Mods: {
 		}
 
 		Buffs: {
+			SeasSearingPlayerRadiationBuff: {
+				DisplayName: 辐射兴奋
+				Description: 持续使用海之炽灼命中敌人可积累辐射兴奋
+				DisplayName_Level1: 辐射兴奋 — I 级
+				Description_Level1: 远程伤害提高 8%
+				DisplayName_Level2: 辐射兴奋 — II 级
+				Description_Level2: 远程伤害提高 16%，远程护甲穿透提高 8 点
+				DisplayName_Level3: 辐射兴奋 — III 级
+				Description_Level3: 远程伤害提高 26%，远程护甲穿透提高 16 点，移动速度提高 12%
+				DisplayName_Level4: 辐射兴奋 — IV 级
+				Description_Level4: 远程伤害提高 38%，远程护甲穿透提高 26 点，移动速度提高 20%，远程暴击率提高 10%
+			}
+
 			SeasSearingRadiationBuff: {
 				DisplayName: 深渊辐射污染
 				Description: 水压、毒素与不稳定深海辐射正在累积

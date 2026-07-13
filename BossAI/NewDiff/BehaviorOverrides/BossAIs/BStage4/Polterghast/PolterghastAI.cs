@@ -891,6 +891,9 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             if (timer == 1 && Main.netMode != NetmodeID.MultiplayerClient)
                 Projectile.NewProjectile(npc.GetSource_FromAI(), npc.Center, -Vector2.UnitY, ModContent.ProjectileType<GhastHeldGalileoGladius>(), 0, 0f, Main.myPlayer, npc.whoAmI);
 
+            if (timer < 30)
+                HauntDrift(npc, target, 300f, -200f); // stalk while the gladius materializes
+
             // 7 fold-blinks, one every 20 frames from t=30: warn (10f) -> blink -> slash
             if (timer >= 30 && timer <= 170)
             {
@@ -959,7 +962,9 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 if (Main.netMode != NetmodeID.MultiplayerClient)
                 {
                     Projectile.NewProjectile(npc.GetSource_FromAI(), npc.Center, -Vector2.UnitY, ModContent.ProjectileType<GhastHeldCrescentMoon>(), 0, 0f, Main.myPlayer, npc.whoAmI);
-                    Vector2 anchor = currentVariantB ? target.Center + new Vector2(0f, -320f) : npc.Center;
+                    // A: anchored where the ghost is ABOUT to re-form (its blink destination — not the stale
+                    // pre-blink spot); B: low over the player for the bottom-locking sweep
+                    Vector2 anchor = currentVariantB ? target.Center + new Vector2(0f, -320f) : target.Center + new Vector2(0f, -400f);
                     Projectile.NewProjectile(npc.GetSource_FromAI(), anchor, Vector2.Zero, ModContent.ProjectileType<CrescentPendulumProj>(), npc.defDamage / 3, 0f, Main.myPlayer, anchor.X, anchor.Y);
                 }
                 SoundEngine.PlaySound(SoundID.Item65 with { Volume = 0.7f, Pitch = -0.2f }, target.Center);

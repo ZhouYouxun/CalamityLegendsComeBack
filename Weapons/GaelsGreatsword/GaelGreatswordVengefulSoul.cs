@@ -75,6 +75,27 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
                     Main.rand.NextBool() ? SoulPurple : BloodRed, Main.rand.NextFloat(0.85f, 1.25f));
                 dust.noGravity = true;
             }
+
+            // 灾厄原版 RedirectingVengefulSoul 的灵质拖尾：发光的传送门尘埃，
+            // 染成灵魂紫，不发光照（noLight）以免整屏泛紫。
+            if (Main.rand.NextBool(2))
+            {
+                Dust ectoplasm = Dust.NewDustPerfect(Projectile.Center + Main.rand.NextVector2Circular(7f, 10f), DustID.PortalBoltTrail);
+                ectoplasm.velocity = -Projectile.velocity * Main.rand.NextFloat(0.05f, 0.2f);
+                ectoplasm.color = SoulPurple;
+                ectoplasm.scale = Main.rand.NextFloat(0.9f, 1.3f);
+                ectoplasm.noGravity = true;
+                ectoplasm.noLight = true;
+            }
+
+            // 灵珠残响：偶尔在身后滞留一颗缓缓熄灭的灵魂光珠。
+            if (!Main.dedServ && Main.rand.NextBool(6))
+            {
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    Projectile.Center - Projectile.velocity.SafeNormalize(Vector2.UnitY) * 18f + Main.rand.NextVector2Circular(6f, 6f),
+                    Main.rand.NextVector2Circular(0.6f, 0.6f), false,
+                    Main.rand.Next(16, 26), Main.rand.NextFloat(0.12f, 0.2f), SoulPurple));
+            }
         }
 
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)

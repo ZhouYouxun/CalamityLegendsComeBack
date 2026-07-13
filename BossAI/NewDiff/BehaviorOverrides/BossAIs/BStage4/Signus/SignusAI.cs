@@ -534,8 +534,12 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             timer++;
             if (timer == 1)
             {
-                // Blink to a throwing flank before the volley — the assassin repositions, never strolls in
-                Vector2 dest = DirectedHoverSpot(npc, target, 430f, currentVariantB ? -320f : -60f, 6f);
+                // Blink to the throwing perch — A: high overhead (vertical throw => knives freeze in a
+                // horizontal line at the player's FLANKS, stabbing inward, forcing the doc's vertical escape);
+                // B: side flank (horizontal throw => vertical knife curtain, forcing a horizontal escape).
+                Vector2 dest = currentVariantB
+                    ? DirectedHoverSpot(npc, target, 430f, -60f, 6f)
+                    : DirectedHoverSpot(npc, target, 60f, -430f, 6f);
                 BeginBlink(npc, dest, 20);
                 if (Main.netMode != NetmodeID.MultiplayerClient)
                     Projectile.NewProjectile(npc.GetSource_FromAI(), npc.Center, -Vector2.UnitY, ModContent.ProjectileType<SignusHeldCosmicKunai>(), 0, 0f, Main.myPlayer, npc.whoAmI);
@@ -543,7 +547,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
             if (timer > 20 && timer < 50)
             {
-                CloakedDrift(npc, target, 430f, currentVariantB ? -320f : -60f, 0.05f, 9f);
+                CloakedDrift(npc, target, currentVariantB ? 430f : 60f, currentVariantB ? -60f : -430f, 0.05f, 9f);
                 // Charge: void-dust drawn into the blade hand
                 if (Main.rand.NextBool(2))
                 {
@@ -560,11 +564,12 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             {
                 // Five kunai aimed to PASS the player and freeze beyond them, then right-angle stab back (design doc)
                 Vector2 throwDir = SafeNormalize(target.Center - npc.Center, Vector2.UnitY);
-                Vector2 perp = currentVariantB ? new Vector2(-throwDir.Y, throwDir.X) : new Vector2(-throwDir.Y, throwDir.X);
+                Vector2 perp = new Vector2(-throwDir.Y, throwDir.X);
                 for (int i = 0; i < 5; i++)
                 {
-                    // A: spread across the player's flanks; B: stacked vertically above/below
-                    Vector2 passPoint = target.Center + throwDir * 240f + perp * (i - 2) * (currentVariantB ? 120f : 95f);
+                    // A (thrown from overhead): a horizontal rank hanging at the player's flanks, tight forward
+                    // offset so they freeze near waist level; B (thrown from the side): a vertical curtain beyond them
+                    Vector2 passPoint = target.Center + throwDir * (currentVariantB ? 240f : 160f) + perp * (i - 2) * (currentVariantB ? 120f : 95f);
                     Vector2 vel = SafeNormalize(passPoint - npc.Center, Vector2.UnitY) * 23f;
                     float flightFrames = MathHelper.Clamp(Vector2.Distance(npc.Center, passPoint) / 23f, 8f, 40f);
                     Projectile.NewProjectile(npc.GetSource_FromAI(), npc.Center, vel, ModContent.ProjectileType<SignusKunaiProj>(), npc.defDamage / 3, 0f, Main.myPlayer, flightFrames);
@@ -975,14 +980,14 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 FindHeldWeapon<SignusHeldSevensStriker>(npc)?.Pulse(6f);
             }
 
-            if (currentVariantB && timer == 84)
+            if (currentVariantB && timer == 77)
             {
-                // Cross-blink mid-volley: shots now come from the other side of the lane
+                // Cross-blink mid-volley, timed inside the 76->88 shot gap so the blink swallows no bullet
                 float side = Math.Sign(npc.Center.X - target.Center.X);
-                BeginBlink(npc, target.Center + new Vector2(-side * 470f, -120f), 14);
+                BeginBlink(npc, target.Center + new Vector2(-side * 470f, -120f), 10);
             }
 
-            if (timer > 18 && !(currentVariantB && timer >= 84 && timer <= 98))
+            if (timer > 18 && !(currentVariantB && timer >= 77 && timer <= 87))
             {
                 FindHeldWeapon<SignusHeldSevensStriker>(npc)?.SetAim((target.Center - npc.Center).ToRotation());
                 CloakedDrift(npc, target, 470f, -120f, 0.045f, 8f);

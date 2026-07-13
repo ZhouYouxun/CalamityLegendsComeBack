@@ -96,12 +96,17 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
 
         private bool IsRightHeld()
         {
-            if (!Owner.channel)
-                return false;
+            // 右键长按不能依赖 player.channel —— 原版 channel 只随左键（controlUseItem）
+            // 维持，右键按住时 channel 立即失效导致格挡瞬间被杀。
+            // 照 SHPC 右键 Holdout 的手动检测方案：owner 端直接读 Main.mouseRight，
+            // 非 owner 端不做输入检测，弹幕存活与否由 owner 端 Kill 后网络同步。
             if (Main.myPlayer != Projectile.owner)
                 return true;
 
-            return (Owner.Calamity().mouseRight || Main.mouseRight) && !Main.mapFullscreen && !Main.blockMouse && !Owner.mouseInterface;
+            if (Owner.noItems || Owner.CCed || Main.mapFullscreen || Main.blockMouse || Owner.mouseInterface)
+                return false;
+
+            return Owner.Calamity().mouseRight || Main.mouseRight;
         }
 
         private void EmitGuardEffects(Vector2 guardCenter)

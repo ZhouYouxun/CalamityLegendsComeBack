@@ -48,6 +48,7 @@ Mods: {
 				FoodDrizzlefishOddSpore.DisplayName: 怪异孢子
 				FoodDrizzlefishFeastComet.DisplayName: 大餐彗弹
 				FoodDrizzlefishMealBurst.DisplayName: 宴火爆发
+				// FoodDrizzlefishStatusBar.DisplayName: Food Drizzlefish Status Bar
 			}
 		}
 	}

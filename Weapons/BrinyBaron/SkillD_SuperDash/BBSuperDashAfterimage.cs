@@ -14,6 +14,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
         private const int Lifetime = 25;
         private const float VelocityRetention = 0.9f;
 
+        // A renderer-only Player. Never mutate the real owner while drawing an afterimage.
+        private Player visualPlayer;
+
         public new string LocalizationCategory => "Projectiles.BrinyBaron";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
@@ -99,21 +102,98 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             Vector2 drawPosition = Projectile.Center - Main.screenPosition + new Vector2(0f, owner.gfxOffY);
 
             DrawPlayerAura(drawPosition, outlineOpacity);
-            DrawFrozenPlayer(owner, opacity, progress);
+            DrawFrozenPlayer(owner, opacity);
             DrawWeaponAfterimage(drawPosition, opacity, outlineOpacity);
             return false;
         }
 
-        private void DrawFrozenPlayer(Player owner, float opacity, float progress)
+        private void DrawFrozenPlayer(Player owner, float opacity)
         {
-            int oldImmuneAlpha = owner.immuneAlpha;
-            int oldDirection = owner.direction;
+            PrepareVisualPlayer(owner, opacity);
+            Main.PlayerRenderer.DrawPlayer(
+                Main.Camera,
+                visualPlayer,
+                visualPlayer.position,
+                visualPlayer.fullRotation,
+                visualPlayer.fullRotationOrigin);
+        }
 
-            owner.immuneAlpha = Math.Max(owner.immuneAlpha, (int)MathHelper.Lerp(90f, 245f, progress));
-            owner.direction = SnapshotDirection;
-            Main.PlayerRenderer.DrawPlayer(Main.Camera, owner, Projectile.position, owner.fullRotation, owner.fullRotationOrigin);
-            owner.direction = oldDirection;
-            owner.immuneAlpha = oldImmuneAlpha;
+        private void PrepareVisualPlayer(Player owner, float opacity)
+        {
+            visualPlayer ??= new Player();
+            visualPlayer.ResetEffects();
+
+            // Keep this proxy detached from Main.player so local-player-only effects cannot leak
+            // into the afterimage draw pass.
+            visualPlayer.whoAmI = -1;
+            visualPlayer.name = "Briny Baron Afterimage";
+            visualPlayer.Male = owner.Male;
+            visualPlayer.skinVariant = owner.skinVariant;
+            visualPlayer.hair = owner.hair;
+            visualPlayer.hairColor = owner.hairColor;
+            visualPlayer.skinColor = owner.skinColor;
+            visualPlayer.eyeColor = owner.eyeColor;
+            visualPlayer.shirtColor = owner.shirtColor;
+            visualPlayer.underShirtColor = owner.underShirtColor;
+            visualPlayer.pantsColor = owner.pantsColor;
+            visualPlayer.shoeColor = owner.shoeColor;
+            visualPlayer.hairDye = owner.hairDye;
+
+            for (int i = 0; i < visualPlayer.armor.Length; i++)
+                visualPlayer.armor[i] = owner.armor[i].Clone();
+            for (int i = 0; i < visualPlayer.dye.Length; i++)
+                visualPlayer.dye[i] = owner.dye[i].Clone();
+
+            // The original renderer uses these visible slots to select the correct multi-frame
+            // armor and vanity textures. Accessories are re-applied as visible equipment so
+            // wings, shields and back items use Terraria's normal draw layers.
+            visualPlayer.head = owner.head;
+            visualPlayer.body = owner.body;
+            visualPlayer.legs = owner.legs;
+            visualPlayer.cHead = owner.cHead;
+            visualPlayer.cBody = owner.cBody;
+            visualPlayer.cLegs = owner.cLegs;
+            for (int i = 3; i < 8 && i < visualPlayer.armor.Length; i++)
+            {
+                if (!visualPlayer.armor[i].IsAir)
+                    visualPlayer.UpdateVisibleAccessory(i, visualPlayer.armor[i]);
+            }
+
+            visualPlayer.position = Projectile.Center - new Vector2(visualPlayer.width * 0.5f, visualPlayer.height * 0.5f);
+            visualPlayer.velocity = Vector2.Zero;
+            visualPlayer.direction = SnapshotDirection;
+            visualPlayer.gravDir = owner.gravDir;
+            visualPlayer.gfxOffY = 0f;
+            visualPlayer.fullRotation = 0f;
+            visualPlayer.fullRotationOrigin = Vector2.Zero;
+            visualPlayer.active = true;
+            visualPlayer.dead = false;
+            visualPlayer.ghost = false;
+            visualPlayer.invis = false;
+            visualPlayer.shimmering = false;
+            visualPlayer.immune = false;
+            visualPlayer.immuneTime = 0;
+            visualPlayer.immuneAlpha = (int)MathHelper.Clamp(255f - opacity * 185f, 0f, 255f);
+            visualPlayer.stealth = 1f;
+            visualPlayer.heldProj = -1;
+            visualPlayer.inventory[0].TurnToAir();
+            visualPlayer.selectedItem = 0;
+            visualPlayer.itemAnimation = 0;
+            visualPlayer.itemTime = 0;
+
+            // A dash afterimage should retain the player's pose at the moment it is spawned,
+            // rather than advancing its own walk cycle.
+            visualPlayer.bodyFrame = owner.bodyFrame;
+            visualPlayer.legFrame = owner.legFrame;
+            visualPlayer.headFrame = owner.headFrame;
+            visualPlayer.bodyFrameCounter = owner.bodyFrameCounter;
+            visualPlayer.legFrameCounter = owner.legFrameCounter;
+
+            visualPlayer.armorEffectDrawOutlines = false;
+            visualPlayer.armorEffectDrawOutlinesForbidden = false;
+            visualPlayer.armorEffectDrawShadow = false;
+            visualPlayer.armorEffectDrawShadowSubtle = false;
+            visualPlayer.armorEffectDrawShadowLokis = false;
         }
 
         private static void DrawPlayerAura(Vector2 drawPosition, float opacity)

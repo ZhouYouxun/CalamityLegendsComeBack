@@ -44,6 +44,17 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.DragoonDrizzlefish
 
         public override bool AltFunctionUse(Player player) => true;
 
+        public override bool CanRightClick() => true;
+
+        public override void RightClick(Player player)
+        {
+            player.GetModPlayer<DragoonDrizzlefishPlayer>().DiscardFood();
+        }
+
+        // Inventory right click otherwise follows the consumable-item path.
+        // The food state is discarded, never the weapon itself.
+        public override bool ConsumeItem(Player player) => false;
+
         public override bool CanUseItem(Player player)
         {
             DragoonDrizzlefishPlayer foodPlayer = player.GetModPlayer<DragoonDrizzlefishPlayer>();
@@ -71,7 +82,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.DragoonDrizzlefish
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
             if (!Main.keyState.PressingShift())
+            {
+                tooltips.Add(new TooltipLine(Mod, "DiscardFood", "背包内右键：倒掉当前装填的食物。"));
                 return;
+            }
 
             tooltips.RemoveAll(line => line.Mod == "Terraria" &&
                 line.Name.StartsWith("Tooltip", StringComparison.Ordinal));
@@ -79,6 +93,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.DragoonDrizzlefish
             {
                 OverrideColor = new Color(230, 238, 255)
             });
+            tooltips.Add(new TooltipLine(Mod, "DiscardFood", "背包内右键：倒掉当前装填的食物。"));
         }
 
         public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source,
@@ -193,11 +208,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.DragoonDrizzlefish
         private void FireFishBubbles(Player player, IEntitySource source, Vector2 position, Vector2 velocity,
             int damage, float knockback, int packedFood)
         {
-            for (int i = -1; i <= 1; i += 2)
+            // Each bubble receives its own small random deviation, so the volley reads as a lively
+            // spray instead of a fixed two-pronged fork.
+            for (int i = 0; i < 3; i++)
             {
-                Vector2 shotVelocity = velocity.RotatedBy(MathHelper.ToRadians(7f * i)) * Main.rand.NextFloat(0.92f, 1.04f);
+                Vector2 shotVelocity = velocity.RotatedBy(MathHelper.ToRadians(Main.rand.NextFloat(-5f, 5f))) * Main.rand.NextFloat(0.94f, 1.06f);
                 FireSingle(player, source, position, shotVelocity, ModContent.ProjectileType<FoodDrizzlefishFishBubble>(),
-                    (int)(damage * 0.72f), knockback * 0.8f, packedFood);
+                    (int)(damage * 0.62f), knockback * 0.72f, packedFood);
             }
         }
 

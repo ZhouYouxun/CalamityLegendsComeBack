@@ -86,6 +86,19 @@ Mods: {
 		}
 
 		Buffs: {
+			SeasSearingPlayerRadiationBuff: {
+				DisplayName: Radiation Excitement
+				Description: Sustained hits with Sea's Searing build Radiation Excitement
+				DisplayName_Level1: Radiation Excitement — Level I
+				Description_Level1: Ranged damage increased by 8%
+				DisplayName_Level2: Radiation Excitement — Level II
+				Description_Level2: Ranged damage increased by 16% and ranged armor penetration increased by 8
+				DisplayName_Level3: Radiation Excitement — Level III
+				Description_Level3: Ranged damage increased by 26%, ranged armor penetration increased by 16, and movement speed increased by 12%
+				DisplayName_Level4: Radiation Excitement — Level IV
+				Description_Level4: Ranged damage increased by 38%, ranged armor penetration increased by 26, movement speed increased by 20%, and ranged critical chance increased by 10%
+			}
+
 			SeasSearingRadiationBuff: {
 				DisplayName: Abyssal Radiation Pollution
 				Description: Pressure, poison, and unstable deep-sea radiation are accumulating
