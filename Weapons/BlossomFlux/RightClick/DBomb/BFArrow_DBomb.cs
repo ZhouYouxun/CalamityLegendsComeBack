@@ -698,7 +698,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                     Projectile.GetSource_FromThis(),
                     spawnPosition, velocity,
                     ModContent.ProjectileType<BFLeafProj>(),
-                    Math.Max(1, (int)(storedRainDamage * 0.9f)),
+                    Math.Max(1, (int)(storedRainDamage * 0.8f)),
                     storedAmmoKnockback,
                     Projectile.owner,
                     (float)BlossomFluxChloroplastPresetType.Chlo_DBomb,
