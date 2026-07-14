@@ -162,12 +162,16 @@ namespace CalamityLegendsComeBack.BossAI.HDMC
     public sealed class HDMCGeoBurstHostile : ModProjectile
     {
         private const int BaseBuildEnd = 70;
-        private const int Lifetime = 100;
+        private const int TailDuration = 30;
 
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
+        // ai[1] 可携带较大的错峰偏移（多米诺链最多 +52），因此寿命必须
+        // 跟随 BuildEnd 动态推算，不能用固定 timeLeft 倒数（会在偏移较大时
+        // 于引爆前被引擎提前清除）。计龄改用独立的 localAI[0] 计数器。
         private int BuildEnd => BaseBuildEnd + (int)Projectile.ai[1];
-        private int Age => Lifetime - Projectile.timeLeft;
+        private int Lifetime => BuildEnd + TailDuration;
+        private int Age => (int)Projectile.localAI[0];
         private MatrixGeometryShape Shape => (Projectile.identity % 3) switch
         {
             0 => MatrixGeometryShape.Tetrahedron,
@@ -189,14 +193,21 @@ namespace CalamityLegendsComeBack.BossAI.HDMC
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
             Projectile.penetrate = -1;
-            Projectile.timeLeft = Lifetime;
+            Projectile.timeLeft = 300; // 安全上限，实际寿命由 Lifetime/localAI 计数器把控
         }
 
         public override bool ShouldUpdatePosition() => false;
 
         public override void AI()
         {
+            Projectile.localAI[0]++;
             int age = Age;
+            if (age >= Lifetime)
+            {
+                Projectile.Kill();
+                return;
+            }
+
             if (age == BuildEnd && Main.netMode != NetmodeID.MultiplayerClient)
                 FireShards();
             if (age == BuildEnd && !Main.dedServ)

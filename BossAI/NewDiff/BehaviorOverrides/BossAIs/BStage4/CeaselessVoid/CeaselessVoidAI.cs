@@ -24,6 +24,12 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         public override float[] PhaseLifeRatios => new[] { 0.50f };
         public override int AttackCycleLength => 120;
         public override float MotionIntensity => 0.8f;
+
+        // Dedicated sound identity — pitch-varied vanilla SoundIDs, matching the convention Cryogen/OldDuke/
+        // Signus already use rather than bare unvaried SoundID calls.
+        private static readonly SoundStyle VoidPulseSound = SoundID.Item103 with { Volume = 0.7f, Pitch = -0.35f };
+        private static readonly SoundStyle OrbiterBreakSound = SoundID.NPCDeath4 with { Volume = 0.85f, Pitch = -0.1f };
+        private static readonly SoundStyle StasisSound = SoundID.Item103 with { Volume = 0.7f, Pitch = -0.55f };
         #endregion
 
         #region Attack States
@@ -41,6 +47,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             PhantasmalFury = 9,
             RealityRupture = 10,
             Transition = 11,
+            DeathAnimation = 12,
         }
 
         private static bool IsP1(AttackState s) => s == AttackState.MirrorBlade || s == AttackState.VoidConcentration;
@@ -82,6 +89,11 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
         private int arenaHurtCooldown = 0;
         private float transitionFlashAlpha = 0f;
+
+        // Motion afterimages — mostly a stationary anchor, but the P3 charges and any positioning burst
+        // still benefit from the same ghost-trail convention the rest of the roster uses.
+        private readonly Vector2[] oldPos = new Vector2[9];
+        private int oldPosIndex = 0;
         #endregion
 
         #region Core AI Hooks
@@ -163,7 +175,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 }
             }
 
-            if (state != AttackState.Transition)
+            if (state != AttackState.Transition && state != AttackState.DeathAnimation)
                 UpdateGravityBreathing(npc, target, currentPhase);
             UpdateOrbiterDeflection(npc, target);
             UpdateOrbitersRespawn();
@@ -182,11 +194,11 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 }
                 if (stunTimer == 0)
                 {
-                    SoundEngine.PlaySound(SoundID.Item103 with { Volume = 0.8f, Pitch = -0.3f }, npc.Center);
+                    SoundEngine.PlaySound(VoidPulseSound, npc.Center);
                     VoidFx.Burst(npc.Center, 6f, 24);
                 }
             }
-            else if (state != AttackState.Transition)
+            else if (state != AttackState.Transition && state != AttackState.DeathAnimation)
             {
                 npc.damage = npc.defDamage;
                 // The Void keeps its distance — a higher, wider standoff arc instead of camping the player's head
@@ -194,7 +206,8 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 Vector2 desiredVel = (desiredPos - npc.Center) * 0.03f;
                 npc.velocity = Vector2.Lerp(npc.velocity, desiredVel, 0.1f);
             }
-            npc.rotation = ticksRunning * 0.05f;
+            if (state != AttackState.DeathAnimation)
+                npc.rotation = ticksRunning * 0.05f;
 
             if (stunTimer == 0)
             {
@@ -212,14 +225,27 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     case AttackState.PhantasmalFury: ExecutePhantasmalFury(npc, target, ref timer, ref stateTracker); break;
                     case AttackState.RealityRupture: ExecuteRealityRupture(npc, target, ref timer, ref stateTracker); break;
                     case AttackState.Transition: ExecuteTransition(npc, target, ref timer, ref stateTracker); break;
+                    case AttackState.DeathAnimation: ExecuteDeathAnimation(npc, target, ref timer); break;
                 }
             }
+
+            oldPos[oldPosIndex] = npc.Center;
+            oldPosIndex = (oldPosIndex + 1) % oldPos.Length;
 
             return false;
         }
 
-        public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers) => ProcessOrbiterHits(npc, player.Center, ref modifiers, item.damage);
-        public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers) => ProcessOrbiterHits(npc, projectile.Center, ref modifiers, projectile.damage);
+        public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers)
+        {
+            ProcessOrbiterHits(npc, player.Center, ref modifiers, item.damage);
+            InterceptLethalHit(npc, ref modifiers, (int)AttackState.DeathAnimation, () => BeginDeathAnimation(npc, player));
+        }
+
+        public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers)
+        {
+            ProcessOrbiterHits(npc, projectile.Center, ref modifiers, projectile.damage);
+            InterceptLethalHit(npc, ref modifiers, (int)AttackState.DeathAnimation, () => BeginDeathAnimation(npc, Main.player[projectile.owner]));
+        }
         #endregion
 
         #region Helpers
@@ -258,7 +284,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
                 // Stasis shell: a visible cage of void-light holds the player — the freeze has a CAUSE
                 if (timer == siphonEnd)
-                    SoundEngine.PlaySound(SoundID.Item103 with { Volume = 0.7f, Pitch = -0.5f }, target.Center);
+                    SoundEngine.PlaySound(StasisSound, target.Center);
                 for (int i = 0; i < 2; i++)
                 {
                     float a = ticksRunning * 0.2f + i * MathHelper.Pi;
@@ -357,7 +383,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     if (orbiterFxCooldown <= 0) { orbiterFxCooldown = 8; SoundEngine.PlaySound(SoundID.NPCHit5 with { Volume = 0.4f }, orbiterPos); }
                     if (orbiterHPs[i] <= 0f)
                     {
-                        SoundEngine.PlaySound(SoundID.NPCDeath4, orbiterPos);
+                        SoundEngine.PlaySound(OrbiterBreakSound, orbiterPos);
                         VoidFx.Burst(orbiterPos, 5f, 14);
                         CheckAllOrbitersBroken(npc);
                     }
@@ -377,6 +403,8 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 npc.velocity = Vector2.Zero;
                 SoundEngine.PlaySound(SoundID.NPCHit53, npc.Center);
                 VoidFx.Burst(npc.Center, 7f, 30);
+                if (Main.netMode != NetmodeID.Server)
+                    Main.LocalPlayer.Calamity().GeneralScreenShakePower = 8f;
             }
         }
         #endregion
@@ -655,9 +683,118 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         }
         #endregion
 
+        #region Death Animation
+        // 奇点坍缩 — 五段演出, 把它的引力操控身份彻底反转到自己身上, 而不是通用爆炸:
+        // 虚空震颤 -> 引力失稳反噬(呼吸节律紊乱) -> 镜像回收 -> 奇点坍缩(自吸) -> 终末爆发.
+        private void BeginDeathAnimation(NPC npc, Player target)
+        {
+            npc.ai[1] = (float)AttackState.DeathAnimation;
+            npc.ai[2] = 0f;
+            npc.ai[3] = 0f;
+            stunTimer = 0;
+            for (int i = 0; i < 6; i++) orbiterHPs[i] = 0f;
+            npc.netUpdate = true;
+
+            TriggerDeathCinematic(npc, target, focusStrength: 0.6f, holdFrames: 55, shakePower: 10f);
+            SoundEngine.PlaySound(SoundID.Item103 with { Volume = 1f, Pitch = -0.5f }, npc.Center);
+        }
+
+        private void ExecuteDeathAnimation(NPC npc, Player target, ref float timer)
+        {
+            npc.damage = 0;
+            npc.dontTakeDamage = true;
+            npc.velocity *= 0.94f;
+
+            if (timer < 30f)
+            {
+                // 虚空震颤 — spin destabilizes, faster and less even than its usual steady drift
+                npc.rotation += 0.15f + MathF.Sin(timer * 0.5f) * 0.05f;
+                if ((int)timer % 3 == 0)
+                {
+                    Dust d = Dust.NewDustPerfect(npc.Center + Main.rand.NextVector2Circular(60f, 60f), DustID.PurpleTorch, Main.rand.NextVector2Circular(3f, 3f), 100, default, 1.3f);
+                    d.noGravity = true;
+                }
+            }
+            else if (timer < 75f)
+            {
+                // 引力失稳反噬 — the breathing rhythm it usually inflicts on the player turns erratic on itself:
+                // short alternating in/out dust pulses instead of the clean siphon-hold-push cycle
+                float t = timer - 30f;
+                bool pulling = (int)(t / 8f) % 2 == 0;
+                npc.rotation += pulling ? 0.03f : -0.06f;
+                if ((int)t % 2 == 0)
+                {
+                    Vector2 around = npc.Center + Main.rand.NextVector2CircularEdge(90f, 90f);
+                    Vector2 vel = pulling ? (npc.Center - around) * 0.06f : (around - npc.Center) * 0.06f;
+                    Dust d = Dust.NewDustPerfect(around, DustID.ShadowbeamStaff, vel, 100, default, 1.2f);
+                    d.noGravity = true;
+                }
+            }
+            else if (timer < 110f)
+            {
+                // 镜像回收 — any lingering mirror-shard identity gets pulled back in and consumed
+                float t = timer - 75f;
+                if ((int)t % 3 == 0)
+                {
+                    float a = t * 0.4f;
+                    Vector2 spawn = npc.Center + a.ToRotationVector2() * MathHelper.Lerp(160f, 30f, t / 35f);
+                    Dust d = Dust.NewDustPerfect(spawn, DustID.PurpleCrystalShard, (npc.Center - spawn) * 0.08f, 100, default, 1.3f);
+                    d.noGravity = true;
+                }
+            }
+            else if (timer < 150f)
+            {
+                // 奇点坍缩 — full self-implosion, the cinematic pull peaks as it shrinks toward a point
+                float t = timer - 110f;
+                npc.scale = MathHelper.Lerp(1f, 0.15f, Math.Min(1f, t / 40f));
+                if ((int)t % 2 == 0)
+                {
+                    Vector2 spawn = npc.Center + Main.rand.NextVector2CircularEdge(220f, 220f);
+                    Dust d = Dust.NewDustPerfect(spawn, DustID.PurpleTorch, (npc.Center - spawn) * 0.09f, 100, default, 1.4f);
+                    d.noGravity = true;
+                }
+            }
+            else
+            {
+                // 终末爆发 — the actual kill fires once, everything after is the lingering burst
+                if (timer == 150f)
+                {
+                    npc.scale = 1f;
+                    SoundEngine.PlaySound(SoundID.Item62, npc.Center);
+                    SoundEngine.PlaySound(SoundID.NPCDeath4, npc.Center);
+                    target.Calamity().GeneralScreenShakePower = 13f;
+                    VoidFx.Burst(npc.Center, 8f, 40);
+                    VoidFx.Burst(npc.Center, 5f, 24);
+                }
+
+                if (timer >= 172f)
+                {
+                    npc.dontTakeDamage = false;
+                    npc.StrikeInstantKill();
+                }
+            }
+        }
+        #endregion
+
         #region Drawing
         public override bool PreDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
+            // Motion afterimages — this boss mostly holds position, so the trail only shows up during the
+            // rare real movement (P3 charges, positioning bursts), same convention as the rest of the roster.
+            if (npc.velocity.Length() > 6f)
+            {
+                Texture2D tex = TextureAssets.Npc[npc.type].Value;
+                Vector2 origin = npc.frame.Size() * 0.5f;
+                for (int i = 1; i < oldPos.Length; i++)
+                {
+                    int idx = (oldPosIndex - i + oldPos.Length * 2) % oldPos.Length;
+                    if (oldPos[idx] == Vector2.Zero) continue;
+                    float fade = (1f - i / (float)oldPos.Length) * 0.35f * npc.Opacity;
+                    Color ghost = new Color(180, 100, 255, 0) * fade;
+                    spriteBatch.Draw(tex, oldPos[idx] - screenPos, npc.frame, ghost, npc.rotation, origin, npc.scale * (1f - i * 0.02f), SpriteEffects.None, 0f);
+                }
+            }
+
             if (transitionFlashAlpha > 0f)
                 spriteBatch.Draw(TextureAssets.MagicPixel.Value, new Rectangle(0, 0, Main.screenWidth, Main.screenHeight), Color.White * transitionFlashAlpha);
             return true;

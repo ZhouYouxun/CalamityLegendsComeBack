@@ -60,6 +60,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             SulphurousGrabber = 14,
 
             Transition = 15,
+            DeathAnimation = 16,
         }
 
         private static bool IsP1(AttackState s) => (int)s <= (int)AttackState.OldReaper;
@@ -211,6 +212,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     case AttackState.SpentFuel: ExecuteSpentFuel(npc, target, ref timer, ref tracker); break;
                     case AttackState.SulphurousGrabber: ExecuteSulphurousGrabber(npc, target, ref timer, ref tracker); break;
                     case AttackState.Transition: ExecuteTransition(npc, target, ref timer, ref tracker); break;
+                    case AttackState.DeathAnimation: ExecuteDeathAnimation(npc, target, ref timer); break;
                 }
             }
 
@@ -224,8 +226,17 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             return false;
         }
 
-        public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers) => ProcessBlubberHit(npc, player.Center, ref modifiers, item.damage);
-        public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers) => ProcessBlubberHit(npc, projectile.Center, ref modifiers, projectile.damage);
+        public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers)
+        {
+            ProcessBlubberHit(npc, player.Center, ref modifiers, item.damage);
+            InterceptLethalHit(npc, ref modifiers, (int)AttackState.DeathAnimation, () => BeginDeathAnimation(npc, player));
+        }
+
+        public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers)
+        {
+            ProcessBlubberHit(npc, projectile.Center, ref modifiers, projectile.damage);
+            InterceptLethalHit(npc, ref modifiers, (int)AttackState.DeathAnimation, () => BeginDeathAnimation(npc, Main.player[projectile.owner]));
+        }
         #endregion
 
         #region Movement: Circling & Committed Dashes
@@ -1117,6 +1128,103 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 npc.ai[3] = 0;
                 npc.dontTakeDamage = false;
                 npc.netUpdate = true;
+            }
+        }
+        #endregion
+
+        #region Death Animation
+        // 引擎殉爆 — 五段演出,复用本战已建立的废气/鳍脂/俯冲身份而不是套一个通用爆炸:
+        // 痉挛前摇 -> 引擎超载暴走(短促乱冲+电爆) -> 痛苦爬升 -> 失速俯冲 -> 终末殉爆.
+        private void BeginDeathAnimation(NPC npc, Player target)
+        {
+            npc.ai[1] = (float)AttackState.DeathAnimation;
+            npc.ai[2] = 0f;
+            npc.ai[3] = 0f;
+            blubberStunTimer = 0;
+            CleanupHeldWeapons(npc);
+            npc.netUpdate = true;
+
+            TriggerDeathCinematic(npc, target, focusStrength: 0.55f, holdFrames: 55, shakePower: 10f);
+            SoundEngine.PlaySound(SoundID.Roar with { Volume = 1f, Pitch = -0.4f }, npc.Center);
+        }
+
+        private void ExecuteDeathAnimation(NPC npc, Player target, ref float timer)
+        {
+            npc.damage = 0;
+            npc.dontTakeDamage = true;
+
+            if (timer < 30f)
+            {
+                // 痉挛前摇 — full-body jitter, sulphur bubbling out of the old blubber-pad wounds
+                npc.velocity *= 0.9f;
+                npc.rotation += MathF.Sin(timer * 1.3f) * 0.12f;
+                if ((int)timer % 5 == 0)
+                {
+                    for (int i = 0; i < 3; i++)
+                        ScourgeFx.Burst(BlubberPos(npc, i), 3f, 5, DustID.ToxicBubble);
+                }
+            }
+            else if (timer < 90f)
+            {
+                // 引擎超载暴走 — short jerky decelerating dashes in random directions, engine "misfiring"
+                if ((int)(timer - 30f) % 15 == 0)
+                {
+                    Vector2 misfireDir = Main.rand.NextVector2Unit();
+                    npc.velocity = misfireDir * Main.rand.NextFloat(9f, 15f);
+                    dashDir = misfireDir;
+                    SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.7f, Pitch = Main.rand.NextFloat(-0.2f, 0.3f) }, npc.Center);
+                    for (int i = 0; i < 10; i++)
+                    {
+                        Dust d = Dust.NewDustPerfect(npc.Center + Main.rand.NextVector2Circular(40f, 40f), DustID.Electric, misfireDir.RotatedBy(Main.rand.NextFloat(-0.6f, 0.6f)) * Main.rand.NextFloat(3f, 7f), 100, default, 1.1f);
+                        d.noGravity = true;
+                    }
+                }
+                else
+                {
+                    npc.velocity *= 0.9f;
+                }
+                if ((int)timer % 4 == 0)
+                    ScourgeFx.Burst(npc.Center - dashDir * 20f, 2.5f, 4, DustID.GoldFlame);
+            }
+            else if (timer < 130f)
+            {
+                // 痛苦爬升 — forced ascent, spin building, a thickening smoke column trailing below
+                npc.velocity.Y = MathHelper.Lerp(npc.velocity.Y, -9f, 0.06f);
+                npc.velocity.X *= 0.95f;
+                npc.rotation += 0.1f;
+                if ((int)timer % 3 == 0)
+                {
+                    Dust d = Dust.NewDustPerfect(npc.Center + new Vector2(0f, 40f), DustID.Smoke, new Vector2(0f, 2f), 150, default, 2f);
+                    d.noGravity = false;
+                }
+            }
+            else if (timer < 165f)
+            {
+                // 失速俯冲 — stall, then a gravity-accelerated plunge, afterimage trail reads as freefall weight
+                npc.velocity.Y = Math.Min(npc.velocity.Y + 1.4f, 26f);
+                npc.velocity.X *= 0.97f;
+                npc.rotation = npc.velocity.SafeNormalize(Vector2.UnitY).ToRotation() + MathHelper.PiOver2;
+                if ((int)timer % 2 == 0)
+                    ScourgeFx.Burst(npc.Center, 2f, 3, DustID.Smoke);
+            }
+            else
+            {
+                // 终末殉爆 — the actual kill fires once, everything after is just the lingering burst
+                if (timer == 165f)
+                {
+                    npc.velocity = Vector2.Zero;
+                    SoundEngine.PlaySound(SoundID.Item14 with { Volume = 1.1f, Pitch = -0.3f }, npc.Center);
+                    SoundEngine.PlaySound(SoundID.NPCDeath4, npc.Center);
+                    target.Calamity().GeneralScreenShakePower = 14f;
+                    ScourgeFx.Burst(npc.Center, 8f, 40, DustID.GoldFlame);
+                    ScourgeFx.Burst(npc.Center, 5f, 30, DustID.ToxicBubble);
+                }
+
+                if (timer >= 180f)
+                {
+                    npc.dontTakeDamage = false;
+                    npc.StrikeInstantKill();
+                }
             }
         }
         #endregion

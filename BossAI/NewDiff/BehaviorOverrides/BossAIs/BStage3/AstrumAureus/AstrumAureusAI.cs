@@ -41,7 +41,8 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             AstralachneaStaff = 9,
             AbandonedSlime = 10,
             HivePod = 11,
-            StateTransition = 12
+            StateTransition = 12,
+            DeathAnimation = 13
         }
         #endregion
 
@@ -163,8 +164,11 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             // Stellar Limbs Emitters — only defends P1; the reactor is exposed for the entire second phase.
             UpdateEmitterShield(npc, currentPhase);
 
-            npc.rotation = npc.velocity.X * 0.03f;
-            npc.scale = (currentPhase <= 1 ? 1.05f : 0.9f) + (float)Math.Sin(ticksRunning * 0.05f) * 0.02f;
+            if (state != AttackState.DeathAnimation)
+            {
+                npc.rotation = npc.velocity.X * 0.03f;
+                npc.scale = (currentPhase <= 1 ? 1.05f : 0.9f) + (float)Math.Sin(ticksRunning * 0.05f) * 0.02f;
+            }
 
             if (shieldFxCooldown > 0)
                 shieldFxCooldown--;
@@ -210,15 +214,18 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 case AttackState.StateTransition:
                     ExecuteTransition(npc, target, ref timer, ref stateTracker, currentPhase);
                     break;
+                case AttackState.DeathAnimation:
+                    ExecuteDeathAnimation(npc, target, ref timer);
+                    break;
             }
 
             return false;
         }
 
-        public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers) => ApplyDefenseModifiers(npc, ref modifiers);
-        public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers) => ApplyDefenseModifiers(npc, ref modifiers);
+        public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers) => ApplyDefenseModifiers(npc, ref modifiers, player);
+        public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers) => ApplyDefenseModifiers(npc, ref modifiers, Main.player[projectile.owner]);
 
-        private void ApplyDefenseModifiers(NPC npc, ref NPC.HitModifiers modifiers)
+        private void ApplyDefenseModifiers(NPC npc, ref NPC.HitModifiers modifiers, Player target)
         {
             if (npc.ai[1] == (float)AttackState.StateTransition)
             {
@@ -234,11 +241,14 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     shieldFxCooldown = 10;
                     SoundEngine.PlaySound(SoundID.Item50 with { Volume = 0.5f, Pitch = 0.3f }, npc.Center);
                 }
+                return;
             }
             else if (shieldStunTimer > 0)
             {
                 modifiers.FinalDamage *= 1.5f; // reactor exposed — 150% damage taken
             }
+
+            InterceptLethalHit(npc, ref modifiers, (int)AttackState.DeathAnimation, () => BeginDeathAnimation(npc, target));
         }
         #endregion
 
@@ -275,7 +285,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 {
                     superGravity = false;
                     gravityCycleTimer = 0;
-                    SoundEngine.PlaySound(SoundID.Item8, target.Center);
+                    SoundEngine.PlaySound(SoundID.Item8 with { Pitch = -0.3f }, target.Center);
                 }
             }
             else
@@ -285,7 +295,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 {
                     superGravity = true;
                     gravityCycleTimer = 0;
-                    SoundEngine.PlaySound(SoundID.Item8, target.Center);
+                    SoundEngine.PlaySound(SoundID.Item8 with { Pitch = 0.3f }, target.Center);
                 }
             }
         }
@@ -325,7 +335,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     shieldActive = false;
                     shieldStunTimer = 420; // 7s stun, 150% damage taken (design doc)
                     npc.velocity = Vector2.Zero;
-                    SoundEngine.PlaySound(SoundID.NPCHit53, npc.Center);
+                    SoundEngine.PlaySound(SoundID.NPCHit53 with { Pitch = -0.2f }, npc.Center);
                     Player t = Main.player[npc.target];
                     if (t.active) t.Calamity().GeneralScreenShakePower = 7f;
                     AureusFx.Burst(npc.Center, 6f, 30);
@@ -841,6 +851,99 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 npc.ai[2] = 0;
                 npc.ai[3] = 0;
                 npc.netUpdate = true;
+            }
+        }
+        #endregion
+
+        #region Death Animation
+        // 反应核心崩溃 — 五段演出, 让护盾/重力异常/星核身份成为演出主角, 而不是通用爆炸:
+        // 护盾余烬崩解 -> 重力异常紊乱(呼应引力阱) -> 星辉过载迸发 -> 核心过载上腾 -> 终末核爆.
+        private void BeginDeathAnimation(NPC npc, Player target)
+        {
+            npc.ai[1] = (float)AttackState.DeathAnimation;
+            npc.ai[2] = 0f;
+            npc.ai[3] = 0f;
+            shieldActive = false;
+            shieldStunTimer = 0;
+            npc.netUpdate = true;
+
+            TriggerDeathCinematic(npc, target, focusStrength: 0.55f, holdFrames: 55, shakePower: 10f);
+            SoundEngine.PlaySound(SoundID.Item62 with { Volume = 1f, Pitch = -0.4f }, npc.Center);
+        }
+
+        private void ExecuteDeathAnimation(NPC npc, Player target, ref float timer)
+        {
+            npc.damage = 0;
+            npc.dontTakeDamage = true;
+
+            if (timer < 25f)
+            {
+                // 护盾余烬崩解 — the same shell-strip visual as the phase-transition reveal, this time for good
+                npc.velocity *= 0.9f;
+                npc.rotation += MathF.Sin(timer * 1.2f) * 0.1f;
+                if ((int)timer % 2 == 0)
+                {
+                    Dust d = Dust.NewDustPerfect(npc.Center + Main.rand.NextVector2Circular(60f, 60f), DustID.GoldFlame, Main.rand.NextVector2Circular(3f, 3f), 100, default, 1.3f);
+                    d.noGravity = true;
+                }
+            }
+            else if (timer < 70f)
+            {
+                // 重力异常紊乱 — its own gravity-well identity turns erratic on itself: alternating pull/push jitter
+                float t = timer - 25f;
+                bool pulling = (int)(t / 10f) % 2 == 0;
+                npc.velocity += (pulling ? Vector2.UnitY : -Vector2.UnitY) * 0.3f;
+                npc.velocity *= 0.94f;
+                if ((int)t % 2 == 0)
+                {
+                    Vector2 around = npc.Center + Main.rand.NextVector2CircularEdge(90f, 90f);
+                    Vector2 vel = pulling ? (npc.Center - around) * 0.06f : (around - npc.Center) * 0.06f;
+                    Dust d = Dust.NewDustPerfect(around, DustID.PurpleTorch, vel, 100, default, 1.2f);
+                    d.noGravity = true;
+                }
+            }
+            else if (timer < 105f)
+            {
+                // 星辉过载迸发 — sparks jitter erratically off the reactor core
+                float t = timer - 70f;
+                npc.velocity += Main.rand.NextVector2Circular(0.6f, 0.6f);
+                npc.velocity *= 0.9f;
+                if ((int)t % 2 == 0)
+                {
+                    Dust d = Dust.NewDustPerfect(npc.Center, DustID.GoldFlame, Main.rand.NextVector2Circular(5f, 5f), 100, default, 1.4f);
+                    d.noGravity = true;
+                }
+            }
+            else if (timer < 140f)
+            {
+                // 核心过载上腾 — rises while the final overload builds, the cinematic pull peaks here
+                npc.velocity = Vector2.Lerp(npc.velocity, new Vector2(0f, -6f), 0.06f);
+                float t = timer - 105f;
+                if ((int)t % 2 == 0)
+                {
+                    Vector2 spawn = npc.Center + Main.rand.NextVector2CircularEdge(100f, 100f);
+                    Dust d = Dust.NewDustPerfect(spawn, DustID.GoldFlame, (npc.Center - spawn) * 0.07f, 100, default, 1.3f);
+                    d.noGravity = true;
+                }
+            }
+            else
+            {
+                // 终末核爆 — the actual kill fires once, everything after is the lingering burst
+                if (timer == 140f)
+                {
+                    npc.velocity = Vector2.Zero;
+                    SoundEngine.PlaySound(SoundID.Item62 with { Volume = 1.2f, Pitch = -0.2f }, npc.Center);
+                    SoundEngine.PlaySound(SoundID.NPCDeath4, npc.Center);
+                    target.Calamity().GeneralScreenShakePower = 13f;
+                    AureusFx.Burst(npc.Center, 8f, 40);
+                    AureusFx.Burst(npc.Center, 5f, 24, DustID.PurpleTorch);
+                }
+
+                if (timer >= 162f)
+                {
+                    npc.dontTakeDamage = false;
+                    npc.StrikeInstantKill();
+                }
             }
         }
         #endregion

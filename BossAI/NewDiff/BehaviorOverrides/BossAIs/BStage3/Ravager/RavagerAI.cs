@@ -47,7 +47,8 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             Viscera = 12,
             DragonbloodDisgorger = 13,
             BloodsoakedCrasher = 14,
-            ReactorOverloadTransition = 15
+            ReactorOverloadTransition = 15,
+            DeathAnimation = 16
         }
         #endregion
 
@@ -155,11 +156,14 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 npc.netUpdate = true;
             }
 
-            CheckLimbStatus(npc);
-            UpdateFleshTotem(npc, target, currentPhase);
+            if (state != AttackState.DeathAnimation)
+            {
+                CheckLimbStatus(npc);
+                UpdateFleshTotem(npc, target, currentPhase);
 
-            npc.rotation = npc.velocity.X * 0.02f;
-            npc.scale = 1.0f + (float)Math.Sin(ticksRunning * 0.05f) * 0.02f;
+                npc.rotation = npc.velocity.X * 0.02f;
+                npc.scale = 1.0f + (float)Math.Sin(ticksRunning * 0.05f) * 0.02f;
+            }
 
             switch (state)
             {
@@ -211,13 +215,25 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 case AttackState.ReactorOverloadTransition:
                     ExecuteTransition(npc, target, ref timer, ref stateTracker, currentPhase);
                     break;
+                case AttackState.DeathAnimation:
+                    ExecuteDeathAnimation(npc, target, ref timer);
+                    break;
             }
 
             return false;
         }
 
-        public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers) => ApplyDefenseModifiers(npc, ref modifiers);
-        public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers) => ApplyDefenseModifiers(npc, ref modifiers);
+        public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers)
+        {
+            ApplyDefenseModifiers(npc, ref modifiers);
+            InterceptLethalHit(npc, ref modifiers, (int)AttackState.DeathAnimation, () => BeginDeathAnimation(npc, player));
+        }
+
+        public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers)
+        {
+            ApplyDefenseModifiers(npc, ref modifiers);
+            InterceptLethalHit(npc, ref modifiers, (int)AttackState.DeathAnimation, () => BeginDeathAnimation(npc, Main.player[projectile.owner]));
+        }
 
         private void ApplyDefenseModifiers(NPC npc, ref NPC.HitModifiers modifiers)
         {
@@ -434,7 +450,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             {
                 tracker = 1f;
                 int dmg = npc.damage / 3;
-                SoundEngine.PlaySound(SoundID.Item14, npc.Center);
+                SoundEngine.PlaySound(SoundID.Item14 with { Pitch = 0.15f }, npc.Center);
                 RavagerFx.Burst(npc.Center, 5f, 16);
                 if (Main.netMode != NetmodeID.MultiplayerClient)
                 {
@@ -850,7 +866,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             {
                 tracker = 1;
                 int dmg = npc.damage / 3;
-                SoundEngine.PlaySound(SoundID.Item14, npc.Center);
+                SoundEngine.PlaySound(SoundID.Item14 with { Pitch = -0.15f }, npc.Center);
                 Player t = target;
                 if (t.active) t.Calamity().GeneralScreenShakePower = 8f;
                 RavagerFx.Burst(npc.Center, 6f, 24);
@@ -904,6 +920,97 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 npc.ai[2] = 0;
                 npc.ai[3] = 0;
                 npc.netUpdate = true;
+            }
+        }
+        #endregion
+
+        #region Death Animation
+        // 血肉终焉 — 五段演出, 让躯壳/血肉图腾身份成为演出主角, 而不是通用爆炸:
+        // 躯壳崩解 -> 残躯狂暴痉挛(前后踉跄) -> 血肉图腾回响涌动 -> 核心过载上腾 -> 终末血爆.
+        private void BeginDeathAnimation(NPC npc, Player target)
+        {
+            npc.ai[1] = (float)AttackState.DeathAnimation;
+            npc.ai[2] = 0f;
+            npc.ai[3] = 0f;
+            npc.netUpdate = true;
+
+            int totemType = ModContent.Find<ModNPC>("CalamityMod/FleshTotem").Type;
+            for (int i = 0; i < Main.maxNPCs; i++)
+            {
+                if (Main.npc[i].active && Main.npc[i].type == totemType)
+                    Main.npc[i].active = false;
+            }
+
+            TriggerDeathCinematic(npc, target, focusStrength: 0.55f, holdFrames: 55, shakePower: 10f);
+            SoundEngine.PlaySound(SoundID.Roar with { Volume = 1f, Pitch = -0.3f }, npc.Center);
+        }
+
+        private void ExecuteDeathAnimation(NPC npc, Player target, ref float timer)
+        {
+            npc.damage = 0;
+            npc.dontTakeDamage = true;
+
+            if (timer < 25f)
+            {
+                // 躯壳崩解 — the same shell-strip visual as the reactor-overload transition, this time for good
+                npc.velocity *= 0.9f;
+                npc.rotation += MathF.Sin(timer * 1.2f) * 0.08f;
+                if ((int)timer % 2 == 0)
+                {
+                    Dust d = Dust.NewDustPerfect(npc.Center + Main.rand.NextVector2Circular(80f, 80f), DustID.Blood, Main.rand.NextVector2Circular(3f, 3f), 100, default, 1.4f);
+                    d.noGravity = true;
+                }
+            }
+            else if (timer < 70f)
+            {
+                // 残躯狂暴痉挛 — a heavy beast lurches forward and back rather than whipping like a worm
+                float t = timer - 25f;
+                float lurch = MathF.Sin(t * 0.28f) * 8f;
+                npc.velocity = Vector2.Lerp(npc.velocity, new Vector2(lurch, 0f), 0.15f);
+                npc.rotation += lurch * 0.01f;
+                if ((int)t % 4 == 0)
+                    RavagerFx.Burst(npc.Center, 3f, 6);
+            }
+            else if (timer < 105f)
+            {
+                // 血肉图腾回响涌动 — the Flesh Totem's own pulse rhythm plays out on the boss itself, one last time
+                float t = timer - 70f;
+                float pulse = (MathF.Sin(t * 0.5f) + 1f) * 0.5f;
+                if ((int)t % 2 == 0)
+                {
+                    Vector2 spawn = npc.Center + Main.rand.NextVector2CircularEdge(MathHelper.Lerp(40f, 160f, pulse), MathHelper.Lerp(40f, 160f, pulse));
+                    Dust d = Dust.NewDustPerfect(spawn, DustID.Blood, (npc.Center - spawn) * 0.05f, 100, default, 1.3f);
+                    d.noGravity = true;
+                }
+            }
+            else if (timer < 140f)
+            {
+                // 核心过载上腾 — rises while the final overload builds, the cinematic pull peaks here
+                npc.velocity = Vector2.Lerp(npc.velocity, new Vector2(0f, -6f), 0.06f);
+                if ((int)timer % 2 == 0)
+                {
+                    Vector2 spawn = npc.Center + Main.rand.NextVector2CircularEdge(100f, 100f);
+                    Dust d = Dust.NewDustPerfect(spawn, DustID.Blood, (npc.Center - spawn) * 0.07f, 100, default, 1.3f);
+                    d.noGravity = true;
+                }
+            }
+            else
+            {
+                // 终末血爆 — the actual kill fires once, everything after is the lingering burst
+                if (timer == 140f)
+                {
+                    npc.velocity = Vector2.Zero;
+                    SoundEngine.PlaySound(SoundID.Item62 with { Volume = 1.2f, Pitch = -0.4f }, npc.Center);
+                    SoundEngine.PlaySound(SoundID.NPCDeath4, npc.Center);
+                    target.Calamity().GeneralScreenShakePower = 13f;
+                    RavagerFx.Burst(npc.Center, 8f, 40);
+                }
+
+                if (timer >= 162f)
+                {
+                    npc.dontTakeDamage = false;
+                    npc.StrikeInstantKill();
+                }
             }
         }
         #endregion

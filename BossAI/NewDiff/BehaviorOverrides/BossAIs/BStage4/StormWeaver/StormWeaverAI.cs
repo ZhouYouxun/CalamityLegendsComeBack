@@ -29,6 +29,12 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         public override float[] PhaseLifeRatios => new[] { 0.80f };
         public override int AttackCycleLength => 120;
         public override float MotionIntensity => 1.25f;
+
+        // Dedicated sound identity — pitch-varied vanilla SoundIDs, matching Cryogen/OldDuke/Signus's
+        // convention. This fight previously had zero SoundStyle fields and zero Pitch variance at all.
+        private static readonly SoundStyle SparkSound = SoundID.Item9 with { Volume = 0.7f, Pitch = 0.15f };
+        private static readonly SoundStyle StormRoarSound = SoundID.Roar with { Volume = 0.9f, Pitch = 0.35f };
+        private static readonly SoundStyle ThunderClapSound = SoundID.Item14 with { Volume = 0.75f, Pitch = -0.1f };
         #endregion
 
         #region Attack States
@@ -48,6 +54,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             FourSeasons = 11,
             RealityRupture = 12,
             Transition = 13,
+            DeathAnimation = 14,
         }
 
         private static bool IsP1(AttackState s) => s == AttackState.SkytideDragoon || s == AttackState.Storm || s == AttackState.Volterion;
@@ -85,6 +92,17 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         // 穿过式咬合 timer — private field, not npc.localAI, to avoid colliding with vanilla worm bookkeeping.
         private int carvePassTimer = 0;
         private float transitionFlashAlpha = 0f;
+
+        // Motion afterimages — the head is the fast, whip-heavy part of the worm; a ghost trail sells the
+        // speed the same way Cryogen/AstrumDeus/AquaticScourge already do.
+        private readonly Vector2[] headOldPos = new Vector2[9];
+        private int headOldPosIndex = 0;
+
+        // Sky leash — Storm Weaver's real Calamity home biome is Sky Height (see base StormWeaverHead.cs's
+        // own outOfBounds check). Same 5s-grace + Lerp speed-ramp pattern as Cryogen's snow leash.
+        private int outOfBiomeTimer = 0;
+        private float enrageSpeedMultiplier = 1f;
+        private bool wasEnraged = false;
         #endregion
 
         #region Core AI Hooks
@@ -123,10 +141,12 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             UpdateWingDrain(target);
             UpdateTeslaLink(npc, target);
             if (teslaHurtCooldown > 0) teslaHurtCooldown--;
+            if (state != AttackState.DeathAnimation)
+                UpdateBiomeEnrage(npc, target);
 
-            if (state != AttackState.Transition)
+            if (state != AttackState.Transition && state != AttackState.DeathAnimation)
             {
-                float baseSpeed = IsP1(state) ? 14f : 22f;
+                float baseSpeed = (IsP1(state) ? 14f : 22f) * enrageSpeedMultiplier;
                 float speed = baseSpeed + (1f - lifeRatio) * 6f;
                 float turnSpeed = 0.045f + (1f - lifeRatio) * 0.03f;
 
@@ -163,13 +183,49 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 case AttackState.FourSeasons: ExecuteFourSeasons(npc, target, ref timer, ref tracker); break;
                 case AttackState.RealityRupture: ExecuteRealityRupture(npc, target, ref timer, ref tracker); break;
                 case AttackState.Transition: ExecuteTransition(npc, target, ref timer, ref tracker); break;
+                case AttackState.DeathAnimation: ExecuteDeathAnimation(npc, target, ref timer); break;
             }
+
+            headOldPos[headOldPosIndex] = npc.Center;
+            headOldPosIndex = (headOldPosIndex + 1) % headOldPos.Length;
 
             return false;
         }
 
-        public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers) => ApplyDefense(npc, ref modifiers);
-        public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers) => ApplyDefense(npc, ref modifiers);
+        #region Sky Enrage
+        private void UpdateBiomeEnrage(NPC npc, Player target)
+        {
+            const int graceFrames = 300;
+            const float maxMultiplier = 1.35f;
+
+            if (!target.ZoneSkyHeight)
+                outOfBiomeTimer = Math.Min(outOfBiomeTimer + 1, graceFrames + 120);
+            else
+                outOfBiomeTimer = Math.Max(outOfBiomeTimer - 3, 0);
+
+            bool enraged = outOfBiomeTimer >= graceFrames;
+            npc.Calamity().CurrentlyEnraged = enraged;
+            enrageSpeedMultiplier = MathHelper.Lerp(enrageSpeedMultiplier, enraged ? maxMultiplier : 1f, 0.04f);
+
+            if (enraged && !wasEnraged)
+                SoundEngine.PlaySound(StormRoarSound, npc.Center);
+            wasEnraged = enraged;
+        }
+        #endregion
+
+        public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers)
+        {
+            ApplyDefense(npc, ref modifiers);
+            if (npc.type == ModContent.Find<ModNPC>("CalamityMod/StormWeaverHead").Type)
+                InterceptLethalHit(npc, ref modifiers, (int)AttackState.DeathAnimation, () => BeginDeathAnimation(npc, player));
+        }
+
+        public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers)
+        {
+            ApplyDefense(npc, ref modifiers);
+            if (npc.type == ModContent.Find<ModNPC>("CalamityMod/StormWeaverHead").Type)
+                InterceptLethalHit(npc, ref modifiers, (int)AttackState.DeathAnimation, () => BeginDeathAnimation(npc, Main.player[projectile.owner]));
+        }
 
         // Design doc: in P1 only the tail is exposed (head/body are ~immune); once the shell breaks off at
         // 80% HP the whole body becomes normally damageable.
@@ -386,6 +442,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
             if (timer == 30 && Main.netMode != NetmodeID.MultiplayerClient)
             {
+                SoundEngine.PlaySound(SparkSound, npc.Center);
                 for (int i = 0; i < 4; i++)
                 {
                     Vector2 pos = target.Center + new Vector2(i * 160f - 240f, Main.rand.NextFloat(-150f, 150f));
@@ -514,6 +571,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
             if (timer == 40 && Main.netMode != NetmodeID.MultiplayerClient)
             {
+                SoundEngine.PlaySound(ThunderClapSound, npc.Center);
                 Vector2 dir = SafeNormalize(target.Center - npc.Center, Vector2.UnitY);
                 foreach (float phase in new float[] { 0f, MathHelper.Pi })
                 {
@@ -651,11 +709,118 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         }
         #endregion
 
+        #region Death Animation
+        // 雷霆湮灭 — 五段演出, 借身体本身当作一条会甩动的雷蛇, 而不是原地放一个通用爆炸:
+        // 雷暴痉挛 -> 狂风失控蜿蜒(甩尾) -> 雷鸣汇聚上腾 -> 闪电崩解俯冲 -> 终末雷爆.
+        private void BeginDeathAnimation(NPC npc, Player target)
+        {
+            npc.ai[1] = (float)AttackState.DeathAnimation;
+            npc.ai[2] = 0f;
+            npc.ai[3] = 0f;
+            carvePassTimer = 0;
+            npc.netUpdate = true;
+
+            TriggerDeathCinematic(npc, target, focusStrength: 0.55f, holdFrames: 55, shakePower: 10f);
+            SoundEngine.PlaySound(SoundID.Roar with { Volume = 1f, Pitch = 0.15f }, npc.Center);
+        }
+
+        private void ExecuteDeathAnimation(NPC npc, Player target, ref float timer)
+        {
+            npc.damage = 0;
+            npc.dontTakeDamage = true;
+
+            if (timer < 30f)
+            {
+                // 雷暴痉挛 — the whole serpent arcs with barely-controlled current
+                npc.velocity *= 0.9f;
+                npc.rotation += MathF.Sin(timer * 1.4f) * 0.1f;
+                if ((int)timer % 3 == 0)
+                {
+                    Dust d = Dust.NewDustPerfect(npc.Center + Main.rand.NextVector2Circular(50f, 50f), DustID.Electric, Main.rand.NextVector2Circular(4f, 4f), 100, default, 1.3f);
+                    d.noGravity = true;
+                }
+            }
+            else if (timer < 80f)
+            {
+                // 狂风失控蜿蜒 — whip-thrash: turn rate and sine amplitude both spike, a serpent lashing out
+                float t = timer - 30f;
+                float whipAngle = MathF.Sin(t * 0.35f) * 2.2f;
+                Vector2 whipDir = Vector2.UnitX.RotatedBy(whipAngle);
+                npc.velocity = Vector2.Lerp(npc.velocity, whipDir * 18f, 0.2f);
+                npc.rotation = npc.velocity.ToRotation() + MathHelper.PiOver2;
+                if ((int)t % 4 == 0)
+                    WeaverFx.Burst(npc.Center, 3f, 6);
+            }
+            else if (timer < 120f)
+            {
+                // 雷鸣汇聚上腾 — rises while a storm-orb builds at its head, the cinematic pull peaks here
+                npc.velocity = Vector2.Lerp(npc.velocity, new Vector2(0f, -6f), 0.05f);
+                float t = timer - 80f;
+                float ringRadius = MathHelper.Lerp(10f, 90f, t / 40f);
+                if ((int)t % 2 == 0)
+                {
+                    Vector2 spawn = npc.Center + (t * 0.5f).ToRotationVector2() * ringRadius;
+                    Dust d = Dust.NewDustPerfect(spawn, DustID.Electric, (npc.Center - spawn) * 0.05f, 100, default, 1.4f);
+                    d.noGravity = true;
+                }
+            }
+            else if (timer < 155f)
+            {
+                // 闪电崩解俯冲 — a hard opposite-direction dive, lightning trailing off the whole body
+                if (timer == 120f)
+                    npc.velocity = new Vector2(0f, 24f);
+                npc.velocity.Y = Math.Min(npc.velocity.Y + 0.6f, 30f);
+                npc.rotation = npc.velocity.ToRotation() + MathHelper.PiOver2;
+                if ((int)timer % 2 == 0)
+                {
+                    Dust d = Dust.NewDustPerfect(npc.Center, DustID.Electric, -npc.velocity.SafeNormalize(Vector2.UnitY).RotatedBy(Main.rand.NextFloat(-0.4f, 0.4f)) * Main.rand.NextFloat(3f, 6f), 100, default, 1.2f);
+                    d.noGravity = true;
+                }
+            }
+            else
+            {
+                // 终末雷爆 — the actual kill fires once, everything after is the lingering burst
+                if (timer == 155f)
+                {
+                    npc.velocity = Vector2.Zero;
+                    SoundEngine.PlaySound(SoundID.Item14 with { Volume = 1.1f, Pitch = 0.1f }, npc.Center);
+                    SoundEngine.PlaySound(SoundID.NPCDeath4, npc.Center);
+                    target.Calamity().GeneralScreenShakePower = 13f;
+                    WeaverFx.Burst(npc.Center, 8f, 40);
+                }
+
+                if (timer >= 177f)
+                {
+                    npc.dontTakeDamage = false;
+                    npc.StrikeInstantKill();
+                }
+            }
+        }
+        #endregion
+
         #region Drawing
         public override bool PreDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
             int headType = ModContent.Find<ModNPC>("CalamityMod/StormWeaverHead").Type;
-            if (npc.type == headType && transitionFlashAlpha > 0f)
+            if (npc.type != headType)
+                return true;
+
+            // Motion afterimages — sells the carve-pass speed the same way Cryogen/AstrumDeus/AquaticScourge do.
+            if (npc.velocity.Length() > 12f)
+            {
+                Texture2D tex = TextureAssets.Npc[npc.type].Value;
+                Vector2 origin = npc.frame.Size() * 0.5f;
+                for (int i = 1; i < headOldPos.Length; i++)
+                {
+                    int idx = (headOldPosIndex - i + headOldPos.Length * 2) % headOldPos.Length;
+                    if (headOldPos[idx] == Vector2.Zero) continue;
+                    float fade = (1f - i / (float)headOldPos.Length) * 0.35f * npc.Opacity;
+                    Color ghost = new Color(255, 120, 200, 0) * fade;
+                    spriteBatch.Draw(tex, headOldPos[idx] - screenPos, npc.frame, ghost, npc.rotation, origin, npc.scale * (1f - i * 0.02f), SpriteEffects.None, 0f);
+                }
+            }
+
+            if (transitionFlashAlpha > 0f)
                 spriteBatch.Draw(TextureAssets.MagicPixel.Value, new Rectangle(0, 0, Main.screenWidth, Main.screenHeight), Color.White * transitionFlashAlpha);
             return true;
         }

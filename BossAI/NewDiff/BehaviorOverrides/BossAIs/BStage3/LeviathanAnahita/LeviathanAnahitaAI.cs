@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossAIs.Common;
 using CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossAIs.WeaponAttacks;
 using Microsoft.Xna.Framework;
@@ -106,6 +107,12 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         private bool wasEnraged = false;
 
         private float transitionFlashAlpha = 0f;
+
+        // Leviathan and Anahita are two independent NPCs that die independently — a death performance here
+        // must NOT touch master.ai[] (the shared conductor state both entities read), or killing one would
+        // desync or interrupt the other's still-ongoing fight. So each death runs on its own per-whoAmI timer
+        // instead of going through the normal AttackState machine at all.
+        private readonly Dictionary<int, int> deathAnimTimer = new();
         #endregion
 
         #region Core AI Hooks
@@ -124,6 +131,13 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             {
                 npc.velocity.Y -= 0.5f;
                 if (npc.timeLeft > 60) npc.timeLeft = 60;
+                return false;
+            }
+
+            if (deathAnimTimer.TryGetValue(npc.whoAmI, out int deathTimer) && deathTimer > 0)
+            {
+                ExecuteDeathAnimation(npc, target, isAnahita, deathTimer);
+                deathAnimTimer[npc.whoAmI] = deathTimer + 1;
                 return false;
             }
 
@@ -238,8 +252,17 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             return false;
         }
 
-        public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers) => ApplyDefenseModifiers(npc, ref modifiers);
-        public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers) => ApplyDefenseModifiers(npc, ref modifiers);
+        public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers)
+        {
+            ApplyDefenseModifiers(npc, ref modifiers);
+            InterceptEntityDeath(npc, ref modifiers, player);
+        }
+
+        public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers)
+        {
+            ApplyDefenseModifiers(npc, ref modifiers);
+            InterceptEntityDeath(npc, ref modifiers, Main.player[projectile.owner]);
+        }
 
         private void ApplyDefenseModifiers(NPC npc, ref NPC.HitModifiers modifiers)
         {
@@ -268,6 +291,40 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     }
                 }
             }
+        }
+
+        // Self-contained lethal-hit intercept keyed by whoAmI (not by the shared master.ai[1] state — see the
+        // deathAnimTimer field comment for why) so it works identically and independently for both entities.
+        private void InterceptEntityDeath(NPC npc, ref NPC.HitModifiers modifiers, Player target)
+        {
+            if (deathAnimTimer.TryGetValue(npc.whoAmI, out int t) && t > 0)
+            {
+                modifiers.FinalDamage *= 0f;
+                return;
+            }
+
+            modifiers.ModifyHitInfo += (ref NPC.HitInfo info) =>
+            {
+                if (npc.life - info.Damage > 1)
+                    return;
+                info.Damage = Math.Max(npc.life - 1, 0);
+                npc.dontTakeDamage = true;
+                BeginDeathAnimation(npc, target);
+            };
+        }
+
+        private void BeginDeathAnimation(NPC npc, Player target)
+        {
+            deathAnimTimer[npc.whoAmI] = 1;
+            npc.velocity = Vector2.Zero;
+            npc.netUpdate = true;
+
+            bool isAnahita = npc.type == ModContent.Find<ModNPC>("CalamityMod/Anahita").Type;
+            TriggerDeathCinematic(npc, target, focusStrength: 0.5f, holdFrames: 50, shakePower: 9f);
+            if (isAnahita)
+                SoundEngine.PlaySound(SoundID.Shatter, npc.Center);
+            else
+                SoundEngine.PlaySound(SoundID.Roar with { Volume = 1f, Pitch = 0.1f }, npc.Center);
         }
         #endregion
 
@@ -777,6 +834,103 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 timer = 0;
                 tracker = 0;
                 npc.netUpdate = true;
+            }
+        }
+
+        // 独立殒落 — 五段演出, 分别按利维坦(深潜巨兽)/阿纳西塔(冰棱术士)两种身份走不同的中段, 而不是通用爆炸.
+        // 两个实体各自独立播放, 互不干扰对方的战斗状态(见 deathAnimTimer 字段注释).
+        // 震颤 -> 中段(阿纳西塔:冰棱汇聚回收环绕加速 / 利维坦:甩尾俯冲) -> 独有收尾 -> 上腾聚能 -> 终末爆发.
+        private void ExecuteDeathAnimation(NPC npc, Player target, bool isAnahita, int t)
+        {
+            npc.damage = 0;
+            npc.dontTakeDamage = true;
+            int themeDust = isAnahita ? DustID.IceRod : DustID.DungeonWater;
+
+            if (t < 25)
+            {
+                npc.velocity *= 0.9f;
+                npc.rotation += MathF.Sin(t * 1.2f) * 0.1f;
+                if (t % 2 == 0)
+                {
+                    Dust d = Dust.NewDustPerfect(npc.Center + Main.rand.NextVector2Circular(60f, 60f), themeDust, Main.rand.NextVector2Circular(3f, 3f), 100, default, 1.3f);
+                    d.noGravity = true;
+                }
+            }
+            else if (t < 70)
+            {
+                if (isAnahita)
+                {
+                    // 冰环加速环绕 — orbiting shards spin faster as the prism sorceress unravels
+                    float a = (t - 25) * 0.3f;
+                    npc.velocity *= 0.92f;
+                    if (t % 2 == 0)
+                    {
+                        Vector2 spawn = npc.Center + a.ToRotationVector2() * 80f;
+                        Dust d = Dust.NewDustPerfect(spawn, DustID.IceRod, Vector2.Zero, 100, default, 1.2f);
+                        d.noGravity = true;
+                    }
+                }
+                else
+                {
+                    // 甩尾俯冲前奏 — the same whip-thrash lash every worm-like body in this roster uses, gone loose
+                    float tt = t - 25;
+                    Vector2 whipDir = Vector2.UnitX.RotatedBy(MathF.Sin(tt * 0.35f) * 2f);
+                    npc.velocity = Vector2.Lerp(npc.velocity, whipDir * 13f, 0.15f);
+                    npc.rotation = npc.velocity.ToRotation();
+                    if (t % 4 == 0)
+                        LeviathanFx.Burst(npc.Center, 3f, 6);
+                }
+            }
+            else if (t < 105)
+            {
+                if (isAnahita)
+                {
+                    // 冰棱残躯回收 — the shattered ice-shield identity pulls its own remnants back inward
+                    if (t % 3 == 0)
+                    {
+                        Vector2 spawn = npc.Center + Main.rand.NextVector2CircularEdge(150f, 150f);
+                        Dust d = Dust.NewDustPerfect(spawn, DustID.IceRod, (npc.Center - spawn) * 0.07f, 100, default, 1.3f);
+                        d.noGravity = true;
+                    }
+                }
+                else
+                {
+                    // 深潜 — dives as if sinking back into the trench it came from
+                    npc.velocity = Vector2.Lerp(npc.velocity, new Vector2(0f, 7f), 0.06f);
+                    if (t % 2 == 0)
+                    {
+                        Dust d = Dust.NewDustPerfect(npc.Center + new Vector2(Main.rand.NextFloat(-30f, 30f), 60f), DustID.DungeonWater, new Vector2(0f, -2f), 100, default, 1.3f);
+                        d.noGravity = true;
+                    }
+                }
+            }
+            else if (t < 140)
+            {
+                // 上腾聚能 — both entities rise together into their finale, the cinematic pull peaks here
+                npc.velocity = Vector2.Lerp(npc.velocity, new Vector2(0f, -7f), 0.06f);
+                if (t % 2 == 0)
+                {
+                    Vector2 spawn = npc.Center + Main.rand.NextVector2CircularEdge(90f, 90f);
+                    Dust d = Dust.NewDustPerfect(spawn, themeDust, (npc.Center - spawn) * 0.06f, 100, default, 1.3f);
+                    d.noGravity = true;
+                }
+            }
+            else
+            {
+                // 终末爆发 — the actual kill fires once, everything after is the lingering burst
+                if (t == 140)
+                {
+                    npc.velocity = Vector2.Zero;
+                    SoundEngine.PlaySound(SoundID.NPCDeath4, npc.Center);
+                    target.Calamity().GeneralScreenShakePower = 12f;
+                    LeviathanFx.Burst(npc.Center, 7f, 36, themeDust);
+                }
+
+                if (t >= 160)
+                {
+                    npc.dontTakeDamage = false;
+                    npc.StrikeInstantKill();
+                }
             }
         }
         #endregion

@@ -43,7 +43,8 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             BlightSpewer = 9,
             Pandemic = 10,
             PlagueTaintedSMG = 11,
-            OverloadTransition = 12
+            OverloadTransition = 12,
+            DeathAnimation = 13
         }
         #endregion
 
@@ -216,8 +217,11 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             UpdateDroneShield(npc, currentPhase);
 
             // Visual oscillations and breathing
-            npc.rotation = npc.velocity.X * 0.03f;
-            npc.scale = 1f + (float)Math.Sin(ticksRunning * 0.05f) * 0.02f;
+            if (state != AttackState.DeathAnimation)
+            {
+                npc.rotation = npc.velocity.X * 0.03f;
+                npc.scale = 1f + (float)Math.Sin(ticksRunning * 0.05f) * 0.02f;
+            }
 
             if (shieldFxCooldown > 0)
                 shieldFxCooldown--;
@@ -264,6 +268,9 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 case AttackState.OverloadTransition:
                     ExecuteOverloadTransition(npc, target, ref timer, ref stateTracker, currentPhase);
                     break;
+                case AttackState.DeathAnimation:
+                    ExecuteDeathAnimation(npc, target, ref timer);
+                    break;
             }
 
             return false;
@@ -272,11 +279,13 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers)
         {
             ApplyDefenseModifiers(npc, ref modifiers);
+            InterceptLethalHit(npc, ref modifiers, (int)AttackState.DeathAnimation, () => BeginDeathAnimation(npc, player));
         }
 
         public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers)
         {
             ApplyDefenseModifiers(npc, ref modifiers);
+            InterceptLethalHit(npc, ref modifiers, (int)AttackState.DeathAnimation, () => BeginDeathAnimation(npc, Main.player[projectile.owner]));
         }
 
         private void ApplyDefenseModifiers(NPC npc, ref NPC.HitModifiers modifiers)
@@ -1113,6 +1122,96 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             }
         }
         #endregion
+
+        #region Death Animation
+        // 瘟疫终末 — 五段演出, 让护甲/毒气/温室结界身份成为演出主角, 而不是通用爆炸:
+        // 护甲腐蚀崩解 -> 毒气失控喷发 -> 温室锚点回收 -> 瘟疫核心过载上腾 -> 终末瘟疫核爆.
+        private void BeginDeathAnimation(NPC npc, Player target)
+        {
+            npc.ai[1] = (float)AttackState.DeathAnimation;
+            npc.ai[2] = 0f;
+            npc.ai[3] = 0f;
+            shieldActive = false;
+            shieldStunTimer = 0;
+            npc.netUpdate = true;
+
+            TriggerDeathCinematic(npc, target, focusStrength: 0.55f, holdFrames: 55, shakePower: 10f);
+            SoundEngine.PlaySound(SoundID.Item62 with { Volume = 1f, Pitch = -0.4f }, npc.Center);
+        }
+
+        private void ExecuteDeathAnimation(NPC npc, Player target, ref float timer)
+        {
+            npc.damage = 0;
+            npc.dontTakeDamage = true;
+
+            if (timer < 25f)
+            {
+                // 护甲腐蚀崩解 — the same shell-strip visual as the overload transition, this time for good
+                npc.velocity *= 0.9f;
+                npc.rotation += MathF.Sin(timer * 1.2f) * 0.1f;
+                if ((int)timer % 2 == 0)
+                {
+                    Dust d = Dust.NewDustPerfect(npc.Center + Main.rand.NextVector2Circular(70f, 70f), DustID.GreenFairy, Main.rand.NextVector2Circular(3f, 3f), 100, default, 1.3f);
+                    d.noGravity = true;
+                }
+            }
+            else if (timer < 70f)
+            {
+                // 毒气失控喷发 — the greenhouse-steam identity vents wildly instead of on a lane/warning cycle
+                npc.velocity += Main.rand.NextVector2Circular(0.5f, 0.5f);
+                npc.velocity *= 0.92f;
+                if ((int)timer % 2 == 0)
+                {
+                    Dust d = Dust.NewDustPerfect(npc.Center + Main.rand.NextVector2Circular(50f, 50f), DustID.PoisonStaff, new Vector2(Main.rand.NextFloat(-1f, 1f), Main.rand.NextFloat(-2f, -0.5f)), 100, default, 1.4f);
+                    d.noGravity = true;
+                }
+            }
+            else if (timer < 105f)
+            {
+                // 温室锚点回收 — the greenhouse arena border rushes fully inward onto the boss itself
+                float t = timer - 70f;
+                if ((int)t % 3 == 0)
+                {
+                    float a = Main.rand.NextFloat(MathHelper.TwoPi);
+                    Vector2 pos = npc.Center + a.ToRotationVector2() * MathHelper.Lerp(500f, 20f, t / 35f);
+                    Dust d = Dust.NewDustPerfect(pos, DustID.GreenFairy, (npc.Center - pos) * 0.06f, 100, default, 1.3f);
+                    d.noGravity = true;
+                }
+            }
+            else if (timer < 140f)
+            {
+                // 瘟疫核心过载上腾 — rises while the final overload builds, the cinematic pull peaks here
+                npc.velocity = Vector2.Lerp(npc.velocity, new Vector2(0f, -6f), 0.06f);
+                float t = timer - 105f;
+                if ((int)t % 2 == 0)
+                {
+                    Vector2 spawn = npc.Center + Main.rand.NextVector2CircularEdge(100f, 100f);
+                    Dust d = Dust.NewDustPerfect(spawn, DustID.GreenFairy, (npc.Center - spawn) * 0.07f, 100, default, 1.3f);
+                    d.noGravity = true;
+                }
+            }
+            else
+            {
+                // 终末瘟疫核爆 — the actual kill fires once, everything after is the lingering burst
+                if (timer == 140f)
+                {
+                    npc.velocity = Vector2.Zero;
+                    SoundEngine.PlaySound(SoundID.Item62 with { Volume = 1.2f, Pitch = -0.2f }, npc.Center);
+                    SoundEngine.PlaySound(SoundID.NPCDeath4, npc.Center);
+                    target.Calamity().GeneralScreenShakePower = 13f;
+                    PlagueFx.Burst(npc.Center, 8f, 40);
+                    PlagueFx.Burst(npc.Center, 5f, 24);
+                }
+
+                if (timer >= 162f)
+                {
+                    npc.dontTakeDamage = false;
+                    npc.StrikeInstantKill();
+                }
+            }
+        }
+        #endregion
+
         #region Drawing
         public override bool PreDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {

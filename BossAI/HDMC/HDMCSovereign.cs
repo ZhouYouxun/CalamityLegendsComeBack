@@ -21,7 +21,7 @@ namespace CalamityLegendsComeBack.BossAI.HDMC
     ///
     /// 状态机（ai[0]）：
     ///   0  = 登场展开
-    ///   1-13 = 攻击模组（见 HDMCSovereignAttacks）
+    ///   1-30 = 攻击模组，每阶段 6 种（见 HDMCSovereignAttacks）
     ///   89 = 攻击间隙换位
     ///   90 = 阶段转换（重编译）
     ///   95 = 终章·数据奇点（生命 &lt;8% 触发一次）

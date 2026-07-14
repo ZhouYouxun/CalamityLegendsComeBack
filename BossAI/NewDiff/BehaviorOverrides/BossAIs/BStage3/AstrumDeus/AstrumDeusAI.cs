@@ -36,6 +36,11 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         public override float[] PhaseLifeRatios => new[] { 0.50f };
         public override int AttackCycleLength => 120;
         public override float MotionIntensity => 1.3f;
+
+        // Dedicated sound identity — pitch-varied vanilla SoundIDs, matching Cryogen/OldDuke/Signus's
+        // convention. This fight previously had zero SoundStyle fields and zero Pitch variance at all.
+        private static readonly SoundStyle StarSputterSound = SoundID.Item9 with { Volume = 0.7f, Pitch = 0.2f };
+        private static readonly SoundStyle StarSpawnBreakSound = SoundID.NPCDeath4 with { Volume = 0.85f, Pitch = -0.15f };
         #endregion
 
         #region Attack States
@@ -52,6 +57,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             RadiantStar = 8,
             TrueBiome = 9,
             Transition = 10,
+            DeathAnimation = 11,
         }
 
         private static bool IsP1(AttackState s) => s == AttackState.MicrowaveBeam || s == AttackState.StarSputter ||
@@ -94,6 +100,11 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
         // 穿过式咬合 timer, per-head (Deus can split into two Heads; all four localAI slots are taken).
         private readonly Dictionary<int, int> carveTimers = new();
+
+        // Motion afterimages, per-head (keyed by whoAmI like carveTimers above — two Heads can be alive
+        // simultaneously post-split, each needs its own independent trail).
+        private readonly Dictionary<int, Vector2[]> headTrails = new();
+        private readonly Dictionary<int, int> headTrailIndex = new();
 
         private float transitionFlashAlpha = 0f;
         #endregion
@@ -151,9 +162,10 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 return false;
             }
 
-            UpdateConstellationLink(npc, target);
+            if (state != AttackState.DeathAnimation)
+                UpdateConstellationLink(npc, target);
 
-            if (state != AttackState.Transition)
+            if (state != AttackState.Transition && state != AttackState.DeathAnimation)
             {
                 float baseSpeed = IsP1(state) ? 14f : 20f;
                 float speed = baseSpeed + (1f - lifeRatio) * 6f;
@@ -212,13 +224,37 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 case AttackState.Transition:
                     ExecuteTransition(npc, target, ref timer, ref tracker);
                     break;
+                case AttackState.DeathAnimation:
+                    ExecuteDeathAnimation(npc, target, ref timer);
+                    break;
             }
+
+            if (!headTrails.TryGetValue(npc.whoAmI, out Vector2[] trail))
+            {
+                trail = new Vector2[9];
+                headTrails[npc.whoAmI] = trail;
+                headTrailIndex[npc.whoAmI] = 0;
+            }
+            int trailIdx = headTrailIndex[npc.whoAmI];
+            trail[trailIdx] = npc.Center;
+            headTrailIndex[npc.whoAmI] = (trailIdx + 1) % trail.Length;
 
             return false;
         }
 
-        public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers) => ProcessCoreHit(npc, item.damage, ref modifiers);
-        public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers) => ProcessCoreHit(npc, projectile.damage, ref modifiers);
+        public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers)
+        {
+            ProcessCoreHit(npc, item.damage, ref modifiers);
+            if (npc.type == ModContent.Find<ModNPC>("CalamityMod/AstrumDeusHead").Type)
+                InterceptLethalHit(npc, ref modifiers, (int)AttackState.DeathAnimation, () => BeginDeathAnimation(npc, player));
+        }
+
+        public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers)
+        {
+            ProcessCoreHit(npc, projectile.damage, ref modifiers);
+            if (npc.type == ModContent.Find<ModNPC>("CalamityMod/AstrumDeusHead").Type)
+                InterceptLethalHit(npc, ref modifiers, (int)AttackState.DeathAnimation, () => BeginDeathAnimation(npc, Main.player[projectile.owner]));
+        }
 
         // Design doc: Head/Tail take 100% damage. Body segments carry a 250 HP stellar core each — intact,
         // that segment has 95% DR; once the core is broken, DR is gone AND the segment takes 200% damage.
@@ -244,7 +280,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
             if (hp <= 0f)
             {
-                SoundEngine.PlaySound(SoundID.NPCDeath4, npc.Center);
+                SoundEngine.PlaySound(StarSpawnBreakSound, npc.Center);
                 DeusFx.Burst(npc.Center, 5f, 14, DustID.PurpleTorch);
 
                 int headIdx = (int)npc.ai[2];
@@ -400,6 +436,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
             if (timer == 40 && Main.netMode != NetmodeID.MultiplayerClient)
             {
+                SoundEngine.PlaySound(StarSputterSound, npc.Center);
                 int dmg = npc.damage / 3;
                 int bodyType = ModContent.Find<ModNPC>("CalamityMod/AstrumDeusBody").Type;
                 for (int i = 0; i < Main.maxNPCs; i++)
@@ -659,7 +696,134 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         }
         #endregion
 
+        #region Death Animation
+        // 星神殒落 — 五段演出, 把星芒/群星/星座链身份用在自己身上, 而不是通用爆炸:
+        // 星核震颤 -> 星芒溃散(甩尾) -> 群星回收(呼应星座链) -> 超新星凝聚上腾 -> 终末超新星爆发.
+        // Only ever called on a Head (ModifyHitByItem/Projectile gate it), so ai[]/localAI[] here are always
+        // that specific worm's own — safe even with two Heads alive at once post-split.
+        private void BeginDeathAnimation(NPC npc, Player target)
+        {
+            npc.ai[1] = (float)AttackState.DeathAnimation;
+            npc.ai[2] = 0f;
+            npc.ai[3] = 0f;
+            npc.localAI[3] = 0f;
+            carveTimers[npc.whoAmI] = 0;
+            npc.netUpdate = true;
+
+            TriggerDeathCinematic(npc, target, focusStrength: 0.55f, holdFrames: 55, shakePower: 10f);
+            SoundEngine.PlaySound(SoundID.Roar with { Volume = 1f, Pitch = 0.1f }, npc.Center);
+        }
+
+        private void ExecuteDeathAnimation(NPC npc, Player target, ref float timer)
+        {
+            npc.damage = 0;
+            npc.dontTakeDamage = true;
+
+            if (timer < 30f)
+            {
+                // 星核震颤 — cosmic dust jitters loose from the whole segmented body
+                npc.velocity *= 0.9f;
+                npc.rotation += MathF.Sin(timer * 1.3f) * 0.1f;
+                if ((int)timer % 3 == 0)
+                {
+                    Dust d = Dust.NewDustPerfect(npc.Center + Main.rand.NextVector2Circular(50f, 50f), DustID.PurpleTorch, Main.rand.NextVector2Circular(4f, 4f), 100, default, 1.3f);
+                    d.noGravity = true;
+                }
+            }
+            else if (timer < 75f)
+            {
+                // 星芒溃散 — whip-thrash, the same serpentine lash as the fight's own carve-pass motif gone loose
+                float t = timer - 30f;
+                float whipAngle = MathF.Sin(t * 0.35f) * 2.2f;
+                Vector2 whipDir = Vector2.UnitX.RotatedBy(whipAngle);
+                npc.velocity = Vector2.Lerp(npc.velocity, whipDir * 17f, 0.2f);
+                npc.rotation = npc.velocity.ToRotation() + MathHelper.PiOver2;
+                if ((int)t % 4 == 0)
+                    DeusFx.Burst(npc.Center, 3f, 6, DustID.PurpleTorch);
+            }
+            else if (timer < 110f)
+            {
+                // 群星回收 — the constellation-link identity turns inward: stray star-motes get pulled back into the head
+                float t = timer - 75f;
+                if ((int)t % 3 == 0)
+                {
+                    Vector2 spawn = npc.Center + Main.rand.NextVector2CircularEdge(200f, 200f);
+                    Dust d = Dust.NewDustPerfect(spawn, DustID.GoldFlame, (npc.Center - spawn) * 0.07f, 100, default, 1.3f);
+                    d.noGravity = true;
+                }
+            }
+            else if (timer < 150f)
+            {
+                // 超新星凝聚上腾 — rises while a supernova core builds, the cinematic pull peaks here
+                npc.velocity = Vector2.Lerp(npc.velocity, new Vector2(0f, -7f), 0.05f);
+                float t = timer - 110f;
+                float ringRadius = MathHelper.Lerp(10f, 90f, t / 40f);
+                if ((int)t % 2 == 0)
+                {
+                    Vector2 spawn = npc.Center + (t * 0.5f).ToRotationVector2() * ringRadius;
+                    Dust d = Dust.NewDustPerfect(spawn, DustID.PurpleTorch, (npc.Center - spawn) * 0.05f, 100, default, 1.4f);
+                    d.noGravity = true;
+                }
+            }
+            else
+            {
+                // 终末超新星爆发 — the actual kill fires once, everything after is the lingering burst
+                if (timer == 150f)
+                {
+                    npc.velocity = Vector2.Zero;
+                    SoundEngine.PlaySound(SoundID.Item14 with { Volume = 1.1f, Pitch = 0f }, npc.Center);
+                    SoundEngine.PlaySound(SoundID.NPCDeath4, npc.Center);
+                    target.Calamity().GeneralScreenShakePower = 13f;
+                    DeusFx.Burst(npc.Center, 8f, 40);
+                    DeusFx.Burst(npc.Center, 5f, 24, DustID.GoldFlame);
+                }
+
+                if (timer >= 172f)
+                {
+                    // The head is what StrikeInstantKill removes — its trailing Body/Tail segments are separate
+                    // NPCs with no self-cleanup, so they'd otherwise be left drifting headless (same reason the
+                    // 50%-split transition above manually deactivates the old chain).
+                    if (Main.netMode != NetmodeID.MultiplayerClient)
+                    {
+                        int bodyType = ModContent.Find<ModNPC>("CalamityMod/AstrumDeusBody").Type;
+                        int tailType = ModContent.Find<ModNPC>("CalamityMod/AstrumDeusTail").Type;
+                        for (int i = 0; i < Main.maxNPCs; i++)
+                        {
+                            NPC seg = Main.npc[i];
+                            if (seg.active && (seg.type == bodyType || seg.type == tailType) && (int)seg.ai[2] == npc.whoAmI)
+                                seg.active = false;
+                        }
+                    }
+
+                    npc.dontTakeDamage = false;
+                    npc.StrikeInstantKill();
+                }
+            }
+        }
+        #endregion
+
         #region Drawing
+        public override bool PreDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
+        {
+            // Motion afterimages, per-head (see headTrails field comment) — sells the carve-pass speed the
+            // same way every other worm boss in this roster (Cryogen/StormWeaver/AquaticScourge) already does.
+            if (npc.type == ModContent.Find<ModNPC>("CalamityMod/AstrumDeusHead").Type && npc.velocity.Length() > 10f
+                && headTrails.TryGetValue(npc.whoAmI, out Vector2[] trail) && headTrailIndex.TryGetValue(npc.whoAmI, out int trailIdx))
+            {
+                Texture2D tex = TextureAssets.Npc[npc.type].Value;
+                Vector2 origin = npc.frame.Size() * 0.5f;
+                for (int i = 1; i < trail.Length; i++)
+                {
+                    int idx = (trailIdx - i + trail.Length * 2) % trail.Length;
+                    if (trail[idx] == Vector2.Zero) continue;
+                    float fade = (1f - i / (float)trail.Length) * 0.35f * npc.Opacity;
+                    Color ghost = new Color(160, 60, 220, 0) * fade;
+                    spriteBatch.Draw(tex, trail[idx] - screenPos, npc.frame, ghost, npc.rotation, origin, npc.scale * (1f - i * 0.02f), SpriteEffects.None, 0f);
+                }
+            }
+            return true;
+        }
+
         public override void PostDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
             int headType = ModContent.Find<ModNPC>("CalamityMod/AstrumDeusHead").Type;
