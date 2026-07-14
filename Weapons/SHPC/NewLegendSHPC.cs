@@ -764,6 +764,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         {
             ClampSelectedMagazineToActiveCount(player);
 
+            // Keep the inventory slot's normal click behavior: while the cursor is over an
+            // SHPC item, that click belongs to the inventory (including its right-click unload
+            // action), not to the held weapon. Opening the inventory by itself must not block fire.
+            if (Main.playerInventory && Main.HoverItem.type == Type)
+                return false;
+
             if (IsUsingEX(player))
                 return false;
 
@@ -1348,7 +1354,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         private static bool IsWorldRightClickInteractionActive(Player player)
         {
-            return Main.playerInventory ||
+            return (Main.playerInventory && Main.HoverItem.type == ModContent.ItemType<NewLegendSHPC>()) ||
                    player.chest != -1 ||
                    player.sleeping.isSleeping ||
                    player.TalkNPC != null;

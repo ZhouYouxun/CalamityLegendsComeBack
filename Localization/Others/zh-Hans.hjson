@@ -171,6 +171,11 @@ Mods: {
 			CTRLBossBulkAll: 一键开关所有 Boss
 			CTRLBossBulkInvert: 一键反向调整所有 Boss
 			CTRLBossBulkChanged: "{0}：已调整 {1} 个 Boss 进度。"
+			WelcomeMessage:
+				'''
+				欢迎游玩本模组，灾厄-传奇，目前里面只做了一把传奇武器，不过后续更新会很快的。
+				想了解详情或聊天问问题，欢迎加Q群：876728711
+				'''
 		}
 
 		Keybinds: {
