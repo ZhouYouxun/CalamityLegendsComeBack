@@ -9,7 +9,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Core.Systems
     // the vanilla player-centered camera rather than hard-locking it away, so the player never loses track
     // of their own character. Three phases per request: rise (ease toward the focus), hold (sit on it),
     // fall (ease back to normal) — not an instant snap-then-cut.
-    public sealed class IUMWCameraFocusPlayer : ModPlayer
+    public sealed class LegendsCameraFocusPlayer : ModPlayer
     {
         private Vector2 focusPosition;
         private float pullStrength;
@@ -90,8 +90,8 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Core.Systems
         }
     }
 
-    public static class IUMWCameraExtensions
+    public static class LegendsCameraExtensions
     {
-        public static IUMWCameraFocusPlayer IUMWCamera(this Player player) => player.GetModPlayer<IUMWCameraFocusPlayer>();
+        public static LegendsCameraFocusPlayer LegendsCamera(this Player player) => player.GetModPlayer<LegendsCameraFocusPlayer>();
     }
 }

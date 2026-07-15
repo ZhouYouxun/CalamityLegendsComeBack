@@ -4,9 +4,9 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossAIs.WeaponAttacks
 {
-    internal static class IUMWWeaponBossRegistry
+    internal static class LegendsWeaponBossRegistry
     {
-        private static readonly Dictionary<int, IUMWWeaponBossProfile> ProfilesByNpcType = new();
+        private static readonly Dictionary<int, LegendsWeaponBossProfile> ProfilesByNpcType = new();
         private static readonly Dictionary<string, int> ItemTypeCache = new();
 
         public static void Load()
@@ -14,7 +14,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             ProfilesByNpcType.Clear();
             ItemTypeCache.Clear();
 
-            foreach (IUMWWeaponBossProfile profile in IUMWWeaponBossProfiles.All)
+            foreach (LegendsWeaponBossProfile profile in LegendsWeaponBossProfiles.All)
             {
                 foreach (string npcName in profile.NpcNames)
                 {
@@ -30,22 +30,22 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             ItemTypeCache.Clear();
         }
 
-        public static bool TryGetProfile(int npcType, out IUMWWeaponBossProfile profile)
+        public static bool TryGetProfile(int npcType, out LegendsWeaponBossProfile profile)
         {
             return ProfilesByNpcType.TryGetValue(npcType, out profile);
         }
 
-        public static bool TryCreateAI(string npcName, out IUMWBossAI ai)
+        public static bool TryCreateAI(string npcName, out LegendsBossAI ai)
         {
             ai = null;
 
             if (!ModContent.TryFind("CalamityMod/" + npcName, out ModNPC npc))
                 return false;
 
-            if (!TryGetProfile(npc.Type, out IUMWWeaponBossProfile profile))
+            if (!TryGetProfile(npc.Type, out LegendsWeaponBossProfile profile))
                 return false;
 
-            ai = new IUMWWeaponBossAI(npc.Type, profile);
+            ai = new LegendsWeaponBossAI(npc.Type, profile);
             return true;
         }
 

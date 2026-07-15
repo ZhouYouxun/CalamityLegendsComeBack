@@ -25,7 +25,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
     {
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
-        /// <summary>IUMWWeaponBossRegistry key of the weapon item whose sprite this projectile wears.</summary>
+        /// <summary>LegendsWeaponBossRegistry key of the weapon item whose sprite this projectile wears.</summary>
         public abstract string WeaponName { get; }
 
         public virtual float SpriteScale => 1.4f;
@@ -122,7 +122,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
         public override bool PreDraw(ref Color lightColor)
         {
-            int itemType = IUMWWeaponBossRegistry.GetItemType(WeaponName);
+            int itemType = LegendsWeaponBossRegistry.GetItemType(WeaponName);
             if (itemType <= 0 || itemType >= TextureAssets.Item.Length)
                 return false;
             Main.instance.LoadItem(itemType);

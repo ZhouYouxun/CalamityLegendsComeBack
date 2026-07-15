@@ -9,7 +9,7 @@ using CalamityLegendsComeBack.BossAI.NewDiff.Core.Systems;
 
 namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossAIs.Common
 {
-    internal abstract class IUMWBossAI
+    internal abstract class LegendsBossAI
     {
         public abstract int NPCType { get; }
         public abstract string BossName { get; }
@@ -19,10 +19,10 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         public virtual int AttackCycleLength => 150;
         public virtual float MotionIntensity => 1f;
         public virtual string PhaseName(int phase) => $"Phase {phase}";
-        public virtual string StateName(IUMWGlobalNPC data) => $"Attack {data.AttackIndex} T:{data.PatternTimer}";
+        public virtual string StateName(LegendsGlobalNPC data) => $"Attack {data.AttackIndex} T:{data.PatternTimer}";
 
-        public virtual bool PreAI(NPC npc, IUMWGlobalNPC data) => true;
-        public virtual void PostAI(NPC npc, IUMWGlobalNPC data) { }
+        public virtual bool PreAI(NPC npc, LegendsGlobalNPC data) => true;
+        public virtual void PostAI(NPC npc, LegendsGlobalNPC data) { }
         public virtual bool PreDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor) => true;
         public virtual void PostDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor) { }
         public virtual void FindFrame(NPC npc, int frameHeight) { }
@@ -86,7 +86,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             npc.velocity = (npc.velocity * (inertia - 1f) + dir * speed) / inertia;
         }
 
-        protected static bool PhaseTransitionGuard(NPC npc, IUMWGlobalNPC data)
+        protected static bool PhaseTransitionGuard(NPC npc, LegendsGlobalNPC data)
         {
             if (data.TransitionTimer <= 0)
                 return false;
@@ -101,7 +101,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             return true;
         }
 
-        protected static void BeginTransition(NPC npc, IUMWGlobalNPC data, int duration = 90)
+        protected static void BeginTransition(NPC npc, LegendsGlobalNPC data, int duration = 90)
         {
             data.TransitionTimer = duration;
             data.PatternTimer = 0;
@@ -144,7 +144,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             if (target is null || !target.active)
                 return;
 
-            target.IUMWCamera().RequestFocus(npc.Center, focusStrength, holdFrames, riseFrames: 12, fallFrames: 34);
+            target.LegendsCamera().RequestFocus(npc.Center, focusStrength, holdFrames, riseFrames: 12, fallFrames: 34);
             target.Calamity().GeneralScreenShakePower = Math.Max(target.Calamity().GeneralScreenShakePower, shakePower);
         }
     }

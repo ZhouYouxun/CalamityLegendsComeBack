@@ -3,9 +3,9 @@ using Terraria.ModLoader.Config;
 
 namespace CalamityLegendsComeBack.BossAI.NewDiff.Core.Configs
 {
-    public sealed class IUMWClientConfig : ModConfig
+    public sealed class LegendsClientConfig : ModConfig
     {
-        public static IUMWClientConfig Instance;
+        public static LegendsClientConfig Instance;
 
         public override ConfigScope Mode => ConfigScope.ClientSide;
 

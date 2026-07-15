@@ -12,7 +12,7 @@ using CalamityMod;
 
 namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossAIs.BStage4.Dragonfolly
 {
-    internal sealed class DragonfollyAI : IUMWBossAI
+    internal sealed class DragonfollyAI : LegendsBossAI
     {
         #region Constants & Configurations
         public override int NPCType => ModContent.NPCType<CalamityMod.NPCs.Bumblebirb.Dragonfolly>();
@@ -131,7 +131,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         #endregion
 
         #region Core AI Hooks
-        public override bool PreAI(NPC npc, IUMWGlobalNPC data)
+        public override bool PreAI(NPC npc, LegendsGlobalNPC data)
         {
             ticksRunning++;
             oldPositions[oldPositionsIndex] = npc.Center;

@@ -7,7 +7,7 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.BossAI.NewDiff.Core.Netcode
 {
-    internal static class IUMWPacketHandler
+    internal static class LegendsPacketHandler
     {
         public static void SendModeSync(int toClient = -1, int ignoreClient = -1)
         {
@@ -16,14 +16,14 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Core.Netcode
 
             ModPacket packet = ModContent.GetInstance<global::CalamityLegendsComeBack.CalamityLegendsComeBack>().GetPacket();
             packet.Write((byte)GamePacketType.NewDiffSyncMode);
-            packet.Write(IUMWWorldSystem.IUMWModeEnabled);
+            packet.Write(LegendsWorldSystem.LegendsModeEnabled);
             packet.Send(toClient, ignoreClient);
         }
 
         public static void HandleModeSyncPacket(BinaryReader reader, int whoAmI)
         {
             bool enabled = reader.ReadBoolean();
-            IUMWWorldSystem.SetModeEnabled(enabled, sync: false);
+            LegendsWorldSystem.SetModeEnabled(enabled, sync: false);
 
             if (Main.netMode == NetmodeID.Server)
                 SendModeSync(ignoreClient: whoAmI);

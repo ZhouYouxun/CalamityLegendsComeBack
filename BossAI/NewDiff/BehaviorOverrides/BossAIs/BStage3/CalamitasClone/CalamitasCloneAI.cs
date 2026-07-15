@@ -15,7 +15,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
     // 灾厄克隆体 — 不稳定生化晶体核心. 设计文档: 大计划/C 灾厄克隆体/灾厄克隆体_重置版设计文档.md
     // 移动哲学(分寸感): 熔炉里的女巫不追人 — 她在方框内的侧翼火位之间用"硫火裂步"(带火尘汇聚预告的
     // 短瞬移)换位, 出手前落位、蓄力、再开火; 弹幕的反弹网和收缩的方框才是压力来源.
-    internal sealed class CalamitasCloneAI : IUMWBossAI
+    internal sealed class CalamitasCloneAI : LegendsBossAI
     {
         #region Constants & Configuration
         public override int NPCType => ModContent.NPCType<CalamityMod.NPCs.CalClone.CalamitasClone>();
@@ -87,7 +87,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         #endregion
 
         #region Core AI Hooks
-        public override bool PreAI(NPC npc, IUMWGlobalNPC data)
+        public override bool PreAI(NPC npc, LegendsGlobalNPC data)
         {
             ticksRunning++;
             oldPositions[oldPositionsIndex] = npc.Center;
@@ -1066,10 +1066,10 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             Vector2 bl = arenaCenter + new Vector2(-borderSize / 2f, borderSize / 2f);
             Vector2 br = arenaCenter + new Vector2(borderSize / 2f, borderSize / 2f);
 
-            IUMWWeaponBossVisuals.DrawLine(spriteBatch, tl, tr, Color.Red * 0.7f, 4f);
-            IUMWWeaponBossVisuals.DrawLine(spriteBatch, tr, br, Color.Red * 0.7f, 4f);
-            IUMWWeaponBossVisuals.DrawLine(spriteBatch, br, bl, Color.Red * 0.7f, 4f);
-            IUMWWeaponBossVisuals.DrawLine(spriteBatch, bl, tl, Color.Red * 0.7f, 4f);
+            LegendsWeaponBossVisuals.DrawLine(spriteBatch, tl, tr, Color.Red * 0.7f, 4f);
+            LegendsWeaponBossVisuals.DrawLine(spriteBatch, tr, br, Color.Red * 0.7f, 4f);
+            LegendsWeaponBossVisuals.DrawLine(spriteBatch, br, bl, Color.Red * 0.7f, 4f);
+            LegendsWeaponBossVisuals.DrawLine(spriteBatch, bl, tl, Color.Red * 0.7f, 4f);
 
             // Sniper lock line: thin while tracking, flaring when locked
             if (animosityLineBright > 0.05f && animosityLockedDir != Vector2.Zero)
@@ -1114,7 +1114,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 {
                     Vector2 start = seekerPositions[i];
                     Vector2 end = seekerPositions[(i + 1) % seekerCount];
-                    IUMWWeaponBossVisuals.DrawLine(spriteBatch, start, end, Color.Red * 0.8f, 3f);
+                    LegendsWeaponBossVisuals.DrawLine(spriteBatch, start, end, Color.Red * 0.8f, 3f);
                 }
             }
 

@@ -1,5 +1,5 @@
 // =====================================================================================================================
-// YHARON, DRAGON OF REBIRTH - CUSTOM BEHAVIOR OVERRIDE (IUMW MODE)
+// YHARON, DRAGON OF REBIRTH - CUSTOM BEHAVIOR OVERRIDE (Legends MODE)
 // =====================================================================================================================
 // DESIGN PHILOSOPHY:
 // This file implements a completely custom, 1500+ line state-machine-driven AI override for Yharon, Dragon of Rebirth.
@@ -42,7 +42,7 @@ using CalamityYharon = CalamityMod.NPCs.Yharon.Yharon;
 
 namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossAIs.BStage5.Yharon
 {
-    internal sealed class YharonIUMWAI : IUMWBossAI
+    internal sealed class YharonLegendsAI : LegendsBossAI
     {
         #region Constants & Configuration
         public override int NPCType => ModContent.NPCType<CalamityYharon>();
@@ -99,7 +99,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         /// <summary>
         /// Main update override in PreAI. Completely takes over Yharon's update loop.
         /// </summary>
-        public override bool PreAI(NPC npc, IUMWGlobalNPC data)
+        public override bool PreAI(NPC npc, LegendsGlobalNPC data)
         {
             // Player Target Verification
             if (npc.target < 0 || npc.target >= Main.maxPlayers || !Main.player[npc.target].active || Main.player[npc.target].dead)
@@ -172,13 +172,13 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
             // Report state values back to debug overlay
             data.CurrentPhase = currentPhase;
-            data.AttackState = (IUMWAttackState)state;
+            data.AttackState = (LegendsAttackState)state;
             data.PatternTimer = (int)timer;
 
             return false;
         }
 
-        public override void PostAI(NPC npc, IUMWGlobalNPC data)
+        public override void PostAI(NPC npc, LegendsGlobalNPC data)
         {
             // Empty bypass override
         }

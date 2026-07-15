@@ -13,7 +13,7 @@ using CalamityMod;
 
 namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossAIs.BStage3.AstrumDeus
 {
-    // Head, Body and Tail all route through this one shared AI instance (see IUMWBossAIRegistry). Body/Tail
+    // Head, Body and Tail all route through this one shared AI instance (see LegendsBossAIRegistry). Body/Tail
     // return true from PreAI and keep running their REAL, unmodified vanilla follow-the-leader AI — including
     // the real spawn loop that is supposed to grow the worm's body. That loop lives inside vanilla Head.AI(),
     // which our override never calls (PreAI returns false for Head), so without replicating it manually the
@@ -25,7 +25,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
     // chain pointer (never touch it after the initial spawn); ai[1]=AttackState, ai[2]=timer, ai[3]=variant
     // tracker. localAI[0]=P1 repetition count, localAI[1]=rotation cycle index, localAI[2]=cores destroyed,
     // localAI[3]=stun timer.
-    internal sealed class AstrumDeusAI : IUMWBossAI
+    internal sealed class AstrumDeusAI : LegendsBossAI
     {
         #region Constants & Configurations
         public override int NPCType => ModContent.Find<ModNPC>("CalamityMod/AstrumDeusHead").Type;
@@ -110,7 +110,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         #endregion
 
         #region Core AI Hooks
-        public override bool PreAI(NPC npc, IUMWGlobalNPC data)
+        public override bool PreAI(NPC npc, LegendsGlobalNPC data)
         {
             ticksRunning++;
 
@@ -854,7 +854,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             bool solid = cycle >= 318;
             float width = solid ? 50f : MathHelper.Lerp(2f, 10f, (cycle - 300) / 18f);
             Color core = solid ? new Color(220, 140, 255) : new Color(160, 60, 220);
-            IUMWWeaponBossVisuals.DrawLine(spriteBatch, npc.Center, tail.Center, core * 0.8f, width);
+            LegendsWeaponBossVisuals.DrawLine(spriteBatch, npc.Center, tail.Center, core * 0.8f, width);
         }
         #endregion
 

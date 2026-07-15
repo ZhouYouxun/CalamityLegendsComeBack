@@ -12,7 +12,7 @@ using CalamityMod;
 
 namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossAIs.BStage3.PlaguebringerGoliath
 {
-    internal sealed class PlaguebringerGoliathAI : IUMWBossAI
+    internal sealed class PlaguebringerGoliathAI : LegendsBossAI
     {
         #region Constants & Configurations
         public override int NPCType => ModContent.Find<ModNPC>("CalamityMod/PlaguebringerGoliath").Type;
@@ -122,7 +122,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         #endregion
 
         #region Core AI Hooks
-        public override bool PreAI(NPC npc, IUMWGlobalNPC data)
+        public override bool PreAI(NPC npc, LegendsGlobalNPC data)
         {
             ticksRunning++;
             oldPositions[oldPositionsIndex] = npc.Center;
@@ -1251,10 +1251,10 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             Vector2 bl = arenaCenter + new Vector2(-borderSize / 2f, borderSize / 2f);
             Vector2 br = arenaCenter + new Vector2(borderSize / 2f, borderSize / 2f);
 
-            IUMWWeaponBossVisuals.DrawLine(spriteBatch, tl, tr, Color.LimeGreen * 0.7f, 4f);
-            IUMWWeaponBossVisuals.DrawLine(spriteBatch, tr, br, Color.LimeGreen * 0.7f, 4f);
-            IUMWWeaponBossVisuals.DrawLine(spriteBatch, br, bl, Color.LimeGreen * 0.7f, 4f);
-            IUMWWeaponBossVisuals.DrawLine(spriteBatch, bl, tl, Color.LimeGreen * 0.7f, 4f);
+            LegendsWeaponBossVisuals.DrawLine(spriteBatch, tl, tr, Color.LimeGreen * 0.7f, 4f);
+            LegendsWeaponBossVisuals.DrawLine(spriteBatch, tr, br, Color.LimeGreen * 0.7f, 4f);
+            LegendsWeaponBossVisuals.DrawLine(spriteBatch, br, bl, Color.LimeGreen * 0.7f, 4f);
+            LegendsWeaponBossVisuals.DrawLine(spriteBatch, bl, tl, Color.LimeGreen * 0.7f, 4f);
 
             if (activeSteamAxis != -1 && steamWarnOpacity > 0f)
             {
@@ -1265,13 +1265,13 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 {
                     Vector2 start = new(arenaCenter.X - borderSize / 2f, steamLaneY);
                     Vector2 end = new(arenaCenter.X + borderSize / 2f, steamLaneY);
-                    IUMWWeaponBossVisuals.DrawLine(spriteBatch, start, end, warnColor, 3f);
+                    LegendsWeaponBossVisuals.DrawLine(spriteBatch, start, end, warnColor, 3f);
                 }
                 if (activeSteamAxis == 1 || activeSteamAxis == 2)
                 {
                     Vector2 start = new(steamLaneX, arenaCenter.Y - borderSize / 2f);
                     Vector2 end = new(steamLaneX, arenaCenter.Y + borderSize / 2f);
-                    IUMWWeaponBossVisuals.DrawLine(spriteBatch, start, end, warnColor, 3f);
+                    LegendsWeaponBossVisuals.DrawLine(spriteBatch, start, end, warnColor, 3f);
                 }
             }
 
@@ -1303,7 +1303,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 {
                     Vector2 start = dronePositions[i];
                     Vector2 end = dronePositions[(i + 1) % droneCount];
-                    IUMWWeaponBossVisuals.DrawLine(spriteBatch, start, end, Color.LimeGreen * 0.8f, 3f);
+                    LegendsWeaponBossVisuals.DrawLine(spriteBatch, start, end, Color.LimeGreen * 0.8f, 3f);
                 }
             }
 

@@ -13,9 +13,9 @@ using Terraria.UI;
 
 namespace CalamityLegendsComeBack.BossAI.NewDiff.Core.Systems
 {
-    public class IUMWDebugSystem : ModSystem
+    public class LegendsDebugSystem : ModSystem
     {
-        private static IUMWDebugInfo currentInfo;
+        private static LegendsDebugInfo currentInfo;
 
         private static float currentDistance;
 
@@ -36,7 +36,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Core.Systems
             currentDistance = float.MaxValue;
         }
 
-        internal static void Report(NPC npc, IUMWBossAI ai, IUMWGlobalNPC data)
+        internal static void Report(NPC npc, LegendsBossAI ai, LegendsGlobalNPC data)
         {
             if (Main.dedServ || Main.LocalPlayer is null || !npc.active)
                 return;
@@ -46,7 +46,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Core.Systems
                 return;
 
             currentDistance = distance;
-            currentInfo = new IUMWDebugInfo(
+            currentInfo = new LegendsDebugInfo(
                 ai.BossName,
                 data.CurrentPhase,
                 ai.MaxPhaseCount,
@@ -65,12 +65,12 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Core.Systems
 
         private static bool DrawDebugText()
         {
-            if (!IUMWWorldSystem.IUMWModeEnabled || Main.gameMenu || IUMWClientConfig.Instance?.ShowBossAIDebugText == false)
+            if (!LegendsWorldSystem.LegendsModeEnabled || Main.gameMenu || LegendsClientConfig.Instance?.ShowBossAIDebugText == false)
                 return true;
 
             string text = currentInfo is null
-                ? "IUMW DEBUG\nBoss: none\nMode: waiting for tracked boss"
-                : $"IUMW DEBUG\nBoss: {currentInfo.BossName}\nPhase: {currentInfo.Phase}/{currentInfo.MaxPhase} - {currentInfo.PhaseName}\nState: {currentInfo.StateName}\nTimer: {currentInfo.Timer}\nLife: {currentInfo.LifeRatio:P0}";
+                ? "Legends DEBUG\nBoss: none\nMode: waiting for tracked boss"
+                : $"Legends DEBUG\nBoss: {currentInfo.BossName}\nPhase: {currentInfo.Phase}/{currentInfo.MaxPhase} - {currentInfo.PhaseName}\nState: {currentInfo.StateName}\nTimer: {currentInfo.Timer}\nLife: {currentInfo.LifeRatio:P0}";
 
             string[] lines = text.Split('\n');
             Vector2 position = new(18f, Main.screenHeight - 18f - lines.Length * 18f);
@@ -89,6 +89,6 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Core.Systems
             }
         }
 
-        private sealed record IUMWDebugInfo(string BossName, int Phase, int MaxPhase, string PhaseName, string StateName, int Timer, float LifeRatio, Color Color);
+        private sealed record LegendsDebugInfo(string BossName, int Phase, int MaxPhase, string PhaseName, string StateName, int Timer, float LifeRatio, Color Color);
     }
 }

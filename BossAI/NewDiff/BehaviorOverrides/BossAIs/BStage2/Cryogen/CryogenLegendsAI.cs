@@ -22,7 +22,7 @@ using CalamityCryogen = CalamityMod.NPCs.Cryogen.Cryogen;
 
 namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossAIs.BStage2.Cryogen
 {
-    internal sealed class CryogenIUMWAI : IUMWBossAI
+    internal sealed class CryogenLegendsAI : LegendsBossAI
     {
         #region Constants & Configuration
         public override int NPCType => ModContent.NPCType<CalamityCryogen>();
@@ -176,7 +176,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         #endregion
 
         #region Core AI Hooks
-        public override bool PreAI(NPC npc, IUMWGlobalNPC data)
+        public override bool PreAI(NPC npc, LegendsGlobalNPC data)
         {
             ticksRunning++;
 
@@ -307,13 +307,13 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
             // Sync structural local variables to GlobalNPC to comply with difficulty UI
             data.CurrentPhase = currentPhase;
-            data.AttackState = (IUMWAttackState)Math.Clamp((int)state, 0, 4);
+            data.AttackState = (LegendsAttackState)Math.Clamp((int)state, 0, 4);
             data.PatternTimer = (int)timer;
 
             return false;
         }
 
-        public override void PostAI(NPC npc, IUMWGlobalNPC data)
+        public override void PostAI(NPC npc, LegendsGlobalNPC data)
         {
         }
         #endregion
@@ -1918,7 +1918,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             npc.damage = 0;
             npc.velocity *= 0.85f;
 
-            // Invulnerable for the whole performance. Without this, sustained high DPS (routine in IUMW-tier
+            // Invulnerable for the whole performance. Without this, sustained high DPS (routine in Legends-tier
             // gear) keeps landing hits through the entire 30-90f cutscene, and life keeps dropping the whole
             // time CheckPhaseTransitions is asleep (its guard skips re-checking while state==FreezeTransition).
             // The instant the transition ends and the check resumes, it sees a life ratio that's already sunk

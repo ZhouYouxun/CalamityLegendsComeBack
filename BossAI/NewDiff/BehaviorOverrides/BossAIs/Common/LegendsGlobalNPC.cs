@@ -6,7 +6,7 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossAIs.Common
 {
-    public class IUMWGlobalNPC : GlobalNPC
+    public class LegendsGlobalNPC : GlobalNPC
     {
         public override bool InstancePerEntity => true;
 
@@ -20,7 +20,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
         internal int TransitionTimer;
 
-        internal IUMWAttackState AttackState;
+        internal LegendsAttackState AttackState;
 
         internal int BroadcastedPhase;
 
@@ -33,17 +33,17 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             PatternTimer = 0;
             AttackIndex = 0;
             TransitionTimer = 0;
-            AttackState = IUMWAttackState.MatrixHover;
+            AttackState = LegendsAttackState.MatrixHover;
             BroadcastedPhase = 0;
             BroadcastedAttackIndex = -1;
         }
 
         public override bool PreAI(NPC npc)
         {
-            if (!IUMWWorldSystem.IUMWModeEnabled)
+            if (!LegendsWorldSystem.LegendsModeEnabled)
                 return true;
 
-            if (!IUMWBossAIRegistry.TryGetAI(npc.type, out IUMWBossAI ai))
+            if (!LegendsBossAIRegistry.TryGetAI(npc.type, out LegendsBossAI ai))
                 return true;
 
             return ai.PreAI(npc, this);
@@ -51,22 +51,22 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
         public override void PostAI(NPC npc)
         {
-            if (!IUMWWorldSystem.IUMWModeEnabled)
+            if (!LegendsWorldSystem.LegendsModeEnabled)
                 return;
 
-            if (!IUMWBossAIRegistry.TryGetAI(npc.type, out IUMWBossAI ai))
+            if (!LegendsBossAIRegistry.TryGetAI(npc.type, out LegendsBossAI ai))
                 return;
 
             ai.PostAI(npc, this);
-            IUMWDebugSystem.Report(npc, ai, this);
+            LegendsDebugSystem.Report(npc, ai, this);
         }
 
         public override bool PreDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
-            if (!IUMWWorldSystem.IUMWModeEnabled)
+            if (!LegendsWorldSystem.LegendsModeEnabled)
                 return true;
 
-            if (!IUMWBossAIRegistry.TryGetAI(npc.type, out IUMWBossAI ai))
+            if (!LegendsBossAIRegistry.TryGetAI(npc.type, out LegendsBossAI ai))
                 return true;
 
             return ai.PreDraw(npc, spriteBatch, screenPos, drawColor);
@@ -74,10 +74,10 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
         public override void PostDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
-            if (!IUMWWorldSystem.IUMWModeEnabled)
+            if (!LegendsWorldSystem.LegendsModeEnabled)
                 return;
 
-            if (!IUMWBossAIRegistry.TryGetAI(npc.type, out IUMWBossAI ai))
+            if (!LegendsBossAIRegistry.TryGetAI(npc.type, out LegendsBossAI ai))
                 return;
 
             ai.PostDraw(npc, spriteBatch, screenPos, drawColor);
@@ -85,10 +85,10 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
         public override void FindFrame(NPC npc, int frameHeight)
         {
-            if (!IUMWWorldSystem.IUMWModeEnabled)
+            if (!LegendsWorldSystem.LegendsModeEnabled)
                 return;
 
-            if (!IUMWBossAIRegistry.TryGetAI(npc.type, out IUMWBossAI ai))
+            if (!LegendsBossAIRegistry.TryGetAI(npc.type, out LegendsBossAI ai))
                 return;
 
             ai.FindFrame(npc, frameHeight);
@@ -96,10 +96,10 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
         public override bool? CanBeHitByItem(NPC npc, Player player, Item item)
         {
-            if (!IUMWWorldSystem.IUMWModeEnabled)
+            if (!LegendsWorldSystem.LegendsModeEnabled)
                 return null;
 
-            if (!IUMWBossAIRegistry.TryGetAI(npc.type, out IUMWBossAI ai))
+            if (!LegendsBossAIRegistry.TryGetAI(npc.type, out LegendsBossAI ai))
                 return null;
 
             return ai.CanBeHitByItem(npc, player, item);
@@ -107,10 +107,10 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
         public override bool? CanBeHitByProjectile(NPC npc, Projectile projectile)
         {
-            if (!IUMWWorldSystem.IUMWModeEnabled)
+            if (!LegendsWorldSystem.LegendsModeEnabled)
                 return null;
 
-            if (!IUMWBossAIRegistry.TryGetAI(npc.type, out IUMWBossAI ai))
+            if (!LegendsBossAIRegistry.TryGetAI(npc.type, out LegendsBossAI ai))
                 return null;
 
             return ai.CanBeHitByProjectile(npc, projectile);
@@ -118,10 +118,10 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
         public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers)
         {
-            if (!IUMWWorldSystem.IUMWModeEnabled)
+            if (!LegendsWorldSystem.LegendsModeEnabled)
                 return;
 
-            if (!IUMWBossAIRegistry.TryGetAI(npc.type, out IUMWBossAI ai))
+            if (!LegendsBossAIRegistry.TryGetAI(npc.type, out LegendsBossAI ai))
                 return;
 
             ai.ModifyHitByItem(npc, player, item, ref modifiers);
@@ -129,10 +129,10 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
         public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers)
         {
-            if (!IUMWWorldSystem.IUMWModeEnabled)
+            if (!LegendsWorldSystem.LegendsModeEnabled)
                 return;
 
-            if (!IUMWBossAIRegistry.TryGetAI(npc.type, out IUMWBossAI ai))
+            if (!LegendsBossAIRegistry.TryGetAI(npc.type, out LegendsBossAI ai))
                 return;
 
             ai.ModifyHitByProjectile(npc, projectile, ref modifiers);

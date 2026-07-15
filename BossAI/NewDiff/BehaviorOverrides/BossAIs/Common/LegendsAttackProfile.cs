@@ -2,7 +2,7 @@ using Microsoft.Xna.Framework;
 
 namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossAIs.Common
 {
-    internal enum IUMWPatternKind
+    internal enum LegendsPatternKind
     {
         LateralDashBarrage,
         OrbitingCrossfire,
@@ -14,9 +14,9 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         SniperGrid
     }
 
-    internal sealed record IUMWAttackProfile(
+    internal sealed record LegendsAttackProfile(
         string Name,
-        IUMWPatternKind Kind,
+        LegendsPatternKind Kind,
         string PrimaryProjectile,
         Color Color,
         int DustType,

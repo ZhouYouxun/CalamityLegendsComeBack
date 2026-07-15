@@ -602,8 +602,8 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             Vector2 dir = Projectile.rotation.ToRotationVector2();
             Vector2 start = Projectile.Center - dir * 700f;
             Vector2 end = Projectile.Center + dir * 700f;
-            IUMWWeaponBossVisuals.DrawLine(Main.spriteBatch, start, end, new Color(220, 40, 40, 0) * (active ? 0.7f : 0.4f) * opacity, active ? 16f : 4f);
-            IUMWWeaponBossVisuals.DrawLine(Main.spriteBatch, start, end, Color.White * (active ? 0.5f : 0.3f) * opacity, active ? 5f : 2f);
+            LegendsWeaponBossVisuals.DrawLine(Main.spriteBatch, start, end, new Color(220, 40, 40, 0) * (active ? 0.7f : 0.4f) * opacity, active ? 16f : 4f);
+            LegendsWeaponBossVisuals.DrawLine(Main.spriteBatch, start, end, Color.White * (active ? 0.5f : 0.3f) * opacity, active ? 5f : 2f);
             return false;
         }
     }

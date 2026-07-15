@@ -17,7 +17,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
     // (冲量起步→滑行→减速停驻), 出手时几乎悬停不动, 威压来自编排好的弹幕与结界机关, 而非贴脸.
     // 结界锚点(arenaCenter)开战时落定, 只以极缓速度跟随玩家 — 结界、折射光网、越界惩罚全部
     // 以锚点为基准, 修复旧版"结界跟着Boss乱飘"的问题.
-    internal sealed class ProvidenceAI : IUMWBossAI
+    internal sealed class ProvidenceAI : LegendsBossAI
     {
         #region Constants & Configurations
         public override int NPCType => ModContent.Find<ModNPC>("CalamityMod/Providence").Type;
@@ -112,7 +112,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         #endregion
 
         #region Core AI Hooks
-        public override bool PreAI(NPC npc, IUMWGlobalNPC data)
+        public override bool PreAI(NPC npc, LegendsGlobalNPC data)
         {
             ticksRunning++;
             oldPositions[oldPositionsIndex] = npc.Center;
@@ -237,7 +237,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             }
 
             data.CurrentPhase = currentPhase;
-            data.AttackState = (IUMWAttackState)Math.Clamp((int)state, 0, 4);
+            data.AttackState = (LegendsAttackState)Math.Clamp((int)state, 0, 4);
             data.PatternTimer = (int)timer;
 
             return false;

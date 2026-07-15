@@ -8,7 +8,7 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossAIs.WeaponAttacks
 {
-    internal static class IUMWWeaponBossVisuals
+    internal static class LegendsWeaponBossVisuals
     {
         public static int PackColor(Color color)
         {
@@ -51,7 +51,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         }
     }
 
-    public sealed class IUMWWeaponTelegraphProjectile : ModProjectile
+    public sealed class LegendsWeaponTelegraphProjectile : ModProjectile
     {
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
@@ -78,13 +78,13 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             Projectile.velocity *= 0.92f;
             Projectile.rotation += 0.035f * Math.Sign(Projectile.ai[2] == 0f ? 1f : Projectile.ai[2]);
             Projectile.scale = MathHelper.Lerp(Projectile.scale, Projectile.ai[2] <= 0f ? 1f : Projectile.ai[2] / 100f, 0.16f);
-            Lighting.AddLight(Projectile.Center, IUMWWeaponBossVisuals.UnpackColor(Projectile.ai[1]).ToVector3() * 0.45f);
+            Lighting.AddLight(Projectile.Center, LegendsWeaponBossVisuals.UnpackColor(Projectile.ai[1]).ToVector3() * 0.45f);
         }
 
         public override bool PreDraw(ref Color lightColor)
         {
             int itemType = (int)Projectile.ai[0];
-            Color outline = IUMWWeaponBossVisuals.UnpackColor(Projectile.ai[1]);
+            Color outline = LegendsWeaponBossVisuals.UnpackColor(Projectile.ai[1]);
             float opacity = MathHelper.Clamp(Projectile.timeLeft / 18f, 0f, 1f);
             opacity = Math.Min(opacity, MathHelper.Clamp((54f - Projectile.timeLeft) / 8f, 0f, 1f));
             float scale = Projectile.scale * (1f + 0.05f * MathF.Sin(Main.GlobalTimeWrappedHourly * 8f));
@@ -109,15 +109,15 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             {
                 Rectangle box = new((int)drawPosition.X - 18, (int)drawPosition.Y - 18, 36, 36);
                 Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, box, outline * (0.45f * opacity));
-                IUMWWeaponBossVisuals.DrawLine(Main.spriteBatch, Projectile.Center + new Vector2(-24f, -24f), Projectile.Center + new Vector2(24f, 24f), Color.White * opacity, 2f);
-                IUMWWeaponBossVisuals.DrawLine(Main.spriteBatch, Projectile.Center + new Vector2(-24f, 24f), Projectile.Center + new Vector2(24f, -24f), Color.White * opacity, 2f);
+                LegendsWeaponBossVisuals.DrawLine(Main.spriteBatch, Projectile.Center + new Vector2(-24f, -24f), Projectile.Center + new Vector2(24f, 24f), Color.White * opacity, 2f);
+                LegendsWeaponBossVisuals.DrawLine(Main.spriteBatch, Projectile.Center + new Vector2(-24f, 24f), Projectile.Center + new Vector2(24f, -24f), Color.White * opacity, 2f);
             }
 
             return false;
         }
     }
 
-    public sealed class IUMWWeaponHostileBolt : ModProjectile
+    public sealed class LegendsWeaponHostileBolt : ModProjectile
     {
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
@@ -136,7 +136,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         public override void AI()
         {
             int style = (int)Projectile.ai[0];
-            Color color = IUMWWeaponBossVisuals.UnpackColor(Projectile.ai[1]);
+            Color color = LegendsWeaponBossVisuals.UnpackColor(Projectile.ai[1]);
 
             if (style == 1)
             {
@@ -145,7 +145,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 if (target.active && !target.dead)
                 {
                     float speed = Math.Max(4f, Projectile.velocity.Length());
-                    Vector2 desired = IUMWWeaponBossVisuals.SafeDirection(Projectile.Center, target.Center, Vector2.UnitY) * speed;
+                    Vector2 desired = LegendsWeaponBossVisuals.SafeDirection(Projectile.Center, target.Center, Vector2.UnitY) * speed;
                     Projectile.velocity = Vector2.Lerp(Projectile.velocity, desired, turn);
                 }
             }
@@ -169,7 +169,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
         public override bool PreDraw(ref Color lightColor)
         {
-            Color color = IUMWWeaponBossVisuals.UnpackColor(Projectile.ai[1]);
+            Color color = LegendsWeaponBossVisuals.UnpackColor(Projectile.ai[1]);
             Vector2 center = Projectile.Center - Main.screenPosition;
             Texture2D pixel = TextureAssets.MagicPixel.Value;
             float pulse = 0.85f + 0.2f * MathF.Sin(Main.GlobalTimeWrappedHourly * 12f + Projectile.whoAmI);
@@ -179,12 +179,12 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             Main.spriteBatch.Draw(pixel, core, Color.Lerp(Color.White, color, 0.45f) * pulse);
 
             Vector2 tail = Projectile.Center - Projectile.velocity.SafeNormalize(Vector2.UnitY) * 34f;
-            IUMWWeaponBossVisuals.DrawLine(Main.spriteBatch, tail, Projectile.Center, color * 0.55f, 3f);
+            LegendsWeaponBossVisuals.DrawLine(Main.spriteBatch, tail, Projectile.Center, color * 0.55f, 3f);
             return false;
         }
     }
 
-    public sealed class IUMWWeaponLineHazard : ModProjectile
+    public sealed class LegendsWeaponLineHazard : ModProjectile
     {
         private const int TelegraphTime = 30;
         private const int Lifetime = 62;
@@ -209,7 +209,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         {
             Projectile.localAI[0]++;
             Projectile.velocity *= 0.98f;
-            Lighting.AddLight(Projectile.Center, IUMWWeaponBossVisuals.UnpackColor(Projectile.ai[1]).ToVector3() * 0.65f);
+            Lighting.AddLight(Projectile.Center, LegendsWeaponBossVisuals.UnpackColor(Projectile.ai[1]).ToVector3() * 0.65f);
         }
 
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
@@ -227,7 +227,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
         public override bool PreDraw(ref Color lightColor)
         {
-            Color color = IUMWWeaponBossVisuals.UnpackColor(Projectile.ai[1]);
+            Color color = LegendsWeaponBossVisuals.UnpackColor(Projectile.ai[1]);
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             float length = Projectile.ai[2] <= 0f ? 1800f : Projectile.ai[2];
             Vector2 start = Projectile.Center - direction * length * 0.5f;
@@ -236,13 +236,13 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             float fade = Projectile.timeLeft / 18f;
             float opacity = active ? MathHelper.Clamp(fade, 0f, 1f) : 0.42f + 0.18f * MathF.Sin(Main.GlobalTimeWrappedHourly * 18f);
 
-            IUMWWeaponBossVisuals.DrawLine(Main.spriteBatch, start, end, active ? color * (0.8f * opacity) : color * opacity, active ? 18f : 4f);
-            IUMWWeaponBossVisuals.DrawLine(Main.spriteBatch, start, end, Color.White * (active ? 0.48f * opacity : 0.32f), active ? 5f : 2f);
+            LegendsWeaponBossVisuals.DrawLine(Main.spriteBatch, start, end, active ? color * (0.8f * opacity) : color * opacity, active ? 18f : 4f);
+            LegendsWeaponBossVisuals.DrawLine(Main.spriteBatch, start, end, Color.White * (active ? 0.48f * opacity : 0.32f), active ? 5f : 2f);
             return false;
         }
     }
 
-    public sealed class IUMWWeaponSummonCore : ModProjectile
+    public sealed class LegendsWeaponSummonCore : ModProjectile
     {
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
@@ -262,7 +262,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
         public override void AI()
         {
-            Color color = IUMWWeaponBossVisuals.UnpackColor(Projectile.ai[0]);
+            Color color = LegendsWeaponBossVisuals.UnpackColor(Projectile.ai[0]);
             Player target = Main.player[Player.FindClosest(Projectile.Center, 1, 1)];
             if (target.active && !target.dead)
             {
@@ -277,12 +277,12 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
             if (Main.netMode != NetmodeID.MultiplayerClient && Projectile.localAI[0] % 36f == 12f && target.active && !target.dead)
             {
-                Vector2 velocity = IUMWWeaponBossVisuals.SafeDirection(Projectile.Center, target.Center, Vector2.UnitY) * 7.5f;
+                Vector2 velocity = LegendsWeaponBossVisuals.SafeDirection(Projectile.Center, target.Center, Vector2.UnitY) * 7.5f;
                 Projectile.NewProjectile(
                     Projectile.GetSource_FromAI(),
                     Projectile.Center,
                     velocity,
-                    ModContent.ProjectileType<IUMWWeaponHostileBolt>(),
+                    ModContent.ProjectileType<LegendsWeaponHostileBolt>(),
                     Projectile.damage,
                     0f,
                     Main.myPlayer,
@@ -294,7 +294,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
         public override bool PreDraw(ref Color lightColor)
         {
-            Color color = IUMWWeaponBossVisuals.UnpackColor(Projectile.ai[0]);
+            Color color = LegendsWeaponBossVisuals.UnpackColor(Projectile.ai[0]);
             Vector2 center = Projectile.Center - Main.screenPosition;
             Texture2D pixel = TextureAssets.MagicPixel.Value;
             float pulse = 0.8f + 0.2f * MathF.Sin(Main.GlobalTimeWrappedHourly * 7f + Projectile.whoAmI);
@@ -307,7 +307,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             for (int i = 0; i < 4; i++)
             {
                 Vector2 spoke = (Projectile.rotation + MathHelper.PiOver2 * i).ToRotationVector2() * 28f;
-                IUMWWeaponBossVisuals.DrawLine(Main.spriteBatch, Projectile.Center - spoke, Projectile.Center + spoke, color * 0.62f, 2f);
+                LegendsWeaponBossVisuals.DrawLine(Main.spriteBatch, Projectile.Center - spoke, Projectile.Center + spoke, color * 0.62f, 2f);
             }
 
             return false;

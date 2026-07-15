@@ -1,0 +1,119 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		DifficultyUI: {
+			Name: 传说模式
+			ShortDescription: 启用传说模式。
+			ExpandedDescription: 传说模式会为指定灾厄 Boss 重制专属 AI 层：血量阶段切换、武器化招式循环、移动压力、死亡演出，以及左下角调试文字。
+		}
+
+		UI: {
+			ModeEnabled: 传说模式已开启。
+			ModeDisabled: 传说模式已关闭。
+			StatusOn: 当前状态：开启
+			StatusOff: 当前状态：关闭
+		}
+
+		Items: {
+			BossSummonerItem: {
+				DisplayName: Boss 召唤器
+				Tooltip: 右键打开 Boss 列表。点击任意 Boss 图标即可召唤。
+			}
+		}
+
+		Configs: {
+			LegendsClientConfig: {
+				DisplayName: 传说模式客户端设置
+
+				ShowBossAIDebugText: {
+					Label: 显示 Boss AI 调试文字
+					Tooltip: 传说模式开启时，在左下角显示当前跟踪 Boss、阶段、武器、计时器和生命比例。
+				}
+			}
+		}
+
+		LegendsDebug: {
+			Header: 传说模式调试
+			NoBoss: 等待追踪 Boss
+			Boss: Boss
+			Phase: 阶段
+			Weapon: 武器
+			Timer: 计时
+			Life: 生命
+			PhaseFallback: 第 {0} 阶段
+		}
+
+		LegendsPhases: {
+			Cryogen: {
+				1: 封印冰核
+				2: 封印冰核·碎裂
+				3: 封印冰核·全武装
+				4: 核心解封
+				5: 核心解封·双重回响
+				6: 永恒之冬
+			}
+			OldDuke: { 1: 腐朽军械, 2: 引擎过载 }
+			Polterghast: { 1: 怨能囚笼, 2: 怨魂解缚 }
+			StormWeaver: { 1: 装甲织体, 2: 雷暴全解 }
+			CeaselessVoid: { 1: 镜像封锁, 2: 虚空解封 }
+			Signus: { 1: 影袭潜行, 2: 高频瞬影 }
+			Providence: { 1: 圣火仪式, 2: 神威全盛 }
+			AstrumDeus: { 1: 星神之躯, 2: 双星裂体 }
+			PlaguebringerGoliath: {
+				1: 装甲蜂巢·一
+				2: 装甲蜂巢·二
+				3: 装甲蜂巢·三
+				4: 核心暴走·一
+				5: 核心暴走·二
+				6: 核心暴走·三
+			}
+			AstrumAureus: { 1: 星辉机甲, 2: 反应堆暴走 }
+			AquaticScourge: { 1: 深渊潜袭, 2: 硫磺狂潮 }
+			HiveMind: { 1: 蜂巢苏醒, 2: 蔓延腐化, 3: 噬影, 4: 腐朽核心 }
+			Perforators: { 1: 血巢主宰, 2: 小穿孔者, 3: 中穿孔者, 4: 大穿孔者 }
+			CalamitasClone: { 1: 灾祸之影, 2: 灾祸解缚 }
+			LeviathanAnahita: { 1: 双歌合鸣, 2: 白水风暴 }
+			Ravager: { 1: 血肉壁垒, 2: 反应堆过载 }
+			Dragonfolly: { 1: 金羽猎手, 2: 雷暴之主 }
+			Yharon: { 1: 烈焰暴君, 2: 浴火重生 }
+		}
+
+		LegendsAttacks: {
+			Common: {
+				Transition: 阶段转换
+				FreezeTransition: 阶段转换
+				StateTransition: 阶段转换
+				OverloadTransition: 核心过载
+				OceanStormTransition: 白水风暴
+				ReactorOverloadTransition: 反应堆过载
+				DeathAnimation: 死亡演出
+				VictoryDespawn: 胜利离场
+			}
+			Cryogen: {
+				HoarfrostBow: 白霜弓
+				Icebreaker: 破冰者
+				Avalanche: 雪崩
+				SnowstormStaff: 冰晶风暴
+				SoulofCryogen: 极寒之魂
+				GlacialEmbrace: 冰川之拥
+				DarklightGreatsword: 巨剑夜光
+				StarnightLance: 星夜长枪
+				ShadecrystalBarrage: 暗晶风暴
+				DaedalusGolemStaff: 代达罗斯守卫
+				DarkechoAndShimmerspark: 暗之回响·炽光
+				CrystalPiercer: 水晶穿刺者
+			}
+			HiveMind: {
+				SpawnRoar: 苏醒咆哮
+				SuspensionDrift: 悬浮漂移
+				NPCSpawnArc: 召唤弧线
+				SpinLunge: 旋转突进
+				CloudDash: 云层冲刺
+				EaterOfSoulsWall: 噬魂者之墙
+				UndergroundFlameDash: 地底火焰冲锋
+				CursedRain: 诅咒之雨
+				BlobBurst: 血珠爆发
+				DesperationArena: 绝境领域
+			}
+		}
+	}
+}

@@ -1,5 +1,5 @@
 // =====================================================================================================================
-// THE PERFORATORS - CUSTOM BEHAVIOR OVERRIDE (IUMW MODE)
+// THE PERFORATORS - CUSTOM BEHAVIOR OVERRIDE (Legends MODE)
 // =====================================================================================================================
 // DESIGN PHILOSOPHY & FIGHT METRICS:
 // The Perforators are the living embodiment of the Crimson biome, representing raw flesh, bone, and flowing ichor.
@@ -47,7 +47,7 @@ using CalamityPerforatorHive = CalamityMod.NPCs.Perforator.PerforatorHive;
 namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossAIs.BStage1.Perforators
 {
     /// <summary>
-    /// Custom behavior override for The Perforator Hive in IUMW Mode.
+    /// Custom behavior override for The Perforator Hive in Legends Mode.
     /// This class takes absolute authority over boss movement, state flow, projectile management,
     /// custom drawing overlays (e.g. desperation boundaries, warning geysers, linear telegraphs),
     /// difficulty scaling, minion spawning and coordination, and death sequences.
@@ -60,7 +60,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
     /// - Desperation barrier check using boundary distance checks:
     ///   dist = Vector2.Distance(player.Center, desperationCenter)
     /// </summary>
-    internal sealed class PerforatorsIUMWAI : IUMWBossAI
+    internal sealed class PerforatorsLegendsAI : LegendsBossAI
     {
         #region Constants & Configuration
         // NPC Identifiers
@@ -198,7 +198,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         /// Main update override in PreAI. Suppresses default AI by returning false.
         /// Handles target validity, enrage calculations, phase thresholds, and delegates to custom states.
         /// </summary>
-        public override bool PreAI(NPC npc, IUMWGlobalNPC data)
+        public override bool PreAI(NPC npc, LegendsGlobalNPC data)
         {
             ticksRunning++;
 

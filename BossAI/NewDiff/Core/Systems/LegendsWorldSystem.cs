@@ -7,11 +7,11 @@ using Terraria.ModLoader.IO;
 
 namespace CalamityLegendsComeBack.BossAI.NewDiff.Core.Systems
 {
-    public class IUMWWorldSystem : ModSystem
+    public class LegendsWorldSystem : ModSystem
     {
         private static bool iumwModeEnabled;
 
-        public static bool IUMWModeEnabled
+        public static bool LegendsModeEnabled
         {
             get => iumwModeEnabled;
             set => SetModeEnabled(value);
@@ -25,27 +25,29 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Core.Systems
             iumwModeEnabled = value;
 
             if (!value)
-                IUMWDebugSystem.Clear();
+                LegendsDebugSystem.Clear();
 
             if (sync && Main.netMode != NetmodeID.SinglePlayer)
-                IUMWPacketHandler.SendModeSync();
+                LegendsPacketHandler.SendModeSync();
         }
 
         public override void SaveWorldHeader(TagCompound tag)
         {
-            if (IUMWModeEnabled)
-                tag["IUMWModeActive"] = true;
+            if (LegendsModeEnabled)
+                tag["LegendsModeActive"] = true;
         }
 
         public override void SaveWorldData(TagCompound tag)
         {
-            if (IUMWModeEnabled)
-                tag["IUMWModeActive"] = true;
+            if (LegendsModeEnabled)
+                tag["LegendsModeActive"] = true;
         }
 
         public override void LoadWorldData(TagCompound tag)
         {
-            SetModeEnabled(tag.GetBool("IUMWModeActive"), sync: false);
+            // "IUMWModeActive" is the pre-rename save tag — keep reading it so worlds created before the
+            // Legends Mode rename don't silently lose the enabled flag on update.
+            SetModeEnabled(tag.GetBool("LegendsModeActive") || tag.GetBool("IUMWModeActive"), sync: false);
         }
 
         public override void OnWorldLoad() => SetModeEnabled(false, sync: false);
@@ -58,7 +60,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Core.Systems
         {
             BitsByte flags = new()
             {
-                [0] = IUMWModeEnabled
+                [0] = LegendsModeEnabled
             };
 
             writer.Write(flags);

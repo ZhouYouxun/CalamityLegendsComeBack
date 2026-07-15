@@ -16,7 +16,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
     // RavagerHead/Head2 are left completely unregistered — they keep running their REAL, unmodified Calamity
     // AI, which already gives the claws their native "dash out on a chain, then retract" grapple behavior.
     // That's a free ambient pressure layer; the custom rotation below is the main event layered on top of it.
-    internal sealed class RavagerAI : IUMWBossAI
+    internal sealed class RavagerAI : LegendsBossAI
     {
         #region Constants & Configurations
         public override int NPCType => ModContent.Find<ModNPC>("CalamityMod/RavagerBody").Type;
@@ -98,7 +98,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         #endregion
 
         #region Core AI Hooks
-        public override bool PreAI(NPC npc, IUMWGlobalNPC data)
+        public override bool PreAI(NPC npc, LegendsGlobalNPC data)
         {
             ticksRunning++;
             oldPositions[oldPositionsIndex] = npc.Center;
@@ -1061,10 +1061,10 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 Vector2 bl = totemCenter + new Vector2(-borderSize / 2f, borderSize / 2f);
                 Vector2 br = totemCenter + new Vector2(borderSize / 2f, borderSize / 2f);
 
-                IUMWWeaponBossVisuals.DrawLine(spriteBatch, tl, tr, Color.Crimson * 0.7f, 4f);
-                IUMWWeaponBossVisuals.DrawLine(spriteBatch, tr, br, Color.Crimson * 0.7f, 4f);
-                IUMWWeaponBossVisuals.DrawLine(spriteBatch, br, bl, Color.Crimson * 0.7f, 4f);
-                IUMWWeaponBossVisuals.DrawLine(spriteBatch, bl, tl, Color.Crimson * 0.7f, 4f);
+                LegendsWeaponBossVisuals.DrawLine(spriteBatch, tl, tr, Color.Crimson * 0.7f, 4f);
+                LegendsWeaponBossVisuals.DrawLine(spriteBatch, tr, br, Color.Crimson * 0.7f, 4f);
+                LegendsWeaponBossVisuals.DrawLine(spriteBatch, br, bl, Color.Crimson * 0.7f, 4f);
+                LegendsWeaponBossVisuals.DrawLine(spriteBatch, bl, tl, Color.Crimson * 0.7f, 4f);
             }
 
             spriteBatch.End();

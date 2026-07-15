@@ -23,15 +23,15 @@ using CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossAIs.B
 
 namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossAIs.Common
 {
-    internal static class IUMWBossAIRegistry
+    internal static class LegendsBossAIRegistry
     {
-        private static Dictionary<int, IUMWBossAI> aiByNPCType = new();
+        private static Dictionary<int, LegendsBossAI> aiByNPCType = new();
 
         public static void Load()
         {
-            aiByNPCType = new Dictionary<int, IUMWBossAI>();
+            aiByNPCType = new Dictionary<int, LegendsBossAI>();
 
-            Register(new YharonIUMWAI());
+            Register(new YharonLegendsAI());
             Register(new OldDukeAI());
             Register(new PolterghastAI());
             var stormWeaver = new StormWeaverAI();
@@ -49,7 +49,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             aiByNPCType[ModContent.NPCType<CalamityMod.NPCs.AstrumDeus.AstrumDeusTail>()] = astrumDeus;
             Register(new PlaguebringerGoliathAI());
             Register(new AstrumAureusAI());
-            Register(new CryogenIUMWAI());
+            Register(new CryogenLegendsAI());
             var aquaticScourge = new AquaticScourgeAI();
             Register(aquaticScourge);
             if (ModContent.TryFind("CalamityMod/AquaticScourgeBody", out ModNPC scourgeBody))
@@ -58,8 +58,8 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 aiByNPCType[scourgeBodyAlt.Type] = aquaticScourge;
             if (ModContent.TryFind("CalamityMod/AquaticScourgeTail", out ModNPC scourgeTail))
                 aiByNPCType[scourgeTail.Type] = aquaticScourge;
-            Register(new HiveMindIUMWAI());
-            Register(new PerforatorsIUMWAI());
+            Register(new HiveMindLegendsAI());
+            Register(new PerforatorsLegendsAI());
             Register(new CalamitasCloneAI());
             var leviathanAnahita = new LeviathanAnahitaAI();
             Register(leviathanAnahita);
@@ -68,22 +68,22 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             Register(new RavagerAI());
             Register(new DragonfollyAI());
 
-            IUMWWeaponBossRegistry.Load();
+            LegendsWeaponBossRegistry.Load();
         }
 
         public static void Unload()
         {
-            IUMWWeaponBossRegistry.Unload();
+            LegendsWeaponBossRegistry.Unload();
             aiByNPCType = null;
         }
 
-        public static bool TryGetAI(int npcType, out IUMWBossAI ai)
+        public static bool TryGetAI(int npcType, out LegendsBossAI ai)
         {
             ai = null;
             return aiByNPCType?.TryGetValue(npcType, out ai) == true;
         }
 
-        private static void Register(IUMWBossAI ai)
+        private static void Register(LegendsBossAI ai)
         {
             try
             {

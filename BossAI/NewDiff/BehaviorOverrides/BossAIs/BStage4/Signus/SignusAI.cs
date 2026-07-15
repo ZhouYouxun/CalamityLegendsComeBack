@@ -16,7 +16,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
     // 移动哲学(分寸感): 隐身期从不直线追人 — 它在玩家侧翼的"影子车道"里游走(正弦飘移),
     // 每次出手前用带尘埃汇聚预告的瞬移(高频瞬移是设计文档对P2的明确要求)落位, 出手后退回车道.
     // 隐身期间接触伤害为0 (被看不见的身体撞死不公平); 只有破隐窗口和死亡升华冲刺期间有接触伤害.
-    internal sealed class SignusAI : IUMWBossAI
+    internal sealed class SignusAI : LegendsBossAI
     {
         #region Constants & Configurations
         public override int NPCType => ModContent.Find<ModNPC>("CalamityMod/Signus").Type;
@@ -113,7 +113,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         #endregion
 
         #region Core AI Hooks
-        public override bool PreAI(NPC npc, IUMWGlobalNPC data)
+        public override bool PreAI(NPC npc, LegendsGlobalNPC data)
         {
             ticksRunning++;
 
@@ -253,7 +253,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             oldPosIndex = (oldPosIndex + 1) % oldPos.Length;
 
             data.CurrentPhase = currentPhase;
-            data.AttackState = (IUMWAttackState)Math.Clamp((int)state, 0, 4);
+            data.AttackState = (LegendsAttackState)Math.Clamp((int)state, 0, 4);
             data.PatternTimer = (int)timer;
 
             return false;

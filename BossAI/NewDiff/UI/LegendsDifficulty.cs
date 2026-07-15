@@ -14,14 +14,14 @@ using static CalamityMod.Systems.DifficultyModeSystem;
 
 namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.UI
 {
-    public class IUMWDifficulty : DifficultyMode
+    public class LegendsDifficulty : DifficultyMode
     {
         public override bool Enabled
         {
-            get => IUMWWorldSystem.IUMWModeEnabled;
+            get => LegendsWorldSystem.LegendsModeEnabled;
             set
             {
-                IUMWWorldSystem.IUMWModeEnabled = value;
+                LegendsWorldSystem.LegendsModeEnabled = value;
 
                 if (!value)
                     return;
@@ -34,11 +34,11 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.UI
             }
         }
 
-        public override Asset<Texture2D> Texture => _texture ??= ModContent.Request<Texture2D>("CalamityLegendsComeBack/BossAI/NewDiff/Assets/UI/IUMWIcon");
+        public override Asset<Texture2D> Texture => _texture ??= ModContent.Request<Texture2D>("CalamityLegendsComeBack/BossAI/NewDiff/Assets/UI/LegendsIcon");
 
-        public override Asset<Texture2D> TextureDisabled => _textureDisabled ??= ModContent.Request<Texture2D>("CalamityLegendsComeBack/BossAI/NewDiff/Assets/UI/IUMWIcon_Off");
+        public override Asset<Texture2D> TextureDisabled => _textureDisabled ??= ModContent.Request<Texture2D>("CalamityLegendsComeBack/BossAI/NewDiff/Assets/UI/LegendsIcon_Off");
 
-        public override Asset<Texture2D> OutlineTexture => _outlineTexture ??= ModContent.Request<Texture2D>("CalamityLegendsComeBack/BossAI/NewDiff/Assets/UI/IUMWIcon_Outline");
+        public override Asset<Texture2D> OutlineTexture => _outlineTexture ??= ModContent.Request<Texture2D>("CalamityLegendsComeBack/BossAI/NewDiff/Assets/UI/LegendsIcon_Outline");
 
         public override SoundStyle ActivationSound => SoundID.Item4 with { Volume = 0.75f, Pitch = -0.18f };
 

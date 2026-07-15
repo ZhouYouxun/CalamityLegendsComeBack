@@ -1,6 +1,6 @@
 namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossAIs.Common
 {
-    public enum IUMWAttackState
+    public enum LegendsAttackState
     {
         MatrixHover,
         VectorDash,

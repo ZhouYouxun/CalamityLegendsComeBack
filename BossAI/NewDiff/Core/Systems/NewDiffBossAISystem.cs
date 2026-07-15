@@ -9,18 +9,18 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Core.Systems
     {
         public override void Load()
         {
-            DifficultyModeSystem.Difficulties.Add(new IUMWDifficulty());
+            DifficultyModeSystem.Difficulties.Add(new LegendsDifficulty());
             DifficultyModeSystem.CalculateDifficultyData();
         }
 
         public override void PostSetupContent()
         {
-            IUMWBossAIRegistry.Load();
+            LegendsBossAIRegistry.Load();
         }
 
         public override void Unload()
         {
-            IUMWBossAIRegistry.Unload();
+            LegendsBossAIRegistry.Unload();
         }
     }
 }

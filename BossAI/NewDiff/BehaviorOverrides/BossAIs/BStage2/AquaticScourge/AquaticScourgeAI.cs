@@ -13,12 +13,12 @@ using CalamityMod;
 namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossAIs.BStage2.AquaticScourge
 {
     // Head, Body/BodyAlt and Tail all route through this shared AI instance (registered in
-    // IUMWBossAIRegistry). Only the Head runs the attack state machine; other segments return true
+    // LegendsBossAIRegistry). Only the Head runs the attack state machine; other segments return true
     // immediately (pure vanilla chain positioning) but still receive ModifyHitBy* so hits on the
     // specific pustule-carrying segments can be detected. Our PreAI override skips vanilla
     // Head.AI() entirely, which is where the real body-spawn loop lives — SpawnWormChain() replicates
     // it manually, matching the fix already applied to Astrum Deus and Storm Weaver.
-    internal sealed class AquaticScourgeAI : IUMWBossAI
+    internal sealed class AquaticScourgeAI : LegendsBossAI
     {
         #region Constants & Configurations
         public override int NPCType => ModContent.Find<ModNPC>("CalamityMod/AquaticScourgeHead").Type;
@@ -117,7 +117,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         #endregion
 
         #region Core AI Hooks
-        public override bool PreAI(NPC npc, IUMWGlobalNPC data)
+        public override bool PreAI(NPC npc, LegendsGlobalNPC data)
         {
             int headType = ModContent.Find<ModNPC>("CalamityMod/AquaticScourgeHead").Type;
             if (npc.type != headType)

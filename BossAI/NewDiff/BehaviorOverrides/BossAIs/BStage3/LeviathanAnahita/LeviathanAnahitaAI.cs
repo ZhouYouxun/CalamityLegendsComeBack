@@ -14,7 +14,7 @@ using CalamityMod;
 namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossAIs.BStage3.LeviathanAnahita
 {
     // Leviathan and Anahita are TWO NPC entities that both route through this ONE shared AI instance (see
-    // IUMWBossAIRegistry.Load — both npc.type values map to the same object), so every instance field here
+    // LegendsBossAIRegistry.Load — both npc.type values map to the same object), so every instance field here
     // is genuinely boss-wide state, not per-entity. Leviathan acts as the "conductor": its branch owns
     // timer++ and RotateAttack for every state (including Anahita's), while Anahita's branch only reads
     // timer/tracker to drive her own spell logic. This mirrors the file's original design; the fixes here
@@ -22,7 +22,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
     // CalamityMod/NPCs/Leviathan/Leviathan.cs's own notOcean check), a cooldown-gated arena hurt instead of
     // per-frame Hurt(), anti-cheese hover, a persistent attack-cycle rotation with dual variants, and P2
     // padded out to 8 rotation slots (the design doc only names 2 P2 moves, well short of the 6-slot floor).
-    internal sealed class LeviathanAnahitaAI : IUMWBossAI
+    internal sealed class LeviathanAnahitaAI : LegendsBossAI
     {
         #region Constants & Configurations
         public override int NPCType => ModContent.Find<ModNPC>("CalamityMod/Leviathan").Type;
@@ -116,7 +116,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         #endregion
 
         #region Core AI Hooks
-        public override bool PreAI(NPC npc, IUMWGlobalNPC data)
+        public override bool PreAI(NPC npc, LegendsGlobalNPC data)
         {
             ticksRunning++;
 
@@ -981,8 +981,8 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 Vector2 startLower = new Vector2(target.Center.X - 1200f, bottomTideY);
                 Vector2 endLower = new Vector2(target.Center.X + 1200f, bottomTideY);
 
-                IUMWWeaponBossVisuals.DrawLine(spriteBatch, startUpper, endUpper, Color.DeepSkyBlue * 0.7f, 5f);
-                IUMWWeaponBossVisuals.DrawLine(spriteBatch, startLower, endLower, Color.DeepSkyBlue * 0.7f, 5f);
+                LegendsWeaponBossVisuals.DrawLine(spriteBatch, startUpper, endUpper, Color.DeepSkyBlue * 0.7f, 5f);
+                LegendsWeaponBossVisuals.DrawLine(spriteBatch, startLower, endLower, Color.DeepSkyBlue * 0.7f, 5f);
 
                 if (shieldActive)
                 {

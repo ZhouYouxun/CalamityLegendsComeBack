@@ -17,7 +17,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
     // are safe. Body/Tail return true and keep running vanilla positioning — but NOT vanilla attacks, since
     // those depend on a Head-side localAI[0] counter that only increments inside vanilla Head.AI(), which we
     // never call; leaving that counter frozen means vanilla Body/Tail attacks simply never trigger.
-    internal sealed class StormWeaverAI : IUMWBossAI
+    internal sealed class StormWeaverAI : LegendsBossAI
     {
         #region Constants & Configurations
         public override int NPCType => ModContent.Find<ModNPC>("CalamityMod/StormWeaverHead").Type;
@@ -106,7 +106,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         #endregion
 
         #region Core AI Hooks
-        public override bool PreAI(NPC npc, IUMWGlobalNPC data)
+        public override bool PreAI(NPC npc, LegendsGlobalNPC data)
         {
             ticksRunning++;
 

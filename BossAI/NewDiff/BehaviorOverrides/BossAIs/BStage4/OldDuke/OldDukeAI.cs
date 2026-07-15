@@ -22,7 +22,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
     // SlitheringEels, SkyfinBombers, SpentFuelContainer and SulphurousGrabber are shared with Aquatic
     // Scourge per the design docs — their projectiles and held-weapon classes are reused directly from
     // the AquaticScourge namespace rather than duplicated.
-    internal sealed class OldDukeAI : IUMWBossAI
+    internal sealed class OldDukeAI : LegendsBossAI
     {
         #region Constants & Configurations
         public override int NPCType => ModContent.Find<ModNPC>("CalamityMod/OldDuke").Type;
@@ -119,7 +119,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         #endregion
 
         #region Core AI Hooks
-        public override bool PreAI(NPC npc, IUMWGlobalNPC data)
+        public override bool PreAI(NPC npc, LegendsGlobalNPC data)
         {
             ticksRunning++;
 
@@ -220,7 +220,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             oldPosIndex = (oldPosIndex + 1) % oldPos.Length;
 
             data.CurrentPhase = currentPhase;
-            data.AttackState = (IUMWAttackState)Math.Clamp((int)state, 0, 4);
+            data.AttackState = (LegendsAttackState)Math.Clamp((int)state, 0, 4);
             data.PatternTimer = (int)timer;
 
             return false;

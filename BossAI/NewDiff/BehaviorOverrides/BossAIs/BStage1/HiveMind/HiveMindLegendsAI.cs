@@ -1,5 +1,5 @@
 // =====================================================================================================================
-// THE HIVE MIND - CUSTOM BEHAVIOR OVERRIDE (IUMW MODE)
+// THE HIVE MIND - CUSTOM BEHAVIOR OVERRIDE (Legends MODE)
 // =====================================================================================================================
 // DESIGN PHILOSOPHY & FIGHT METRICS:
 // The Hive Mind is the collective consciousness of the Corrupt biome, a mass of rotting tissue, infected cells,
@@ -47,7 +47,7 @@ using CalamityHiveMind = CalamityMod.NPCs.HiveMind.HiveMind;
 
 namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossAIs.BStage1.HiveMind
 {
-    internal sealed class HiveMindIUMWAI : IUMWBossAI
+    internal sealed class HiveMindLegendsAI : LegendsBossAI
     {
         #region Constants & Configuration
         // NPC Identifiers
@@ -202,7 +202,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         /// Main update override in PreAI. Suppresses default AI by returning false.
         /// Handles target validity, enrage calculations, phase thresholds, and delegates to custom states.
         /// </summary>
-        public override bool PreAI(NPC npc, IUMWGlobalNPC data)
+        public override bool PreAI(NPC npc, LegendsGlobalNPC data)
         {
             ticksRunning++;
 

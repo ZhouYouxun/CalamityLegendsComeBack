@@ -58,10 +58,10 @@ namespace CalamityLegendsComeBack
                     PlayerSaddlePackets.HandleDismount(reader, whoAmI);
                     break;
                 case GamePacketType.NewDiffSyncMode:
-                    IUMWPacketHandler.HandleModeSyncPacket(reader, whoAmI);
+                    LegendsPacketHandler.HandleModeSyncPacket(reader, whoAmI);
                     break;
                 case GamePacketType.NewDiffYharonState:
-                    IUMWPacketHandler.HandleYharonStatePacket(reader, whoAmI);
+                    LegendsPacketHandler.HandleYharonStatePacket(reader, whoAmI);
                     break;
                 default:
                     TetrisMultiplayerPackets.HandlePacket(packetType, reader, whoAmI);

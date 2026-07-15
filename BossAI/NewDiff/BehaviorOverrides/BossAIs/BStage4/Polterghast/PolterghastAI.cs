@@ -16,7 +16,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
     // 移动哲学(分寸感): 幽魂在怨能石墙内侧的暗角之间飘移(正弦幽浮), 从不径直扑脸;
     // P2按文档开启"高频瞬移" — 每次瞬移都有怨雾汇聚预告, 绝不无征兆闪现.
     // 结界石墙、砖墙拍击、双子分身全部可视化(旧版全是隐形碰撞, 是最重的公平性欠账).
-    internal sealed class PolterghastAI : IUMWBossAI
+    internal sealed class PolterghastAI : LegendsBossAI
     {
         #region Constants & Configurations
         public override int NPCType => ModContent.Find<ModNPC>("CalamityMod/Polterghast").Type;
@@ -125,7 +125,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         #endregion
 
         #region Core AI Hooks
-        public override bool PreAI(NPC npc, IUMWGlobalNPC data)
+        public override bool PreAI(NPC npc, LegendsGlobalNPC data)
         {
             ticksRunning++;
 
@@ -262,7 +262,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             oldPosIndex = (oldPosIndex + 1) % oldPos.Length;
 
             data.CurrentPhase = currentPhase;
-            data.AttackState = (IUMWAttackState)Math.Clamp((int)state, 0, 4);
+            data.AttackState = (LegendsAttackState)Math.Clamp((int)state, 0, 4);
             data.PatternTimer = (int)timer;
 
             return false;

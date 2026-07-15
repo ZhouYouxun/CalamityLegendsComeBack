@@ -12,7 +12,7 @@ using CalamityMod;
 
 namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossAIs.BStage3.AstrumAureus
 {
-    internal sealed class AstrumAureusAI : IUMWBossAI
+    internal sealed class AstrumAureusAI : LegendsBossAI
     {
         #region Constants & Configurations
         public override int NPCType => ModContent.Find<ModNPC>("CalamityMod/AstrumAureus").Type;
@@ -97,7 +97,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         #endregion
 
         #region Core AI Hooks
-        public override bool PreAI(NPC npc, IUMWGlobalNPC data)
+        public override bool PreAI(NPC npc, LegendsGlobalNPC data)
         {
             ticksRunning++;
             oldPositions[oldPositionsIndex] = npc.Center;
@@ -986,10 +986,10 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             Vector2 bl = npc.Center + new Vector2(-borderSize / 2f, borderSize / 2f);
             Vector2 br = npc.Center + new Vector2(borderSize / 2f, borderSize / 2f);
 
-            IUMWWeaponBossVisuals.DrawLine(spriteBatch, tl, tr, Color.Orange * 0.7f, 4f);
-            IUMWWeaponBossVisuals.DrawLine(spriteBatch, tr, br, Color.Orange * 0.7f, 4f);
-            IUMWWeaponBossVisuals.DrawLine(spriteBatch, br, bl, Color.Orange * 0.7f, 4f);
-            IUMWWeaponBossVisuals.DrawLine(spriteBatch, bl, tl, Color.Orange * 0.7f, 4f);
+            LegendsWeaponBossVisuals.DrawLine(spriteBatch, tl, tr, Color.Orange * 0.7f, 4f);
+            LegendsWeaponBossVisuals.DrawLine(spriteBatch, tr, br, Color.Orange * 0.7f, 4f);
+            LegendsWeaponBossVisuals.DrawLine(spriteBatch, br, bl, Color.Orange * 0.7f, 4f);
+            LegendsWeaponBossVisuals.DrawLine(spriteBatch, bl, tl, Color.Orange * 0.7f, 4f);
 
             if (shieldActive && currentPhase == 1)
             {
