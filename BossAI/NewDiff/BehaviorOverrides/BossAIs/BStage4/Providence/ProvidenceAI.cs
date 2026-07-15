@@ -56,6 +56,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             Maelstrom = 16,
             Prince = 17,
             Transition = 18,
+            DeathAnimation = 19,
         }
 
         private static readonly AttackState[] P1Cycle =
@@ -231,6 +232,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     case AttackState.Maelstrom: ExecuteMaelstrom(npc, target, ref timer, ref stateTracker, currentPhase); break;
                     case AttackState.Prince: ExecutePrince(npc, target, ref timer, ref stateTracker, currentPhase); break;
                     case AttackState.Transition: ExecuteTransition(npc, target, ref timer, ref stateTracker, currentPhase); break;
+                    case AttackState.DeathAnimation: ExecuteDeathAnimation(npc, target, ref timer); break;
                 }
             }
 
@@ -241,8 +243,17 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             return false;
         }
 
-        public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers) => ProcessCrystalHits(npc, player.Center, ref modifiers, item.damage);
-        public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers) => ProcessCrystalHits(npc, projectile.Center, ref modifiers, projectile.damage);
+        public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers)
+        {
+            ProcessCrystalHits(npc, player.Center, ref modifiers, item.damage);
+            InterceptLethalHit(npc, ref modifiers, (int)AttackState.DeathAnimation, () => BeginDeathAnimation(npc, player));
+        }
+
+        public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers)
+        {
+            ProcessCrystalHits(npc, projectile.Center, ref modifiers, projectile.damage);
+            InterceptLethalHit(npc, ref modifiers, (int)AttackState.DeathAnimation, () => BeginDeathAnimation(npc, Main.player[projectile.owner]));
+        }
         #endregion
 
         #region Arena, Refraction & Crystals
@@ -1279,6 +1290,99 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 npc.ai[2] = 0;
                 npc.ai[3] = 0;
                 npc.netUpdate = true;
+            }
+        }
+        #endregion
+
+        #region Death Animation
+        // 神格飞升 — 五段演出, 让三枚圣晶与结界洪流成为演出的主角, 而不是通用爆炸:
+        // 圣力崩解 -> 晶核依次湮灭(呼应三晶机制) -> 结界洪流全面内爆 -> 神格飞升 -> 终末圣爆.
+        private void BeginDeathAnimation(NPC npc, Player target)
+        {
+            npc.ai[1] = (float)AttackState.DeathAnimation;
+            npc.ai[2] = 0f;
+            npc.ai[3] = 0f;
+            stunTimer = 0;
+            yellowCrystalHP = 0f;
+            orangeCrystalHP = 0f;
+            purpleCrystalHP = 0f;
+            CleanupHeldWeapons(npc);
+            npc.netUpdate = true;
+
+            TriggerDeathCinematic(npc, target, focusStrength: 0.6f, holdFrames: 60, shakePower: 11f);
+            SoundEngine.PlaySound(SoundID.Item74 with { Volume = 1f, Pitch = -0.3f }, npc.Center);
+        }
+
+        private void ExecuteDeathAnimation(NPC npc, Player target, ref float timer)
+        {
+            npc.damage = 0;
+            npc.dontTakeDamage = true;
+
+            if (timer < 30f)
+            {
+                // 圣力崩解 — molten-gold cracks race across the body, embers shedding faster than the transition ever did
+                npc.velocity *= 0.9f;
+                npc.rotation += MathF.Sin(timer * 1.1f) * 0.08f;
+                if ((int)timer % 2 == 0)
+                {
+                    Dust d = Dust.NewDustPerfect(npc.Center + Main.rand.NextVector2Circular(90f, 70f), Main.rand.NextBool() ? DustID.Torch : DustID.CrimsonTorch, new Vector2(Main.rand.NextFloat(-2f, 2f), Main.rand.NextFloat(1f, 4f)), 100, default, 1.5f);
+                    d.fadeIn = 1.2f;
+                    d.noGravity = true;
+                }
+            }
+            else if (timer < 90f)
+            {
+                // 晶核依次湮灭 — the three sacred crystal positions flare and shatter in sequence, echoing the triad mechanic
+                float t = timer - 30f;
+                int which = (int)(t / 20f);
+                if (which < 3 && (int)t % 20 == 0)
+                {
+                    float a = which * MathHelper.TwoPi / 3f;
+                    Vector2 crystalPos = npc.Center + a.ToRotationVector2() * 110f;
+                    SoundEngine.PlaySound(SoundID.Shatter with { Volume = 0.8f, Pitch = which * 0.15f }, crystalPos);
+                    ProvFx.Burst(crystalPos, 6f, 20, which == 0 ? DustID.GoldFlame : which == 1 ? DustID.CrimsonTorch : DustID.PurpleTorch);
+                }
+            }
+            else if (timer < 130f)
+            {
+                // 结界洪流全面内爆 — the cage-contraction wave from phase transition, but this time it rushes fully onto her
+                float t = timer - 90f;
+                if ((int)t % 3 == 0)
+                {
+                    float a = Main.rand.NextFloat(MathHelper.TwoPi);
+                    Vector2 pos = npc.Center + a.ToRotationVector2() * MathHelper.Lerp(600f, 20f, t / 40f);
+                    Dust d = Dust.NewDustPerfect(pos, DustID.GoldFlame, (npc.Center - pos) * 0.06f, 100, default, 1.5f);
+                    d.noGravity = true;
+                }
+            }
+            else if (timer < 165f)
+            {
+                // 神格飞升 — a rapid ascent in a column of light, the cinematic pull peaks on the way up
+                npc.velocity = Vector2.Lerp(npc.velocity, new Vector2(0f, -10f), 0.08f);
+                if ((int)timer % 2 == 0)
+                {
+                    Dust d = Dust.NewDustPerfect(npc.Center + new Vector2(Main.rand.NextFloat(-30f, 30f), 60f), DustID.GoldFlame, new Vector2(0f, 3f), 100, default, 1.4f);
+                    d.noGravity = true;
+                }
+            }
+            else
+            {
+                // 终末圣爆 — the actual kill fires once, everything after is the lingering burst
+                if (timer == 165f)
+                {
+                    npc.velocity = Vector2.Zero;
+                    SoundEngine.PlaySound(SoundID.Item74 with { Volume = 1.2f, Pitch = -0.2f }, npc.Center);
+                    SoundEngine.PlaySound(SoundID.NPCDeath4, npc.Center);
+                    target.Calamity().GeneralScreenShakePower = 14f;
+                    ProvFx.Burst(npc.Center, 9f, 46);
+                    ProvFx.Burst(npc.Center, 6f, 26, DustID.CrimsonTorch);
+                }
+
+                if (timer >= 188f)
+                {
+                    npc.dontTakeDamage = false;
+                    npc.StrikeInstantKill();
+                }
             }
         }
         #endregion

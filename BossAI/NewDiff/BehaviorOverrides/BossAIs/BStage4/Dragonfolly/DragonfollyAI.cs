@@ -34,7 +34,8 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             DraconicSwarmSigil = 3,
             ThunderboltWrath = 4,
             SonicBoomOverdrive = 5,
-            Transition = 6
+            Transition = 6,
+            DeathAnimation = 7
         }
 
         // Only 3 named weapons per phase — half the "at least 6 slots" floor — so every weapon gets two
@@ -209,7 +210,8 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 npc.damage = npc.defDamage;
             }
             // Movement is owned by each attack below — the constant全局追尾 that ate every dash is gone.
-            npc.rotation = npc.velocity.X * 0.05f;
+            if (state != AttackState.DeathAnimation)
+                npc.rotation = npc.velocity.X * 0.05f;
 
             if (stunTimer == 0)
             {
@@ -236,14 +238,26 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     case AttackState.Transition:
                         ExecuteTransition(npc, target, ref timer, ref tracker, currentPhase);
                         break;
+                    case AttackState.DeathAnimation:
+                        ExecuteDeathAnimation(npc, target, ref timer);
+                        break;
                 }
             }
 
             return false;
         }
 
-        public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers) => ProcessWingHits(npc, player.Center, ref modifiers, item.damage);
-        public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers) => ProcessWingHits(npc, projectile.Center, ref modifiers, projectile.damage);
+        public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers)
+        {
+            ProcessWingHits(npc, player.Center, ref modifiers, item.damage);
+            InterceptLethalHit(npc, ref modifiers, (int)AttackState.DeathAnimation, () => BeginDeathAnimation(npc, player));
+        }
+
+        public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers)
+        {
+            ProcessWingHits(npc, projectile.Center, ref modifiers, projectile.damage);
+            InterceptLethalHit(npc, ref modifiers, (int)AttackState.DeathAnimation, () => BeginDeathAnimation(npc, Main.player[projectile.owner]));
+        }
         #endregion
 
         #region Helpers
@@ -691,6 +705,89 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 npc.ai[2] = 0;
                 npc.ai[3] = 0;
                 npc.netUpdate = true;
+            }
+        }
+        #endregion
+
+        #region Death Animation
+        // 金羽陨落 — 五段演出, 让金羽/雷网身份成为演出主角, 而不是通用爆炸:
+        // 金羽剥离 -> 残翼癫狂振翅 -> 雷网回响震颤 -> 雷霆凝聚振翅上腾 -> 终末雷光爆发.
+        private void BeginDeathAnimation(NPC npc, Player target)
+        {
+            npc.ai[1] = (float)AttackState.DeathAnimation;
+            npc.ai[2] = 0f;
+            npc.ai[3] = 0f;
+            stunTimer = 0;
+            npc.netUpdate = true;
+
+            TriggerDeathCinematic(npc, target, focusStrength: 0.55f, holdFrames: 55, shakePower: 10f);
+            SoundEngine.PlaySound(SoundID.Roar with { Volume = 1f, Pitch = 0.4f }, npc.Center);
+        }
+
+        private void ExecuteDeathAnimation(NPC npc, Player target, ref float timer)
+        {
+            npc.damage = 0;
+            npc.dontTakeDamage = true;
+
+            if (timer < 25f)
+            {
+                // 金羽剥离 — the same feather-shedding visual as the phase transition, this time for good
+                npc.velocity *= 0.9f;
+                npc.rotation += MathF.Sin(timer * 1.2f) * 0.1f;
+                if ((int)timer % 2 == 0)
+                {
+                    Dust d = Dust.NewDustPerfect(npc.Center + Main.rand.NextVector2Circular(60f, 40f), DustID.GoldFlame, Main.rand.NextVector2Circular(3f, 3f), 100, default, 1.3f);
+                    d.noGravity = true;
+                }
+            }
+            else if (timer < 70f)
+            {
+                // 残翼癫狂振翅 — the broken-wing flutter identity gone fully erratic, no recovery left in it
+                npc.velocity += Main.rand.NextVector2Circular(0.7f, 0.7f);
+                npc.velocity *= 0.9f;
+                npc.rotation += MathF.Sin(timer * 0.6f) * 0.15f;
+                if ((int)timer % 3 == 0)
+                    FollyFx.Burst(npc.Center, 4f, 8);
+            }
+            else if (timer < 105f)
+            {
+                // 雷网回响震颤 — the Tesla-grid identity crawls across the body itself as a last discharge
+                float t = timer - 70f;
+                if ((int)t % 2 == 0)
+                {
+                    Vector2 spawn = npc.Center + Main.rand.NextVector2Circular(90f, 60f);
+                    Dust d = Dust.NewDustPerfect(spawn, DustID.Electric, (npc.Center - spawn) * 0.05f, 100, default, 1.3f);
+                    d.noGravity = true;
+                }
+            }
+            else if (timer < 140f)
+            {
+                // 雷霆凝聚振翅上腾 — rises while a final thunderbolt gathers, the cinematic pull peaks here
+                npc.velocity = Vector2.Lerp(npc.velocity, new Vector2(0f, -7f), 0.06f);
+                if ((int)timer % 2 == 0)
+                {
+                    Vector2 spawn = npc.Center + Main.rand.NextVector2CircularEdge(100f, 100f);
+                    Dust d = Dust.NewDustPerfect(spawn, DustID.GoldFlame, (npc.Center - spawn) * 0.07f, 100, default, 1.3f);
+                    d.noGravity = true;
+                }
+            }
+            else
+            {
+                // 终末雷光爆发 — the actual kill fires once, everything after is the lingering burst
+                if (timer == 140f)
+                {
+                    npc.velocity = Vector2.Zero;
+                    SoundEngine.PlaySound(SoundID.Item14 with { Volume = 1.1f, Pitch = 0.2f }, npc.Center);
+                    SoundEngine.PlaySound(SoundID.NPCDeath4, npc.Center);
+                    target.Calamity().GeneralScreenShakePower = 13f;
+                    FollyFx.Burst(npc.Center, 8f, 40);
+                }
+
+                if (timer >= 162f)
+                {
+                    npc.dontTakeDamage = false;
+                    npc.StrikeInstantKill();
+                }
             }
         }
         #endregion

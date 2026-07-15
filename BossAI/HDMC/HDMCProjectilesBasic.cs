@@ -125,7 +125,10 @@ namespace CalamityLegendsComeBack.BossAI.HDMC
                 Projectile.oldPos[i] = Projectile.position;
         }
 
-        public override bool CanHitPlayer(Player target) => Age > 16;
+        // 命中窗口必须跟随实际的凝滞时长（ai[1]）——部分攻击传入远超 16 帧的
+        // 凝滞期（如 LanceWheel 的 26、JudgmentRain 的 32），若用固定阈值，
+        // 矛在"完全静止预警"阶段就已能命中玩家，破坏"离开原地即安全"的设计。
+        public override bool CanHitPlayer(Player target) => Age > (int)Projectile.ai[1];
 
         public override void AI()
         {
@@ -536,7 +539,7 @@ namespace CalamityLegendsComeBack.BossAI.HDMC
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
             Projectile.penetrate = -1;
-            Projectile.timeLeft = 600;
+            Projectile.timeLeft = 600; // 起始安全值；实际寿命由下方 localAI 计数器 + Radius/MaxRadius 把控
             Projectile.netImportant = true;
         }
 
@@ -545,6 +548,9 @@ namespace CalamityLegendsComeBack.BossAI.HDMC
         public override void AI()
         {
             Projectile.localAI[0]++;
+            // 自管生命周期：负偏移错峰起步时可能需要远超默认 timeLeft 的帧数才能
+            // 收网，因此每帧都把引擎倒计时按回安全值，避免被提前误杀（同 HDMCLaserHostile 的做法）。
+            Projectile.timeLeft = 2;
             if (Radius >= MaxRadius)
             {
                 Projectile.Kill();

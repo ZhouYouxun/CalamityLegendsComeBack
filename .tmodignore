@@ -2,6 +2,10 @@ bin/
 obj/
 .vs/
 .codex-tools/
+.git/
+.agents/
+.claude/
+.codex/
 *.zip
 
 # Archived source and assets retained only as reference.

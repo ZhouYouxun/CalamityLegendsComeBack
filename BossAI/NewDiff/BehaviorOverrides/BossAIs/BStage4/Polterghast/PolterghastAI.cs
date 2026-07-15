@@ -52,6 +52,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             WarloksMoon = 13,
             Vega = 14,
             Transition = 15,
+            DeathAnimation = 16,
         }
 
         private static bool IsP1(AttackState s) => s == AttackState.TerrorBlade || s == AttackState.BansheeHook ||
@@ -247,6 +248,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     case AttackState.WarloksMoon: ExecuteWarloksMoon(npc, target, ref timer, ref tracker); break;
                     case AttackState.Vega: ExecuteVega(npc, target, ref timer, ref tracker); break;
                     case AttackState.Transition: ExecuteTransition(npc, target, ref timer, ref tracker); break;
+                    case AttackState.DeathAnimation: ExecuteDeathAnimation(npc, target, ref timer); break;
                 }
             }
             else
@@ -266,8 +268,17 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             return false;
         }
 
-        public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers) => ProcessCloneHits(npc, player.Center, ref modifiers, item.damage);
-        public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers) => ProcessCloneHits(npc, projectile.Center, ref modifiers, projectile.damage);
+        public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers)
+        {
+            ProcessCloneHits(npc, player.Center, ref modifiers, item.damage);
+            InterceptLethalHit(npc, ref modifiers, (int)AttackState.DeathAnimation, () => BeginDeathAnimation(npc, player));
+        }
+
+        public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers)
+        {
+            ProcessCloneHits(npc, projectile.Center, ref modifiers, projectile.damage);
+            InterceptLethalHit(npc, ref modifiers, (int)AttackState.DeathAnimation, () => BeginDeathAnimation(npc, Main.player[projectile.owner]));
+        }
         #endregion
 
         #region Movement & Blink Helpers
@@ -1226,6 +1237,99 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 npc.ai[2] = 0;
                 npc.ai[3] = 0;
                 npc.netUpdate = true;
+            }
+        }
+        #endregion
+
+        #region Death Animation
+        // 虚无回收 — 五段演出,呼应本战的分身/瞬移/石墙身份而不是通用爆炸:
+        // 幻象崩解(残余分身被吸回本体) -> 虚空回音闪烁(急速微瞬移) -> 石墙回响坍塌 -> 灵魂虹吸内爆 -> 终末虚无爆发.
+        private void BeginDeathAnimation(NPC npc, Player target)
+        {
+            npc.ai[1] = (float)AttackState.DeathAnimation;
+            npc.ai[2] = 0f;
+            npc.ai[3] = 0f;
+            stunTimer = 0;
+            blinkDuration = 0;
+            hateCloneHP = 0f;
+            fearCloneHP = 0f;
+            CleanupHeldWeapons(npc);
+            npc.netUpdate = true;
+
+            TriggerDeathCinematic(npc, target, focusStrength: 0.55f, holdFrames: 55, shakePower: 10f);
+            SoundEngine.PlaySound(SoundID.Zombie40 with { Volume = 1f, Pitch = -0.5f }, npc.Center);
+        }
+
+        private void ExecuteDeathAnimation(NPC npc, Player target, ref float timer)
+        {
+            npc.damage = 0;
+            npc.dontTakeDamage = true;
+            npc.velocity *= 0.92f;
+
+            if (timer < 30f)
+            {
+                // 幻象崩解 — the two clone anchor points get yanked back into the body, trailing dust behind them
+                Vector2 hatePos = ClonePos(npc, 0);
+                Vector2 fearPos = ClonePos(npc, 1);
+                if ((int)timer % 4 == 0)
+                {
+                    Dust dh = Dust.NewDustPerfect(hatePos, DustID.PinkTorch, (npc.Center - hatePos) * 0.12f, 100, GhostPink, 1.3f);
+                    dh.noGravity = true;
+                    Dust df = Dust.NewDustPerfect(fearPos, DustID.BlueTorch, (npc.Center - fearPos) * 0.12f, 100, default, 1.3f);
+                    df.noGravity = true;
+                }
+            }
+            else if (timer < 70f)
+            {
+                // 虚空回音闪烁 — rapid strobing near-invisibility, an echo of the blink identity without going anywhere
+                float strobe = (int)(timer - 30f) % 10;
+                npc.Opacity = strobe < 4f ? 0.15f : 1f;
+                if (strobe == 0f)
+                {
+                    SoundEngine.PlaySound(SoundID.Item8 with { Volume = 0.4f, Pitch = -0.3f + Main.rand.NextFloat(-0.1f, 0.1f) }, npc.Center);
+                    GhastFx.Burst(npc.Center, 4f, 10);
+                }
+            }
+            else if (timer < 110f)
+            {
+                // 石墙回响坍塌 — dungeon stone shards rain inward, same motif as the phase-transition cage collapse
+                npc.Opacity = 1f;
+                if (Main.rand.NextBool(2))
+                {
+                    Vector2 around = npc.Center + Main.rand.NextVector2Circular(220f, 220f);
+                    Dust d = Dust.NewDustPerfect(around, DustID.Stone, (npc.Center - around) * 0.07f, 80, default, 1.2f);
+                    d.fadeIn = 1.1f;
+                }
+            }
+            else if (timer < 150f)
+            {
+                // 灵魂虹吸内爆 — a spiral of soul-motes accelerates inward, peak of the cinematic pull
+                float t = timer - 110f;
+                if ((int)t % 3 == 0)
+                {
+                    float ang = t * 0.35f;
+                    Vector2 spawn = npc.Center + ang.ToRotationVector2() * MathHelper.Lerp(260f, 20f, t / 40f);
+                    Dust d = Dust.NewDustPerfect(spawn, DustID.PinkTorch, (npc.Center - spawn).SafeNormalize(Vector2.Zero) * MathHelper.Lerp(2f, 9f, t / 40f), 100, GhostPink, 1.4f);
+                    d.noGravity = true;
+                }
+            }
+            else
+            {
+                // 终末虚无爆发 — the actual kill fires once, everything after is the lingering burst
+                if (timer == 150f)
+                {
+                    SoundEngine.PlaySound(SoundID.Zombie39 with { Volume = 1.1f, Pitch = -0.4f }, npc.Center);
+                    SoundEngine.PlaySound(SoundID.NPCDeath4, npc.Center);
+                    target.Calamity().GeneralScreenShakePower = 13f;
+                    GhastFx.Burst(npc.Center, 8f, 40);
+                    GhastFx.Burst(npc.Center, 5f, 24, DustID.BlueTorch);
+                }
+
+                if (timer >= 172f)
+                {
+                    npc.dontTakeDamage = false;
+                    npc.StrikeInstantKill();
+                }
             }
         }
         #endregion

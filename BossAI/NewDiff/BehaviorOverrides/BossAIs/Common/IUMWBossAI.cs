@@ -1,8 +1,11 @@
+using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
+using CalamityMod;
+using CalamityLegendsComeBack.BossAI.NewDiff.Core.Systems;
 
 namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossAIs.Common
 {
@@ -108,6 +111,41 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             npc.dontTakeDamage = true;
             npc.immortal = true;
             npc.netUpdate = true;
+        }
+
+        // Shared death-performance skeleton (generalized from Cryogen's InterceptLethalHit). Works purely
+        // in terms of npc.ai[1] as an int so it doesn't need to know each boss's own AttackState enum type —
+        // callers pass their own death-state id and a callback that switches them into it. The killing blow
+        // itself never lands; life is clamped to 1 and the boss becomes untouchable, then the caller's own
+        // callback drives whatever themed performance that boss wants before it actually dies for real.
+        protected static void InterceptLethalHit(NPC npc, ref NPC.HitModifiers modifiers, int deathAnimationStateId, Action beginDeathCallback)
+        {
+            if ((int)npc.ai[1] == deathAnimationStateId)
+            {
+                modifiers.FinalDamage *= 0f;
+                return;
+            }
+
+            modifiers.ModifyHitInfo += (ref NPC.HitInfo info) =>
+            {
+                if (npc.life - info.Damage > 1)
+                    return;
+                info.Damage = Math.Max(npc.life - 1, 0);
+                npc.dontTakeDamage = true;
+                beginDeathCallback?.Invoke();
+            };
+        }
+
+        // Generic half of a death cinematic: pull the camera toward the boss and layer a screen-shake burst
+        // on top of whatever the caller's own theme requires (dust colors, sound cues, unique flourish stay
+        // boss-specific — this only owns the "the camera and the screen both react" beat all of them share).
+        protected static void TriggerDeathCinematic(NPC npc, Player target, float focusStrength = 0.6f, int holdFrames = 50, float shakePower = 12f)
+        {
+            if (target is null || !target.active)
+                return;
+
+            target.IUMWCamera().RequestFocus(npc.Center, focusStrength, holdFrames, riseFrames: 12, fallFrames: 34);
+            target.Calamity().GeneralScreenShakePower = Math.Max(target.Calamity().GeneralScreenShakePower, shakePower);
         }
     }
 }

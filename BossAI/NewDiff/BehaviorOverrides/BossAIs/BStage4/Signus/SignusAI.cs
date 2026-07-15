@@ -47,6 +47,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             VenusianTrident = 9,
             RealityRupture = 10,
             Transition = 11,
+            DeathAnimation = 12,
         }
 
         private static bool IsP1(AttackState s) => s == AttackState.CosmicKunai || s == AttackState.Cosmilamp;
@@ -204,6 +205,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     case AttackState.VenusianTrident: ExecuteVenusianTrident(npc, target, ref timer, ref tracker, currentPhase); break;
                     case AttackState.RealityRupture: ExecuteRealityRupture(npc, target, ref timer, ref tracker, currentPhase); break;
                     case AttackState.Transition: ExecuteTransition(npc, target, ref timer, ref tracker, currentPhase); break;
+                    case AttackState.DeathAnimation: ExecuteDeathAnimation(npc, target, ref timer); break;
                 }
             }
             else if (blinkDuration > 0 && state != AttackState.Transition)
@@ -214,9 +216,10 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
             // Cloak: 90% transparent while gliding, fully visible while the core is exposed.
             // Contact damage only exists when you can SEE the body (expose window / scythe dash).
-            if (stunTimer == 0 && blinkDuration <= 0)
+            if (stunTimer == 0 && blinkDuration <= 0 && state != AttackState.DeathAnimation)
                 npc.alpha = coreExposed ? 0 : 230;
-            npc.damage = (coreExposed || dashContact) && stunTimer == 0 ? npc.defDamage : 0;
+            if (state != AttackState.DeathAnimation)
+                npc.damage = (coreExposed || dashContact) && stunTimer == 0 ? npc.defDamage : 0;
 
             // Core sparkle: converging motes make the 0.5s/0.3s punish window pop against the dark
             if (coreExposed && stunTimer == 0 && Main.rand.NextBool(2))
@@ -239,7 +242,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             wasCoreExposed = coreExposed;
 
             // Ghostly rotation: lean into motion plus a slow hover bob
-            if (stunTimer == 0)
+            if (stunTimer == 0 && state != AttackState.DeathAnimation)
                 npc.rotation = npc.velocity.X * 0.05f + MathF.Sin(ticksRunning * 0.05f) * 0.04f;
 
             // The blink owns velocity/alpha/position while active (runs last, like Cryogen's teleport)
@@ -256,10 +259,10 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             return false;
         }
 
-        public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers) => ProcessCoreHits(npc, ref modifiers, item.damage);
-        public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers) => ProcessCoreHits(npc, ref modifiers, projectile.damage);
+        public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers) => ProcessCoreHits(npc, ref modifiers, item.damage, player);
+        public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers) => ProcessCoreHits(npc, ref modifiers, projectile.damage, Main.player[projectile.owner]);
 
-        private void ProcessCoreHits(NPC npc, ref NPC.HitModifiers modifiers, int damage)
+        private void ProcessCoreHits(NPC npc, ref NPC.HitModifiers modifiers, int damage, Player target)
         {
             if (npc.ai[1] == (float)AttackState.Transition)
             {
@@ -294,6 +297,9 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 npc.velocity = Vector2.Zero;
                 npc.netUpdate = true;
             }
+
+            // Only reachable once exposed and past the stun-interrupt check — i.e. a hit that actually counts.
+            InterceptLethalHit(npc, ref modifiers, (int)AttackState.DeathAnimation, () => BeginDeathAnimation(npc, target));
         }
         #endregion
 
@@ -1143,6 +1149,99 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 npc.ai[2] = 0;
                 npc.ai[3] = 0;
                 npc.netUpdate = true;
+            }
+        }
+        #endregion
+
+        #region Death Animation
+        // 刺客的终幕 — 五段演出, 把"永远隐匿"的身份彻底反转成"被迫显形"再消散, 而不是通用爆炸:
+        // 强制显形 -> 虚空刃裂解 -> 暗影回廊塌陷(乱纹紊乱后归零) -> 升华聚能 -> 终末湮灭.
+        private void BeginDeathAnimation(NPC npc, Player target)
+        {
+            npc.ai[1] = (float)AttackState.DeathAnimation;
+            npc.ai[2] = 0f;
+            npc.ai[3] = 0f;
+            stunTimer = 0;
+            blinkDuration = 0;
+            minesActive = false;
+            CleanupAttackProjectiles(npc, alsoMines: true);
+            npc.netUpdate = true;
+
+            npc.alpha = 0; // forced full unveil — the one guarantee of this fight, broken for the finale
+            TriggerDeathCinematic(npc, target, focusStrength: 0.55f, holdFrames: 55, shakePower: 10f);
+            SoundEngine.PlaySound(SoundID.Item122 with { Volume = 1f, Pitch = -0.5f }, npc.Center);
+        }
+
+        private void ExecuteDeathAnimation(NPC npc, Player target, ref float timer)
+        {
+            npc.damage = 0;
+            npc.dontTakeDamage = true;
+            npc.alpha = 0;
+
+            if (timer < 25f)
+            {
+                // 强制显形 — the cloak fails, hood fragments spiral off same as the phase-transition reveal
+                npc.velocity *= 0.9f;
+                npc.rotation += MathF.Sin(timer * 1.2f) * 0.1f;
+                if ((int)timer % 3 == 0)
+                {
+                    Dust d = Dust.NewDustPerfect(npc.Center + Main.rand.NextVector2Circular(50f, 70f), DustID.Shadowflame, Main.rand.NextVector2CircularEdge(3f, 3f) - Vector2.UnitY, 100, default, 1.3f);
+                    d.fadeIn = 1.2f;
+                    d.noGravity = true;
+                }
+            }
+            else if (timer < 65f)
+            {
+                // 虚空刃裂解 — its own kunai/scythe motif spins off the body and dissolves
+                float t = timer - 25f;
+                if ((int)t % 5 == 0)
+                {
+                    float a = t * 0.3f;
+                    Vector2 spawn = npc.Center + a.ToRotationVector2() * 70f;
+                    Dust d = Dust.NewDustPerfect(spawn, DustID.PurpleTorch, a.ToRotationVector2().RotatedBy(MathHelper.PiOver2) * 4f, 100, VoidBright, 1.3f);
+                    d.noGravity = true;
+                }
+                npc.rotation += 0.06f;
+            }
+            else if (timer < 100f)
+            {
+                // 暗影回廊塌陷 — the shadow-lane weave goes erratic, then decays toward stillness
+                float t = timer - 65f;
+                float decay = 1f - t / 35f;
+                npc.velocity = new Vector2(MathF.Sin(t * 0.5f) * 10f * decay, MathF.Cos(t * 0.4f) * 6f * decay);
+                if ((int)t % 3 == 0)
+                    SignusFx.Burst(npc.Center, 3f, 6, DustID.Shadowflame);
+            }
+            else if (timer < 140f)
+            {
+                // 升华聚能 — rises while void energy gathers at the core, the cinematic pull peaks here
+                npc.velocity = Vector2.Lerp(npc.velocity, new Vector2(0f, -5f), 0.05f);
+                float t = timer - 100f;
+                if ((int)t % 2 == 0)
+                {
+                    Vector2 spawn = npc.Center + Main.rand.NextVector2CircularEdge(100f, 100f);
+                    Dust d = Dust.NewDustPerfect(spawn, DustID.PurpleTorch, (npc.Center - spawn) * 0.07f, 100, VoidBright, 1.3f);
+                    d.noGravity = true;
+                }
+            }
+            else
+            {
+                // 终末湮灭 — the actual kill fires once, everything after is the lingering burst
+                if (timer == 140f)
+                {
+                    npc.velocity = Vector2.Zero;
+                    SoundEngine.PlaySound(SoundID.Item122 with { Volume = 1.1f, Pitch = -0.3f }, npc.Center);
+                    SoundEngine.PlaySound(SoundID.NPCDeath4, npc.Center);
+                    target.Calamity().GeneralScreenShakePower = 13f;
+                    SignusFx.Burst(npc.Center, 8f, 40);
+                    SignusFx.Burst(npc.Center, 5f, 24, DustID.Shadowflame);
+                }
+
+                if (timer >= 162f)
+                {
+                    npc.dontTakeDamage = false;
+                    npc.StrikeInstantKill();
+                }
             }
         }
         #endregion

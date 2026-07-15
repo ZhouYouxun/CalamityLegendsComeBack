@@ -8,6 +8,7 @@ using Terraria.Audio;
 using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
+using CalamityMod;
 
 namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossAIs.BStage2.AquaticScourge
 {
@@ -29,6 +30,13 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         public override float[] PhaseLifeRatios => new[] { 0.50f };
         public override int AttackCycleLength => 120;
         public override float MotionIntensity => 1.2f;
+
+        // Dedicated sound identity — pitch-varied vanilla SoundIDs (no bespoke asset paths to risk breaking
+        // at runtime), matching the convention set by Cryogen/OldDuke/Signus rather than bare SoundID calls.
+        private static readonly SoundStyle RoarSound = SoundID.Roar with { Volume = 0.9f, Pitch = 0.25f };
+        private static readonly SoundStyle ShockLaunchSound = SoundID.Item94 with { Volume = 0.75f, Pitch = -0.1f };
+        private static readonly SoundStyle TideRiseSound = SoundID.Item21 with { Volume = 0.65f, Pitch = -0.45f };
+        private static readonly SoundStyle PustuleBreakSound = SoundID.NPCDeath4 with { Volume = 0.85f, Pitch = 0.15f };
         #endregion
 
         #region Attack States
@@ -48,6 +56,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             SulphurousGrabber = 10,
 
             Transition = 11,
+            DeathAnimation = 12,
         }
 
         private static bool IsP1(AttackState s) =>
@@ -92,6 +101,19 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
         // 穿过式咬合: while > 0 the head keeps its line and refuses to re-track — the dodge window.
         private int carvePassTimer = 0;
+
+        // Motion afterimages — the head is a fast, whip-heavy worm; a ghost trail sells the speed the same
+        // way it already does for every other worm boss in this roster (Cryogen/StormWeaver/AstrumDeus).
+        private readonly Vector2[] headOldPos = new Vector2[9];
+        private int headOldPosIndex = 0;
+
+        // Sulphur-Sea leash — Aquatic Scourge's real Calamity home biome is the Sulphurous Sea (see base
+        // AquaticScourgeHead.cs's own ZoneSulphur checks). Same pattern as Cryogen's snow leash / PBG's
+        // jungle leash: a 5s grace period, then a Lerp speed ramp so a player can't just drag the fight
+        // out into open ocean with zero penalty.
+        private int outOfBiomeTimer = 0;
+        private float enrageSpeedMultiplier = 1f;
+        private bool wasEnraged = false;
         #endregion
 
         #region Core AI Hooks
@@ -129,6 +151,8 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
             UpdatePustuleRespawn();
             UpdateSulphurTide(npc, target);
+            if (state != AttackState.DeathAnimation)
+                UpdateBiomeEnrage(npc, target);
 
             int destroyedPustules = 0;
             for (int i = 0; i < 6; i++) if (pustuleHPs[i] <= 0f) destroyedPustules++;
@@ -141,11 +165,11 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 if (ticksRunning % 20 == 0)
                     ScourgeFx.Burst(npc.Center, 2.5f, 6, DustID.ToxicBubble);
             }
-            else if (state != AttackState.Transition)
+            else if (state != AttackState.Transition && state != AttackState.DeathAnimation)
             {
                 float speedPenalty = 1f - 0.15f * destroyedPustules;
                 float baseSpeed = IsP1(state) ? 13f : 19f;
-                float speed = (baseSpeed + (1f - lifeRatio) * 5f) * speedPenalty;
+                float speed = (baseSpeed + (1f - lifeRatio) * 5f) * speedPenalty * enrageSpeedMultiplier;
                 float turnSpeed = (0.045f + (1f - lifeRatio) * 0.02f) * speedPenalty;
 
                 // 蠕虫的分寸感: 贴近后咬定直线动量穿过玩家(36帧不再转向) — 蛇是掠过的, 不是像素级黏着的.
@@ -163,7 +187,8 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                         carvePassTimer = 36;
                 }
             }
-            npc.rotation = npc.velocity.SafeNormalize(Vector2.UnitY).ToRotation() + MathHelper.PiOver2;
+            if (state != AttackState.DeathAnimation)
+                npc.rotation = npc.velocity.SafeNormalize(Vector2.UnitY).ToRotation() + MathHelper.PiOver2;
 
             if (pustuleStunTimer == 0)
             {
@@ -181,8 +206,12 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     case AttackState.SpentFuel: ExecuteSpentFuel(npc, target, ref timer, ref tracker); break;
                     case AttackState.SulphurousGrabber: ExecuteSulphurousGrabber(npc, target, ref timer, ref tracker); break;
                     case AttackState.Transition: ExecuteTransition(npc, target, ref timer, ref tracker); break;
+                    case AttackState.DeathAnimation: ExecuteDeathAnimation(npc, target, ref timer); break;
                 }
             }
+
+            headOldPos[headOldPosIndex] = npc.Center;
+            headOldPosIndex = (headOldPosIndex + 1) % headOldPos.Length;
 
             return false;
         }
@@ -191,12 +220,16 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         {
             ApplyStunDamageBonus(ref modifiers);
             ProcessPustuleHit(npc, player.Center, ref modifiers, item.damage);
+            if (npc.type == ModContent.Find<ModNPC>("CalamityMod/AquaticScourgeHead").Type)
+                InterceptLethalHit(npc, ref modifiers, (int)AttackState.DeathAnimation, () => BeginDeathAnimation(npc, player));
         }
 
         public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers)
         {
             ApplyStunDamageBonus(ref modifiers);
             ProcessPustuleHit(npc, projectile.Center, ref modifiers, projectile.damage);
+            if (npc.type == ModContent.Find<ModNPC>("CalamityMod/AquaticScourgeHead").Type)
+                InterceptLethalHit(npc, ref modifiers, (int)AttackState.DeathAnimation, () => BeginDeathAnimation(npc, Main.player[projectile.owner]));
         }
 
         private void ApplyStunDamageBonus(ref NPC.HitModifiers modifiers)
@@ -280,7 +313,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 pustuleHPs[i] -= damage;
                 if (pustuleHPs[i] <= 0f)
                 {
-                    SoundEngine.PlaySound(SoundID.NPCDeath4, hitPos);
+                    SoundEngine.PlaySound(PustuleBreakSound, hitPos);
                     ScourgeFx.Burst(hitPos, 6f, 16, DustID.ToxicBubble);
 
                     bool allDead = true;
@@ -291,6 +324,8 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                         pustuleStunTimer = 360; // 6s
                         head.velocity = Vector2.Zero;
                         SoundEngine.PlaySound(SoundID.NPCHit53, head.Center);
+                        if (Main.netMode != NetmodeID.Server)
+                            Main.LocalPlayer.Calamity().GeneralScreenShakePower = 8f;
                     }
                 }
                 break;
@@ -311,13 +346,36 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             if (tideTimer >= 480) // 8s cycle
             {
                 tideTimer = 0;
-                SoundEngine.PlaySound(SoundID.Item21 with { Volume = 0.6f, Pitch = -0.4f }, target.Center);
+                SoundEngine.PlaySound(TideRiseSound, target.Center);
+                target.Calamity().GeneralScreenShakePower = Math.Max(target.Calamity().GeneralScreenShakePower, 5f);
                 if (Main.netMode != NetmodeID.MultiplayerClient)
                 {
                     float sign = Main.rand.NextBool() ? 1f : -1f;
                     Projectile.NewProjectile(npc.GetSource_FromAI(), target.Center, Vector2.Zero, ModContent.ProjectileType<SulphurTideWallProj>(), npc.damage / 6, 0f, Main.myPlayer, sign);
                 }
             }
+        }
+        #endregion
+
+        #region Sulphur-Sea Enrage
+        private void UpdateBiomeEnrage(NPC npc, Player target)
+        {
+            const int graceFrames = 300;
+            const float maxMultiplier = 1.35f;
+
+            if (!target.Calamity().ZoneSulphur)
+                outOfBiomeTimer = Math.Min(outOfBiomeTimer + 1, graceFrames + 120);
+            else
+                outOfBiomeTimer = Math.Max(outOfBiomeTimer - 3, 0);
+
+            bool enraged = outOfBiomeTimer >= graceFrames;
+            npc.Calamity().CurrentlyEnraged = enraged;
+            enrageSpeedMultiplier = MathHelper.Lerp(enrageSpeedMultiplier, enraged ? maxMultiplier : 1f, 0.04f);
+
+            // One-time cue on the rising edge only — the speed ramp itself is gradual (Lerp above).
+            if (enraged && !wasEnraged)
+                SoundEngine.PlaySound(RoarSound, npc.Center);
+            wasEnraged = enraged;
         }
         #endregion
 
@@ -367,7 +425,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
             if (timer == 40)
             {
-                SoundEngine.PlaySound(SoundID.Item94, npc.Center);
+                SoundEngine.PlaySound(ShockLaunchSound, npc.Center);
                 npc.velocity = SafeNormalize(target.Center - npc.Center, Vector2.UnitY) * 15f;
                 w?.Pulse(14f);
             }
@@ -572,7 +630,128 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         }
         #endregion
 
+        #region Death Animation
+        // 巨怪沉没 — 五段演出, 让脓疮/潮汐/深潜身份成为演出主角, 而不是通用爆炸:
+        // 脓疮尽数破裂 -> 潮汐力竭紊乱(甩尾) -> 深渊回声下潜 -> 硫磺回潮上腾 -> 终末巨浪爆发.
+        private void BeginDeathAnimation(NPC npc, Player target)
+        {
+            npc.ai[1] = (float)AttackState.DeathAnimation;
+            npc.ai[2] = 0f;
+            npc.ai[3] = 0f;
+            pustuleStunTimer = 0;
+            npc.netUpdate = true;
+
+            TriggerDeathCinematic(npc, target, focusStrength: 0.55f, holdFrames: 55, shakePower: 10f);
+            SoundEngine.PlaySound(SoundID.Roar with { Volume = 1f, Pitch = 0.3f }, npc.Center);
+        }
+
+        private void ExecuteDeathAnimation(NPC npc, Player target, ref float timer)
+        {
+            npc.damage = 0;
+            npc.dontTakeDamage = true;
+
+            if (timer < 30f)
+            {
+                // 脓疮尽数破裂 — all six pustule sites burst at once, the fight's own signature weak points finish it off
+                npc.velocity *= 0.9f;
+                if ((int)timer % 5 == 0)
+                {
+                    for (int i = 0; i < 6; i++)
+                    {
+                        int segIdx = pustuleSegment[i];
+                        if (segIdx < 0 || segIdx >= Main.maxNPCs || !Main.npc[segIdx].active) continue;
+                        ScourgeFx.Burst(Main.npc[segIdx].Center, 3f, 6, DustID.ToxicBubble);
+                    }
+                }
+            }
+            else if (timer < 75f)
+            {
+                // 潮汐力竭紊乱 — whip-thrash, the same serpentine lash used by every worm in this roster gone loose
+                float t = timer - 30f;
+                float whipAngle = MathF.Sin(t * 0.35f) * 2.2f;
+                Vector2 whipDir = Vector2.UnitX.RotatedBy(whipAngle);
+                npc.velocity = Vector2.Lerp(npc.velocity, whipDir * 15f, 0.2f);
+                npc.rotation = npc.velocity.ToRotation() + MathHelper.PiOver2;
+                if ((int)t % 4 == 0)
+                    ScourgeFx.Burst(npc.Center, 3f, 6, DustID.ToxicBubble);
+            }
+            else if (timer < 105f)
+            {
+                // 深渊回声下潜 — dives as if sinking, bubbles trailing upward behind it
+                npc.velocity = Vector2.Lerp(npc.velocity, new Vector2(0f, 8f), 0.06f);
+                npc.rotation = npc.velocity.ToRotation() + MathHelper.PiOver2;
+                if ((int)timer % 2 == 0)
+                {
+                    Dust d = Dust.NewDustPerfect(npc.Center + new Vector2(Main.rand.NextFloat(-20f, 20f), 40f), DustID.ToxicBubble, new Vector2(0f, -3f), 100, default, 1.2f);
+                    d.noGravity = true;
+                }
+            }
+            else if (timer < 140f)
+            {
+                // 硫磺回潮上腾 — a final upward surge, the cinematic pull peaks on the way up
+                npc.velocity = Vector2.Lerp(npc.velocity, new Vector2(0f, -9f), 0.07f);
+                npc.rotation = npc.velocity.ToRotation() + MathHelper.PiOver2;
+                if ((int)timer % 2 == 0)
+                    ScourgeFx.Burst(npc.Center, 3f, 5, DustID.ToxicBubble);
+            }
+            else
+            {
+                // 终末巨浪爆发 — the actual kill fires once, everything after is the lingering burst
+                if (timer == 140f)
+                {
+                    npc.velocity = Vector2.Zero;
+                    SoundEngine.PlaySound(SoundID.Item14 with { Volume = 1.1f, Pitch = -0.1f }, npc.Center);
+                    SoundEngine.PlaySound(SoundID.NPCDeath4, npc.Center);
+                    target.Calamity().GeneralScreenShakePower = 13f;
+                    ScourgeFx.Burst(npc.Center, 8f, 40, DustID.ToxicBubble);
+                }
+
+                if (timer >= 162f)
+                {
+                    // The head is what StrikeInstantKill removes — Body/Tail are separate NPCs with no
+                    // self-cleanup (same reason vanilla worm chains need a manual sweep on real death).
+                    if (Main.netMode != NetmodeID.MultiplayerClient)
+                    {
+                        int bodyType = ModContent.Find<ModNPC>("CalamityMod/AquaticScourgeBody").Type;
+                        int bodyAltType = ModContent.Find<ModNPC>("CalamityMod/AquaticScourgeBodyAlt").Type;
+                        int tailType = ModContent.Find<ModNPC>("CalamityMod/AquaticScourgeTail").Type;
+                        for (int i = 0; i < Main.maxNPCs; i++)
+                        {
+                            NPC seg = Main.npc[i];
+                            if (seg.active && (seg.type == bodyType || seg.type == bodyAltType || seg.type == tailType) && (int)seg.ai[2] == npc.whoAmI)
+                                seg.active = false;
+                        }
+                    }
+
+                    npc.dontTakeDamage = false;
+                    npc.StrikeInstantKill();
+                }
+            }
+        }
+        #endregion
+
         #region Drawing
+        public override bool PreDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
+        {
+            // Motion afterimages — only the head runs this AI, and only worth drawing once it's actually
+            // moving with intent (dash/whip states), matching the ghost-trail convention used by every
+            // other worm boss in this roster (Cryogen/StormWeaver/AstrumDeus).
+            if (npc.type == ModContent.Find<ModNPC>("CalamityMod/AquaticScourgeHead").Type && npc.velocity.Length() > 10f)
+            {
+                Texture2D tex = TextureAssets.Npc[npc.type].Value;
+                Vector2 origin = npc.frame.Size() * 0.5f;
+                for (int i = 1; i < headOldPos.Length; i++)
+                {
+                    int idx = (headOldPosIndex - i + headOldPos.Length * 2) % headOldPos.Length;
+                    if (headOldPos[idx] == Vector2.Zero) continue;
+                    float fade = (1f - i / (float)headOldPos.Length) * 0.35f * npc.Opacity;
+                    Color ghost = new Color(120, 220, 200, 0) * fade;
+                    spriteBatch.Draw(tex, headOldPos[idx] - screenPos, npc.frame, ghost, npc.rotation, origin, npc.scale * (1f - i * 0.02f), SpriteEffects.None, 0f);
+                }
+            }
+            return true;
+        }
+
         public override void PostDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
             if (npc.type != ModContent.Find<ModNPC>("CalamityMod/AquaticScourgeHead").Type)
