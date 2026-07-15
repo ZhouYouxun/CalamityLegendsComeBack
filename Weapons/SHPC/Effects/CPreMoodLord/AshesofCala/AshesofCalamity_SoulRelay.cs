@@ -102,7 +102,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.AshesofCala
                 ? MathHelper.Lerp(5.4f, 7.2f, shotIndex / (float)(ShotCount - 1))
                 : Main.rand.NextFloat(13.5f, 16.5f);
 
-            int damage = Math.Max(1, (int)(Projectile.damage * 0.77f));
+            int damage = Math.Max(1, (int)(Projectile.damage * 1.07f));
 
             Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
