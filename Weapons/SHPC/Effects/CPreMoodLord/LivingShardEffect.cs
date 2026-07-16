@@ -1,4 +1,4 @@
-﻿using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
+using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
 using CalamityMod;
 using CalamityMod.Items.Materials;
 using CalamityMod.Particles;
@@ -24,121 +24,74 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
         public override Color StartColor => new Color(180, 255, 180);
         public override Color EndColor => new Color(60, 200, 120);
 
-        public override float SquishyLightParticleFactor => 1.55f;
-        public override float ExplosionPulseFactor => 1.55f;
+        // 交给下方自定义的引爆闪光处理，屏蔽共享默认爆炸（仿照AshesofCalamityEffect等"直接引爆"效果的写法）
+        public override float SquishyLightParticleFactor => 0f;
+        public override float ExplosionPulseFactor => 0f;
+        public override float GlowScaleFactor => 0f;
+        public override float GlowIntensityFactor => 0f;
 
-        // ================= OnSpawn =================
+        private const int MinButterflies = 3;
+        private const int MaxButterflies = 5; // Next(3,6) 上限不含，实际取3~5
+        private const float SpreadHalfAngleDegrees = 10f; // 正前方20度范围 = ±10度
+
+        // 继承SHPLB(NewLegendSHPB)的默认shootSpeed(20f)再快一些——与旧版"生命气息"一致的速度
+        private const float ButterflyLaunchSpeed = 20f * 1.3f;
+
+        // ================= OnSpawn：直接引爆（仿照 PurifiedGelEffect 的 firstFrame 套路）=================
         public override void OnSpawn(Projectile projectile, Player owner)
         {
-            // 穿透
-            projectile.penetrate = 1;
-            projectile.timeLeft = 500;
-
-            // 初速度大幅提升
-            projectile.velocity *= 2.5f;
+            projectile.GetGlobalProjectile<LivingShard_GP>().firstFrame = true;
+            projectile.penetrate = -1;
+            projectile.timeLeft = 2;
+            projectile.tileCollide = false;
+            // 本体只是一次性的引爆触发器，不需要可见、也不需要自己造成伤害
+            projectile.friendly = false;
+            projectile.hide = true;
         }
-        private int hitCount;
-        private int postHitTimer;
-        private int trackingTimer;
+
         public override void AI(Projectile projectile, Player owner)
         {
-            NPC target = projectile.Center.ClosestNPCAt(1200f);
+            LivingShard_GP gp = projectile.GetGlobalProjectile<LivingShard_GP>();
+            if (!gp.firstFrame)
+                return;
 
-            Vector2 forward = projectile.velocity.SafeNormalize(Vector2.UnitX);
-
-            if (target != null)
-            {
-                trackingTimer++;
-                Vector2 desiredDir = (target.Center - projectile.Center).SafeNormalize(Vector2.UnitX);
-
-                // ================= 角速度逻辑 =================
-                float loosen = Utils.GetLerpValue(0f, 105f, trackingTimer, true);
-                float closeTargetBoost = Utils.GetLerpValue(190f, 40f, projectile.Distance(target.Center), true);
-                float turnInterpolant = MathHelper.Max(loosen, closeTargetBoost);
-                float maxTurnDegrees;
-
-                if (hitCount == 0)
-                {
-                    // 第一次命中前
-                    maxTurnDegrees = MathHelper.Lerp(2.7f, 10.5f, turnInterpolant);
-                }
-                else
-                {
-                    maxTurnDegrees = MathHelper.Lerp(5.5f, 14f, turnInterpolant);
-                    postHitTimer++;
-                }
-
-                float maxTurn = MathHelper.ToRadians(maxTurnDegrees);
-                float currentRot = projectile.velocity.ToRotation();
-                float targetRot = desiredDir.ToRotation();
-
-                float newRot = currentRot.AngleTowards(targetRot, maxTurn);
-
-                // ===== 随机扰动 =====
-                newRot += Main.rand.NextFloat(-0.08f, 0.08f) * (1f - turnInterpolant);
-
-                float speed = projectile.velocity.Length();
-
-                // ===== 速度稳定 =====
-                speed = MathHelper.Lerp(speed, 16f, 0.08f);
-
-                projectile.velocity = newRot.ToRotationVector2() * speed;
-            }
-            else
-                trackingTimer = 0;
-
-            // ================= 速度层 =================
-            projectile.velocity *= 1.025f; // 常驻
-
-            if (hitCount > 0)
-            {
-                projectile.velocity *= 1.005f; // 第二层加速
-            }
+            gp.firstFrame = false;
+            projectile.Kill();
         }
 
-        // ================= OnHitNPC =================
-        public override void OnHitNPC(Projectile projectile, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
-        {
-
-            hitCount++;
-            postHitTimer = 0;
-
-
-            //// ===== 吸血 =====
-            //int heal = damageDone / 10;
-            //if (heal > 0)
-            //{
-            //    owner.statLife += heal;
-            //    owner.HealEffect(heal);
-            //}
-
-            if (projectile.localAI[0] == 0f)
-            {
-                projectile.localAI[0] = 1f;
-
-                Vector2 healVelocity = (owner.Center - target.Center).SafeNormalize(-projectile.velocity.SafeNormalize(Vector2.UnitY)) * 9f;
-
-                Projectile.NewProjectile(
-                    projectile.GetSource_FromThis(),
-                    target.Center,
-                    healVelocity,
-                    ModContent.ProjectileType<LivingShard_Healing>(),
-                    projectile.damage,
-                    0f,
-                    projectile.owner
-                );
-            }
-        }
-
-
-
-
+        // ================= OnKill：引爆炸出萤火魂蝶群 =================
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
             SoundEngine.PlaySound(new SoundStyle("CalamityLegendsComeBack/Sound/Other/DeltaForce/沙漠之鹰有消音"), projectile.Center);
+
+            if (projectile.owner == Main.myPlayer)
+                SpawnFireflyButterflies(projectile, owner);
+
             Vector2 center = projectile.Center;
 
-            // ================= 1.主圆环（放射爆散） =================
+            // ================= 引爆闪光：自己画的冲击波，不再依赖共享默认爆炸 =================
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                center,
+                Vector2.Zero,
+                Color.Lerp(Color.LimeGreen, Color.White, 0.25f),
+                "CalamityMod/Particles/BloomRing",
+                Vector2.One,
+                0f,
+                0.14f,
+                1.05f,
+                20));
+
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                center,
+                Vector2.Zero,
+                Color.White,
+                "CalamityMod/Particles/BloomCircle",
+                Vector2.One * 0.6f,
+                0f,
+                0.5f,
+                0.06f,
+                14));
+
             int count = 12;
 
             for (int i = 0; i < count; i++)
@@ -158,62 +111,40 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
 
                 GeneralParticleHandler.SpawnParticle(particle);
             }
-
-            // ================= 2.椭圆 Dust X环 =================
-            int dustCount = 24;
-
-            float longAxis = 70f;   // ⭐ 长轴（你可以自己调）
-            float shortAxis = 30f;  // ⭐ 短轴（你可以自己调）
-            float speed = 3f;
-
-            for (int i = 0; i < dustCount; i++)
-            {
-                float t = MathHelper.TwoPi * i / dustCount;
-
-                // 椭圆1
-                Vector2 ellipse1 = new Vector2(
-                    (float)Math.Cos(t) * longAxis,
-                    (float)Math.Sin(t) * shortAxis
-                );
-
-                // 椭圆2（旋转90°形成X）
-                Vector2 ellipse2 = ellipse1.RotatedBy(MathHelper.Pi / 2f);
-
-                Vector2 dir1 = ellipse1.SafeNormalize(Vector2.UnitY);
-                Vector2 dir2 = ellipse2.SafeNormalize(Vector2.UnitY);
-
-                Vector2 vel1 = dir1 * speed;
-                Vector2 vel2 = dir2 * speed;
-
-                // Dust1
-                Dust d1 = Dust.NewDustPerfect(
-                    center + ellipse1,
-                    Main.rand.NextBool() ? 107 : 110,
-                    vel1,
-                    120,
-                    Main.rand.NextBool() ? Color.LightGreen : Color.LimeGreen,
-                    Main.rand.NextFloat(1.0f, 2.2f)
-                );
-                d1.noGravity = true;
-
-                // Dust2
-                Dust d2 = Dust.NewDustPerfect(
-                    center + ellipse2,
-                    Main.rand.NextBool() ? 107 : 110,
-                    vel2,
-                    120,
-                    Main.rand.NextBool() ? Color.LightGreen : Color.LimeGreen,
-                    Main.rand.NextFloat(1.0f, 2.2f)
-                );
-                d2.noGravity = true;
-            }
         }
 
+        private static void SpawnFireflyButterflies(Projectile projectile, Player owner)
+        {
+            int count = Main.rand.Next(MinButterflies, MaxButterflies + 1);
+            int damagePerButterfly = Math.Max(1, (int)Math.Round(projectile.damage / (float)count));
 
+            Vector2 forward = projectile.velocity.SafeNormalize(
+                owner.direction == 0 ? Vector2.UnitX : new Vector2(owner.direction, 0f));
+            float baseRotation = forward.ToRotation();
 
+            for (int i = 0; i < count; i++)
+            {
+                float angle = baseRotation + MathHelper.ToRadians(Main.rand.NextFloat(-SpreadHalfAngleDegrees, SpreadHalfAngleDegrees));
+                Vector2 velocity = angle.ToRotationVector2() * Main.rand.NextFloat(ButterflyLaunchSpeed * 0.92f, ButterflyLaunchSpeed * 1.08f);
 
+                Projectile.NewProjectile(
+                    projectile.GetSource_FromThis(),
+                    projectile.Center,
+                    velocity,
+                    ModContent.ProjectileType<LivingShard_Butterfly>(),
+                    damagePerButterfly,
+                    0f,
+                    projectile.owner
+                );
+            }
+        }
+    }
 
+    // 让生命碎片的光球在生成后立刻引爆（同 PurifiedGelEffect 的 firstFrame 套路）
+    internal class LivingShard_GP : GlobalProjectile
+    {
+        public override bool InstancePerEntity => true;
 
-
+        public bool firstFrame;
     }
 }

@@ -17,10 +17,17 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.BossProgress
     public class CTRLBoss : ModItem, ILocalizedModType
     {
         public new string LocalizationCategory => "Items.Weapons";
-        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Tools/DebugTools/BossProgress/CTRLBoss/CTRLBoss";
+        public override string Texture => "Terraria/Images/Item_" + ItemID.SuspiciousLookingEye;
 
         private static int PanelType => ModContent.ProjectileType<CTRLBossPanel>();
         private static int SummonerPanelType => ModContent.ProjectileType<BossSummonerPanel>();
+
+        public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame,
+            Color drawColor, Color itemColor, Vector2 origin, float scale)
+        {
+            DebugToolOutline.Draw(spriteBatch, TextureAssets.Item[Type].Value, position, frame, origin, scale, new Color(230, 70, 70));
+            return true;
+        }
 
         public override void SetDefaults()
         {

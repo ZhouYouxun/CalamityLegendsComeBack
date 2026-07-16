@@ -8,6 +8,7 @@ Mods: {
 					SHPC_LoadingUIHint: "[c/66CCFF:Open inventory and press] [[c/66CCFF:{0}]] [c/66CCFF:to open the loading UI. Load specific materials to change attack effects.]"
 					SHPC_CurrentAmmoEffect: "[c/66CCFF:Current loaded effect: {0}]"
 					SHPC_DefaultAmmoEffect: No special material loaded; fires default white orbs that deal area damage.
+					SHPC_UnloadHint: "[c/CFCFCF:Right-click in inventory: unload the current magazine's material; Shift+Right-click: unload all magazines.]"
 					SHPC_Passive: "[c/B8FF9E:Passive (Extra Preparation): increases maximum mana and mana potion restoration, and shortens Mana Sickness duration.]"
 					SHPC_RightIntro1:
 						'''
@@ -285,7 +286,7 @@ Mods: {
 			SHPCAmmo12: Soul of Fright leaves hovering terror souls that continuously search for prey near the blast point.
 			SHPCAmmo13: Soul of Might releases three delayed-explosion energy orbs.
 			SHPCAmmo14: Soul of Sight causes the orb to unleash a more violent explosion the longer it flies.
-			SHPCAmmo15: Living Shard tracks enemies and converts the power dealt into healing.
+			SHPCAmmo15: Living Shard fires a burst of life butterflies that track enemies and heal the player.
 			SHPCAmmo16: !!!
 			SHPCAmmo17: Depth Cells fires a Viperfish that falls from above and bursts.
 			SHPCAmmo18: Plague Cell Canister fires a marking ray and calls plague missiles.
@@ -334,7 +335,7 @@ Mods: {
 				EssenceofSunlight_BurstRelay.DisplayName: Essence of Sunlight Burst Relay
 				NewSHPS.DisplayName: SHPS Support Core
 				AshesofCalamity_Fire.DisplayName: Ashes of Calamity Fire
-				LivingShard_Healing.DisplayName: Living Shard Heal
+				LivingShard_Butterfly.DisplayName: Firefly Soul Butterfly
 				FragmentEntropyExplosion.DisplayName: Entropy Fragment Explosion
 				FragmentSolar_Spear.DisplayName: Solar Fragment Spear
 				FragmentStardust_Cell.DisplayName: Stardust Fragment Cell

@@ -17,7 +17,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.ParticleLab
 {
     public sealed class ParticleLabDebugItem : ModItem, ILocalizedModType
     {
-        public const string DemoTexture = "CalamityLegendsComeBack/Weapons/A_Tools/DebugTools/ParticleLab/ParticleLabDebugItem";
+        public static readonly string DemoTexture = "Terraria/Images/Item_" + ItemID.CrystalSerpent;
 
         private static int PanelType => ModContent.ProjectileType<ParticleLabPanel>();
         private static int TestProjectileType => ModContent.ProjectileType<ParticleLabProjectile>();
@@ -26,6 +26,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.ParticleLab
         public override string Texture => DemoTexture;
 
         public override bool AltFunctionUse(Player player) => true;
+
+        public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame,
+            Color drawColor, Color itemColor, Vector2 origin, float scale)
+        {
+            DebugToolOutline.Draw(spriteBatch, TextureAssets.Item[Type].Value, position, frame, origin, scale, new Color(150, 120, 255));
+            return true;
+        }
 
         public override void SetDefaults()
         {

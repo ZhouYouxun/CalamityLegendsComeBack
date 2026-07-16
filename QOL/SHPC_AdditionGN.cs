@@ -7,6 +7,7 @@ using CalamityMod.NPCs.NormalNPCs;
 using CalamityMod;
 using CalamityLegendsComeBack.Weapons.SHPC;
 using CalamityLegendsComeBack.Weapons.SHPC.SHPCBook;
+using CalamityLegendsComeBack.Weapons.A_Tools.Toys.RetroGames;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -48,12 +49,10 @@ namespace CalamityLegendsComeBack.QOL
             if (shop.NpcType != NPCID.Merchant)
                 return;
 
-            // 允许玩家在意外遗失后，以 SHPC 自身标价从商人处补回一把。
-            shop.AddWithCustomValue<NewLegendSHPC>(CalamityGlobalItem.RarityPinkBuyPrice);
-
-            shop.Add<SHPCBook>(new Condition(
-                Language.GetOrRegister("Mods.CalamityLegendsComeBack.Conditions.HoldingSHPC", () => "While holding SHPC"),
-                () => Main.LocalPlayer.HeldItem.type == ModContent.ItemType<NewLegendSHPC>()));
+            // SHPC 与 SHPC 光盘不再由商人出售，改为通过传奇补给箱获取。
+            shop.AddWithCustomValue<LegendarySupplyBox>(Item.buyPrice(gold: 20));
+            shop.AddWithCustomValue<RetroGameConsoleSupplyBox>(Item.buyPrice(gold: 5));
+            shop.AddWithCustomValue<LegendaryCodex>(Item.buyPrice(gold: 5));
         }
 
     }

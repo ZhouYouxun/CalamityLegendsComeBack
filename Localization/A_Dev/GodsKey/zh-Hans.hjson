@@ -1,0 +1,19 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				GodsKey: {
+					DisplayName: 上帝之匙
+					Tooltip:
+						'''
+						使用该钥匙自行开关"超频模式"
+						超频模式下，本模组的全部传奇武器伤害均*1.25
+						不会影响开发者武器和其他非传奇武器
+						'''
+					ModeOn: 【已开启】
+					ModeOff: 【未启用】
+				}
+			}
+		}
+	}
+}

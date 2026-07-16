@@ -42,6 +42,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.SHPCBook
             Item.rare = ItemRarityID.Cyan;
         }
 
+        public override void AddRecipes()
+        {
+            CreateRecipe()
+                .AddIngredient(ItemID.Glass, 50)
+                .AddIngredient<CalamityMod.Items.Materials.MysteriousCircuitry>()
+                .AddIngredient<CalamityMod.Items.Materials.DubiousPlating>()
+                .Register();
+        }
+
         public override bool CanUseItem(Player player)
         {
             return Main.myPlayer == player.whoAmI &&

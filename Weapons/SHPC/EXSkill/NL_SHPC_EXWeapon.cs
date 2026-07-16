@@ -34,7 +34,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
         private int exSkyLightningTimer;
         private int superLaserIndex = -1;
 
-        private const int ChargeTime = 180;
+        private const int ChargeTime = 120; // 原180帧，蓄力时间-33%
         private const int LaserTime = 60;
         private const int OverheatTime = 30;
 
@@ -299,7 +299,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
                 GunTip,
                 Projectile.velocity,
                 laserType,
-                (int)(Projectile.damage * 2.5),
+                (int)(Projectile.damage * new BalanceSHPC().GetUltimateLaserDamageMultiplier()),
                 Projectile.knockBack,
                 Projectile.owner,
                 Projectile.identity);

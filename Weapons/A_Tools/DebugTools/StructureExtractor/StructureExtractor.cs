@@ -22,7 +22,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.StructureExtractor
         private static int OverlayType => ModContent.ProjectileType<StructureExtractorOverlay>();
 
         public new string LocalizationCategory => "Items.Weapons";
-        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Tools/DebugTools/StructureExtractor/StructureExtractor";
+        public override string Texture => "Terraria/Images/Item_2622"; // 利刃台风 Blade Tsunami
+
+        public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame,
+            Color drawColor, Color itemColor, Vector2 origin, float scale)
+        {
+            DebugToolOutline.Draw(spriteBatch, TextureAssets.Item[Type].Value, position, frame, origin, scale, new Color(120, 220, 255));
+            return true;
+        }
 
         public override void SetDefaults()
         {

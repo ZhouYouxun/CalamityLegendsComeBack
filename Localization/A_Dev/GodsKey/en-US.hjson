@@ -1,0 +1,19 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				GodsKey: {
+					DisplayName: God's Key
+					Tooltip:
+						'''
+						Use this key to toggle "Overclock Mode" on or off
+						While active, every Legendary weapon in this mod deals x1.25 damage
+						Does not affect developer weapons or other non-Legendary items
+						'''
+					ModeOn: "[Enabled]"
+					ModeOff: "[Disabled]"
+				}
+			}
+		}
+	}
+}

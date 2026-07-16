@@ -58,7 +58,14 @@ Mods: {
 
 				LegendaryCodex: {
 					DisplayName: Legendary Codex
-					Tooltip: Left-click to open the legendary weapon codex panel.
+					Tooltip:
+						'''
+						Welcome to Calamity: Legend!
+						This mod has just gotten started and is under active development.
+						Every legendary weapon will be reworked over time, with plenty more new content on the way -- stay tuned.
+						Feedback and suggestions are welcome -- please leave a rational comment in the review section.
+						Left-click to view the Legendary Codex.
+						'''
 				}
 
 				CTRLBoss: {
@@ -172,8 +179,10 @@ Mods: {
 			CTRLBossBulkChanged: "{0}: changed {1} boss flags."
 			WelcomeMessage:
 				'''
-				Welcome to Calamity: Legend! The mod currently features only one legendary weapon, but future updates will arrive quickly.
-				If you have any questions, please leave a comment. I read every comment carefully.
+				Welcome to Calamity: Legend!
+				This mod has just gotten started and is under active development.
+				Every legendary weapon will be reworked over time, with plenty more new content on the way -- stay tuned.
+				Feedback and suggestions are welcome -- please leave a rational comment in the review section.
 				'''
 		}
 

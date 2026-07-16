@@ -22,7 +22,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
     /// </summary>
     /// <summary>
     /// 灾劫核心爆炸后的四色分裂弹。
-    /// 每帧固定向左拐一度，经过短暂展开后再对最近目标追加追踪修正。
+    /// 一开始就追踪最近目标，同时每帧叠加固定向左拐一度的基础弧线。
     /// </summary>
     internal sealed class CoreOfCalamitySplitOrb : ModProjectile, ILocalizedModType, IPixelatedPrimitiveRenderer
     {
@@ -64,12 +64,31 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
             Projectile.localNPCHitCooldown = -1;
         }
 
+        private const float PreTrackCurlDegrees = 1f;
+        private const float TrackTurnDegrees = 7f;
+        private const float TrackRange = 900f;
+
         public override void AI()
         {
             Timer++;
             Projectile.tileCollide = false;
             if (Projectile.localAI[1] == 0f)
                 Projectile.localAI[1] = 120f + Projectile.ai[0] * 90f;
+
+            // 每帧固定向左拐一度，贯穿全程的基础弧线
+            Projectile.velocity = Projectile.velocity.RotatedBy(-MathHelper.ToRadians(PreTrackCurlDegrees));
+
+            // 一开始就追踪最近目标，不再等待展开期
+            NPC target = Projectile.Center.ClosestNPCAt(TrackRange);
+            if (target != null)
+            {
+                float speed = Projectile.velocity.Length();
+                Vector2 desiredDirection = (target.Center - Projectile.Center).SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitX));
+                float currentRot = Projectile.velocity.ToRotation();
+                float targetRot = desiredDirection.ToRotation();
+                float newRot = currentRot.AngleTowards(targetRot, MathHelper.ToRadians(TrackTurnDegrees));
+                Projectile.velocity = newRot.ToRotationVector2() * speed;
+            }
 
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Projectile.rotation = direction.ToRotation();

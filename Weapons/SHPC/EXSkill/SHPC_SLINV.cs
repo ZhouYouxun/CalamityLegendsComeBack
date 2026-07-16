@@ -146,11 +146,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             return (seed & 0x00FFFFFF) / 16777215f;
         }
 
+        // 着色器粗细削减75%，即变为原来的1/4
+        private const float ShaderWidthScale = 0.25f;
+
         private float PrimitiveWidthFunction(float completionRatio, Vector2 vertexPos)
         {
             float tipFade = Utils.GetLerpValue(1f, 0.64f, completionRatio, true);
             float rootGrow = (float)Math.Sin(Utils.GetLerpValue(0f, 0.2f, completionRatio, true) * MathHelper.PiOver2);
-            return MathHelper.Lerp(4f, 26f, rootGrow) * tipFade * trailWidthScale;
+            return MathHelper.Lerp(4f, 26f, rootGrow) * tipFade * trailWidthScale * ShaderWidthScale;
         }
 
         private Color PrimitiveColorFunction(float completionRatio, Vector2 vertexPos)

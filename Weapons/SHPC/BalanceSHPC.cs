@@ -32,61 +32,61 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         private static readonly int[] DefaultLeftClickProgressDamage =
         {
-            17, // Initial / 初始
-            25, // Eye of Cthulhu / 克苏鲁之眼
-            28, // Evil Boss / 腐化或猩红 Boss T2
-            36, // Skeletron / 骷髅王
-            40, // Hardmode / 困难模式
-            45, // Any Mechanical Boss / 任意机械 Boss
-            50, // Plantera / 世纪之花
-            54, // Golem / 石巨人
-            55, // Moon Lord / 月亮领主
-            56, // Providence / 亵渎天神
-            72, // Polterghast / 噬魂幽花
-            81, // Devourer of Gods / 神明吞噬者
-            90, // Yharon / 犽戎
-            100 // Exo Mechs and Supreme Calamitas / 星流巨械与至尊灾厄
+            21, // Initial / 初始
+            31, // Eye of Cthulhu / 克苏鲁之眼
+            35, // Evil Boss / 腐化或猩红 Boss T2
+            45, // Skeletron / 骷髅王
+            50, // Hardmode / 困难模式
+            56, // Any Mechanical Boss / 任意机械 Boss
+            63, // Plantera / 世纪之花
+            68, // Golem / 石巨人
+            69, // Moon Lord / 月亮领主
+            70, // Providence / 亵渎天神
+            90, // Polterghast / 噬魂幽花
+            101, // Devourer of Gods / 神明吞噬者
+            113, // Yharon / 犽戎
+            125 // Exo Mechs and Supreme Calamitas / 星流巨械与至尊灾厄
         };
 
         // 2. 右键基础倍率/伤害成长：顺序和 StageNames 完全一致。
         private static readonly int[] DefaultRightClickBaseDamage =
         {
-            13, // Initial / 初始
-            17, // Eye of Cthulhu / 克苏鲁之眼
-            22, // Evil Boss / 腐化或猩红 Boss T2
-            28, // Skeletron / 骷髅王
-            40, // Hardmode / 困难模式
-            50, // Any Mechanical Boss / 任意机械 Boss
-            64, // Plantera / 世纪之花
-            72, // Golem / 石巨人
-            84, // Moon Lord / 月亮领主
-            90, // Providence / 亵渎天神
-            100, // Polterghast / 噬魂幽花
-            127, // Devourer of Gods / 神明吞噬者
-            200, // Yharon / 犽戎
-            333 // Exo Mechs and Supreme Calamitas / 星流巨械与至尊灾厄
+            16, // Initial / 初始
+            21, // Eye of Cthulhu / 克苏鲁之眼
+            28, // Evil Boss / 腐化或猩红 Boss T2
+            35, // Skeletron / 骷髅王
+            50, // Hardmode / 困难模式
+            63, // Any Mechanical Boss / 任意机械 Boss
+            80, // Plantera / 世纪之花
+            90, // Golem / 石巨人
+            105, // Moon Lord / 月亮领主
+            113, // Providence / 亵渎天神
+            125, // Polterghast / 噬魂幽花
+            159, // Devourer of Gods / 神明吞噬者
+            250, // Yharon / 犽戎
+            416 // Exo Mechs and Supreme Calamitas / 星流巨械与至尊灾厄
         };
 
         // 迫击炮模式倍率
         private static readonly int[] MortarRightClickBaseDamage =
         {
-            540, // Providence / 亵渎天神
-            600, // Polterghast / 噬魂幽花
-            762, // Devourer of Gods / 神明吞噬者
-            2000, // Yharon / 犽戎
-            3330 // Exo Mechs and Supreme Calamitas / 星流巨械与至尊灾厄
+            675, // Providence / 亵渎天神
+            750, // Polterghast / 噬魂幽花
+            953, // Devourer of Gods / 神明吞噬者
+            2500, // Yharon / 犽戎
+            4163 // Exo Mechs and Supreme Calamitas / 星流巨械与至尊灾厄
         };
 
         // 炮台模式倍率
         private static readonly int[] TurretRightClickBaseDamage =
         {
-            150, // Golem / 石巨人
-            168, // Moon Lord / 月亮领主
-            180, // Providence / 亵渎天神
-            200, // Polterghast / 噬魂幽花
-            254, // Devourer of Gods / 神明吞噬者
-            400, // Yharon / 犽戎
-            666 // Exo Mechs and Supreme Calamitas / 星流巨械与至尊灾厄
+            188, // Golem / 石巨人
+            210, // Moon Lord / 月亮领主
+            225, // Providence / 亵渎天神
+            250, // Polterghast / 噬魂幽花
+            318, // Devourer of Gods / 神明吞噬者
+            500, // Yharon / 犽戎
+            833 // Exo Mechs and Supreme Calamitas / 星流巨械与至尊灾厄
         };
 
         private static readonly float[] DefaultLeftClickMaterialDamageMultipliers =
@@ -137,6 +137,28 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             4.00f, // EffectID 43: Cynosure / 填 0 = 使用阶段默认倍率；填正数 n = 最终伤害倍率为 (1+n)，例如填 1.5 = 2.5 倍
             1.12f // EffectID 44: Core of Calamity / 灾劫核心，与瘟疫细胞罐一致
         };
+
+        // 大招（超级激光）伤害倍率：肉后/月后/神后三档
+        private static readonly float[] UltimateLaserDamageMultipliers =
+        {
+            2.50f, // Tier 0: 肉后（大招解锁起点，机械 Boss 之后）
+            3.20f, // Tier 1: 月后（月亮领主之后）
+            4.00f  // Tier 2: 神后（亵渎天神 Providence 之后）
+        };
+
+        public float GetUltimateLaserDamageMultiplier()
+        {
+            return GetFloatValueForStage(GetUltimateLaserDamageMultiplierValues(), GetUltimateLaserDamageTier());
+        }
+
+        public int GetUltimateLaserDamageTier()
+        {
+            if (DownedBossSystem.downedProvidence)
+                return 2;
+            if (NPC.downedMoonlord)
+                return 1;
+            return 0;
+        }
 
         public const int ForcedShutdownTime = 120;
         public const int NormalHeatDecayTime = 90;
@@ -445,5 +467,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         private static int[] GetHeatFillTimesByProgressStateValues() =>
             RuntimeBalanceData.GetSourceIntArray(SourceFile, nameof(HeatFillTimesByProgressState), HeatFillTimesByProgressState);
+
+        private static float[] GetUltimateLaserDamageMultiplierValues() =>
+            RuntimeBalanceData.GetSourceFloatArray(SourceFile, nameof(UltimateLaserDamageMultipliers), UltimateLaserDamageMultipliers);
     }
 }

@@ -19,7 +19,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.ShaderLab
 {
     public sealed class ShaderTestItem : ModItem, ILocalizedModType
     {
-        public const string DemoTexture = "CalamityLegendsComeBack/Weapons/A_Tools/DebugTools/ShaderLab/ShaderTestItem";
+        public static readonly string DemoTexture = "Terraria/Images/Item_" + ItemID.LastPrism;
 
         private static int PanelType => ModContent.ProjectileType<ShaderTestPanel>();
         private static int TestProjectileType => ModContent.ProjectileType<ShaderTestProjectile>();
@@ -28,6 +28,16 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.ShaderLab
         public override string Texture => DemoTexture;
 
         public override bool AltFunctionUse(Player player) => true;
+
+        public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame,
+            Color drawColor, Color itemColor, Vector2 origin, float scale)
+        {
+            // 最终棱镜主题：随时间流转的彩虹色包边
+            float hue = Main.GlobalTimeWrappedHourly * 0.35f % 1f;
+            Color rainbow = Main.hslToRgb(hue, 1f, 0.6f);
+            DebugToolOutline.Draw(spriteBatch, TextureAssets.Item[Type].Value, position, frame, origin, scale, rainbow);
+            return true;
+        }
 
         public override void SetDefaults()
         {
