@@ -64,6 +64,8 @@ Mods: {
 						This mod has just gotten started and is under active development.
 						Every legendary weapon will be reworked over time, with plenty more new content on the way -- stay tuned.
 						Feedback and suggestions are welcome -- please leave a rational comment in the review section.
+						[c/FF5555:If your screen turns black while a Legendary weapon's tooltip is shown ]
+						[c/FF5555:Go to Mod Configuration > Calamity > Client Config > the 2nd option, Extra Text Effects, and turn it off.]
 						Left-click to view the Legendary Codex.
 						'''
 				}

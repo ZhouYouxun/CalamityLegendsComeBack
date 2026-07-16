@@ -1820,6 +1820,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 .AddIngredient<PlasmaDriveCore>()
                 .AddIngredient(ItemID.SpaceGun)
                 .AddTile(TileID.Anvils)
+                .AddDecraftCondition(Condition.DownedEowOrBoc)
                 .Register();
         }
         #endregion
