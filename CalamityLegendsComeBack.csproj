@@ -31,6 +31,7 @@
 	  <Folder Include="Weapons\BlossomFlux\EXSkill\SpecialEffects\" />
 	  <Folder Include="Weapons\BlossomFlux\Hold\" />
 	  <Folder Include="Weapons\BrinyBaron\SkillD_SuperDash\Effects\" />
+	  <Folder Include="Weapons\B_Report\规划\" />
 	  <Folder Include="Weapons\LeonidProgenitor\LPBook\" />
 	  <Folder Include="Weapons\PristineFury\EXSkill\" />
 	  <Folder Include="Weapons\PristineFury\LeftEffect\EAfterDog\EXOMech\Ares\" />
