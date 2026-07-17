@@ -19,7 +19,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
     /// </summary>damage
     public class CynosureArmorPiercingRound : ModProjectile, ILocalizedModType
     {
-        public override string Texture => "CalamityLegendsComeBack/Weapons/SHPC/Effects/EAfterDog/Cynosure/CynosureArmorPiercingRound";
+        public override string Texture => "CalamityMod/Projectiles/Typeless/ExoTankMissile";
         public new string LocalizationCategory => "Projectiles.SHPC";
 
         // 金源主题色
@@ -37,6 +37,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
         {
             ProjectileID.Sets.TrailCacheLength[Type] = 18;
             ProjectileID.Sets.TrailingMode[Type] = 2;
+            Main.projFrames[Type] = 4;
         }
 
         public override void SetDefaults()
@@ -58,6 +59,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
         public override void AI()
         {
             Projectile.rotation = Projectile.velocity.ToRotation();
+            Projectile.frameCounter++;
+            Projectile.frame = Projectile.frameCounter / 5 % Main.projFrames[Type];
             Lighting.AddLight(Projectile.Center, new Vector3(0.18f, 0.65f, 1f) * 0.72f);
 
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
@@ -478,7 +481,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
 
             // --- 弹丸本体 ---
             Texture2D texture = TextureAssets.Projectile[Type].Value;
-            Vector2 textureOrigin = texture.Size() * 0.5f;
+            Rectangle frame = texture.Frame(1, Main.projFrames[Type], 0, Projectile.frame);
+            Vector2 textureOrigin = frame.Size() * 0.5f;
             float outlinePulse = 1f + 0.18f * MathF.Sin(Main.GlobalTimeWrappedHourly * 18f + Projectile.identity * 0.37f);
             Color outlineColor = AuricGold with { A = 0 };
 
@@ -490,7 +494,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
                 Main.EntitySpriteDraw(
                     texture,
                     Projectile.Center + offset - Main.screenPosition,
-                    null,
+                    frame,
                     outlineColor * 0.42f,
                     Projectile.rotation,
                     textureOrigin,
@@ -502,7 +506,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Cynosure
             Main.EntitySpriteDraw(
                 texture,
                 Projectile.Center - Main.screenPosition,
-                null,
+                frame,
                 Color.White,
                 Projectile.rotation,
                 textureOrigin,

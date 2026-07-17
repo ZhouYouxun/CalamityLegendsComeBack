@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using CalamityMod.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
@@ -319,7 +320,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.BossProgress
                 E("史莱姆王", "PreHardmode/史莱姆王-图标", p => SpawnVanilla(p, NPCID.KingSlime)),
                 E("荒漠灾虫", "PreHardmode/荒漠灾虫-图标", p => SpawnCal(p, "DesertScourgeHead")),
                 E("克苏鲁之眼", "PreHardmode/克苏鲁之眼第一阶段-图标", p => SpawnVanilla(p, NPCID.EyeofCthulhu)),
-                E("菌生蟹", "PreHardmode/菌生蟹-图标", p => SpawnCal(p, "CrabulonIdle")),
+                E("菌生蟹", "PreHardmode/菌生蟹-图标", p => SpawnCal(p, "Crabulon")),
                 E("世界吞噬者", "PreHardmode/世界吞噬怪-图标", p => SpawnVanilla(p, NPCID.EaterofWorldsHead)),
                 E("克苏鲁之脑", "PreHardmode/克苏鲁之脑-图标", p => SpawnVanilla(p, NPCID.BrainofCthulhu)),
                 E("腐巢意志", "PreHardmode/腐巢意志第二阶段-图标", p => SpawnCal(p, "HiveMind")),
@@ -357,7 +358,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.BossProgress
             var post = new List<BossSpawnEntry>
             {
                 E("亵渎守卫", "PostMoon/亵渎守卫面具", p => SpawnCal(p, "ProfanedGuardianCommander")),
-                E("痴愚金龙", "PostMoon/痴愚金龙-图标", p => SpawnCal(p, "Bumblebirb")),
+                E("痴愚金龙", "PostMoon/痴愚金龙-图标", p => SpawnCal(p, "Dragonfolly")),
                 E("亵渎天神·普罗维登斯", "PostMoon/亵渎天神，普罗维登斯-图标", p => SpawnCal(p, "Providence")),
                 E("风暴编织者", "PostMoon/风暴编织者第一阶段地图图标", p => SpawnCal(p, "StormWeaverHead")),
                 E("无尽虚空", "PostMoon/无尽虚空地图图标", p => SpawnCal(p, "CeaselessVoid")),
@@ -388,7 +389,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.BossProgress
             if (Main.netMode == NetmodeID.MultiplayerClient)
                 return;
             Vector2 pos = player.Center - Vector2.UnitY * 480f;
-            NPC.NewNPC(player.GetSource_Misc("BossSummoner"), (int)pos.X, (int)pos.Y, npcType);
+            int index = NPC.NewNPC(player.GetSource_Misc("BossSummoner"), (int)pos.X, (int)pos.Y, npcType);
+            DebugBossEnvironmentBypass.Track(index);
         }
 
         private static void SpawnCal(Player player, string npcName)
@@ -401,7 +403,49 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.BossProgress
                 return;
             }
             Vector2 pos = player.Center - Vector2.UnitY * 480f;
-            NPC.NewNPC(player.GetSource_Misc("BossSummoner"), (int)pos.X, (int)pos.Y, npc.Type);
+            int index = NPC.NewNPC(player.GetSource_Misc("BossSummoner"), (int)pos.X, (int)pos.Y, npc.Type);
+            DebugBossEnvironmentBypass.Track(index);
         }
+    }
+
+    // Debug-summoned bosses must not enrage or misbehave from being outside their normal biome/arena.
+    // CalamityMod gates nearly every biome-based enrage check behind BossRushEvent.BossRushActive
+    // (that's exactly what Boss Rush mode does: any boss, anywhere, at full behavior), so we force it
+    // on for as long as a debug-summoned boss is alive, then restore it if we're the ones who set it.
+    internal static class DebugBossEnvironmentBypass
+    {
+        private static readonly HashSet<(int whoAmI, int type)> trackedNpcs = new();
+        private static bool weForcedBossRush;
+
+        public static void Track(int npcIndex)
+        {
+            if (npcIndex < 0 || npcIndex >= Main.maxNPCs || !Main.npc[npcIndex].active)
+                return;
+
+            trackedNpcs.Add((npcIndex, Main.npc[npcIndex].type));
+            if (!BossRushEvent.BossRushActive)
+            {
+                BossRushEvent.BossRushActive = true;
+                weForcedBossRush = true;
+            }
+        }
+
+        public static void Update()
+        {
+            if (!weForcedBossRush)
+                return;
+
+            trackedNpcs.RemoveWhere(t => !(Main.npc[t.whoAmI].active && Main.npc[t.whoAmI].type == t.type));
+            if (trackedNpcs.Count == 0)
+            {
+                BossRushEvent.BossRushActive = false;
+                weForcedBossRush = false;
+            }
+        }
+    }
+
+    internal sealed class DebugBossEnvironmentBypassSystem : ModSystem
+    {
+        public override void PostUpdateNPCs() => DebugBossEnvironmentBypass.Update();
     }
 }

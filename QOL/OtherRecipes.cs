@@ -114,6 +114,16 @@ namespace CalamityLegendsComeBack.QOL
                     dubiousPlatingRecipe.Register();
                 }
 
+                // 诡秘线路板 Mysterious Circuitry: 5 任意铁锭 + 5 任意铜锭 + 5 电线 -> 10个（与其微光转化的批量一致）
+                if (calamity.TryFind<ModItem>("MysteriousCircuitry", out ModItem mysteriousCircuitry))
+                {
+                    Recipe mysteriousCircuitryRecipe = Recipe.Create(mysteriousCircuitry.Type, 10);
+                    mysteriousCircuitryRecipe.AddRecipeGroup("IronBar", 5);
+                    mysteriousCircuitryRecipe.AddRecipeGroup("AnyCopperBar", 5);
+                    mysteriousCircuitryRecipe.AddIngredient(ItemID.Wire, 5);
+                    mysteriousCircuitryRecipe.Register();
+                }
+
                 // 死灵骨髓法杖 Staff of Necrosteocytes: 1 魔力水晶 + 20 骨头
                 if (calamity.TryFind<ModItem>("StaffOfNecrosteocytes", out ModItem necrosteocytesStaff))
                 {

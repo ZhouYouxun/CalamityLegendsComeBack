@@ -102,6 +102,13 @@ namespace CalamityLegendsComeBack.QOL
             new[] { "DaedalusStormbow", "CrystalVileShard", "FlyingKnife", "IlluminantHook" }
         };
 
+        // Giant Clam本身困难模式前就能击败，但这4把武器只应该在困难模式掉落/合成，
+        // 否则用雕像配方就能在进入困难模式前绕过掉落限制。
+        private static readonly HashSet<string> HardmodeOnlyRelicWeapons = new()
+        {
+            "ClamCrusher", "ClamorRifle", "Poseidon", "ShellfishStaff"
+        };
+
         private static readonly string[][] MaterialConversionPairs = new[]
         {
             new[] { "SilverBar", "TungstenBar" },
@@ -139,6 +146,10 @@ namespace CalamityLegendsComeBack.QOL
 
                     Recipe recipe = Recipe.Create(weaponItem.Type);
                     recipe.AddIngredient(relicItem.Type);
+
+                    if (HardmodeOnlyRelicWeapons.Contains(weaponName))
+                        recipe.AddCondition(Condition.Hardmode);
+
                     recipe.Register();
                 }
             }
