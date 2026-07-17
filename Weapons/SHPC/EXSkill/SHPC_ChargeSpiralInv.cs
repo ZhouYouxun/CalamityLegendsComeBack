@@ -29,6 +29,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
         private float radialPulseOffset;
         private float radialPulseSpeed;
         private float harmonicPhaseOffset;
+        private float epicycleFrequency;
+        private float epicyclePhaseOffset;
         private Color trailColorA;
         private Color trailColorB;
         private Color trailColorEnd;
@@ -66,6 +68,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             radialPulseOffset = Main.rand.NextFloat(MathHelper.TwoPi);
             radialPulseSpeed = Main.rand.NextFloat(1.8f, 2.6f);
             harmonicPhaseOffset = Main.rand.NextFloat(MathHelper.TwoPi);
+            epicycleFrequency = Main.rand.NextFloat(2.6f, 4.4f) * (Main.rand.NextBool() ? 1f : -1f);
+            epicyclePhaseOffset = Main.rand.NextFloat(MathHelper.TwoPi);
             trailColorA = Main.rand.NextBool() ? new Color(90, 200, 255) : new Color(120, 235, 255);
             trailColorB = Color.Lerp(trailColorA, Color.White, 0.42f);
             trailColorEnd = Color.Lerp(trailColorA, Color.White, 0.78f);
@@ -104,7 +108,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             OrbitAngle += angularVelocity * MathHelper.Lerp(1.1f, 2.4f, progress) * angularTempo;
 
             float angleRipple = 0.07f * (float)System.Math.Sin(OrbitAngle * 2f + radialPulseOffset) * (1f - inwardProgress * 0.55f);
-            Vector2 nextCenter = origin + (OrbitAngle + angleRipple).ToRotationVector2() * radius;
+
+            // 更复杂的数学运动：主轨道上叠加一个自转更快的小外旋轮(epicycle)，
+            // 振幅随内旋进度衰减到0，最终仍然收敛到中心
+            float epicycleRadius = MaxOrbitRadius * 0.24f * (1f - inwardProgress) *
+                (0.6f + 0.4f * (float)System.Math.Sin(progress * MathHelper.TwoPi * 1.3f + epicyclePhaseOffset));
+            float epicycleAngle = OrbitAngle * epicycleFrequency + epicyclePhaseOffset;
+            Vector2 epicycleOffset = epicycleAngle.ToRotationVector2() * epicycleRadius;
+
+            Vector2 nextCenter = origin + (OrbitAngle + angleRipple).ToRotationVector2() * radius + epicycleOffset;
 
             if (!initialized)
             {

@@ -390,7 +390,7 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.KarasawaModule
             Particle coreLine = new CustomSpark(
                 muzzle,
                 direction * 18f,
-                "CalamityLegendsComeBack/Texture/Shared/GlowBlade",
+                "CalamityLegendsComeBack/Weapons/BrinyBaron/SkillA_ShortDash/GlowBlade",
                 false,
                 16,
                 0.08f,

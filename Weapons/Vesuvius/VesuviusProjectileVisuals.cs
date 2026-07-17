@@ -1,4 +1,3 @@
-using CalamityMod.Graphics.Metaballs;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Terraria;
@@ -21,6 +20,16 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
         internal static readonly Color ObsidianEdge = new(38, 38, 42);
 
         internal static Color AdditiveColor(Color color) => new(color.R, color.G, color.B, 0);
+
+        internal static void SpawnMoltenBloom(Vector2 center, float radius, float opacity = 0.75f)
+        {
+            if (Main.dedServ)
+                return;
+
+            float scale = MathHelper.Clamp(radius / 48f, 0.28f, 1.8f) * VisualScale;
+            Color color = Color.Lerp(LavaOrange, HotWhite, MathHelper.Clamp(radius / 120f, 0.08f, 0.55f));
+            GeneralParticleHandler.SpawnParticle(new StrongBloom(center, Vector2.Zero, color * opacity, scale, 15));
+        }
 
         internal static void SpawnMoltenMeteorTrail(Projectile projectile, float intensity, bool heavySmoke)
         {
@@ -71,7 +80,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                 return;
 
             strength = ReducedIntensity(strength);
-            RancorLavaMetaball.SpawnParticle(center + Main.rand.NextVector2Circular(8f, 8f), Main.rand.NextFloat(32f, 58f) * strength);
+            SpawnMoltenBloom(center + Main.rand.NextVector2Circular(8f, 8f), Main.rand.NextFloat(32f, 58f) * strength);
 
             GeneralParticleHandler.SpawnParticle(new CustomPulse(
                 center,
@@ -199,7 +208,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
 
             intensity = ReducedIntensity(intensity);
             if (Main.rand.NextFloat() < 0.72f * intensity)
-                RancorLavaMetaball.SpawnParticle(center + Main.rand.NextVector2Circular(spread.X, spread.Y), Main.rand.NextFloat(16f, 38f) * intensity);
+                SpawnMoltenBloom(center + Main.rand.NextVector2Circular(spread.X, spread.Y), Main.rand.NextFloat(16f, 38f) * intensity, 0.55f);
 
             if (Main.rand.NextFloat() < 0.45f * intensity)
             {

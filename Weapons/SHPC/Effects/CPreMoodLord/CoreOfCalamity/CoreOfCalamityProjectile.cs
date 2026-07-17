@@ -2,7 +2,6 @@ using CalamityMod;
 using CalamityMod.Enums;
 using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
-using CalamityLegendsComeBack.Weapons.A_Olds.TheEnforcer;
 using CalamityLegendsComeBack.Weapons.SHPC;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -50,7 +49,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
             Projectile.ignoreWater = true;
             Projectile.penetrate = 1;
             Projectile.extraUpdates = 4;
-            Projectile.timeLeft = 300;
+            Projectile.timeLeft = 60;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = -1;
         }
@@ -97,29 +96,25 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
                 hitbox.netUpdate = true;
             }
 
-            // 前、左、右、后四枚分裂弹。颜色编号通过 ai[0] 同步给所有客户端。
-            const float splitSpawnRadius = 15f * 16f;
-            Vector2[] splitOffsets =
+            // 原地向四面八方炸开 12 枚分裂弹，每枚的颜色都独立随机抽取（不保证四色轮换），
+            // 速度带一点随机浮动但不会相差太多；颜色编号通过 ai[0] 同步给所有客户端。
+            const int splitCount = 12;
+            const float splitSpeedMin = 12f;
+            const float splitSpeedMax = 16f;
+            for (int i = 0; i < splitCount; i++)
             {
-                new(splitSpawnRadius, 0f),
-                new(0f, splitSpawnRadius),
-                new(-splitSpawnRadius, 0f),
-                new(0f, -splitSpawnRadius)
-            };
-            float returnSpeed = Math.Max(1f, Projectile.velocity.Length() * 2f);
-            for (int i = 0; i < splitOffsets.Length; i++)
-            {
-                Vector2 offset = splitOffsets[i];
-                Vector2 direction = (-offset).SafeNormalize(Vector2.UnitX);
+                Vector2 direction = Main.rand.NextVector2Unit();
+                float speed = Main.rand.NextFloat(splitSpeedMin, splitSpeedMax);
+                int colorIndex = Main.rand.Next(CoreOfCalamitySplitOrb.Palette.Length);
                 Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
-                    Projectile.Center + offset,
-                    direction * returnSpeed,
+                    Projectile.Center,
+                    direction * speed,
                     ModContent.ProjectileType<CoreOfCalamitySplitOrb>(),
-                    Math.Max(1, (int)(Projectile.damage * 0.9)),
+                    Math.Max(1, (int)(Projectile.damage * 0.3)),
                     Projectile.knockBack * 0.72f,
                     Projectile.owner,
-                    i);
+                    colorIndex);
             }
         }
 

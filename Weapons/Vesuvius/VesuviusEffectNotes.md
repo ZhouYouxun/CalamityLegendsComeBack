@@ -26,7 +26,7 @@
 
 ## Hard rules
 
-- `RancorLavaMetaball` is only for hit impact, landing, lingering lava, eruption cores, or other location feedback.
-- `RancorLavaMetaball` must not be used as normal projectile flight trail.
+- `RancorLavaMetaball` is blacklisted for the entire Vesuvius family and must not be used for flight, impact, charge, lingering lava, or eruption visuals.
+- Use structured bloom, heat distortion, smoke, embers, rock fragments, and directional rupture geometry instead.
 - `Cinder` visuals are limited to `SmallSmokeParticle` plus dust.
 - `ObsidianShard` keeps the void/obsidian read, but its projectile body scale is locked to roughly 33 percent.

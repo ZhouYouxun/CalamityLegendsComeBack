@@ -190,6 +190,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             TriggerTacticalOutlinePulse(rightClick: true);
             PlayRightReleaseSound();
             ReleaseChargedShot(CurrentPreset, ChargeCompletion);
+            BFAccessories.TriggerFairyRightAttack();
             Owner.GetModPlayer<BFEXPlayer>().GainEX(3);
         }
 

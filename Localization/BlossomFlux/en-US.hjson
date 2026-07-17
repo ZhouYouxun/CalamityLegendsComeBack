@@ -237,6 +237,55 @@ Mods: {
 					'''
 			}
 
+			FairyDance: {
+				DisplayName: Fairy Dance
+				Tooltip:
+					'''
+					+4 life regeneration and +6 defense.
+					Summons pink, green, and blue fairies with distinct blessings.
+					Holding either attack with BlossomFlux sends them toward the cursor.
+					Fairies launch every 5 frames, with 2 frames between each color.
+					Contact deals 20 ranged damage, increased to 30 while holding right click.
+					Releasing a charged right-click attack launches all three at once.
+					Each simultaneous charge deals 120 damage and has 10 armor penetration.
+					Fairy damage receives ranged bonuses but cannot critically strike.
+					'''
+			}
+
+			RainbowSpiritDance: {
+				DisplayName: Rainbow Spirit Dance
+				Tooltip:
+					'''
+					+6 life regeneration, +10 defense, and +10% ranged damage.
+					Includes every effect of Fairy Dance.
+					Every 60 BlossomFlux hits summons a Prismatic Lacewing.
+					Lacewings live for 18 seconds, with at most 7 active.
+					While holding left click, each fires a fast rainbow bolt every 45 frames.
+					Bolts deal 60 ranged damage, can critically strike, and inflict Holy Flames.
+					Rainbow bolts have a maximum range of 35 tiles.
+					Holding right click makes the lacewings rapidly orbit the player.
+					Releasing right click sends every lacewing toward the cursor.
+					Each deals 1200 ranged damage and is guaranteed to critically strike.
+					Healing at least 200 life at once consumes one fairy and restores 100 life.
+					If Final Stand is cooling down, its cooldown is reduced by 60 seconds.
+					'''
+			}
+
+			BadSeed: {
+				DisplayName: Bad Seed
+				Tooltip:
+					'''
+					Halves defense and grants +20% ranged damage.
+					Grants +10% ranged critical strike chance and +15% arrow velocity.
+					BlossomFlux gains a further +5% damage and +8% critical strike chance.
+					Final Stand immediately triggers an ultimate and skips its charge phase.
+					All BlossomFlux ultimates have half their normal barrage duration.
+					Final Stand recharges twice as fast and can recharge during boss fights.
+					It no longer grants temporary invulnerability and instead restores 200 life.
+					The revival also inflicts Withered for 30 seconds.
+					'''
+			}
+
 			BFArrowRest: {
 				DisplayName: BFArrowRest
 				Tooltip:
@@ -362,6 +411,21 @@ Mods: {
 		TheSpecialText.BlossomFluxPresetSelected: Doctrine Selected: {0}
 
 		Buffs: {
+			PinkFairyBlessing: {
+				DisplayName: Pink Fairy Blessing
+				Description: The pink fairy's dance steadily restores life.
+			}
+
+			GreenFairyBlessing: {
+				DisplayName: Green Fairy Blessing
+				Description: The green fairy's dance increases ranged damage.
+			}
+
+			BlueFairyBlessing: {
+				DisplayName: Blue Fairy Blessing
+				Description: The blue fairy's dance reinforces your defense.
+			}
+
 			BFRecoveryLeafBuff: {
 				DisplayName: Recovery Leaf
 				Description: The recovery branchflow is protecting and healing you.

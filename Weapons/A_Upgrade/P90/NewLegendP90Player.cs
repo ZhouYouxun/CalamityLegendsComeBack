@@ -3,7 +3,6 @@ using CalamityMod;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.Audio;
-using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -23,11 +22,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.P90
         public int RollTimer { get; private set; }
         public int RollDirection { get; private set; } = 1;
         public int DashCooldownTimer { get; private set; }
-        public int ShockGrenadeCooldownTimer { get; private set; }
+        public int DodgeEmpowerTimer { get; private set; }
         public bool HoldingP90 { get; private set; }
+
+        private bool dodgedHostileProjectileThisRoll;
 
         public bool IsReloading => ReloadTimer > 0;
         public bool IsRolling => RollTimer > 0;
+        public bool DodgeEmpowered => DodgeEmpowerTimer > 0;
         public float ReloadCompletion => IsReloading ? 1f - ReloadTimer / (float)NewLegendP90.ReloadFrames : 0f;
         public float RollCompletion => IsRolling ? 1f - RollTimer / (float)NewLegendP90.RollFrames : 0f;
         public float DashCooldownCompletion => DashCooldownTimer <= 0 ? 1f : 1f - DashCooldownTimer / (float)NewLegendP90.RollCooldownFrames;
@@ -47,7 +49,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.P90
             ReloadTimer = 0;
             RollTimer = 0;
             DashCooldownTimer = 0;
-            ShockGrenadeCooldownTimer = 0;
+            DodgeEmpowerTimer = 0;
+            dodgedHostileProjectileThisRoll = false;
             Player.fullRotation = 0f;
             ResetMagazineToDefault();
         }
@@ -64,8 +67,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.P90
                     CompleteReload();
             }
 
-            if (ShockGrenadeCooldownTimer > 0)
-                ShockGrenadeCooldownTimer--;
+            if (DodgeEmpowerTimer > 0)
+            {
+                DodgeEmpowerTimer--;
+                if (DodgeEmpowerTimer <= 0)
+                    SpawnEmpowerEndContraction();
+            }
 
             if (DashCooldownTimer > 0)
             {
@@ -147,6 +154,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.P90
             RollDirection = direction;
             RollTimer = NewLegendP90.RollFrames;
             DashCooldownTimer = NewLegendP90.RollCooldownFrames;
+            dodgedHostileProjectileThisRoll = false;
             Player.fullRotationOrigin = Player.Size * 0.5f;
             Player.Calamity().GeneralScreenShakePower = Math.Max(Player.Calamity().GeneralScreenShakePower, 2.4f);
 
@@ -167,27 +175,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.P90
             SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.78f, Pitch = 0.18f }, Player.Center);
             SoundEngine.PlaySound(SoundID.Item7 with { Volume = 0.52f, Pitch = 0.35f }, Player.Center);
             SpawnRollDust(18, 3.8f);
-            return true;
-        }
-
-        public bool TryThrowShockGrenade(IEntitySource source, Vector2 position, Vector2 direction, int damage, float knockback)
-        {
-            if (DashCooldownTimer <= 0 || ShockGrenadeCooldownTimer > 0 || Main.myPlayer != Player.whoAmI)
-                return false;
-
-            ShockGrenadeCooldownTimer = NewLegendP90.ShockGrenadeCooldownFrames;
-            direction = direction.SafeNormalize(Vector2.UnitX * Player.direction);
-            int grenadeDamage = Math.Max(1, (int)(damage * 3.2f));
-            Projectile.NewProjectile(
-                source,
-                position,
-                direction * 12.5f + Player.velocity * 0.18f - Vector2.UnitY * 1.2f,
-                ModContent.ProjectileType<P90ShockGrenade>(),
-                grenadeDamage,
-                knockback * 3.4f,
-                Player.whoAmI);
-
-            SoundEngine.PlaySound(SoundID.Item1 with { Volume = 0.55f, Pitch = 0.26f }, Player.Center);
             return true;
         }
 
@@ -214,6 +201,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.P90
             if (Player.velocity.Y > 1.2f)
                 Player.velocity.Y = 1.2f;
 
+            TryRegisterHostileProjectileDodge();
+
             if (Main.rand.NextBool(2))
             {
                 Dust trail = Dust.NewDustPerfect(
@@ -230,8 +219,67 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.P90
             if (RollTimer <= 0)
             {
                 Player.fullRotation = 0f;
+                if (dodgedHostileProjectileThisRoll)
+                {
+                    DodgeEmpowerTimer = NewLegendP90.DodgeEmpowerFrames;
+                    dodgedHostileProjectileThisRoll = false;
+                }
+
                 SpawnRollDust(12, 2.8f);
                 SoundEngine.PlaySound(SoundID.Item37 with { Volume = 0.42f, Pitch = 0.24f }, Player.Center);
+            }
+        }
+
+        private void TryRegisterHostileProjectileDodge()
+        {
+            if (dodgedHostileProjectileThisRoll || Main.myPlayer != Player.whoAmI)
+                return;
+
+            Rectangle playerHitbox = Player.Hitbox;
+            foreach (Projectile projectile in Main.ActiveProjectiles)
+            {
+                TryRegisterHostileProjectileDodge(projectile, playerHitbox);
+                if (dodgedHostileProjectileThisRoll)
+                    break;
+            }
+        }
+
+        internal void TryRegisterHostileProjectileDodge(Projectile projectile)
+        {
+            TryRegisterHostileProjectileDodge(projectile, Player.Hitbox);
+        }
+
+        private void TryRegisterHostileProjectileDodge(Projectile projectile, Rectangle playerHitbox)
+        {
+            if (!IsRolling || dodgedHostileProjectileThisRoll || Main.myPlayer != Player.whoAmI)
+                return;
+            if (!projectile.active || !projectile.hostile || projectile.damage <= 0)
+                return;
+            if (ProjectileLoader.CanDamage(projectile) == false || !ProjectileLoader.CanHitPlayer(projectile, Player))
+                return;
+            if (!projectile.Colliding(projectile.Hitbox, playerHitbox))
+                return;
+
+            dodgedHostileProjectileThisRoll = true;
+        }
+
+        private void SpawnEmpowerEndContraction()
+        {
+            if (Main.dedServ || Main.myPlayer != Player.whoAmI)
+                return;
+
+            const int dustCount = 12;
+            for (int i = 0; i < dustCount; i++)
+            {
+                Vector2 outward = (MathHelper.TwoPi * i / dustCount).ToRotationVector2();
+                Dust dust = Dust.NewDustPerfect(
+                    Player.Center + outward * 30f,
+                    DustID.GoldFlame,
+                    -outward * 3.4f,
+                    90,
+                    Color.Gold,
+                    Main.rand.NextFloat(0.65f, 0.9f));
+                dust.noGravity = true;
             }
         }
 

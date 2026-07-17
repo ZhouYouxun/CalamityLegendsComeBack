@@ -1,4 +1,5 @@
 using CalamityLegendsComeBack.Weapons.BlossomFlux;
+using CalamityLegendsComeBack.Accssory.BF.Common;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;
@@ -76,7 +77,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                     ModContent.ProjectileType<BFEXWeapon>(),
                     player.GetWeaponDamage(Item),
                     Item.knockBack,
-                    player.whoAmI);
+                    player.whoAmI,
+                    0f,
+                    player.GetModPlayer<BFAccessoryPlayer>().BadSeedEquipped ? 1f : 0f);
 
                 exWeaponActive = true;
             }

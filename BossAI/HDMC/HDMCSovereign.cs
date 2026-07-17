@@ -200,6 +200,15 @@ namespace CalamityLegendsComeBack.BossAI.HDMC
             NPC.dontTakeDamage = true;
             NPC.velocity *= 0.92f;
 
+            // 登场瞬间建立数据牢笼边界（中心 = 玩家当前位置，与灾厄克隆体竞技场同技术）
+            if (Timer == 1 && Main.netMode != NetmodeID.MultiplayerClient &&
+                !AnyProjectile(ModContent.ProjectileType<HDMCArena>()))
+            {
+                Projectile.NewProjectile(
+                    NPC.GetSource_FromAI(), target.Center, Vector2.Zero,
+                    ModContent.ProjectileType<HDMCArena>(), 0, 0f, Main.myPlayer, NPC.whoAmI);
+            }
+
             if (Timer == 1 && !Main.dedServ)
                 SoundEngine.PlaySound(new SoundStyle(MatrixModuleNumbers.SndCompileStorm) { Volume = 0.7f }, NPC.Center);
 
@@ -234,11 +243,27 @@ namespace CalamityLegendsComeBack.BossAI.HDMC
         // 状态：攻击间隙换位
         // ──────────────────────────────────────────────────
 
+        /// <summary>
+        /// 换位时长：P1 保留较长的"呼吸"给教学，越到后期越短——
+        /// 消灭"Boss 散步"的空档，是"太简单"最直接的解药。
+        /// </summary>
+        private int ReposDuration => Phase switch { 1 => 30, 2 => 26, 3 => 22, 4 => 18, _ => 14 };
+
         private void DoReposition(Player target)
         {
-            HoverBesideTarget(target, HoverSide * 460f, -250f, 18f, 22f);
+            HoverBesideTarget(target, HoverSide * 430f, -250f, 20f, 20f);
 
-            if (Timer >= 42)
+            // 换位底流：P2+ 途中也吐低速环形弹（不追踪，纯占位），让换位不再是免费喘息。
+            // 密度随阶段递增：P2 每 12 帧、P5 每 7 帧。
+            int stream = Phase switch { <= 1 => 0, 2 => 12, 3 => 10, 4 => 8, _ => 7 };
+            if (stream > 0 && Timer % stream == 0 && Main.netMode != NetmodeID.MultiplayerClient)
+            {
+                float a = HDMCUtil.Hash01(NPC.whoAmI * 7 + Timer) * MathHelper.TwoPi;
+                Vector2 dir = a.ToRotationVector2();
+                SpawnHostile<HDMCLanceHostile>(NPC.Center + dir * 40f, dir * 5.5f, 0.45f, 8.5f, 6f);
+            }
+
+            if (Timer >= ReposDuration)
             {
                 if (Main.netMode != NetmodeID.MultiplayerClient)
                 {
@@ -371,6 +396,18 @@ namespace CalamityLegendsComeBack.BossAI.HDMC
             // 距离过近时轻微减速，避免穿模贴脸
             if (dist < 130f)
                 NPC.velocity *= 0.9f;
+        }
+
+        /// <summary>场上是否已存在指定类型的弹幕（防边界重复生成）。</summary>
+        private static bool AnyProjectile(int type)
+        {
+            for (int i = 0; i < Main.maxProjectiles; i++)
+            {
+                Projectile p = Main.projectile[i];
+                if (p.active && p.type == type)
+                    return true;
+            }
+            return false;
         }
 
         /// <summary>敌对弹幕生成快捷方式（仅服务器）。</summary>

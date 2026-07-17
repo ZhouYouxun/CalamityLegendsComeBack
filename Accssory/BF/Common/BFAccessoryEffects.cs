@@ -84,6 +84,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
         public BlossomFluxChloroplastPresetType Preset;
         private bool sunflowerEmpowered;
         private bool sunflowerContactTriggered;
+        private bool badSeedCritApplied;
 
         public override void AI(Projectile projectile)
         {
@@ -96,6 +97,12 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
 
             Player owner = Main.player[projectile.owner];
             BFAccessoryPlayer accessoryPlayer = owner.GetModPlayer<BFAccessoryPlayer>();
+
+            if (accessoryPlayer.BadSeedEquipped && !badSeedCritApplied)
+            {
+                badSeedCritApplied = true;
+                projectile.CritChance += 8;
+            }
 
             if (accessoryPlayer.DominationQuiverEquipped)
                 projectile.tileCollide = false;
@@ -147,12 +154,23 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
             if (BFArrowCommon.InBounds(projectile.owner, Main.maxPlayers) && Main.player[projectile.owner].GetModPlayer<BFAccessoryPlayer>().DominationQuiverEquipped)
                 modifiers.DefenseEffectiveness *= 0f;
 
+            if (BFArrowCommon.InBounds(projectile.owner, Main.maxPlayers) && Main.player[projectile.owner].GetModPlayer<BFAccessoryPlayer>().BadSeedEquipped)
+                modifiers.FinalDamage *= 1.05f;
+
             if (sunflowerEmpowered && preset == BlossomFluxChloroplastPresetType.Chlo_ABreak)
             {
                 modifiers.FinalDamage *= 1.35f;
                 if (Main.rand.NextFloat() < 0.25f)
                     modifiers.FinalDamage *= 1.5f;
             }
+        }
+
+        public override void OnHitNPC(Projectile projectile, NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            if (!BFAccessorySystem.TryGetBlossomFluxPreset(projectile, out _) || !BFArrowCommon.InBounds(projectile.owner, Main.maxPlayers))
+                return;
+
+            Main.player[projectile.owner].GetModPlayer<BFAccessoryPlayer>().RegisterBlossomFluxHit();
         }
 
     }

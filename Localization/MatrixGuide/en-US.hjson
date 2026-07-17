@@ -1,7 +1,7 @@
 Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
-			LegendsMatrixTablet: {
+			IUMWMatrixTablet: {
 				DisplayName: Matrix Guide Tablet
 				Tooltip: Opens the Calamity Legends Come Back matrix guide.
 			}
@@ -11,7 +11,7 @@ Mods: {
 		}
 
 		Projectiles: {
-			LegendsMatrixPanel.DisplayName: Matrix Guide Panel
+			IUMWMatrixPanel.DisplayName: Matrix Guide Panel
 			BarrierShieldVisual.DisplayName: Barrier Shield Visual
 			CtrlChipNEWReticle.DisplayName: Ctrl Chip N E W Reticle
 			CtrlChipReticle.DisplayName: Ctrl Chip Reticle

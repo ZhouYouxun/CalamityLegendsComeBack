@@ -70,7 +70,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.AshesofCala
             Projectile.penetrate = -1;
             Projectile.extraUpdates = 0;
             Projectile.timeLeft = 720;
-            Projectile.localNPCHitCooldown = 20;
+            Projectile.localNPCHitCooldown = 8;
             Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitX) * BaseSpeed;
         }
 

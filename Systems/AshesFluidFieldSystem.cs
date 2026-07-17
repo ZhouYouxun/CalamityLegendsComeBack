@@ -69,19 +69,15 @@ namespace CalamityLegendsComeBack.Systems
 
         private static void DrawFluidFieldHook(On_Main.orig_SortDrawCacheWorms orig, Main self)
         {
-            // Draw BEFORE orig(self), the exact point where Calamity draws its own Profaned
-            // Moonlight aurora field. At this entry there is no active spriteBatch, so
-            // FluidField.Draw's internal Begin/End (needsToCallEnd: false) is safe. Drawing
-            // AFTER orig() can collide with a spriteBatch that orig left open, throwing inside
-            // the detour and silently killing the effect (which is why nothing showed up).
+            orig(self);
+
+            // Only blit while the fire is still alive/fading; stays dormant otherwise.
             if (SharedField is not null && !Main.gameMenu && framesSinceLastSource <= IdleDrawFrames)
             {
                 Vector2 screenCenter = new Vector2(Main.screenWidth, Main.screenHeight) * 0.5f;
                 // Draw in World space using GameViewMatrix transformation matrix.
                 SharedField.Draw(screenCenter, false, Main.GameViewMatrix.TransformationMatrix, Matrix.Identity);
             }
-
-            orig(self);
         }
 
         public override void PostUpdateEverything()

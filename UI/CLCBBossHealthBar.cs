@@ -5,14 +5,14 @@ using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Graphics;
 using Terraria;
 using Terraria.GameContent;
-using Terraria.GameContent.UI.BigProgressBar;
 using Terraria.ID;
 using Terraria.ModLoader;
+using Terraria.UI;
 using Terraria.UI.Chat;
 
 namespace CalamityLegendsComeBack.UI
 {
-    public class CLCBBossHealthBarSystem : ModBossBarStyle
+    public class CLCBBossHealthBarSystem : ModSystem
     {
         // ─── layout constants ───────────────────────────────────────────────
         private const int PanelW     = 460;
@@ -47,17 +47,16 @@ namespace CalamityLegendsComeBack.UI
 
         private static readonly List<BossBar> Bars = new();
 
-        public override string DisplayName => "CLCB Matrix";
-
-        public override bool PreventDraw => true;
+        private static bool IsEnabled => CLCBClientConfig.Instance?.ShowMatrixBossBar ?? true;
 
         // ─── lifecycle ──────────────────────────────────────────────────────
-        public override void Unload() => Bars.Clear();
+        public override void OnWorldUnload() => Bars.Clear();
 
-        public override void Update(IBigProgressBar currentBar, ref BigProgressBarInfo info)
+        public override void PostUpdateEverything()
         {
             if (Main.netMode == NetmodeID.Server) return;
-            if (Main.gameMenu) { Bars.Clear(); return; }
+            if (!IsEnabled) { Bars.Clear(); return; }
+            if (Main.gameMenu) return;
 
             // Update existing entries
             for (int i = Bars.Count - 1; i >= 0; i--)
@@ -144,16 +143,27 @@ namespace CalamityLegendsComeBack.UI
         }
 
         // ─── interface layer ────────────────────────────────────────────────
-        // ─── drawing ────────────────────────────────────────────────────────
-        public override void Draw(SpriteBatch spriteBatch, IBigProgressBar currentBar, BigProgressBarInfo info)
+        public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
         {
-            if (Main.gameMenu) return;
+            int idx = layers.FindIndex(l => l.Name == "Vanilla: Mouse Text");
+            if (idx < 0) return;
+
+            layers.Insert(idx, new LegacyGameInterfaceLayer(
+                "CalamityLegendsComeBack: Matrix Boss Bars",
+                () => { DrawAllBars(Main.spriteBatch); return true; },
+                InterfaceScaleType.None));
+        }
+
+        // ─── drawing ────────────────────────────────────────────────────────
+        private static void DrawAllBars(SpriteBatch sb)
+        {
+            if (!IsEnabled || Main.gameMenu) return;
 
             int drawn = 0;
             foreach (BossBar bar in Bars)
             {
                 if (bar.Opacity > 0.002f)
-                    DrawBar(spriteBatch, bar, drawn++);
+                    DrawBar(sb, bar, drawn++);
             }
         }
 

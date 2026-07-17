@@ -99,7 +99,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                     player.whoAmI,
                     0f,
                     0f,
-                    VesuviusProgression.GetMaxStage());
+                    VesuviusProgression.GetWorldPowerStage());
 
                 player.GetModPlayer<VesuviusEXPlayer>().GainEX(1);
                 return false;
@@ -158,7 +158,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
 
         public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
         {
-            damage.Base += Item.damage * (0.12f * (VesuviusProgression.GetMaxStage() - 1));
+            damage.Base += Item.damage * (0.12f * (VesuviusProgression.GetWorldPowerStage() - 1));
         }
 
         public override void ModifyTooltips(List<TooltipLine> tooltips)
@@ -232,7 +232,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                 VesuviusProgression.GetRightDamage(player.GetWeaponDamage(Item)),
                 Item.knockBack,
                 player.whoAmI,
-                VesuviusProgression.GetMaxStage());
+                VesuviusProgression.GetWorldPowerStage());
 
             if (Main.projectile.IndexInRange(projIndex))
                 Main.projectile[projIndex].CritChance = player.GetWeaponCrit(Item);

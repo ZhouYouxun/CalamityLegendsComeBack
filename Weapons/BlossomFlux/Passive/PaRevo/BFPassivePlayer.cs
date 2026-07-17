@@ -1,10 +1,13 @@
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using CalamityLegendsComeBack.Accssory.BF.Common;
+using CalamityLegendsComeBack.Accssory.BF.FairyDance;
+using CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;
 using CalamityMod;
 using CalamityMod.CalPlayer.Dashes;
+using CalamityMod.Buffs.Cooldowns;
 using CalamityMod.Cooldowns;
 using Terraria;
 using Terraria.Audio;
@@ -30,7 +33,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
         private bool HoldingBlossomFluxNow => Player.HeldItem.type == ModContent.ItemType<NewLegendBlossomFlux>();
         public bool PassiveUnlocked => Main.hardMode;
         public bool FinalStandActive => FinalStandTimer > 0;
-        public int PassiveChargeFramesRequired => PassiveCooldownFrames;
+        private bool BadSeedActive => Player.GetModPlayer<BFAccessoryPlayer>().BadSeedEquipped;
+        public int PassiveChargeFramesRequired => BadSeedActive ? PassiveCooldownFrames / 2 : PassiveCooldownFrames;
         public bool PassiveReady => PassiveUnlocked && PassiveCooldownTimer >= PassiveChargeFramesRequired && !FinalStandActive;
         public bool ShouldShowCooldownDisplay =>
             (HoldingBlossomFluxNow && PassiveUnlocked) ||
@@ -57,7 +61,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
             {
                 PassiveCooldownTimer = 0;
             }
-            else if (!FinalStandActive && HoldingBlossomFluxNow && !AnyBossAlive())
+            else if (!FinalStandActive && HoldingBlossomFluxNow && (BadSeedActive || !AnyBossAlive()))
             {
                 int requiredFrames = PassiveChargeFramesRequired;
                 int previousTimer = PassiveCooldownTimer;
@@ -116,7 +120,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
             if (CalamityReviveShouldGoFirst())
                 return true;
 
-            TriggerFinalStand();
+            if (BadSeedActive)
+                TriggerBadSeedRevival();
+            else
+                TriggerFinalStand();
+
             playSound = false;
             genGore = false;
             return false;
@@ -170,6 +178,57 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
             }
         }
 
+        private void TriggerBadSeedRevival()
+        {
+            finalStandPreset = Player.GetModPlayer<BFRightUIPlayer>().CurrentPreset;
+            FinalStandTimer = 0;
+            PassiveCooldownTimer = 0;
+            finalStandBlockedHits = 0;
+
+            int restoredLife = System.Math.Min(Player.statLifeMax2, 200);
+            Player.statLife = System.Math.Max(1, restoredLife);
+            Player.HealEffect(restoredLife, true);
+            Player.AddBuff(ModContent.BuffType<Withered>(), 30 * 60);
+
+            SpawnRecoveryField(finalStandPreset);
+            SpawnTriggerBurstFX(finalStandPreset);
+            Player.GetModPlayer<BFAccessoryPlayer>().NotifyLargeHeal(200);
+            SpawnBadSeedUltimate();
+
+            if (Player.whoAmI == Main.myPlayer)
+            {
+                SoundEngine.PlaySound(BlossomFluxSounds.PassivePlayerSpecialAction1, Player.Center);
+                SoundEngine.PlaySound(BlossomFluxSounds.PassivePlayerSpecialAction2, Player.Center);
+            }
+        }
+
+        private void SpawnBadSeedUltimate()
+        {
+            if (Player.whoAmI != Main.myPlayer || Player.ownedProjectileCounts[ModContent.ProjectileType<BFEXWeapon>()] > 0)
+                return;
+
+            Vector2 direction = (Main.MouseWorld - Player.Center).SafeNormalize(Vector2.UnitX * Player.direction);
+            Projectile.NewProjectile(
+                Player.GetSource_FromThis(),
+                Player.Center,
+                direction,
+                ModContent.ProjectileType<BFEXWeapon>(),
+                Player.GetWeaponDamage(Player.HeldItem),
+                Player.HeldItem.knockBack,
+                Player.whoAmI,
+                0f,
+                3f);
+        }
+
+        internal void AccelerateCooldown(int frames)
+        {
+            if (frames <= 0 || FinalStandActive || PassiveCooldownTimer >= PassiveChargeFramesRequired)
+                return;
+
+            PassiveCooldownTimer = System.Math.Min(PassiveChargeFramesRequired, PassiveCooldownTimer + frames);
+            SyncPassiveDisplay();
+        }
+
         private void ResolveFinalStandSurvival()
         {
             int lifePenalty = (int)System.Math.Ceiling(Player.statLifeMax2 * 0.2f * finalStandBlockedHits);
@@ -179,6 +238,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
                 int healAmount = targetLife - Player.statLife;
                 Player.statLife = targetLife;
                 Player.HealEffect(healAmount, true);
+                Player.GetModPlayer<BFAccessoryPlayer>().NotifyLargeHeal(healAmount);
             }
             else
             {

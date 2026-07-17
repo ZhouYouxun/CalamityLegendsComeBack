@@ -17,7 +17,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
             int effectID = EffectRegistry.GetEffectIDByAmmo(item.type);
             BalanceSHPC balance = new();
-            float panelMultiplier = balance.GetLeftClickMaterialDamageMultiplier(effectID);
+            float panelMultiplier = balance.GetLeftClickMaterialDamageMultiplier(effectID)
+                * Main.LocalPlayer.GetModPlayer<A_Dev.GodsKey.GodsKeyPlayer>().PanelMultiplier;
             string panelMultiplierText = panelMultiplier.ToString("0.##", CultureInfo.InvariantCulture);
             int shotsPerAmmo = SHPCAmmoCapacity.GetCapacity(effectID);
 

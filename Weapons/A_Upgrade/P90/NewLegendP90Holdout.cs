@@ -145,17 +145,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.P90
         {
             int rollDirection = ResolveRollDirection();
             if (P90Player.DashCooldownTimer <= 0 && !P90Player.IsReloading)
-            {
                 P90Player.TryStartRoll(Owner.HeldItem, rollDirection);
-                return;
-            }
-
-            P90Player.TryThrowShockGrenade(
-                Projectile.GetSource_FromThis(),
-                GunTipPosition,
-                AimDirection,
-                Projectile.damage,
-                Projectile.knockBack);
         }
 
         private bool FireOnce()
@@ -184,7 +174,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.P90
             shot.CritChance = Owner.GetWeaponCrit(Owner.HeldItem);
             shot.GetGlobalProjectile<P90ProjectileGlobal>().Configure(
                 homing: currentMode == P90RangeMode.Far,
-                strongKnockback: currentMode == P90RangeMode.Close);
+                strongKnockback: currentMode == P90RangeMode.Close,
+                dodgeEmpowered: P90Player.DodgeEmpowered);
             shot.netUpdate = true;
 
             P90Player.ConsumeMagazineShot();

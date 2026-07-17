@@ -296,6 +296,9 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     break;
             }
 
+            // 剧场层：真实攻击态期间持续填屏（集中挂载，覆盖全部招式，不逐招改动）
+            EmitAmbientTheater(npc, state, currentPhase, (int)timer);
+
             timer++;
 
             // Telegraphed teleport gets the final say over velocity/opacity/position this frame
@@ -500,8 +503,9 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             // Breathing scale pulse
             npc.scale = 1.0f + (float)Math.Sin(ticksRunning * 0.08f) * 0.04f;
 
-            // Ambient snowfall drifting through the arena — thickens as the fight gets more desperate
-            float snowIntensity = 0.2f + (1f - npc.life / (float)npc.lifeMax) * 0.35f;
+            // Ambient snowfall drifting through the arena — thickens as the fight gets more desperate.
+            // 加厚一档：配合陪跑弹层，让画面在任何时刻都"满"，消除空旷感（纯客户端粒子，低配可控）。
+            float snowIntensity = 0.32f + (1f - npc.life / (float)npc.lifeMax) * 0.5f;
             if (Main.rand.NextFloat() < snowIntensity)
             {
                 Vector2 spawnPos = target.Center + new Vector2(Main.rand.NextFloat(-1000f, 1000f), -Main.rand.NextFloat(500f, 700f));
@@ -673,6 +677,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     hoarfrostVolleyIndex++;
                     SoundEngine.PlaySound(SoundID.Item5 with { Volume = 0.7f }, npc.Center);
                     FindHeldWeapon<CryogenHeldHoarfrostBow>(npc)?.Pulse(-22f);
+                    FrostImpactBeat(npc.Center, 3f, 10);
                 }
 
                 if (hoarfrostVolleyIndex < volleyCount)
@@ -793,6 +798,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     SoundEngine.PlaySound(SoundID.Item30, npc.Center);
                     EmitCryoDustRing(npc.Center, 40f, 18, 6f);
                     FindHeldWeapon<CryogenHeldIcebreaker>(npc)?.Pulse(30f);
+                    FrostImpactBeat(npc.Center, 4.5f, 14);
 
                     if (Main.netMode != NetmodeID.MultiplayerClient)
                     {
@@ -835,6 +841,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     SoundEngine.PlaySound(SoundID.Item30, npc.Center);
                     EmitCryoDustRing(npc.Center, 40f, 18, 6f);
                     FindHeldWeapon<CryogenHeldIcebreaker>(npc)?.Pulse(30f);
+                    FrostImpactBeat(npc.Center, 4.5f, 14);
 
                     if (Main.netMode != NetmodeID.MultiplayerClient)
                     {
@@ -1168,6 +1175,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     FindHeldWeapon<CryogenHeldSnowstormStaff>(npc)?.Pulse(-20f);
                     SoundEngine.PlaySound(SoundID.Item28 with { Volume = 0.8f, Pitch = -0.1f }, npc.Center);
                     EmitFrostBurst(npc.Center, 4f, 24);
+                    FrostImpactBeat(npc.Center, 3.5f, 12);
 
                     if (Main.netMode != NetmodeID.MultiplayerClient)
                     {
@@ -1337,6 +1345,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     npc.velocity = dashVel;
                     SoundEngine.PlaySound(SoundID.Item71 with { Volume = 0.9f, Pitch = -0.1f }, npc.Center);
                     EmitShadowBurst(npc.Center);
+                    FrostImpactBeat(npc.Center, 5f, 16);
 
                     if (Main.netMode != NetmodeID.MultiplayerClient)
                     {
@@ -2224,6 +2233,62 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 Dust d = Dust.NewDustPerfect(spawnPos, DustID.Ice, vel, 100, Color.Cyan, Main.rand.NextFloat(0.8f, 1.3f));
                 d.noGravity = true;
             }
+        }
+
+        // --- 剧场层：陪跑弹填屏 + 冲击拍 ------------------------------------------------------------------
+
+        // 360° 陪跑弹环：填屏用，大部分注定飞过玩家。伤害低、视觉暗，制造"危险的观感"而非难度。仅服务端生成。
+        private void EmitFrostTheater(NPC npc, Vector2 center, int count, float speed, int phase, float baseAngle = 0f)
+        {
+            if (Main.netMode == NetmodeID.MultiplayerClient || count <= 0)
+                return;
+
+            float violet = phase >= 4 ? 1f : 0f;
+            int dmg = Math.Max(1, npc.damage / 6);
+            for (int i = 0; i < count; i++)
+            {
+                Vector2 vel = (baseAngle + MathHelper.TwoPi * i / count).ToRotationVector2() * speed;
+                Projectile.NewProjectile(npc.GetSource_FromAI(), center, vel,
+                    ModContent.ProjectileType<CryogenFrostMote>(), dmg, 0f, Main.myPlayer, violet);
+            }
+        }
+
+        // 集中式环境剧场层：任何真实攻击态里按节拍自动喷一圈陪跑弹（相位越高越密）。
+        // 这一处集中挂载，让全部 12 招不逐个改动就自动获得填屏密度。非攻击态静默、隐身不吐。
+        private void EmitAmbientTheater(NPC npc, AttackState state, int phase, int timer)
+        {
+            switch (state)
+            {
+                case AttackState.FreezeTransition:
+                case AttackState.DeathAnimation:
+                case AttackState.VictoryDespawn:
+                    return;
+            }
+            if (npc.Opacity < 0.55f)
+                return;
+
+            int interval = phase switch { <= 3 => 30, 4 => 24, 5 => 20, _ => 18 };
+            if (timer < 20 || timer % interval != 0)
+                return;
+
+            int count = 5 + phase;                 // P1 环 6 枚 → P6 环 11 枚
+            float speed = 3.4f + phase * 0.25f;
+            EmitFrostTheater(npc, npc.Center, count, speed, phase, ticksRunning * 0.05f);
+        }
+
+        // 一次性"冲击拍"：屏震（本地玩家，联机各自抖各自的）+ 一记明亮爆散 flash。
+        // 卖出每一次预警解算/齐射发射的重量感。屏震力道保持在克制预算内。
+        private static void FrostImpactBeat(Vector2 pos, float shake, int burst = 12, float burstSpeed = 6f)
+        {
+            if (Main.dedServ)
+                return;
+
+            Player local = Main.LocalPlayer;
+            if (local != null && local.active)
+                local.Calamity().GeneralScreenShakePower = Math.Max(local.Calamity().GeneralScreenShakePower, shake);
+
+            EmitFrostBurst(pos, burstSpeed, burst, burst / 6);
+            EmitCryoDustRing(pos, 26f, 12, 4.5f);
         }
         #endregion
 

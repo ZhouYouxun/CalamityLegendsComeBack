@@ -764,6 +764,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         {
             ClampSelectedMagazineToActiveCount(player);
 
+            // Keep the inventory slot's normal click behavior: while the cursor is over an
+            // SHPC item, that click belongs to the inventory (including its right-click unload
+            // action), not to the held weapon. Opening the inventory by itself must not block fire.
+            if (Main.playerInventory && Main.HoverItem.type == Type)
+                return false;
+
             if (IsUsingEX(player))
                 return false;
 
@@ -1348,7 +1354,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         private static bool IsWorldRightClickInteractionActive(Player player)
         {
-            return Main.playerInventory ||
+            return (Main.playerInventory && Main.HoverItem.type == ModContent.ItemType<NewLegendSHPC>()) ||
                    player.chest != -1 ||
                    player.sleeping.isSleeping ||
                    player.TalkNPC != null;
@@ -1491,7 +1497,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 balance.GetRightClickBaseDamage();
             int damage = (int)player.GetTotalDamage(Item.DamageType).ApplyTo(baseDamage);
             float accessoryMultiplier = player.GetModPlayer<SHPCEnergyCorePlayer>().SHPCDamageMultiplier;
-            return Math.Max(1, (int)Math.Round(damage * accessoryMultiplier));
+            float godsKeyMultiplier = player.GetModPlayer<A_Dev.GodsKey.GodsKeyPlayer>().PanelMultiplier;
+            return Math.Max(1, (int)Math.Round(damage * accessoryMultiplier * godsKeyMultiplier));
         }
 
         internal int GetCurrentLeftClickDamage(Player player, int effectID)
@@ -1499,7 +1506,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             int baseDamage = balance.GetLeftClickBaseDamageForEffect(effectID);
             int damage = (int)player.GetTotalDamage(Item.DamageType).ApplyTo(baseDamage);
             float accessoryMultiplier = player.GetModPlayer<SHPCEnergyCorePlayer>().SHPCDamageMultiplier;
-            return Math.Max(1, (int)Math.Round(damage * accessoryMultiplier));
+            float godsKeyMultiplier = player.GetModPlayer<A_Dev.GodsKey.GodsKeyPlayer>().PanelMultiplier;
+            return Math.Max(1, (int)Math.Round(damage * accessoryMultiplier * godsKeyMultiplier));
         }
 
         public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
@@ -1510,6 +1518,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             int targetDamage = balance.GetLeftClickBaseDamageForEffect(GetProjectileEffectIDForShot());
             damage.Base += targetDamage - Item.damage;
             damage *= player.GetModPlayer<SHPCEnergyCorePlayer>().SHPCDamageMultiplier;
+            damage *= player.GetModPlayer<A_Dev.GodsKey.GodsKeyPlayer>().PanelMultiplier;
         }
         #endregion
 
@@ -1554,6 +1563,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                     string compactSuffix =
                         string.Format(this.GetLocalizedValue("SHPC_AmmoWheelHint"), compactFormKeyText).TrimEnd('\r', '\n') + "\n" +
                         this.GetLocalizedValue($"SHPC_RightIntro{compactState + 1}").TrimEnd('\r', '\n') + "\n" +
+                        this.GetLocalizedValue("SHPC_UnloadHint").TrimEnd('\r', '\n') + "\n" +
                         this.GetLocalizedValue("SHPC_Passive").TrimEnd('\r', '\n') + "\n" +
                         compactExHint.TrimEnd('\r', '\n') + "\n" +
                         this.GetLocalizedValue("SHPC_Final").TrimEnd('\r', '\n') + "\n";
@@ -1570,6 +1580,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 {
                 string leftIntro = this.GetLocalizedValue("SHPC_LeftIntro").TrimEnd('\r', '\n');
                 string ammoText = BuildMagazineTooltipText(player);
+                string unloadHintText = this.GetLocalizedValue("SHPC_UnloadHint").TrimEnd('\r', '\n');
                 string passiveText = this.GetLocalizedValue("SHPC_Passive").TrimEnd('\r', '\n');
 
                 int state = GetRightClickProgressState();
@@ -1596,6 +1607,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                     ammoWheelHint +
                     "\n\n" +
                     rightStateText + "\n\n" +
+                    unloadHintText + "\n\n" +
                     passiveText + "\n\n" +
                     exHint + "\n\n" +
                     finalLine + "\n";
@@ -1799,20 +1811,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         #region ===== 克隆、存档与联机同步 =====
 
-        #region ===== 预留合成表 =====
-        // ==================== 合成表（先保留原版） ====================
-        //public override void AddRecipes()
-        //{
-        //    CreateRecipe()
-        //        .AddIngredient<PlasmaDriveCore>()
-        //        .AddIngredient<SuspiciousScrap>(4)
-        //        //.AddRecipeGroup("AnyMythrilBar", 10)
-        //        //.AddIngredient(ItemID.SoulofFright, 5)
-        //        //.AddIngredient(ItemID.SoulofMight, 5)
-        //        //.AddIngredient(ItemID.SoulofSight, 5)
-        //        .AddTile(TileID.Anvils)
-        //        .Register();
-        //}
+        #region ===== 合成表 =====
+        public override void AddRecipes()
+        {
+            CreateRecipe()
+                .AddIngredient<MysteriousCircuitry>(8)
+                .AddIngredient<DubiousPlating>(8)
+                .AddIngredient<PlasmaDriveCore>()
+                .AddIngredient(ItemID.SpaceGun)
+                .AddTile(TileID.Anvils)
+                .AddDecraftCondition(Condition.DownedEowOrBoc)
+                .Register();
+        }
         #endregion
 
         #region ===== 复制、存档与网络同步 =====

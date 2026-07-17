@@ -1,7 +1,7 @@
 Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
-			LegendsMatrixTablet: {
+			IUMWMatrixTablet: {
 				DisplayName: 传奇矩阵终端
 				Tooltip: 打开“灾厄传说归来”的矩阵说明界面。
 			}
@@ -11,7 +11,7 @@ Mods: {
 		}
 
 		Projectiles: {
-			LegendsMatrixPanel.DisplayName: 传奇矩阵界面
+			IUMWMatrixPanel.DisplayName: 传奇矩阵界面
 			// BarrierShieldVisual.DisplayName: Barrier Shield Visual
 			// CtrlChipNEWReticle.DisplayName: Ctrl Chip N E W Reticle
 			// CtrlChipReticle.DisplayName: Ctrl Chip Reticle

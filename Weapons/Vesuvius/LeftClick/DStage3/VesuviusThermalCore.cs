@@ -1,5 +1,4 @@
 using CalamityMod;
-using CalamityMod.Graphics.Metaballs;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -12,11 +11,14 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.DStage3
 {
-    // A dense splinter of the pillar's core, hurled dead straight — no arc, no drift, just raw thermal mass
+    // The left-click charge payoff: a fast, straight volcanic core with no homing or ballistic drift.
     public class VesuviusThermalCore : ModProjectile, ILocalizedModType
     {
         public new string LocalizationCategory => "Projectiles.Vesuvius";
         public override string Texture => "CalamityMod/Projectiles/Magic/VolatileStarcore";
+
+        private int Stage => (int)MathHelper.Clamp(Projectile.ai[0], 2f, 3f);
+        private bool Cataclysmic => Stage >= 3;
 
         public override void SetStaticDefaults()
         {
@@ -35,7 +37,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.DStage3
             Projectile.ignoreWater = true;
             Projectile.penetrate = 1;
             Projectile.timeLeft = 90;
-            Projectile.extraUpdates = 2;
+            Projectile.extraUpdates = 1;
             Projectile.DamageType = DamageClass.Magic;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = -1;
@@ -43,6 +45,15 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.DStage3
 
         public override void AI()
         {
+            if (Projectile.localAI[0] == 0f)
+            {
+                Projectile.localAI[0] = 1f;
+                Projectile.localAI[2] = Projectile.velocity.ToRotation();
+                Projectile.scale = Cataclysmic ? 1.55f : 1.18f;
+                Projectile.Resize(Cataclysmic ? 38 : 28, Cataclysmic ? 38 : 28);
+                Projectile.netUpdate = true;
+            }
+
             Projectile.frameCounter++;
             if (Projectile.frameCounter > 2)
             {
@@ -51,8 +62,9 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.DStage3
             }
 
             // No gravity, no drag, no homing — the point is that this one is a straight, uninterrupted line
-            Projectile.rotation += 0.3f;
-            Lighting.AddLight(Projectile.Center, 0.85f * VesuviusProjectileVisuals.VisualIntensity, 0.32f * VesuviusProjectileVisuals.VisualIntensity, 0.08f * VesuviusProjectileVisuals.VisualIntensity);
+            Projectile.rotation += Cataclysmic ? 0.42f : 0.3f;
+            float lightPower = Cataclysmic ? 1.25f : 0.85f;
+            Lighting.AddLight(Projectile.Center, lightPower * VesuviusProjectileVisuals.VisualIntensity, 0.42f * lightPower * VesuviusProjectileVisuals.VisualIntensity, 0.1f * VesuviusProjectileVisuals.VisualIntensity);
 
             SpawnCoreTrail();
         }
@@ -88,30 +100,51 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.DStage3
                 GeneralParticleHandler.SpawnParticle(streak);
             }
 
-            if (Main.rand.NextBool(5))
-                RancorLavaMetaball.SpawnParticle(Projectile.Center + Main.rand.NextVector2Circular(4f, 4f), Main.rand.NextFloat(14f, 24f));
+            if (Main.rand.NextBool(Cataclysmic ? 3 : 5))
+                VesuviusProjectileVisuals.SpawnMoltenBloom(Projectile.Center + Main.rand.NextVector2Circular(4f, 4f), Main.rand.NextFloat(14f, Cataclysmic ? 34f : 24f), 0.48f);
+
+            if (Cataclysmic && Main.rand.NextBool(3))
+            {
+                Particle shellSmoke = new SmallSmokeParticle(
+                    Projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
+                    backward * Main.rand.NextFloat(1.2f, 3.4f),
+                    VesuviusProjectileVisuals.RavagerSmoke,
+                    Color.Black,
+                    Main.rand.NextFloat(0.55f, 0.9f),
+                    0.62f,
+                    Main.rand.NextFloat(-0.04f, 0.04f));
+                GeneralParticleHandler.SpawnParticle(shellSmoke);
+            }
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
+            Projectile.localAI[1] = 1f;
             target.AddBuff(BuffID.OnFire3, 240);
         }
 
         public override void OnKill(int timeLeft)
         {
             if (!Main.dedServ)
-                SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.55f, Pitch = -0.32f }, Projectile.Center);
+                SoundEngine.PlaySound(SoundID.Item14 with { Volume = Cataclysmic ? 0.85f : 0.62f, Pitch = Cataclysmic ? -0.5f : -0.34f }, Projectile.Center);
 
             if (Projectile.owner == Main.myPlayer)
             {
+                bool directHit = Projectile.localAI[1] > 0f;
+                float blastMultiplier = directHit
+                    ? (Cataclysmic ? 1.15f : 1.05f)
+                    : (Cataclysmic ? 0.58f : 0.42f);
                 Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
                     Projectile.Center,
                     Vector2.Zero,
                     ModContent.ProjectileType<VesuviusThermalCoreBlast>(),
-                    Math.Max(1, (int)(Projectile.damage * 1.35f)),
+                    Math.Max(1, (int)(Projectile.damage * blastMultiplier)),
                     Projectile.knockBack * 1.4f,
-                    Projectile.owner);
+                    Projectile.owner,
+                    Stage,
+                    directHit ? 1f : 0f,
+                    Projectile.localAI[2]);
             }
         }
 
@@ -163,14 +196,18 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.DStage3
         public new string LocalizationCategory => "Projectiles.Vesuvius";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
-        private const float ExplosionRadius = 210f;
+        private int Stage => (int)MathHelper.Clamp(Projectile.ai[0], 2f, 3f);
+        private bool Cataclysmic => Stage >= 3;
+        private bool DirectHit => Projectile.ai[1] > 0f;
+        private Vector2 ImpactDirection => Projectile.ai[2].ToRotationVector2();
+        private float ExplosionRadius => Cataclysmic ? 300f : 200f;
         private int currentFrame;
         private bool damageFrame;
         private float burstAngle;
 
         public override void SetDefaults()
         {
-            Projectile.width = Projectile.height = 210;
+            Projectile.width = Projectile.height = 240;
             Projectile.friendly = true;
             Projectile.hostile = false;
             Projectile.DamageType = DamageClass.Magic;
@@ -218,15 +255,17 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.DStage3
         private void TriggerCoreRupture()
         {
             float distanceFactor = Utils.GetLerpValue(1800f, 240f, Vector2.Distance(Main.LocalPlayer.Center, Projectile.Center), true);
-            Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(Main.LocalPlayer.Calamity().GeneralScreenShakePower, 9f * distanceFactor);
+            float shakePower = Cataclysmic ? 15f : 8.5f;
+            Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(Main.LocalPlayer.Calamity().GeneralScreenShakePower, shakePower * distanceFactor);
 
             SoundEngine.PlaySound(SoundID.Item14 with { Volume = 1f, Pitch = -0.45f }, Projectile.Center);
             SoundEngine.PlaySound(SoundID.Item62 with { Volume = 0.7f, Pitch = -0.2f }, Projectile.Center);
 
-            for (int i = 0; i < 10; i++)
+            int pulseCount = Cataclysmic ? 7 : 5;
+            for (int i = 0; i < pulseCount; i++)
             {
-                Color c = Color.Lerp(VesuviusProjectileVisuals.LavaOrange, VesuviusProjectileVisuals.HotWhite, Utils.GetLerpValue(0, 10, i, true));
-                GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero, c, "CalamityMod/Particles/SoftRoundExplosion", Vector2.One, Main.rand.NextFloat(-5f, 5f), 0f, ExplosionRadius * 0.0007f + 0.07f + 0.035f * i, (int)(26 - i)));
+                Color c = Color.Lerp(VesuviusProjectileVisuals.LavaOrange, VesuviusProjectileVisuals.HotWhite, Utils.GetLerpValue(0, pulseCount, i, true));
+                GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero, c, "CalamityMod/Particles/SoftRoundExplosion", Vector2.One, Main.rand.NextFloat(-5f, 5f), 0f, ExplosionRadius * 0.00065f + 0.065f + 0.04f * i, 26 - i));
             }
 
             for (int i = 0; i < 3; i++)
@@ -246,7 +285,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.DStage3
             }
 
             // Rock shrapnel — a different material mixed into the fire for visual variety
-            for (int i = 0; i < 22; i++)
+            for (int i = 0; i < (Cataclysmic ? 30 : 20); i++)
             {
                 Vector2 vel = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(4f, 11f);
                 Dust stone = Dust.NewDustPerfect(Projectile.Center, Main.rand.NextBool(2) ? DustID.Stone : DustID.Obsidian, vel, 100, Color.Lerp(Color.DarkGray, VesuviusProjectileVisuals.LavaOrange, 0.2f), Main.rand.NextFloat(1f, 1.9f));
@@ -254,7 +293,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.DStage3
             }
 
             // Fire dust burst
-            for (int i = 0; i < 40; i++)
+            for (int i = 0; i < (Cataclysmic ? 48 : 32); i++)
             {
                 Vector2 vel = Main.rand.NextVector2Circular(9f, 9f);
                 Dust fire = Dust.NewDustPerfect(Projectile.Center, DustID.InfernoFork, vel, 40, default, Main.rand.NextFloat(1f, 1.9f));
@@ -263,14 +302,35 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.DStage3
             }
 
             // Heavy smoke plume
-            for (int i = 0; i < 18; i++)
+            for (int i = 0; i < (Cataclysmic ? 16 : 10); i++)
             {
                 Vector2 vel = Main.rand.NextVector2Circular(4f, 4f) * Main.rand.NextFloat(0.6f, 1.6f);
                 Particle smoke = new HeavySmokeParticle(Projectile.Center + vel * 3f, vel, VesuviusProjectileVisuals.RavagerSmoke, Main.rand.Next(28, 42), Main.rand.NextFloat(1.2f, 2f), 0.55f, Main.rand.NextFloat(-0.05f, 0.05f), true, required: true);
                 GeneralParticleHandler.SpawnParticle(smoke);
             }
 
-            RancorLavaMetaball.SpawnParticle(Projectile.Center, 90f);
+            VesuviusProjectileVisuals.SpawnMoltenBloom(Projectile.Center, Cataclysmic ? 116f : 82f, DirectHit ? 0.95f : 0.68f);
+
+            if (Cataclysmic)
+                SpawnCrustFractures();
+        }
+
+        private void SpawnCrustFractures()
+        {
+            Vector2 forward = ImpactDirection.SafeNormalize(Vector2.UnitX);
+            for (int branch = -1; branch <= 1; branch++)
+            {
+                Vector2 branchDirection = forward.RotatedBy(branch * 0.34f);
+                for (int step = 1; step <= 9; step++)
+                {
+                    Vector2 position = Projectile.Center + branchDirection * (step * 28f) + branchDirection.RotatedBy(MathHelper.PiOver2) * (float)Math.Sin(step * 1.7f + branch) * 10f;
+                    Color color = step % 3 == 0 ? VesuviusProjectileVisuals.HotWhite : VesuviusProjectileVisuals.LavaGold;
+                    GeneralParticleHandler.SpawnParticle(new LineParticle(position, branchDirection * Main.rand.NextFloat(2.5f, 5.5f), false, 18 + step, 0.38f + (9 - step) * 0.025f, color));
+
+                    Dust rock = Dust.NewDustPerfect(position, step % 2 == 0 ? DustID.Obsidian : DustID.Stone, -Vector2.UnitY.RotatedByRandom(0.45f) * Main.rand.NextFloat(2f, 7f), 100, Color.Lerp(Color.DarkGray, color, 0.22f), Main.rand.NextFloat(0.9f, 1.6f));
+                    rock.noGravity = step % 3 == 0;
+                }
+            }
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)

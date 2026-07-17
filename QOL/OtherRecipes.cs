@@ -104,54 +104,42 @@ namespace CalamityLegendsComeBack.QOL
                 RegisterReaperWeaponRecipe(calamity, "SoulEdge");
                 RegisterReaperWeaponRecipe(calamity, "DeepSeaDumbbell");
 
-                // 阴影商人饰品：均为开局可收集材料的稳定获取途径。
-                if (calamity.TryFind<ModItem>("LuxorsGift", out ModItem luxorsGift) &&
-                    calamity.TryFind<ModItem>("UnstableGraniteCore", out ModItem unstableGraniteCore) &&
-                    calamity.TryFind<ModItem>("GladiatorsLocket", out ModItem gladiatorsLocket) &&
-                    calamity.TryFind<ModItem>("TrinketofChi", out ModItem trinketOfChi))
+                // 存疑镀层 Dubious Plating: 5 任意铁锭 + 5 任意铜锭 + 5 玻璃块 -> 20个
+                if (calamity.TryFind<ModItem>("DubiousPlating", out ModItem dubiousPlating))
                 {
-                    Recipe.Create(luxorsGift.Type)
-                        .AddIngredient(ItemID.Sandstone, 25)
-                        .AddIngredient(ItemID.DesertFossil, 5)
-                        .AddIngredient(ItemID.Amber)
-                        .AddTile(TileID.WorkBenches)
-                        .Register();
-
-                    Recipe.Create(unstableGraniteCore.Type)
-                        .AddIngredient(ItemID.Granite, 25)
-                        .AddIngredient(ItemID.Topaz, 5)
-                        .AddIngredient(ItemID.FallenStar, 3)
-                        .AddTile(TileID.WorkBenches)
-                        .Register();
-
-                    Recipe.Create(gladiatorsLocket.Type)
-                        .AddIngredient(ItemID.Shackle)
-                        .AddRecipeGroup(RecipeGroupID.IronBar, 5)
-                        .AddIngredient(ItemID.Chain, 10)
-                        .AddTile(TileID.Anvils)
-                        .Register();
-
-                    Recipe.Create(trinketOfChi.Type)
-                        .AddIngredient(ItemID.BambooBlock, 10)
-                        .AddIngredient(ItemID.Daybloom, 3)
-                        .AddIngredient(ItemID.BottledWater)
-                        .AddTile(TileID.WorkBenches)
-                        .Register();
+                    Recipe dubiousPlatingRecipe = Recipe.Create(dubiousPlating.Type, 20);
+                    dubiousPlatingRecipe.AddRecipeGroup("IronBar", 5);
+                    dubiousPlatingRecipe.AddRecipeGroup("AnyCopperBar", 5);
+                    dubiousPlatingRecipe.AddIngredient(ItemID.Glass, 5);
+                    dubiousPlatingRecipe.Register();
                 }
 
-                // 甲壳与巨壳为等效饰品，允许玩家无成本互相转换。
-                if (calamity.TryFind<ModItem>("CrawCarapace", out ModItem crawCarapace) &&
-                    calamity.TryFind<ModItem>("GiantShell", out ModItem giantShell))
+                // 诡秘线路板 Mysterious Circuitry: 5 任意铁锭 + 5 任意铜锭 + 5 电线 -> 10个（与其微光转化的批量一致）
+                if (calamity.TryFind<ModItem>("MysteriousCircuitry", out ModItem mysteriousCircuitry))
                 {
-                    Recipe.Create(crawCarapace.Type)
-                        .AddIngredient(giantShell.Type)
-                        .AddTile(TileID.WorkBenches)
-                        .Register();
+                    Recipe mysteriousCircuitryRecipe = Recipe.Create(mysteriousCircuitry.Type, 10);
+                    mysteriousCircuitryRecipe.AddRecipeGroup("IronBar", 5);
+                    mysteriousCircuitryRecipe.AddRecipeGroup("AnyCopperBar", 5);
+                    mysteriousCircuitryRecipe.AddIngredient(ItemID.Wire, 5);
+                    mysteriousCircuitryRecipe.Register();
+                }
 
-                    Recipe.Create(giantShell.Type)
-                        .AddIngredient(crawCarapace.Type)
-                        .AddTile(TileID.WorkBenches)
-                        .Register();
+                // 死灵骨髓法杖 Staff of Necrosteocytes: 1 魔力水晶 + 20 骨头
+                if (calamity.TryFind<ModItem>("StaffOfNecrosteocytes", out ModItem necrosteocytesStaff))
+                {
+                    Recipe necrosteocytesRecipe = Recipe.Create(necrosteocytesStaff.Type);
+                    necrosteocytesRecipe.AddIngredient(ItemID.ManaCrystal, 1);
+                    necrosteocytesRecipe.AddIngredient(ItemID.Bone, 20);
+                    necrosteocytesRecipe.Register();
+                }
+
+                // Anechoic Plating: 50 任意铁锭 + 1 天使雕像
+                if (calamity.TryFind<ModItem>("AnechoicPlating", out ModItem anechoicPlating))
+                {
+                    Recipe anechoicPlatingRecipe = Recipe.Create(anechoicPlating.Type);
+                    anechoicPlatingRecipe.AddRecipeGroup("IronBar", 50);
+                    anechoicPlatingRecipe.AddIngredient(ItemID.AngelStatue, 1);
+                    anechoicPlatingRecipe.Register();
                 }
             }
         }

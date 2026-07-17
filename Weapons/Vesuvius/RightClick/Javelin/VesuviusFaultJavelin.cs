@@ -2,7 +2,6 @@ using CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.CStage2;
 using CalamityLegendsComeBack.Weapons.Vesuvius.Passive;
 using CalamityLegendsComeBack.Weapons.Vesuvius.RightClick.Javelin;
 using CalamityMod;
-using CalamityMod.Graphics.Metaballs;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -374,7 +373,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
                 dust.noGravity = Main.rand.NextBool();
             }
 
-            RancorLavaMetaball.SpawnParticle(center + Main.rand.NextVector2Circular(6f, 6f), Main.rand.NextFloat(28f, 52f));
+            VesuviusProjectileVisuals.SpawnMoltenBloom(center + Main.rand.NextVector2Circular(6f, 6f), Main.rand.NextFloat(28f, 52f), 0.64f);
             VesuviusVolcanicVisuals.SpawnImpactMix(center, 0.85f + Stage * 0.12f);
         }
 
@@ -792,7 +791,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
                 if (Main.rand.NextBool(3))
                 {
                     Vector2 lavaPosition = Projectile.Center + Main.rand.NextVector2Circular(Projectile.width * 0.5f, Projectile.height * 0.42f);
-                    RancorLavaMetaball.SpawnParticle(lavaPosition, Main.rand.NextFloat(16f, 34f));
+                    VesuviusProjectileVisuals.SpawnMoltenBloom(lavaPosition, Main.rand.NextFloat(16f, 34f), 0.52f);
                 }
 
                 if (Main.rand.NextBool(3))
@@ -850,7 +849,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
                 {
                     float along = Main.rand.NextFloat(0f, 260f);
                     Vector2 pos = start + dir * along + Main.rand.NextVector2Circular(18f, 18f);
-                    RancorLavaMetaball.SpawnParticle(pos, Main.rand.NextFloat(26f, 54f));
+                    VesuviusProjectileVisuals.SpawnMoltenBloom(pos, Main.rand.NextFloat(26f, 54f), 0.58f);
                     VesuviusVolcanicVisuals.SpawnSubductionMix(pos, dir, i == 0);
                 }
 
@@ -1072,7 +1071,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
                 return;
 
             strength = MathHelper.Clamp(strength, 0.3f, 1.8f);
-            RancorLavaMetaball.SpawnParticle(center + Main.rand.NextVector2Circular(7f, 7f), Main.rand.NextFloat(26f, 46f) * strength);
+            VesuviusProjectileVisuals.SpawnMoltenBloom(center + Main.rand.NextVector2Circular(7f, 7f), Main.rand.NextFloat(26f, 46f) * strength, 0.66f);
 
             GeneralParticleHandler.SpawnParticle(new CustomPulse(
                 center,

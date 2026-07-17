@@ -8,7 +8,6 @@ using CalamityLegendsComeBack.Weapons.Vesuvius.RightClick;
 using CalamityLegendsComeBack.Weapons;
 using CalamityMod;
 using CalamityMod.Cooldowns;
-using CalamityMod.Graphics.Metaballs;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -414,7 +413,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.EXSkill
             Color color = Color.Lerp(new Color(255, 80, 24), new Color(255, 230, 90), progress);
             if (timer % 2 == 0)
             {
-                RancorLavaMetaball.SpawnParticle(GunTip + Main.rand.NextVector2Circular(22f, 22f), Main.rand.NextFloat(24f, 58f) * (0.35f + progress));
+                VesuviusProjectileVisuals.SpawnMoltenBloom(GunTip + Main.rand.NextVector2Circular(22f, 22f), Main.rand.NextFloat(24f, 58f) * (0.35f + progress), 0.52f);
                 Particle smoke = new HeavySmokeParticle(
                     GunTip + Main.rand.NextVector2Circular(70f * progress, 40f * progress),
                     (GunTip - (Projectile.Center + Main.rand.NextVector2Circular(180f, 140f))).SafeNormalize(Vector2.Zero) * Main.rand.NextFloat(1f, 5f),
@@ -438,7 +437,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.EXSkill
                 return;
 
             Color color = new Color(255, 220, 80);
-            RancorLavaMetaball.SpawnParticle(GunTip + Main.rand.NextVector2Circular(16f, 16f), Main.rand.NextFloat(36f, 70f));
+            VesuviusProjectileVisuals.SpawnMoltenBloom(GunTip + Main.rand.NextVector2Circular(16f, 16f), Main.rand.NextFloat(36f, 70f), 0.72f);
 
             // Fully charged idle intentionally avoids shockwave rings.
         }
@@ -453,7 +452,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.EXSkill
             for (int i = 0; i < 4; i++)
             {
                 Vector2 velocity = -Vector2.UnitY.RotatedBy(Main.rand.NextFloat(-0.52f, 0.52f)) * Main.rand.NextFloat(7f, 18f);
-                RancorLavaMetaball.SpawnParticle(GunTip + Main.rand.NextVector2Circular(32f, 18f), Main.rand.NextFloat(34f, 76f));
+                VesuviusProjectileVisuals.SpawnMoltenBloom(GunTip + Main.rand.NextVector2Circular(32f, 18f), Main.rand.NextFloat(34f, 76f), 0.68f);
 
                 Particle smoke = new HeavySmokeParticle(
                     GunTip + Main.rand.NextVector2Circular(42f, 28f),

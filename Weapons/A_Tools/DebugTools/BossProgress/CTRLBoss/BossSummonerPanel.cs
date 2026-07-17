@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using CalamityMod.CalPlayer;
+using CalamityMod.Events;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
@@ -329,7 +329,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.BossProgress
                 E("骷髅王", "PreHardmode/骷髅王-图标", p => SpawnVanilla(p, NPCID.SkeletronHead)),
                 E("独眼巨鹿", "PreHardmode/独眼巨鹿-图标", p => SpawnVanilla(p, NPCID.Deerclops)),
                 E("史莱姆之神", "PreHardmode/史莱姆之神核心-图标", p => SpawnCal(p, "SlimeGodCore")),
-                E("血肉之墙", "PreHardmode/血肉墙-图标", SpawnWallOfFlesh),
+                E("血肉之墙", "PreHardmode/血肉墙-图标", p => SpawnVanilla(p, NPCID.WallofFlesh)),
             };
 
             var hard = new List<BossSpawnEntry>
@@ -358,7 +358,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.BossProgress
             var post = new List<BossSpawnEntry>
             {
                 E("亵渎守卫", "PostMoon/亵渎守卫面具", p => SpawnCal(p, "ProfanedGuardianCommander")),
-                E("痴愚金龙", "PostMoon/痴愚金龙-图标", p => SpawnCal(p, "Bumblebirb")),
+                E("痴愚金龙", "PostMoon/痴愚金龙-图标", p => SpawnCal(p, "Dragonfolly")),
                 E("亵渎天神·普罗维登斯", "PostMoon/亵渎天神，普罗维登斯-图标", p => SpawnCal(p, "Providence")),
                 E("风暴编织者", "PostMoon/风暴编织者第一阶段地图图标", p => SpawnCal(p, "StormWeaverHead")),
                 E("无尽虚空", "PostMoon/无尽虚空地图图标", p => SpawnCal(p, "CeaselessVoid")),
@@ -389,46 +389,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.BossProgress
             if (Main.netMode == NetmodeID.MultiplayerClient)
                 return;
             Vector2 pos = player.Center - Vector2.UnitY * 480f;
-            NPC.NewNPC(player.GetSource_Misc("BossSummoner"), (int)pos.X, (int)pos.Y, npcType);
-        }
-
-        private static void SpawnWallOfFlesh(Player player)
-        {
-            if (Main.netMode == NetmodeID.MultiplayerClient)
-                return;
-
-            Vector2 underworldPosition = FindUnderworldPositionAtPlayerX(player);
-            CalamityPlayer.ModTeleport(player, underworldPosition, false, TeleportationStyleID.TeleportationPotion);
-            NPC.SpawnWOF(player.position);
-        }
-
-        private static Vector2 FindUnderworldPositionAtPlayerX(Player player)
-        {
-            bool canSpawn = false;
-            int playerTileX = Utils.Clamp((int)(player.Center.X / 16f), 80, Main.maxTilesX - 80);
-            int teleportStartY = Main.UnderworldLayer + 20;
-            int teleportRangeY = 80;
-            Player.RandomTeleportationAttemptSettings settings = new()
-            {
-                mostlySolidFloor = true,
-                avoidAnyLiquid = true,
-                avoidLava = true,
-                avoidHurtTiles = true,
-                avoidWalls = true,
-                attemptsBeforeGivingUp = 1000,
-                maximumFallDistanceFromOrignalPoint = 30
-            };
-
-            Vector2 position = player.CheckForGoodTeleportationSpot(ref canSpawn, playerTileX - 40, 80, teleportStartY, teleportRangeY, settings);
-            if (!canSpawn)
-                position = player.CheckForGoodTeleportationSpot(ref canSpawn, playerTileX - 80, 160, teleportStartY, teleportRangeY, settings);
-
-            if (canSpawn)
-                return position;
-
-            float fallbackX = MathHelper.Clamp(player.Center.X, 80f * 16f, (Main.maxTilesX - 80f) * 16f);
-            float fallbackY = MathHelper.Clamp((Main.UnderworldLayer + 50f) * 16f, 0f, (Main.maxTilesY - 120f) * 16f);
-            return new Vector2(fallbackX - player.width * 0.5f, fallbackY - player.height);
+            int index = NPC.NewNPC(player.GetSource_Misc("BossSummoner"), (int)pos.X, (int)pos.Y, npcType);
+            DebugBossEnvironmentBypass.Track(index);
         }
 
         private static void SpawnCal(Player player, string npcName)
@@ -441,7 +403,49 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.BossProgress
                 return;
             }
             Vector2 pos = player.Center - Vector2.UnitY * 480f;
-            NPC.NewNPC(player.GetSource_Misc("BossSummoner"), (int)pos.X, (int)pos.Y, npc.Type);
+            int index = NPC.NewNPC(player.GetSource_Misc("BossSummoner"), (int)pos.X, (int)pos.Y, npc.Type);
+            DebugBossEnvironmentBypass.Track(index);
         }
+    }
+
+    // Debug-summoned bosses must not enrage or misbehave from being outside their normal biome/arena.
+    // CalamityMod gates nearly every biome-based enrage check behind BossRushEvent.BossRushActive
+    // (that's exactly what Boss Rush mode does: any boss, anywhere, at full behavior), so we force it
+    // on for as long as a debug-summoned boss is alive, then restore it if we're the ones who set it.
+    internal static class DebugBossEnvironmentBypass
+    {
+        private static readonly HashSet<(int whoAmI, int type)> trackedNpcs = new();
+        private static bool weForcedBossRush;
+
+        public static void Track(int npcIndex)
+        {
+            if (npcIndex < 0 || npcIndex >= Main.maxNPCs || !Main.npc[npcIndex].active)
+                return;
+
+            trackedNpcs.Add((npcIndex, Main.npc[npcIndex].type));
+            if (!BossRushEvent.BossRushActive)
+            {
+                BossRushEvent.BossRushActive = true;
+                weForcedBossRush = true;
+            }
+        }
+
+        public static void Update()
+        {
+            if (!weForcedBossRush)
+                return;
+
+            trackedNpcs.RemoveWhere(t => !(Main.npc[t.whoAmI].active && Main.npc[t.whoAmI].type == t.type));
+            if (trackedNpcs.Count == 0)
+            {
+                BossRushEvent.BossRushActive = false;
+                weForcedBossRush = false;
+            }
+        }
+    }
+
+    internal sealed class DebugBossEnvironmentBypassSystem : ModSystem
+    {
+        public override void PostUpdateNPCs() => DebugBossEnvironmentBypass.Update();
     }
 }

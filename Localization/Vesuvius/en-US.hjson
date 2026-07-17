@@ -7,14 +7,12 @@ Mods: {
 					Tooltip: "[GFB]"
 					LeftClick:
 						'''
-						[c/FF8A3D:Left Click: Hold to charge Supervolcanic Eruption, then release to fire.]
-						[c/FF8A3D:Short taps are forced into Stage 0 and only release three weak meteors.]
+						[c/FF8A3D:Left Click: Hold to charge one of three mutually exclusive eruptions, then release to fire.]
+						[c/FF8A3D:Short taps release two weak molten meteors; later stages replace the meteor spread with a fast, straight thermal core.]
 						'''
-					ChargeStage1: "[c/FF8A3D:Unlocked charge: Stage I - basaltic jet.]"
-					ChargeStage2: "[c/FF9F45:Unlocked charge: Stage II - strombolian bombs.]"
-					ChargeStage3: "[c/FFC45B:Unlocked charge: Stage III - vulcanian magma pillars.]"
-					ChargeStage4: "[c/FF754F:Unlocked charge: Stage IV - vesuvian homing cinders.]"
-					ChargeStage5: "[c/D84BFF:Unlocked charge: Stage V - Toba-class obsidian shards.]"
+					ChargeStage1: "[c/FF8A3D:Unlocked charge: Stage I - a tight spread of three molten meteors.]"
+					ChargeStage2: "[c/FF9F45:Unlocked charge: Stage II - a fast thermal core that ruptures on impact.]"
+					ChargeStage3: "[c/FFE27E:Unlocked charge: Stage III - a cataclysmic core that tears open the crust.]"
 					RightClick:
 						'''
 						[c/FFB15C:Right Click: Hold to brace the staff like a javelin, then release to throw.]
@@ -38,7 +36,7 @@ Mods: {
 						'''
 						[c/FFB15C:The first Vesuvius understood volcanoes as meteors: fall from above, smash the target, then explode.]
 						[c/FF8A3D:That design was direct enough, but it only showed the surface fall of a volcano, not the disaster moving through the earth below.]
-						[c/FFB15C:After the rebuild, jets, volcanic bombs, magma pillars, firestorms, and caldera collapse are all compressed into one staff.]
+						[c/FFB15C:After the rebuild, scattered ejecta are compressed into a single thermal core; a precise hit drives the eruption into the target.]
 						[c/D84BFF:Right click is no longer just another projectile. It pulls earthquakes, faults, and crust pressure into the fight.]
 						[c/FF4422:When the final eruption comes, what falls is no longer lava. It is an entire layer of earth finishing the volcano's declaration.]
 						'''

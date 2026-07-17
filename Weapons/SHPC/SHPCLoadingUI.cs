@@ -31,16 +31,19 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         #region ===== 静态状态 =====
         public static bool IsOpen { get; private set; }
         private static int ownerWhoAmI = -1;
+        private static Item targetItem;
         private static Vector2 panelCenter;
         private static bool prevMouseMiddle;
         private static bool prevKeybindPressed;
         #endregion
 
         #region ===== 开关 =====
-        public static void Open(int who)
+        // 打开时锁定具体的那把武器实例，避免背包里多把SHPC时互相串弹药
+        public static void Open(int who, Item item)
         {
             IsOpen = true;
             ownerWhoAmI = who;
+            targetItem = item;
             Main.playerInventory = true;
         }
 
@@ -48,14 +51,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         {
             IsOpen = false;
             ownerWhoAmI = -1;
+            targetItem = null;
         }
 
-        public static void Toggle(int who)
+        public static void Toggle(int who, Item item)
         {
             if (IsOpen && ownerWhoAmI == who)
                 Close();
             else
-                Open(who);
+                Open(who, item);
         }
         #endregion
 
@@ -91,13 +95,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         #endregion
 
-        private static NewLegendSHPC FindWeapon(Player player)
-        {
-            for (int i = 0; i < 58; i++)
-                if (player.inventory[i].ModItem is NewLegendSHPC w) return w;
-            return null;
-        }
-
         #region ===== 绘制主入口 =====
         private static void Draw(SpriteBatch sb)
         {
@@ -129,7 +126,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                         if (justPressedMiddle && Main.HoverItem.ModItem is NewLegendSHPC)
                         {
                             bool wasOpen = IsOpen;
-                            Toggle(localPlayer.whoAmI);
+                            Toggle(localPlayer.whoAmI, Main.HoverItem);
                             SoundEngine.PlaySound(
                                 wasOpen
                                     ? SoundID.MenuClose with { Pitch = 0.06f, Volume = 0.62f }
@@ -143,7 +140,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                         if (keybindJustPressed && Main.HoverItem.ModItem is NewLegendSHPC)
                         {
                             bool wasOpen = IsOpen;
-                            Toggle(localPlayer.whoAmI);
+                            Toggle(localPlayer.whoAmI, Main.HoverItem);
                             SoundEngine.PlaySound(
                                 wasOpen
                                     ? SoundID.MenuClose with { Pitch = 0.06f, Volume = 0.62f }
@@ -162,7 +159,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             Player owner = Main.player[ownerWhoAmI];
             if (!owner.active || owner.dead || !Main.playerInventory) { Close(); return; }
 
-            NewLegendSHPC weapon = FindWeapon(owner);
+            if (targetItem == null || targetItem.IsAir) { Close(); return; }
+            NewLegendSHPC weapon = targetItem.ModItem as NewLegendSHPC;
             if (weapon == null) { Close(); return; }
 
             int slotCount = weapon.GetActiveMagazineCount(owner);

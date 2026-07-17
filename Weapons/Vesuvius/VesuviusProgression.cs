@@ -6,19 +6,27 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
 {
     internal static class VesuviusProgression
     {
-        private static readonly int[] AdvancedStageFrames =
+        private static readonly int[] StageFrames =
         {
-            90,
-            90,
-            120,
+            60,
             120,
             180
         };
 
-        public const int EarlyStageOneFrames = 180;
         public const int ClickLockoutFrames = 30;
 
         public static int GetMaxStage()
+        {
+            if (NPC.downedMoonlord)
+                return 3;
+
+            if (Main.hardMode)
+                return 2;
+
+            return 1;
+        }
+
+        public static int GetWorldPowerStage()
         {
             if (DownedBossSystem.downedDoG)
                 return 5;
@@ -38,18 +46,13 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
         public static int GetChargeStage(int chargeFrames)
         {
             int maxStage = GetMaxStage();
-            if (maxStage <= 1)
-                return chargeFrames >= EarlyStageOneFrames ? 1 : 0;
-
-            int requiredFrames = 0;
-            for (int stage = 1; stage <= maxStage; stage++)
+            for (int stage = maxStage; stage >= 1; stage--)
             {
-                requiredFrames += AdvancedStageFrames[stage - 1];
-                if (chargeFrames < requiredFrames)
-                    return stage - 1;
+                if (chargeFrames >= StageFrames[stage - 1])
+                    return stage;
             }
 
-            return maxStage;
+            return 0;
         }
 
         public static int GetStageStartFrame(int stage)
@@ -57,14 +60,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
             if (stage <= 0)
                 return 0;
 
-            if (GetMaxStage() <= 1)
-                return EarlyStageOneFrames;
-
-            int frames = 0;
-            for (int i = 0; i < stage && i < AdvancedStageFrames.Length; i++)
-                frames += AdvancedStageFrames[i];
-
-            return frames;
+            return StageFrames[Utils.Clamp(stage - 1, 0, StageFrames.Length - 1)];
         }
 
         public static float GetStageProgress(int chargeFrames, int stage)
@@ -85,18 +81,16 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
         {
             return stage switch
             {
-                <= 0 => (int)(itemDamage * 0.58f),
-                1 => (int)(itemDamage * 0.42f),
-                2 => (int)(itemDamage * 0.62f),
-                3 => (int)(itemDamage * 0.72f),
-                4 => (int)(itemDamage * 0.54f),
-                _ => (int)(itemDamage * 1.15f)
+                <= 0 => (int)(itemDamage * 0.34f),
+                1 => (int)(itemDamage * 0.48f),
+                2 => (int)(itemDamage * 2.25f),
+                _ => (int)(itemDamage * 3.4f)
             };
         }
 
         public static int GetRightDamage(int itemDamage)
         {
-            int stage = GetMaxStage();
+            int stage = GetWorldPowerStage();
             return (int)(itemDamage * (0.9f + stage * 0.08f));
         }
 
@@ -107,9 +101,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                 <= 0 => new Color(255, 116, 40),
                 1 => new Color(255, 86, 36),
                 2 => new Color(255, 132, 43),
-                3 => new Color(255, 190, 78),
-                4 => new Color(255, 86, 52),
-                _ => new Color(215, 66, 255)
+                _ => new Color(255, 226, 126)
             };
         }
     }

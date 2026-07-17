@@ -16,8 +16,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.P90
         internal const int ReloadConsumeCount = 10;
         internal const int ReloadFrames = 20;
         internal const int RollFrames = 30;
-        internal const int RollCooldownFrames = 10 * 60;
-        internal const int ShockGrenadeCooldownFrames = 90;
+        internal const int RollCooldownFrames = 7 * 60;
+        internal const int DodgeEmpowerFrames = 3 * 60;
 
         private static int HoldoutType => ModContent.ProjectileType<NewLegendP90Holdout>();
 
@@ -99,8 +99,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.P90
                 this.GetLocalizedValue("Conversion") + "\n" +
                 this.GetLocalizedValue("Reload") + "\n" +
                 this.GetLocalizedValue("Roll") + "\n" +
-                this.GetLocalizedValue("Shock") + "\n" +
-                this.GetLocalizedValue("Mark") + "\n" +
+                this.GetLocalizedValue("Dodge") + "\n" +
+                this.GetLocalizedValue("Empower") + "\n" +
                 this.GetLocalizedValue("Modes") + "\n" +
                 status;
 

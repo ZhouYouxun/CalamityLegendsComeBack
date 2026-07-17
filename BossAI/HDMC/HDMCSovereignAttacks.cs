@@ -204,13 +204,16 @@ namespace CalamityLegendsComeBack.BossAI.HDMC
         {
             HoverBesideTarget(target, HoverSide * 460f, -280f, 16f, 24f);
 
-            if (Timer == 40 || Timer == 150)
+            // 向心轮盘主体：P3+ 追加第三环，P4+ 每环 12 枚（安全窗更窄）。
+            bool ring = Timer == 40 || Timer == 150 || (Phase >= 3 && Timer == 250);
+            if (ring)
             {
                 Vector2 snapshot = target.Center;
+                int count = Phase >= 4 ? 12 : 10;
                 float baseAngle = HDMCUtil.Hash01(NPC.whoAmI * 23 + Timer) * MathHelper.TwoPi;
-                for (int i = 0; i < 10; i++)
+                for (int i = 0; i < count; i++)
                 {
-                    Vector2 dir = (baseAngle + MathHelper.TwoPi * i / 10f).ToRotationVector2();
+                    Vector2 dir = (baseAngle + MathHelper.TwoPi * i / count).ToRotationVector2();
                     Vector2 from = snapshot + dir * 480f;
                     SpawnHostile<HDMCLanceHostile>(from, -dir * 2f, 0.75f, 15f, 26f);
                 }
@@ -218,6 +221,11 @@ namespace CalamityLegendsComeBack.BossAI.HDMC
                 if (!Main.dedServ)
                     SoundEngine.PlaySound(SoundID.Item117 with { Volume = 0.35f, Pitch = 0.1f, MaxInstances = 3 }, snapshot);
             }
+
+            // 底流：环与环之间的持续压力——每 34 帧一枚慢速瞄准矛（P2+）。
+            // 让"躲到快照点外站着不动"不再是免费解，但矛速慢、单发轻，保持可读。
+            if (Phase >= 2 && Timer > 70 && Timer < 260 && Timer % 34 == 0)
+                FireAimedLance(target, (Timer / 34 % 2 == 0 ? 8f : -8f), 0.6f, 13f);
         }
 
         /// <summary>
@@ -228,11 +236,13 @@ namespace CalamityLegendsComeBack.BossAI.HDMC
         {
             HoverBesideTarget(target, HoverSide * 440f, -300f, 16f, 24f);
 
-            if (Timer == 30 || Timer == 150)
+            // 幕帘主体：P3+ 追加第三波（从上一波对侧再扫回来）。
+            bool wave = Timer == 30 || Timer == 150 || (Phase >= 3 && Timer == 250);
+            if (wave)
             {
-                float side = Timer == 30 ? HoverSide : -HoverSide;
+                float side = Timer == 30 ? HoverSide : (Timer == 150 ? -HoverSide : HoverSide);
                 float xFrom = target.Center.X + side * 900f;
-                float yOffset = Timer == 30 ? 0f : 67f; // 第二波错半格
+                float yOffset = Timer == 150 ? 67f : 0f; // 第二波错半格
                 Vector2 dir = new(-side, 0f);
 
                 for (int i = -3; i <= 3; i++)
@@ -244,6 +254,10 @@ namespace CalamityLegendsComeBack.BossAI.HDMC
                 if (!Main.dedServ)
                     SoundEngine.PlaySound(SoundID.Item12 with { Volume = 0.3f, Pitch = 0.3f, MaxInstances = 4 }, target.Center);
             }
+
+            // 底流：横扫幕帘之间补一枚慢速瞄准矛（P2+），封住"站在幕帘缝里等下一波"的白嫖。
+            if (Phase >= 2 && Timer > 60 && Timer < 260 && Timer % 40 == 0)
+                FireAimedLance(target, 0f, 0.6f, 13f);
         }
 
         /// <summary>

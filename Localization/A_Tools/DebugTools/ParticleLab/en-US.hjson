@@ -14,8 +14,6 @@ Mods: {
 				ParticleLabProjectile.DisplayName: Particle Lab Test Projectile
 				ParticleLabPanel.DisplayName: Particle Lab Matrix
 			}
-
-			YCAuricJudgementMatrix.DisplayName: Y C Auric Judgement Matrix
 		}
 	}
 }

@@ -1,7 +1,6 @@
 using CalamityLegendsComeBack.Weapons.Vesuvius.EXSkill;
 using CalamityLegendsComeBack.Weapons.Vesuvius.RightClick.Javelin;
 using CalamityMod;
-using CalamityMod.Graphics.Metaballs;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -173,7 +172,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
                 VesuviusVolcanicVisuals.SpawnTravelMix(JavelinTip + Main.rand.NextVector2Circular(8f, 8f), -Direction * Main.rand.NextFloat(0.4f, 1.2f), 0.48f + heat * 0.7f, Stage >= 4);
 
             if (pullback >= 1f && Main.rand.NextBool(3))
-                RancorLavaMetaball.SpawnParticle(JavelinTip + Main.rand.NextVector2Circular(8f, 8f), Main.rand.NextFloat(20f, 38f) * (0.65f + heat * 0.5f));
+                VesuviusProjectileVisuals.SpawnMoltenBloom(JavelinTip + Main.rand.NextVector2Circular(8f, 8f), Main.rand.NextFloat(20f, 38f) * (0.65f + heat * 0.5f), 0.56f);
 
             if (pullback >= 1f && Main.rand.NextBool(4))
             {

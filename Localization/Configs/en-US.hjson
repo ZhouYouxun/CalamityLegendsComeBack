@@ -29,6 +29,15 @@
 					Tooltip: If enabled, new players will automatically receive a [Quick Start Supply Box] upon spawning. (WARNING: This severely ruins game balance!)
 				}
 			}
+
+			CLCBClientConfig: {
+				DisplayName: Calamity Legends Come Back Client Settings
+
+				ShowMatrixBossBar: {
+					Label: Show Matrix Boss Health Bar
+					Tooltip: If enabled, displays a custom matrix-style boss health bar at the top-center of the screen.
+				}
+			}
 		}
 	}
 }

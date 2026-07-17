@@ -217,6 +217,13 @@ Mods: {
 			CTRLBossBulkAll: Toggle all bosses
 			CTRLBossBulkInvert: Invert every boss flag
 			CTRLBossBulkChanged: "{0}: changed {1} boss flags."
+			WelcomeMessage:
+				'''
+				Welcome to Calamity: Legend!
+				This mod has just gotten started and is under active development.
+				Every legendary weapon will be reworked over time, with plenty more new content on the way -- stay tuned.
+				Feedback and suggestions are welcome -- please leave a rational comment in the review section.
+				'''
 		}
 
 		Keybinds: {

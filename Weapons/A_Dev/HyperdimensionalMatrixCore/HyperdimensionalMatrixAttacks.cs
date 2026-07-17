@@ -672,9 +672,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
     // ──────────────────────────────────────────────────────
 
     /// <summary>
-    /// 能量光球模块：五个风格各异的光球绕目标轨道飞行，各自持续释放环境粒子；
-    /// 消亡时的攻击方式因类型而异——烈焰化为天降流星、冰霜化为地涌尖刺、
-    /// 混沌化为随机散射弹幕、奇点坍缩为一道贯穿激光、极光化为环绕新星。
+    /// 能量光球模块：五个风格各异的光球绕目标轨道飞行，
+    /// 各自持续释放环境粒子，消亡时爆炸为弹幕+粒子。
     /// </summary>
     public sealed class MatrixShaderOrb : ModProjectile, ILocalizedModType
     {
@@ -915,33 +914,23 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
 
             switch (OrbType)
             {
-                case 0: // Fire — a small meteor shower rains down onto the target zone
-                    if (target != null)
+                case 0: // Fire — 8 directions
+                    for (int i = 0; i < 8; i++)
                     {
-                        for (int i = 0; i < 5; i++)
-                        {
-                            float xOff = (i - 2) * 45f + Main.rand.NextFloat(-12f, 12f);
-                            Vector2 spawnPos = target.Center + new Vector2(xOff, -280f - i * 14f);
-                            Vector2 vel = new Vector2(xOff * 0.02f, 17f + Main.rand.NextFloat(2f));
-                            Projectile.NewProjectile(src, spawnPos, vel,
-                                ModContent.ProjectileType<MatrixGeoShard>(), dmg, Projectile.knockBack, Projectile.owner,
-                                target.whoAmI);
-                        }
+                        Vector2 vel = (MathHelper.TwoPi * i / 8f).ToRotationVector2() * 18f;
+                        Projectile.NewProjectile(src, Projectile.Center, vel,
+                            ModContent.ProjectileType<MatrixGridCell>(), dmg, Projectile.knockBack, Projectile.owner,
+                            target?.whoAmI ?? -1);
                     }
                     break;
 
-                case 1: // Cryo — ice spikes erupt from the ground beneath the target
-                    if (target != null)
+                case 1: // Cryo — hexagonal ring
+                    for (int i = 0; i < 6; i++)
                     {
-                        for (int i = 0; i < 6; i++)
-                        {
-                            float xOff = (i - 2.5f) * 30f;
-                            Vector2 spawnPos = target.Center + new Vector2(xOff, 240f);
-                            Vector2 vel = new Vector2(xOff * 0.6f, -20f);
-                            Projectile.NewProjectile(src, spawnPos, vel,
-                                ModContent.ProjectileType<MatrixGeoShard>(), dmg, Projectile.knockBack, Projectile.owner,
-                                target.whoAmI);
-                        }
+                        Vector2 vel = (MathHelper.TwoPi * i / 6f).ToRotationVector2() * 22f;
+                        Projectile.NewProjectile(src, Projectile.Center, vel,
+                            ModContent.ProjectileType<MatrixGridCell>(), dmg, Projectile.knockBack, Projectile.owner,
+                            target?.whoAmI ?? -1);
                     }
                     break;
 
@@ -955,13 +944,17 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
                     }
                     break;
 
-                case 3: // Singularity — collapses into a single focused beam through the target
+                case 3: // Singularity — focused fan toward target
                     if (target != null)
                     {
-                        Vector2 dir = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY);
-                        Vector2 origin = MatrixDataLaser.GetCenteredOrigin(target.Center, dir);
-                        Projectile.NewProjectile(src, origin, dir,
-                            ModContent.ProjectileType<MatrixDataLaser>(), dmg, Projectile.knockBack, Projectile.owner);
+                        for (int i = 0; i < 6; i++)
+                        {
+                            float spread = MathHelper.ToRadians(28f) * (i / 5f - 0.5f);
+                            Vector2 dir = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY).RotatedBy(spread);
+                            Projectile.NewProjectile(src, Projectile.Center, dir * 20f,
+                                ModContent.ProjectileType<MatrixGridCell>(), dmg, Projectile.knockBack, Projectile.owner,
+                                target.whoAmI);
+                        }
                     }
                     break;
 
@@ -2072,8 +2065,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
     // ──────────────────────────────────────────────────────
 
     /// <summary>
-    /// 超维刻印：在目标位置逐笔描绘一个七芒星阵，完成后从每个顶点射出贯穿式激光，
-    /// 汇聚穿透中心目标，并额外释放一枚追踪数据矛。描绘笔画实时可见，是矩阵运算过程的直观化表达。
+    /// 超维刻印：在目标位置逐笔描绘一个七芒星阵，完成后从每个顶点射出非追踪几何碎片，
+    /// 并在中心释放一枚追踪数据矛。描绘笔画实时可见，是矩阵运算过程的直观化表达。
     /// </summary>
     public sealed class MatrixRunicStamp : ModProjectile, ILocalizedModType
     {
@@ -2145,14 +2138,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             Vector2[] verts = GetStarVerts(Projectile.Center, rot);
             IEntitySource src = Projectile.GetSource_FromThis();
 
-            // 7道贯穿激光从各顶点方向汇聚穿透中心目标，居中重置后目标始终位于光束正中央
+            // 7枚非追踪碎片从各顶点射出（非追踪 → 双倍伤害奖励已计入 InscriptionDamage）
             for (int i = 0; i < VertexCount; i++)
             {
-                Vector2 dir = (Projectile.Center - verts[i]).SafeNormalize(Vector2.UnitX);
-                Vector2 origin = MatrixDataLaser.GetCenteredOrigin(Projectile.Center, dir);
-                Projectile.NewProjectile(src, origin, dir,
-                    ModContent.ProjectileType<MatrixDataLaser>(),
-                    Projectile.damage, Projectile.knockBack, Projectile.owner);
+                Vector2 dir = (verts[i] - Projectile.Center).SafeNormalize(Vector2.UnitX);
+                Projectile.NewProjectile(src, verts[i], dir * 26f,
+                    ModContent.ProjectileType<MatrixGeoShard>(),
+                    Projectile.damage, Projectile.knockBack, Projectile.owner, -1);
             }
 
             // 1枚追踪数据矛从中心射出

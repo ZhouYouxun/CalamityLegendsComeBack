@@ -8,9 +8,9 @@ Mods: {
 					LeftClick: 左键以固定五十发弹匣全自动扫射目标
 					Conversion: 火枪子弹会转化成5.7×28毫米专用防卫弹
 					Reload: 特殊子弹装填十发即可供应五十发
-					Roll: 右键水平翻滚冲刺并免疫接触弹幕
-					Shock: 翻滚冷却期间右键投出短冷却震撼弹
-					Mark: 震撼弹命中的敌人进入电磁标记状态，持续3秒，标记期间受到的P90子弹伤害提高10%
+					Roll: 右键水平翻滚冲刺，前30帧免疫伤害，冷却7秒
+					Dodge: 翻滚期间接触任意敌方弹幕即视为成功闪避
+					Empower: 成功闪避后子弹获得3秒黄金强化，造成1.2倍伤害
 					Modes: 近敌强化击退远敌为所有子弹追踪
 					MagazineStatus: 当前弹匣余量为{0}/{1}发并永远固定
 					LegendaryText:
@@ -22,19 +22,11 @@ Mods: {
 			}
 		}
 
-		Buffs: {
-			P90ShockDebuff: {
-				DisplayName: 电磁标记
-				Description: 你被电磁场缠绕！小传奇-P90射出的子弹对你造成的伤害提高10%
-			}
-		}
-
 		Projectiles: {
 			P90: {
 				NewLegendP90Holdout.DisplayName: 小传奇-P90
 				P90DefenseRound.DisplayName: 五点七防卫弹
 				P90RollHitbox.DisplayName: 翻滚冲击
-				P90ShockGrenade.DisplayName: 矩阵震撼弹
 				P90CooldownBar.DisplayName: 翻滚冷却矩阵
 			}
 		}

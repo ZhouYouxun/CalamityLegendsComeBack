@@ -8,6 +8,7 @@ Mods: {
 					SHPC_LoadingUIHint: "[c/66CCFF:打开背包并按下] [[c/66CCFF:{0}]] [c/66CCFF:打开装填UI，将特定材料装填进去，可以改变攻击效果]"
 					SHPC_CurrentAmmoEffect: "[c/66CCFF:当前装填效果：{0}]"
 					SHPC_DefaultAmmoEffect: 未装填特定材料，默认发射白色光球，造成范围伤害
+					SHPC_UnloadHint: "[c/CFCFCF:背包内右键：倒出当前弹夹的材料；Shift+右键：倒出全部弹夹的材料]"
 					SHPC_Passive: "[c/B8FF9E:被动【额外准备】手持即可增加最大魔力值和魔力药水恢复量，降低魔力病的持续时间]"
 					SHPC_RightIntro1:
 						'''
@@ -283,7 +284,7 @@ Mods: {
 			SHPCAmmo12: 恐惧之魂会留下滞空游猎的恐魂，在原地附近持续寻找猎物
 			SHPCAmmo13: 力量之魂会释放三枚延迟爆炸的能量光球
 			SHPCAmmo14: 视域之魂会让飞行更久的光球释放更猛烈的爆炸
-			SHPCAmmo15: 生命碎片会追踪敌人，并将造成的力量转化为治疗
+			SHPCAmmo15: 生命碎片会射出多发生命蝴蝶，追踪敌人，并为玩家治疗
 			SHPCAmmo16: ！！！
 			SHPCAmmo17: 深渊细胞会发射蝰蛇鱼，从上方坠下并爆开
 			SHPCAmmo18: 瘟疫细胞罐会发射标记射线，并呼叫瘟疫导弹
@@ -332,7 +333,7 @@ Mods: {
 				EssenceofSunlight_BurstRelay.DisplayName: 日光精华连发核心
 				NewSHPS.DisplayName: SHPS支援核心
 				AshesofCalamity_Fire.DisplayName: 灾厄余烬火线
-				LivingShard_Healing.DisplayName: 活体碎片治愈波
+				LivingShard_Butterfly.DisplayName: 萤火魂蝶
 				FragmentEntropyExplosion.DisplayName: 熵碎爆炸
 				FragmentSolar_Spear.DisplayName: 太阳碎片长矛
 				FragmentStardust_Cell.DisplayName: 星尘碎片细胞

@@ -9,8 +9,8 @@ Mods: {
 		UI: {
 			ModeEnabled: Legends Mode enabled.
 			ModeDisabled: Legends Mode disabled.
-			StatusOn: "Current state: ON"
-			StatusOff: "Current state: OFF"
+			StatusOn: Current state: ON
+			StatusOff: Current state: OFF
 		}
 
 		Items: {
@@ -39,25 +39,54 @@ Mods: {
 			Weapon: Weapon
 			Timer: Timer
 			Life: Life
-			PhaseFallback: "Phase {0}"
+			PhaseFallback: Phase {0}
 		}
 
 		LegendsPhases: {
 			Cryogen: {
 				1: Sealed Frost Core
-				2: "Sealed Core: Splintering"
-				3: "Sealed Core: Full Arsenal"
+				2: Sealed Core: Splintering
+				3: Sealed Core: Full Arsenal
 				4: Core Unsealed
-				5: "Unsealed: Twin Echoes"
+				5: Unsealed: Twin Echoes
 				6: Eternal Winter
 			}
-			OldDuke: { 1: Rotten Arsenal, 2: Engine Overdrive }
-			Polterghast: { 1: Haunted Cage, 2: Unsealed Phantom }
-			StormWeaver: { 1: Armored Weave, 2: Storm Unleashed }
-			CeaselessVoid: { 1: Mirror Lockdown, 2: Void Unsealed }
-			Signus: { 1: Shadow Stalking, 2: Phantom Overdrive }
-			Providence: { 1: Holy Rites, 2: Divine Zenith }
-			AstrumDeus: { 1: Astral Vessel, 2: Twin Godworms }
+
+			OldDuke: {
+				1: Rotten Arsenal
+				2: Engine Overdrive
+			}
+
+			Polterghast: {
+				1: Haunted Cage
+				2: Unsealed Phantom
+			}
+
+			StormWeaver: {
+				1: Armored Weave
+				2: Storm Unleashed
+			}
+
+			CeaselessVoid: {
+				1: Mirror Lockdown
+				2: Void Unsealed
+			}
+
+			Signus: {
+				1: Shadow Stalking
+				2: Phantom Overdrive
+			}
+
+			Providence: {
+				1: Holy Rites
+				2: Divine Zenith
+			}
+
+			AstrumDeus: {
+				1: Astral Vessel
+				2: Twin Godworms
+			}
+
 			PlaguebringerGoliath: {
 				1: Armored Hive I
 				2: Armored Hive II
@@ -66,15 +95,55 @@ Mods: {
 				5: Reactor Overload II
 				6: Reactor Overload III
 			}
-			AstrumAureus: { 1: Astral Warframe, 2: Reactor Overload }
-			AquaticScourge: { 1: Abyssal Stalker, 2: Sulphurous Fury }
-			HiveMind: { 1: Awakening of the Hive, 2: Creeping Corruption, 3: Devouring Shadows, 4: The Rotting Core }
-			Perforators: { 1: The Bloody Hive, 2: Small Perforator, 3: Medium Perforator, 4: Large Perforator }
-			CalamitasClone: { 1: Shadow of Calamity, 2: Unsealed Calamity }
-			LeviathanAnahita: { 1: Siren Duet, 2: Whitewater Storm }
-			Ravager: { 1: Fleshy Bulwark, 2: Reactor Overload }
-			Dragonfolly: { 1: Gilded Raptor, 2: Storm Sovereign }
-			Yharon: { 1: Dragon of Rebirth, 2: Rebirth }
+
+			AstrumAureus: {
+				1: Astral Warframe
+				2: Reactor Overload
+			}
+
+			AquaticScourge: {
+				1: Abyssal Stalker
+				2: Sulphurous Fury
+			}
+
+			HiveMind: {
+				1: Awakening of the Hive
+				2: Creeping Corruption
+				3: Devouring Shadows
+				4: The Rotting Core
+			}
+
+			Perforators: {
+				1: The Bloody Hive
+				2: Small Perforator
+				3: Medium Perforator
+				4: Large Perforator
+			}
+
+			CalamitasClone: {
+				1: Shadow of Calamity
+				2: Unsealed Calamity
+			}
+
+			LeviathanAnahita: {
+				1: Siren Duet
+				2: Whitewater Storm
+			}
+
+			Ravager: {
+				1: Fleshy Bulwark
+				2: Reactor Overload
+			}
+
+			Dragonfolly: {
+				1: Gilded Raptor
+				2: Storm Sovereign
+			}
+
+			Yharon: {
+				1: Dragon of Rebirth
+				2: Rebirth
+			}
 		}
 
 		LegendsAttacks: {
@@ -88,10 +157,12 @@ Mods: {
 				DeathAnimation: Death Throes
 				VictoryDespawn: Victory Despawn
 			}
+
 			Cryogen: {
 				DarkechoAndShimmerspark: Darkecho & Shimmerspark
 				SoulofCryogen: Soul of Cryogen
 			}
+
 			HiveMind: {
 				SpawnRoar: Spawn Roar
 				SuspensionDrift: Suspension Drift

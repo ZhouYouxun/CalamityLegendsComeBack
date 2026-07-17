@@ -54,6 +54,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
             set => Projectile.ai[0] = value;
         }
 
+        private int BadSeedFlags => (int)Projectile.ai[1];
+        private bool BadSeedDuration => (BadSeedFlags & 1) != 0;
+        private bool ImmediateBarrage => (BadSeedFlags & 2) != 0;
+        private int CurrentBarrageFrames => BadSeedDuration ? BarrageFrames / 2 : BarrageFrames;
+
         private Vector2 AimDirection => Projectile.velocity.SafeNormalize(Vector2.UnitX * Owner.direction);
         private Vector2 GunTip => Projectile.Center + AimDirection * 44f;
         private Color MainColor => new Color(86, 255, 148);
@@ -92,6 +97,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
 
             UpdateHeldProjectileVariables();
             ManipulatePlayerVariables();
+
+            if (ImmediateBarrage && State == 0)
+                EnterBarragePhase();
 
             switch (State)
             {
@@ -162,7 +170,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
             timer++;
             fireSoundTimer++;
 
-            float barrageCompletion = Utils.GetLerpValue(0f, BarrageFrames, timer, true);
+            float barrageCompletion = Utils.GetLerpValue(0f, CurrentBarrageFrames, timer, true);
             holdOffsetFromArm = MathHelper.Lerp(ChargedHoldOffset - 2f, IdleHoldOffset - 1f, barrageCompletion);
             extraFrontArmRotation = -0.1f;
             extraBackArmRotation = 0.06f;
@@ -179,7 +187,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
                 BlossomFluxSounds.PlayEXWeaponNormalFire(GunTip);
             }
 
-            if (timer >= BarrageFrames)
+            if (timer >= CurrentBarrageFrames)
                 Projectile.Kill();
         }
 

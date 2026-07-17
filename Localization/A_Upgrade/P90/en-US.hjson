@@ -8,9 +8,9 @@ Mods: {
 					LeftClick: Left-click fully automatic fire from a fixed fifty-round magazine
 					Conversion: Converts Musket Balls into 5.7x28mm personal defense rounds
 					Reload: Reloading spends ten special bullets to load fifty shots
-					Roll: Right-click rolls horizontally, ignoring contact and projectile damage
-					Shock: During roll cooldown, right-click throws a short-cooldown shock grenade
-					Mark: Enemies hit by the shock grenade gain an electromagnetic mark for 3 seconds, taking 10% more damage from P90 bullets while marked
+					Roll: Right-click rolls horizontally; the first 30 frames grant immunity, with a 7-second cooldown
+					Dodge: Touching any hostile projectile during the roll counts as a successful dodge
+					Empower: A successful dodge empowers bullets with golden energy for 3 seconds, increasing damage by 20%
 					Modes: Close targets triple knockback; distant targets make bullets home
 					MagazineStatus: Current magazine: {0}/{1} rounds, capacity cannot change
 					LegendaryText:
@@ -22,19 +22,11 @@ Mods: {
 			}
 		}
 
-		Buffs: {
-			P90ShockDebuff: {
-				DisplayName: Electromagnetic Mark
-				Description: You're crackling with electricity! Bullets fired from the Little Legend - P90 deal 10% more damage to you
-			}
-		}
-
 		Projectiles: {
 			P90: {
 				NewLegendP90Holdout.DisplayName: Little Legend - P90
 				P90DefenseRound.DisplayName: 5.7 Defense Round
 				P90RollHitbox.DisplayName: Tactical Roll Impact
-				P90ShockGrenade.DisplayName: Matrix Shock Grenade
 				P90CooldownBar.DisplayName: Roll Cooldown Matrix
 			}
 		}

@@ -18,20 +18,29 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.P90
         private bool fromP90;
         private bool homing;
         private bool strongKnockback;
+        private bool dodgeEmpowered;
         private int homingTimer;
+        private int empoweredVisualTimer;
 
-        public void Configure(bool homing, bool strongKnockback)
+        public void Configure(bool homing, bool strongKnockback, bool dodgeEmpowered)
         {
             fromP90 = true;
             this.homing = homing;
             this.strongKnockback = strongKnockback;
+            this.dodgeEmpowered = dodgeEmpowered;
             homingTimer = 0;
+            empoweredVisualTimer = 0;
         }
 
         public override void AI(Projectile projectile)
         {
+            if (projectile.hostile && !Main.dedServ)
+                Main.LocalPlayer.GetModPlayer<NewLegendP90Player>().TryRegisterHostileProjectileDodge(projectile);
+
             if (!fromP90)
                 return;
+
+            UpdateEmpoweredVisuals(projectile);
 
             if (strongKnockback && Main.rand.NextBool(5))
             {
@@ -84,8 +93,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.P90
             if (strongKnockback)
                 modifiers.Knockback *= 3f;
 
-            if (target.HasBuff<P90ShockDebuff>())
-                modifiers.SourceDamage *= 1.1f;
+            if (dodgeEmpowered)
+                modifiers.SourceDamage *= 1.2f;
         }
 
         public override void SendExtraAI(Projectile projectile, BitWriter bitWriter, BinaryWriter binaryWriter)
@@ -93,6 +102,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.P90
             bitWriter.WriteBit(fromP90);
             bitWriter.WriteBit(homing);
             bitWriter.WriteBit(strongKnockback);
+            bitWriter.WriteBit(dodgeEmpowered);
             if (fromP90)
                 binaryWriter.Write((short)homingTimer);
         }
@@ -102,7 +112,27 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.P90
             fromP90 = bitReader.ReadBit();
             homing = bitReader.ReadBit();
             strongKnockback = bitReader.ReadBit();
+            dodgeEmpowered = bitReader.ReadBit();
             homingTimer = fromP90 ? binaryReader.ReadInt16() : 0;
+        }
+
+        private void UpdateEmpoweredVisuals(Projectile projectile)
+        {
+            if (!dodgeEmpowered || Main.dedServ || projectile.numUpdates != 0)
+                return;
+
+            empoweredVisualTimer++;
+            if (empoweredVisualTimer != 1 && empoweredVisualTimer != 8)
+                return;
+
+            Dust dust = Dust.NewDustPerfect(
+                projectile.Center,
+                DustID.GoldFlame,
+                -projectile.velocity.SafeNormalize(Vector2.UnitX) * Main.rand.NextFloat(0.25f, 0.7f),
+                100,
+                Color.Gold,
+                Main.rand.NextFloat(0.5f, 0.72f));
+            dust.noGravity = true;
         }
 
         private static NPC FindTarget(Projectile projectile, float range)
