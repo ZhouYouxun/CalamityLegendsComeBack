@@ -710,7 +710,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
                     activeSoulCount++;
                 }
 
-                SpawnChargeSpiralInvs(center, progress, spawnAttempts, spawnCycle);
+                // 蓄力阶段暂不生成 SHPC_ChargeSpiralInv；大激光阶段的 SpawnSpiralInvs() 保持启用。
+                // SpawnChargeSpiralInvs(center, progress, spawnAttempts, spawnCycle);
             }
 
             if (Main.dedServ)

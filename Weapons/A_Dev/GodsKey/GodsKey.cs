@@ -36,6 +36,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.GodsKey
             Item.Calamity().devItem = true;
         }
 
+        public override void AddRecipes()
+        {
+            CreateRecipe()
+                .AddIngredient(ItemID.IronBar, 10)
+                .AddIngredient(ItemID.Chain, 15)
+                .Register();
+        }
+
         public override bool? UseItem(Player player)
         {
             if (player.itemAnimation > 0 && player.itemTime == 0)
