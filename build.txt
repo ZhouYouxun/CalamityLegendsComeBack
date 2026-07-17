@@ -1,6 +1,6 @@
 displayName = CalamityLegendsComeBack [灾厄-传奇]
 author = 犽戎&剃刀刃台风&某不知名容器
-version = 1.0.0.5
+version = 1.0.0.6
 hideCode = false
 hideResources = false
 includeSource = true

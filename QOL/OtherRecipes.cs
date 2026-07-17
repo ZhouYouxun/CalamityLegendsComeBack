@@ -103,6 +103,34 @@ namespace CalamityLegendsComeBack.QOL
 
                 RegisterReaperWeaponRecipe(calamity, "SoulEdge");
                 RegisterReaperWeaponRecipe(calamity, "DeepSeaDumbbell");
+
+                // 存疑镀层 Dubious Plating: 5 任意铁锭 + 5 任意铜锭 + 5 玻璃块 -> 20个
+                if (calamity.TryFind<ModItem>("DubiousPlating", out ModItem dubiousPlating))
+                {
+                    Recipe dubiousPlatingRecipe = Recipe.Create(dubiousPlating.Type, 20);
+                    dubiousPlatingRecipe.AddRecipeGroup("IronBar", 5);
+                    dubiousPlatingRecipe.AddRecipeGroup("AnyCopperBar", 5);
+                    dubiousPlatingRecipe.AddIngredient(ItemID.Glass, 5);
+                    dubiousPlatingRecipe.Register();
+                }
+
+                // 死灵骨髓法杖 Staff of Necrosteocytes: 1 魔力水晶 + 20 骨头
+                if (calamity.TryFind<ModItem>("StaffOfNecrosteocytes", out ModItem necrosteocytesStaff))
+                {
+                    Recipe necrosteocytesRecipe = Recipe.Create(necrosteocytesStaff.Type);
+                    necrosteocytesRecipe.AddIngredient(ItemID.ManaCrystal, 1);
+                    necrosteocytesRecipe.AddIngredient(ItemID.Bone, 20);
+                    necrosteocytesRecipe.Register();
+                }
+
+                // Anechoic Plating: 50 任意铁锭 + 1 天使雕像
+                if (calamity.TryFind<ModItem>("AnechoicPlating", out ModItem anechoicPlating))
+                {
+                    Recipe anechoicPlatingRecipe = Recipe.Create(anechoicPlating.Type);
+                    anechoicPlatingRecipe.AddRecipeGroup("IronBar", 50);
+                    anechoicPlatingRecipe.AddIngredient(ItemID.AngelStatue, 1);
+                    anechoicPlatingRecipe.Register();
+                }
             }
         }
 
