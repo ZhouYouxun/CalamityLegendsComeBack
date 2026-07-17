@@ -1,6 +1,5 @@
 using CalamityLegendsComeBack.Weapons.SHPC;
 using CalamityLegendsComeBack.Weapons.SHPC.SHPCBook;
-using CalamityLegendsComeBack.Weapons.A_Dev.GodsKey;
 using CalamityMod.Rarities;
 using Terraria;
 using Terraria.DataStructures;
@@ -43,7 +42,6 @@ namespace CalamityLegendsComeBack
             return new[]
             {
                 ModContent.ItemType<NewLegendSHPC>(),
-                ModContent.ItemType<GodsKey>(),
             };
         }
 

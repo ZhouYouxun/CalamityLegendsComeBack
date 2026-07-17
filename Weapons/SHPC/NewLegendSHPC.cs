@@ -1497,8 +1497,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 balance.GetRightClickBaseDamage();
             int damage = (int)player.GetTotalDamage(Item.DamageType).ApplyTo(baseDamage);
             float accessoryMultiplier = player.GetModPlayer<SHPCEnergyCorePlayer>().SHPCDamageMultiplier;
-            float godsKeyMultiplier = player.GetModPlayer<A_Dev.GodsKey.GodsKeyPlayer>().PanelMultiplier;
-            return Math.Max(1, (int)Math.Round(damage * accessoryMultiplier * godsKeyMultiplier));
+            return Math.Max(1, (int)Math.Round(damage * accessoryMultiplier * 1.25f));
         }
 
         internal int GetCurrentLeftClickDamage(Player player, int effectID)
@@ -1506,8 +1505,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             int baseDamage = balance.GetLeftClickBaseDamageForEffect(effectID);
             int damage = (int)player.GetTotalDamage(Item.DamageType).ApplyTo(baseDamage);
             float accessoryMultiplier = player.GetModPlayer<SHPCEnergyCorePlayer>().SHPCDamageMultiplier;
-            float godsKeyMultiplier = player.GetModPlayer<A_Dev.GodsKey.GodsKeyPlayer>().PanelMultiplier;
-            return Math.Max(1, (int)Math.Round(damage * accessoryMultiplier * godsKeyMultiplier));
+            return Math.Max(1, (int)Math.Round(damage * accessoryMultiplier * 1.25f));
         }
 
         public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
@@ -1518,7 +1516,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             int targetDamage = balance.GetLeftClickBaseDamageForEffect(GetProjectileEffectIDForShot());
             damage.Base += targetDamage - Item.damage;
             damage *= player.GetModPlayer<SHPCEnergyCorePlayer>().SHPCDamageMultiplier;
-            damage *= player.GetModPlayer<A_Dev.GodsKey.GodsKeyPlayer>().PanelMultiplier;
+            damage *= 1.25f;
         }
         #endregion
 
