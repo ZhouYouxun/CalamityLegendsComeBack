@@ -8,13 +8,21 @@ using Terraria.DataStructures;
 using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
+using CalamityLegendsComeBack.Weapons.A_Tools.DebugTools;
 
 namespace CalamityLegendsComeBack.Weapons.A_Tools.Tools.MagnetBomb
 {
     public class MagnetBombItem : ModItem, ILocalizedModType
     {
         public new string LocalizationCategory => "Items.Weapons";
-        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Tools/Tools/MagnetBomb/MagnetBombItem";
+        public override string Texture => "Terraria/Images/Item_" + ItemID.Detonator;
+
+        public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame,
+            Color drawColor, Color itemColor, Vector2 origin, float scale)
+        {
+            DebugToolOutline.Draw(spriteBatch, TextureAssets.Item[Type].Value, position, frame, origin, scale, new Color(255, 80, 70));
+            return true;
+        }
 
         private static int BombType => ModContent.ProjectileType<MagnetBombProj>();
 
@@ -77,7 +85,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.Tools.MagnetBomb
     public class MagnetBombProj : ModProjectile, ILocalizedModType
     {
         public new string LocalizationCategory => "Projectiles.A_Tools";
-        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Tools/Tools/MagnetBomb/MagnetBombItem";
+        public override string Texture => "Terraria/Images/Item_" + ItemID.Detonator;
 
         private bool isStuck;
 

@@ -70,6 +70,10 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         private int currentRepetition = 0;
         private int attackCycleIndex = 0;
 
+        // The void ring is a battlefield, not a halo that chases a teleporting assassin.
+        private Vector2 arenaCenter = Vector2.Zero;
+        private bool centerSet = false;
+
         // Phantom Evasion Step
         private bool coreExposed = false;
         private bool wasCoreExposed = false;
@@ -115,6 +119,9 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         #region Core AI Hooks
         public override bool PreAI(NPC npc, LegendsGlobalNPC data)
         {
+            if ((int)npc.ai[0] == 0)
+                ResetFightState();
+
             ticksRunning++;
 
             if (!TryGetTarget(npc, out Player target))
@@ -123,6 +130,13 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 if (npc.timeLeft > 60) npc.timeLeft = 60;
                 return false;
             }
+
+            if (!centerSet)
+            {
+                arenaCenter = target.Center;
+                centerSet = true;
+            }
+            arenaCenter = Vector2.Lerp(arenaCenter, target.Center, 0.004f);
 
             int currentPhase = (int)npc.ai[0];
             AttackState state = (AttackState)(int)npc.ai[1];
@@ -257,6 +271,33 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             data.PatternTimer = (int)timer;
 
             return false;
+        }
+
+        private void ResetFightState()
+        {
+            ticksRunning = 0;
+            currentRepetition = 0;
+            attackCycleIndex = 0;
+            arenaCenter = Vector2.Zero;
+            centerSet = false;
+            coreExposed = false;
+            wasCoreExposed = false;
+            stunTimer = 0;
+            mineGridTimer = 0;
+            Array.Clear(minePositions, 0, minePositions.Length);
+            minesActive = false;
+            arenaHurtCooldown = 0;
+            transitionFlashAlpha = 0f;
+            Array.Clear(attackVariant, 0, attackVariant.Length);
+            currentVariantB = false;
+            blinkTimer = 0;
+            blinkDuration = 0;
+            blinkDestination = Vector2.Zero;
+            weavePhase = 0f;
+            dashContact = false;
+            Array.Clear(oldPos, 0, oldPos.Length);
+            oldPosIndex = 0;
+            hitFxCooldown = 0;
         }
 
         public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers) => ProcessCoreHits(npc, ref modifiers, item.damage, player);
@@ -399,16 +440,20 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             for (int i = 0; i < 3; i++)
             {
                 float a = Main.rand.NextFloat(MathHelper.TwoPi);
-                Vector2 pos = npc.Center + a.ToRotationVector2() * radius;
+                Vector2 pos = arenaCenter + a.ToRotationVector2() * radius;
                 Dust d = Dust.NewDustPerfect(pos, DustID.PurpleTorch, a.ToRotationVector2().RotatedBy(MathHelper.PiOver2) * 1.4f, 140, default, 1.05f);
                 d.noGravity = true;
             }
 
-            Vector2 dist = target.Center - npc.Center;
+            Player arenaPlayer = Main.netMode == NetmodeID.Server ? null : Main.LocalPlayer;
+            if (arenaPlayer is null || !arenaPlayer.active || arenaPlayer.dead)
+                return;
+
+            Vector2 dist = arenaPlayer.Center - arenaCenter;
             // Densify the warning where the player is about to cross
             if (dist.Length() > radius - 140f)
             {
-                Vector2 edge = npc.Center + dist.SafeNormalize(Vector2.UnitX) * radius;
+                Vector2 edge = arenaCenter + dist.SafeNormalize(Vector2.UnitX) * radius;
                 for (int i = 0; i < 2; i++)
                 {
                     Dust d = Dust.NewDustPerfect(edge + Main.rand.NextVector2Circular(70f, 70f), DustID.Shadowflame, Vector2.Zero, 100, default, 1.3f);
@@ -419,11 +464,11 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
             if (dist.Length() > radius)
             {
-                target.AddBuff(BuffID.ShadowFlame, 180);
+                arenaPlayer.AddBuff(BuffID.ShadowFlame, 180);
                 if (arenaHurtCooldown <= 0)
                 {
                     arenaHurtCooldown = 30;
-                    target.Hurt(Terraria.DataStructures.PlayerDeathReason.ByNPC(npc.whoAmI), 20, 0);
+                    arenaPlayer.Hurt(Terraria.DataStructures.PlayerDeathReason.ByNPC(npc.whoAmI), 20, 0);
                 }
             }
         }
@@ -445,8 +490,9 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 SoundEngine.PlaySound(SoundID.Item104 with { Volume = 0.6f, Pitch = -0.3f }, target.Center);
             }
 
-            if (minesActive && mineGridTimer < 300) // 5s pull-line window (design doc)
+            if (minesActive && mineGridTimer < 300 && Main.netMode != NetmodeID.Server) // 5s pull-line window (design doc)
             {
+                Player linePlayer = Main.LocalPlayer;
                 for (int i = 0; i < 6; i++)
                 {
                     Vector2 m1 = minePositions[i];
@@ -455,23 +501,23 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     if (abLen <= 0f) continue;
 
                     Vector2 ab = m2 - m1;
-                    Vector2 ac = target.Center - m1;
+                    Vector2 ac = linePlayer.Center - m1;
                     float proj = Vector2.Dot(ac, ab) / abLen;
                     proj = Math.Clamp(proj, 0f, abLen);
                     Vector2 closest = m1 + SafeNormalize(ab, Vector2.Zero) * proj;
-                    if (Vector2.Distance(target.Center, closest) < 24f)
+                    if (Vector2.Distance(linePlayer.Center, closest) < 24f)
                     {
-                        target.velocity += SafeNormalize(closest - target.Center, Vector2.Zero) * 0.6f;
+                        linePlayer.velocity += SafeNormalize(closest - linePlayer.Center, Vector2.Zero) * 0.6f;
                         // Grabbing sparks along the line so the pull has a visible cause
                         if (Main.rand.NextBool(2))
                         {
-                            Dust d = Dust.NewDustPerfect(closest, DustID.PurpleTorch, (closest - target.Center).SafeNormalize(Vector2.Zero) * 2f, 100, default, 1.2f);
+                            Dust d = Dust.NewDustPerfect(closest, DustID.PurpleTorch, (closest - linePlayer.Center).SafeNormalize(Vector2.Zero) * 2f, 100, default, 1.2f);
                             d.noGravity = true;
                         }
                     }
                 }
             }
-            else
+            else if (mineGridTimer >= 300)
             {
                 minesActive = false;
             }

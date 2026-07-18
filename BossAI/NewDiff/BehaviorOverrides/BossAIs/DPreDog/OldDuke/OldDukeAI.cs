@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossAIs.BStage2.AquaticScourge;
 using CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossAIs.Common;
 using CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossAIs.WeaponAttacks;
@@ -91,6 +92,10 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         private int blubberStunTimer = 0;
         private int blubberRespawnTimer = 0;
 
+        // 破垫反馈的边沿检测标记（纯客户端视听，不参与玩法判定）
+        private readonly bool[] padBrokenFx = new bool[3];
+        private bool allBrokenFx = false;
+
         private int exhaustTimer = 0;
         private int exhaustBoundaryHurtCooldown = 0;
 
@@ -116,6 +121,52 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         // Motion afterimages for the dashes
         private readonly Vector2[] oldPos = new Vector2[10];
         private int oldPosIndex = 0;
+
+        // 废气牢笼锚点：开场钉死在世界坐标。原本牢笼是以 npc.Center 为心的，可这头野兽全程
+        // 20~26px/f 到处贯穿、蓄力驻留点又在 520px 外，而 P2 笼子半径只有 450 ——
+        // 玩家什么都没做就会被判出界吃硫磺中毒+虚弱+掉血。锚死之后这类问题整类消失。
+        private Vector2 cageCenter;
+        #endregion
+
+        #region Per-fight State Reset
+        // Registry 里每个 Boss 类型只 new 一个 AI 实例（静态字典持有），因此下面这些实例字段是
+        // 整个游戏会话共享、跨场次不重置的。原来的初始化只清了 4 样，漏掉的里面最要命的是
+        // blubberStunTimer —— 若 boss 死在脂肪垫全破的 7 秒硬直里，下一场开局它就是
+        // damage=0 + 承伤150% 的喘气状态，整场白给。这里一次清干净。
+        private void ResetFightState(NPC npc, Player target)
+        {
+            ticksRunning = 0;
+            currentRepetition = 0;
+            attackCycleIndex = 0;
+
+            for (int i = 0; i < 3; i++)
+            {
+                blubberHPs[i] = 1200f;
+                blubberFlash[i] = 0f;
+            }
+            blubberStunTimer = 0;
+            blubberRespawnTimer = 0;
+            Array.Clear(padBrokenFx, 0, padBrokenFx.Length);
+            allBrokenFx = false;
+
+            exhaustTimer = 0;
+            exhaustBoundaryHurtCooldown = 0;
+
+            Array.Clear(attackVariant, 0, attackVariant.Length);
+            currentVariantB = false;
+
+            dashDir = Vector2.Zero;
+            crossedTargetThisDash = false;
+            clawAimDir = Vector2.Zero;
+            clawLineBright = 0f;
+
+            // 拖尾塌到当前位置，否则会从上一场的死亡点拖一条线过来
+            for (int i = 0; i < oldPos.Length; i++)
+                oldPos[i] = npc.Center;
+            oldPosIndex = 0;
+
+            cageCenter = target.Center;
+        }
         #endregion
 
         #region Core AI Hooks
@@ -134,14 +185,13 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             ref float timer = ref npc.ai[2];
             ref float tracker = ref npc.ai[3];
 
+            // ai[0]==0 只在一场战斗的第一帧成立，是清掉上一场残留状态的唯一时机。
             if (npc.ai[0] == 0f)
             {
+                ResetFightState(npc, target);
                 npc.ai[0] = 1f;
                 state = AttackState.InsidiousImpaler;
                 npc.ai[1] = (float)state;
-                currentRepetition = 0;
-                attackCycleIndex = 0;
-                for (int i = 0; i < 3; i++) blubberHPs[i] = 1200f;
                 currentVariantB = UseVariantB(state);
                 npc.netUpdate = true;
             }
@@ -161,7 +211,8 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 npc.netUpdate = true;
             }
 
-            UpdateBlubberRespawn();
+            UpdateBlubberRespawn(npc);
+            UpdateBlubberBreakFx(npc);
             UpdateExhaustCage(npc, target, currentPhase);
             for (int i = 0; i < 3; i++)
                 if (blubberFlash[i] > 0f) blubberFlash[i] -= 0.07f;
@@ -271,6 +322,15 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             SoundEngine.PlaySound(SoundID.Roar with { Volume = 0.55f, Pitch = 0.2f }, npc.Center);
             ScourgeFx.Burst(npc.Center, 5f, 14, DustID.ToxicBubble);
 
+            // 冲刺是这头野兽的身份，之前却一声不响地就窜出去了 —— 全 boss 7 处 LaunchDash 一个屏震都没有。
+            // 力道随冲刺速度走(20~26 -> 约 4.4~5.7)，够沉但不喧宾夺主：真正的重锤留给部位破坏和死亡。
+            if (!Main.dedServ && Main.LocalPlayer.active)
+            {
+                float shake = MathHelper.Clamp(speed * 0.22f, 3.5f, 6f);
+                Main.LocalPlayer.Calamity().GeneralScreenShakePower =
+                    Math.Max(Main.LocalPlayer.Calamity().GeneralScreenShakePower, shake);
+            }
+
             // Exhaust trail along the dash lane; the trail self-ignites into a firewall 45 frames later.
             // Side blubber pads gate the exhaust (design doc): both side pads destroyed = no trail at all.
             bool exhaustAvailable = blubberHPs[1] > 0f || blubberHPs[2] > 0f;
@@ -324,7 +384,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             return npc.Center + (npc.rotation + offset).ToRotationVector2() * 90f;
         }
 
-        private void UpdateBlubberRespawn()
+        private void UpdateBlubberRespawn(NPC npc)
         {
             bool allDead = true;
             for (int i = 0; i < 3; i++) if (blubberHPs[i] > 0f) allDead = false;
@@ -334,9 +394,17 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 blubberRespawnTimer++;
                 if (blubberRespawnTimer >= 1200) // 20s
                 {
-                    for (int i = 0; i < 3; i++) blubberHPs[i] = 1200f;
-                    blubberRespawnTimer = 0;
-                    SoundEngine.PlaySound(SoundID.NPCHit13 with { Volume = 0.6f, Pitch = -0.3f }, Main.player[Main.myPlayer].Center);
+                    // 状态改动只由服务端做，随后经 SendExtraAI 同步；客户端的计时器会被同步值纠正。
+                    if (Main.netMode != NetmodeID.MultiplayerClient)
+                    {
+                        for (int i = 0; i < 3; i++) blubberHPs[i] = 1200f;
+                        blubberRespawnTimer = 0;
+                        npc.netUpdate = true;
+                    }
+                    // 音效各端自己放。原来放在 Main.player[Main.myPlayer].Center —— 专用服务器上
+                    // Main.myPlayer 是 255（占位假玩家），既没意义也不该在服务端跑。
+                    if (!Main.dedServ && Main.LocalPlayer.active)
+                        SoundEngine.PlaySound(SoundID.NPCHit13 with { Volume = 0.6f, Pitch = -0.3f }, Main.LocalPlayer.Center);
                 }
             }
             else
@@ -364,19 +432,42 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 Vector2 padPos = BlubberPos(npc, i);
                 if (Vector2.Distance(hitPos, padPos) < 70f)
                 {
-                    blubberHPs[i] -= damage;
-                    blubberFlash[i] = 1f;
-                    if (blubberHPs[i] <= 0f)
+                    blubberFlash[i] = 1f; // 纯视觉，各端自己闪
+
+                    // 扣血只能由服务端做。ModifyHitBy* 在【弹幕所有者的客户端和服务端都会跑】，
+                    // 原来两边各扣各的 -> 联机两个人打，服务端扣两次、每个客户端各扣一次，
+                    // 垫子血量彻底发散（"我这边垫子破了，你那边还在"）。
+                    // 现在服务端算完 netUpdate 下发，客户端只负责读结果（见 SendExtraAI/ReceiveExtraAI）。
+                    if (Main.netMode != NetmodeID.MultiplayerClient)
                     {
-                        SoundEngine.PlaySound(SoundID.NPCDeath4, padPos);
-                        ScourgeFx.Burst(padPos, 6f, 14, DustID.ToxicBubble);
-                        CheckAllBlubberBroken(npc);
+                        blubberHPs[i] -= damage;
+                        npc.netUpdate = true;
+                        if (blubberHPs[i] <= 0f)
+                            CheckAllBlubberBroken(npc);
                     }
                     break;
                 }
             }
         }
 
+        public override void SendExtraAI(NPC npc, LegendsGlobalNPC data, BinaryWriter writer)
+        {
+            for (int i = 0; i < 3; i++)
+                writer.Write(blubberHPs[i]);
+            writer.Write((short)blubberStunTimer);
+            writer.Write((short)blubberRespawnTimer);
+        }
+
+        public override void ReceiveExtraAI(NPC npc, LegendsGlobalNPC data, BinaryReader reader)
+        {
+            for (int i = 0; i < 3; i++)
+                blubberHPs[i] = reader.ReadSingle();
+            blubberStunTimer = reader.ReadInt16();
+            blubberRespawnTimer = reader.ReadInt16();
+        }
+
+        // 只在服务端改状态；破盾的音效/爆散/屏震交给下面的 UpdateBlubberBreakFx 在各端自行触发，
+        // 否则联机时客户端既听不到也震不到（状态是服务端算的，反馈必须各端自己放）。
         private void CheckAllBlubberBroken(NPC npc)
         {
             bool allDead = true;
@@ -386,11 +477,51 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             {
                 blubberStunTimer = 420; // 7s
                 npc.velocity = Vector2.Zero;
-                SoundEngine.PlaySound(SoundID.NPCHit53, npc.Center);
-                SoundEngine.PlaySound(SoundID.NPCHit13 with { Volume = 0.8f, Pitch = -0.5f }, npc.Center);
-                ScourgeFx.Burst(npc.Center, 7f, 30, DustID.ToxicBubble);
-                if (Main.netMode != NetmodeID.Server)
-                    Main.LocalPlayer.Calamity().GeneralScreenShakePower = 8f;
+                npc.netUpdate = true;
+            }
+        }
+
+        /// <summary>
+        /// 破垫反馈的各端触发器：血量由服务端算、经 SendExtraAI 同步下来，客户端靠"血量跨过 0"这个
+        /// 边沿自己放音效/爆散/屏震。这样联机里每个人都能听到、看到、震到，而状态依旧只有一个权威源。
+        /// </summary>
+        private void UpdateBlubberBreakFx(NPC npc)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                bool broken = blubberHPs[i] <= 0f;
+                if (broken && !padBrokenFx[i])
+                {
+                    padBrokenFx[i] = true;
+                    if (!Main.dedServ)
+                    {
+                        Vector2 padPos = BlubberPos(npc, i);
+                        SoundEngine.PlaySound(SoundID.NPCDeath4, padPos);
+                        ScourgeFx.Burst(padPos, 6f, 14, DustID.ToxicBubble);
+                    }
+                }
+                else if (!broken)
+                {
+                    padBrokenFx[i] = false; // 重生后重新武装
+                }
+            }
+
+            bool allDead = blubberHPs[0] <= 0f && blubberHPs[1] <= 0f && blubberHPs[2] <= 0f;
+            if (allDead && !allBrokenFx)
+            {
+                allBrokenFx = true;
+                if (!Main.dedServ)
+                {
+                    SoundEngine.PlaySound(SoundID.NPCHit53, npc.Center);
+                    SoundEngine.PlaySound(SoundID.NPCHit13 with { Volume = 0.8f, Pitch = -0.5f }, npc.Center);
+                    ScourgeFx.Burst(npc.Center, 7f, 30, DustID.ToxicBubble);
+                    if (Main.LocalPlayer.active)
+                        Main.LocalPlayer.Calamity().GeneralScreenShakePower = 8f;
+                }
+            }
+            else if (!allDead)
+            {
+                allBrokenFx = false;
             }
         }
         #endregion
@@ -398,34 +529,46 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         #region Acidic Exhaust Cage
         private void UpdateExhaustCage(NPC npc, Player target, int phase)
         {
+            // P2 收紧到 900（半径 450）。注意笼子中心是开场钉死的 cageCenter，不再是 npc.Center ——
+            // 这头野兽全程 20~26px/f 贯穿、蓄力驻留点还在 520px 外，跟着它走的笼子会把老老实实站桩的
+            // 玩家反复判出界。锚死之后"看到的框 = 真实的墙"，也不会满场乱飞。
             float cageSize = phase == 1 ? 1400f : 900f;
             float half = cageSize / 2f;
-            Vector2 dist = target.Center - npc.Center;
             if (exhaustBoundaryHurtCooldown > 0) exhaustBoundaryHurtCooldown--;
 
             // The golden toxic-mist frame must be visible: sulphur motes trace the square
-            for (int i = 0; i < 3; i++)
+            if (!Main.dedServ)
             {
-                float t = Main.rand.NextFloat(4f);
-                Vector2 pos;
-                if (t < 1f) pos = npc.Center + new Vector2(MathHelper.Lerp(-half, half, t), -half);
-                else if (t < 2f) pos = npc.Center + new Vector2(half, MathHelper.Lerp(-half, half, t - 1f));
-                else if (t < 3f) pos = npc.Center + new Vector2(MathHelper.Lerp(half, -half, t - 2f), half);
-                else pos = npc.Center + new Vector2(-half, MathHelper.Lerp(half, -half, t - 3f));
-                Dust d = Dust.NewDustPerfect(pos, DustID.GoldFlame, Vector2.Zero, 150, default, 1.1f);
-                d.noGravity = true;
-                d.fadeIn = 1f;
+                for (int i = 0; i < 3; i++)
+                {
+                    float t = Main.rand.NextFloat(4f);
+                    Vector2 pos;
+                    if (t < 1f) pos = cageCenter + new Vector2(MathHelper.Lerp(-half, half, t), -half);
+                    else if (t < 2f) pos = cageCenter + new Vector2(half, MathHelper.Lerp(-half, half, t - 1f));
+                    else if (t < 3f) pos = cageCenter + new Vector2(MathHelper.Lerp(half, -half, t - 2f), half);
+                    else pos = cageCenter + new Vector2(-half, MathHelper.Lerp(half, -half, t - 3f));
+                    Dust d = Dust.NewDustPerfect(pos, DustID.GoldFlame, Vector2.Zero, 150, default, 1.1f);
+                    d.noGravity = true;
+                    d.fadeIn = 1f;
+                }
             }
 
-            if (Math.Abs(dist.X) > half || Math.Abs(dist.Y) > half)
+            // 惩罚只作用于本地玩家：玩家 buff/物理/掉血都是客户端权威的，在别人机器上改远程玩家无效，
+            // 而且原来 Hurt 会被每个客户端各调一次。改成各管各的之后，联机里所有人都会被牢笼约束。
+            // 惩罚从"中毒+虚弱+掉血"三连减为"中毒+掉血"：虚弱 200 帧叠在中毒和掉血上过重。
+            Player local = Main.LocalPlayer;
+            if (local != null && local.active && !local.dead)
             {
-                if (ModContent.TryFind("CalamityMod", "SulphuricPoisoning", out ModBuff poison))
-                    target.AddBuff(poison.Type, 200);
-                target.AddBuff(BuffID.Weak, 200);
-                if (exhaustBoundaryHurtCooldown <= 0)
+                Vector2 offset = local.Center - cageCenter;
+                if (Math.Abs(offset.X) > half || Math.Abs(offset.Y) > half)
                 {
-                    target.Hurt(Terraria.DataStructures.PlayerDeathReason.ByNPC(npc.whoAmI), 6, 0);
-                    exhaustBoundaryHurtCooldown = 30;
+                    if (ModContent.TryFind("CalamityMod", "SulphuricPoisoning", out ModBuff poison))
+                        local.AddBuff(poison.Type, 200);
+                    if (exhaustBoundaryHurtCooldown <= 0)
+                    {
+                        local.Hurt(Terraria.DataStructures.PlayerDeathReason.ByNPC(npc.whoAmI), 6, 0);
+                        exhaustBoundaryHurtCooldown = 30;
+                    }
                 }
             }
 
@@ -1097,7 +1240,10 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             {
                 SoundEngine.PlaySound(SoundID.NPCDeath10, npc.Center);
                 SoundEngine.PlaySound(SoundID.Roar with { Volume = 0.9f, Pitch = -0.3f }, npc.Center);
-                target.Calamity().GeneralScreenShakePower = 9f;
+                // 屏震要打在本地玩家上（各客户端抖各自的屏）。这个文件里 393/930 行本来就是这么写的，
+                // 只有这里和死亡演出两处漏了 —— 统一过来。
+                if (!Main.dedServ && Main.LocalPlayer.active)
+                    Main.LocalPlayer.Calamity().GeneralScreenShakePower = 9f;
             }
 
             // Five overload dashes as the exhaust cage collapses down to its phase-2 size (design doc: 恒定5次).
@@ -1215,7 +1361,8 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     npc.velocity = Vector2.Zero;
                     SoundEngine.PlaySound(SoundID.Item14 with { Volume = 1.1f, Pitch = -0.3f }, npc.Center);
                     SoundEngine.PlaySound(SoundID.NPCDeath4, npc.Center);
-                    target.Calamity().GeneralScreenShakePower = 14f;
+                    if (!Main.dedServ && Main.LocalPlayer.active)
+                        Main.LocalPlayer.Calamity().GeneralScreenShakePower = 14f;
                     ScourgeFx.Burst(npc.Center, 8f, 40, DustID.GoldFlame);
                     ScourgeFx.Burst(npc.Center, 5f, 30, DustID.ToxicBubble);
                 }

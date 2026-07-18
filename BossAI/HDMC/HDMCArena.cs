@@ -4,20 +4,18 @@ using CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.Audio;
-using Terraria.DataStructures;
 using Terraria.ID;
-using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.BossAI.HDMC
 {
     /// <summary>
     /// 超维矩阵·数据牢笼——Boss 登场瞬间建立的矩形边界。
-    /// 技术沿用灾厄克隆体竞技场（软墙约束本地玩家 + 越界惩罚），配色换成矩阵数据流风格。
+    /// 技术沿用灾厄克隆体竞技场的视觉边界，配色换成矩阵数据流风格。
     ///
     /// 设计分寸：
-    ///  · 「软墙」——距边缘 PushZone 内开始施加递增的向心推力，越靠边推得越狠；
-    ///  · 越过硬边界会被钳回并触发一次「数据反噬」（掉血 + 爆散 + 震屏），带冷却，不会连锁秒杀；
+    ///  · 「硬墙」——只在玩家完整碰撞箱越界时阻挡，不会在接近边缘时减速或反弹；
+    ///  · 越界会被钳回边界内侧并清除朝外速度，不附加伤害或其他惩罚；
     ///  · 边界四条边会「感知」玩家：玩家靠近哪条边，那条边就高亮加粗——既是警示也是演出。
     ///
     /// ai[0] = 宿主 Boss 的 whoAmI。中心 = 生成位置（登场时的玩家位置）。
@@ -28,15 +26,13 @@ namespace CalamityLegendsComeBack.BossAI.HDMC
         public const float HalfWidth = 1400f;
         public const float HalfHeight = 950f;
 
-        private const float PushZone = 280f;     // 距边缘多近开始向心推
-        private const float HurtCooldown = 28f;  // 越界反噬冷却帧
+        private const float VisualProximityZone = 160f;
 
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         private int Host => (int)Projectile.ai[0];
         private ref float Age => ref Projectile.localAI[0];
         private ref float Fade => ref Projectile.localAI[1];
-        private ref float HurtTimer => ref Projectile.localAI[2];
 
         public override void SetStaticDefaults()
         {
@@ -89,9 +85,6 @@ namespace CalamityLegendsComeBack.BossAI.HDMC
                 }
             }
 
-            if (HurtTimer > 0f)
-                HurtTimer--;
-
             if (Age == 1f && !Main.dedServ)
                 SoundEngine.PlaySound(new SoundStyle(MatrixModuleNumbers.SndSpaceWarp) { Volume = 0.6f, Pitch = -0.2f }, Projectile.Center);
 
@@ -102,7 +95,7 @@ namespace CalamityLegendsComeBack.BossAI.HDMC
                 ConfineLocalPlayer();
         }
 
-        /// <summary>软墙约束本地玩家：近边向心推，越界钳回 + 数据反噬。</summary>
+        /// <summary>硬边界约束本地玩家：只在完整碰撞箱越界时钳回，并清除朝外速度。</summary>
         private void ConfineLocalPlayer()
         {
             Player p = Main.LocalPlayer;
@@ -110,69 +103,34 @@ namespace CalamityLegendsComeBack.BossAI.HDMC
                 return;
 
             Vector2 c = Projectile.Center;
-            bool breached = false;
-            Vector2 breachPoint = p.Center;
-
             float left = c.X - HalfWidth, right = c.X + HalfWidth;
             float top = c.Y - HalfHeight, bottom = c.Y + HalfHeight;
 
-            // ── X 轴 ──
-            if (p.Center.X < left + PushZone)
+            // Use the player's whole hitbox, so touching a border feels like a solid wall instead of a spring.
+            if (p.position.X < left)
             {
-                p.velocity.X += ((left + PushZone) - p.Center.X) * 0.01f;
-                if (p.Center.X < left)
-                {
-                    p.position.X += left - p.Center.X;
-                    if (p.velocity.X < 0f) p.velocity.X = 0f;
-                    breached = true; breachPoint.X = left;
-                }
+                p.position.X = left;
+                if (p.velocity.X < 0f)
+                    p.velocity.X = 0f;
             }
-            else if (p.Center.X > right - PushZone)
+            else if (p.position.X + p.width > right)
             {
-                p.velocity.X -= (p.Center.X - (right - PushZone)) * 0.01f;
-                if (p.Center.X > right)
-                {
-                    p.position.X += right - p.Center.X;
-                    if (p.velocity.X > 0f) p.velocity.X = 0f;
-                    breached = true; breachPoint.X = right;
-                }
+                p.position.X = right - p.width;
+                if (p.velocity.X > 0f)
+                    p.velocity.X = 0f;
             }
 
-            // ── Y 轴 ──
-            if (p.Center.Y < top + PushZone)
+            if (p.position.Y < top)
             {
-                p.velocity.Y += ((top + PushZone) - p.Center.Y) * 0.01f;
-                if (p.Center.Y < top)
-                {
-                    p.position.Y += top - p.Center.Y;
-                    if (p.velocity.Y < 0f) p.velocity.Y = 0f;
-                    breached = true; breachPoint.Y = top;
-                }
+                p.position.Y = top;
+                if (p.velocity.Y < 0f)
+                    p.velocity.Y = 0f;
             }
-            else if (p.Center.Y > bottom - PushZone)
+            else if (p.position.Y + p.height > bottom)
             {
-                p.velocity.Y -= (p.Center.Y - (bottom - PushZone)) * 0.01f;
-                if (p.Center.Y > bottom)
-                {
-                    p.position.Y += bottom - p.Center.Y;
-                    if (p.velocity.Y > 0f) p.velocity.Y = 0f;
-                    breached = true; breachPoint.Y = bottom;
-                }
-            }
-
-            if (breached && HurtTimer <= 0f && !p.HasBuff(BuffID.ChaosState))
-            {
-                HurtTimer = HurtCooldown;
-                p.Hurt(
-                    PlayerDeathReason.ByCustomReason(NetworkText.FromLiteral($"{p.name} 试图越过数据边界，被反噬解构了。")),
-                    120, 0);
-
-                if (!Main.dedServ)
-                {
-                    HDMCUtil.DataBurstParticles(breachPoint, 10, 6, 8f);
-                    HDMCUtil.ScreenShake(breachPoint, 3f, 700f);
-                    SoundEngine.PlaySound(new SoundStyle(MatrixModuleNumbers.SndGeoBurst) { Volume = 0.5f, Pitch = 0.3f }, breachPoint);
-                }
+                p.position.Y = bottom - p.height;
+                if (p.velocity.Y > 0f)
+                    p.velocity.Y = 0f;
             }
         }
 
@@ -208,7 +166,7 @@ namespace CalamityLegendsComeBack.BossAI.HDMC
 
         private void DrawEdge(Vector2 a, Vector2 b, Player p, float t, float op, float hue)
         {
-            float prox = MathHelper.Clamp(1f - DistancePointToSegment(p.Center, a, b) / PushZone, 0f, 1f);
+            float prox = MathHelper.Clamp(1f - DistancePointToSegment(p.Center, a, b) / VisualProximityZone, 0f, 1f);
             float baseAlpha = 0.32f + prox * 0.6f;
 
             Color glow = HDMCUtil.DataColor(hue + t * 0.05f, op * baseAlpha * 0.35f);

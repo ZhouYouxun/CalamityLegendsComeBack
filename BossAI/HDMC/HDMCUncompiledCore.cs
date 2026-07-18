@@ -1,10 +1,9 @@
 using System;
-using CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore;
+using CalamityMod;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.Audio;
-using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -16,6 +15,23 @@ namespace CalamityLegendsComeBack.BossAI.HDMC
     /// </summary>
     public sealed class HDMCUncompiledCore : ModItem
     {
+        private static readonly Vector3[] PrismVertices =
+        {
+            new Vector3(0f, -1f, -0.65f),
+            new Vector3(0.866f, 0.5f, -0.65f),
+            new Vector3(-0.866f, 0.5f, -0.65f),
+            new Vector3(0f, -1f, 0.65f),
+            new Vector3(0.866f, 0.5f, 0.65f),
+            new Vector3(-0.866f, 0.5f, 0.65f)
+        };
+
+        private static readonly (int Start, int End)[] PrismEdges =
+        {
+            (0, 1), (1, 2), (2, 0),
+            (3, 4), (4, 5), (5, 3),
+            (0, 3), (1, 4), (2, 5)
+        };
+
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         public override void SetStaticDefaults()
@@ -41,7 +57,7 @@ namespace CalamityLegendsComeBack.BossAI.HDMC
         public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame,
             Color drawColor, Color itemColor, Vector2 origin, float scale)
         {
-            DrawTriangularCore(position, scale * 0.9f, true);
+            DrawTriangularPrism(position, scale * 0.9f, true);
             return false;
         }
 
@@ -50,65 +66,52 @@ namespace CalamityLegendsComeBack.BossAI.HDMC
         {
             Vector2 center = Item.Center - Main.screenPosition + Vector2.UnitY *
                 MathF.Sin(Main.GlobalTimeWrappedHourly * 2.1f) * 1.6f * scale;
-            DrawTriangularCore(center, scale * 0.78f, false);
+            DrawTriangularPrism(center, scale * 0.78f, false);
             return false;
         }
 
-        // The summon uses a deliberately spare triangular silhouette so it cannot be mistaken for the Matrix Core weapon.
-        private static void DrawTriangularCore(Vector2 center, float scale, bool inventory)
+        // The Matrix Core's 3D rotation and perspective projection, reduced to one triangular prism and nine edges.
+        private static void DrawTriangularPrism(Vector2 center, float scale, bool inventory)
         {
-            float time = Main.GlobalTimeWrappedHourly;
-            float iconScale = MathHelper.Clamp(scale, 0.55f, 1.25f);
-            float outerRadius = 22f * iconScale;
-            float innerRadius = outerRadius * 0.48f;
-            float rotation = -MathHelper.PiOver2 + time * 0.18f;
+            float iconScale = MathHelper.Clamp(scale, 0.55f, 1.15f);
             float opacity = inventory ? 1f : 0.76f;
+            Color lineColor = new Color(91, 224, 255) * opacity;
+            Vector2[] projected = ProjectPrism(center, 18f * iconScale, Main.GlobalTimeWrappedHourly);
 
-            Color outerColor = Color.Lerp(new Color(44, 224, 255), new Color(174, 94, 255),
-                0.5f + 0.5f * MathF.Sin(time * 1.4f)) * opacity;
-            Color innerColor = Color.Lerp(new Color(255, 124, 226), new Color(80, 245, 255),
-                0.5f + 0.5f * MathF.Sin(time * 1.4f + 1.7f)) * opacity;
-
-            Vector2[] outer = new Vector2[3];
-            Vector2[] inner = new Vector2[3];
-            for (int i = 0; i < 3; i++)
-            {
-                float angle = rotation + MathHelper.TwoPi * i / 3f;
-                outer[i] = center + angle.ToRotationVector2() * outerRadius;
-                inner[i] = center + (angle + MathHelper.Pi / 3f).ToRotationVector2() * innerRadius;
-            }
-
-            for (int i = 0; i < 3; i++)
-            {
-                int next = (i + 1) % 3;
-                DrawHologramLine(outer[i], outer[next], outerColor * 0.2f, 5.2f * iconScale);
-                DrawHologramLine(outer[i], outer[next], outerColor, 1.5f * iconScale);
-                DrawHologramLine(inner[i], inner[next], innerColor * 0.7f, 1.15f * iconScale);
-
-                float nodePulse = 1f + 0.25f * MathF.Sin(time * 4f + i * 2.1f);
-                Vector2 node = outer[i];
-                DrawHologramLine(node - Vector2.UnitX * 2.5f * iconScale,
-                    node + Vector2.UnitX * 2.5f * iconScale, Color.White * (0.8f * opacity), 1.1f * nodePulse);
-                DrawHologramLine(node - Vector2.UnitY * 2.5f * iconScale,
-                    node + Vector2.UnitY * 2.5f * iconScale, Color.White * (0.8f * opacity), 1.1f * nodePulse);
-            }
-
-            float scanProgress = (time * 0.7f) % 1f;
-            Vector2 scanStart = Vector2.Lerp(outer[1], outer[2], scanProgress);
-            DrawHologramLine(scanStart, center, innerColor * 0.6f, 0.9f * iconScale);
-            DrawHologramLine(center - Vector2.UnitX * 2.2f * iconScale,
-                center + Vector2.UnitX * 2.2f * iconScale, Color.White * (0.9f * opacity), 1.3f * iconScale);
+            foreach ((int start, int end) in PrismEdges)
+                DrawProjectedEdge(projected[start], projected[end], lineColor, 1.2f * iconScale);
         }
 
-        private static void DrawHologramLine(Vector2 start, Vector2 end, Color color, float width)
+        private static Vector2[] ProjectPrism(Vector2 center, float radius, float time)
         {
-            Vector2 edge = end - start;
-            float length = edge.Length();
-            if (length <= 0.01f)
+            Matrix rotation = Matrix.CreateFromYawPitchRoll(time * 0.94f, time * 0.67f, time * 0.43f);
+            Vector2[] projected = new Vector2[PrismVertices.Length];
+            Vector2 projectedCenter = Vector2.Zero;
+
+            for (int i = 0; i < PrismVertices.Length; i++)
+            {
+                Vector3 normalized = PrismVertices[i];
+                normalized.Normalize();
+                Vector3 point = Vector3.Transform(normalized * radius, rotation);
+                float perspective = 620f / Math.Max(180f, 620f + point.Z);
+                projected[i] = center + new Vector2(point.X, point.Y) * perspective;
+                projectedCenter += projected[i];
+            }
+
+            Vector2 correction = center - projectedCenter / projected.Length;
+            for (int i = 0; i < projected.Length; i++)
+                projected[i] += correction;
+
+            return projected;
+        }
+
+        // DrawLineBetter is the Matrix Core's endpoint-bounded renderer; no line can extend beyond start and end.
+        private static void DrawProjectedEdge(Vector2 start, Vector2 end, Color color, float width)
+        {
+            if (Vector2.DistanceSquared(start, end) <= 0.0001f)
                 return;
 
-            Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, start, null, color, edge.ToRotation(),
-                Vector2.Zero, new Vector2(length, width), SpriteEffects.None, 0f);
+            Main.spriteBatch.DrawLineBetter(start, end, color, width);
         }
 
         public override bool CanUseItem(Player player)
@@ -143,12 +146,8 @@ namespace CalamityLegendsComeBack.BossAI.HDMC
         public override void AddRecipes()
         {
             CreateRecipe()
-                .AddIngredient(ItemID.LunarBar, 10)
-                .AddIngredient(ItemID.FragmentSolar, 6)
-                .AddIngredient(ItemID.FragmentVortex, 6)
-                .AddIngredient(ItemID.FragmentNebula, 6)
-                .AddIngredient(ItemID.FragmentStardust, 6)
-                .AddTile(TileID.LunarCraftingStation)
+                .AddRecipeGroup("AnyGoldBar", 10)
+                .AddIngredient(ItemID.Wire, 25)
                 .Register();
         }
     }

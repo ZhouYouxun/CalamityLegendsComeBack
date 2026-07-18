@@ -14,6 +14,7 @@ using Terraria.ModLoader;
 using Terraria.UI.Chat;
 using CalamityMod;
 using CalamityLegendsComeBack.Systems;
+using CalamityLegendsComeBack.Weapons.A_Tools.DebugTools;
 using CalamityLegendsComeBack.Weapons.A_Tools.Toys.RetroGames;
 
 namespace CalamityLegendsComeBack.Weapons.A_Tools.Toys.PlayerLocker
@@ -21,7 +22,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.Toys.PlayerLocker
     public sealed class PlayerLocker : ModItem, ILocalizedModType
     {
         public new string LocalizationCategory => "Items.Weapons";
-        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Tools/DebugTools/StructureExtractor/StructureExtractor";
+        public override string Texture => "Terraria/Images/Item_" + ItemID.ExtendoGrip;
+
+        public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame,
+            Color drawColor, Color itemColor, Vector2 origin, float scale)
+        {
+            DebugToolOutline.Draw(spriteBatch, TextureAssets.Item[Type].Value, position, frame, origin, scale, new Color(230, 90, 80));
+            return true;
+        }
 
         private static int PanelType => ModContent.ProjectileType<PlayerLockerPanel>();
 

@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -23,6 +24,18 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
         public virtual bool PreAI(NPC npc, LegendsGlobalNPC data) => true;
         public virtual void PostAI(NPC npc, LegendsGlobalNPC data) { }
+
+        /// <summary>
+        /// 自定义状态同步通道。传奇模式的 Boss AI 把大量玩法状态（护盾、部位血量、阶段计时器）存在
+        /// 实例字段里，而这些字段默认【完全不过网】——服务端和客户端各算各的，一旦被用来 gate 伤害
+        /// 就会出现"我明明在打却不掉血"。想同步的 Boss 覆写这两个方法即可；不覆写的写 0 字节，
+        /// 收发字节数天然对称，不会影响其它 Boss。
+        ///
+        /// 注意：写入方与读取方必须严格对称（同样的字段、同样的顺序、同样的宽度），否则会读串。
+        /// 改动时务必两边一起改。字段变化后记得 npc.netUpdate = true 才会真正下发。
+        /// </summary>
+        public virtual void SendExtraAI(NPC npc, LegendsGlobalNPC data, BinaryWriter writer) { }
+        public virtual void ReceiveExtraAI(NPC npc, LegendsGlobalNPC data, BinaryReader reader) { }
         public virtual bool PreDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor) => true;
         public virtual void PostDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor) { }
         public virtual void FindFrame(NPC npc, int frameHeight) { }

@@ -124,6 +124,9 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         #region Core AI Hooks
         public override bool PreAI(NPC npc, LegendsGlobalNPC data)
         {
+            if ((int)npc.ai[0] == 0)
+                ResetFightState();
+
             ticksRunning++;
             oldPositions[oldPositionsIndex] = npc.Center;
             oldPositionsIndex = (oldPositionsIndex + 1) % oldPositions.Length;
@@ -196,17 +199,21 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             // Greenhouse Boundary Arena (1400px in P1-P3, 1000px in P4-P6). Square check matching the drawn
             // frame, anchored to the ToxicHeart arena center (was a circle glued to the boss). Damage throttled.
             float borderSize = currentPhase <= 3 ? 1400f : 1000f;
-            Vector2 dist = target.Center - arenaCenter;
-            if (arenaHurtCooldown > 0)
-                arenaHurtCooldown--;
-            if (Math.Abs(dist.X) > borderSize / 2f || Math.Abs(dist.Y) > borderSize / 2f)
+            if (Main.netMode != NetmodeID.Server)
             {
-                target.velocity += SafeNormalize(arenaCenter - target.Center, Vector2.Zero) * 2f;
-                if (arenaHurtCooldown <= 0)
+                Player arenaPlayer = Main.LocalPlayer;
+                Vector2 dist = arenaPlayer.Center - arenaCenter;
+                if (arenaHurtCooldown > 0)
+                    arenaHurtCooldown--;
+                if (Math.Abs(dist.X) > borderSize / 2f || Math.Abs(dist.Y) > borderSize / 2f)
                 {
-                    arenaHurtCooldown = 30;
-                    target.AddBuff(BuffID.Poisoned, 180);
-                    target.Hurt(Terraria.DataStructures.PlayerDeathReason.ByNPC(npc.whoAmI), 15, 0);
+                    arenaPlayer.velocity += SafeNormalize(arenaCenter - arenaPlayer.Center, Vector2.Zero) * 2f;
+                    if (arenaHurtCooldown <= 0)
+                    {
+                        arenaHurtCooldown = 30;
+                        arenaPlayer.AddBuff(BuffID.Poisoned, 180);
+                        arenaPlayer.Hurt(Terraria.DataStructures.PlayerDeathReason.ByNPC(npc.whoAmI), 15, 0);
+                    }
                 }
             }
 
@@ -215,6 +222,15 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
             // Update Nano-Drone Grid Shield
             UpdateDroneShield(npc, currentPhase);
+
+            // Armor readability: a faint, intermittent green dither lets players see whether the
+            // drone shield is still supplying armor without competing with attack telegraphs.
+            armorDither = MathHelper.Lerp(armorDither, shieldActive ? 1f : 0f, 0.08f);
+            if (Main.netMode != NetmodeID.Server && armorDither > 0.08f && Main.rand.NextFloat() < armorDither * 0.12f)
+            {
+                Dust armorSpark = Dust.NewDustPerfect(npc.Center + Main.rand.NextVector2Circular(78f, 62f), DustID.GreenTorch, Main.rand.NextVector2Circular(0.9f, 0.9f), 135, default, 0.8f + armorDither * 0.45f);
+                armorSpark.noGravity = true;
+            }
 
             // Visual oscillations and breathing
             if (state != AttackState.DeathAnimation)
@@ -274,6 +290,41 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             }
 
             return false;
+        }
+
+        private void ResetFightState()
+        {
+            ticksRunning = 0;
+            currentRepetition = 0;
+            Array.Clear(oldPositions, 0, oldPositions.Length);
+            oldPositionsIndex = 0;
+            attackCycleIndex = 0;
+            shieldActive = true;
+            shieldStunTimer = 0;
+            shieldRegenTimer = 0;
+            shieldFxCooldown = 0;
+            steamWarnTimer = 0;
+            activeSteamAxis = -1;
+            steamWarnOpacity = 0f;
+            steamLaneX = 0f;
+            steamLaneY = 0f;
+            arenaCenter = Vector2.Zero;
+            centerSet = false;
+            Array.Clear(attackVariant, 0, attackVariant.Length);
+            currentVariantB = false;
+            syringeAimDir = Vector2.Zero;
+            syringeLineBright = 0f;
+            armorDither = 0f;
+            transitionFlashAlpha = 0f;
+            arenaHurtCooldown = 0;
+            outOfBiomeTimer = 0;
+            enrageSpeedMultiplier = 1f;
+            wasEnraged = false;
+            malevolenceSide = 1;
+            staffTargetX = 0f;
+            staffTargetY = 0f;
+            syringeSwingDir = 1f;
+            defilerAimDir = Vector2.UnitY;
         }
 
         public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers)

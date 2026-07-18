@@ -77,9 +77,9 @@ namespace CalamityLegendsComeBack.BossAI.HDMC
             NPC.width = 108;
             NPC.height = 108;
             NPC.aiStyle = -1;
-            NPC.lifeMax = 3_000_000;
-            NPC.damage = 220;
-            NPC.defense = 60;
+            NPC.lifeMax = 22_000;
+            NPC.damage = 52;
+            NPC.defense = 14;
             NPC.knockBackResist = 0f;
             NPC.value = 1_500_000f;
             NPC.npcSlots = 36f;
@@ -90,7 +90,7 @@ namespace CalamityLegendsComeBack.BossAI.HDMC
             NPC.HitSound = SoundID.NPCHit53;
             NPC.DeathSound = SoundID.NPCDeath14;
             NPC.Calamity().canBreakPlayerDefense = true;
-            NPC.DR_NERD(0.22f);
+            NPC.DR_NERD(0.05f);
             Music = MusicID.LunarBoss;
         }
 

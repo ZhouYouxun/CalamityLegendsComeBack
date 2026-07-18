@@ -89,6 +89,9 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         #region Core AI Hooks
         public override bool PreAI(NPC npc, LegendsGlobalNPC data)
         {
+            if ((int)npc.ai[0] == 0)
+                ResetFightState();
+
             ticksRunning++;
             oldPositions[oldPositionsIndex] = npc.Center;
             oldPositionsIndex = (oldPositionsIndex + 1) % oldPositions.Length;
@@ -155,21 +158,25 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             else if (currentPhase == 4) borderSize = 650f;
 
             // Boundary push + damage — throttled to one hit per half-second.
-            Vector2 dist = target.Center - arenaCenter;
-            if (arenaHurtCooldown > 0)
-                arenaHurtCooldown--;
-            if (Math.Abs(dist.X) > borderSize / 2f || Math.Abs(dist.Y) > borderSize / 2f)
+            if (Main.netMode != NetmodeID.Server)
             {
-                if (Math.Abs(dist.X) > borderSize / 2f)
-                    target.velocity.X = -Math.Sign(dist.X) * 5f;
-                if (Math.Abs(dist.Y) > borderSize / 2f)
-                    target.velocity.Y = -Math.Sign(dist.Y) * 5f;
-
-                if (arenaHurtCooldown <= 0)
+                Player arenaPlayer = Main.LocalPlayer;
+                Vector2 dist = arenaPlayer.Center - arenaCenter;
+                if (arenaHurtCooldown > 0)
+                    arenaHurtCooldown--;
+                if (Math.Abs(dist.X) > borderSize / 2f || Math.Abs(dist.Y) > borderSize / 2f)
                 {
-                    arenaHurtCooldown = 30;
-                    target.AddBuff(BuffID.OnFire, 180);
-                    target.Hurt(Terraria.DataStructures.PlayerDeathReason.ByNPC(npc.whoAmI), 12, 0);
+                    if (Math.Abs(dist.X) > borderSize / 2f)
+                        arenaPlayer.velocity.X = -Math.Sign(dist.X) * 5f;
+                    if (Math.Abs(dist.Y) > borderSize / 2f)
+                        arenaPlayer.velocity.Y = -Math.Sign(dist.Y) * 5f;
+
+                    if (arenaHurtCooldown <= 0)
+                    {
+                        arenaHurtCooldown = 30;
+                        arenaPlayer.AddBuff(BuffID.OnFire, 180);
+                        arenaPlayer.Hurt(Terraria.DataStructures.PlayerDeathReason.ByNPC(npc.whoAmI), 12, 0);
+                    }
                 }
             }
 
@@ -231,6 +238,31 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             UpdateBlink(npc);
 
             return false;
+        }
+
+        private void ResetFightState()
+        {
+            ticksRunning = 0;
+            currentRepetition = 0;
+            Array.Clear(oldPositions, 0, oldPositions.Length);
+            oldPositionsIndex = 0;
+            arenaCenter = Vector2.Zero;
+            centerSet = false;
+            arenaHurtCooldown = 0;
+            shieldActive = true;
+            shieldRegenTimer = 0;
+            shieldStunTimer = 0;
+            shieldFxCooldown = 0;
+            Array.Clear(attackVariant, 0, attackVariant.Length);
+            currentVariantB = false;
+            blinkTimer = 0;
+            blinkDuration = 0;
+            blinkDestination = Vector2.Zero;
+            animosityMuzzle = Vector2.Zero;
+            animosityLockedDir = Vector2.Zero;
+            animosityLineBright = 0f;
+            Array.Clear(lashesAnchors, 0, lashesAnchors.Length);
+            lashesChargeT = 0f;
         }
 
         public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers) => ApplyDefense(npc, ref modifiers);

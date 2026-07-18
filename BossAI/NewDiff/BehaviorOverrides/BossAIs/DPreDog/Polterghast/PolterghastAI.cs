@@ -127,6 +127,9 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         #region Core AI Hooks
         public override bool PreAI(NPC npc, LegendsGlobalNPC data)
         {
+            if ((int)npc.ai[0] == 0)
+                ResetFightState();
+
             ticksRunning++;
 
             if (!TryGetTarget(npc, out Player target))
@@ -176,16 +179,20 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             }
 
             float borderSize = currentPhase == 1 ? 1400f : 900f;
-            if (arenaHurtCooldown > 0) arenaHurtCooldown--;
-            Vector2 dist = target.Center - arenaCenter;
-            if (Math.Abs(dist.X) > borderSize / 2f || Math.Abs(dist.Y) > borderSize / 2f)
+            if (Main.netMode != NetmodeID.Server)
             {
-                target.AddBuff(BuffID.Bleeding, 180);
-                target.AddBuff(BuffID.Silenced, 180); // Necro Choke: locks dash for 3s
-                if (arenaHurtCooldown <= 0)
+                Player arenaPlayer = Main.LocalPlayer;
+                if (arenaHurtCooldown > 0) arenaHurtCooldown--;
+                Vector2 dist = arenaPlayer.Center - arenaCenter;
+                if (Math.Abs(dist.X) > borderSize / 2f || Math.Abs(dist.Y) > borderSize / 2f)
                 {
-                    arenaHurtCooldown = 30;
-                    target.Hurt(Terraria.DataStructures.PlayerDeathReason.ByNPC(npc.whoAmI), 20, 0);
+                    arenaPlayer.AddBuff(BuffID.Bleeding, 180);
+                    arenaPlayer.AddBuff(BuffID.Silenced, 180); // Necro Choke: locks dash for 3s
+                    if (arenaHurtCooldown <= 0)
+                    {
+                        arenaHurtCooldown = 30;
+                        arenaPlayer.Hurt(Terraria.DataStructures.PlayerDeathReason.ByNPC(npc.whoAmI), 20, 0);
+                    }
                 }
             }
 
@@ -266,6 +273,36 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             data.PatternTimer = (int)timer;
 
             return false;
+        }
+
+        private void ResetFightState()
+        {
+            ticksRunning = 0;
+            currentRepetition = 0;
+            attackCycleIndex = 0;
+            arenaCenter = Vector2.Zero;
+            centerSet = false;
+            slamTimer = 0;
+            activeSlamSide = -1;
+            wallSlamOffset = 0f;
+            slamHurtCooldown = 0;
+            hateCloneHP = 1500f;
+            fearCloneHP = 1500f;
+            Array.Clear(cloneFlash, 0, cloneFlash.Length);
+            stunTimer = 0;
+            respawnClonesTimer = 0;
+            cloneFxCooldown = 0;
+            arenaHurtCooldown = 0;
+            transitionFlashAlpha = 0f;
+            Array.Clear(attackVariant, 0, attackVariant.Length);
+            currentVariantB = false;
+            blinkTimer = 0;
+            blinkDuration = 0;
+            blinkDestination = Vector2.Zero;
+            galileoNextPos = Vector2.Zero;
+            weavePhase = 0f;
+            Array.Clear(oldPos, 0, oldPos.Length);
+            oldPosIndex = 0;
         }
 
         public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers)
@@ -418,20 +455,24 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             else if (slamTimer < 192)
             {
                 wallSlamOffset = 300f;
-                if (slamHurtCooldown > 0) { slamHurtCooldown--; }
-                else
+                if (Main.netMode != NetmodeID.Server)
                 {
-                    Vector2 dist = target.Center - arenaCenter;
-                    bool collided =
-                        (activeSlamSide == 0 && dist.X < -borderSize / 2f + 300f) ||
-                        (activeSlamSide == 1 && dist.X > borderSize / 2f - 300f) ||
-                        (activeSlamSide == 2 && dist.Y < -borderSize / 2f + 300f) ||
-                        (activeSlamSide == 3 && dist.Y > borderSize / 2f - 300f);
-                    if (collided)
+                    Player arenaPlayer = Main.LocalPlayer;
+                    if (slamHurtCooldown > 0) { slamHurtCooldown--; }
+                    else
                     {
-                        slamHurtCooldown = 30;
-                        target.AddBuff(BuffID.Silenced, 180);
-                        target.Hurt(Terraria.DataStructures.PlayerDeathReason.ByNPC(npc.whoAmI), 20, 0);
+                        Vector2 dist = arenaPlayer.Center - arenaCenter;
+                        bool collided =
+                            (activeSlamSide == 0 && dist.X < -borderSize / 2f + 300f) ||
+                            (activeSlamSide == 1 && dist.X > borderSize / 2f - 300f) ||
+                            (activeSlamSide == 2 && dist.Y < -borderSize / 2f + 300f) ||
+                            (activeSlamSide == 3 && dist.Y > borderSize / 2f - 300f);
+                        if (collided)
+                        {
+                            slamHurtCooldown = 30;
+                            arenaPlayer.AddBuff(BuffID.Silenced, 180);
+                            arenaPlayer.Hurt(Terraria.DataStructures.PlayerDeathReason.ByNPC(npc.whoAmI), 20, 0);
+                        }
                     }
                 }
             }

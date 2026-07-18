@@ -37,6 +37,7 @@ using Terraria;
 using Terraria.Audio;
 using Terraria.GameContent;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using CalamityYharon = CalamityMod.NPCs.Yharon.Yharon;
 
@@ -53,6 +54,13 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         public override int AttackCycleLength => 160;
         public override float MotionIntensity => 1.45f;
         public override Color DebugColor => new(255, 135, 55);
+        public override string PhaseName(int phase) => Language.GetTextValue($"Mods.CalamityLegendsComeBack.LegendsPhases.Yharon.{phase}");
+
+        public override string StateName(LegendsGlobalNPC data)
+        {
+            string state = ((AttackState)(int)data.AttackState).ToString();
+            return Language.GetTextValue($"Mods.CalamityLegendsComeBack.LegendsAttacks.Yharon.{state}");
+        }
 
         // Sound configuration registers
         public static readonly SoundStyle RoarSound = new("Terraria/Sounds/NPC_Killed_10") { Volume = 1.3f, Pitch = -0.1f };
@@ -91,9 +99,17 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             SunFlareEruption = 6,
             RebirthCeremony = 7,
             PhoenixFlareRain = 8,
-            DespawnRetreat = 9
+            DespawnRetreat = 9,
+            DeathAnimation = 10
         }
         #endregion
+
+        // This is gameplay state, not a drawing convenience. The final ring must stay in the
+        // same world position for every client instead of inheriting whichever player happens
+        // to be Yharon's current target locally.
+        private Vector2 solarArenaCenter;
+        private bool solarArenaAnchored;
+        private int solarArenaHurtCooldown;
 
         #region Core AI Override Hooks
         /// <summary>
@@ -123,6 +139,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             // Set Initial Phase
             if (currentPhase == 0)
             {
+                ResetFightState();
                 npc.ai[0] = 1f;
                 currentPhase = 1;
                 npc.netUpdate = true;
@@ -164,11 +181,15 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 case AttackState.DespawnRetreat:
                     ExecuteDespawnAI(npc);
                     break;
+                case AttackState.DeathAnimation:
+                    DoAttack_DeathAnimation(npc, target, ref timer);
+                    break;
             }
 
             // Core Tick updates
             timer++;
             npc.knockBackResist = 0f;
+            UpdateSolarTheater(npc, target, currentPhase, state, timer);
 
             // Report state values back to debug overlay
             data.CurrentPhase = currentPhase;
@@ -182,6 +203,25 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         {
             // Empty bypass override
         }
+
+        public override void SendExtraAI(NPC npc, LegendsGlobalNPC data, BinaryWriter writer)
+        {
+            writer.Write(solarArenaAnchored);
+            writer.Write(solarArenaCenter.X);
+            writer.Write(solarArenaCenter.Y);
+        }
+
+        public override void ReceiveExtraAI(NPC npc, LegendsGlobalNPC data, BinaryReader reader)
+        {
+            solarArenaAnchored = reader.ReadBoolean();
+            solarArenaCenter = new Vector2(reader.ReadSingle(), reader.ReadSingle());
+        }
+
+        public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers) =>
+            InterceptLethalHit(npc, ref modifiers, (int)AttackState.DeathAnimation, () => BeginDeathAnimation(npc, player));
+
+        public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers) =>
+            InterceptLethalHit(npc, ref modifiers, (int)AttackState.DeathAnimation, () => BeginDeathAnimation(npc, Main.player[projectile.owner]));
         #endregion
 
         #region Attack State Implementations
@@ -220,7 +260,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             {
                 SoundEngine.PlaySound(RoarSound, npc.Center);
                 SpawnExplosionDust(npc.Center, 80, 15f, DustID.SolarFlare);
-                Main.LocalPlayer.Calamity().GeneralScreenShakePower = 18f;
+                SetLocalScreenShake(18f);
                 npc.netUpdate = true;
             }
 
@@ -601,7 +641,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 // Camera shake during laser fire
                 if (Main.netMode != NetmodeID.Server)
                 {
-                    Main.LocalPlayer.Calamity().GeneralScreenShakePower = 3f;
+                    SetLocalScreenShake(3f);
                 }
             }
 
@@ -621,10 +661,16 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             npc.dontTakeDamage = true;
             npc.velocity *= 0.85f;
 
-            Vector2 center = target.Center;
+            Vector2 center = solarArenaAnchored ? solarArenaCenter : target.Center;
 
             if (timer == 1)
             {
+                if (Main.netMode != NetmodeID.MultiplayerClient)
+                {
+                    solarArenaCenter = target.Center;
+                    solarArenaAnchored = true;
+                    center = solarArenaCenter;
+                }
                 SoundEngine.PlaySound(HealChargeSound, npc.Center);
                 npc.Center = center - new Vector2(0f, 120f);
                 npc.velocity = Vector2.Zero;
@@ -657,9 +703,6 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             if (timer >= 150)
             {
                 npc.dontTakeDamage = false;
-                // Save desperation coordinate anchor
-                npc.localAI[1] = target.Center.X;
-                npc.localAI[2] = target.Center.Y;
                 TransitionToState(npc, AttackState.PhoenixFlareRain);
             }
         }
@@ -673,11 +716,15 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             npc.damage = npc.defDamage * 2;
             npc.dontTakeDamage = false;
 
-            Vector2 arenaCenter = new Vector2(npc.localAI[1], npc.localAI[2]);
-            if (arenaCenter == Vector2.Zero)
+            Vector2 arenaCenter = solarArenaCenter;
+            if (!solarArenaAnchored)
             {
-                npc.localAI[1] = target.Center.X;
-                npc.localAI[2] = target.Center.Y;
+                if (Main.netMode != NetmodeID.MultiplayerClient)
+                {
+                    solarArenaCenter = target.Center;
+                    solarArenaAnchored = true;
+                    npc.netUpdate = true;
+                }
                 arenaCenter = target.Center;
             }
 
@@ -685,7 +732,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             npc.velocity = Vector2.Lerp(npc.velocity, (arenaCenter - npc.Center) * 0.12f, 0.12f);
 
             // Constraint player inside 660f radius arena
-            ApplySolarArenaConstraints(target, arenaCenter);
+            ApplySolarArenaConstraints(npc, arenaCenter);
 
             int cycle = (int)timer % 360;
 
@@ -782,11 +829,10 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             // Render desperation arena ring
             if (state == AttackState.PhoenixFlareRain || state == AttackState.RebirthCeremony)
             {
-                Vector2 arenaCenter = new Vector2(npc.localAI[1], npc.localAI[2]);
-                if (arenaCenter != Vector2.Zero)
+                if (solarArenaAnchored)
                 {
                     float alphaFactor = (state == AttackState.RebirthCeremony) ? Math.Min(1f, timer / 150f) : 1f;
-                    DrawSolarArenaBoundary(spriteBatch, arenaCenter, alphaFactor);
+                    DrawSolarArenaBoundary(spriteBatch, solarArenaCenter, alphaFactor);
                 }
             }
 
@@ -795,7 +841,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
         public override void PostDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
-            // Empty overlay draw
+            DrawSolarBackglow(npc, spriteBatch, screenPos);
         }
         #endregion
 
@@ -816,7 +862,8 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             if (phase == 1 && lifeRatio < 0.75f)
             {
                 phase = 2;
-                BroadcastMessage("犽戎长啸，燃尽四周空气！", DebugColor);
+                npc.ai[0] = phase;
+                BroadcastLocalizedMessage("Mods.CalamityLegendsComeBack.Status.Yharon.Phase2", DebugColor);
                 TransitionToState(npc, AttackState.BlazingPhoenixBlossom);
                 return;
             }
@@ -824,7 +871,8 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             if (phase == 2 && lifeRatio < 0.50f)
             {
                 phase = 3;
-                BroadcastMessage("火焰风暴咆哮！犽戎的攻击更加炽烈！", DebugColor);
+                npc.ai[0] = phase;
+                BroadcastLocalizedMessage("Mods.CalamityLegendsComeBack.Status.Yharon.Phase3", DebugColor);
                 TransitionToState(npc, AttackState.SolarGridDash);
                 return;
             }
@@ -832,16 +880,29 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             if (phase < 4 && lifeRatio < 0.25f)
             {
                 phase = 4;
-                BroadcastMessage("最终重华！犽戎引燃奇点结界！", DebugColor);
+                npc.ai[0] = phase;
+                solarArenaAnchored = false;
+                solarArenaCenter = Vector2.Zero;
+                BroadcastLocalizedMessage("Mods.CalamityLegendsComeBack.Status.Yharon.Phase4", DebugColor);
                 TransitionToState(npc, AttackState.RebirthCeremony);
                 return;
             }
         }
 
-        private void ApplySolarArenaConstraints(Player player, Vector2 center)
+        private void ApplySolarArenaConstraints(NPC npc, Vector2 center)
         {
+            if (Main.netMode == NetmodeID.Server)
+                return;
+
+            Player player = Main.LocalPlayer;
+            if (!player.active || player.dead)
+                return;
+
             const float ArenaRadius = 660f;
             float distance = Vector2.Distance(player.Center, center);
+
+            if (solarArenaHurtCooldown > 0)
+                solarArenaHurtCooldown--;
 
             if (distance > ArenaRadius)
             {
@@ -849,9 +910,10 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 Vector2 pull = SafeNormalize(center - player.Center, Vector2.Zero) * 5f;
                 player.velocity += pull;
 
-                if (Main.rand.NextBool(4))
+                if (solarArenaHurtCooldown <= 0)
                 {
-                    player.Hurt(Terraria.DataStructures.PlayerDeathReason.ByNPC(NPCType), ScaleBossDamage(null, 140), 0);
+                    solarArenaHurtCooldown = 30;
+                    player.Hurt(Terraria.DataStructures.PlayerDeathReason.ByNPC(npc.whoAmI), ScaleBossDamage(npc, 80), 0);
                 }
 
                 // Fire particles around player
@@ -893,7 +955,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             return ProjectileID.Fireball;
         }
 
-        private static Vector2 SafeNormalize(Vector2 vector, Vector2 fallback)
+        private new static Vector2 SafeNormalize(Vector2 vector, Vector2 fallback)
         {
             if (vector.LengthSquared() < 0.0001f)
             {
@@ -903,17 +965,151 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             return vector;
         }
 
-        private void BroadcastMessage(string text, Color color)
+        private void BroadcastLocalizedMessage(string key, Color color)
         {
             if (Main.netMode == NetmodeID.MultiplayerClient) return;
 
             if (Main.netMode == NetmodeID.Server)
             {
-                Terraria.Chat.ChatHelper.BroadcastChatMessage(Terraria.Localization.NetworkText.FromLiteral(text), color);
+                Terraria.Chat.ChatHelper.BroadcastChatMessage(NetworkText.FromKey(key), color);
             }
             else
             {
-                Main.NewText(text, color);
+                Main.NewText(Language.GetTextValue(key), color);
+            }
+        }
+
+        private void ResetFightState()
+        {
+            solarArenaCenter = Vector2.Zero;
+            solarArenaAnchored = false;
+            solarArenaHurtCooldown = 0;
+        }
+
+        private static void SetLocalScreenShake(float power)
+        {
+            if (Main.netMode != NetmodeID.Server && Main.LocalPlayer.active)
+                Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(Main.LocalPlayer.Calamity().GeneralScreenShakePower, power);
+        }
+
+        // A fight-wide visual bed gives every attack the same solar identity. It intentionally stays
+        // below projectile brightness so telegraphs remain the first thing the player reads.
+        private void UpdateSolarTheater(NPC npc, Player target, int phase, AttackState state, float timer)
+        {
+            if (Main.netMode == NetmodeID.Server)
+                return;
+
+            int cadence = phase switch
+            {
+                1 => 18,
+                2 => 13,
+                3 => 9,
+                _ => 6
+            };
+
+            if (Main.GameUpdateCount % (ulong)cadence != 0)
+                return;
+
+            Color emberColor = phase switch
+            {
+                1 => new Color(255, 184, 72),
+                2 => new Color(255, 125, 48),
+                3 => new Color(255, 78, 32),
+                _ => new Color(255, 220, 124)
+            };
+
+            float radius = state == AttackState.RebirthCeremony || state == AttackState.PhoenixFlareRain ? 330f : 150f;
+            Vector2 offset = Main.rand.NextVector2CircularEdge(radius, radius * 0.56f);
+            Vector2 position = npc.Center + offset;
+            Vector2 velocity = -offset * 0.012f + Main.rand.NextVector2Circular(0.65f, 0.65f);
+            Dust ember = Dust.NewDustPerfect(position, phase >= 3 ? DustID.SolarFlare : DustID.Torch, velocity, 110, emberColor, Main.rand.NextFloat(0.8f, 1.25f));
+            ember.noGravity = true;
+
+            if (state == AttackState.RebirthCeremony && solarArenaAnchored)
+            {
+                float ringAngle = timer * 0.075f;
+                Vector2 ringPos = solarArenaCenter + ringAngle.ToRotationVector2() * MathHelper.Lerp(650f, 120f, MathHelper.Clamp(timer / 150f, 0f, 1f));
+                Dust ringEmber = Dust.NewDustPerfect(ringPos, DustID.GoldFlame, (solarArenaCenter - ringPos) * 0.025f, 110, Color.Gold, 1.15f);
+                ringEmber.noGravity = true;
+            }
+        }
+
+        private void DrawSolarBackglow(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos)
+        {
+            if (Main.dedServ || npc.Opacity <= 0.02f)
+                return;
+
+            Texture2D texture = TextureAssets.Npc[npc.type].Value;
+            Rectangle frame = npc.frame;
+            Vector2 origin = frame.Size() * 0.5f;
+            int phase = Math.Clamp((int)npc.ai[0], 1, 4);
+            AttackState state = (AttackState)(int)npc.ai[1];
+            float pulse = 0.55f + MathF.Sin((float)Main.GlobalTimeWrappedHourly * (state == AttackState.DeathAnimation ? 13f : 5f)) * 0.2f;
+            float strength = state == AttackState.RebirthCeremony || state == AttackState.DeathAnimation ? 1.25f : 0.72f;
+            Color glow = phase switch
+            {
+                1 => new Color(255, 180, 70),
+                2 => new Color(255, 115, 38),
+                3 => new Color(255, 65, 20),
+                _ => new Color(255, 228, 128)
+            };
+            glow *= npc.Opacity * pulse * strength * 0.26f;
+
+            Vector2 drawPosition = npc.Center - screenPos;
+            for (int i = 0; i < 10; i++)
+            {
+                Vector2 offset = (MathHelper.TwoPi * i / 10f).ToRotationVector2() * (2f + strength * 2.2f);
+                spriteBatch.Draw(texture, drawPosition + offset, frame, glow, npc.rotation, origin, npc.scale, npc.spriteDirection == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally, 0f);
+            }
+        }
+
+        private void BeginDeathAnimation(NPC npc, Player target)
+        {
+            npc.ai[1] = (float)AttackState.DeathAnimation;
+            npc.ai[2] = 0f;
+            npc.ai[3] = 0f;
+            solarArenaHurtCooldown = 0;
+            npc.netUpdate = true;
+
+            TriggerDeathCinematic(npc, target, focusStrength: 0.72f, holdFrames: 72, shakePower: 13f);
+            SoundEngine.PlaySound(RoarSound with { Volume = 1.55f, Pitch = -0.25f }, npc.Center);
+        }
+
+        private void DoAttack_DeathAnimation(NPC npc, Player target, ref float timer)
+        {
+            npc.damage = 0;
+            npc.dontTakeDamage = true;
+
+            if (timer < 52f)
+            {
+                npc.velocity *= 0.9f;
+                npc.rotation = MathF.Sin(timer * 0.8f) * 0.11f;
+                if (Main.netMode != NetmodeID.Server && (int)timer % 2 == 0)
+                    SpawnExplosionDust(npc.Center + Main.rand.NextVector2Circular(90f, 70f), 2, 6f, DustID.SolarFlare);
+            }
+            else if (timer < 118f)
+            {
+                npc.velocity = Vector2.Lerp(npc.velocity, new Vector2(0f, -4.5f), 0.06f);
+                if ((int)timer % 12 == 0)
+                {
+                    SoundEngine.PlaySound(SoundID.Item74 with { Volume = 0.72f, Pitch = -0.45f }, npc.Center);
+                    SetLocalScreenShake(5f);
+                }
+            }
+            else
+            {
+                if (timer == 118f)
+                {
+                    SoundEngine.PlaySound(SoundID.NPCDeath10 with { Volume = 1.25f, Pitch = -0.15f }, npc.Center);
+                    SpawnExplosionDust(npc.Center, 64, 18f, DustID.SolarFlare);
+                    SetLocalScreenShake(18f);
+                }
+
+                if (timer >= 145f)
+                {
+                    npc.dontTakeDamage = false;
+                    npc.StrikeInstantKill();
+                }
             }
         }
 

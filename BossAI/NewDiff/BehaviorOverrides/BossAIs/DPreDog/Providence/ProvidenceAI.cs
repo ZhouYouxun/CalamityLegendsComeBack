@@ -114,6 +114,9 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         #region Core AI Hooks
         public override bool PreAI(NPC npc, LegendsGlobalNPC data)
         {
+            if ((int)npc.ai[0] == 0)
+                ResetFightState();
+
             ticksRunning++;
             oldPositions[oldPositionsIndex] = npc.Center;
             oldPositionsIndex = (oldPositionsIndex + 1) % oldPositions.Length;
@@ -243,6 +246,29 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             return false;
         }
 
+        private void ResetFightState()
+        {
+            ticksRunning = 0;
+            currentRepetition = 0;
+            attackCycleIndex = 0;
+            Array.Clear(oldPositions, 0, oldPositions.Length);
+            oldPositionsIndex = 0;
+            yellowCrystalHP = 800f;
+            orangeCrystalHP = 800f;
+            purpleCrystalHP = 800f;
+            stunTimer = 0;
+            respawnCrystalsTimer = 0;
+            crystalFxCooldown = 0;
+            Array.Clear(crystalFlash, 0, crystalFlash.Length);
+            arenaCenter = Vector2.Zero;
+            refractionTimer = 0;
+            refractionHitThisActivation = false;
+            arenaHurtCooldown = 0;
+            transitionFlashAlpha = 0f;
+            Array.Clear(attackVariant, 0, attackVariant.Length);
+            currentVariantB = false;
+        }
+
         public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers)
         {
             ProcessCrystalHits(npc, player.Center, ref modifiers, item.damage);
@@ -277,7 +303,11 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 d.fadeIn = 1f;
             }
 
-            Vector2 dist = target.Center - arenaCenter;
+            Player arenaPlayer = Main.netMode == NetmodeID.Server ? null : Main.LocalPlayer;
+            if (arenaPlayer is null || !arenaPlayer.active || arenaPlayer.dead)
+                return;
+
+            Vector2 dist = arenaPlayer.Center - arenaCenter;
             // Densify the wall the player is drifting toward
             if (Math.Abs(dist.X) > half - 160f || Math.Abs(dist.Y) > half - 160f)
             {
@@ -294,12 +324,12 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
             if (Math.Abs(dist.X) > half || Math.Abs(dist.Y) > half)
             {
-                target.AddBuff(BuffID.Daybreak, 180); // Profaned Weakness
-                target.AddBuff(BuffID.BrokenArmor, 120);
+                arenaPlayer.AddBuff(BuffID.Daybreak, 180); // Profaned Weakness
+                arenaPlayer.AddBuff(BuffID.BrokenArmor, 120);
                 if (arenaHurtCooldown <= 0)
                 {
                     arenaHurtCooldown = 30;
-                    target.Hurt(Terraria.DataStructures.PlayerDeathReason.ByNPC(npc.whoAmI), 25, 0);
+                    arenaPlayer.Hurt(Terraria.DataStructures.PlayerDeathReason.ByNPC(npc.whoAmI), 25, 0);
                 }
             }
         }
@@ -353,12 +383,16 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
             if (live && !refractionHitThisActivation)
             {
-                if (Collision.CheckAABBvLineCollision(target.position, target.Size, topLeft, bottomRight) ||
-                    Collision.CheckAABBvLineCollision(target.position, target.Size, topRight, bottomLeft))
+                if (Main.netMode != NetmodeID.Server)
                 {
-                    refractionHitThisActivation = true;
-                    target.AddBuff(BuffID.Daybreak, 180); // Profaned Weakness: defense to 0 for 3s
-                    target.Hurt(Terraria.DataStructures.PlayerDeathReason.ByNPC(npc.whoAmI), 30, 0);
+                    Player beamPlayer = Main.LocalPlayer;
+                    if (Collision.CheckAABBvLineCollision(beamPlayer.position, beamPlayer.Size, topLeft, bottomRight) ||
+                        Collision.CheckAABBvLineCollision(beamPlayer.position, beamPlayer.Size, topRight, bottomLeft))
+                    {
+                        refractionHitThisActivation = true;
+                        beamPlayer.AddBuff(BuffID.Daybreak, 180); // Profaned Weakness: defense to 0 for 3s
+                        beamPlayer.Hurt(Terraria.DataStructures.PlayerDeathReason.ByNPC(npc.whoAmI), 30, 0);
+                    }
                 }
             }
         }

@@ -1,12 +1,15 @@
 using System.IO;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
+using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader;
 using CalamityMod;
+using CalamityLegendsComeBack.Weapons.A_Tools.DebugTools;
 using CalamityLegendsComeBack.Weapons.A_Tools.Toys.RetroGames;
 
 namespace CalamityLegendsComeBack.Weapons.A_Tools.Toys.PlayerSaddle
@@ -15,7 +18,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.Toys.PlayerSaddle
     public class PlayerSaddleItem : ModItem, ILocalizedModType
     {
         public new string LocalizationCategory => "Items.Weapons";
-        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Tools/DebugTools/BossProgress/CTRLBoss/CTRLBoss";
+        public override string Texture => "Terraria/Images/Item_" + ItemID.PaintedHorseSaddle;
+
+        public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame,
+            Color drawColor, Color itemColor, Vector2 origin, float scale)
+        {
+            DebugToolOutline.Draw(spriteBatch, TextureAssets.Item[Type].Value, position, frame, origin, scale, new Color(220, 180, 255));
+            return true;
+        }
 
         public override void SetDefaults()
         {

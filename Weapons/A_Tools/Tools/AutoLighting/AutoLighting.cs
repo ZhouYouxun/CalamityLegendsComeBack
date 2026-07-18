@@ -1,14 +1,24 @@
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Terraria;
+using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
+using CalamityLegendsComeBack.Weapons.A_Tools.DebugTools;
 
 namespace CalamityLegendsComeBack.Weapons.A_Tools.Tools.AutoLighting
 {
     public class AutoLighting : ModItem, ILocalizedModType
     {
         public new string LocalizationCategory => "Items.Weapons";
-        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Tools/Tools/AutoLighting/AutoLighting";
+        public override string Texture => "Terraria/Images/Item_" + ItemID.GoldChandelier;
+
+        public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame,
+            Color drawColor, Color itemColor, Vector2 origin, float scale)
+        {
+            DebugToolOutline.Draw(spriteBatch, TextureAssets.Item[Type].Value, position, frame, origin, scale, new Color(255, 210, 90));
+            return true;
+        }
 
         public override void SetDefaults()
         {

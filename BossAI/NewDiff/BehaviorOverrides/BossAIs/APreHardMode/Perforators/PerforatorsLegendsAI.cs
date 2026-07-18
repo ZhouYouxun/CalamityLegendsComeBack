@@ -200,6 +200,9 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         /// </summary>
         public override bool PreAI(NPC npc, LegendsGlobalNPC data)
         {
+            if ((int)npc.ai[0] == 0)
+                ResetFightState();
+
             ticksRunning++;
 
             // Verify target players
@@ -350,6 +353,28 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             teleportPositionY = 0f;
 
             npc.netUpdate = true;
+        }
+
+        // The registry reuses this object. Encounter-only state must not make a later Perforator
+        // start with a prior hive's active minions, prediction line, or invulnerability timer.
+        private void ResetFightState()
+        {
+            arenaAlpha = 0f;
+            desperationCenter = Vector2.Zero;
+            drawPredictionPath = false;
+            teleportPositionX = 0f;
+            teleportPositionY = 0f;
+            dashPredictionPath.Clear();
+            activeGeysers.Clear();
+            activeMinions.Clear();
+            ticksRunning = 0;
+            dashCounter = 0;
+            spawnCounter = 0;
+            leapStage = 0;
+            invincibilityTimer = 0;
+            activeWormNPCId = -1;
+            Array.Clear(oldPositions, 0, oldPositions.Length);
+            oldPositionsIndex = 0;
         }
 
         /// <summary>
@@ -1283,7 +1308,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         /// <summary>
         /// Normalizes vectors safely avoiding division by zero.
         /// </summary>
-        private static Vector2 SafeNormalize(Vector2 vector, Vector2 fallback)
+        private new static Vector2 SafeNormalize(Vector2 vector, Vector2 fallback)
         {
             if (vector.LengthSquared() < 0.0001f)
             {

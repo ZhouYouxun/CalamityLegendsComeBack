@@ -142,7 +142,17 @@ Mods: {
 
 			Yharon: {
 				1: 烈焰暴君
-				2: 浴火重生
+				2: 烈焰风暴
+				3: 日冕爆发
+				4: 太阳奇点
+			}
+		}
+
+		Status: {
+			Yharon: {
+				Phase2: 犽戎振翼，引燃席卷战场的火焰风暴！
+				Phase3: 日冕响应犽戎的咆哮！
+				Phase4: 重生仪式开始，太阳之环正在封锁战场！
 			}
 		}
 
@@ -175,6 +185,20 @@ Mods: {
 				BlobBurst: 血珠爆发
 				DesperationArena: 绝境领域
 			}
+
+			Yharon: {
+				IntroductionSpawn: 重生之龙降临
+				DragonFireDash: 龙炎追击
+				InfernadoSpout: 炼狱龙卷
+				BlazingPhoenixBlossom: 炽焰凤凰绽放
+				MeteorRedirectBarrage: 折返流星弹幕
+				SolarGridDash: 太阳网格冲刺
+				SunFlareEruption: 日耀喷发
+				RebirthCeremony: 浴火仪式
+				PhoenixFlareRain: 凤凰烈焰雨
+				DespawnRetreat: 太阳撤离
+				DeathAnimation: 最后的重生
+			}
 		}
 
 		// NPCs.CryogenDaedalusMinion.DisplayName: Cryogen Daedalus Minion
@@ -190,7 +214,7 @@ Mods: {
 			// AquaticScourgeDeepseaStaffProjectile.DisplayName: Aquatic Scourge Deepsea Staff Projectile
 			// AquaticScourgeDownpourProjectile.DisplayName: Aquatic Scourge Downpour Projectile
 			// AquaticScourgeFlakToxicannonProjectile.DisplayName: Aquatic Scourge Flak Toxicannon Projectile
-			// AquaticScourgeScourgeoftheSeasProjectile.DisplayName: Aquatic Scourge Scourgeofthe Seas Projectile
+			// AquaticScourgeScourgeoftheSeasProjectile.DisplayName: Aquatic Scourge Scourge of the Seas Projectile
 			// AquaticScourgeCausticCroakerStaffProjectile.DisplayName: Aquatic Scourge Caustic Croaker Staff Projectile
 			// AquaticScourgeSlitheringEelsProjectile.DisplayName: Aquatic Scourge Slithering Eels Projectile
 			// AquaticScourgeSkyfinBombersProjectile.DisplayName: Aquatic Scourge Skyfin Bombers Projectile
@@ -220,8 +244,8 @@ Mods: {
 			// AstrumDeusTrueBiomeBladeProjectile.DisplayName: Astrum Deus True Biome Blade Projectile
 			// CalamitasCloneOblivionProjectile.DisplayName: Calamitas Clone Oblivion Projectile
 			// CalamitasCloneAnimosityProjectile.DisplayName: Calamitas Clone Animosity Projectile
-			// CalamitasCloneLashesofChaosProjectile.DisplayName: Calamitas Clone Lashesof Chaos Projectile
-			// CalamitasCloneEntropysVigilProjectile.DisplayName: Calamitas Clone Entropys Vigil Projectile
+			// CalamitasCloneLashesofChaosProjectile.DisplayName: Calamitas Clone Lashes of Chaos Projectile
+			// CalamitasCloneEntropysVigilProjectile.DisplayName: Calamitas Clone Entropy's Vigil Projectile
 			// CalamitasCloneCrushsawCrasherProjectile.DisplayName: Calamitas Clone Crushsaw Crasher Projectile
 			// CalamitasCloneHavocsBreathProjectile.DisplayName: Calamitas Clone Havocs Breath Projectile
 			// CeaselessVoidMirrorBladeProjectile.DisplayName: Ceaseless Void Mirror Blade Projectile
@@ -241,7 +265,7 @@ Mods: {
 			// CryogenIcebreakerProjectile.DisplayName: Cryogen Icebreaker Projectile
 			// CryogenIcebreaker.DisplayName: Cryogen Icebreaker
 			// CryogenSnowstormStaffProjectile.DisplayName: Cryogen Snowstorm Staff Projectile
-			// CryogenSoulofCryogenProjectile.DisplayName: Cryogen Soulof Cryogen Projectile
+			// CryogenSoulofCryogenProjectile.DisplayName: Cryogen Soul of Cryogen Projectile
 			// CryogenCryoStoneProjectile.DisplayName: Cryogen Cryo Stone Projectile
 			// CryogenFrostFlareProjectile.DisplayName: Cryogen Frost Flare Projectile
 			// CryogenGlacialEmbraceProjectile.DisplayName: Cryogen Glacial Embrace Projectile
@@ -307,7 +331,7 @@ Mods: {
 			// PolterghastSiriusProjectile.DisplayName: Polterghast Sirius Projectile
 			// PolterghastStratusSphereProjectile.DisplayName: Polterghast Stratus Sphere Projectile
 			// PolterghastVegaProjectile.DisplayName: Polterghast Vega Projectile
-			// PolterghastWarloksMoonFistProjectile.DisplayName: Polterghast Warloks Moon Fist Projectile
+			// PolterghastWarloksMoonFistProjectile.DisplayName: Polterghast Warlok's Moon Fist Projectile
 			// ProvidenceBlissfulBombardierProjectile.DisplayName: Providence Blissful Bombardier Projectile
 			// ProvidenceBurningRevelationProjectile.DisplayName: Providence Burning Revelation Projectile
 			// ProvidenceHolyColliderProjectile.DisplayName: Providence Holy Collider Projectile
@@ -321,7 +345,7 @@ Mods: {
 			// ProvidenceDarkSparkProjectile.DisplayName: Providence Dark Spark Projectile
 			// ProvidenceGalactusBladeProjectile.DisplayName: Providence Galactus Blade Projectile
 			// ProvidenceHandheldTankProjectile.DisplayName: Providence Handheld Tank Projectile
-			// ProvidenceMirrorofKalandraProjectile.DisplayName: Providence Mirrorof Kalandra Projectile
+			// ProvidenceMirrorofKalandraProjectile.DisplayName: Providence Mirror of Kalandra Projectile
 			// ProvidenceMourningstarProjectile.DisplayName: Providence Mourningstar Projectile
 			// ProvidenceShatteredDawnProjectile.DisplayName: Providence Shattered Dawn Projectile
 			// ProvidenceSeekingScorcherProjectile.DisplayName: Providence Seeking Scorcher Projectile
@@ -645,7 +669,7 @@ Mods: {
 			// GhastHeldStratusSphere.DisplayName: Ghast Held Stratus Sphere
 			// GhastHeldTerrorBlade.DisplayName: Ghast Held Terror Blade
 			// GhastHeldVega.DisplayName: Ghast Held Vega
-			// GhastHeldWarloksMoon.DisplayName: Ghast Held Warloks Moon
+			// GhastHeldWarloksMoon.DisplayName: Ghast Held Warlok's Moon
 			// GhastlyVisageFaceProj.DisplayName: Ghastly Visage Face Proj
 			// GhostFireProj.DisplayName: Ghost Fire Proj
 			// GougerDrillProj.DisplayName: Gouger Drill Proj
@@ -674,7 +698,7 @@ Mods: {
 			// MoltenDripProj.DisplayName: Molten Drip Proj
 			// MoltenPoolProj.DisplayName: Molten Pool Proj
 			// MoltenSickleProj.DisplayName: Molten Sickle Proj
-			// MourningstarLineProj.DisplayName: Mourningstar Line Proj
+			// MourningstarLineProj.DisplayName: Mourningstar Line Projectile
 			// PristineFlameProj.DisplayName: Pristine Flame Proj
 			// ProvHeldAetherfluxCannon.DisplayName: Prov Held Aetherflux Cannon
 			// ProvHeldAngelicShotgun.DisplayName: Prov Held Angelic Shotgun

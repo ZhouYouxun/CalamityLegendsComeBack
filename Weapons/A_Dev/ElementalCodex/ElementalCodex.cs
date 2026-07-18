@@ -1,16 +1,26 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Terraria;
+using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
+using CalamityLegendsComeBack.Weapons.A_Tools.DebugTools;
 
 namespace CalamityLegendsComeBack.Weapons.A_Dev.ElementalCodex
 {
     public sealed class ElementalCodex : ModItem, ILocalizedModType
     {
         public new string LocalizationCategory => "Items.Accessories";
-        public override string Texture => "CalamityLegendsComeBack/LegendaryCodex";
+        public override string Texture => "Terraria/Images/Item_" + ItemID.Book;
+
+        public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame,
+            Color drawColor, Color itemColor, Vector2 origin, float scale)
+        {
+            DebugToolOutline.Draw(spriteBatch, TextureAssets.Item[Type].Value, position, frame, origin, scale, new Color(120, 190, 255));
+            return true;
+        }
 
         public override void SetDefaults()
         {
