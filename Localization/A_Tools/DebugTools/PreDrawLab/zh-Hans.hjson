@@ -1,0 +1,18 @@
+Mods: {
+  CalamityLegendsComeBack: {
+    Items: {
+      Weapons: {
+        PreDrawLabItem: {
+          DisplayName: PreDraw 实验室
+          Tooltip: 左键发射油漆刷测试弹幕。右键打开 PreDraw 测试面板。
+        }
+      }
+    }
+    Projectiles: {
+      A_Dev: {
+        PreDrawLabProjectile.DisplayName: PreDraw 实验室测试弹幕
+        PreDrawLabPanel.DisplayName: PreDraw 实验室面板
+      }
+    }
+  }
+}

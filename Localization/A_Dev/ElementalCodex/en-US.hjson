@@ -1,0 +1,99 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Accessories: {
+				ElementalCodex: {
+					DisplayName: Elemental Codex
+					Tooltip:
+						'''
+						Grants the effects of the Mana Flower and Celestial Magnet; increases magic damage by 8%
+						Registered magic weapons prime enemies with elements; two different elements trigger a reaction
+						[c/9DA8B8:While equipped, registered weapons show their element type. Hold Shift for the rules.]
+						'''
+					ShiftDetails:
+						'''
+						[c/9FD8FF:Rules] The first element stays on an enemy for a short duration. A second different element consumes both, triggers a reaction, then starts a progression-scaling global reaction cooldown.
+						[c/FF6A3C:Fire]+[c/62B8FF:Water] Steam Burst: deals one hit for 4x the second weapon's listed damage.
+						[c/FF6A3C:Fire]+[c/A6F0FF:Ice] Melting Impact: deals 0.5x damage, then deals 1/5 listed damage every 0.2 seconds for 3 seconds.
+						[c/FF6A3C:Fire]+[c/C27CFF:Lightning] Overload: explodes in a 10-tile radius for 5x listed damage and heavy knockback.
+						[c/FF6A3C:Fire]+[c/7EEA78:Nature] Scorch: burns over time based on the second weapon's listed damage.
+						[c/FF6A3C:Fire]+[c/606060:Disease] Paralysis: briefly prevents the enemy from damaging players.
+						[c/62B8FF:Water]+[c/A6F0FF:Ice] Freeze: immobilizes for 1.5 seconds; the enemy is invulnerable while frozen.
+						[c/62B8FF:Water]+[c/C27CFF:Lightning] Electrified: repeatedly strikes with lightning, with a small chance to jump to a nearby enemy.
+						[c/62B8FF:Water]+[c/7EEA78:Nature] Growth: for 6 seconds, enemy speed fluctuates between normal and 60%.
+						[c/62B8FF:Water]+[c/606060:Disease] Wither: loses 1% maximum life per second for 5 seconds.
+						[c/A6F0FF:Ice]+[c/C27CFF:Lightning] Condensation: deals maximum-life percent damage, but speeds the enemy up by 20%.
+						[c/A6F0FF:Ice]+[c/7EEA78:Nature] Cold Storage: permanently increases enemy value, causing more coin drops on death.
+						[c/A6F0FF:Ice]+[c/606060:Disease] Corrupt Freeze: usually deals 8x damage, but can heal the enemy instead.
+						[c/C27CFF:Lightning]+[c/7EEA78:Nature] Flourish: player projectiles home toward this enemy.
+						[c/C27CFF:Lightning]+[c/606060:Disease] Control: forces the player to attack this enemy and increases damage to it.
+						[c/7EEA78:Nature]+[c/606060:Disease] Neutralization: greatly extends reaction cooldown but temporarily increases player damage.
+						'''
+				}
+			}
+		}
+
+		Buffs: {
+			ElementalFireDebuff: {
+				DisplayName: Fire Element
+				Description: Red rays flare outward, burning the enemy over time
+			}
+
+			ElementalWaterDebuff: {
+				DisplayName: Water Element
+				Description: Blue rays spread outward, weakening enemy defense
+			}
+
+			ElementalIceDebuff: {
+				DisplayName: Ice Element
+				Description: Pale-blue rays move horizontally and may slow the enemy
+			}
+
+			ElementalLightningDebuff: {
+				DisplayName: Lightning Element
+				Description: Purple rays move vertically, slightly reducing enemy damage
+			}
+
+			ElementalNatureDebuff: {
+				DisplayName: Nature Element
+				Description: Curved green rays wander wildly, increasing enemy value
+			}
+
+			ElementalDiseaseDebuff: {
+				DisplayName: Disease Element
+				Description: Black random rays corrode the enemy, reducing damage mitigation
+			}
+		}
+
+		ElementalCodex: {
+			WeaponTooltip: "[Elemental Codex] {0} / {1}: {2}"
+
+			Elements: {
+				Fire: Fire
+				Water: Water
+				Ice: Ice
+				Lightning: Lightning
+				Nature: Nature
+				Disease: Disease
+			}
+
+			Reactions: {
+				SteamBurst: Steam Burst
+				MeltingImpact: Melting Impact
+				Overload: Overload
+				Scorch: Scorch
+				Paralysis: Paralysis
+				Freeze: Freeze
+				Electrified: Electrified
+				Growth: Growth
+				Wither: Wither
+				Condensation: Condensation
+				ColdStorage: Cold Storage
+				CorruptFreeze: Corrupt Freeze
+				Flourish: Flourish
+				Control: Control
+				Neutralization: Neutralization
+			}
+		}
+	}
+}

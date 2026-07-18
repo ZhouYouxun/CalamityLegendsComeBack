@@ -12,6 +12,7 @@ namespace CalamityLegendsComeBack.Shader
     internal enum ShaderCategory
     {
         Trail,
+        CalamityTrail,
         Overlay,
         Screen
     }
@@ -77,11 +78,17 @@ namespace CalamityLegendsComeBack.Shader
             return GameShaders.Misc.TryGetValue(ShaderPrefix + registrationName, out shader) && shader is not null;
         }
 
+        public static bool TryGetCalamityMiscShader(string registrationName, out MiscShaderData shader)
+        {
+            return GameShaders.Misc.TryGetValue("CalamityMod:" + registrationName, out shader) && shader is not null;
+        }
+
         internal static IReadOnlyList<ShaderDefinition> GetShaders(ShaderCategory category)
         {
             return category switch
             {
                 ShaderCategory.Trail => TrailShaders,
+                ShaderCategory.CalamityTrail => CalamityTrailShaders,
                 ShaderCategory.Overlay => OverlayShaders,
                 ShaderCategory.Screen => ScreenShaders,
                 _ => Array.Empty<ShaderDefinition>()

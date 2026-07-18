@@ -41,8 +41,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.ParticleLab
             Item.damage = 0;
             Item.knockBack = 0f;
             Item.DamageType = DamageClass.Generic;
-            Item.useTime = 5;
-            Item.useAnimation = 5;
+            Item.useTime = 15;
+            Item.useAnimation = 15;
             Item.useStyle = ItemUseStyleID.Swing;
             Item.noMelee = true;
             Item.autoReuse = true;
@@ -73,13 +73,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.ParticleLab
             }
 
             int effectIndex = player.GetModPlayer<ParticleLabPlayer>().SelectedEffectIndex;
-            float speed = Math.Max(velocity.Length(), Item.shootSpeed);
-            const int burstCount = 10;
-            for (int i = 0; i < burstCount; i++)
-            {
-                Vector2 burstVelocity = (MathHelper.TwoPi * i / burstCount).ToRotationVector2() * speed;
-                Projectile.NewProjectile(source, player.MountedCenter, burstVelocity, TestProjectileType, 0, 0f, player.whoAmI, effectIndex);
-            }
+            Projectile.NewProjectile(source, player.MountedCenter, velocity, TestProjectileType, 0, 0f, player.whoAmI, effectIndex);
             return false;
         }
 
@@ -104,6 +98,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.ParticleLab
     internal sealed class ParticleLabPlayer : ModPlayer
     {
         private int selectedEffectIndex;
+        private int lastParticleLabPage;
 
         public int SelectedEffectIndex
         {
@@ -120,12 +115,20 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.ParticleLab
             if (ParticleEffectCatalog.IsValidIndex(effectIndex))
                 selectedEffectIndex = effectIndex;
         }
+
+        public int LastParticleLabPage => lastParticleLabPage;
+
+        public void SetLastParticleLabPage(int page) => lastParticleLabPage = Math.Max(0, page);
     }
 
     internal sealed class ParticleLabProjectile : ModProjectile, ILocalizedModType
     {
         public new string LocalizationCategory => "Projectiles.A_Dev";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+
+        private const int EffectInterval = 2;
+        private const int RingInterval = 60;
+        private const int RingParticleCount = 10;
 
         private int EffectIndex => (int)Projectile.ai[0];
 
@@ -137,7 +140,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.ParticleLab
             Projectile.hostile = false;
             Projectile.DamageType = DamageClass.Generic;
             Projectile.penetrate = -1;
-            Projectile.timeLeft = 3;
+            Projectile.timeLeft = 300;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
             Projectile.hide = true;
@@ -147,12 +150,26 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.ParticleLab
 
         public override void AI()
         {
-            if (Projectile.localAI[0] != 0f)
-                return;
+            int elapsedFrames = (int)++Projectile.localAI[0];
+            if (elapsedFrames % EffectInterval == 0)
+                ParticleEffectCatalog.Spawn(EffectIndex, Projectile);
 
-            Projectile.localAI[0] = 1f;
-            ParticleEffectCatalog.Spawn(EffectIndex, Projectile);
-            Projectile.Kill();
+            if (elapsedFrames % RingInterval == 0)
+                SpawnRing();
+        }
+
+        private void SpawnRing()
+        {
+            float speed = Math.Max(Projectile.velocity.Length(), 1f);
+            Vector2 originalVelocity = Projectile.velocity;
+
+            for (int i = 0; i < RingParticleCount; i++)
+            {
+                Projectile.velocity = (MathHelper.TwoPi * i / RingParticleCount).ToRotationVector2() * speed;
+                ParticleEffectCatalog.Spawn(EffectIndex, Projectile);
+            }
+
+            Projectile.velocity = originalVelocity;
         }
     }
 
@@ -1628,6 +1645,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.ParticleLab
 
         private Vector2 panelTopLeft;
         private bool panelPositionInitialized;
+        private bool pageInitialized;
         private int page;
 
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
@@ -1679,10 +1697,16 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.ParticleLab
             if (!panelPositionInitialized && Main.myPlayer == Projectile.owner)
             {
                 Vector2 requestedTopLeft = Projectile.ai[1] != 0f || Projectile.ai[2] != 0f
-                    ? new Vector2(Projectile.ai[1], Projectile.ai[2])
+                    ? new Vector2(Projectile.ai[1], Projectile.ai[2]) - new Vector2(PanelWidth, PanelHeight) * 0.5f
                     : Main.MouseScreen;
                 panelTopLeft = GetClampedPanelTopLeft(requestedTopLeft);
                 panelPositionInitialized = true;
+            }
+
+            if (!pageInitialized && Main.myPlayer == Projectile.owner)
+            {
+                page = Math.Clamp(owner.GetModPlayer<ParticleLabPlayer>().LastParticleLabPage, 0, PageCount - 1);
+                pageInitialized = true;
             }
 
             page = Math.Clamp(page, 0, PageCount - 1);
@@ -1706,6 +1730,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.ParticleLab
             bool mouseOverPanel = panelArea.Intersects(MouseRectangle);
             bool leftClickPressed = Main.mouseLeft && Main.mouseLeftRelease;
             bool rightClickPressed = Main.mouseRight && Main.mouseRightRelease;
+            string hoveredEffectName = null;
 
             DrawPanel(panelArea, Projectile.Opacity);
             DrawHeader(panelArea, Projectile.Opacity);
@@ -1724,6 +1749,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.ParticleLab
                 {
                     mouseOverPanel = true;
                     Main.hoverItemName = name;
+                    hoveredEffectName = name;
 
                     if (leftClickPressed && Projectile.Opacity >= 0.95f)
                     {
@@ -1734,6 +1760,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.ParticleLab
 
                 DrawSlot(name, slotArea, selected, hovered, Projectile.Opacity);
             }
+
+            if (hoveredEffectName != null)
+                DrawHoveredEffectName(panelArea, hoveredEffectName, Projectile.Opacity);
 
             Rectangle previousPageArea = GetPreviousPageArea(panelArea);
             Rectangle nextPageArea = GetNextPageArea(panelArea);
@@ -1752,11 +1781,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.ParticleLab
                 if (canPageLeft && previousHovered)
                 {
                     page--;
+                    labPlayer.SetLastParticleLabPage(page);
                     SoundEngine.PlaySound(SoundID.MenuTick with { Volume = 0.42f, Pitch = -0.08f }, owner.Center);
                 }
                 else if (canPageRight && nextHovered)
                 {
                     page++;
+                    labPlayer.SetLastParticleLabPage(page);
                     SoundEngine.PlaySound(SoundID.MenuTick with { Volume = 0.42f, Pitch = 0.08f }, owner.Center);
                 }
             }
@@ -1833,6 +1864,23 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.ParticleLab
             Rectangle headerArea = new(panelArea.X + PanelPadding, panelArea.Y + PanelPadding, panelArea.Width - PanelPadding * 2, HeaderHeight - 8);
             DrawRectangle(new Rectangle(headerArea.X, headerArea.Bottom + 4, headerArea.Width, 2), new Color(88, 218, 202) * (opacity * 0.78f));
             DrawFitText($"Particle Lab  {ParticleEffectCatalog.Count}", headerArea, Color.White, 0.8f, 0.44f, opacity);
+        }
+
+        private static void DrawHoveredEffectName(Rectangle panelArea, string effectName, float opacity)
+        {
+            const int displayWidth = 300;
+            const int displayHeight = 88;
+            const int displayGap = 12;
+            const int screenMargin = 12;
+
+            int x = Math.Min(panelArea.Right + displayGap, Main.screenWidth - displayWidth - screenMargin);
+            int y = Math.Clamp(panelArea.Center.Y - displayHeight / 2, screenMargin, Main.screenHeight - displayHeight - screenMargin);
+            Rectangle displayArea = new(x, y, displayWidth, displayHeight);
+
+            DrawRectangle(displayArea, new Color(16, 22, 30, 240) * opacity);
+            DrawBorder(displayArea, new Color(88, 218, 202) * opacity, BorderThickness);
+            DrawFitText(effectName, new Rectangle(displayArea.X + 12, displayArea.Y + 12, displayArea.Width - 24, displayArea.Height - 24),
+                Color.White, 1.2f, 0.5f, opacity);
         }
 
         private static void DrawSlot(string name, Rectangle slotArea, bool selected, bool hovered, float opacity)

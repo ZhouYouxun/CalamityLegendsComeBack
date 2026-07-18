@@ -1,0 +1,16 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				AutoLighting: {
+					DisplayName: Auto Lighter
+					Tooltip:
+						'''
+						While favorited, automatically places the topmost torch from your inventory in dark areas.
+						Throws a glowstick instead when underwater.
+						'''
+				}
+			}
+		}
+	}
+}

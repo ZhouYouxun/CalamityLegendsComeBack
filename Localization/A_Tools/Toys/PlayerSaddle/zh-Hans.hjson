@@ -1,0 +1,24 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				PlayerSaddleItem: {
+					DisplayName: 玩家鞍
+					Tooltip:
+						'''
+						对准附近玩家点击左键，骑上对方。
+						骑乘期间自身无法移动，但攻击、交互等功能照常。
+						对方死亡时自动下马。
+						再次点击左键下马，或右键甩下身上的骑手。
+						'''
+				}
+			}
+		}
+
+		TheSpecialText: {
+			PlayerSaddleNoTarget: 附近没有找到可以骑乘的玩家。
+			PlayerSaddleOccupied: 该玩家已有骑手。
+			PlayerSaddleMounted: "{0} 骑上了 {1}！"
+		}
+	}
+}

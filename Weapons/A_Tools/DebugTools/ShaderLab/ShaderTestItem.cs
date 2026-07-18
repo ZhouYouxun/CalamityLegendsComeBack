@@ -252,7 +252,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.ShaderLab
             if (!ShaderGames.TryGetShaderByCatalogIndex(CatalogIndex, out ShaderGames.ShaderDefinition shader))
                 return true;
 
-            if (shader.Category == ShaderCategory.Trail)
+            if (shader.Category is ShaderCategory.Trail or ShaderCategory.CalamityTrail)
                 return false;
 
             if (shader.Category != ShaderCategory.Overlay)
@@ -305,17 +305,25 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.ShaderLab
         public void RenderPixelatedPrimitives(SpriteBatch spriteBatch, GeneralDrawLayer layer)
         {
             if (!ShaderGames.TryGetShaderByCatalogIndex(CatalogIndex, out ShaderGames.ShaderDefinition shader) ||
-                shader.Category != ShaderCategory.Trail ||
-                !ShaderGames.TryGetMiscShader(shader.RegistrationName, out MiscShaderData trailShader))
+                shader.Category is not (ShaderCategory.Trail or ShaderCategory.CalamityTrail))
             {
                 return;
             }
+
+            bool calamityTrail = shader.Category == ShaderCategory.CalamityTrail;
+            MiscShaderData trailShader;
+            bool foundShader = calamityTrail
+                ? ShaderGames.TryGetCalamityMiscShader(shader.RegistrationName, out trailShader)
+                : ShaderGames.TryGetMiscShader(shader.RegistrationName, out trailShader);
+            if (!foundShader)
+                return;
 
             Vector2[] trailPoints = BuildTrailPoints();
             if (trailPoints.Length < 2)
                 return;
 
-            ConfigureTrailEffect(ShaderGames.GetEffect(shader.Name));
+            if (!calamityTrail)
+                ConfigureTrailEffect(ShaderGames.GetEffect(shader.Name));
 
             trailShader
                 .SetShaderTexture(ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/SylvestaffStreak"))
@@ -453,6 +461,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.ShaderLab
         private static readonly ShaderCategory[] Categories =
         [
             ShaderCategory.Trail,
+            ShaderCategory.CalamityTrail,
             ShaderCategory.Overlay,
             ShaderCategory.Screen
         ];
@@ -707,6 +716,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.ShaderLab
             return category switch
             {
                 ShaderCategory.Trail => new Color(255, 152, 72),
+                ShaderCategory.CalamityTrail => new Color(255, 96, 120),
                 ShaderCategory.Overlay => new Color(88, 218, 202),
                 ShaderCategory.Screen => new Color(172, 126, 255),
                 _ => Color.White

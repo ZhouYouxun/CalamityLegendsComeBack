@@ -1,0 +1,18 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				MagnetBombItem: {
+					DisplayName: 磁吸炸弹
+					Tooltip:
+						'''
+						左键投掷炸弹，黏附在物体表面等待引爆。
+						右键统一引爆所有已部署的炸弹。
+						'''
+				}
+			}
+		}
+
+		Projectiles.A_Tools.MagnetBombProj.DisplayName: 磁吸炸弹
+	}
+}

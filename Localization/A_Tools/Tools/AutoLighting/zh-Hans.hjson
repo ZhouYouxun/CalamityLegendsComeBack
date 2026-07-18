@@ -1,0 +1,16 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				AutoLighting: {
+					DisplayName: 自动照明器
+					Tooltip:
+						'''
+						收藏后，在黑暗环境中自动插入背包里最靠上的火把。
+						在水中时改为丢出荧光棒。
+						'''
+				}
+			}
+		}
+	}
+}

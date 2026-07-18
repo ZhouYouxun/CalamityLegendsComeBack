@@ -192,7 +192,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.BossProgress
             if (!panelPositionInitialized && Main.myPlayer == Projectile.owner)
             {
                 Vector2 requestedTopLeft = Projectile.ai[1] != 0f || Projectile.ai[2] != 0f
-                    ? new Vector2(Projectile.ai[1], Projectile.ai[2])
+                    ? new Vector2(Projectile.ai[1], Projectile.ai[2]) - new Vector2(PanelWidth, PanelHeight) * 0.5f
                     : Main.MouseScreen;
                 panelTopLeft = GetClampedPanelTopLeft(requestedTopLeft);
                 panelPositionInitialized = true;

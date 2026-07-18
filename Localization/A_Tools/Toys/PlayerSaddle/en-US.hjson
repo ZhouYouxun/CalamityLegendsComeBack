@@ -1,0 +1,24 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				PlayerSaddleItem: {
+					DisplayName: Player Saddle
+					Tooltip:
+						'''
+						Left-click on a nearby player to mount them.
+						While riding, you cannot move but can still attack and interact normally.
+						Auto-dismounts if your mount dies.
+						Left-click again to dismount, or right-click to throw off your own rider.
+						'''
+				}
+			}
+		}
+
+		TheSpecialText: {
+			PlayerSaddleNoTarget: No nearby player found to mount.
+			PlayerSaddleOccupied: That player already has a rider.
+			PlayerSaddleMounted: "{0} is now riding {1}!"
+		}
+	}
+}

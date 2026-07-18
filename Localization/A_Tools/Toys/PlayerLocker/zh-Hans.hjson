@@ -1,0 +1,21 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				PlayerLocker: {
+					DisplayName: 夺取者
+					Tooltip: 右键点击附近的玩家，打开并掠夺他们的背包。
+				}
+			}
+		}
+
+		Projectiles.A_Dev.PlayerLockerPanel.DisplayName: 玩家背包掠夺面板
+
+		TheSpecialText: {
+			PlayerLockerTitle: 正在掠夺 {0} 的背包
+			PlayerLockerNoTarget: 未找到附近的玩家，请将鼠标移近玩家后再右键。
+			PlayerLockerLoading: 正在获取背包数据...
+			PlayerLockerStolen: 从 {1} 身上偷走了 [{0}]！
+		}
+	}
+}
