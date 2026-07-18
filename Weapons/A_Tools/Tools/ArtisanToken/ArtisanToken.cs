@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Graphics;
@@ -14,6 +15,7 @@ using Terraria.UI.Chat;
 using CalamityMod;
 using CalamityLegendsComeBack.Systems;
 using CalamityLegendsComeBack.Weapons.A_Tools.DebugTools;
+using CalamityLegendsComeBack.Weapons.A_Tools.Toys.RetroGames;
 
 namespace CalamityLegendsComeBack.Weapons.A_Tools.Tools.ArtisanToken
 {
@@ -35,9 +37,31 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.Tools.ArtisanToken
         {
             Item.width = 28;
             Item.height = 28;
+            Item.damage = 0;
+            Item.knockBack = 0f;
+            Item.DamageType = DamageClass.Generic;
+            Item.useTime = 15;
+            Item.useAnimation = 15;
+            Item.useStyle = ItemUseStyleID.HoldUp;
+            Item.noMelee = true;
+            Item.autoReuse = false;
+            Item.shoot = PanelType;
+            Item.shootSpeed = 0f;
+            Item.UseSound = null;
             Item.value = Item.sellPrice(gold: 15);
             Item.rare = ItemRarityID.Yellow;
             Item.maxStack = 9999;
+        }
+
+        public override bool AltFunctionUse(Player player) => true;
+
+        public override bool CanUseItem(Player player)
+        {
+            return Main.myPlayer == player.whoAmI &&
+                !Main.mapFullscreen &&
+                !Main.blockMouse &&
+                !player.mouseInterface &&
+                !(Main.playerInventory && Main.HoverItem.type == Type);
         }
 
         public override bool CanRightClick() => true;
@@ -45,9 +69,19 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.Tools.ArtisanToken
 
         public override void RightClick(Player player)
         {
-            if (Main.myPlayer != player.whoAmI) return;
+            if (Main.myPlayer == player.whoAmI)
+                TogglePanel(player, Item.GetSource_FromThis());
+        }
 
-            // Toggle panel
+        public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position,
+            Vector2 velocity, int type, int damage, float knockback)
+        {
+            TogglePanel(player, source);
+            return false;
+        }
+
+        private static void TogglePanel(Player player, IEntitySource source)
+        {
             int panelType = PanelType;
             for (int i = 0; i < Main.maxProjectiles; i++)
             {
@@ -59,7 +93,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.Tools.ArtisanToken
             }
 
             Projectile.NewProjectile(
-                Item.GetSource_FromThis(), player.Center, Vector2.Zero,
+                source, player.Center, Vector2.Zero,
                 panelType, 0, 0f, player.whoAmI);
             SoundEngine.PlaySound(SoundID.MenuOpen with { Volume = 0.7f, Pitch = 0.1f }, player.Center);
         }
@@ -277,16 +311,58 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.Tools.ArtisanToken
 
         private static void ApplyPrefix(Player player, PrefixEntry entry)
         {
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+            {
+                ArtisanTokenPackets.RequestApplyPrefix(entry.Id);
+                return;
+            }
+
+            int applied = ApplyPrefixToAccessories(player, entry.Id);
+            ShowAppliedMessage(entry, applied);
+        }
+
+        internal static int ApplyPrefixToAccessories(Player player, int prefixId)
+        {
             int applied = 0;
             for (int i = 0; i < player.armor.Length; i++)
             {
                 Item equip = player.armor[i];
                 if (equip.IsAir || !equip.accessory) continue;
-                equip.Prefix(entry.Id);
+                if (!equip.Prefix(prefixId))
+                    continue;
+
                 if (Main.netMode != NetmodeID.SinglePlayer)
                     NetMessage.SendData(MessageID.SyncEquipment, -1, -1, null, player.whoAmI, i, equip.prefix);
                 applied++;
             }
+            return applied;
+        }
+
+        internal static bool IsSupportedPrefix(int prefixId)
+        {
+            foreach (PrefixEntry entry in Prefixes)
+            {
+                if (entry.Id == prefixId)
+                    return true;
+            }
+
+            return false;
+        }
+
+        internal static void ShowAppliedMessage(int prefixId, int applied)
+        {
+            foreach (PrefixEntry entry in Prefixes)
+            {
+                if (entry.Id == prefixId)
+                {
+                    ShowAppliedMessage(entry, applied);
+                    return;
+                }
+            }
+        }
+
+        private static void ShowAppliedMessage(PrefixEntry entry, int applied)
+        {
             string msg = Language.GetTextValue("Mods.CalamityLegendsComeBack.TheSpecialText.ArtisanTokenApplied",
                 entry.ChineseName, applied);
             Main.NewText(msg, new Color(255, 220, 100));
@@ -317,5 +393,57 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.Tools.ArtisanToken
         }
 
         public override void DrawBehind(int index, List<int> behindNPCsAndTiles, List<int> behindNPCs, List<int> behindProjectiles, List<int> overPlayers, List<int> overWiresUI) { }
+    }
+
+    internal static class ArtisanTokenPackets
+    {
+        public static void RequestApplyPrefix(int prefixId)
+        {
+            ModPacket packet = ModContent.GetInstance<global::CalamityLegendsComeBack.CalamityLegendsComeBack>().GetPacket();
+            packet.Write((byte)GamePacketType.ArtisanTokenApplyPrefix);
+            packet.Write((byte)prefixId);
+            packet.Send();
+        }
+
+        public static void HandleApplyPrefix(BinaryReader reader, int whoAmI)
+        {
+            if (Main.netMode != NetmodeID.Server || reader.BaseStream.Position >= reader.BaseStream.Length)
+                return;
+
+            int prefixId = reader.ReadByte();
+            if (!Main.player.IndexInRange(whoAmI) || !ArtisanTokenPanel.IsSupportedPrefix(prefixId))
+                return;
+
+            Player player = Main.player[whoAmI];
+            if (!player.active || !PlayerOwnsArtisanToken(player))
+                return;
+
+            int applied = ArtisanTokenPanel.ApplyPrefixToAccessories(player, prefixId);
+            ModPacket response = ModContent.GetInstance<global::CalamityLegendsComeBack.CalamityLegendsComeBack>().GetPacket();
+            response.Write((byte)GamePacketType.ArtisanTokenPrefixApplied);
+            response.Write((byte)prefixId);
+            response.Write((byte)applied);
+            response.Send(whoAmI);
+        }
+
+        public static void HandlePrefixApplied(BinaryReader reader)
+        {
+            if (Main.netMode == NetmodeID.Server || reader.BaseStream.Length - reader.BaseStream.Position < 2)
+                return;
+
+            ArtisanTokenPanel.ShowAppliedMessage(reader.ReadByte(), reader.ReadByte());
+        }
+
+        private static bool PlayerOwnsArtisanToken(Player player)
+        {
+            int tokenType = ModContent.ItemType<ArtisanToken>();
+            foreach (Item item in player.inventory)
+            {
+                if (!item.IsAir && item.type == tokenType)
+                    return true;
+            }
+
+            return false;
+        }
     }
 }
