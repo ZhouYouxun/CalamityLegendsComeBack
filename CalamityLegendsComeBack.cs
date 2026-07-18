@@ -4,6 +4,7 @@ using CalamityMod.Particles;
 using CalamityLegendsComeBack.Weapons.A_Tools.Toys.PlayerLocker;
 using CalamityLegendsComeBack.Weapons.A_Tools.Toys.PlayerSaddle;
 using CalamityLegendsComeBack.Weapons.A_Tools.Toys.RetroGames;
+using CalamityLegendsComeBack.Weapons.A_Tools.Tools.ArtisanToken;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -49,6 +50,12 @@ namespace CalamityLegendsComeBack
                     break;
                 case GamePacketType.PlayerSaddleDismount:
                     PlayerSaddlePackets.HandleDismount(reader, whoAmI);
+                    break;
+                case GamePacketType.ArtisanTokenApplyPrefix:
+                    ArtisanTokenPackets.HandleApplyPrefix(reader, whoAmI);
+                    break;
+                case GamePacketType.ArtisanTokenPrefixApplied:
+                    ArtisanTokenPackets.HandlePrefixApplied(reader);
                     break;
                 default:
                     TetrisMultiplayerPackets.HandlePacket(packetType, reader, whoAmI);

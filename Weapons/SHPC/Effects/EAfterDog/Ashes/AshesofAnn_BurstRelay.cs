@@ -10,27 +10,28 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
 {
+    // The primary fire is deliberately a paired sweep. Every beat releases one left and one
+    // right homing ember, so the pattern reads as a wide double strafe instead of a random spray.
     internal sealed class AshesofAnn_BurstRelay : ModProjectile, ILocalizedModType
     {
-        private const int ShotCount = 17;
-        private const int WarmupFrames = 4;
-        private const int FireInterval = 4;
+        private const int SweepPairCount = 8;
+        private const int WarmupFrames = 3;
+        private const int FireInterval = 2;
 
         public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         private ref float Timer => ref Projectile.localAI[0];
-        private ref float ShotsFired => ref Projectile.localAI[1];
+        private ref float SweepPairsFired => ref Projectile.localAI[1];
 
         private Vector2 ForwardDirection
         {
             get
             {
                 Vector2 stored = new(Projectile.ai[0], Projectile.ai[1]);
-                if (stored.LengthSquared() > 0.001f)
-                    return stored.SafeNormalize(Vector2.UnitX);
-
-                return Projectile.velocity.SafeNormalize(Vector2.UnitX);
+                return stored.LengthSquared() > 0.001f
+                    ? stored.SafeNormalize(Vector2.UnitX)
+                    : Projectile.velocity.SafeNormalize(Vector2.UnitX);
             }
         }
 
@@ -40,7 +41,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
             Projectile.height = 32;
             Projectile.friendly = false;
             Projectile.hostile = false;
-            Projectile.timeLeft = WarmupFrames + ShotCount * FireInterval + 18;
+            Projectile.timeLeft = WarmupFrames + SweepPairCount * FireInterval + 8;
             Projectile.penetrate = -1;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
@@ -52,7 +53,24 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
 
         public override void OnSpawn(IEntitySource source)
         {
-            SoundEngine.PlaySound(SoundID.Item20 with { Volume = 0.34f, Pitch = -0.18f, PitchVariance = 0.1f, MaxInstances = 4 }, Projectile.Center);
+            SoundEngine.PlaySound(SoundID.Item20 with { Volume = 0.36f, Pitch = -0.20f, PitchVariance = 0.1f, MaxInstances = 4 }, Projectile.Center);
+
+            Player owner = Main.player[Projectile.owner];
+            NPC markedTarget = FindMarkedTarget(owner.Center, 2600f);
+            if (Projectile.owner == Main.myPlayer && markedTarget is not null)
+            {
+                Vector2 attackDirection = (markedTarget.Center - owner.Center).SafeNormalize(ForwardDirection);
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    markedTarget.Center,
+                    attackDirection,
+                    ModContent.ProjectileType<AshesofAnn_Located>(),
+                    Projectile.damage,
+                    Projectile.knockBack,
+                    Projectile.owner,
+                    markedTarget.whoAmI);
+            }
+
             if (!Main.dedServ)
                 SpawnMuzzleFlash(ForwardDirection);
         }
@@ -74,47 +92,62 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
             Projectile.Center = owner.Center + forward * 68f;
             Projectile.rotation = forward.ToRotation();
 
-            if (Projectile.owner == Main.myPlayer && Timer >= WarmupFrames && ShotsFired < ShotCount && (Timer - WarmupFrames) % FireInterval == 0f)
-                FireSoul((int)ShotsFired++);
+            if (Projectile.owner == Main.myPlayer && Timer >= WarmupFrames && SweepPairsFired < SweepPairCount && (Timer - WarmupFrames) % FireInterval == 0f)
+                FireHomingSweepPair((int)SweepPairsFired++);
 
             if (!Main.dedServ)
                 SpawnChargeEffects(forward);
         }
 
-        private void FireSoul(int shotIndex)
+        private void FireHomingSweepPair(int pairIndex)
         {
             Vector2 forward = ForwardDirection;
             Vector2 normal = forward.RotatedBy(MathHelper.PiOver2);
-            bool piercingShot = shotIndex % 3 == 2;
+            float completion = pairIndex / (float)Math.Max(1, SweepPairCount - 1);
+            float sweepAngle = MathHelper.Lerp(0.38f, 0.055f, completion);
+            int damage = Math.Max(1, (int)(Projectile.damage * MathHelper.Lerp(0.78f, 0.94f, completion)));
 
-            float shotCompletion = shotIndex / (float)(ShotCount - 1);
-            float spreadStrength = MathHelper.Lerp(0.26f, 0.06f, shotCompletion);
-            float wave = (float)System.Math.Sin(shotIndex * 1.83f) * spreadStrength;
-            Vector2 direction = forward.RotatedBy(wave).SafeNormalize(forward);
+            for (int side = -1; side <= 1; side += 2)
+            {
+                Vector2 direction = forward.RotatedBy(sweepAngle * side).SafeNormalize(forward);
+                Vector2 spawnPosition = Projectile.Center + forward * 20f + normal * side * MathHelper.Lerp(30f, 8f, completion);
+                int shotIndex = pairIndex * 2 + (side > 0 ? 1 : 0);
 
-            float sideOffset = (float)System.Math.Sin(shotIndex * 2.41f) * 18f;
-            Vector2 spawnPosition = Projectile.Center + forward * 18f + normal * sideOffset;
-            float speed = piercingShot
-                ? MathHelper.Lerp(5.4f, 7.2f, shotCompletion)
-                : Main.rand.NextFloat(13.5f, 16.5f);
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    spawnPosition,
+                    direction * MathHelper.Lerp(18f, 15.5f, completion),
+                    ModContent.ProjectileType<AshesofAnn_CurseFire>(),
+                    damage,
+                    Projectile.knockBack,
+                    Projectile.owner,
+                    0f,
+                    shotIndex);
 
-            int damage = Math.Max(1, (int)(Projectile.damage * MathHelper.Lerp(0.78f, 0.92f, shotCompletion)));
-            if (shotIndex == ShotCount - 1)
-                damage = Math.Max(1, (int)(Projectile.damage * 1.08f));
+                SpawnShotGlow(spawnPosition, direction, side);
+            }
 
-            Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(),
-                spawnPosition,
-                direction * speed,
-                ModContent.ProjectileType<AshesofAnn_CurseFire>(),
-                damage,
-                Projectile.knockBack,
-                Projectile.owner,
-                piercingShot ? 1f : 0f,
-                shotIndex);
+            SoundEngine.PlaySound(SoundID.Item73 with { Volume = 0.54f, Pitch = MathHelper.Lerp(-0.24f, 0.12f, completion), MaxInstances = 8 }, Projectile.Center);
+        }
 
-            SoundEngine.PlaySound(SoundID.Item73, spawnPosition);
-            SpawnShotGlow(spawnPosition, direction);
+        private static NPC FindMarkedTarget(Vector2 center, float range)
+        {
+            NPC closest = null;
+            float closestDistance = range;
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (!npc.CanBeChasedBy(null, false))
+                    continue;
+
+                float distance = Vector2.Distance(center, npc.Center);
+                if (distance >= closestDistance)
+                    continue;
+
+                closest = npc;
+                closestDistance = distance;
+            }
+
+            return closest;
         }
 
         private static Vector2 GetOwnerAimDirection(Player owner, Vector2 fallback)
@@ -138,36 +171,33 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
 
         private void SpawnChargeEffects(Vector2 forward)
         {
-            Vector2 normal = forward.RotatedBy(MathHelper.PiOver2);
-            Color orange = new(255, 162, 64);
-            Color ember = new(210, 42, 18);
+            if ((int)Timer % 2 != 0)
+                return;
 
-            if ((int)Timer % 2 == 0)
-            {
-                GeneralParticleHandler.SpawnParticle(new CustomSpark(
-                    Projectile.Center + normal * Main.rand.NextFloat(-8f, 8f),
-                    -forward * Main.rand.NextFloat(0.3f, 1.2f),
-                    "CalamityMod/Particles/VerticalSmear",
-                    false,
-                    1,
-                    Main.rand.NextFloat(0.7f, 1.05f),
-                    Color.Lerp(orange, ember, Main.rand.NextFloat(0.2f, 0.7f)),
-                    new Vector2(0.16f, 0.62f),
-                    true,
-                    true,
-                    shrinkSpeed: 0.78f,
-                    glowOpacity: 0.42f));
-            }
+            Vector2 normal = forward.RotatedBy(MathHelper.PiOver2);
+            GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                Projectile.Center + normal * Main.rand.NextFloat(-8f, 8f),
+                -forward * Main.rand.NextFloat(0.3f, 1.2f),
+                "CalamityMod/Particles/VerticalSmear",
+                false,
+                1,
+                Main.rand.NextFloat(0.7f, 1.05f),
+                Color.Lerp(new Color(255, 162, 64), new Color(210, 42, 18), Main.rand.NextFloat(0.2f, 0.7f)),
+                new Vector2(0.16f, 0.62f),
+                true,
+                true,
+                shrinkSpeed: 0.78f,
+                glowOpacity: 0.42f));
         }
 
-        private static void SpawnShotGlow(Vector2 center, Vector2 direction)
+        private static void SpawnShotGlow(Vector2 center, Vector2 direction, int side)
         {
-            if (Main.dedServ || !Main.rand.NextBool(3))
+            if (Main.dedServ || !Main.rand.NextBool(2))
                 return;
 
             GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
                 center,
-                -direction * Main.rand.NextFloat(0.25f, 0.9f) + Main.rand.NextVector2Circular(0.4f, 0.4f),
+                -direction * Main.rand.NextFloat(0.25f, 0.9f) + direction.RotatedBy(MathHelper.PiOver2) * side * 0.4f,
                 false,
                 Main.rand.Next(7, 12),
                 Main.rand.NextFloat(0.16f, 0.25f),

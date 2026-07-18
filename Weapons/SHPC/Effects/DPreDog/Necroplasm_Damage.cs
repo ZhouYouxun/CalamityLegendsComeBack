@@ -1,179 +1,141 @@
+using CalamityMod;
+using CalamityMod.Dusts;
+using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Terraria;
+using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 {
-    internal class SHPCNecroplasmDamage : ModProjectile, ILocalizedModType
+    // The additional damage orb is intentionally slim. It uses the same three-frame Phantom
+    // Spirit silhouette as the main orb, but has its own compact hitbox and much sharper chase.
+    internal sealed class SHPCNecroplasmDamage : ModProjectile, ILocalizedModType
     {
+        private static readonly Color OuterColor = new(78, 65, 202);
+        private static readonly Color CoreColor = new(149, 249, 255);
+
         public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+        private ref float Timer => ref Projectile.localAI[0];
 
         public override void SetStaticDefaults()
         {
-            ProjectileID.Sets.TrailingMode[Projectile.type] = 0;
-            ProjectileID.Sets.TrailCacheLength[Projectile.type] = 20;
+            ProjectileID.Sets.TrailingMode[Type] = 2;
+            ProjectileID.Sets.TrailCacheLength[Type] = 14;
         }
 
         public override void SetDefaults()
         {
-            Projectile.width = 32;
-            Projectile.height = 32;
-
+            Projectile.width = 14;
+            Projectile.height = 14;
             Projectile.friendly = true;
+            Projectile.hostile = false;
+            Projectile.DamageType = DamageClass.Magic;
             Projectile.tileCollide = false;
-
-            Projectile.penetrate = 1;
-            Projectile.timeLeft = 180;
-
+            Projectile.ignoreWater = true;
+            Projectile.penetrate = 2;
+            Projectile.timeLeft = 150;
+            Projectile.extraUpdates = 1;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = 10;
+            Projectile.localNPCHitCooldown = 12;
         }
 
-        // ===== 飞行逻辑：纯减速 =====
+        public override void OnSpawn(IEntitySource source)
+        {
+            if (Projectile.velocity.LengthSquared() < 0.01f)
+                Projectile.velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * 8f;
+        }
+
         public override void AI()
         {
-            timer++; // 计时器
+            if (Projectile.numUpdates == 0)
+                Timer++;
 
-            if (timer > 20)
+            NPC target = Projectile.Center.ClosestNPCAt(2000f);
+            Vector2 fallback = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            if (target is not null && Timer >= 5f)
             {
-                NPC target = FindTarget(1400f);
-                if (target != null)
-                {
-                    float trackingPower = Utils.GetLerpValue(20f, 120f, timer, true);
-                    float lateLifeBoost = Projectile.timeLeft < 90 ? 2f : 1f;
-                    float speed = MathHelper.Lerp(8f, 19f, trackingPower) * lateLifeBoost;
-                    Vector2 desiredVelocity = (target.Center - Projectile.Center).SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitX)) * speed;
-                    Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, MathHelper.Lerp(0.08f, 0.34f, trackingPower));
-                    return;
-                }
+                float pressure = Utils.GetLerpValue(5f, 28f, Timer, true);
+                float targetSpeed = MathHelper.Lerp(14f, 28f, pressure);
+                Vector2 desiredVelocity = Projectile.SafeDirectionTo(target.Center, fallback) * targetSpeed;
+                Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, MathHelper.Lerp(0.16f, 0.34f, pressure));
             }
+            else
+                Projectile.velocity *= 0.992f;
 
-            Projectile.velocity *= 0.965f;
+            float speed = MathHelper.Clamp(Projectile.velocity.Length(), 5f, 30f);
+            Projectile.velocity = Projectile.velocity.SafeNormalize(fallback) * speed;
+            Projectile.rotation = Projectile.velocity.ToRotation();
+            Lighting.AddLight(Projectile.Center, CoreColor.ToVector3() * 0.38f);
+
+            if (!Main.dedServ && (int)Timer % 3 == 0)
+                SpawnTrail();
         }
 
-        private NPC FindTarget(float maxDistance)
+        private void SpawnTrail()
         {
-            NPC result = null;
-            float bestDistance = maxDistance;
+            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                Projectile.Center - direction * Main.rand.NextFloat(3f, 10f) + Main.rand.NextVector2Circular(2f, 2f),
+                -direction * Main.rand.NextFloat(0.4f, 1.5f),
+                false,
+                Main.rand.Next(8, 13),
+                Main.rand.NextFloat(0.10f, 0.17f),
+                Main.rand.NextBool() ? OuterColor : CoreColor,
+                true,
+                false));
 
-            foreach (NPC npc in Main.ActiveNPCs)
-            {
-                if (!npc.CanBeChasedBy(Projectile))
-                    continue;
-
-                float distance = Projectile.Distance(npc.Center);
-                if (distance >= bestDistance)
-                    continue;
-
-                bestDistance = distance;
-                result = npc;
-            }
-
-            return result;
+            Dust dust = Dust.NewDustPerfect(Projectile.Center, (int)CalamityDusts.Necroplasm,
+                -direction * Main.rand.NextFloat(0.6f, 1.8f), 100, CoreColor, 0.72f);
+            dust.noGravity = true;
         }
 
-        // ===== 视觉完全复刻 =====
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            if (Main.dedServ)
+                return;
+
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                Projectile.Center,
+                Projectile.velocity.SafeNormalize(Vector2.UnitX) * 0.2f,
+                CoreColor,
+                new Vector2(0.28f, 0.66f),
+                Projectile.rotation,
+                0.06f,
+                0.56f,
+                12));
+        }
+
         public override bool PreDraw(ref Color lightColor)
         {
-            Texture2D lightTexture = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/SmallGreyscaleCircle").Value;
+            Texture2D ghost = ModContent.Request<Texture2D>("CalamityMod/NPCs/NormalNPCs/PhantomSpirit").Value;
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            int frameHeight = ghost.Height / 3;
+            int frameIndex = ((int)(Timer / 4f) + Projectile.identity) % 3;
+            Rectangle frame = new(0, frameHeight * frameIndex, ghost.Width, frameHeight);
+            Vector2 origin = frame.Size() * 0.5f;
+            float opacity = Utils.GetLerpValue(0f, 8f, Timer, true) * Utils.GetLerpValue(0f, 14f, Projectile.timeLeft, true);
 
-            for (int i = 0; i < Projectile.oldPos.Length; i++)
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
+            for (int i = 0; i < Projectile.oldPos.Length; i += 3)
             {
-                float colorInterpolation =
-                    (float)Math.Cos(
-                        Projectile.timeLeft / 32f +
-                        Main.GlobalTimeWrappedHourly / 20f +
-                        i / (float)Projectile.oldPos.Length * MathHelper.Pi
-                    ) * 0.5f + 0.5f;
+                if (Projectile.oldPos[i] == Vector2.Zero)
+                    continue;
 
-                Color color = Color.Lerp(
-                    new Color(255, 80, 180),
-                    new Color(200, 40, 140),
-                    colorInterpolation
-                ) * 0.8f;
-
-                color.A = 255;
-
-                Vector2 drawPosition =
-                    Projectile.oldPos[i]
-                    + lightTexture.Size() * 0.5f
-                    - Main.screenPosition
-                    + new Vector2(0f, Projectile.gfxOffY)
-                    + new Vector2(-28f, -28f);
-
-                Color outerColor = color;
-                Color innerColor = color * 0.5f;
-
-                float intensity =
-                    0.9f + 0.15f *
-                    (float)Math.Cos(Main.GlobalTimeWrappedHourly % 60f * MathHelper.TwoPi);
-
-                intensity *= MathHelper.Lerp(
-                    0.15f,
-                    1f,
-                    1f - i / (float)Projectile.oldPos.Length
-                );
-
-                if (Projectile.timeLeft <= 60)
-                    intensity *= Projectile.timeLeft / 60f;
-
-                Vector2 outerScale = new Vector2(1f) * intensity;
-                Vector2 innerScale = new Vector2(1f) * intensity * 0.7f;
-
-                outerColor *= intensity;
-                innerColor *= intensity;
-
-                Main.EntitySpriteDraw(
-                    lightTexture,
-                    drawPosition,
-                    null,
-                    outerColor,
-                    0f,
-                    lightTexture.Size() * 0.5f,
-                    outerScale * 0.6f,
-                    SpriteEffects.None,
-                    0
-                );
-
-                Main.EntitySpriteDraw(
-                    lightTexture,
-                    drawPosition,
-                    null,
-                    innerColor,
-                    0f,
-                    lightTexture.Size() * 0.5f,
-                    innerScale * 0.6f,
-                    SpriteEffects.None,
-                    0
-                );
+                float trailOpacity = (1f - i / (float)Projectile.oldPos.Length) * 0.22f * opacity;
+                Vector2 trailPosition = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
+                Main.EntitySpriteDraw(ghost, trailPosition, frame, OuterColor * trailOpacity, Projectile.rotation * 0.08f, origin, 0.48f, SpriteEffects.None);
             }
 
+            Vector2 drawPosition = Projectile.Center - Main.screenPosition;
+            Main.EntitySpriteDraw(bloom, drawPosition, null, OuterColor * (0.32f * opacity), 0f, bloom.Size() * 0.5f, 0.18f, SpriteEffects.None);
+            Main.EntitySpriteDraw(ghost, drawPosition, frame, CoreColor * (0.72f * opacity), Projectile.rotation * 0.06f, origin, 0.56f, SpriteEffects.None);
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
             return false;
-        }
-
-        // ===== 全部留空 =====
-        public override void OnSpawn(Terraria.DataStructures.IEntitySource source) { }
-
-        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone) { }
-
-        public override void OnKill(int timeLeft) { }
-
-
-        private int timer;
-
-        public override bool? CanDamage()
-        {
-            if (timer < 20)
-                return false;
-            return null;
         }
     }
 }

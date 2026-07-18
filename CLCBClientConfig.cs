@@ -13,5 +13,8 @@ namespace CalamityLegendsComeBack
 
         [DefaultValue(true)]
         public bool ShowMatrixBossBar;
+
+        [DefaultValue(true)]
+        public bool ShowInternalEnglishNames;
     }
 }

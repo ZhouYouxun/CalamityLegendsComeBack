@@ -58,12 +58,12 @@ namespace CalamityLegendsComeBack.QOL
                     causticTearRecipe.Register();
                 }
 
-                // 博比特虫 Hook: 10 Ruinous Soul + 1 Lunar Hook
+                // 博比特虫 Hook: 2 Ruinous Soul + 1 Lunar Hook
                 if (calamity.TryFind<ModItem>("BobbitHook", out ModItem bobbitHook) &&
                     calamity.TryFind<ModItem>("RuinousSoul", out ModItem ruinousSoul))
                 {
                     Recipe bobbitHookRecipe = Recipe.Create(bobbitHook.Type);
-                    bobbitHookRecipe.AddIngredient(ruinousSoul.Type, 10);
+                    bobbitHookRecipe.AddIngredient(ruinousSoul.Type, 2);
                     bobbitHookRecipe.AddIngredient(ItemID.LunarHook);
                     bobbitHookRecipe.Register();
                 }

@@ -6,7 +6,7 @@ Mods: {
 					DisplayName: Artisan Token
 					Tooltip:
 						'''
-						Right-click to open the modifier selection menu.
+						Right-click this item in your inventory to open the modifier selection menu.
 						Clicking a modifier instantly reforges all equipped accessories with it.
 						Sold by the Goblin Tinkerer.
 						'''

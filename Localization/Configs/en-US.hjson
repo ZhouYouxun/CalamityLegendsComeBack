@@ -27,6 +27,11 @@
 					Label: Show Matrix Boss Health Bar
 					Tooltip: If enabled, displays a custom matrix-style boss health bar at the top-center of the screen.
 				}
+
+				ShowInternalEnglishNames: {
+					Label: Show Internal English Names
+					Tooltip: If enabled, appends every item's internal English name to its tooltip name while the game language is not English.
+				}
 			}
 		}
 	}

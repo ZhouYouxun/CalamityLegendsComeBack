@@ -172,6 +172,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.PreDrawLab
         public new string LocalizationCategory => "Projectiles.A_Dev";
         public override string Texture => PreDrawLabItem.DemoTexture;
 
+        private int EffectIndex => Math.Clamp((int)Projectile.ai[0], 0, PreDrawEffectCatalog.Count - 1);
+
         public override void SetDefaults()
         {
             Projectile.width = 18;
@@ -184,14 +186,311 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.PreDrawLab
             Projectile.tileCollide = false;
         }
 
+        public override void SetStaticDefaults()
+        {
+            ProjectileID.Sets.TrailCacheLength[Type] = 12;
+            ProjectileID.Sets.TrailingMode[Type] = 2;
+        }
+
         public override bool? CanDamage() => false;
+
+        public override void AI()
+        {
+            Projectile.localAI[0]++;
+            Projectile.rotation = MathHelper.WrapAngle(Projectile.rotation + MathHelper.PiOver4);
+        }
+
+        public override Color? GetAlpha(Color lightColor)
+        {
+            if (EffectIndex != 10)
+                return null;
+
+            float pulse = 0.45f + 0.55f * (float)Math.Sin(Projectile.localAI[0] * 0.14f);
+            return Color.Lerp(new Color(255, 132, 54), Color.White, pulse) * 0.85f;
+        }
 
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D texture = TextureAssets.Projectile[Type].Value;
-            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, Color.White,
-                MathHelper.PiOver4, texture.Size() * 0.5f, 1f, SpriteEffects.None, 0);
+            Vector2 drawPosition = Projectile.Center - Main.screenPosition;
+            Vector2 origin = texture.Size() * 0.5f;
+            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 perpendicular = direction.RotatedBy(MathHelper.PiOver2);
+            float time = Projectile.localAI[0];
+            float pulse = 0.5f + 0.5f * (float)Math.Sin(time * 0.16f);
+            Color drawColor = Color.White;
+
+            switch (EffectIndex)
+            {
+                case 1: // Frame clipping.
+                    int frameWidth = Math.Max(1, texture.Width / 2);
+                    Rectangle frame = new((int)(time / 12f % 2) * frameWidth, 0, frameWidth, texture.Height);
+                    DrawSprite(texture, drawPosition, frame, drawColor, Projectile.rotation, new Vector2(frameWidth, texture.Height) * 0.5f, 1f);
+                    return false;
+
+                case 2: // Origin offset.
+                    DrawSprite(texture, drawPosition, null, drawColor, Projectile.rotation, origin + new Vector2(8f, -5f), 1f);
+                    return false;
+
+                case 3: // Sprite flip.
+                    DrawSprite(texture, drawPosition, null, drawColor, Projectile.rotation, origin, 1f,
+                        ((int)(time / 18f) & 1) == 0 ? SpriteEffects.FlipHorizontally : SpriteEffects.FlipVertically);
+                    return false;
+
+                case 4: // Velocity-driven rotation.
+                    DrawSprite(texture, drawPosition, null, drawColor, Projectile.velocity.ToRotation() + time * 0.08f, origin, 1f);
+                    return false;
+
+                case 5: // Scale pulse.
+                    DrawSprite(texture, drawPosition, null, drawColor, Projectile.rotation, origin, 0.65f + pulse * 0.9f);
+                    return false;
+
+                case 6: // Deterministic jitter.
+                    DrawSprite(texture, drawPosition + new Vector2((float)Math.Sin(time * 2.3f), (float)Math.Cos(time * 1.7f)) * 5f,
+                        null, drawColor, Projectile.rotation, origin, 1f);
+                    return false;
+
+                case 7: // Environment lighting.
+                    DrawSprite(texture, drawPosition, null, lightColor, Projectile.rotation, origin, 1f);
+                    return false;
+
+                case 8:
+                    DrawSprite(texture, drawPosition, null, new Color(255, 86, 48), Projectile.rotation, origin, 1f);
+                    return false;
+
+                case 9:
+                    DrawSprite(texture, drawPosition, null, Color.Lerp(new Color(50, 220, 255), new Color(255, 72, 184), pulse), Projectile.rotation, origin, 1f);
+                    return false;
+
+                case 10:
+                    DrawSprite(texture, drawPosition, null, GetAlpha(lightColor) ?? Color.White, Projectile.rotation, origin, 1f);
+                    return false;
+
+                case 11:
+                    DrawSprite(texture, drawPosition, null, Color.White * MathHelper.Clamp(Projectile.timeLeft / 70f, 0f, 1f), Projectile.rotation, origin, 1f);
+                    return false;
+
+                case 12:
+                    DrawSprite(texture, drawPosition, null, Color.Lerp(new Color(255, 180, 64), Color.White, pulse), Projectile.rotation, origin, 1f);
+                    return false;
+
+                case 13:
+                    DrawSprite(texture, drawPosition, null, Main.hslToRgb((time * 0.012f) % 1f, 0.9f, 0.6f), Projectile.rotation, origin, 1f);
+                    return false;
+
+                case 14:
+                    DrawRadialCopies(texture, drawPosition, origin, Projectile.rotation, 7, 5f, new Color(255, 92, 50) * 0.7f);
+                    break;
+
+                case 15:
+                    DrawSprite(texture, drawPosition - direction * 4f, null, new Color(60, 220, 255) * 0.72f, Projectile.rotation, origin, 1f);
+                    DrawSprite(texture, drawPosition + direction * 4f, null, new Color(255, 88, 86) * 0.72f, Projectile.rotation, origin, 1f);
+                    break;
+
+                case 16:
+                case 17:
+                    DrawSprite(texture, drawPosition, null, new Color(255, 122, 42) * 0.35f, Projectile.rotation, origin, 1.65f);
+                    break;
+
+                case 18:
+                    DrawSprite(texture, drawPosition, null, new Color(255, 168, 66) * 0.2f, Projectile.rotation, origin, 2.5f);
+                    break;
+
+                case 19:
+                case 20:
+                case 21:
+                    for (int i = 0; i < 6; i++)
+                    {
+                        float angle = MathHelper.TwoPi * i / 6f + (EffectIndex == 20 ? time * 0.08f : 0f);
+                        float radius = EffectIndex == 21 ? 12f + (float)Math.Sin(time * 0.4f + i * 4.1f) * 5f : 15f;
+                        DrawSprite(texture, drawPosition + angle.ToRotationVector2() * radius, null,
+                            Main.hslToRgb((i / 6f + time * 0.01f) % 1f, 0.8f, 0.65f) * 0.4f, Projectile.rotation, origin, 0.55f);
+                    }
+                    break;
+
+                case 22:
+                    for (int i = 4; i >= 1; i--)
+                        DrawSprite(texture, drawPosition - direction * i * 4f, null, Color.White * (0.12f * i), Projectile.rotation, origin, 1f);
+                    break;
+
+                case 23:
+                    DrawSprite(texture, drawPosition - perpendicular * 4f, null, new Color(80, 120, 255) * 0.55f, Projectile.rotation - 0.18f, origin, 1.15f);
+                    DrawSprite(texture, drawPosition + perpendicular * 4f, null, new Color(255, 88, 122) * 0.55f, Projectile.rotation + 0.18f, origin, 0.9f);
+                    break;
+
+                case 24:
+                    for (int i = 0; i < 5; i++)
+                    {
+                        float angle = time * 0.05f + i * MathHelper.TwoPi / 5f;
+                        DrawSprite(texture, drawPosition + angle.ToRotationVector2() * (8f + pulse * 16f), null,
+                            new Color(110, 180, 255) * 0.18f, angle, origin, 1.2f + pulse);
+                    }
+                    break;
+
+                case 25:
+                    DrawSprite(texture, drawPosition - direction * 12f, null, new Color(255, 100, 48) * 0.5f, Projectile.velocity.ToRotation(), origin, new Vector2(2.8f, 0.6f));
+                    break;
+
+                case 26:
+                    DrawLine(drawPosition - direction * 28f + perpendicular * 18f, drawPosition + direction * 28f - perpendicular * 18f, new Color(255, 212, 112) * 0.8f, 4f);
+                    break;
+
+                case 27:
+                case 29:
+                case 30:
+                    DrawPositionTrail(texture, origin, EffectIndex == 30 ? 3f : 0f, EffectIndex == 29 ? 0.75f : 1f);
+                    break;
+
+                case 28:
+                    for (int i = Projectile.oldRot.Length - 1; i >= 0; i--)
+                        DrawSprite(texture, drawPosition - direction * (i + 1) * 3f, null, new Color(176, 92, 255) * (0.05f + 0.035f * i), Projectile.oldRot[i], origin, 1f);
+                    break;
+
+                case 31:
+                    DrawSprite(texture, drawPosition - perpendicular * 5f, null, Color.Red * 0.72f, Projectile.rotation, origin, 1f);
+                    DrawSprite(texture, drawPosition + direction * 5f, null, Color.Lime * 0.72f, Projectile.rotation, origin, 1f);
+                    DrawSprite(texture, drawPosition + perpendicular * 5f, null, Color.Cyan * 0.72f, Projectile.rotation, origin, 1f);
+                    break;
+
+                case 32:
+                    for (int i = 1; i <= 8; i++)
+                        DrawSprite(texture, drawPosition - direction * i * 7f, null, new Color(255, 145, 56) * (0.55f / i), Projectile.rotation, origin, 1f - i * 0.07f);
+                    break;
+
+                case 33:
+                    for (int i = 0; i < 8; i++)
+                    {
+                        float angle = i * MathHelper.TwoPi / 8f + time * 0.04f;
+                        DrawSprite(texture, drawPosition + angle.ToRotationVector2() * (42f - pulse * 28f), null, new Color(120, 230, 255) * 0.35f, angle, origin, 0.45f);
+                    }
+                    break;
+
+                case 34:
+                    DrawRing(drawPosition, 14f + pulse * 22f, new Color(255, 160, 72) * (1f - pulse) * 0.8f, 2f);
+                    break;
+
+                case 35:
+                    DrawSprite(texture, drawPosition, null, Color.White * (0.35f + pulse * 0.65f), Projectile.rotation, origin, 2f + pulse * 1.8f);
+                    break;
+
+                case 36:
+                case 37:
+                    for (int i = 0; i < (EffectIndex == 36 ? 5 : 9); i++)
+                    {
+                        float angle = time * 0.07f + i * MathHelper.TwoPi / (EffectIndex == 36 ? 5 : 9);
+                        Vector2 point = drawPosition + angle.ToRotationVector2() * (EffectIndex == 36 ? 28f : 8f + (i % 3) * 10f);
+                        DrawStar(point, EffectIndex == 36 ? new Color(255, 224, 92) : new Color(255, 132, 62), EffectIndex == 36 ? 5f : 3f);
+                    }
+                    break;
+
+                case 38:
+                case 39:
+                case 40:
+                case 41:
+                case 42:
+                case 43:
+                    DrawBeamDemo(drawPosition, direction, perpendicular, EffectIndex, time);
+                    break;
+
+                case 44:
+                    DrawRadialCopies(texture, drawPosition, origin, Projectile.rotation + time * 0.06f, 12, 11f, Main.hslToRgb((time * 0.01f) % 1f, 0.9f, 0.65f) * 0.5f);
+                    break;
+
+                case 45:
+                    for (int i = 0; i < 12; i++)
+                    {
+                        float angle = time * 0.09f + i * 2.4f;
+                        DrawStar(drawPosition + angle.ToRotationVector2() * (6f + (i % 4) * 8f), new Color(255, 120, 42) * 0.8f, 2f + i % 3);
+                    }
+                    break;
+
+                case 46:
+                    DrawRing(drawPosition, 26f + pulse * 18f, new Color(100, 230, 255) * 0.65f, 3f);
+                    DrawRing(drawPosition, 10f + pulse * 8f, new Color(255, 90, 200) * 0.8f, 2f);
+                    break;
+            }
+
+            DrawSprite(texture, drawPosition, null, drawColor, Projectile.rotation, origin, 1f);
             return false;
+        }
+
+        private static void DrawSprite(Texture2D texture, Vector2 position, Rectangle? source, Color color, float rotation,
+            Vector2 origin, float scale, SpriteEffects effects = SpriteEffects.None) =>
+            Main.EntitySpriteDraw(texture, position, source, color, rotation, origin, scale, effects, 0);
+
+        private static void DrawSprite(Texture2D texture, Vector2 position, Rectangle? source, Color color, float rotation,
+            Vector2 origin, Vector2 scale, SpriteEffects effects = SpriteEffects.None) =>
+            Main.EntitySpriteDraw(texture, position, source, color, rotation, origin, scale, effects, 0);
+
+        private static void DrawRadialCopies(Texture2D texture, Vector2 position, Vector2 origin, float rotation, int count, float radius, Color color)
+        {
+            for (int i = 0; i < count; i++)
+                DrawSprite(texture, position + (rotation + MathHelper.TwoPi * i / count).ToRotationVector2() * radius, null, color, rotation, origin, 1f);
+        }
+
+        private void DrawPositionTrail(Texture2D texture, Vector2 origin, float edgeOffset, float scale)
+        {
+            for (int i = Projectile.oldPos.Length - 1; i >= 0; i--)
+            {
+                if (Projectile.oldPos[i] == Vector2.Zero)
+                    continue;
+
+                Vector2 trailPosition = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
+                Vector2 offset = Projectile.velocity.SafeNormalize(Vector2.UnitX) * edgeOffset * (i + 1);
+                DrawSprite(texture, trailPosition - offset, null, new Color(255, 130, 64) * (0.06f + 0.035f * (Projectile.oldPos.Length - i)), Projectile.rotation, origin, scale);
+            }
+        }
+
+        private static void DrawLine(Vector2 start, Vector2 end, Color color, float width)
+        {
+            Vector2 vector = end - start;
+            Main.EntitySpriteDraw(TextureAssets.MagicPixel.Value, start, null, color, vector.ToRotation(), Vector2.Zero,
+                new Vector2(vector.Length(), width), SpriteEffects.None, 0);
+        }
+
+        private static void DrawRing(Vector2 center, float radius, Color color, float width)
+        {
+            const int segments = 24;
+            for (int i = 0; i < segments; i++)
+            {
+                Vector2 start = center + (MathHelper.TwoPi * i / segments).ToRotationVector2() * radius;
+                Vector2 end = center + (MathHelper.TwoPi * (i + 1) / segments).ToRotationVector2() * radius;
+                DrawLine(start, end, color, width);
+            }
+        }
+
+        private static void DrawStar(Vector2 center, Color color, float size)
+        {
+            DrawLine(center - Vector2.UnitX * size, center + Vector2.UnitX * size, color, 1f);
+            DrawLine(center - Vector2.UnitY * size, center + Vector2.UnitY * size, color, 1f);
+        }
+
+        private static void DrawBeamDemo(Vector2 center, Vector2 direction, Vector2 perpendicular, int effect, float time)
+        {
+            Vector2 start = center - direction * 48f;
+            Vector2 end = center + direction * 72f;
+            Color color = effect == 42 ? new Color(255, 72, 72) * 0.38f : new Color(100, 220, 255) * 0.75f;
+
+            if (effect == 41)
+            {
+                for (int i = 0; i < 8; i++)
+                    DrawRing(Vector2.Lerp(start, end, i / 7f), 4f, color, 1f);
+            }
+            else
+            {
+                DrawLine(start, end, color, effect == 42 ? 2f : 4f);
+                if (effect == 38 || effect == 39)
+                {
+                    for (int i = 1; i < 6; i++)
+                        DrawLine(Vector2.Lerp(start, end, i / 6f) - perpendicular * 4f, Vector2.Lerp(start, end, i / 6f) + perpendicular * 4f, Color.White * 0.6f, 1f);
+                }
+            }
+
+            if (effect == 43)
+            {
+                DrawRing(start, 7f + (float)Math.Sin(time * 0.15f) * 2f, Color.White * 0.8f, 2f);
+                DrawRing(end, 7f + (float)Math.Cos(time * 0.15f) * 2f, Color.White * 0.8f, 2f);
+            }
         }
     }
 
@@ -239,7 +538,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.PreDrawLab
             Projectile.penetrate = -1;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
-            Projectile.hide = true;
             Projectile.Opacity = 0f;
         }
 

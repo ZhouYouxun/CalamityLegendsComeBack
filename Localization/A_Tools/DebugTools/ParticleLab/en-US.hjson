@@ -6,6 +6,11 @@ Mods: {
 					DisplayName: Particle Lab
 					Tooltip: Right click opens the particle matrix. Left click releases the selected single particle effect.
 				}
+
+				ProfanedGuardianProjectileSniper: {
+					DisplayName: Profaned Guardian Projectile Test Sniper
+					Tooltip: Left click fires the selected Profaned Guardian projectile toward the mouse cursor.\nRight click opens the projectile matrix.\nFires once every 30 frames.
+				}
 			}
 		}
 

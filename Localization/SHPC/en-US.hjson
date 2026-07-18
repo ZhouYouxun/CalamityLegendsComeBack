@@ -130,7 +130,7 @@ Mods: {
 
 			MatrixChargingBarrier: {
 				DisplayName: Matrix Charging Barrier
-				Tooltip: While holding SHPC, charges a shield equal to 25% of maximum life. Damage resets a 10-second recharge delay, then the shield fully charges over 5 seconds. While active, it reduces pre-defense damage by 10%
+				Tooltip: While holding SHPC, charges a shield equal to 25% of maximum life. After a full shield takes damage, it waits 10 seconds and then fully recharges over 5 seconds; damage does not interrupt either stage. While active, it reduces pre-defense damage by 10%. Does not conflict with other barriers
 			}
 
 			CtrlChip: {
@@ -171,8 +171,9 @@ Mods: {
 				Tooltip: "[GFB]"
 				TooltipCompact:
 					'''
-					Has all the effects of all 4 chips
-					Hold Shift to show the effects provided by each chip
+					Has all the effects of all 4 chips and the Matrix Charging Barrier
+					Hold Shift to show the effects provided by each chip and the barrier
+					Matrix Charging Barrier shield health +50%
 					No longer inherits any chip's drawbacks
 					"Hello, World"
 					'''
@@ -182,6 +183,7 @@ Mods: {
 					Diffusion Chip: +7% magic damage and magic critical strike chance; empowered heat attacks become more focused
 					Control Chip: +7% critical strike chance; while holding SHPC, gain a reticle that latches, tracks, and auto-aims
 					Ascension Chip: while holding SHPC, +70% flight time and improved movement speed, jump speed, and acceleration
+					Matrix Charging Barrier: while holding SHPC, gain its charging shield with 50% more shield health; does not conflict with other barriers
 					No longer inherits any chip's drawbacks
 					"Hello, World"
 					'''
@@ -258,6 +260,7 @@ Mods: {
 					'''
 					+20% SHPC damage, +10% critical strike chance, allows laser barrage to crit, and shortens laser barrage startup
 					While holding SHPC, gain infinite mana; firing energy orbs has a 50% chance not to consume ammo
+					Right-click laser barrage never overheats
 					Adds energy orb canisters; ammo capacity +100%
 					'''
 			}
@@ -420,6 +423,10 @@ Mods: {
 				PlagueCell_Nuke.DisplayName: Plague Cell_ Nuke
 				SHPC_ChargeSpiralInv.DisplayName: S H P C_ Charge Spiral Inv
 				StellarVortexShard.DisplayName: Stellar Vortex Shard
+				AshesofAnn_CataclysmFist.DisplayName: Ashesof Ann_ Cataclysm Fist
+				AshesofAnn_CatastropheSlash.DisplayName: Ashesof Ann_ Catastrophe Slash
+				AshesofAnn_VerdictHunter.DisplayName: Ashesof Ann_ Verdict Hunter
+				AshesofAnn_VerdictPiercer.DisplayName: Ashesof Ann_ Verdict Piercer
 			}
 
 			SHPCRight_HeatUI.DisplayName: S H P C Right_ Heat U I

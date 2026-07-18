@@ -1,4 +1,5 @@
 using System;
+using CalamityMod;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -53,15 +54,18 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip
 
         public override bool PreDraw(ref Color lightColor)
         {
+            CtrlChipPlayer ctrlPlayer =
+                Main.player[Projectile.owner].GetModPlayer<CtrlChipPlayer>();
+
+            if (!ctrlPlayer.CtrlChipEquipped || ctrlPlayer.CtrlChipVisualsHidden)
+                return false;
+
             Texture2D reticle = ModContent.Request<Texture2D>(
                 "CalamityMod/Particles/DestroyerReticleTelegraph"
             ).Value;
 
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
             Vector2 origin = reticle.Size() * 0.5f;
-
-            CtrlChipPlayer ctrlPlayer =
-                Main.player[Projectile.owner].GetModPlayer<CtrlChipPlayer>();
 
             bool locked = ctrlPlayer.ReticleHasTarget;
 
@@ -87,11 +91,14 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip
                 null,
                 Main.GameViewMatrix.TransformationMatrix);
 
-            Main.EntitySpriteDraw(reticle, drawPosition, null, outerColor * 0.88f, time * 1.26f, origin, outerScale, SpriteEffects.None, 0f);
-            Main.EntitySpriteDraw(reticle, drawPosition, null, innerColor * 0.76f, -time * 0.96f, origin, innerScale, SpriteEffects.FlipHorizontally, 0f);
+            if (locked)
+                DrawLockingDashedLine(Main.player[Projectile.owner].MountedCenter, Projectile.Center, 0.42f);
+
+            Main.EntitySpriteDraw(reticle, drawPosition, null, outerColor * 0.72f, time * 1.26f, origin, outerScale, SpriteEffects.None, 0f);
+            Main.EntitySpriteDraw(reticle, drawPosition, null, innerColor * 0.68f, -time * 0.96f, origin, innerScale, SpriteEffects.FlipHorizontally, 0f);
 
             if (locked)
-                Main.EntitySpriteDraw(reticle, drawPosition, null, white * 0.28f, time * 1.80f, origin, 0.24f * pulse * VisualScale, SpriteEffects.None, 0f);
+                Main.EntitySpriteDraw(reticle, drawPosition, null, white * 0.22f, time * 1.80f, origin, 0.24f * pulse * VisualScale, SpriteEffects.None, 0f);
 
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(
@@ -104,6 +111,28 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip
                 Main.GameViewMatrix.TransformationMatrix);
 
             return false;
+        }
+
+        private static void DrawLockingDashedLine(Vector2 start, Vector2 end, float opacity)
+        {
+            const int segmentCount = 20;
+            float time = Main.GlobalTimeWrappedHourly * 2.2f;
+            Color lineColor = new Color(116, 212, 255) * opacity;
+
+            // Match the matrix core's travelling-dash rhythm, but keep this feedback softer.
+            for (int i = 0; i < segmentCount; i += 2)
+            {
+                float startProgress = (i + time % 2f) / segmentCount;
+                float endProgress = Math.Min(1f, startProgress + 0.6f / segmentCount);
+                if (startProgress >= 1f)
+                    continue;
+
+                Main.spriteBatch.DrawLineBetter(
+                    Vector2.Lerp(start, end, startProgress),
+                    Vector2.Lerp(start, end, endProgress),
+                    lineColor,
+                    1.15f);
+            }
         }
     }
 }

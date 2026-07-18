@@ -45,3 +45,4 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
         }
     }
 }
+

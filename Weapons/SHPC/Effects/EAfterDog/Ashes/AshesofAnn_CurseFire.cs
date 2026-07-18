@@ -27,7 +27,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
         private const float NoTargetDamping = 0.992f;
         private const float WanderingTurnStrength = 0.006f;
         private const float NonHomingTurnStrength = 0.011f;
-        private const int TotalRelayShots = 17;
+        private const int TotalRelayShots = 16;
 
         public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
@@ -52,14 +52,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
             Projectile.friendly = true;
             Projectile.hostile = false;
             Projectile.DamageType = DamageClass.Magic;
-            Projectile.penetrate = 1;
-            Projectile.timeLeft = 150; // homing template lifetime
+            // Each ember survives its first connection. The paired sweep is eight beats on
+            // each side, and every individual ember is allowed to strike twice.
+            Projectile.penetrate = 2;
+            Projectile.timeLeft = 150;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.extraUpdates = 1;
             Projectile.alpha = 255;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = 10;
+            Projectile.localNPCHitCooldown = 12;
         }
 
         public override void OnSpawn(IEntitySource source)
@@ -201,15 +203,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
             target.AddBuff(BuffID.OnFire, 240);
             target.AddBuff(BuffID.CursedInferno, 180);
 
-            if (IsPiercingShot)
-            {
-                if (!Main.dedServ)
-                    SpawnImpactEffects();
-            }
-            else
-            {
-                Projectile.Kill();
-            }
+            if (!Main.dedServ)
+                SpawnImpactEffects();
         }
 
         public override void OnKill(int timeLeft)
@@ -345,7 +340,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
             for (int side = -1; side <= 1; side += 2)
             {
                 Vector2 velocity = (-direction * Main.rand.NextFloat(1.2f, 3.6f) + normal * side * Main.rand.NextFloat(1.6f, 4.4f));
-                GeneralParticleHandler.SpawnParticle(new SparkParticle(
+                GeneralParticleHandler.SpawnParticle(new PointParticle(
                     Projectile.Center - direction * Main.rand.NextFloat(3f, 12f) + normal * side * Main.rand.NextFloat(3f, 7f),
                     velocity,
                     false,

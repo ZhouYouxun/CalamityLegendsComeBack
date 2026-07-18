@@ -174,6 +174,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.ParticleLab
     }
 
     internal readonly record struct ParticleEffectDefinition(string Name);
+    internal readonly record struct ParticleEffectCategory(string Name);
 
     internal static class ParticleEffectCatalog
     {
@@ -276,9 +277,57 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.ParticleLab
             new("StreamGougeMetaball")
         };
 
+        // These are intentionally category pages, not a flat list cut into arbitrary 36-item
+        // chunks. Each page keeps comparable particles together and the metaballs always finish
+        // the book, which makes visual lookup much faster during effect work.
+        private static readonly ParticleEffectCategory[] Categories =
+        {
+            new("Sparks & Trails"),
+            new("Small Glows & Stars"),
+            new("Large Glows & Pulses"),
+            new("Smoke, Flame & Fluid"),
+            new("Organic, Debris & Emotes"),
+            new("Tech, Telegraph & Utility"),
+            new("Mist & Specialty"),
+            new("Metaballs")
+        };
+
+        private static readonly int[][] CategoryEffectIndices =
+        {
+            CreateIndices(0, 14),
+            CreateIndices(14, 30),
+            CreateIndices(30, 48),
+            CreateIndices(48, 62),
+            CreateIndices(62, 75),
+            CreateIndices(75, 88),
+            CreateIndices(88, 92),
+            CreateIndices(92, 95)
+        };
+
         public static int Count => Effects.Count;
+        public static int CategoryCount => Categories.Length;
 
         public static bool IsValidIndex(int index) => index >= 0 && index < Effects.Count;
+
+        public static string GetCategoryName(int categoryIndex)
+        {
+            categoryIndex = Math.Clamp(categoryIndex, 0, CategoryCount - 1);
+            return Categories[categoryIndex].Name;
+        }
+
+        public static IReadOnlyList<int> GetEffectIndicesForCategory(int categoryIndex)
+        {
+            categoryIndex = Math.Clamp(categoryIndex, 0, CategoryCount - 1);
+            return CategoryEffectIndices[categoryIndex];
+        }
+
+        private static int[] CreateIndices(int startInclusive, int endExclusive)
+        {
+            int[] indices = new int[endExclusive - startInclusive];
+            for (int i = 0; i < indices.Length; i++)
+                indices[i] = startInclusive + i;
+            return indices;
+        }
 
         public static void Spawn(int effectIndex, Projectile projectile)
         {
@@ -1658,7 +1707,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.ParticleLab
         }
 
         private static int ItemsPerPage => Columns * Rows;
-        private static int PageCount => Math.Max(1, (ParticleEffectCatalog.Count + ItemsPerPage - 1) / ItemsPerPage);
+        private static int PageCount => ParticleEffectCatalog.CategoryCount;
         private static int PanelWidth => PanelPadding * 2 + Columns * SlotSize + (Columns - 1) * SlotGap;
         private static int PanelHeight => PanelPadding * 2 + HeaderHeight + Rows * SlotSize + (Rows - 1) * SlotGap + FooterHeight;
         private static Rectangle MouseRectangle => new((int)Main.MouseScreen.X, (int)Main.MouseScreen.Y, 2, 2);
@@ -1732,14 +1781,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.ParticleLab
             bool rightClickPressed = Main.mouseRight && Main.mouseRightRelease;
             string hoveredEffectName = null;
 
+            IReadOnlyList<int> categoryEffects = ParticleEffectCatalog.GetEffectIndicesForCategory(page);
             DrawPanel(panelArea, Projectile.Opacity);
-            DrawHeader(panelArea, Projectile.Opacity);
+            DrawHeader(panelArea, ParticleEffectCatalog.GetCategoryName(page), categoryEffects.Count, Projectile.Opacity);
 
-            int start = page * ItemsPerPage;
-            int end = Math.Min(ParticleEffectCatalog.Count, start + ItemsPerPage);
-            for (int index = start; index < end; index++)
+            for (int localIndex = 0; localIndex < categoryEffects.Count; localIndex++)
             {
-                int localIndex = index - start;
+                int index = categoryEffects[localIndex];
                 Rectangle slotArea = GetSlotArea(localIndex);
                 bool hovered = slotArea.Intersects(MouseRectangle);
                 bool selected = labPlayer.SelectedEffectIndex == index;
@@ -1774,7 +1822,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.ParticleLab
 
             DrawPager(previousPageArea, "<", canPageLeft, previousHovered, Projectile.Opacity);
             DrawPager(nextPageArea, ">", canPageRight, nextHovered, Projectile.Opacity);
-            DrawFitText($"{page + 1} / {PageCount}", GetPageTextArea(panelArea), Color.White, 0.72f, 0.42f, Projectile.Opacity);
+            DrawFitText($"{page + 1} / {PageCount}  {ParticleEffectCatalog.GetCategoryName(page)}", GetPageTextArea(panelArea), Color.White, 0.72f, 0.42f, Projectile.Opacity);
 
             if (leftClickPressed && Projectile.Opacity >= 0.95f)
             {
@@ -1859,11 +1907,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.ParticleLab
             DrawBorder(panelArea, new Color(94, 110, 132) * opacity, BorderThickness);
         }
 
-        private static void DrawHeader(Rectangle panelArea, float opacity)
+        private static void DrawHeader(Rectangle panelArea, string categoryName, int categoryCount, float opacity)
         {
             Rectangle headerArea = new(panelArea.X + PanelPadding, panelArea.Y + PanelPadding, panelArea.Width - PanelPadding * 2, HeaderHeight - 8);
             DrawRectangle(new Rectangle(headerArea.X, headerArea.Bottom + 4, headerArea.Width, 2), new Color(88, 218, 202) * (opacity * 0.78f));
-            DrawFitText($"Particle Lab  {ParticleEffectCatalog.Count}", headerArea, Color.White, 0.8f, 0.44f, opacity);
+            DrawFitText($"Particle Lab  |  {categoryName}  ({categoryCount})", headerArea, Color.White, 0.8f, 0.44f, opacity);
         }
 
         private static void DrawHoveredEffectName(Rectangle panelArea, string effectName, float opacity)
