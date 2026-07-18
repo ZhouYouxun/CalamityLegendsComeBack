@@ -1,0 +1,315 @@
+# 星流巨械 / 嘉登 (Draedon / Exo Mechs) - Infernum Mode 深度分析报告
+
+## 一、基本信息 (Basic Information)
+- **模组内部ID**: `Draedon`
+- **重写的NPC目标**: `Unknown`, `ModContent.NPCType<Apollo>()`, `ModContent.NPCType<ThanatosHead>()`, `ModContent.NPCType<AresBody>()`, `ModContent.NPCType<Artemis>()`, `ModContent.NPCType<ThanatosBody1>()`, `ModContent.NPCType<DraedonNPC>()`
+- **关联源文件**:
+  - `DraedonBehaviorOverride.cs`
+  - `ExoMechAIUtilities.cs`
+  - `ExoMechManagement.cs`
+  - `AresBeamExplosion.cs`
+  - `AresBeamTelegraph.cs`
+  - `AresBodyBehaviorOverride.cs`
+  - `AresCannonBehaviorOverride.cs`
+  - `AresCannonLaser.cs`
+  - `AresDeathBeamTelegraph.cs`
+  - `AresEnergyDeathray.cs`
+  - `AresEnergyDeathrayTelegraph.cs`
+  - `AresEnergyKatana.cs`
+  - `AresEnergySlash.cs`
+  - `AresLaserCannonBehaviorOverride.cs`
+  - `AresLaserDeathray.cs`
+  - `AresLaughBoom.cs`
+  - `AresPlasmaCannonBehaviorOverride.cs`
+  - `AresPlasmaFireball.cs`
+  - `AresPrecisionBlast.cs`
+  - `AresPulseBlast.cs`
+  - `AresPulseCannon.cs`
+  - `AresPulseDeathray.cs`
+  - `AresSpinningDeathBeam.cs`
+  - `AresSpinningRedDeathray.cs`
+  - `AresTeslaCannonBehaviorOverride.cs`
+  - `AresTeslaGasField.cs`
+  - `AresTeslaOrb.cs`
+  - `AresTeslaSpark.cs`
+  - `ExoburstSpark.cs`
+  - `HotMetal.cs`
+  - `PlasmaGas.cs`
+  - `SmallPlasmaSpark.cs`
+  - `ApolloAcceleratingPlasmaSpark.cs`
+  - `ApolloBehaviorOverride.cs`
+  - `ApolloFallingPlasmaSpark.cs`
+  - `ApolloFlamethrower.cs`
+  - `ApolloPlasmaFireball.cs`
+  - `ApolloRocketInfernum.cs`
+  - `ArtemisBasicShotLaser.cs`
+  - `ArtemisBehaviorOverride.cs`
+  - `ArtemisGasFireballBlast.cs`
+  - `ArtemisGatlingLaser.cs`
+  - `ArtemisLaser.cs`
+  - `ArtemisLaserbeamTelegraph.cs`
+  - `ArtemisSpinLaser.cs`
+  - `ArtemisSweepLaserbeam.cs`
+  - `ExoplasmaBomb.cs`
+  - `ExoplasmaExplosion.cs`
+  - `PlasmaChargeTelegraph.cs`
+  - `SuperheatedExofireGas.cs`
+  - `ThermonuclearDeathOrb.cs`
+  - `ExoMechComboAttackContent.cs`
+  - `ThanatosAndAresComboAttacks.cs`
+  - `TwinsAndAresComboAttacks.cs`
+  - `TwinsAndThanatosComboAttacks.cs`
+  - `DetatchedThanatosLaser.cs`
+  - `ExolaserBomb.cs`
+  - `ExolaserSpark.cs`
+  - `LightOverloadRay.cs`
+  - `LightRayTelegraph.cs`
+  - `OverloadBoom.cs`
+  - `RefractionRotor.cs`
+  - `ThanatosAresComboLaser.cs`
+  - `ThanatosHeadBehaviorOverride.cs`
+  - `ThanatosSegmentBehaviorOverride.cs`
+
+## 二、血量阶段与触发阈值 (Life Phases & Thresholds)
+- `Phase2LifeRatio: 0.85f`
+- `Phase Ratio Array: ExoMechManagement.Phase3LifeRatio, ExoMechManagement.Phase4LifeRatio`
+- `Phase Ratio Array: ExoMechManagement.Phase4LifeRatio`
+- `Phase3LifeRatio: 0.625f`
+- `ComplementMechInvincibilityThreshold: 0.5f`
+- `Phase4LifeRatio: 0.5f`
+
+## 三、攻击模式与AI状态 (Attack Patterns & AI States)
+### 状态机/枚举: `AresBodyAttackType`
+- `IdleHover`
+- `LaserSpinBursts`
+- `DirectionChangingSpinBursts`
+- `// Energy katana attacks.
+            EnergyBladeSlices`
+- `DownwardCrossSlices`
+- `ThreeDimensionalSuperslashes`
+- `// Ultimate attack. Only happens when in the final phase.
+            PrecisionBlasts`
+### 状态机/枚举: `TwinsAttackType`
+- `BasicShots`
+- `FireCharge`
+- `ApolloPlasmaCharges`
+- `ArtemisLaserRay`
+- `GatlingLaserAndPlasmaFlames`
+- `SlowLaserRayAndPlasmaBlasts`
+- `// Ultimate attack. Only happens when in the final phase.
+            ThermonuclearBlitz`
+### 状态机/枚举: `ExoMechComboAttackType`
+- `AresTwins_DualLaserCharges`
+- `AresTwins_CircleAttack`
+- `ThanatosAres_LaserCircle`
+- `ThanatosAres_EnergySlashesAndCharges`
+- `TwinsThanatos_ThermoplasmaDashes`
+- `TwinsThanatos_AlternatingTwinsBursts`
+### 状态机/枚举: `ThanatosHeadAttackType`
+- `AggressiveCharge`
+- `ExoBomb`
+- `ExoLightBarrage`
+- `RefractionRotorRays`
+- `// Ultimate attack. Only happens when in the final phase.
+            MaximumOverdrive`
+
+### AI行为核心逻辑与注释摘录 (Core AI Logic & Comments)
+- **源码注释**: *Projectile damage values.*
+- **源码注释**: *Contact damage values.*
+- **源码注释**: *Decide an initial target and play a teleport sound on the first frame.*
+- **源码注释**: *Kill the player if pissed.*
+- **源码注释**: *Play the stand up animation after teleportation.*
+- **源码注释**: *Inform the player who summoned draedon they may choose the first mech and cause a selection UI to appear over their head.*
+- **源码注释**: *Wait for the player to select an exo mech.*
+- **源码注释**: *Make the screen rumble and summon the exo mechs.*
+- **源码注释**: *Summon the selected exo mech.*
+- **源码注释**: *Dialogue lines depending on what phase the exo mechs are at.*
+- **源码注释**: *Summon Thanatos underground.*
+- **源码注释**: *Summon Ares in the sky, directly above the player.*
+- **源码注释**: *Summon Apollo and Artemis above the player to their sides.*
+- **源码注释**: *Check to see if any player has completed the Lab Rat and defeat all bosses achievement.*
+- **源码注释**: *Fade back in as a hologram if the player tried to kill Draedon.*
+
+## 四、Boss弹幕分析 (Projectiles)
+- **弹幕类名/类型**: `ApolloPlasmaFireball`
+- **弹幕类名/类型**: `AresDeathBeamTelegraph`
+- **弹幕类名/类型**: `LightOverloadRay`
+- **弹幕类名/类型**: `RefractionRotor`
+- **弹幕类名/类型**: `ArtemisBasicShotLaser`
+- **弹幕类名/类型**: `PlasmaGas`
+- **弹幕类名/类型**: `AresPrecisionBlast`
+- **弹幕类名/类型**: `ThanatosAresComboLaser`
+- **弹幕类名/类型**: `ApolloRocketInfernum`
+- **弹幕类名/类型**: `ExolaserSpark`
+- **弹幕类名/类型**: `AresPulseBlast`
+- **弹幕类名/类型**: `ArtemisGasFireballBlast`
+- **弹幕类名/类型**: `ApolloFallingPlasmaSpark`
+- **弹幕类名/类型**: `AresTeslaSpark`
+- **弹幕类名/类型**: `HotMetal`
+- **弹幕类名/类型**: `AresBeamTelegraph`
+- **弹幕类名/类型**: `AresTeslaOrb`
+- **弹幕类名/类型**: `LightRayTelegraph`
+- **弹幕类名/类型**: `AresEnergyDeathrayTelegraph`
+- **弹幕类名/类型**: `ApolloFlamethrower`
+- **弹幕类名/类型**: `ApolloAcceleratingPlasmaSpark`
+- **弹幕类名/类型**: `DetatchedThanatosLaser`
+- **弹幕类名/类型**: `AresSpinningRedDeathray`
+- **弹幕类名/类型**: `ArtemisLaser`
+- **弹幕类名/类型**: `ExoplasmaExplosion`
+- **弹幕类名/类型**: `ExolaserBomb`
+- **弹幕类名/类型**: `AresPlasmaFireball`
+- **弹幕类名/类型**: `PlasmaChargeTelegraph`
+- **弹幕类名/类型**: `ExoburstSpark`
+- **弹幕类名/类型**: `ThermonuclearDeathOrb`
+- **弹幕类名/类型**: `AresBeamExplosion`
+- **弹幕类名/类型**: `ArtemisGatlingLaser`
+- **弹幕类名/类型**: `ArtemisLaserbeamTelegraph`
+- **弹幕类名/类型**: `SuperheatedExofireGas`
+- **弹幕类名/类型**: `ExoplasmaBomb`
+- **弹幕类名/类型**: `SmallPlasmaSpark`
+- **弹幕类名/类型**: `AresEnergySlash`
+- **弹幕类名/类型**: `AresCannonLaser`
+- **弹幕类名/类型**: `AresTeslaGasField`
+
+## 五、特色机制与专有系统 (Unique Mechanics & Systems)
+- **特色系统**: 拥有专属的Boss登场展示界面 (Custom Boss Intro Screen)
+- **特色系统**: 支持宠物小红帽 (Hat Girl) 战斗提示或对话 (Pet Dialogue Support)
+- **特色系统**: 有专属的背景音乐(BGM)或场景音效控制 (Custom Music / Scene Effect)
+
+## 六、特效与着色器分析 (Visual Effects & Shaders)
+### 着色器 (Shaders) & 绘制机制:
+- Custom rendering found in ArtemisLaser.cs
+- 着色器引用: `PrimitiveRenderer.RenderTrail(points, new(SlashWidthFunction, SlashColorFunction, _ => direction * -60f, Shader: Infernu`
+- Custom rendering found in SuperheatedExofireGas.cs
+- Custom rendering found in ExolaserSpark.cs
+- Custom rendering found in ThanatosAresComboLaser.cs
+- 着色器引用: `Shader/Overlay reference in HotMetal.cs`
+- Custom rendering found in AresLaserCannonBehaviorOverride.cs
+- Custom rendering found in AresPlasmaFireball.cs
+- 着色器引用: `InfernumEffectsRegistry.ScreenBorderShader.GetShader().UseImage(ModContent.Request<Texture2D>("CalamityMod/ExtraTextures`
+- Custom rendering found in AresBodyBehaviorOverride.cs
+- Custom rendering found in AresEnergyDeathray.cs
+- 着色器引用: `Shader/Overlay reference in ExolaserBomb.cs`
+- Custom rendering found in ApolloBehaviorOverride.cs
+- Custom rendering found in AresSpinningDeathBeam.cs
+- 着色器引用: `Shader/Overlay reference in AresEnergyKatana.cs`
+- Custom rendering found in AresPulseDeathray.cs
+- 着色器引用: `Shader/Overlay reference in AresSpinningDeathBeam.cs`
+- Custom rendering found in ExoplasmaExplosion.cs
+- 着色器引用: `InfernumEffectsRegistry.ScreenBorderShader.GetShader().UseOpacity(0f);`
+- Custom rendering found in ApolloRocketInfernum.cs
+- Custom rendering found in AresLaserDeathray.cs
+- 着色器引用: `InfernumEffectsRegistry.FireVertexShader.UseImage1("Images/Misc/Perlin");`
+- 着色器引用: `InfernumEffectsRegistry.ArtemisLaserVertexShader.UseImage1("Images/Extra_189");`
+- Custom rendering found in AresTeslaGasField.cs
+- Custom rendering found in AresTeslaSpark.cs
+- 着色器引用: `FireDrawer ??= new PrimitiveTrailCopy(SunWidthFunction, SunColorFunction, null, true, InfernumEffectsRegistry.FireVertex`
+- Custom rendering found in LightRayTelegraph.cs
+- 着色器引用: `Shader/Overlay reference in PlasmaChargeTelegraph.cs`
+- Custom rendering found in AresPlasmaCannonBehaviorOverride.cs
+- Custom rendering found in AresEnergyDeathrayTelegraph.cs
+- Custom rendering found in ArtemisGatlingLaser.cs
+- 着色器引用: `InfernumEffectsRegistry.ArtemisLaserVertexShader.UseColor(Color.Fuchsia);`
+- 着色器引用: `InfernumEffectsRegistry.FireVertexShader.UseSaturation(0.14f);`
+- Custom rendering found in ExoMechAIUtilities.cs
+- 着色器引用: `InfernumEffectsRegistry.ArtemisLaserVertexShader.UseColor(Color.Cyan);`
+- Custom rendering found in AresBeamTelegraph.cs
+- Custom rendering found in ArtemisSpinLaser.cs
+- Custom rendering found in ApolloAcceleratingPlasmaSpark.cs
+- Custom rendering found in AresTeslaCannonBehaviorOverride.cs
+- Custom rendering found in HotMetal.cs
+- 着色器引用: `Shader/Overlay reference in AresLaserDeathray.cs`
+- 着色器引用: `FireDrawer ??= new PrimitiveTrailCopy(OrbWidthFunction, OrbColorFunction, null, true, InfernumEffectsRegistry.PrismaticR`
+- 着色器引用: `new PrimitiveSettings(c => FlameTrailWidthFunction(npc, c), c => FlameTrailColorFunction(npc, c), null, Shader: Infernum`
+- Custom rendering found in ThermonuclearDeathOrb.cs
+- 着色器引用: `Shader/Overlay reference in LightOverloadRay.cs`
+- Custom rendering found in ThanatosHeadBehaviorOverride.cs
+- Custom rendering found in ExolaserBomb.cs
+- Custom rendering found in LightOverloadRay.cs
+- Custom rendering found in ArtemisSweepLaserbeam.cs
+- 着色器引用: `Shader/Overlay reference in ThermonuclearDeathOrb.cs`
+- Custom rendering found in AresEnergySlash.cs
+- 着色器引用: `LaserDrawer ??= new PrimitiveTrailCopy(LaserWidthFunction, LaserColorFunction, null, true, InfernumEffectsRegistry.FireV`
+- 着色器引用: `InfernumEffectsRegistry.FireVertexShader.UseSaturation(0.45f);`
+- Custom rendering found in ArtemisGasFireballBlast.cs
+- 着色器引用: `Shader/Overlay reference in ArtemisSpinLaser.cs`
+- 着色器引用: `Shader/Overlay reference in ApolloBehaviorOverride.cs`
+- 着色器引用: `InfernumEffectsRegistry.ArtemisLaserVertexShader.UseImage2("Images/Misc/Perlin");`
+- Custom rendering found in ArtemisLaserbeamTelegraph.cs
+- Custom rendering found in DetatchedThanatosLaser.cs
+- 着色器引用: `InfernumEffectsRegistry.ScreenBorderShader.GetShader().UseIntensity(intensity);`
+- 着色器引用: `LaserDrawer ??= new(LaserWidthFunction, LaserColorFunction, null, true, InfernumEffectsRegistry.ArtemisLaserVertexShader`
+- 着色器引用: `InfernumEffectsRegistry.ScreenBorderShader.GetShader().UseIntensity(0f);`
+- 着色器引用: `Shader/Overlay reference in ArtemisBehaviorOverride.cs`
+- 着色器引用: `InfernumEffectsRegistry.ArtemisLaserVertexShader.UseImage2("Images/Extra_193");`
+- Custom rendering found in AresBeamExplosion.cs
+- Custom rendering found in AresCannonLaser.cs
+- 着色器引用: `InfernumEffectsRegistry.ScreenBorderShader.GetShader().UseColor(Main.hslToRgb(currentHue, saturation, luminosity));`
+- 着色器引用: `var flame = InfernumEffectsRegistry.FlameVertexShader;`
+- 着色器引用: `InfernumEffectsRegistry.PrismaticRayVertexShader.UseOpacity(0.25f);`
+- 着色器引用: `InfernumEffectsRegistry.ScreenBorderShader.GetShader().UseOpacity(1f);`
+- 着色器引用: `Shader/Overlay reference in ArtemisSweepLaserbeam.cs`
+- 着色器引用: `Shader/Overlay reference in ExoplasmaExplosion.cs`
+- Custom rendering found in AresTeslaOrb.cs
+- 着色器引用: `InfernumEffectsRegistry.PrismaticRayVertexShader.UseImage1("Images/Misc/Perlin");`
+- 着色器引用: `Shader/Overlay reference in AresEnergySlash.cs`
+- 着色器引用: `InfernumEffectsRegistry.FireVertexShader.SetShaderTexture(InfernumTextureRegistry.CultistRayMap);`
+- 着色器引用: `InfernumEffectsRegistry.ArtemisLaserVertexShader.UseColor(Color.Orange);`
+- 着色器引用: `(offset) => new(c => FlameTrailWidthFunctionBig(npc, c), c => FlameTrailColorFunctionBig(npc, c), _ => offset, Shader: I`
+- Custom rendering found in AresPulseBlast.cs
+- Custom rendering found in AresPulseCannon.cs
+- Custom rendering found in ApolloFallingPlasmaSpark.cs
+- 着色器引用: `if (!InfernumEffectsRegistry.ScreenBorderShader.IsActive() && !InfernumConfig.Instance.ReducedGraphicsConfig)`
+- Custom rendering found in PlasmaChargeTelegraph.cs
+- Custom rendering found in RefractionRotor.cs
+- Custom rendering found in ExoplasmaBomb.cs
+- Custom rendering found in ApolloPlasmaFireball.cs
+- 着色器引用: `Shader/Overlay reference in AresEnergyDeathray.cs`
+- Custom rendering found in ArtemisBehaviorOverride.cs
+- Custom rendering found in PlasmaGas.cs
+- 着色器引用: `Shader/Overlay reference in AresPulseDeathray.cs`
+- 着色器引用: `Shader/Overlay reference in DraedonBehaviorOverride.cs`
+- Custom rendering found in AresDeathBeamTelegraph.cs
+- 着色器引用: `InfernumEffectsRegistry.ArtemisLaserVertexShader.UseImage1("Images/Extra_194");`
+- Custom rendering found in SmallPlasmaSpark.cs
+- Custom rendering found in ThanatosSegmentBehaviorOverride.cs
+- Custom rendering found in AresPrecisionBlast.cs
+- Custom rendering found in ExoburstSpark.cs
+- 着色器引用: `(offset) => new PrimitiveSettings(c => FlameTrailWidthFunctionBig(npc, c), c => FlameTrailColorFunctionBig(npc, c), _ =>`
+- 着色器引用: `Shader/Overlay reference in AresSpinningRedDeathray.cs`
+- Custom rendering found in AresEnergyKatana.cs
+- Custom rendering found in ApolloFlamethrower.cs
+- Custom rendering found in AresSpinningRedDeathray.cs
+- 着色器引用: `Shader/Overlay reference in ApolloRocketInfernum.cs`
+- Custom rendering found in ArtemisBasicShotLaser.cs
+- Custom rendering found in AresCannonBehaviorOverride.cs
+- 特效代码片段: `if (!InfernumEffectsRegistry.ScreenBorderShader.IsActive() && !InfernumConfig.Instance.ReducedGraphicsConfig)`
+- 特效代码片段: `InfernumEffectsRegistry.ScreenBorderShader.GetShader().UseColor(Main.hslToRgb(currentHue, saturation, luminosity));`
+- 特效代码片段: `InfernumEffectsRegistry.ScreenBorderShader.GetShader().UseOpacity(1f);`
+- 特效代码片段: `InfernumEffectsRegistry.ScreenBorderShader.GetShader().UseImage(ModContent.Request<Texture2D>("CalamityMod/ExtraTextures`
+- 特效代码片段: `InfernumEffectsRegistry.ScreenBorderShader.GetShader().UseIntensity(intensity);`
+- 特效代码片段: `InfernumEffectsRegistry.ScreenBorderShader.GetShader().UseOpacity(0f);`
+- 特效代码片段: `InfernumEffectsRegistry.ScreenBorderShader.GetShader().UseIntensity(0f);`
+
+### 屏幕特效 (Screen Effects):
+- Screen shake/effects found in DraedonBehaviorOverride.cs
+- Screen shake/effects found in ThanatosAndAresComboAttacks.cs
+- Screen shake/effects found in ThanatosHeadBehaviorOverride.cs
+- Screen shake/effects found in ApolloBehaviorOverride.cs
+- Screen shake/effects found in AresEnergyDeathrayTelegraph.cs
+- Screen shake/effects found in ExolaserBomb.cs
+- Screen shake/effects found in OverloadBoom.cs
+- Screen shake/effects found in AresLaughBoom.cs
+- Screen shake/effects found in AresEnergyKatana.cs
+- Screen shake/effects found in TwinsAndAresComboAttacks.cs
+- Screen shake/effects found in AresBodyBehaviorOverride.cs
+- 屏幕震动/音效触发: `using CalamityMod.Sounds;`
+- 屏幕震动/音效触发: `using InfernumMode.Assets.Sounds;`
+- 屏幕震动/音效触发: `public const int IntroSoundLength = 106;`
+- 屏幕震动/音效触发: `SoundEngine.PlaySound(TeleportSound, playerToFollow.Center);`
+- 屏幕震动/音效触发: `SoundEngine.PlaySound(CommonCalamitySounds.LaserCannonSound with { MaxInstances = 45, Volume = 0.15f }, playerToFollow.C`
+- 屏幕震动/音效触发: `Main.LocalPlayer.Calamity().GeneralScreenShakePower = Utils.GetLerpValue(4200f, 1400f, Main.LocalPlayer.Distance(playerT`
+- 屏幕震动/音效触发: `Main.LocalPlayer.Calamity().GeneralScreenShakePower *= Utils.GetLerpValue(ExoMechChooseDelay + 5f, ExoMechPhaseDialogueT`
+- 屏幕震动/音效触发: `SoundEngine.PlaySound(CommonCalamitySounds.FlareSound with { Volume = 1.55f }, playerToFollow.Center);`
+- 屏幕震动/音效触发: `SoundEngine.PlaySound(InfernumSoundRegistry.ExoMechIntroSound with { Volume = 1.5f });`
+- 屏幕震动/音效触发: `SoundEngine.PlaySound(LaughSound, playerToFollow.Center);`

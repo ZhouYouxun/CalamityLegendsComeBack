@@ -1,0 +1,1293 @@
+================================================================================
+CALAMITY MOD - RANGED HOLDOUT PROJECTILES TECHNICAL REPORT
+Generated: 2026-06-21
+================================================================================
+
+TABLE OF CONTENTS
+  1. Base Class Architecture
+     1a. BaseGunHoldoutProjectile
+     1b. BaseIdleHoldoutProjectile
+  2. Guns
+  3. Bows
+  4. Launchers
+  5. Flamethrowers
+  6. Others (Ranged - Unusual Mechanics)
+  7. DraedonsArsenal Holdouts (Category Check)
+
+================================================================================
+1. BASE CLASS ARCHITECTURE
+================================================================================
+
+--------------------------------------------------------------------------------
+1a. BaseGunHoldoutProjectile
+  File: Projectiles/BaseProjectiles/BaseGunHoldoutProjectile.cs
+--------------------------------------------------------------------------------
+
+PURPOSE:
+  Abstract base class for the large majority of ranged holdout projectiles.
+  Provides a unified framework for arm positioning, recoil, texture/name
+  auto-derivation, and multiplayer syncing.
+
+AI CALL ORDER (each frame):
+  AI() -> KillHoldoutLogic() -> ManageHoldout() -> HoldoutAI()
+
+ABSTRACT MEMBERS (subclasses MUST implement):
+  - int AssociatedItemID        : The item type this holdout belongs to.
+  - void HoldoutAI()            : All weapon logic goes here.
+
+KEY VIRTUAL MEMBERS (subclasses MAY override):
+  - Vector2 GunTipPosition      : Spawn point for projectiles.
+                                  Default: Center + rotated (width*0.5) forward.
+  - float WeaponTurnSpeed       : How fast the holdout rotates toward mouse.
+                                  Default: 0.2f
+  - float RecoilResolveSpeed    : Lerp speed to restore OffsetLengthFromArm.
+                                  Default: 0.3f
+  - float MaxOffsetLengthFromArm: Maximum arm extension length (no default,
+                                  each subclass sets this).
+  - float OffsetXUpwards/Downwards, OffsetYUpwards/Downwards, BaseOffsetY,
+    BaseOffsetX: Fine-tune holdout placement.
+  - void KillHoldoutLogic()     : Default calls Projectile.Kill() when
+                                  Owner.CantUseHoldout().
+  - void SendExtraAIHoldout() / ReceiveExtraAIHoldout(): For syncing extra
+                                  local fields in multiplayer.
+
+KEY PROPERTIES:
+  - Owner (Player)              : The owning player.
+  - HeldItem (Item)             : The currently held item.
+  - KeepRefreshingLifetime (bool): If true (default), timeLeft is set to 2
+                                   each frame.
+  - SetUsage (bool)             : If true (default), sets itemTime/itemAnimation
+                                   to 2 each frame (keeps weapon in use state).
+  - OffsetLengthFromArm (ref float): Decreasing this creates recoil.
+                                   Auto-lerps back via RecoilResolveSpeed.
+  - ExtraFrontArmRotation/ExtraBackArmRotation (float): Extra arm rotation.
+  - FrontArmStretch/BackArmStretch: Composite arm stretch amount enums.
+  - ContinuouslyUpdateDamageStats: Always true (damage respects buffs live).
+
+SetDefaults():
+  - Width/height taken from item texture.
+  - tileCollide = false, netImportant = true
+  - DamageType = DamageClass.Ranged
+  - ContinuouslyUpdateDamageStats = true
+
+Texture and DisplayName are auto-derived from AssociatedItemID's item class.
+
+SYNCING:
+  - SendExtraAI/ReceiveExtraAI are SEALED; subclasses use
+    SendExtraAIHoldout/ReceiveExtraAIHoldout instead.
+
+--------------------------------------------------------------------------------
+1b. BaseIdleHoldoutProjectile
+  File: Projectiles/BaseProjectiles/BaseIdleHoldoutProjectile.cs
+--------------------------------------------------------------------------------
+
+PURPOSE:
+  Alternative base class for "always-active" holdouts that spawn themselves
+  without requiring a Shoot() call from the weapon item. Uses a static
+  dictionary mapping item IDs to projectile types.
+
+SELF-SPAWN MECHANISM:
+  - Static Dictionary<int,int> ItemProjectileRelationship populated in
+    SetStaticDefaults().
+  - CheckForEveryHoldout(Player): iterates all registered items each frame,
+    spawns the holdout if the player holds the matching item and the holdout
+    isn't already alive.
+
+AI FLOW:
+  Sealed AI(): CheckForEveryHoldout() -> kills if wrong item / CCed / dead /
+               profanedCrystalBuffs -> calls SafeAI() (the subclass hook).
+
+DIFFERENCE FROM BaseGunHoldoutProjectile:
+  - Self-spawning (no Shoot() override needed on the weapon).
+  - Simpler; no recoil, no arm management framework built-in.
+  - Used primarily by support / accessory-style ranged items, NOT by the 41
+    weapon holdouts documented below.
+
+================================================================================
+2. GUNS
+================================================================================
+
+--------------------------------------------------------------------------------
+2a. AdamantiteAcceleratorHoldout -> Items/Weapons/Ranged/AdamantiteAccelerator
+  Base class: BaseGunHoldoutProjectile
+--------------------------------------------------------------------------------
+
+SPAWN METHOD:
+  Item Shoot() override; standard holdout spawn via NewProjectile.
+
+HoldoutAI() BEHAVIOR:
+  - ai[0] = ChargeTimer (accumulates while mouse held, dilated by in-game time)
+  - ai[1] = DelayTimer (fires on specific values; 0 = red beam, 8 = blue beam)
+  - localAI[0] = ChargeRate (= 44f / HeldItem.useTime; respects speed reforges)
+  - localAI[1] = BounceBackPower (recoil animation strength)
+
+  Phase: Charge while mouse is held. ChargeTimer increments by ChargeRate each
+  frame. On release (CantUseHoldout), fires:
+    - DelayTimer == 0: AdAcceleratorBeam (red, base damage)
+    - DelayTimer == 8: AdAcceleratorBeam (blue, bonus tier)
+  Custom recoil squish/displacement animation uses piecewise Bezier curves.
+  Custom PreDraw draws gun texture separately from base class.
+
+KEY PARAMETERS:
+  ChargeRate: 44f / HeldItem.useTime (faster items charge faster)
+  DelayTimer determines which beam color fires.
+
+--------------------------------------------------------------------------------
+2b. ArcNovaDiffuserHoldout -> Items/Weapons/Ranged/ArcNovaDiffuser
+  Base class: BaseGunHoldoutProjectile
+--------------------------------------------------------------------------------
+
+SPAWN METHOD:
+  Item Shoot() override.
+
+HoldoutAI() BEHAVIOR:
+  - ai[0] = CurrentChargingFrames
+  - ai[1] = ShotsLoaded
+  - ai[2] = ShootRecoilTimer
+  - FramesPerLoad = 13; MaxLoadableShots = 15; BulletSpeed = 12f
+
+  While held: loads shots (one per FramesPerLoad frames). Looping charge sounds
+  play; pulse sounds at LV1/LV2 thresholds.
+  On release:
+    - LV2 charge (Charge2Frames): fires 1 NovaChargedShot (9x damage).
+    - Else: fires loaded NovaShots at intervals that lerp from 33 to 13 frames
+      as more shots were loaded.
+
+KEY PARAMETERS:
+  Charge1Frames, Charge2Frames defined as constants on item class.
+  Max 15 shots loaded. Release fires all at once (burst) or big shot.
+
+--------------------------------------------------------------------------------
+2c. ArcherfishHoldout -> Items/Weapons/Ranged/Archerfish
+  Base class: BaseGunHoldoutProjectile
+--------------------------------------------------------------------------------
+
+SPAWN METHOD:
+  Item Shoot() override.
+
+HoldoutAI() BEHAVIOR:
+  Local fields: Time, shotCounter, framesBetweenShots, PostVolley.
+  - Fires a 25-shot volley of ArcherfishShot at 6-frame intervals.
+  - After shot 25: PostVolley = true; 100-frame cooldown begins.
+  - Frame 80 of cooldown: fires MantisClawJet projectile at
+    0.2f * damage * sharkGunDamageScaling.
+  - sharkGunDamageScaling set to 0 on holdout spawn, incremented by a global
+    projectile hook each time an Archerfish bullet hits an enemy.
+
+KEY PARAMETERS:
+  25 shots per volley, 6-frame intervals, 100-frame post-volley cooldown.
+  sharkGunDamageScaling: CalamityPlayer field, tracks scaling for
+  Megalodon/Archerfish/Seadragon family.
+
+--------------------------------------------------------------------------------
+2d. BuzzkillHoldout -> Items/Weapons/Ranged/Buzzkill
+  Base class: BaseGunHoldoutProjectile
+--------------------------------------------------------------------------------
+
+SPAWN METHOD:
+  Item Shoot() override.
+
+HoldoutAI() BEHAVIOR:
+  - ChargeupTime = 120 frames; 5-frame animated spritesheet (spinning saw).
+  - SetDefaults adds: friendly=true, penetrate=-1,
+    usesLocalNPCImmunity, localNPCHitCooldown=10.
+  - CanDamage() returns true during charge (spinning saw at gun tip deals
+    HeavyBleeding on contact).
+  - On release (CantUseHoldout): fires BuzzkillSaw with stats depending on
+    charge level:
+    Level 0 (<25%): pierce 2, 1x damage multiplier
+    Level 1 (>=25%): pierce 4, ~2-3x damage multiplier, hitbox +28px
+    Level 2 (100%): pierce 6, ~5x damage multiplier, hitbox +65px
+  - sawDamageMult lerps 1x to 5x based on SawPower (Time / ChargeupTime).
+
+KEY PARAMETERS:
+  ChargeupTime = 120 frames. Three charge tiers affecting damage and pierce.
+  HeavyBleeding applied on contact hit during charge phase.
+
+--------------------------------------------------------------------------------
+2e. ChromaticEruptionHoldout -> Items/Weapons/Ranged/ChromaticEruption
+  Base class: BaseGunHoldoutProjectile
+--------------------------------------------------------------------------------
+
+SPAWN METHOD:
+  Item Shoot() override.
+
+HoldoutAI() BEHAVIOR:
+  - ai[0] = ShotCooldown, ai[1] = ShotsFired, ai[2] = ShootTimer
+  - 60-frame wind-up, then fires until ShotsFired >= 24.
+  - Per fire cycle: 2 ChromaticFire projectiles; every 3rd shot also fires
+    2 ChromaticFlare projectiles (when FireBlobs counter == 0, then
+    FireBlobs = 3 and counts down).
+  - Firing frequency: every useTime frames within the active phase.
+  - Kills self when ShotsFired >= 24 OR CantUseHoldout().
+
+KEY PARAMETERS:
+  60-frame startup. 24 total shots. Every 3rd shot adds 2 flares.
+  ShotCooldown uses HeldItem.useTime.
+
+--------------------------------------------------------------------------------
+2f. FetidEmesisHoldout -> Items/Weapons/Ranged/FetidEmesis
+  Base class: BaseGunHoldoutProjectile
+--------------------------------------------------------------------------------
+
+SPAWN METHOD:
+  Item Shoot() override.
+
+HoldoutAI() BEHAVIOR:
+  - ai[0] = revFrames (spin-up timer), ai[1] = cooldownTimer,
+    ai[2] = shootingTimer
+  - revSpeed = remap(revFrames, 0, 420-120, 1, 20) - controls spin speed and
+    spread.
+  - maxFrames = 420. Until then, alternates dual shots:
+    Shot 1 fires at shootingTimer >= initialFireTime (45 frames).
+    Shot 2 fires at shootingTimer >= 60 frames.
+    Then repeats.
+  - Spread increases with revFrames (max 0.045 radians).
+  - At maxFrames (420 frames): fires an EmesisGore burst of 13 chunks
+    at 2.5x damage; resets.
+  - Cooldown after firing: lerps between 40 and 180 frames based on revFrames.
+
+KEY PARAMETERS:
+  420-frame total rev cycle. Dual-shot pattern. Burst mode at full rev.
+  Spread and fire speed scale with revFrames.
+
+--------------------------------------------------------------------------------
+2g. FirestormCannonHoldout -> Items/Weapons/Ranged/FirestormCannon
+  Base class: BaseGunHoldoutProjectile
+--------------------------------------------------------------------------------
+
+SPAWN METHOD:
+  Item Shoot() override.
+
+HoldoutAI() BEHAVIOR:
+  - ai[0] = Timer
+  - Hold 30 frames before firing starts.
+  - Firing frequency lerps from useTime to useTime/2 over 90 frames
+    (escalating rate via firingLerp).
+  - FirestormCannon.BuiltUpHeat on the item accumulates per shot.
+  - At OverheatLevel: player takes OverheatDamage (defense-bypassing,
+    undodgeable), gains OnFire buff, flareGunOverheat cooldown is set.
+  - Pan-searing: CanDamage() returns true when BuiltHeat >= 120 and not
+    overheated; each contact hit reduces heat by 6.
+  - Fires flare ammo with penetrate=3, MaxUpdates=2, timeLeft=600.
+  - Warning sound plays at OverheatLevel - 100 heat.
+
+KEY PARAMETERS:
+  30-frame startup delay. Heat builds from use. Overheat is punishing.
+  Escalating fire rate over 90 frames (useTime -> useTime/2).
+
+--------------------------------------------------------------------------------
+2h. HalleysInfernoHoldout -> Items/Weapons/Ranged/HalleysInferno
+  Base class: BaseGunHoldoutProjectile
+--------------------------------------------------------------------------------
+
+SPAWN METHOD:
+  Item Shoot() override.
+
+HoldoutAI() BEHAVIOR:
+  - ai[0] = ShotTimer, ai[2] = ShotCounter,
+    localAI[0] = RecoilAmount
+  - AccuracyCounter = Owner.Calamity().HalleyAccuracyCounter (increases on hit)
+  - SetUsage = false; manages own timeLeft = 60 each frame.
+  - WeaponTurnSpeed = 20 (instant snap to mouse).
+  - Left-click: burst of 5 HalleysComet projectiles, then 35-frame cooldown.
+  - Right-click (controlUseTile): fires HalleysStarburst (consumes
+    StratusStarburst resource from CalamityPlayer).
+  - Displays accuracy progress bar UI above the player.
+
+KEY PARAMETERS:
+  5-shot left-click burst, 35-frame cooldown. Right-click fires starburst.
+  Accuracy counter builds on hit and affects starburst damage.
+  WeaponTurnSpeed = 20 (essentially instant aim).
+
+--------------------------------------------------------------------------------
+2i. HellbornHoldout -> Items/Weapons/Ranged/Hellborn
+  Base class: BaseGunHoldoutProjectile
+--------------------------------------------------------------------------------
+
+SPAWN METHOD:
+  Item Shoot() override.
+
+HoldoutAI() BEHAVIOR:
+  - ai[0] = time, ai[2] = mode flag (0=spinning, nonzero=fire-ready)
+  - Spinning mode: gun revolves in circle at gun tip, building hellbornShots
+    counter (CalamityPlayer field) by hitting enemies (ModifyHitNPC:
+    0.08x damage, +1 hellbornShots up to 12 per hit).
+  - CanDamage() is true during spinning; collision is a 100px circular hitbox.
+  - Fire mode (right-click or release): fires HellbornProj using hellbornShots.
+    If hellbornShots == 0: dud fire sound, short cooldown.
+    On fire: strong recoil (OffsetLengthFromArm -= 35), player pushed back.
+  - PostFiringCooldown manages revert to spinning mode.
+  - KillHoldoutLogic() is empty (never auto-kills; only killed on death or
+    mode-exit after cooldown expires).
+  - ArmorPenetration = 25 in SetDefaults.
+
+KEY PARAMETERS:
+  Max 12 hellbornShots stored. Circular spinning hitbox (100px radius).
+  Fire mode uses stored charges from spinning phase.
+
+--------------------------------------------------------------------------------
+2j. M1GarandHoldout -> Items/Weapons/Ranged/M1Garand
+  Base class: BaseGunHoldoutProjectile
+--------------------------------------------------------------------------------
+
+SPAWN METHOD:
+  Item Shoot() override.
+
+HoldoutAI() BEHAVIOR:
+  State machine with CurrentState stored in ai[0]:
+  - State 0 (FIRING):
+    Frame 0: fires bullet + ejects shell casing.
+    Frames 1-5: animation holds.
+    Frame 5 onward: waits for next shot.
+    garandShots (CalamityPlayer) tracks remaining clip (8 rounds).
+    After last shot: ping sound plays, ejected clip gore spawns, "PING" combat
+    text with stretch/squash animation (120 frames).
+    Then transitions to State 1 (RELOADING).
+  - State 1 (RELOADING):
+    ai[1] = reloadTimeLeft, ai[2] = globalTimer.
+    120-frame reload animation (gun tilts down then back up).
+    Reload sound plays. Returns to State 0 after reload.
+  - Custom muzzle flash (3 variants, 2-frame duration each).
+  - Glowmask drawn in PostDraw.
+
+KEY PARAMETERS:
+  8-shot clip via garandShots. 120-frame reload. Iconic ping on clip empty.
+  State machine: firing -> reload -> firing loop.
+
+--------------------------------------------------------------------------------
+2k. MagnaCannonHoldout -> Items/Weapons/Ranged/MagnaCannon
+  Base class: BaseGunHoldoutProjectile
+--------------------------------------------------------------------------------
+
+SPAWN METHOD:
+  Item Shoot() override.
+
+HoldoutAI() BEHAVIOR:
+  - ai[0] = CurrentChargingFrames, ai[1] = ShotsLoaded, ai[2] = ShootTimer
+  - FramesPerLoad = 9; MaxLoadableShots = 20; BulletSpeed = 12f
+  - While held: loads MagnaShots (one per FramesPerLoad). Looping charge sound.
+  - On release: fires all loaded shots at 4-5 frame intervals (ShootTimer),
+    9-degree random spread per shot.
+  - Full charge (20 shots): 3x knockback, slightly faster firing (4 vs 5 frame
+    intervals).
+
+KEY PARAMETERS:
+  9 frames per loaded shot. Max 20 shots. 9-degree random spread.
+  Full charge bonus: 3x knockback.
+
+--------------------------------------------------------------------------------
+2l. MegalodonHoldout -> Items/Weapons/Ranged/Megalodon
+  Base class: BaseGunHoldoutProjectile
+--------------------------------------------------------------------------------
+
+SPAWN METHOD:
+  Item Shoot() override.
+
+HoldoutAI() BEHAVIOR:
+  Local fields: Time, shotCounter, framesBetweenShots, swapType.
+  - Frame 30: mag eject gore (MegalodonMag), sharkGunDamageScaling reset to 0.
+  - Frame 90+: 30 shots at 4-frame intervals, alternating:
+    Even shots: ammo bullets (with sharkBullets=true CGP flag for scaling)
+    Odd shots: MegalodonShot (scales in movement speed with sharkGunDamageScaling)
+  - After shot 30: 18-frame pause.
+  - Then: fires MegalodonRocket at 50% base damage * sharkGunDamageScaling.
+    (If scaling is 0, forcibly set to 1 to avoid 0-damage rocket.)
+  - Resets Time=2, shotCounter=0 and loops continuously.
+  - Casing gores ejected only on bullet shots.
+
+KEY PARAMETERS:
+  30 alternating shots per mag. Rocket damage scales with player accuracy.
+  sharkGunDamageScaling: accumulates on hit, resets per mag.
+
+--------------------------------------------------------------------------------
+2m. OmniGunHoldout -> Items/Weapons/Ranged/OmniGun
+  Base class: BaseGunHoldoutProjectile
+--------------------------------------------------------------------------------
+
+SPAWN METHOD:
+  Item Shoot() override.
+
+HoldoutAI() BEHAVIOR:
+  Local fields: Time, shotCounter, framesBetweenShots.
+  70-frame startup. Then combo sequence:
+  - Shot 0 (Sniper): OmniSniperShot at 6x damage; 40-frame delay after.
+                     Recoil: OffsetLengthFromArm -= 20, RecoilResolveSpeed = 0.14
+  - Shots 1-10 (AR): ammo bullets at 8-frame intervals; 30-frame delay after.
+                     Recoil: OffsetLengthFromArm -= 3, RecoilResolveSpeed = 0.3
+  - Shot 11 (Shotgun): 8x OmniShotgunShot at 3x damage each; propels player
+                       backward by 7 units (velocity += -direction * 7).
+                       Recoil: OffsetLengthFromArm -= 20, RecoilResolveSpeed = 0.12
+  - Shot 12 (Grenade): OmniGrenade at 9x damage; resets counter (Time=0,
+                       shotCounter=0 to loop).
+  Different casing gores per mode: OmniSniperCasing, OmniARCasing,
+  OmniShotgunShell, OmniGrenadeShell.
+  Muzzle flash drawn on sniper and shotgun shots.
+
+KEY PARAMETERS:
+  70-frame startup, then cyclic 4-mode combo. Each mode has distinct damage
+  multipliers (6x, 1x, 3x, 9x) and recoil characteristics.
+
+--------------------------------------------------------------------------------
+2n. OntologicalDespoilerHoldout -> Items/Weapons/Ranged/OntologicalDespoiler
+  Base class: BaseGunHoldoutProjectile
+--------------------------------------------------------------------------------
+
+SPAWN METHOD:
+  Item Shoot() override.
+
+HoldoutAI() BEHAVIOR:
+  - ai[0] = CurrentChargingFrames, ai[1] = ShootRecoilTimer, ai[2] = mode flag
+  - Two firing modes: Positive (ai[2]==0 or 10) and Negative (other values).
+  - Positive fires 3-shot spread; Negative fires 2 random-direction shots.
+  - Charge LV1 = 156 frames; LV2 = 312 frames.
+  - ShotsLoaded = remap(chargeFrames, 0, LV1, 1, MaxLoadableShots/2);
+    At LV1: all MaxLoadableShots.
+  - On LV2 release:
+    Positive mode: fires OntologicalDespoilerGrenade (AoE projectile).
+    Negative mode: fires a beam at 20x damage.
+  - Mode-switch animation at ai[2] >= 10 changes player shirt color.
+    Player shirt hue affects projectile color tinting.
+  - despoilerNerf (CalamityPlayer flag): after using LV1+ charge, subsequent
+    charges are 40% slower.
+  - 7-frame animated spritesheet + separate fire animation.
+
+KEY PARAMETERS:
+  LV1 = 156f, LV2 = 312f. Two modes. LV2 bonus: grenade or 20x beam.
+  despoilerNerf slows recharge after using a meaningful charge.
+
+--------------------------------------------------------------------------------
+2o. OpalStrikerHoldout -> Items/Weapons/Ranged/OpalStriker
+  Base class: BaseGunHoldoutProjectile
+--------------------------------------------------------------------------------
+
+SPAWN METHOD:
+  Item Shoot() override.
+
+HoldoutAI() BEHAVIOR:
+  - ai[0] = CurrentChargingFrames
+  - Simple charge-and-release: hold to charge, release fires once.
+  - Uncharged: OpalStrike (1x damage, 5 dust particles).
+  - Fully charged (OpalStriker.FullChargeFrames): OpalChargedStrike
+    (5x damage, 3x knockback, 36-dust burst, screenshake).
+  - At full charge: loop charge sound plays repeatedly.
+
+KEY PARAMETERS:
+  OpalStriker.FullChargeFrames determines full charge threshold.
+  Fully charged shot: 5x damage, 3x knockback, screenshake.
+
+--------------------------------------------------------------------------------
+2p. SevensStrikerHoldout -> Items/Weapons/Ranged/TheSevensStriker
+  Base class: ModProjectile (NOT BaseGunHoldoutProjectile)
+--------------------------------------------------------------------------------
+
+SPAWN METHOD:
+  Weapon's Shoot() spawns this holdout.
+
+AI() BEHAVIOR:
+  This is a slot-machine gun that consumes coins as ammo.
+  - ai[0] = coin type (saved from PickAmmo), ai[1] = outcome (1-4).
+  - On spawn: CalculateOutcome() determines result based on coin type:
+    CopperCoin: 50% bust / 30% doubles / 15% triples / 5% jackpot
+    SilverCoin: 20% bust / 50% doubles / 20% triples / 10% jackpot
+    GoldCoin:   5% bust / 30% doubles / 50% triples / 15% jackpot
+    PlatinumCoin: guaranteed jackpot (100%)
+    (Zenith world: 20% jackpot, 80% bust)
+  - 19-frame animated spritesheet plays during rolling.
+  - After roll animation (16-frame cooldown), fires outcome:
+    Outcome 1 (bust):    1 SevensStrikerBrick (100% damage)
+    Outcome 2 (doubles): 7 SevensStrikerOrange (100% damage each, 0.1 spread)
+    Outcome 3 (triples): 7 SevensStrikerCherry + 7 SevensStrikerGrape
+    Outcome 4 (jackpot): 7 waves of 7 SevensStrikerPlatinumCoin at 7-frame
+                         intervals (jackpot multiplier damage per wave)
+  - After firing: rolls again (ai[1] = 0, rolling = true, next coin consumed).
+  - Holdout managed via manual position/rotation code (old-style, no base class).
+  - CanDamage() = false (holdout itself does no damage).
+  - OnKill: stops any playing slot/jingle sounds, sets 12-frame item cooldown.
+
+KEY PARAMETERS:
+  Coin type determines outcome probabilities. 4 outcomes. Jackpot = 7 waves.
+  Roulette and jingle sounds dynamically tracked via SoundEngine slots.
+
+--------------------------------------------------------------------------------
+2q. SlagfireDouserHoldout -> Items/Weapons/Ranged/SlagfireDouser
+  Base class: BaseGunHoldoutProjectile
+--------------------------------------------------------------------------------
+
+SPAWN METHOD:
+  Item Shoot() override.
+
+HoldoutAI() BEHAVIOR:
+  - ai[0] = ShootingTimer
+  - Requires Owner.channel (fires only while mouse held).
+  - Burst: BurstProjectiles = 4 shots per burst.
+  - DelayBetweenShotsInBurst = 4 frames.
+  - Each burst starts after useAnimation frames and fires 4 Slagfire projectiles
+    at 4-frame intervals.
+  - 11-degree random spread per shot.
+  - Pistil (decorative part) has jiggle physics: pistilJigglePhysicsTimer
+    increases on each shot, decays by 0.04 per frame.
+  - Custom PreDraw draws main texture and pistil texture with jiggle deformation
+    using non-uniform scale (width squeeze/height stretch).
+  - RecoilResolveSpeed = 0.12f.
+  - ExtraFrontArmRotation = 0.14 radians.
+
+KEY PARAMETERS:
+  4 shots per burst. 4-frame delay between shots in burst. 11-degree spread.
+  Pistil jiggle physics on shot. Must hold to keep firing.
+
+--------------------------------------------------------------------------------
+2r. SpectralstormCannonHoldout -> Items/Weapons/Ranged/SpectralstormCannon
+  Base class: BaseGunHoldoutProjectile
+--------------------------------------------------------------------------------
+
+SPAWN METHOD:
+  Item Shoot() override.
+
+HoldoutAI() BEHAVIOR:
+  - ai[0] = Timer (increments only while left mouse held and not overheated)
+  - ai[1] = SoulTimer (increments while left mouse is NOT held)
+  - BuiltUpHeat: field on item, accumulates per shot.
+  - KillHoldoutLogic: kills if not holding weapon, CCed, right-clicked while not
+    overheated, or fully cooled without firing.
+  - Fires SpectralFlare at escalating rate (useTime -> useTime/2 over 90 frames)
+    starting after 30 frames of holding.
+  - Overheat (>= SpectralstormCannon.OverheatLevel):
+    Spawns 25 LostSoulFriendly around player, hurts player for OverheatDamage
+    (defense-bypassing, Nightwither debuff), resets heat to 1, sets overheat
+    cooldown. Smoke effect while overheated.
+  - While NOT firing (SoulTimer active): fires LostSoulFriendly every 8 frames.
+  - Pan-searing: CanDamage() when BuiltHeat >= 120 and not overheated; each
+    contact hit inflicts OnFire3 and reduces heat by 6.
+  - Warning sound at OverheatLevel - 100 heat.
+  - Custom PreDraw: pink aura, color shader (BasicTint), scales with heat.
+
+KEY PARAMETERS:
+  30-frame startup before firing. Heat accumulates. Overheat punishes player.
+  Soul emission when cooling. Pan-sear hitbox at 120+ heat.
+
+--------------------------------------------------------------------------------
+2s. SurgeDriverHoldout -> Items/Weapons/Ranged/SurgeDriver
+  Base class: ModProjectile (NOT BaseGunHoldoutProjectile)
+--------------------------------------------------------------------------------
+
+SPAWN METHOD:
+  Weapon Shoot() spawns this holdout.
+
+AI() BEHAVIOR:
+  - ai[0] = ShootCountdown
+  - Manual arm management via UpdateProjectileHeldVariables() and
+    ManipulatePlayerVariables() (old-style implementation).
+  - Kills when CantUseHoldout() AND ShootCountdown < 0.
+  - Fires one PrismaticEnergyBlast per useAnimation cycle.
+  - PickAmmo() called for stats, but projectile type is always
+    PrismaticEnergyBlast (ignores ammo type for projectile choice).
+  - damage *= 4 (4x damage multiplier applied internally).
+  - shootSpeed = heldItem.shootSpeed * 0.64f.
+  - Gun tip offset: armPosition + direction * item.scale * 130 pixels.
+  - CanDamage() = false.
+  - 192x52 pixel hitbox.
+
+KEY PARAMETERS:
+  Fires once per useAnimation. 4x damage internally. No ammo type override
+  (always PrismaticEnergyBlast). 130px gun tip offset.
+
+--------------------------------------------------------------------------------
+2t. SuperradiantSlaughtererHoldout -> Items/Weapons/Ranged/SuperradiantSlaughterer
+  Base class: BaseGunHoldoutProjectile
+--------------------------------------------------------------------------------
+
+SPAWN METHOD:
+  Item Shoot() override.
+
+HoldoutAI() BEHAVIOR:
+  - ai[0] = Time (charge timer), ai[1] = post-shoot mode flag
+  - ChargeupTime = 120 frames; 5-frame animated spritesheet.
+  - SetDefaults: usesLocalNPCImmunity, localNPCHitCooldown=10.
+  - KillHoldoutLogic: only kills on death (never on CantUseHoldout alone).
+  - While charging: spinning saw at gun tip deals damage (CanDamage when not in
+    post-fire mode, at hitCooldown intervals). CircularSmearVFX particles at
+    LV1 and LV2 thresholds. Sound ramps up.
+  - Hitbox: 46x46 base; +32px at LV1 (>=25%), +72px at LV2 (100%).
+  - Right-click (before release): dash mode - throws SuperradiantSawLingering
+    (2x damage via 4/3 * damage) toward cursor with angular velocity based on
+    cursor distance. Dash cooldown via SuperradiantSawBoost.ID.
+  - On release (CantUseHoldout) without right-click:
+    Fires SuperradiantSaw with sawDamageMult lerped 1x-5x based on SawPower,
+    pierce lerped 2-7, sawLevel 0/1/2.
+    KeepRefreshingLifetime = false; runs for useAnimation more frames.
+  - OnHitNPC: Laceration + ElementalMix debuffs; damage reduces by 20% each hit
+    (if damageDone > 2 and target not armored).
+  - Rainbow spark particles on hit (amount scales with saw level).
+  - ExtraBackArmRotation = 15 degrees on spawn.
+  - PreDraw: frame-based animation, mini saw texture rotates continuously.
+    Large and small rotating slash overlays at respective charge levels.
+
+KEY PARAMETERS:
+  ChargeupTime=120. Three charge levels. Right-click dash + lingering throw.
+  Saw damages while spinning (pre-release). Hit damage reduction per contact.
+
+--------------------------------------------------------------------------------
+2u. TauCannonHoldout -> Items/Weapons/Ranged/TauCannon
+  Base class: BaseGunHoldoutProjectile
+--------------------------------------------------------------------------------
+
+SPAWN METHOD:
+  Item Shoot() override.
+
+HoldoutAI() BEHAVIOR:
+  - ai[0] = Timer (charge), ai[1] = HasShotBeam (bool as float 0/1)
+  - TimePerCharge = 60 frames; three charge levels at 60/120/180 frames.
+  - KillHoldoutLogic: kills if Level0 and CantUseHoldout; always kills on death.
+  - While held and KeepRefreshingLifetime: Timer increments; energy particle orb
+    at gun tip grows with charge. PerLevelChargeEffect fires on each level up
+    (ring particle + sound + dust burst of 12/24/36 dusts).
+  - On release: KeepRefreshingLifetime = false; timeLeft set to fire duration
+    + CoolingDownTime (40 frames) based on level:
+    Level 1 (60f): fires TauCannonBolt every 4 frames for ~54 frames.
+    Level 2 (120f): fires 1 TauCannonBeam at 13x damage, 3x knockback.
+    Level 3 (180f): fires TauCannonBeam at 0.7x damage + 4-5 TauCannonPortals
+                    spawned around player (480px radius). Portals fire bolts.
+  - CoolingDownTime = 40 frames: steam particle effect + cooling sound.
+  - Looping orb charge sound with dynamic pitch/volume based on charge level.
+  - WeaponTurnSpeed: 0.4 normally; slows to 0.018 while firing beam (LaserAimLag
+    equivalent).
+
+KEY PARAMETERS:
+  TimePerCharge=60 per level, 3 levels. Level 3 fires portals in addition to
+  beam. 40-frame cooling down phase after all releases.
+
+--------------------------------------------------------------------------------
+2v. VoidragonHoldout -> Items/Weapons/Ranged/Voidragon
+  Base class: BaseGunHoldoutProjectile
+--------------------------------------------------------------------------------
+
+SPAWN METHOD:
+  Item Shoot() override.
+
+HoldoutAI() BEHAVIOR:
+  Local fields: Time, beamTimer, shotCounter, framesBetweenShots, swapType,
+                firingBeam, chargeVisTimer, chargePulseTimer.
+  - Frame 30: mag eject gore (VoidragonMag), sharkGunDamageScaling = 0,
+    void dust at gun eyes scales with sharkGunDamageScaling each frame.
+  - Frames 90-140 (50 shots): fires at 3-frame intervals, alternating:
+    Odd: ammo bullets with sharkBullets=true (scales with sharkGunDamageScaling)
+    Even: VoidBlast (void energy shots)
+    Casing gores ejected on bullet shots only.
+    Shot 50: sets 150-frame delay (charge buildup before laser).
+  - Charge phase (shotCounter=51, framesBetweenShots>0):
+    Looping VoidragonCharge sound with pitch ramp.
+    Charge visual effects scale with completion.
+    chargePulseTimer builds for ring effects.
+  - Laser phase (shotCounter=51, framesBetweenShots=0):
+    Fires 1 AbyssalFire beam at 5% * sharkGunDamageScaling damage per tick
+    (beam lasts 500 frames = beamTimer).
+    Multiple startup sounds (VoidragonStrongStart, MagnaCannonShot).
+    ManageHoldout() override: aims beam with LaserAimLag = 0.92f (slower aim,
+    Last Prism-like).
+    After beamTimer reaches 0: firingBeam=false, Projectile.Kill().
+  - Resets Time=2, shotCounter=0 to loop like Megalodon.
+  - Custom PreDraw: purple aura scales with sharkGunDamageScaling.
+    Charge visuals (black aura, glow orb, pulse rings).
+
+KEY PARAMETERS:
+  50 alternating shots. 150-frame charge before laser. Laser lasts 500 frames.
+  LaserAimLag = 0.92f. Damage scales with accuracy (sharkGunDamageScaling).
+  Beam damage: 0.05 * damage * sharkGunDamageScaling per tick.
+
+--------------------------------------------------------------------------------
+2w. WildfireBloomHoldout -> Items/Weapons/Ranged/WildfireBloom
+  Base class: BaseGunHoldoutProjectile
+--------------------------------------------------------------------------------
+
+SPAWN METHOD:
+  Item Shoot() override.
+
+HoldoutAI() BEHAVIOR:
+  - ai[0] = ShotCooldown, ai[1] = ShotsFired, ai[2] = ShootTimer
+  - KillHoldoutLogic: kills when ShotsFired >= 16 (in addition to default).
+  - ShootTimer increments each frame. Below 60: wind-up dust, ShotsFired reset.
+  - At ShootTimer >= 60: begins firing WildfireBloomFire at useTime intervals
+    (via ShotCooldown countdown).
+  - Every 4th shot (FireBlobs counter == 0): also fires 2 WildfireBloomFlare
+    at +/-randAngle (8-15 degrees) offset. Then FireBlobs = 3 (3-shot delay
+    before next flares).
+  - After 16 total shots: holdout dies.
+  - OnSpawn: plays wind-up sound (SoundID.Item73 at 0.7 volume).
+  - SendExtraAIHoldout/ReceiveExtraAIHoldout sync FireBlobs field.
+
+KEY PARAMETERS:
+  60-frame wind-up before firing. 16 shots per use. Every 4th shot fires
+  2 extra flares. Shot interval = HeldItem.useTime.
+
+================================================================================
+3. BOWS
+================================================================================
+
+--------------------------------------------------------------------------------
+3a. ClockworkBowHoldout -> Items/Weapons/Ranged/ClockworkBow
+  Base class: ModProjectile (NOT BaseGunHoldoutProjectile)
+--------------------------------------------------------------------------------
+
+SPAWN METHOD:
+  Weapon Shoot() spawns this holdout.
+
+AI() BEHAVIOR:
+  - ai[0] = CurrentChargingFrames, ai[1] = LoadedBolts,
+    localAI[0] = FramesToLoadBolt
+  - Loads up to ClockworkBow.MaxBolts bolts while held.
+  - Each bolt takes FramesToLoadBolt frames to load; after each load,
+    FramesToLoadBolt *= 0.95 (accelerates loading).
+  - Visual feedback: "Tick" text on odd-numbered bolt loads, "Tock" on even.
+  - On release (CantUseHoldout): fires LoadedBolts bolts in a spread.
+    Angular spread = 16 degrees per bolt from center.
+  - Manual arm management: UpdateProjectileHeldVariables() and
+    ManipulatePlayerVariables().
+
+KEY PARAMETERS:
+  MaxBolts defined on ClockworkBow item. Loading accelerates (0.95x per bolt).
+  16-degree spread angle per bolt. Tick/Tock combat text for audio cue.
+
+--------------------------------------------------------------------------------
+3b. CondemnationHoldout -> Items/Weapons/Ranged/Condemnation
+  Base class: BaseGunHoldoutProjectile
+--------------------------------------------------------------------------------
+
+SPAWN METHOD:
+  Item Shoot() override.
+
+HoldoutAI() BEHAVIOR:
+  - ai[0] = CurrentChargingFrames, ai[1] = ArrowsLoaded,
+    localAI[0] = FramesToLoadNextArrow
+  - Loads arrows while held; max = Condemnation.MaxLoadedArrows.
+  - Each arrow takes FramesToLoadNextArrow frames to load; speed accelerates
+    after each load (FramesToLoadNextArrow decreases).
+  - storedVelocity saved at load time (velocity at moment of loading).
+  - KillHoldoutLogic: if CantUseHoldout and ArrowsLoaded > 0, fires one arrow
+    per frame until empty (delayed firing), then kills.
+  - Full charge (all MaxLoadedArrows loaded): arrows become homing
+    (CondemnationArrowHoming at 1.35x damage per arrow).
+  - velocityMultiplier = 1.2x applied to all arrows.
+
+KEY PARAMETERS:
+  MaxLoadedArrows from item. Accelerating load speed. Full charge: homing arrows
+  at 1.35x damage. 1.2x velocity multiplier on all arrows.
+
+--------------------------------------------------------------------------------
+3c. FreedomStarHoldout -> Items/Weapons/Ranged/FreedomStar
+  Base class: ModProjectile (NOT BaseGunHoldoutProjectile)
+--------------------------------------------------------------------------------
+
+SPAWN METHOD:
+  Weapon Shoot() spawns this holdout.
+
+AI() BEHAVIOR:
+  - ai[0] = global timer, ai[1] = secondary value (orb timer or beam index)
+  - Phase 1 (timer 0-80): fires ChargedBlasterOrbs every 5 frames.
+  - Phase 2 (timer 80-180): fires larger ChargedBlasterOrbs every 10 frames.
+  - Phase 3 (timer 180+): fires FreedomStarBeam laser. Beam scales up over 480
+    additional frames (increasing damage and width).
+  - Old-style implementation with inline ManageHoldout equivalent.
+  - No base class; manual arm positioning code.
+
+KEY PARAMETERS:
+  Three phases: orb spray (0-80), heavy orb spray (80-180), laser (180+).
+  Laser power scales with duration (up to 480 frames of sustained fire).
+
+--------------------------------------------------------------------------------
+3d. MaelstromHoldout -> Items/Weapons/Ranged/TheMaelstrom
+  Base class: ModProjectile (NOT BaseGunHoldoutProjectile)
+--------------------------------------------------------------------------------
+
+SPAWN METHOD:
+  Weapon Shoot() spawns this holdout.
+
+AI() BEHAVIOR:
+  - Fires TheMaelstromShark once per FramesToLoadNextArrow frames.
+  - Kills if CantUseHoldout() OR no ammo available.
+  - Consumes arrow ammo for stats (damage/knockback/speed) but fires the shark
+    projectile regardless of arrow type.
+  - Old-style: manual arm positioning in UpdateProjectileHeldVariables() and
+    ManipulatePlayerVariables().
+
+KEY PARAMETERS:
+  Fires TheMaelstromShark at fixed interval. Arrow ammo consumed for stats only
+  (projectile type always TheMaelstromShark).
+
+================================================================================
+4. LAUNCHERS
+================================================================================
+
+--------------------------------------------------------------------------------
+4a. BlissfulBombardierHoldout -> Items/Weapons/Ranged/BlissfulBombardier
+  Base class: BaseGunHoldoutProjectile
+--------------------------------------------------------------------------------
+
+SPAWN METHOD:
+  Item Shoot() override.
+
+HoldoutAI() BEHAVIOR:
+  - Overrides ManageHoldout() ENTIRELY to aim toward sky (not mouse).
+    The gun points upward rather than tracking mouse position.
+  - ai[0] = shootingTimer, ai[1] = PostFireCooldown
+  - Fires NukeOfBliss on shootingTimer == itemAnimationMax.
+  - PostFireCooldown = itemAnimationMax; hasFired bool prevents double-fire.
+  - Uses rocket ammo type to determine dust colors for effects.
+  - FrontArmStretch = Quarter.
+  - ExtraBackArmRotation = 15 degrees.
+
+KEY PARAMETERS:
+  Aims toward sky (override ManageHoldout). Single NukeOfBliss per use cycle.
+  PostFireCooldown prevents repeat fire. Rocket ammo type for color effects.
+
+--------------------------------------------------------------------------------
+4b. FlakKrakenHoldout -> Items/Weapons/Ranged/FlakKraken
+  Base class: BaseGunHoldoutProjectile
+--------------------------------------------------------------------------------
+
+SPAWN METHOD:
+  Item Shoot() override.
+
+HoldoutAI() BEHAVIOR:
+  - ai[0] = ShootingTimer, ai[1] = TimerBetweenBursts
+  - Burst mode: ProjectilesPerBurst shots fired at adaptiveTimeBetweenShots
+    intervals.
+  - adaptiveTimeBetweenShots = TimeBetweenShots * useAnimation / OriginalUseTime
+    (adapts to use speed reforges).
+  - Flak distance = clamped(distance to mouse, 0, 960px); passed as projectile
+    parameter for the FlakKraken projectile to use for aiming.
+  - Player knockback applied per shot (OwnerKnockbackStrength constant).
+  - FrontArmStretch = ThreeQuarters.
+
+KEY PARAMETERS:
+  Burst fire. Adaptive timing for reforges. Flak distance passed to projectile.
+  Player knocked back with each shot. Max distance: 960px to mouse cursor.
+
+--------------------------------------------------------------------------------
+4c. FlakToxicannonHoldout -> Items/Weapons/Ranged/FlakToxicannon
+  Base class: BaseGunHoldoutProjectile
+--------------------------------------------------------------------------------
+
+SPAWN METHOD:
+  Item Shoot() override.
+
+HoldoutAI() BEHAVIOR:
+  - ai[0] = ShootingTimer
+  - Single shot per useAnimation cycle.
+  - Same flak distance system as FlakKraken (clamped mouse distance passed
+    as projectile parameter).
+  - Simpler than FlakKraken: no burst, just one FlakToxicannonProjectile per
+    fire cycle.
+
+KEY PARAMETERS:
+  Single shot per cycle. Flak distance passed to projectile (same as FlakKraken).
+  No burst firing.
+
+--------------------------------------------------------------------------------
+4d. MineralMortarHoldout -> Items/Weapons/Ranged/MineralMortar
+  Base class: BaseGunHoldoutProjectile
+--------------------------------------------------------------------------------
+
+SPAWN METHOD:
+  Item Shoot() override.
+
+HoldoutAI() BEHAVIOR:
+  - ai[0] = Time
+  - Single shot per itemTimeMax cycle.
+  - Fires MineralMortarProjectile with ammo item ID passed as a parameter.
+  - No burst fire, no charge mechanic.
+  - The simplest holdout: just a timer and a single shot.
+
+KEY PARAMETERS:
+  One shot per itemTimeMax. Ammo type passed to projectile as ai parameter.
+  Minimal complexity.
+
+--------------------------------------------------------------------------------
+4e. ScorchedEarthHoldout -> Items/Weapons/Ranged/ScorchedEarth
+  Base class: BaseGunHoldoutProjectile
+--------------------------------------------------------------------------------
+
+SPAWN METHOD:
+  Item Shoot() override.
+
+HoldoutAI() BEHAVIOR:
+  - ai[0] = ShootingTimer, ai[1] = TimerBetweenBursts
+  - Burst launcher: fires ProjectilesPerBurst ScorchedEarthRockets per burst
+    at adaptedTimeBetweenBursts intervals.
+  - 10-degree random spread per rocket.
+  - Uses rocket ammo type for color determination (similar to BlissfulBombardier
+    and TheHive).
+
+KEY PARAMETERS:
+  Burst launcher. ProjectilesPerBurst rockets per burst. 10-degree spread.
+  Rocket ammo type for visual color selection.
+
+--------------------------------------------------------------------------------
+4f. ScorpioHoldout -> Items/Weapons/Ranged/Scorpio
+  Base class: BaseGunHoldoutProjectile
+--------------------------------------------------------------------------------
+
+SPAWN METHOD:
+  Item Shoot() override.
+
+HoldoutAI() BEHAVIOR:
+  - ai[0] = ShootingTimer, ai[1] = TimerBetweenBursts, ai[2] = ChargeLV
+  - Burst launcher with incremental charge system.
+  - Each burst fired: ChargeLV increments (max 3).
+  - Right-click + ChargeLV >= 3: fires ScorpioLargeRocket (big nuke AoE);
+    resets ChargeLV = -1 (brief lockout before next charge build).
+  - 70% ammo conservation chance per shot (may not consume ammo).
+  - ChargeLV affects visual particle intensity and size (scales with level).
+
+KEY PARAMETERS:
+  Burst launcher. ChargeLV 0-3 (increments per burst). Right-click at LV3
+  fires large rocket. 70% ammo conservation. ChargeLV visual feedback.
+
+--------------------------------------------------------------------------------
+4g. TheHiveHoldout -> Items/Weapons/Ranged/TheHive
+  Base class: BaseGunHoldoutProjectile
+--------------------------------------------------------------------------------
+
+SPAWN METHOD:
+  Item Shoot() override.
+
+HoldoutAI() BEHAVIOR:
+  - ai[0] = ShootingTimer, ai[1] = PostFireCooldown
+  - ai[2] = HasLetGo (bool as float)
+  - Hold to charge (ShootingTimer increments up to MaxCharge, pitch increases).
+  - On release (CantUseHoldout): ShootRocket() called.
+    < MaxCharge: 4 HiveMissiles in a spread (rotation shrinks with charge:
+      35 - VelocityMultiplier*26 degrees); PostFireCooldown = 30.
+    >= MaxCharge (FireNuke): 1 HiveNuke at 10x damage; PostFireCooldown = 75.
+  - VelocityMultiplier = lerp(0.5, 1.5, charge / MaxCharge).
+  - Rocket ammo type: determines dust color (WetRocket=blue, LavaRocket=red,
+    HoneyRocket=yellow, default=green).
+  - PostFiringCooldown(): keeps Owner.channel=true; emits smoke; kills after
+    cooldown expires.
+  - OnSpawn: looping LowHum sound; FrontArmStretch = Quarter;
+    ExtraBackArmRotation = 15 degrees.
+
+KEY PARAMETERS:
+  MaxCharge threshold divides normal 4-missile vs single 10x nuke fire.
+  Rocket ammo type affects visual effects. 30 or 75 frame post-fire smoke.
+
+================================================================================
+5. FLAMETHROWERS
+================================================================================
+
+--------------------------------------------------------------------------------
+5a. DragonsBreathHoldout -> Items/Weapons/Ranged/DragonsBreath
+  Base class: BaseGunHoldoutProjectile
+--------------------------------------------------------------------------------
+
+SPAWN METHOD:
+  Item Shoot() override.
+
+HoldoutAI() BEHAVIOR:
+  - ai[0] = Time, ai[1] = fireTimer
+  - Local: fireSpeed, firingBeam, weldingTimer
+  - Normal phase: fires 3 DragonsBreathFlame projectiles per shot.
+    fireTimer increments each frame by (1 + fireSpeed * 0.15).
+    When fireTimer >= useTime: shoot + fireTimer = 0, fireSpeed++.
+  - After fireSpeed reaches 20 (20 shots): enters beam mode.
+    weldingTimer = useAnimation * 6.
+    Fires flames every 2 frames for weldingTimer duration.
+    On weldingTimer end: ejects magazine (animation).
+  - RecoilResolveSpeed = 0.3f (default).
+
+KEY PARAMETERS:
+  3 flames per normal shot. Fire rate accelerates as fireSpeed grows.
+  After 20 shots: enters sustained beam mode for useAnimation*6 frames.
+
+--------------------------------------------------------------------------------
+5b. PhotovisceratorHoldout -> Items/Weapons/Ranged/Photoviscerator
+  Base class: ModProjectile (NOT BaseGunHoldoutProjectile)
+--------------------------------------------------------------------------------
+
+SPAWN METHOD:
+  Weapon Shoot() spawns this holdout.
+
+AI() BEHAVIOR:
+  - ai[0] = ShootTimer, ai[1] = ForcedLifespan
+  - Two attack modes:
+    LEFT-CLICK (channel): ExoFire stream fires every frame.
+      - Damage scales down as PhotoTimer (CalamityPlayer) fills up.
+      - ExoLight bomb every (useTime * 10) frames when PhotoTimer == 0.
+    RIGHT-CLICK (mouseRight): ExoFlareCluster at 70% damage.
+      - Sets ForcedLifespan to prevent click-spam (brief reuse lockout).
+  - PhotoTimer: CalamityPlayer field, counts up per ExoFire hit, decremented
+    each frame, reset to 90 on ExoFire kill.
+  - Old-style arm management (no base class).
+
+KEY PARAMETERS:
+  Left=stream fire with diminishing damage, right=cluster shot.
+  PhotoTimer manages sustained fire damage scaling.
+  ForcedLifespan prevents rapid right-click reuse.
+
+================================================================================
+6. OTHERS (RANGED - UNUSUAL MECHANICS)
+================================================================================
+
+--------------------------------------------------------------------------------
+6a. KingsbaneHoldout -> Items/Weapons/Ranged/Kingsbane
+  Base class: ModProjectile (NOT BaseGunHoldoutProjectile)
+--------------------------------------------------------------------------------
+
+SPAWN METHOD:
+  Weapon Shoot() spawns this holdout.
+
+AI() BEHAVIOR:
+  - 10-frame animated spritesheet (windupAnim decrements from 11 toward 0,
+    each decrement speeds animation).
+  - Wind-up 90 frames: looping rev sounds at increasing pitch (frame-linked).
+  - After 90 frames: fullRev = true; fires AuricBullets at 3-frame intervals
+    using ammo stats.
+  - Discharge (release / CantUseHoldout): fires 50 AuricBullets at high rate,
+    applies player recoil (velocity += -direction * fullRevShots * 0.013).
+    Special GFB recoil: 0.028x multiplier instead of 0.013.
+  - Old-style arm management via UpdateProjectileHeldVariables() and
+    ManipulatePlayerVariables().
+  - CanDamage() = false (visual only).
+
+KEY PARAMETERS:
+  90-frame wind-up. 50-bullet discharge burst with player knockback.
+  Animation speed accelerates as windupAnim decrements.
+
+--------------------------------------------------------------------------------
+6b. PumplerHoldout -> Items/Weapons/Ranged/Pumpler
+  Base class: ModProjectile (NOT BaseGunHoldoutProjectile)
+--------------------------------------------------------------------------------
+
+SPAWN METHOD:
+  Weapon Shoot() spawns this holdout.
+
+AI() BEHAVIOR:
+  - ai[0] = CurrentChargingFrames, ai[1] = PumpkinsCharge,
+    localAI[0] = FramesToLoadNextPumpkin, localAI[1] = Overfilled
+  - Loads up to 5 pumpkins while held.
+  - Each pumpkin takes FramesToLoadNextPumpkin frames; after each load,
+    FramesToLoadNextPumpkin *= 0.85 (accelerates faster than ClockworkBow).
+  - Overfill: if charging continues 160+ frames past last pumpkin, Overfilled
+    bool triggers auto-fire with shoot animation.
+  - On release OR overfill: fires spread of PumplerGrenades.
+    Angular spread = 15 degrees total (+-7.5 degrees per grenade in spread).
+  - 9-frame animated spritesheet.
+  - Old-style arm management.
+
+KEY PARAMETERS:
+  Max 5 pumpkins. Loading accelerates (0.85x per pumpkin). 15-degree spread.
+  Auto-fire at 160 frames overfill. 9-frame animation.
+
+================================================================================
+7. DRAEDONS ARSENAL HOLDOUTS (CATEGORY CHECK)
+================================================================================
+
+These holdouts are in Projectiles/DraedonsArsenal/ and are associated with
+DraedonsArsenal weapons. DamageClass analysis below:
+
+--------------------------------------------------------------------------------
+7a. NidhoggHoldout -> Items/Weapons/DraedonsArsenal/Nidhogg
+  Base class: BaseGunHoldoutProjectile
+  DamageType: DamageClass.Ranged (inherited from base class SetDefaults)
+  Category: RANGED
+--------------------------------------------------------------------------------
+
+HoldoutAI() BEHAVIOR:
+  - ai[0] = shootingTimer, ai[1] = chargeTimer, ai[2] = mode flag
+  - chargeRate = 222 (lines up with NidhoggCharge sound duration).
+  - Regular fire: NidhoggRailgunBlast every fireRate frames (useAnimation).
+  - Right-click: switches to charging mode (ai[2] = 5).
+  - Charging mode: chargeTimer increments; jaw-opening animation.
+    At chargeRate: fires NidhoggRailgunBigShot at 33x damage, player pushed
+    back 12 units; arsenalCooldown = 540; resets to regular mode.
+  - After big shot: shootingTimer = -50 (jaw-closing animation, 50 frames).
+  - KillHoldoutLogic: only kills on player death.
+  - Custom jaw-open/close PreDraw: separate top and bottom jaw textures with
+    displacement based on charge^3.
+  - Aiming sightlines and ring visuals during charging.
+
+KEY PARAMETERS:
+  Two fire modes. Regular: NidhoggRailgunBlast every useAnimation frames.
+  Charged (222 frames): 33x damage big shot, player knockback, 540f cooldown.
+  ArsenalCooldown prevents immediate re-use.
+
+--------------------------------------------------------------------------------
+7b. PhalanxSurgeHoldout -> Items/Weapons/DraedonsArsenal/PhalanxSurge
+  Base class: BaseGunHoldoutProjectile
+  DamageType: DamageClass.Ranged (inherited)
+  Category: RANGED
+--------------------------------------------------------------------------------
+
+HoldoutAI() BEHAVIOR:
+  - ai[0] = shootingTimer, ai[1] = chargeTimer, ai[2] = mode flag
+  - Regular fire: fires 6 PhalanxSurgeLasers in a 3-shot double-angled pattern
+    (2+2 outer angles at 2deg, 2+2 inner at 5deg) every fireRate frames.
+  - Right-click + no arsenalCooldown: enters charging mode.
+    chargeRate = 65 frames. Must hold right-click the entire 65 frames.
+    At full charge: fullyCharged = true; second right-click release triggers
+    the pullback pre-fire animation (chargeRate*0.2 frames).
+    Then fires PhalanxSurgeLance at 35x (45x if dash) damage.
+  - Dash: if left-click during lance fire, player dashes forward 40 units
+    (only if no solid collision), cooldown becomes -25 frames.
+  - arsenal cooldown = 300 frames after lance.
+  - KillHoldoutLogic: only kills on player death.
+
+KEY PARAMETERS:
+  Two modes. Regular: 6 lasers in spread. Charged (65f): lance at 35-45x damage.
+  Dash bonus during lance launch. 300f arsenal cooldown.
+
+--------------------------------------------------------------------------------
+7c. AnomalysNanogunHoldout -> Items/Weapons/DraedonsArsenal/TheAnomalysNanogun
+  Base class: ModProjectile (NOT BaseGunHoldoutProjectile)
+  DamageType: DamageClass.Ranged (set in SetDefaults explicitly)
+  Category: RANGED
+--------------------------------------------------------------------------------
+
+AI() BEHAVIOR:
+  - ai[0] = AI type (0=plasma beam, MPFBAIType=2=right-click shot)
+  - ai[1] = AITimer
+  - Invisible projectile (InvisibleProj texture) that draws a scope.
+  - Left-click (plasma beam mode):
+    40-frame chargeup (scope rotates/shrinks toward center).
+    Then fires AnomalysNanogunPlasmaBeam every 15 frames, 5 times.
+    24-frame cooldown between shots. Total: ~40+24+75 = ~139 frames.
+    Scope animates on chargeup.
+  - Right-click (MPFB mode):
+    Fires 3 AnomalysNanogunMPFBDevastator projectiles immediately.
+    22-frame recoil animation (gun swings upward).
+    Reload animation afterward (MPFBFireTimer = 59 total frames).
+    Player knocked back (MPFBPushback = 15 units velocity).
+
+KEY PARAMETERS:
+  Invisible holdout. Left=5 plasma beams (40f chargeup). Right=3 MPFB missiles
+  with recoil. Scope visual drawn in PostDraw during chargeup.
+
+--------------------------------------------------------------------------------
+7d. AugerHoldout -> Items/Weapons/DraedonsArsenal/Auger
+  Base class: ModProjectile (NOT BaseGunHoldoutProjectile)
+  DamageType: DamageClass.TrueMelee (set in SetDefaults explicitly)
+  Category: MELEE (NOT RANGED)
+--------------------------------------------------------------------------------
+
+  AugerHoldout uses TrueMeleeDamageClass.Instance, NOT Ranged.
+  It is a melee energy-blade weapon using swinging attack patterns.
+  This is definitively a melee holdout and should NOT be categorized as ranged.
+
+--------------------------------------------------------------------------------
+7e. CountermeasureMittHoldout -> Items/Weapons/DraedonsArsenal/CountermeasureMitt
+  Base class: BaseGunHoldoutProjectile
+  DamageType: DamageClass.Magic (set in SetDefaults explicitly: overrides base)
+  Category: MAGIC (NOT RANGED)
+--------------------------------------------------------------------------------
+
+  CountermeasureMittHoldout sets DamageType = DamageClass.Magic in its own
+  SetDefaults (after calling base.SetDefaults). This overrides the base class
+  Ranged assignment.
+  It fires finger-beam lasers as magic. Not a ranged weapon.
+
+--------------------------------------------------------------------------------
+7f. HolofibreImmolatorHoldout -> Items/Weapons/DraedonsArsenal/HolofibreImmolator
+  Base class: BaseGunHoldoutProjectile
+  DamageType: DamageClass.Ranged (inherited from base class SetDefaults)
+  Category: RANGED
+--------------------------------------------------------------------------------
+
+HoldoutAI() BEHAVIOR:
+  - ai[0] = CurrentChargingFrames, ai[1] = ShotsLoaded
+  - chargeMax = itemAnimationMax * 1.5 (set at spawn).
+  - Fires while mouse held; stops and fires on release (or right-click).
+  - ChargeLV1 = CurrentChargingFrames >= chargeMax.
+  - Looping ImmolatorCharge sound while charging.
+  - On release (left-click up):
+    Below chargeMax: 3 ImmolationSpray projectiles in spread
+      (spread angle shrinks with charge completion).
+      Speed: 2 * lerp(0, chargeMax, charge) clamped 0.5-2.
+    At chargeMax (ChargeLV1): 1 ImmolationArrow at 4.5x damage, 3x knockback,
+      2x bullet speed.
+    CurrentChargingFrames reset to 0 after each fire.
+  - Right-click (autoSpam): same fire but does NOT reset charge; used for rapid
+    repeat fire.
+  - downtime = itemAnimationMax after each fire.
+  - Kills on downtime==1 if not right-clicking (or on death).
+  - Charge sound switches to ImmolatorChargeLoop at full charge.
+  - PreDraw: glow at gun tip scales with charge; point/spark effects at LV1.
+
+KEY PARAMETERS:
+  chargeMax = itemAnimationMax*1.5. Partial charge: 3-shot spread. Full charge:
+  single 4.5x arrow. Right-click enables spam mode.
+
+--------------------------------------------------------------------------------
+7g. VulcanHoldout -> Items/Weapons/DraedonsArsenal/Vulcan
+  Base class: BaseGunHoldoutProjectile
+  DamageType: DamageClass.Magic (set in SetDefaults explicitly: overrides base)
+  Category: MAGIC (NOT RANGED)
+--------------------------------------------------------------------------------
+
+  VulcanHoldout sets DamageType = DamageClass.Magic in its own SetDefaults.
+  It is a magic minigun that fires mana-consuming VulcanProjectile shots.
+  Its mana cost check (Owner.CheckMana) and DamageClass.Magic confirm this.
+  Not a ranged weapon.
+
+================================================================================
+SUMMARY TABLE
+================================================================================
+
+CATEGORY   | WEAPON                    | BASE CLASS                   | NOTES
+-----------+---------------------------+------------------------------+--------
+Guns       | AdamantiteAccelerator     | BaseGunHoldoutProjectile     | Charge
+Guns       | ArcNovaDiffuser           | BaseGunHoldoutProjectile     | Charge-release burst
+Guns       | Archerfish                | BaseGunHoldoutProjectile     | 25-shot volley
+Guns       | Buzzkill                  | BaseGunHoldoutProjectile     | Charge saw
+Guns       | ChromaticEruption         | BaseGunHoldoutProjectile     | Wind-up burst
+Guns       | FetidEmesis               | BaseGunHoldoutProjectile     | Spin-up dual shot
+Guns       | FirestormCannon           | BaseGunHoldoutProjectile     | Flare gun / heat
+Guns       | HalleysInferno            | BaseGunHoldoutProjectile     | Burst + starburst
+Guns       | Hellborn                  | BaseGunHoldoutProjectile     | Spin + fire
+Guns       | M1Garand                  | BaseGunHoldoutProjectile     | 8-shot clip reload
+Guns       | MagnaCannon               | BaseGunHoldoutProjectile     | Charge-release
+Guns       | Megalodon                 | BaseGunHoldoutProjectile     | 30-shot + rocket
+Guns       | OmniGun                   | BaseGunHoldoutProjectile     | 4-mode combo
+Guns       | OntologicalDespoiler      | BaseGunHoldoutProjectile     | Two modes + charge
+Guns       | OpalStriker               | BaseGunHoldoutProjectile     | Simple charge
+Guns       | TheSevensStriker          | ModProjectile                | Slot machine
+Guns       | SlagfireDouser            | BaseGunHoldoutProjectile     | Burst + pistil jiggle
+Guns       | SpectralstormCannon       | BaseGunHoldoutProjectile     | Flare/heat + souls
+Guns       | SurgeDriver               | ModProjectile                | Simple timed fire
+Guns       | SuperradiantSlaughterer   | BaseGunHoldoutProjectile     | Charge saw + dash
+Guns       | TauCannon                 | BaseGunHoldoutProjectile     | 3-level charge beam
+Guns       | Voidragon                 | BaseGunHoldoutProjectile     | 50-shot + void laser
+Guns       | WildfireBloom             | BaseGunHoldoutProjectile     | 16-shot + flares
+-----------+---------------------------+------------------------------+--------
+Bows       | ClockworkBow              | ModProjectile                | Multi-load spread
+Bows       | Condemnation              | BaseGunHoldoutProjectile     | Arrow loading
+Bows       | FreedomStar               | ModProjectile                | Orbs then beam
+Bows       | TheMaelstrom              | ModProjectile                | Shark fire
+-----------+---------------------------+------------------------------+--------
+Launchers  | BlissfulBombardier        | BaseGunHoldoutProjectile     | Sky-aim nuke
+Launchers  | FlakKraken                | BaseGunHoldoutProjectile     | Burst flak
+Launchers  | FlakToxicannon            | BaseGunHoldoutProjectile     | Single flak
+Launchers  | MineralMortar             | BaseGunHoldoutProjectile     | Simple mortar
+Launchers  | ScorchedEarth             | BaseGunHoldoutProjectile     | Burst rockets
+Launchers  | Scorpio                   | BaseGunHoldoutProjectile     | Burst + charge nuke
+Launchers  | TheHive                   | BaseGunHoldoutProjectile     | Charge missile/nuke
+-----------+---------------------------+------------------------------+--------
+Flamethrow | DragonsBreath             | BaseGunHoldoutProjectile     | Accel + beam
+Flamethrow | Photoviscerator           | ModProjectile                | Stream + cluster
+-----------+---------------------------+------------------------------+--------
+Others     | Kingsbane                 | ModProjectile                | Rev + discharge
+Others     | Pumpler                   | ModProjectile                | Pumpkin loader
+-----------+---------------------------+------------------------------+--------
+DRAED. RANGED:
+Ranged     | Nidhogg                   | BaseGunHoldoutProjectile     | Railgun + charge
+Ranged     | PhalanxSurge              | BaseGunHoldoutProjectile     | Laser + lance
+Ranged     | TheAnomalysNanogun        | ModProjectile                | Plasma + MPFB
+Ranged     | HolofibreImmolator        | BaseGunHoldoutProjectile     | Charge spray/arrow
+-----------+---------------------------+------------------------------+--------
+DRAED. OTHER:
+Melee      | Auger                     | ModProjectile                | TrueMelee energy blade
+Magic      | CountermeasureMitt        | BaseGunHoldoutProjectile     | Magic finger beams
+Magic      | Vulcan                    | BaseGunHoldoutProjectile     | Magic minigun
+
+================================================================================
+END OF REPORT
+================================================================================

@@ -1,0 +1,279 @@
+﻿# CalamityMod Particles 文件总结与贴图评价
+
+来源目录：`D:\Documents\My Games\Terraria\tModLoader\ModSources\CalamityMod\Particles`
+
+## PNG 贴图
+
+- **ArchSmear.png**：156x156 的灰白半环拖影，适合挥砍弧光或冲击波，评价是笔触有速度感但整体细节集中在上半部。
+- **AresSummonCrate.png**：36x126 的竖向机械召唤箱帧图，金属和灯光信息明确，评价是尺寸虽小但识别度足够高。
+- **BigHeart.png**：450x450 的柔边白色大心形辉光，适合治疗或爱心爆发，评价是轮廓干净但需要代码上色避免过白。
+- **BlastCone.png**：128x22 的短促锥形喷流，适合枪口火花或推进尾焰，评价是方向性强但纹理层次较少。
+- **Blood.png**：118x200 的羽状竖向血雾模板，适合被着色成喷溅血气，评价是形态自然但单独看偏灰白。
+- **Blood2.png**：341x682 的多段血液飞溅帧图，适合连续喷血或碎裂血花，评价是动态变化丰富但文件占用偏高。
+- **BloomArrow.png**：67x67 的柔光上箭头，适合增益或状态上升提示，评价是图标清楚但作为粒子略偏 UI 化。
+- **BloomCircle.png**：200x200 的圆形白色辉光，适合通用光晕和爆点，评价是泛用性强但外观较基础。
+- **BloomLine.png**：64x1 的极细水平发光线，适合拉伸成激光或光线，评价是资源极轻但完全依赖绘制缩放。
+- **BloomLineAngled.png**：1960x1960 的斜向长光条，适合大范围斩击或射线，评价是高分辨率让边缘平滑但成本较大。
+- **BloomLineCap.png**：64x32 的半圆端帽光晕，适合给线段补端点，评价是功能明确但单独表现不完整。
+- **BloomLineFade.png**：1960x1960 的渐隐锥形光束，适合蓄力射线或向上冲光，评价是纵深感好但需要合理裁剪。
+- **BloomLineSkinny.png**：1960x1960 的细腰竖向柔光线，适合能量束中心高亮，评价是线形优雅但用途相对窄。
+- **ThinEndedLine.png**：1960x1960 的圆角软边粗光条，适合持续激光，评价是平滑耐缩放但视觉上较普通。
+- **BloomLineThick.png**：1960x1960 的厚实竖向辉光柱，适合强光射线，评价是亮度饱满但大尺寸可能显得笨重。
+- **BloomRing.png**：190x190 的柔边白色圆环，适合脉冲扩散，评价是过渡自然但缺少破碎或噪声变化。
+- **BloomRingThinLarge.png**：2048x2048 的高分辨率细圆环，适合高清冲击圈，评价是边线锐利但对小粒子来说偏奢侈。
+- **Bolt.png**：64x204 的竖向闪电折线，适合短电弧，评价是形状有力度但帧数单一。
+- **Bolt2.png**：160x510 的更长闪电折线，适合大型电击，评价是延展性强但需要缩放控制锯齿感。
+- **Bubble.png**：20x20 的蓝色像素气泡，适合水下泡泡，评价是体积小巧且识别清晰。
+- **CentralGold.png**：2048x2048 的金色同心圆与中心光球，适合神圣法阵或核心提示，评价是视觉标识强但风格更接近 UI 符号。
+- **ChumBone1.png**：10x22 的小骨头碎片，适合鱼饵或碎骨粒子，评价是像素信息少但轮廓明确。
+- **ChumBone2.png**：12x28 的另一枚小骨头碎片，适合和 ChumBone1 混用，评价是形态略有差异能减少重复感。
+- **CircularSmear.png**：156x156 的圆形灰白旋涡拖影，适合旋转斩击，评价是动态笔触漂亮且通用。
+- **CircularSmearFire1.png**：156x156 的火焰化圆形拖影，适合火系环斩，评价是噪点和高光丰富但仍需颜色染色。
+- **CircularSmearFire2.png**：156x156 的更强白边火焰环痕，适合爆燃挥砍，评价是冲击力更强但边缘较亮。
+- **CircularSmearFire3.png**：156x156 的另一版火焰旋涡拖影，适合连续火焰帧，评价是细节密度好但与前两张区分需靠动画。
+- **CircularSmearSmokey.png**：156x156 的烟雾感圆形拖影，适合暗色旋风或烟爆，评价是柔和且层次好。
+- **CircularTrail.png**：156x156 的稀薄圆弧轨迹，适合低强度旋转残影，评价是留白多但作为叠加层很干净。
+- **Crack.png**：333x768 的竖向裂纹闪光，适合地裂或空间裂隙，评价是形状锐利但黑底区域较大。
+- **CritSpark.png**：14x64 的竖向小暴击火花帧，适合命中闪烁，评价是精简且读取性强。
+- **CuteStars.png**：14x28 的小蓝白星星帧，适合可爱魔法粒子，评价是尺寸小但表情化明显。
+- **DemonSigilParticle.png**：210x210 的白色恶魔符号，适合邪术或诅咒特效，评价是主题明确但最好配合颜色和旋转。
+- **DesertProwlerSkull.png**：30x30 的白色小骷髅头，适合沙漠怪物碎片或死亡粒子，评价是像素造型清楚但层次较平。
+- **DestroyerReticleTelegraph.png**：156x156 的四角瞄准框模板，适合机械瞄准预警，评价是功能性强但单色模板需上色。
+- **DetailedExplosion.png**：360x360 的细节爆炸环与中心碎裂，适合强冲击爆点，评价是结构复杂且表现力高。
+- **DrainLine.png**：6x28 的竖向吸能线，适合魔力抽取，评价是很轻量但只适合缩放绘制。
+- **DrainLine2.png**：28x6 的横向吸能线，适合水平抽取，评价是与 DrainLine 互补且清晰。
+- **DrainLineBloom.png**：10x32 的带辉光竖线，适合发亮吸能轨迹，评价是比基础线更有能量感。
+- **DrainLineBloom2.png**：32x10 的带辉光横线，适合横向能量拖尾，评价是尺寸小且易复用。
+- **DualTrail.png**：392x392 的双竖向光柱模板，适合双轨尾迹，评价是对称结构明确但单独看信息少。
+- **DustyCircleHardEdge.png**：2048x2048 的颗粒化圆环，适合尘土冲击波，评价是噪声边缘很好但分辨率偏大。
+- **ElectricSpark.png**：6x12 的小型电火花，适合短促闪电粒子，评价是极简但需大量实例才显眼。
+- **EmoteExpressions.png**：128x16 的表情符号横向帧图，适合头顶情绪粒子，评价是可读性好但需要近距离显示。
+- **FadeStreak.png**：20x100 的竖向渐隐细光，适合下落流星或高速划痕，评价是柔和但形态偏单一。
+- **FakeDust.png**：6x18 的小灰尘帧，适合替代 Dust 的自定义粒子，评价是轻量且符合像素风。
+- **FakeDustBig.png**：8x24 的较大灰尘帧，适合更明显的尘点，评价是和 FakeDust 搭配能形成尺寸变化。
+- **FancyStars.png**：500x100 的多种星形横向帧图，适合随机星芒，评价是造型丰富且很适合作为法术点缀。
+- **Fire.png**：100x306 的竖向火焰帧图，适合火苗动画，评价是轮廓有跳动感但细节偏白。
+- **FireTypeParticle.png**：34x34 的火属性符号，适合元素提示，评价是主题清楚但更像状态图标。
+- **FlameExplosion.png**：2048x2048 的大面积火焰爆炸环，适合高强度爆燃，评价是气势强但资源尺寸很重。
+- **FlameExplosion2.png**：2048x2048 的透明火焰爆炸环变体，适合叠加第二层火浪，评价是层次松散但能增加体积。
+- **Flames.png**：100x141 的单朵火焰，适合火苗或燃烧粒子，评价是形状自然且读图明确。
+- **FlatShape.png**：64x64 的白色多边形块，适合平面闪光或遮罩，评价是功能型强但美术细节少。
+- **ForwardSmear.png**：446x961 的竖向高速拖影，适合冲刺或前冲挥砍，评价是运动感强但尺寸较大。
+- **FullStar.png**：33x33 的四角星芒，适合亮点闪烁，评价是经典且干净。
+- **GlowBlade.png**：1960x2368 的长条刀锋辉光，适合能量刃，评价是发光饱满但需要准确缩放。
+- **GlowBladeNoBloom.png**：1960x2368 的无外辉光刀锋，适合做清晰刃芯，评价是边缘更硬且利于叠加 Bloom。
+- **GlowFlakeParticle.png**：34x34 的雪花状发光符号，适合冰系粒子，评价是小尺寸下仍有装饰感。
+- **GlowOrbParticle.png**：72x72 的小白色光球，适合魔法点光，评价是泛用但特征不强。
+- **GlowSpark.png**：2048x2048 的椭圆形柔光火花，适合大颗光粒，评价是平滑漂亮但高分辨率偏重。
+- **GlowSpark2.png**：2048x2048 的带底部辉光变体，适合更亮的能量粒子，评价是体积感更强。
+- **GlowSquareFading.png**：295x295 的折角方形辉光，适合科技框或能量碎片，评价是形态特别但用途较专。
+- **GlowSquareParticle.png**：34x34 的小方框辉光，适合科技粒子，评价是清晰且易批量使用。
+- **GlowSquareParticleBig.png**：220x220 的大方框辉光，适合大号科技环，评价是边框锐利但中心留白大。
+- **GlowSquareParticleThick.png**：209x209 的粗边方框辉光，适合更厚重的科技特效，评价是更有存在感。
+- **GlowTriangle.png**：209x209 的三角形辉光框，适合符文或科技警示，评价是轮廓好看且可作为图形语言。
+- **HalfIceStar.png**：33x33 的冰晶半星帧，适合雪花闪烁，评价是细碎感好但尺寸小。
+- **HalfLine.png**：64x42 的半锥形白光，适合短喷射或冲击尖端，评价是明暗简单但用途清楚。
+- **HalfStar.png**：33x33 的半星芒，适合短暂闪光动画，评价是能和 FullStar 组成变化。
+- **HealingPlus.png**：30x30 的十字治疗辉光，适合回血粒子，评价是读图非常直接。
+- **HeartParticle.png**：22x22 的灰白小心形，适合低调治疗或爱心碎粒，评价是小巧但对比略低。
+- **HeavySmoke.png**：559x480 的多帧重烟团，适合浓烟动画，评价是帧变化丰富但亮度模板需要着色。
+- **HighResFoggyCircleHardEdge.png**：2048x2048 的高分辨率雾面实心圆，适合遮罩和雾爆，评价是渐变顺滑但边界用途有限。
+- **HighResHollowCircleHardEdge.png**：2048x2048 的高分辨率硬边空心圆，适合精准冲击圈，评价是边缘清楚但缺少自然噪声。
+- **HighResHollowCircleHardEdgeAlt.png**：2448x2448 的椭圆化硬边空心圆，适合透视光环，评价是形状更有空间感。
+- **HigResThinCircle.png**：2048x2048 的细线高分辨率圆环，适合精密法阵边线，评价是线条很干净但文件名疑似少了 h。
+- **HollowCircleHardEdge.png**：156x156 的硬边空心圆，适合常规脉冲环，评价是轻量且实用。
+- **HollowCircleSoftEdge.png**：156x156 的软边空心圆，适合柔和扩散环，评价是观感更自然。
+- **IceTypeParticle.png**：34x34 的冰属性符号，适合元素提示，评价是图标化强且小尺寸清晰。
+- **Jaws.png**：129x136 的白色双颚/獠牙形图案，适合咬合或捕食特效，评价是主题鲜明且视觉冲击好。
+- **KingSlimeEmeraldShards.png**：22x96 的绿宝石碎片帧，适合史莱姆宝石散落，评价是颜色鲜明但帧间面积小。
+- **KingSlimeRubyShards.png**：22x96 的红宝石碎片帧，适合红色宝石碎裂，评价是和绿蓝版本统一性好。
+- **KingSlimeSapphireShards.png**：22x96 的蓝宝石碎片帧，适合蓝色宝石散落，评价是小而清楚。
+- **LargeBloom.png**：360x360 的大型柔光圆，适合爆点照明，评价是通用性很强但美术特征少。
+- **LargeSpark.png**：720x720 的大型椭圆光芒，适合强闪光或法术核心，评价是平滑且有中心聚焦。
+- **Light.png**：72x72 的小型圆形光点，适合基础亮点，评价是非常通用但不具备独特主题。
+- **LiliesOfFinalityHeartParticle.png**：22x22 的红色像素心，适合特定武器或治疗粒子，评价是配色成品感强。
+- **LineThick.png**：1960x1960 的粗竖线模板，适合宽激光或护盾线，评价是边缘规整但风格朴素。
+- **MammothParticle.png**：432x431 的猛犸剪影粒子，适合召唤或主题特效，评价是识别度很高但适用场景很窄。
+- **MantisPunch.png**：224x648 的蓝紫色拳击/冲击帧图，适合连续拳影，评价是动态信息丰富。
+- **MediumLongThrust.png**：80x240 的长推进火舌帧，适合喷射或突刺尾焰，评价是节奏感好但细节偏线性。
+- **MediumMist.png**：32x102 的中型雾气帧，适合轻雾动画，评价是柔软但需要着色和淡出。
+- **MediumSmoke.png**：32x102 的中型烟团帧，适合灰烟动画，评价是颗粒清楚且实用。
+- **MicroBloom.png**：12x24 的微型光点帧，适合小闪烁，评价是极轻量但单个不显眼。
+- **MiniFlower.png**：14x14 的紫色小花图案，适合花瓣或植物魔法，评价是色块鲜明但细节有限。
+- **MiniSmoke.png**：66x22 的小烟团横向帧，适合轻微烟尘，评价是低成本且自然。
+- **NanoParticleBig.png**：8x24 的大号纳米方块帧，适合机械粒子，评价是规则且科技感强。
+- **NanoParticleSmall.png**：6x18 的小号纳米方块帧，适合细碎机械粒子，评价是和大号搭配合理。
+- **PearlParticle.png**：74x74 的小珍珠球体，适合海洋或珍珠光效，评价是彩色高光有质感。
+- **PearlParticleGlow.png**：74x74 的珍珠柔光层，适合给 PearlParticle 加辉光，评价是辅助层干净。
+- **PlagueHumidifierMist.png**：44x98 的绿色雾气帧，适合瘟疫或毒雾，评价是主题颜色明确。
+- **PlasmaExplosion.png**：2048x2048 的黑白等离子爆炸环，适合高能爆炸，评价是细节强烈且很有科技感。
+- **PointParticle.png**：22x22 的小三角状白色爆点，适合碎片喷出，评价是形态简洁。
+- **ProvidenceMarkParticle.png**：34x34 的神圣环状标记，适合 Providence 主题提示，评价是符号感强但需上色突出。
+- **PulseStar.png**：165x165 的大型四角星芒，适合爆闪中心，评价是高亮自然但外形常见。
+- **QuarterCircle.png**：2048x2048 的四分之一圆弧，适合拼接大环或扇形光效，评价是用途明确但需要绘制逻辑配合。
+- **RoarPulse.png**：1024x1024 的极淡圆形脉冲纹理，适合咆哮冲击波，评价是细腻但缩略图下几乎不可见。
+- **RoundedStar.png**：400x400 的灰色圆角星形，适合柔和星粒，评价是可爱但亮度偏平。
+- **SandyDust.png**：72x36 的沙尘点阵帧，适合沙土飞散，评价是颜色和主题一致。
+- **SeaFoam.png**：34x108 的海泡沫竖向帧，适合水花泡沫，评价是轻盈且帧感明确。
+- **SeaPrisms.png**：52x32 的蓝色海晶碎片帧，适合海洋晶体粒子，评价是颜色漂亮但尺寸小。
+- **SemiCircularSmear.png**：156x156 的半圆灰白拖影，适合弧形挥砍，评价是笔触自然。
+- **SemiCircularSmearSwipe.png**：200x200 的短弧扫击拖影，适合快速划过，评价是速度感强但覆盖范围小。
+- **SemiCircularSmearVertical.png**：156x156 的竖向半圆拖影，适合从上到下的冲击，评价是暖色暗部可塑性好。
+- **SemiCircularSmearVertical2.png**：600x600 的高分辨率竖向半弧拖影，适合放大冲击，评价是边缘更柔但资源更重。
+- **SemiCircularSmearVerticalBlank.png**：200x200 的简化竖向半弧，适合淡入淡出挥砍，评价是干净但细节少。
+- **ShatteredExplosion.png**：2048x2048 的破碎爆裂白光，适合玻璃化或能量破裂，评价是冲击力很强。
+- **ShineExplosion1.png**：2048x2048 的暗色星爆光，适合低亮度爆闪，评价是层次细但可能需要提亮。
+- **ShineExplosion2.png**：2048x2048 的带环星爆光，适合中心爆闪，评价是焦点明确且构图好。
+- **SlashSmear.png**：256x256 的细长弧形斩痕，适合刀光边缘，评价是优雅且留白合理。
+- **SmallBloom.png**：400x400 的小型柔光圆，适合轻爆点，评价是通用且平滑。
+- **SmallBloomRing.png**：96x96 的小型柔光圆环，适合短脉冲，评价是小尺寸实用。
+- **SmallBloomRingLayered.png**：96x96 的多层小圆环，适合更复杂的短脉冲，评价是层次比基础版更好。
+- **SmallSmoke.png**：24x24 的小白烟块，适合短命烟尘，评价是粗犷但可读。
+- **SmokeExplosion.png**：2048x2048 的烟雾爆炸纹理，适合暗烟扩散，评价是氛围强但边缘偏暗。
+- **SoftRoundExplosion.png**：2048x2048 的柔和圆形爆炸烟环，适合圆润冲击波，评价是过渡自然且高级。
+- **Sparkle.png**：33x33 的四角白色闪光，适合普通闪烁，评价是简单可靠。
+- **Sparkle2.png**：33x33 的多芒星闪光，适合更强亮点，评价是比 Sparkle 更活泼。
+- **Square.png**：4x4 的纯白小方块，适合最基础方形粒子，评价是极简且完全依赖代码表现。
+- **SquareRotated.png**：192x192 的旋转方形柔光，适合菱形闪光，评价是几何感强。
+- **StatChangeArrow.png**：26x26 的灰白箭头，适合属性变化提示，评价是 UI 语义清晰。
+- **StoneDebris.png**：16x80 的石块碎片帧，适合落石或破碎粒子，评价是灰阶朴素但实用。
+- **TechyHolosquare.png**：22x64 的科技方块符号帧，适合全息粒子，评价是符号变化丰富。
+- **ThickEndedLine.png**：64x84 的两端加粗竖线，适合能量连线，评价是中心线和端点关系清楚。
+- **ThinEndedLine.png**：64x84 的细端竖线，适合轻量能量连线，评价是比粗版更灵巧。
+- **ThinSparkle.png**：13x13 的微型十字星芒，适合暴击闪光，评价是小但亮度集中。
+- **ThunderBolt.png**：156x335 的烟雾状闪电束，适合雷击效果，评价是形状有力量但亮度不均。
+- **TitaniumRailgunShell.png**：14x44 的彩色轨道炮弹壳，适合弹壳飞出，评价是小尺寸下仍有材质变化。
+- **TitaniumRailgunShellGlow.png**：14x44 的发光弹壳层，适合叠加高光，评价是和主体贴图配合明确。
+- **TrientCircularSmear.png**：156x156 的三分之一圆弧拖影，适合分段旋转斩击，评价是比半圆更有节奏。
+- **UrchinSpikes.png**：48x10 的彩色海胆刺帧，适合尖刺碎片，评价是色彩变化小但主题明确。
+- **VerticalSmear.png**：156x156 的竖向灰白弧形拖影，适合下劈或上挑，评价是笔触自然。
+- **VerticalSmearLarge.png**：624x624 的大号竖向拖影，适合放大斩击，评价是尺寸足够但细节偏柔。
+- **VerticalSmearRagged.png**：624x624 的破碎边缘竖向拖影，适合粗糙冲击，评价是边缘颗粒感更强。
+- **VoidBeam.png**：38x28 的虚空光束端部，适合黑白能量束，评价是形态清楚但尺寸较小。
+- **VoidBeamGlow.png**：38x28 的虚空光束辉光层，适合增强 VoidBeam，评价是辅助效果明确。
+- **WaterFlavored.png**：72x72 的水滴形白色粒子，适合水属性光点，评价是简洁且可染色。
+- **WaterFoam.png**：184x184 的暗色水泡沫纹理，适合水面泡沫扩散，评价是噪声自然但缩略图偏暗。
+- **WaterGlob.png**：22x22 的蓝色水球，适合水滴或水弹粒子，评价是颜色饱满且识别直接。
+- **WulfrumBastionParts.png**：62x66 的 Wulfrum 机械零件帧，适合碎裂掉件，评价是主题资产感强。
+- **WulfrumDroidEmotes.png**：128x32 的绿色与蓝色机器人表情帧，适合无人机情绪提示，评价是小图标可读性好。
+- **WulfrumDroidSweatEmote.png**：10x10 的绿色汗滴/紧张表情块，适合小型情绪提示，评价是很小但颜色醒目。
+- **WulfrumHat.png**：30x20 的红棕色帽子，适合掉落帽子粒子，评价是像素风完整且有趣。
+- **XykWingBlue1.png**：161x494 的白色带孔翼片，适合蓝翼组件第一层，评价是造型独特但需要上色区分蓝主题。
+- **XykWingBlue2.png**：169x393 的白色带孔翼片变体，适合蓝翼组件第二层，评价是和第一层组合感好。
+- **XykWingBlue3.png**：47x422 的细长翼尖，适合蓝翼外缘，评价是线条简洁但单独可读性弱。
+- **XykWingOrange1.png**：161x494 的角形翼片，适合橙翼组件第一层，评价是剪影更尖锐。
+- **XykWingOrange2.png**：169x393 的折线翼片变体，适合橙翼组件第二层，评价是攻击性轮廓明显。
+- **XykWingOrange3.png**：47x422 的细长橙翼外缘，适合补足翼尖层次，评价是需要组合使用才完整。
+
+## CS 粒子逻辑
+
+- **AltLineParticle.cs**：定义使用 DrainLine 的非加法线条粒子，会随生命周期缩放并淡出，评价是逻辑简洁且适合普通吸能线。
+- **AltSparkParticle.cs**：定义使用 StarProj 的非加法星形火花，适合不想过曝的命中亮点，评价是行为清楚但视觉依赖外部贴图。
+- **AresCannonChargeParticleSet.cs**：定义 Ares 炮蓄力粒子集合，组合 ChargeUpLine、StrongBloom 和 PulseRing，评价是结构完整且表现层次足。
+- **AresSummonCrateParticle.cs**：定义 Ares 召唤箱粒子并使用 AresSummonCrate 贴图，评价是主题明确但用途很专。
+- **ArianeFakeDust.cs**：定义使用 FakeDust 的加法发光尘粒，评价是适合轻量光尘但和 FakeGlowDust 较接近。
+- **AuraPulseRing.cs**：定义使用 HollowCircleHardEdge 的加法光环脉冲，评价是适合范围提示且实现直接。
+- **BaseParticleSet.cs**：定义相对坐标粒子集合基类，负责生成、更新和手动绘制集合粒子，评价是抽象清楚但需要调用方管理。
+- **BloodParticle.cs**：定义使用 Blood 的加法血雾粒子，评价是可通过染色获得强烈喷血效果。
+- **BloodParticle2.cs**：定义使用 Blood2 的加法多帧血液粒子，评价是变化更多但成本比单帧更高。
+- **BloomLineVFX.cs**：定义使用 BloomLine 的加法发光线段粒子，评价是适合高速拖线且资源很轻。
+- **BloomParticle.cs**：定义使用 BloomCircle 的加法光晕粒子，评价是通用性强但个性较弱。
+- **BloomRing.cs**：定义使用 BloomRing 的加法圆环粒子，评价是适合短促扩散圈。
+- **BoltParticle.cs**：定义使用 Bolt2 的加法闪电粒子，评价是表现力强但需要旋转和缩放配合。
+- **BossRoar.cs**：定义使用 RoarPulse 的 Boss 咆哮脉冲，评价是场景感明确但贴图本身很淡。
+- **BrainOfCthulhuAfterImage.cs**：定义克苏鲁之脑沿贝塞尔路径移动的残影，评价是定制度高且服务具体 Boss 表现。
+- **BrokenTendril.cs**：定义带重力、碰撞和淡出的断裂触须粒子，评价是物理反馈好但依赖外部触须贴图。
+- **ChargeUpLineVFX.cs**：定义使用 Light 的蓄力线粒子，评价是适合向中心收束的能量特效。
+- **ChumBone.cs**：定义小骨头碎片粒子并使用 ChumBone1 贴图，评价是主题清楚且适合抛撒。
+- **CircularSmearSmokeyVFX .cs**：定义使用 CircularSmearSmokey 的烟雾圆弧拖影，评价是文件名带空格不理想但效果定位清楚。
+- **CircularSmearVFX.cs**：定义使用 CircularSmear 的圆形拖影粒子，评价是适合旋转挥砍且实现简洁。
+- **ConstellationRing.cs**：定义使用 HollowCircleSoftEdge 的星座感圆环并自绘，评价是柔和且适合魔法环。
+- **CrackParticle.cs**：定义使用 Crack 的加法裂隙粒子，评价是适合电裂或空间裂缝。
+- **CritSpark.cs**：定义使用 ThinSparkle 的暴击火花粒子，评价是用途明确且视觉反馈尖锐。
+- **CustomPulse.cs**：定义不依赖固定贴图的自定义脉冲粒子，评价是参数弹性高但调用方要控制表现。
+- **CustomSpark.cs**：定义自绘自定义火花粒子并支持替代视觉，评价是灵活性强且适合复用。
+- **CustomSprite.cs**：定义可指定贴图和混合方式的通用 Sprite 粒子，评价是复用价值高。
+- **CuteManaStarParticle.cs**：定义 CuteStars 魔力星粒子，评价是风格轻快但适用氛围偏可爱。
+- **DeathAshParticle.cs**：定义从 NPC 渲染目标采样并生成大量灰烬方片的特殊系统，评价是技术含量高但性能上需要粒子上限保护。
+- **DesertProwlerSkullParticle.cs**：定义沙漠潜伏者骷髅粒子并使用 DesertProwlerSkull，评价是主题专用且可读性好。
+- **DestroyerReticleTelegraph.cs**：定义 DestroyerReticleTelegraph 瞄准预警粒子，评价是功能性强且适合攻击前摇提示。
+- **DestroyerSparkTelegraph.cs**：定义使用 Sparkle2 的毁灭者火花预警粒子，评价是轻量且能补足预警亮点。
+- **DetailedExplosion.cs**：定义 DetailedExplosion 爆炸粒子并支持替代视觉混合，评价是适合高质量爆点。
+- **DirectionalPulseRing.cs**：定义有方向控制的 HollowCircleHardEdge 脉冲环，评价是比普通圆环更适合定向冲击。
+- **ElectricSpark.cs**：定义 ElectricSpark 加法电火花粒子，评价是短小但适合密集电击。
+- **EmoteExpressionParticle.cs**：定义 EmoteExpressions 表情粒子，评价是适合角色情绪反馈且帧图利用清楚。
+- **EnchantedParticle.cs**：定义使用 Light 的附魔能量粒子，评价是颜色插值能营造蓄能感。
+- **EnchantedParticleSet.cs**：定义 ChargingEnergyParticleSet 并持续生成 EnchantedParticle，评价是适合围绕中心的充能场。
+- **FakeDustParticle.cs**：定义 FakeGlowDust 加法伪尘粒，评价是可替代 Terraria Dust 且表现更可控。
+- **FancyStars.cs**：定义 FancyStars 多变体星星粒子，评价是装饰性好且随机性足。
+- **FireParticle.cs**：定义使用 Fire 的火焰粒子，评价是适合基础火苗动画。
+- **FireParticleSet.cs**：定义持续生成 FireParticle 的火焰粒子集合，评价是用于局部火焰场很合适。
+- **FlameExplosion.cs**：定义使用 FlameExplosion 的加法火焰爆炸粒子，评价是视觉强烈但贴图较重。
+- **FlameParticle.cs**：定义使用 Flames 的加法火苗粒子，评价是单体火焰表现直接。
+- **FlareShine.cs**：定义使用 ThinSparkle 的耀斑闪光粒子，评价是适合瞬时高亮。
+- **FlatGlow.cs**：定义使用 FlatShape 的平面辉光粒子，评价是适合几何闪面但细节简单。
+- **GeneralParticleHandler.cs**：定义粒子注册、生成、更新、分层绘制和混合状态管理系统，评价是整个粒子目录的核心基础设施。
+- **GenericBloom.cs**：定义使用 Light 的通用 Bloom 粒子并支持替代混合，评价是复用性高。
+- **GenericBubbleParticle.cs**：定义 Bubble 气泡粒子，评价是水体反馈明确且代码轻。
+- **GenericSparkle.cs**：定义 Sparkle 通用闪光粒子，评价是适合大多数小亮点。
+- **GlowOrbParticle.cs**：定义 GlowOrbParticle 光球粒子并支持替代视觉，评价是适合魔法光点但外观普通。
+- **GlowSparkParticle.cs**：定义 GlowSpark 加法光粒，评价是适合强光核心和尾迹。
+- **GlowSquareParticle.cs**：定义 GlowSquareParticle 科技方框粒子，评价是适合机械或全息特效。
+- **HealingPlus.cs**：定义 HealingPlus 治疗十字粒子，评价是语义直接且玩家易懂。
+- **HeavySmoke.cs**：定义 HeavySmokeParticle 重烟粒子并支持发光模式，评价是适合浓烟和爆炸后烟雾。
+- **ImpactParticle.cs**：定义使用 StarProj 的命中冲击粒子，评价是轻量且反馈明确。
+- **Jaws.cs**：定义 Jaws 咬合粒子，评价是剪影强烈且主题鲜明。
+- **LiliesOfFinalityHeartParticle.cs**：定义 LiliesOfFinalityHeartParticle 红心粒子，评价是特定武器氛围明确。
+- **LineParticle.cs**：定义 DrainLineBloom 加法线粒子，评价是适合能量连线和吸取轨迹。
+- **LineVFX.cs**：定义 ThinEndedLine 加法线特效，评价是端点处理比普通线更好。
+- **ManaDrainBlobs.cs**：定义使用 MicroBloom 的魔力抽取光点，评价是适合小颗粒汇聚。
+- **ManaDrainStreak.cs**：定义 DrainLineBloom 魔力抽取线，评价是比光点更有方向感。
+- **MantisPunch.cs**：定义 MantisPunch 拳影粒子，评价是动态专用性强且辨识度高。
+- **MediumMistParticle.cs**：定义 MediumMist 加法雾粒，评价是适合淡雾或魔法烟气。
+- **MediumMistParticleAlphaBlend.cs**：定义使用 MediumSmoke 的透明混合雾粒，评价是比加法雾更柔和。
+- **NanoParticle.cs**：定义 NanoParticleSmall 纳米方块粒子并支持替代视觉，评价是适合科技碎粒。
+- **Particle.cs**：定义所有粒子的基础字段、纹理、混合、生命周期和绘制钩子，评价是接口清楚且扩展点完整。
+- **PearlParticle.cs**：定义 PearlParticle 珍珠粒子并叠加 Glow，评价是适合海洋主题且质感更完整。
+- **PlagueHumidifierMist.cs**：定义 PlagueHumidifierMist 毒雾粒子，评价是主题颜色和运动都偏专用。
+- **PlasmaExplosion.cs**：定义 PlasmaExplosion 等离子爆炸粒子，评价是高能感强。
+- **PlayerCenteredPulseRing.cs**：定义以玩家为中心的 HollowCircleHardEdge 脉冲环，评价是适合角色范围技能。
+- **PointParticle.cs**：定义 PointParticle 小爆点并支持替代视觉，评价是可作为基础碎亮点。
+- **PulseRing.cs**：定义 HollowCircleHardEdge 加法脉冲环，评价是基础但非常实用。
+- **RainbowSparkParticle.cs**：定义 RainbowGlowSparkParticle 彩虹光粒，评价是颜色表现丰富但需避免过度杂乱。
+- **RoundedStarParticle.cs**：定义 RoundedStar 圆角星粒，评价是柔和可爱且适合非尖锐魔法。
+- **SandyDustParticle.cs**：定义 SandyDust 沙尘粒子，评价是环境主题明确。
+- **SeaFoamParticle.cs**：定义 SeaFoam 加法海泡粒子，评价是适合水花和浪沫。
+- **SeaPrismParticle.cs**：定义 SeaPrisms 海晶碎片粒子并支持替代视觉，评价是海洋晶体感好。
+- **SemiCircularSmearFade.cs**：定义 SemiCircularSmearVerticalBlank 半弧淡出拖影，评价是适合渐隐挥砍。
+- **SemiCircularSmearVFX.cs**：定义 SemiCircularSmear 半圆拖影粒子，评价是常规弧形斩击表现可靠。
+- **SlashThrough.cs**：定义使用 SwordSlashTexture 的穿透斩击粒子，评价是适合刀光但依赖 ExtraTextures。
+- **SmallSmokeParticle.cs**：定义 SmallSmoke 小烟粒，评价是适合轻微碰撞烟尘。
+- **SnowflakeSparkle.cs**：定义 HalfIceStar 雪花闪光粒子，评价是冰系氛围明确。
+- **SparkleParticle.cs**：定义 Sparkle2 闪光粒子并支持替代视觉，评价是比 GenericSparkle 更有爆点感。
+- **SparkParticle.cs**：定义 StarProj 加法星形火花，评价是命中和飞散都适合。
+- **SquareAshParticle.cs**：定义 Square 方形灰烬粒子，评价是像素化烟尘或碎屑用途清楚。
+- **SquareParticle.cs**：定义 Square 加法方块粒子，评价是极简但适合大量发光方点。
+- **SquishyLightParticle.cs**：定义 Light 软弹光粒，评价是适合有弹性的发光反馈。
+- **StatChangeArrow.cs**：定义 StatChangeArrow 状态变化箭头粒子，评价是 UI 语义强。
+- **StaticGlowLine.cs**：定义 GlowSpark 静态发光线粒子，评价是适合固定方向的能量高亮。
+- **StaticPulseRing.cs**：定义 HighResHollowCircleHardEdge 静态脉冲环，评价是高清但资源较重。
+- **StoneDebrisParticle.cs**：定义 StoneDebris 石块碎片粒子，评价是破碎反馈朴素实用。
+- **StrongBloom.cs**：定义 BloomCircle 强光晕粒子，评价是适合高亮爆点。
+- **TechyHolosquareParticle.cs**：定义 TechyHolosquare 科技全息方块粒子，评价是机械主题突出但类名里 Holoysquare 疑似拼写错误。
+- **ThanatosSmokeParticle.cs**：定义 MediumSmoke 的 Thanatos 烟雾粒子，评价是移动方向和生命周期适合机械烟。
+- **ThanatosSmokeParticleSet.cs**：定义持续生成 ThanatosSmokeParticle 的烟雾集合，评价是适合局部烟流。
+- **ThunderBoltVFX.cs**：定义 ThunderBolt 闪电特效粒子，评价是雷击表现强且适合短生命周期。
+- **TimedSmokeParticle.cs**：定义 MediumSmoke 定时烟粒，评价是通用烟雾逻辑简单可靠。
+- **TitaniumRailgunShell.cs**：定义 TitaniumRailgunShell 弹壳粒子并可叠加 Glow，评价是物件粒子细节完整。
+- **TrientCircularSmearVFX.cs**：定义 TrientCircularSmear 三分圆弧拖影，评价是适合分段旋转特效。
+- **UrchinSpikeParticle.cs**：定义 UrchinSpikes 海胆刺粒子，评价是水生敌人碎片感明确。
+- **VelChangingSpark .cs**：定义速度变化型自绘火花粒子，评价是功能灵活但文件名带空格不利于维护。
+- **VoidSparkParticle.cs**：定义使用 GlowSpark2 的非加法虚空光粒，评价是暗色特效更可控。
+- **WaterFlavoredParticle.cs**：定义 WaterFlavored 水属性粒子，评价是适合水滴亮点且不过曝。
+- **WaterFoamParticle.cs**：定义 WaterFoam 加法泡沫粒子，评价是适合水体扩散和浪花。
+- **WaterGlobParticle.cs**：定义 WaterGlob 水球粒子，评价是小型水滴表现直接。
+- **WulfrumBastionPartsParticle.cs**：定义 WulfrumBastionParts 机械零件粒子，评价是掉件反馈具体且主题强。
+- **WulfrumDroidEmote.cs**：定义 WulfrumDroidEmotes 机器人表情粒子，评价是角色反馈生动。
+- **WulfrumDroidSweatEmote.cs**：定义 WulfrumDroidSweatEmote 汗滴表情粒子，评价是小而明确。
+- **WulfrumHatParticle.cs**：定义 WulfrumHat 帽子粒子，评价是趣味物件掉落感好。
+
