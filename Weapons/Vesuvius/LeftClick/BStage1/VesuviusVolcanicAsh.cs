@@ -58,9 +58,10 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.BStage1
             Projectile.velocity.Y = MathHelper.Clamp(Projectile.velocity.Y + Main.rand.NextFloat(0.008f, 0.045f), -3f, 2.1f); // gentle drift-fall, low terminal speed
             Projectile.rotation += Projectile.velocity.X * 0.03f + Main.rand.NextFloat(-0.04f, 0.08f);
             Projectile.alpha = (int)MathHelper.Lerp(0f, 210f, Utils.GetLerpValue(24f, 0f, Projectile.timeLeft, true));
-            Lighting.AddLight(Projectile.Center, new Vector3(0.16f, 0.075f, 0.035f) * Projectile.Opacity * VesuviusProjectileVisuals.VisualIntensity);
+            // Ash keeps its previously-tuned dim values now that the global 0.55 dampener is gone.
+            Lighting.AddLight(Projectile.Center, new Vector3(0.088f, 0.041f, 0.019f) * Projectile.Opacity);
 
-            VesuviusProjectileVisuals.SpawnVolcanicAshCloud(Projectile, 0.9f);
+            VesuviusProjectileVisuals.SpawnVolcanicAshCloud(Projectile, 0.5f);
             SpawnMagicAshParticles();
         }
 
@@ -93,8 +94,8 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.BStage1
                     backward * Main.rand.NextFloat(0.2f, 1.2f),
                     Color.Lerp(VesuviusProjectileVisuals.ScoriaSmoke, VesuviusProjectileVisuals.LavaOrange, 0.18f),
                     Color.Black,
-                    Main.rand.NextFloat(0.42f, 0.78f) * Projectile.scale,
-                    0.45f,
+                    Main.rand.NextFloat(0.5f, 0.9f) * Projectile.scale,
+                    Main.rand.Next(95, 135),
                     Main.rand.NextFloat(-0.05f, 0.05f)));
             }
 
@@ -118,7 +119,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.BStage1
 
         public override void OnKill(int timeLeft)
         {
-            VesuviusProjectileVisuals.SpawnAshBurst(Projectile.Center, Projectile.scale);
+            VesuviusProjectileVisuals.SpawnAshBurst(Projectile.Center, Projectile.scale * 0.55f);
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -137,7 +138,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.BStage1
                 VesuviusProjectileVisuals.AdditiveColor(Color.Lerp(VesuviusProjectileVisuals.LavaOrange, VesuviusProjectileVisuals.LavaGold, 0.35f)) * 0.22f * fade,
                 Projectile.rotation,
                 bloom.Size() * 0.5f,
-                Projectile.scale * 0.42f * VesuviusProjectileVisuals.VisualScale,
+                Projectile.scale * 0.3f,
                 SpriteEffects.None);
 
             for (int i = Projectile.oldPos.Length - 1; i > 0; i--)
@@ -149,7 +150,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.BStage1
                     texture,
                     oldCenter - Main.screenPosition,
                     frame,
-                    trailColor * fade * 0.42f * trailFade * VesuviusProjectileVisuals.VisualIntensity,
+                    trailColor * fade * 0.23f * trailFade,
                     Projectile.rotation,
                     frame.Size() * 0.5f,
                     Projectile.scale * (0.85f + trailFade * 0.2f),
@@ -157,7 +158,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.BStage1
             }
 
             // FireProj has a black background designed for additive blending — use A=0 trick
-            Color fireC = Color.Lerp(VesuviusProjectileVisuals.LavaOrange, Color.White, 0.22f) * (0.34f * fade * VesuviusProjectileVisuals.VisualIntensity);
+            Color fireC = Color.Lerp(VesuviusProjectileVisuals.LavaOrange, Color.White, 0.22f) * (0.19f * fade);
             Main.EntitySpriteDraw(
                 fire,
                 Projectile.Center - Main.screenPosition,
@@ -165,7 +166,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.BStage1
                 new Color(fireC.R, fireC.G, fireC.B, 0),
                 -Projectile.rotation * 0.6f,
                 fire.Size() * 0.5f,
-                Projectile.scale * 0.52f * VesuviusProjectileVisuals.VisualScale,
+                Projectile.scale * 0.375f,
                 SpriteEffects.None);
 
             Main.EntitySpriteDraw(

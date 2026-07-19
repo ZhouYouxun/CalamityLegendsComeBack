@@ -227,6 +227,8 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick.Javelin
             Rectangle frame = texture.Frame(1, Main.projFrames[Type], 0, Projectile.frame);
             Color color = new Color(255, 172, 64, 0) * Projectile.Opacity;
 
+            // Trail additive, body opaque — same split as the volcanic bomb. Drawing the body
+            // with A=0 left the flame with no solid centre.
             Main.spriteBatch.SetBlendState(BlendState.Additive);
             for (int i = Projectile.oldPos.Length - 1; i >= 1; i--)
             {
@@ -237,9 +239,9 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick.Javelin
                 Vector2 oldCenter = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
                 Main.EntitySpriteDraw(texture, oldCenter, frame, color * 0.28f * t, Projectile.oldRot[i], frame.Size() * 0.5f, Projectile.scale * MathHelper.Lerp(0.58f, 0.95f, t), SpriteEffects.None);
             }
-
-            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, frame, color, Projectile.rotation, frame.Size() * 0.5f, Projectile.scale, SpriteEffects.None);
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
+
+            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, frame, new Color(255, Main.DiscoG, 53) * Projectile.Opacity, Projectile.rotation, frame.Size() * 0.5f, Projectile.scale, SpriteEffects.None);
             return false;
         }
     }

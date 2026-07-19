@@ -135,10 +135,15 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.CStage2
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D texture = ModContent.Request<Texture2D>(Texture).Value;
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Rectangle frame = texture.Frame(1, Main.projFrames[Type], 0, Projectile.frame);
             Color fireColor = Color.Lerp(VesuviusProjectileVisuals.LavaOrange, VesuviusProjectileVisuals.LavaGold, 0.42f) with { A = 0 };
 
+            // Glow and trail are additive; the fireball body is not. Drawing the body with A=0
+            // turned this into a shapeless smear with no readable rock core.
             Main.spriteBatch.SetBlendState(BlendState.Additive);
+            Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition, null, fireColor * 0.5f, 0f, bloom.Size() * 0.5f, Projectile.scale * 0.72f, SpriteEffects.None);
+
             for (int i = Projectile.oldPos.Length - 1; i >= 1; i--)
             {
                 if (Projectile.oldPos[i] == Vector2.Zero)
@@ -146,11 +151,12 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.CStage2
 
                 float t = (Projectile.oldPos.Length - i) / (float)Projectile.oldPos.Length;
                 Vector2 oldCenter = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
-                Main.EntitySpriteDraw(texture, oldCenter, frame, fireColor * (0.34f * t), Projectile.oldRot[i], frame.Size() * 0.5f, Projectile.scale * MathHelper.Lerp(0.72f, 1f, t), SpriteEffects.None);
+                Main.EntitySpriteDraw(texture, oldCenter, frame, fireColor * (0.3f * t), Projectile.oldRot[i], frame.Size() * 0.5f, Projectile.scale * MathHelper.Lerp(0.6f, 0.95f, t), SpriteEffects.None);
             }
-
-            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, frame, fireColor, Projectile.rotation, frame.Size() * 0.5f, Projectile.scale, SpriteEffects.None);
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
+
+            // Calamity's VolcanicFireball tint, drawn opaque so the sprite keeps its shape.
+            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, frame, new Color(255, Main.DiscoG, 53), Projectile.rotation, frame.Size() * 0.5f, Projectile.scale, SpriteEffects.None);
             return false;
         }
     }
@@ -213,30 +219,30 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.CStage2
                 smoke,
                 Projectile.Center - Main.screenPosition - Vector2.UnitY * 8f,
                 null,
-                Color.Lerp(Color.Black, VesuviusProjectileVisuals.RavagerSmoke, 0.55f) * 0.22f * fade * VesuviusProjectileVisuals.VisualIntensity,
+                Color.Lerp(Color.Black, VesuviusProjectileVisuals.RavagerSmoke, 0.55f) * 0.22f * fade,
                 Projectile.rotation + pulse * 0.12f,
                 smoke.Size() * 0.5f,
-                poolScale * new Vector2(1.9f, 0.95f) * VesuviusProjectileVisuals.VisualScale,
+                poolScale * new Vector2(1.9f, 0.95f),
                 SpriteEffects.None);
 
             Main.EntitySpriteDraw(
                 bloom,
                 Projectile.Center - Main.screenPosition,
                 null,
-                new Color(255, 70, 20) * (0.2f + pulse * 0.05f) * fade * VesuviusProjectileVisuals.VisualIntensity,
+                new Color(255, 70, 20) * (0.2f + pulse * 0.05f) * fade,
                 0f,
                 bloom.Size() * 0.5f,
-                poolScale * 1.55f * VesuviusProjectileVisuals.VisualScale,
+                poolScale * 1.55f,
                 SpriteEffects.None);
 
             Main.EntitySpriteDraw(
                 bloom,
                 Projectile.Center - Main.screenPosition,
                 null,
-                VesuviusProjectileVisuals.LavaGold * 0.16f * fade * VesuviusProjectileVisuals.VisualIntensity,
+                VesuviusProjectileVisuals.LavaGold * 0.16f * fade,
                 0f,
                 bloom.Size() * 0.5f,
-                poolScale * new Vector2(0.82f, 0.42f) * VesuviusProjectileVisuals.VisualScale,
+                poolScale * new Vector2(0.82f, 0.42f),
                 SpriteEffects.None);
 
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);

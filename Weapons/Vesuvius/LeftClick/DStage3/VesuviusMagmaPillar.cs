@@ -66,7 +66,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.DStage3
             }
 
             Projectile.rotation = 0f;
-            Lighting.AddLight(Projectile.Center, 0.95f * VesuviusProjectileVisuals.VisualIntensity, 0.24f * VesuviusProjectileVisuals.VisualIntensity, 0.06f * VesuviusProjectileVisuals.VisualIntensity);
+            Lighting.AddLight(Projectile.Center, 0.95f, 0.24f, 0.06f);
 
             if (!Main.dedServ)
             {
@@ -98,10 +98,26 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.DStage3
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D texture = TextureAssets.Projectile[Type].Value;
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Rectangle frame = new(frameX * Projectile.width, frameY * Projectile.height, Projectile.width, Projectile.height);
+
+            // A warm base glow at the vent, then the flameburst sheet drawn exactly how Calamity
+            // draws SubductionFlameburst: normal blending, full white. The animation frames
+            // already carry their own falloff; forcing them through Additive with A=0 washed the
+            // column out into a flat pale ghost with none of the internal flame detail.
             Main.spriteBatch.SetBlendState(BlendState.Additive);
-            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, frame, new Color(255, 255, 255, 0), Projectile.rotation, Projectile.Size / 2f, 1f, SpriteEffects.None);
+            Main.EntitySpriteDraw(
+                bloom,
+                Projectile.Bottom - Main.screenPosition,
+                null,
+                VesuviusProjectileVisuals.AdditiveColor(VesuviusProjectileVisuals.LavaOrange) * 0.55f,
+                0f,
+                bloom.Size() * 0.5f,
+                new Vector2(1.15f, 0.7f),
+                SpriteEffects.None);
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
+
+            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, frame, Color.White, Projectile.rotation, Projectile.Size / 2f, 1f, SpriteEffects.None);
             return false;
         }
     }
@@ -150,20 +166,20 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.DStage3
                 smoke,
                 Projectile.Center - Main.screenPosition - Vector2.UnitY * 5f,
                 null,
-                Color.Lerp(Color.Black, VesuviusProjectileVisuals.RavagerSmoke, 0.5f) * 0.18f * fade * VesuviusProjectileVisuals.VisualIntensity,
+                Color.Lerp(Color.Black, VesuviusProjectileVisuals.RavagerSmoke, 0.5f) * 0.18f * fade,
                 Projectile.rotation,
                 smoke.Size() * 0.5f,
-                new Vector2(0.55f, 0.24f) * (1f + (1f - fade) * 0.55f) * VesuviusProjectileVisuals.VisualScale,
+                new Vector2(0.55f, 0.24f) * (1f + (1f - fade) * 0.55f),
                 SpriteEffects.None);
 
             Main.EntitySpriteDraw(
                 bloom,
                 Projectile.Center - Main.screenPosition,
                 null,
-                VesuviusProjectileVisuals.LavaOrange * 0.16f * fade * VesuviusProjectileVisuals.VisualIntensity,
+                VesuviusProjectileVisuals.LavaOrange * 0.16f * fade,
                 Projectile.rotation,
                 bloom.Size() * 0.5f,
-                new Vector2(0.42f, 0.18f) * (1f + (1f - fade) * 0.4f) * VesuviusProjectileVisuals.VisualScale,
+                new Vector2(0.42f, 0.18f) * (1f + (1f - fade) * 0.4f),
                 SpriteEffects.None);
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
             return false;

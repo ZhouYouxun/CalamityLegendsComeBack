@@ -330,23 +330,19 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick.Javelin
             Color glowColor = Color.Lerp(VesuviusProjectileVisuals.LavaOrange, Color.White, State == FiringState ? 0.36f : 0.18f) * Projectile.Opacity;
             float drawScale = Projectile.scale * (State == FiringState ? 1.05f : 0.92f);
 
+            // Additive pass is glow only. The old "border" here stamped 10-14 rotating copies of
+            // the whole asteroid sprite a few pixels apart, which produced a muddy halo around
+            // the rock rather than an outline.
             Main.spriteBatch.SetBlendState(BlendState.Additive);
-            Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition, null, glowColor * 0.28f, 0f, bloom.Size() * 0.5f, 0.34f + drawScale * 0.18f, SpriteEffects.None);
-
-
-            int borderCopies = State == FiringState ? 14 : 10;
-            float borderRadius = State == FiringState ? 5.5f : 3.4f;
-            for (int i = 0; i < borderCopies; i++)
-            {
-                Vector2 offset = (MathHelper.TwoPi * i / borderCopies + Main.GlobalTimeWrappedHourly * 1.8f).ToRotationVector2() * borderRadius;
-                Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition + offset, null, glowColor * 0.16f, Projectile.rotation, texture.Size() * 0.5f, drawScale, SpriteEffects.None);
-            }
-
-            // 灾厄原版画法：本体贴图正常混合，AsteroidMoltenGlow 用白色叠在上面形成橙色包边�?            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, lightColor * Projectile.Opacity, Projectile.rotation, texture.Size() * 0.5f, drawScale, SpriteEffects.None);
-            Main.EntitySpriteDraw(glow, Projectile.Center - Main.screenPosition, null, Color.White * (0.45f * Projectile.Opacity), Projectile.rotation, glow.Size() * 0.5f, drawScale * 1.05f, SpriteEffects.None);
-
+            Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition, null, VesuviusProjectileVisuals.AdditiveColor(glowColor) * 0.5f, 0f, bloom.Size() * 0.5f, 0.34f + drawScale * 0.28f, SpriteEffects.None);
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
+
+            // Calamity AsteroidMolten draw order: opaque rock body first, then the glowmask in
+            // white on top. The body draw used to sit inside a comment whose trailing byte was
+            // corrupted and ate the terminating newline, and the glowmask was being painted
+            // underneath the rock rather than over it.
             Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, lightColor * Projectile.Opacity, Projectile.rotation, texture.Size() * 0.5f, drawScale, SpriteEffects.None);
+            Main.EntitySpriteDraw(glow, Projectile.Center - Main.screenPosition, null, Color.White * Projectile.Opacity, Projectile.rotation, glow.Size() * 0.5f, drawScale, SpriteEffects.None);
             return false;
         }
 

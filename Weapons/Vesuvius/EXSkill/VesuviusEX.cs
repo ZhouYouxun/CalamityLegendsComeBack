@@ -495,11 +495,13 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.EXSkill
             Color color = state == 2 ? new Color(255, 90, 28) : new Color(255, 210, 80);
 
             Main.spriteBatch.SetBlendState(BlendState.Additive);
-            Main.EntitySpriteDraw(bloom, GunTip - Main.screenPosition, null, color * (0.28f + pulse * 0.18f), 0f, bloom.Size() * 0.5f, state == 2 ? 1.2f + pulse * 0.45f : 0.7f + pulse * 0.22f, SpriteEffects.None);
-            Main.EntitySpriteDraw(glow, drawPosition, null, Color.White * (0.75f + pulse * 0.25f), Projectile.rotation, origin, Projectile.scale, SpriteEffects.None);
+            Main.EntitySpriteDraw(bloom, GunTip - Main.screenPosition, null, VesuviusProjectileVisuals.AdditiveColor(color) * (0.28f + pulse * 0.18f), 0f, bloom.Size() * 0.5f, state == 2 ? 1.2f + pulse * 0.45f : 0.7f + pulse * 0.22f, SpriteEffects.None);
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
 
+            // Staff first, glowmask over it. These were reversed, so the opaque staff was painted
+            // straight over its own glowmask and the weapon never actually lit up during the EX.
             Main.EntitySpriteDraw(texture, drawPosition, null, lightColor, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None);
+            Main.EntitySpriteDraw(glow, drawPosition, null, new Color(255, 255, 255, 0) * (0.75f + pulse * 0.25f), Projectile.rotation, origin, Projectile.scale, SpriteEffects.None);
             return false;
         }
     }

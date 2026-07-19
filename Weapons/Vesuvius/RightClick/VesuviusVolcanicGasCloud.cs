@@ -92,8 +92,8 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
                     Projectile.velocity * Main.rand.NextFloat(0.02f, 0.18f) + Main.rand.NextVector2Circular(0.28f, 0.28f),
                     Color.Lerp(VesuviusProjectileVisuals.AshGray, new Color(156, 150, 84), 0.36f),
                     Color.Lerp(Color.Black, VesuviusProjectileVisuals.AshGray, 0.45f),
-                    Main.rand.NextFloat(0.55f, 1.15f) * fade,
-                    0.48f,
+                    Main.rand.NextFloat(0.7f, 1.35f) * fade,
+                    Main.rand.Next(95, 135),
                     Main.rand.NextFloat(-0.04f, 0.04f));
                 GeneralParticleHandler.SpawnParticle(ash);
             }
@@ -121,7 +121,9 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
             Color smokeColor = Color.Lerp(VesuviusProjectileVisuals.RavagerSmoke, new Color(128, 118, 74), 0.4f);
             Color sulfurColor = new(190, 170, 82);
 
-            Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
+            // EnterShaderRegion is for actually applying a shader; with none bound it just
+            // restarts the batch. Plain SetBlendState is what the rest of the weapon uses.
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
             for (int i = 0; i < 3; i++)
             {
                 float localPulse = pulse + i * 0.18f;
@@ -130,10 +132,10 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
                     smoke,
                     Projectile.Center + offset - Main.screenPosition,
                     null,
-                    smokeColor * (0.22f + localPulse * 0.05f) * fade * VesuviusProjectileVisuals.VisualIntensity,
+                    smokeColor * (0.22f + localPulse * 0.05f) * fade,
                     Projectile.rotation + i * 1.7f,
                     smoke.Size() * 0.5f,
-                    baseScale * new Vector2(1.35f - i * 0.1f, 0.88f + i * 0.06f) * VesuviusProjectileVisuals.VisualScale,
+                    baseScale * new Vector2(1.35f - i * 0.1f, 0.88f + i * 0.06f),
                     SpriteEffects.None);
             }
 
@@ -141,13 +143,13 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
                 bloom,
                 Projectile.Center - Main.screenPosition,
                 null,
-                sulfurColor * (0.16f + pulse * 0.05f) * fade * VesuviusProjectileVisuals.VisualIntensity,
+                sulfurColor * (0.16f + pulse * 0.05f) * fade,
                 -Projectile.rotation * 0.55f,
                 bloom.Size() * 0.5f,
-                new Vector2(Projectile.width / (float)bloom.Width, Projectile.height / (float)bloom.Height) * 1.12f * VesuviusProjectileVisuals.VisualScale,
+                new Vector2(Projectile.width / (float)bloom.Width, Projectile.height / (float)bloom.Height) * 1.12f,
                 SpriteEffects.None);
 
-            Main.spriteBatch.ExitShaderRegion();
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
             return false;
         }
     }

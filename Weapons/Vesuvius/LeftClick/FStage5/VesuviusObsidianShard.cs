@@ -42,7 +42,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.FStage5
         public override void AI()
         {
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
-            Lighting.AddLight(Projectile.Center, 0.03f * VesuviusProjectileVisuals.VisualIntensity, 0.03f * VesuviusProjectileVisuals.VisualIntensity, 0.035f * VesuviusProjectileVisuals.VisualIntensity);
+            Lighting.AddLight(Projectile.Center, 0.03f, 0.03f, 0.035f);
 
             VesuviusProjectileVisuals.SpawnObsidianTrail(Projectile, 1f);
         }
@@ -86,10 +86,9 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.FStage5
 
             SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.55f, Pitch = -0.4f }, Projectile.Center);
             VesuviusProjectileVisuals.SpawnObsidianImpact(Projectile.Center, 0.95f);
-            int dustCount = Math.Max(1, (int)Math.Ceiling(16f * VesuviusProjectileVisuals.VisualIntensity));
-            for (int i = 0; i < dustCount; i++)
+            for (int i = 0; i < 16; i++)
             {
-                Dust dust = Dust.NewDustPerfect(Projectile.Center, DustID.Obsidian, Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2f, 8f) * VesuviusProjectileVisuals.VisualScale, 140, Main.rand.NextBool(3) ? VesuviusProjectileVisuals.ObsidianBlack : VesuviusProjectileVisuals.ObsidianEdge, Main.rand.NextFloat(0.9f, 1.6f) * VesuviusProjectileVisuals.VisualScale);
+                Dust dust = Dust.NewDustPerfect(Projectile.Center, DustID.Obsidian, Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2f, 8f), 140, Main.rand.NextBool(3) ? VesuviusProjectileVisuals.ObsidianBlack : VesuviusProjectileVisuals.ObsidianEdge, Main.rand.NextFloat(0.9f, 1.6f));
                 dust.noGravity = true;
             }
         }
@@ -97,9 +96,16 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.FStage5
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D texture = TextureAssets.Projectile[Type].Value;
-            Color edge = VesuviusProjectileVisuals.ObsidianEdge with { A = 0 };
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Color edge = VesuviusProjectileVisuals.AdditiveColor(VesuviusProjectileVisuals.ObsidianEdge);
 
+            // This shard used to be invisible: it was drawn entirely under Additive blending in
+            // near-black (38,38,42), and additive black contributes nothing to the frame buffer.
+            // A dark object has to be drawn with alpha blending; only its fracture light is
+            // additive. Hence: violet halo + trail additive, solid black-glass body on top.
             Main.spriteBatch.SetBlendState(BlendState.Additive);
+            Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition, null, edge * 0.4f, 0f, bloom.Size() * 0.5f, Projectile.scale * 1.6f, SpriteEffects.None);
+
             for (int i = Projectile.oldPos.Length - 1; i >= 1; i--)
             {
                 if (Projectile.oldPos[i] == Vector2.Zero)
@@ -107,12 +113,16 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.FStage5
 
                 float t = (Projectile.oldPos.Length - i) / (float)Projectile.oldPos.Length;
                 Vector2 oldCenter = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
-                Main.EntitySpriteDraw(texture, oldCenter, null, edge * (0.36f * t * VesuviusProjectileVisuals.VisualIntensity), Projectile.oldRot[i], texture.Size() * 0.5f, Projectile.scale * MathHelper.Lerp(0.72f, 1.18f, t), SpriteEffects.None);
+                Main.EntitySpriteDraw(texture, oldCenter, null, edge * (0.42f * t), Projectile.oldRot[i], texture.Size() * 0.5f, Projectile.scale * MathHelper.Lerp(0.72f, 1.18f, t), SpriteEffects.None);
             }
 
-            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, edge * 0.92f * VesuviusProjectileVisuals.VisualIntensity, Projectile.rotation, texture.Size() * 0.5f, Projectile.scale * 1.18f, SpriteEffects.None);
-            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, Color.White with { A = 0 } * 0.08f, Projectile.rotation, texture.Size() * 0.5f, Projectile.scale * 0.86f, SpriteEffects.None);
+            // Violet rim, slightly larger than the body so it reads as a glowing fracture edge.
+            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, edge * 0.85f, Projectile.rotation, texture.Size() * 0.5f, Projectile.scale * 1.32f, SpriteEffects.None);
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
+
+            // Opaque volcanic-glass core. Tinting the molten asteroid sprite this dark under
+            // normal blending is what actually produces a black obsidian silhouette.
+            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, VesuviusProjectileVisuals.ObsidianBlack, Projectile.rotation, texture.Size() * 0.5f, Projectile.scale, SpriteEffects.None);
             return false;
         }
     }
@@ -144,7 +154,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.FStage5
         public override void AI()
         {
             Projectile.rotation = Projectile.velocity.ToRotation();
-            Lighting.AddLight(Projectile.Center, 0.025f * VesuviusProjectileVisuals.VisualIntensity, 0.025f * VesuviusProjectileVisuals.VisualIntensity, 0.03f * VesuviusProjectileVisuals.VisualIntensity);
+            Lighting.AddLight(Projectile.Center, 0.025f, 0.025f, 0.03f);
 
             if (Projectile.localAI[0] == 0f)
             {
@@ -238,19 +248,19 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.FStage5
                 smoke,
                 Projectile.Center - Main.screenPosition,
                 null,
-                VesuviusProjectileVisuals.ObsidianEdge * 0.38f * fade * VesuviusProjectileVisuals.VisualIntensity,
+                VesuviusProjectileVisuals.ObsidianEdge * 0.38f * fade,
                 Main.GlobalTimeWrappedHourly * 0.7f,
                 smoke.Size() * 0.5f,
-                (0.28f + expand * 0.96f) * VesuviusProjectileVisuals.VisualScale,
+                (0.28f + expand * 0.96f),
                 SpriteEffects.None);
             Main.EntitySpriteDraw(
                 bloom,
                 Projectile.Center - Main.screenPosition,
                 null,
-                VesuviusProjectileVisuals.ObsidianEdge * 0.24f * fade * VesuviusProjectileVisuals.VisualIntensity,
+                VesuviusProjectileVisuals.ObsidianEdge * 0.24f * fade,
                 0f,
                 bloom.Size() * 0.5f,
-                (0.55f + expand * 1.25f) * VesuviusProjectileVisuals.VisualScale,
+                (0.55f + expand * 1.25f),
                 SpriteEffects.None);
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
             return false;

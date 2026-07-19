@@ -390,42 +390,38 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
             float drawRotation = Projectile.rotation + rotationCorrection;
             Vector2 origin = texture.Size() * 0.5f;
 
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+
             Main.spriteBatch.SetBlendState(BlendState.Additive);
 
-            // Spinning fire trail — staff tumbles through the air leaving molten streaks
+            // Soft heat halo. This replaces the old "golden border", which stamped eight rotating
+            // copies of the entire staff sprite around the projectile — at 2.4px offsets that
+            // read as a blurry orange smear, not an outline.
+            Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition, null,
+                VesuviusProjectileVisuals.AdditiveColor(VesuviusProjectileVisuals.LavaOrange) * 0.45f,
+                0f, bloom.Size() * 0.5f, 0.85f * Projectile.scale, SpriteEffects.None);
+
+            // Molten afterimage trail, fading fast so the staff stays readable in flight.
             for (int i = Embedded ? 0 : Projectile.oldPos.Length - 1; i >= 1; i--)
             {
+                if (Projectile.oldPos[i] == Vector2.Zero)
+                    continue;
+
                 Vector2 oldCenter = Projectile.oldPos[i] + Projectile.Size * 0.5f;
                 float t = (Projectile.oldPos.Length - i) / (float)Projectile.oldPos.Length;
-                Color trailC = VesuviusProjectileVisuals.LavaOrange * (t * 0.42f);
+                Color trailC = VesuviusProjectileVisuals.AdditiveColor(VesuviusProjectileVisuals.LavaOrange) * (t * t * 0.34f);
                 Main.EntitySpriteDraw(texture, oldCenter - Main.screenPosition, null,
                     trailC,
                     Projectile.oldRot[i] + rotationCorrection, origin,
                     MathHelper.Lerp(0.6f, 1f, t) * Projectile.scale, flip);
             }
-
-            // Golden outline/border effect (Additive blending with LavaGold)
-            Color goldBorderC = VesuviusProjectileVisuals.LavaGold;
-            float borderRadius = 2.4f;
-            int borderCopies = 8;
-            for (int i = 0; i < borderCopies; i++)
-            {
-                Vector2 offset = (MathHelper.TwoPi * i / borderCopies + Main.GlobalTimeWrappedHourly * 1.6f).ToRotationVector2() * borderRadius;
-                Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition + offset, null,
-                    goldBorderC * 0.25f, drawRotation, origin, 1.05f * Projectile.scale, flip);
-            }
-
-            // Main weapon sprite — spinning staff
-            // Additive glow overlay
-            Color glowC = VesuviusProjectileVisuals.LavaGold * 0.75f;
-            Main.EntitySpriteDraw(glow, Projectile.Center - Main.screenPosition, null,
-                glowC,
-                drawRotation, glow.Size() * 0.5f, 1.05f * Projectile.scale, flip);
-
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
 
+            // Solid staff, then its own glowmask on top — the mod's normal weapon draw order.
             Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null,
                 lightColor, drawRotation, origin, 1.05f * Projectile.scale, flip);
+            Main.EntitySpriteDraw(glow, Projectile.Center - Main.screenPosition, null,
+                Color.White with { A = 0 }, drawRotation, glow.Size() * 0.5f, 1.05f * Projectile.scale, flip);
 
             return false;
         }
@@ -736,6 +732,10 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
             target.AddBuff(BuffID.OnFire3, 180);
         }
 
+        // Calamity's VolcanicFireball keeps a constant fire tint instead of taking ambient
+        // light, so it stays legible in unlit caves. Without this the fireballs went dark.
+        public override Color? GetAlpha(Color lightColor) => new Color(255, Main.DiscoG, 53, Projectile.alpha);
+
         public override bool PreDraw(ref Color lightColor)
         {
             CalamityUtils.DrawAfterimagesCentered(Projectile, ProjectileID.Sets.TrailingMode[Type], lightColor, 1);
@@ -874,22 +874,55 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
 
         public override bool PreDraw(ref Color lightColor)
         {
-            Texture2D pixel = TextureAssets.MagicPixel.Value;
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Vector2 dir = Projectile.velocity.SafeNormalize(new Vector2(Projectile.ai[0], 0.35f));
             Vector2 start = Projectile.Center - dir * 20f;
             Vector2 end = Projectile.Center + dir * 290f + Vector2.UnitY * 80f;
-            Vector2 line = end - start;
             float fade = Utils.GetLerpValue(0f, 20f, Projectile.timeLeft, true);
+            float bloomWidth = bloom.Width;
 
-            Main.EntitySpriteDraw(
-                pixel,
-                start - Main.screenPosition,
-                new Rectangle(0, 0, 1, 1),
-                new Color(255, 72, 24, 0) * 0.44f * fade,
-                line.ToRotation(),
-                new Vector2(0f, 0.5f),
-                new Vector2(line.Length(), 72f),
-                SpriteEffects.None);
+            // Previously this was a single flat 72px-tall MagicPixel rectangle — a solid orange
+            // bar with hard ends and no falloff, which is why it looked like a placeholder.
+            // It is now built from overlapping soft nodes that taper toward both ends, giving a
+            // molten fissure that widens at the rupture point and thins out along the fault.
+            const int Segments = 16;
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
+            for (int i = 0; i < Segments; i++)
+            {
+                float completion = i / (float)(Segments - 1);
+                Vector2 position = Vector2.Lerp(start, end, completion);
+
+                // Widest just past the impact point, tapering to nothing at the far end.
+                float taper = (float)Math.Sin(MathHelper.Pi * (float)Math.Pow(completion, 0.7f));
+                float width = 78f * taper;
+                if (width <= 1f)
+                    continue;
+
+                float flicker = 0.85f + 0.15f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 11f + i * 0.9f);
+                Color hot = Color.Lerp(new Color(255, 176, 60), new Color(255, 62, 18), completion);
+
+                Main.EntitySpriteDraw(
+                    bloom,
+                    position - Main.screenPosition,
+                    null,
+                    VesuviusProjectileVisuals.AdditiveColor(hot) * 0.3f * fade * flicker,
+                    0f,
+                    bloom.Size() * 0.5f,
+                    width / bloomWidth,
+                    SpriteEffects.None);
+
+                // Bright inner seam.
+                Main.EntitySpriteDraw(
+                    bloom,
+                    position - Main.screenPosition,
+                    null,
+                    VesuviusProjectileVisuals.AdditiveColor(Color.Lerp(Color.White, hot, 0.45f)) * 0.34f * fade * flicker,
+                    0f,
+                    bloom.Size() * 0.5f,
+                    width * 0.38f / bloomWidth,
+                    SpriteEffects.None);
+            }
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
             return false;
         }
     }
@@ -938,8 +971,8 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
                     velocity * Main.rand.NextFloat(0.25f, 0.55f),
                     Color.Lerp(LavaColor, HotColor, 0.28f),
                     SmokeColor,
-                    Main.rand.NextFloat(0.32f, 0.62f) * intensity,
-                    0.58f,
+                    Main.rand.NextFloat(0.42f, 0.8f) * intensity,
+                    Main.rand.Next(100, 140),
                     Main.rand.NextFloat(-0.08f, 0.08f));
                 GeneralParticleHandler.SpawnParticle(heatMist);
             }

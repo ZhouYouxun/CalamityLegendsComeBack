@@ -258,25 +258,23 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
             float readyFlash = Utils.GetLerpValue(PullbackLength + ReadyFlashLength, PullbackLength, chargeTimer, true);
             float pulse = 0.5f + 0.5f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * (8f + Stage));
 
-            Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
+            Color additive = VesuviusProjectileVisuals.AdditiveColor(additiveColor);
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
 
-            float borderRadius = 1.8f + pullback * 2.2f + heat * 2.4f + volleyBoost * 2.6f;
-            int borderCopies = (pullback >= 1f ? 12 : 8) + (fullVolleyReady ? 6 : 0);
-            for (int i = 0; i < borderCopies; i++)
-            {
-                Vector2 offset = (MathHelper.TwoPi * i / borderCopies + Main.GlobalTimeWrappedHourly * 1.6f).ToRotationVector2() * borderRadius;
-                Main.EntitySpriteDraw(texture, drawPosition + offset, null, additiveColor * (0.08f + pullback * 0.08f + heat * 0.12f),
-                    drawRotation, origin, Projectile.scale, flip);
-            }
+            // A single body-wide heat glow instead of the old 8-18 offset copies of the whole
+            // staff sprite, which smeared the weapon rather than outlining it. The charge read
+            // now comes from the tip bloom and ring growing, not from the staff going blurry.
+            Main.EntitySpriteDraw(bloom, drawPosition, null, additive * (0.2f + pullback * 0.18f + heat * 0.22f),
+                0f, bloom.Size() * 0.5f, 0.7f + pullback * 0.2f + heat * 0.2f, SpriteEffects.None);
 
-            Main.EntitySpriteDraw(bloom, tipPosition, null, additiveColor * (0.25f + pullback * 0.3f + heat * 0.35f + volleyBoost * 0.22f),
+            Main.EntitySpriteDraw(bloom, tipPosition, null, additive * (0.25f + pullback * 0.3f + heat * 0.35f + volleyBoost * 0.22f),
                 Projectile.rotation, bloom.Size() * 0.5f, 0.38f + pullback * 0.28f + heat * 0.22f + volleyBoost * 0.18f, SpriteEffects.None);
-            Main.EntitySpriteDraw(bloomRing, tipPosition, null, additiveColor * (0.16f + heat * 0.34f + volleyBoost * 0.2f),
+            Main.EntitySpriteDraw(bloomRing, tipPosition, null, additive * (0.16f + heat * 0.34f + volleyBoost * 0.2f),
                 -Main.GlobalTimeWrappedHourly * 2.2f, bloomRing.Size() * 0.5f, 0.15f + pullback * 0.25f + heat * 0.22f + volleyBoost * 0.16f, SpriteEffects.None);
-            Main.EntitySpriteDraw(lightFlash, tipPosition, null, Color.White * (readyFlash * 0.35f + heat * 0.22f),
+            Main.EntitySpriteDraw(lightFlash, tipPosition, null, VesuviusProjectileVisuals.AdditiveColor(Color.White) * (readyFlash * 0.35f + heat * 0.22f),
                 Projectile.rotation, lightFlash.Size() * 0.5f, new Vector2(0.34f + heat * 0.18f, 0.1f + pulse * 0.04f), SpriteEffects.None);
 
-            Main.spriteBatch.ExitShaderRegion();
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
 
             Main.EntitySpriteDraw(texture, drawPosition, null, lightColor, drawRotation, origin, Projectile.scale, flip);
             Main.EntitySpriteDraw(glow, drawPosition, null, Color.White with { A = 0 } * (0.5f + pullback * 0.3f + heat * 0.2f), drawRotation, glow.Size() * 0.5f, Projectile.scale, flip);

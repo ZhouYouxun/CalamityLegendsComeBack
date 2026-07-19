@@ -72,7 +72,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.EStage4
             }
 
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
-            Lighting.AddLight(Projectile.Center, 0.78f * VesuviusProjectileVisuals.VisualIntensity, 0.24f * VesuviusProjectileVisuals.VisualIntensity, 0.06f * VesuviusProjectileVisuals.VisualIntensity);
+            Lighting.AddLight(Projectile.Center, 0.78f, 0.24f, 0.06f);
 
             SpawnSmokeAndDustTrail();
         }
@@ -90,8 +90,8 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.EStage4
                     backward.RotatedByRandom(0.32f) * Main.rand.NextFloat(0.3f, 1.6f),
                     Color.Lerp(VesuviusProjectileVisuals.ScoriaSmoke, VesuviusProjectileVisuals.LavaOrange, 0.16f),
                     Color.Black,
-                    Main.rand.NextFloat(0.34f, 0.76f),
-                    0.52f,
+                    Main.rand.NextFloat(0.45f, 0.9f),
+                    Main.rand.Next(100, 140),
                     Main.rand.NextFloat(-0.06f, 0.06f)));
             }
 
@@ -154,8 +154,8 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.EStage4
                         velocity * 0.28f,
                         Color.Lerp(VesuviusProjectileVisuals.ScoriaSmoke, VesuviusProjectileVisuals.LavaOrange, 0.12f),
                         Color.Black,
-                        Main.rand.NextFloat(0.42f, 0.88f),
-                        0.58f,
+                        Main.rand.NextFloat(0.55f, 1.05f),
+                        Main.rand.Next(110, 150),
                         Main.rand.NextFloat(-0.06f, 0.06f)));
                 }
             }
@@ -164,26 +164,35 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.EStage4
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D texture = TextureAssets.Projectile[Type].Value;
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Rectangle frame = texture.Frame(1, Main.projFrames[Type], 0, Projectile.frame);
 
             Main.spriteBatch.SetBlendState(BlendState.Additive);
-            // Glowing afterimage trail
+            Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition, null,
+                VesuviusProjectileVisuals.AdditiveColor(VesuviusProjectileVisuals.LavaOrange) * 0.55f,
+                0f, bloom.Size() * 0.5f, Projectile.scale * 0.5f, SpriteEffects.None);
+
+            // Afterimages follow their own recorded rotation so the trail actually bends with
+            // the cinder's homing arc instead of every ghost snapping to the current angle.
             for (int i = Projectile.oldPos.Length - 1; i >= 1; i--)
             {
+                if (Projectile.oldPos[i] == Vector2.Zero)
+                    continue;
+
                 Vector2 oldCenter = Projectile.oldPos[i] + Projectile.Size * 0.5f;
                 float t = (Projectile.oldPos.Length - i) / (float)Projectile.oldPos.Length;
-                Color trailC = (VesuviusProjectileVisuals.LavaOrange with { A = 0 }) * (t * 0.32f * VesuviusProjectileVisuals.VisualIntensity);
+                Color trailC = VesuviusProjectileVisuals.AdditiveColor(VesuviusProjectileVisuals.LavaOrange) * (t * 0.34f);
                 Main.EntitySpriteDraw(texture, oldCenter - Main.screenPosition, frame,
-                    trailC, Projectile.rotation, frame.Size() * 0.5f,
+                    trailC, Projectile.oldRot[i], frame.Size() * 0.5f,
                     Projectile.scale * MathHelper.Lerp(0.55f, 1f, t), SpriteEffects.None);
             }
-
-            // Main cinder sprite
-            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, frame,
-                Color.Lerp(lightColor, VesuviusProjectileVisuals.LavaGold, 0.55f) with { A = 0 },
-                Projectile.rotation, frame.Size() * 0.5f, Projectile.scale, SpriteEffects.None);
-
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
+
+            // Calamity's RancorSmallCinder draws its body opaque white. Keeping that here is
+            // what gives the cinder an actual burning core rather than a translucent haze.
+            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, frame,
+                Color.White * Projectile.Opacity,
+                Projectile.rotation, frame.Size() * 0.5f, Projectile.scale, SpriteEffects.None);
             return false;
         }
     }

@@ -637,13 +637,8 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
             Texture2D glow = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/Vesuvius/NewVesuviusGlow").Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Texture2D bloomRing = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
-            Texture2D circularSmear = ModContent.Request<Texture2D>("CalamityMod/Particles/CircularSmear").Value;
             Texture2D volatileCore = ModContent.Request<Texture2D>("CalamityMod/Projectiles/Magic/VolatileStarcore").Value;
-            Texture2D plasmaCore = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/SuperTexturePack/fx_PlasmaBall3").Value;
             Texture2D smokeyHalo = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/SuperTexturePack/fx_SmokeyHalo1").Value;
-            Texture2D lightFlash = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/SuperTexturePack/fx_LightFlash2").Value;
-            Texture2D sunNoise = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/SuperTexturePack/Sun/fbmnoise2_006").Value;
-            Texture2D flameEye = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/SuperTexturePack/Sun/flameeye_008").Value;
 
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
             Vector2 origin = texture.Size() * 0.5f;
@@ -670,46 +665,26 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
             float rotationTime = Main.GlobalTimeWrappedHourly;
             Color additiveStageColor = new Color(stageColor.R, stageColor.G, stageColor.B, 0);
 
+            // Four layers, in the same spirit as HeliumFlash's charge-up: a slow smoky halo, a
+            // wide coloured bloom, a tight white hotspot, and a rotating ring that tightens as
+            // the charge fills. The previous eleven-texture stack (noise x3, flame eye, plasma
+            // core, smear, light flash, ...) all landed on the same point and averaged out into
+            // one muddy blob where no single element could be read.
             Main.EntitySpriteDraw(
                 smokeyHalo,
                 tipScreen,
                 null,
-                additiveStageColor * (0.18f + chargeIntensity * 0.24f),
+                additiveStageColor * (0.16f + chargeIntensity * 0.2f),
                 -Projectile.rotation + rotationTime * 0.85f,
                 smokeyHalo.Size() * 0.5f,
                 coreScale * (0.52f + pulse * 0.08f),
-                SpriteEffects.None);
-
-            for (int i = 0; i < 3; i++)
-            {
-                float noiseRotation = Projectile.rotation * (i % 2 == 0 ? 1f : -1f) + rotationTime * (1.15f + i * 0.33f);
-                Color noiseColor = Color.Lerp(additiveStageColor, VesuviusProjectileVisuals.AdditiveColor(Color.OrangeRed), 0.25f + i * 0.18f) * (0.16f + chargeIntensity * 0.18f) * (1f - i * 0.18f);
-                Main.EntitySpriteDraw(
-                    sunNoise,
-                    tipScreen,
-                    null,
-                    noiseColor,
-                    noiseRotation,
-                    sunNoise.Size() * 0.5f,
-                    coreScale * (0.13f + i * 0.035f),
-                    SpriteEffects.None);
-            }
-
-            Main.EntitySpriteDraw(
-                flameEye,
-                tipScreen,
-                null,
-                additiveStageColor * (0.2f + chargeIntensity * 0.34f),
-                -rotationTime * 1.7f,
-                flameEye.Size() * 0.5f,
-                coreScale * (0.19f + pulse * 0.04f),
                 SpriteEffects.None);
 
             Main.EntitySpriteDraw(
                 bloom,
                 tipScreen,
                 null,
-                VesuviusProjectileVisuals.AdditiveColor(stageColor) * (0.34f + pulse * 0.16f) * (0.35f + chargeIntensity) * fullChargeBonus,
+                additiveStageColor * (0.34f + pulse * 0.16f) * (0.35f + chargeIntensity) * fullChargeBonus,
                 Projectile.rotation,
                 bloom.Size() * 0.5f,
                 (0.42f + stageForDraw * 0.08f + pulse * 0.08f) * (0.75f + chargeIntensity) * fullChargeBonus,
@@ -734,57 +709,24 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                 bloomRing.Size() * 0.5f,
                 (0.16f + chargeIntensity * 0.32f) * fullChargeBonus,
                 SpriteEffects.None);
-
-            Main.EntitySpriteDraw(
-                circularSmear,
-                tipScreen,
-                null,
-                additiveStageColor * (0.14f + chargeIntensity * 0.22f) * fullChargeBonus,
-                -Projectile.rotation + rotationTime * 1.8f,
-                circularSmear.Size() * 0.5f,
-                (0.16f + chargeIntensity * 0.3f) * fullChargeBonus,
-                SpriteEffects.None);
-
-            Main.EntitySpriteDraw(
-                plasmaCore,
-                tipScreen,
-                null,
-                Color.Lerp(additiveStageColor, VesuviusProjectileVisuals.AdditiveColor(Color.White), chargeIntensity * 0.24f) * (0.28f + chargeIntensity * 0.38f),
-                rotationTime * 1.25f,
-                plasmaCore.Size() * 0.5f,
-                (0.09f + chargeIntensity * 0.14f) * fullChargeBonus,
-                SpriteEffects.None);
-
-            if (chargeIntensity > 0.55f || released)
-            {
-                Main.EntitySpriteDraw(
-                    lightFlash,
-                    tipScreen,
-                    null,
-                    VesuviusProjectileVisuals.AdditiveColor(Color.White) * (chargeIntensity * 0.32f),
-                    Projectile.rotation,
-                    lightFlash.Size() * 0.5f,
-                    new Vector2(0.28f + stageForDraw * 0.03f, 0.11f + chargeIntensity * 0.08f) * fullChargeBonus,
-                    SpriteEffects.None);
-            }
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
 
             Main.EntitySpriteDraw(texture, drawPosition, null, lightColor, staffRotation, origin, Projectile.scale, effects);
             Main.EntitySpriteDraw(glow, drawPosition, null, new Color(255, 255, 255, 0) * (0.72f + pulse * 0.28f), staffRotation, origin, Projectile.scale, effects);
 
+            // The charge core is drawn opaque over the staff, exactly as HeliumFlash draws its
+            // starcore. Additive with A=0 dissolved the animated core into the bloom behind it.
             if (chargeIntensity > 0.03f)
             {
-                Main.spriteBatch.SetBlendState(BlendState.Additive);
                 Main.EntitySpriteDraw(
                     volatileCore,
                     tipScreen,
                     coreSource,
-                    (Color.Lerp(stageColor, Color.White, 0.42f) with { A = 0 }) * chargeIntensity,
+                    Color.White,
                     0f,
                     coreSource.Size() * 0.5f,
                     Projectile.scale * MathHelper.Lerp(0.2f, 0.58f, chargeIntensity) * fullChargeBonus,
                     SpriteEffects.None);
-                Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
             }
 
             return false;

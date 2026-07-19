@@ -64,7 +64,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.DStage3
             // No gravity, no drag, no homing — the point is that this one is a straight, uninterrupted line
             Projectile.rotation += Cataclysmic ? 0.42f : 0.3f;
             float lightPower = Cataclysmic ? 1.25f : 0.85f;
-            Lighting.AddLight(Projectile.Center, lightPower * VesuviusProjectileVisuals.VisualIntensity, 0.42f * lightPower * VesuviusProjectileVisuals.VisualIntensity, 0.1f * VesuviusProjectileVisuals.VisualIntensity);
+            Lighting.AddLight(Projectile.Center, lightPower, 0.42f * lightPower, 0.1f);
 
             SpawnCoreTrail();
         }
@@ -110,8 +110,8 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.DStage3
                     backward * Main.rand.NextFloat(1.2f, 3.4f),
                     VesuviusProjectileVisuals.RavagerSmoke,
                     Color.Black,
-                    Main.rand.NextFloat(0.55f, 0.9f),
-                    0.62f,
+                    Main.rand.NextFloat(0.7f, 1.15f),
+                    Main.rand.Next(105, 145),
                     Main.rand.NextFloat(-0.04f, 0.04f));
                 GeneralParticleHandler.SpawnParticle(shellSmoke);
             }
@@ -159,33 +159,32 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.DStage3
             Main.spriteBatch.SetBlendState(BlendState.Additive);
             for (int i = Projectile.oldPos.Length - 1; i >= 1; i--)
             {
+                if (Projectile.oldPos[i] == Vector2.Zero)
+                    continue;
+
                 Vector2 oldCenter = Projectile.oldPos[i] + Projectile.Size * 0.5f;
                 float t = (Projectile.oldPos.Length - i) / (float)Projectile.oldPos.Length;
                 Main.EntitySpriteDraw(
                     bloom,
                     oldCenter - Main.screenPosition,
                     null,
-                    additiveCore * (t * 0.5f * VesuviusProjectileVisuals.VisualIntensity),
+                    additiveCore * (t * 0.5f),
                     0f,
                     bloom.Size() * 0.5f,
-                    Projectile.scale * 0.55f * t * VesuviusProjectileVisuals.VisualScale,
+                    Projectile.scale * 0.55f * t,
                     SpriteEffects.None);
             }
 
-            Main.EntitySpriteDraw(
-                bloom,
-                Projectile.Center - Main.screenPosition,
-                null,
-                additiveCore * 0.65f * VesuviusProjectileVisuals.VisualIntensity,
-                0f,
-                bloom.Size() * 0.5f,
-                Projectile.scale * 1.4f * VesuviusProjectileVisuals.VisualScale,
-                SpriteEffects.None);
-
-            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, frame, Color.White with { A = 0 },
-                Projectile.rotation, frame.Size() * 0.5f, Projectile.scale * 1.2f, SpriteEffects.None);
-
+            // Two-stage bloom exactly like Calamity's VolatileStarcore: a wide coloured halo and
+            // a tight white hotspot underneath the sprite.
+            Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition, null, additiveCore * 0.7f, 0f, bloom.Size() * 0.5f, Projectile.scale * 1.3f, SpriteEffects.None);
+            Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition, null, VesuviusProjectileVisuals.AdditiveColor(Color.White) * 0.7f, 0f, bloom.Size() * 0.5f, Projectile.scale * 0.62f, SpriteEffects.None);
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
+
+            // Starcore body opaque, as Calamity draws it — additive A=0 here dissolved the core
+            // animation into the bloom and left nothing solid to read.
+            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, frame, Color.White,
+                Projectile.rotation, frame.Size() * 0.5f, Projectile.scale, SpriteEffects.None);
             return false;
         }
     }
