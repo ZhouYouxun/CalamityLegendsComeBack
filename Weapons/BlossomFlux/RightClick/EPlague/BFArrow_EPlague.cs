@@ -122,15 +122,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             Projectile.netUpdate = true;
 
             BFPlaguePollutionNPC pollution = target.GetGlobalNPC<BFPlaguePollutionNPC>();
-            bool markedTarget = target.GetGlobalNPC<BFArrow_CDetecNPC>().IsPriorityMarkedBy(Projectile.owner);
-            int advTier = BFArrowCommon.InBounds(Projectile.owner, Main.maxPlayers)
-                ? Main.player[Projectile.owner].GetModPlayer<global::CalamityLegendsComeBack.Accssory.BF.Common.BFAccessoryPlayer>().PlagueAdvancedTier : 0;
-            pollution.ApplyPermanentSpore(target);
+            pollution.ApplyDeath(target);
             ExtendReconMark(target);
-            pollution.ApplyPlagueDebuffs(target, markedTarget, advTier);
-            pollution.ApplyPollution(target, markedTarget);
-            target.AddBuff(BuffID.Poisoned, 180);
-            target.AddBuff(BuffID.Venom, 120);
             Main.player[Projectile.owner].SetScreenshake(6.5f);
             SpawnPlagueCollapseBurst(target.Center, 1.25f);
             SpawnSporeGasBurst(target.Center, System.Math.Max(1, (int)(storedGasDamage * 0.22f)), Main.rand.Next(2, 4), 1.2f);

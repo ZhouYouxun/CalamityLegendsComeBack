@@ -35,10 +35,10 @@ Mods: {
 						[c/FFA07A:左键 - 歼灭：将木箭转化为坠落箭雨。]
 						[c/FFA07A:转化箭命中爆炸，其他箭矢正常发射。]
 						'''
-					PresetLeft4:
-						'''
-						[c/DDA0FF:左键 - 侵染：发射削弱防御的收割者。]
-						[c/DDA0FF:重复命中会刷新污染，持续压低目标防御。]
+			PresetLeft4:
+				'''
+				[c/DDA0FF:左键 - 侵染：施加 4 秒凋萎；重复命中可叠加持续时间。]
+				[c/DDA0FF:凋萎会削弱防御并持续造成伤害。]
 						'''
 					PresetRight0:
 						'''
@@ -60,10 +60,10 @@ Mods: {
 						[c/FFB347:右键 - 歼灭：按住布置准星并发射引导箭。]
 						[c/FFB347:打击会从空中坠落，在标记处爆炸。]
 						'''
-					PresetRight4:
-						'''
-						[c/FFB347:右键 - 侵染：按住发射大型孢子云。]
-						[c/FFB347:孢子云会永久削弱被命中的敌人。]
+			PresetRight4:
+				'''
+				[c/FFB347:右键 - 侵染：按住发射大型孢子云。]
+				[c/FFB347:孢子云会施加 60 秒凋亡，并强化叶流命中。]
 						'''
 					PresetPassive0:
 						'''
@@ -423,9 +423,14 @@ Mods: {
 				Description: 复苏枝流正在保护并治疗你。
 			}
 
-			BFPlaguePollutionBuff: {
-				DisplayName: 侵染污染
-				Description: 防御正被侵染逐层侵蚀。
+			BFPlagueWitherBuff: {
+				DisplayName: 凋萎
+				Description: 受到的伤害增加 5%，每秒失去 44 点生命并失去 1 点防御。
+			}
+
+			BFPlagueDeathBuff: {
+				DisplayName: 凋亡
+				Description: 受到的伤害增加 10%，每秒失去 140 点生命；每种疫病系减益额外失去 40 点生命。
 			}
 
 			CosmicDischargeChainKnifeBuff: {

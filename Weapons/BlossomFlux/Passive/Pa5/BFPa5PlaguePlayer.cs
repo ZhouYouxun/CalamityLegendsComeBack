@@ -31,15 +31,14 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.Pa5
             BFPlagueLeftStats stats = BFPlagueLeftBalance.GetStats();
             int addTime = stats.StackDuration;
             int maxTime = stats.MaxDuration;
-            int pollutionBuff = ModContent.BuffType<BFPlaguePollutionBuff>();
-
             for (int i = 0; i < target.buffType.Length; i++)
             {
                 int buffType = target.buffType[i];
-                if (buffType <= 0 || buffType == pollutionBuff || buffType >= Main.debuff.Length || target.buffTime[i] <= 0 || !Main.debuff[buffType])
+                if (buffType <= 0 || buffType >= Main.debuff.Length || target.buffTime[i] <= 0 || !Main.debuff[buffType])
                     continue;
 
-                target.buffTime[i] = System.Math.Min(target.buffTime[i] + addTime, maxTime);
+                int cap = System.Math.Max(maxTime, target.buffTime[i]);
+                target.buffTime[i] = System.Math.Min(target.buffTime[i] + addTime, cap);
             }
         }
     }

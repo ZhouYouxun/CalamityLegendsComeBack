@@ -87,11 +87,8 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.GetGlobalNPC<BFAccessoryGlobalNPC>().ApplyMandrakeSlow(Projectile.owner, 180);
-            int advTier = BFArrowCommon.InBounds(Projectile.owner, Main.maxPlayers)
-                ? Main.player[Projectile.owner].GetModPlayer<BFAccessoryPlayer>().PlagueAdvancedTier : 0;
             BFPlaguePollutionNPC pollution = target.GetGlobalNPC<BFPlaguePollutionNPC>();
-            pollution.ApplyPollution(target);
-            pollution.ApplyPlagueDebuffs(target, false, advTier);
+            pollution.ApplySupportingDebuffs(target);
         }
 
         public override bool PreDraw(ref Color lightColor)

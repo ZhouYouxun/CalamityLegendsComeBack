@@ -1,4 +1,5 @@
 using CalamityLegendsComeBack.Weapons.BlossomFlux;
+using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Buffs.StatDebuffs;
 using Microsoft.Xna.Framework;
@@ -8,9 +9,9 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
 {
-    internal class BFPlaguePollutionBuff : ModBuff
+    internal sealed class BFPlagueWitherBuff : ModBuff
     {
-        public override string Texture => "Terraria/Images/Projectile_0";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/BlossomFlux/贴图/疫亡";
 
         public override void SetStaticDefaults()
         {
@@ -20,175 +21,168 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         }
     }
 
-    internal class BFPlaguePollutionNPC : GlobalNPC
+    internal sealed class BFPlagueDeathBuff : ModBuff
     {
-        public const int PollutionDuration = 15 * 60;
-        public const int MaxPollutionStacks = 15;
-        public const float DefenseReductionPerStack = 0.05f;
+        public override string Texture => "CalamityLegendsComeBack/Weapons/BlossomFlux/贴图/疫亡2";
 
-        private int pollutionTimeLeft;
-        private int pollutionStacks;
-        private int permanentSporeStacks;
+        public override void SetStaticDefaults()
+        {
+            Main.debuff[Type] = true;
+            Main.buffNoSave[Type] = true;
+            BuffID.Sets.NurseCannotRemoveDebuff[Type] = true;
+        }
+    }
+
+    // Shared authority for Plague doctrine's two tactical debuffs and their staged disease package.
+    internal sealed class BFPlaguePollutionNPC : GlobalNPC
+    {
+        public const int WitherDuration = 4 * 60;
+        public const int DeathDuration = 60 * 60;
+
+        private ulong lastLeafFlowDeathProcFrame;
 
         public override bool InstancePerEntity => true;
 
-        public void ApplyPollution(NPC npc, bool markedTarget = false)
+        public void ApplyWither(NPC npc)
         {
-            int duration = markedTarget ? PollutionDuration * 2 : PollutionDuration;
-            pollutionTimeLeft = System.Math.Max(pollutionTimeLeft, duration);
-            pollutionStacks = Utils.Clamp(pollutionStacks + 1, 1, MaxPollutionStacks);
-            npc.AddBuff(ModContent.BuffType<BFPlaguePollutionBuff>(), pollutionTimeLeft);
+            AddOrExtendBuff(npc, ModContent.BuffType<BFPlagueWitherBuff>(), WitherDuration, int.MaxValue);
+            ApplyStagedDiseaseDebuffs(npc);
         }
 
-        // plagueAdvancedTier: 0=仅基础 Debuff，1=第一批高级（贝西诅咒/星界/凋零），2=全部高级
-        public void ApplyPlagueDebuffs(NPC npc, bool markedTarget, int plagueAdvancedTier = 0)
+        public void ApplyDeath(NPC npc)
         {
-            BFPlagueLeftStats stats = BFPlagueLeftBalance.GetStats();
-            bool alreadyAfflicted = HasAnyPlagueDebuff(npc);
-            int addTime = alreadyAfflicted ? stats.StackDuration : stats.InitialDuration;
-            int maxTime = stats.MaxDuration;
-            if (markedTarget)
-            {
-                addTime *= 2;
-                maxTime *= 2;
-            }
-
-            AddOrExtendBuff(npc, BuffID.Ichor, addTime, maxTime);
-            AddOrExtendBuff(npc, BuffID.Venom, addTime, maxTime);
-            AddOrExtendBuff(npc, ModContent.BuffType<Irradiated>(), addTime, maxTime);
-            AddOrExtendBuff(npc, ModContent.BuffType<Plague>(), addTime, maxTime);
-            AddOrExtendBuff(npc, ModContent.BuffType<MarkedforDeath>(), addTime, maxTime);
-
-            if (plagueAdvancedTier >= 1)
-            {
-                AddOrExtendBuff(npc, BuffID.BetsysCurse, addTime, maxTime);
-                AddOrExtendBuff(npc, ModContent.BuffType<AstralInfectionDebuff>(), addTime, maxTime);
-                AddOrExtendBuff(npc, ModContent.BuffType<WitherDebuff>(), addTime, maxTime);
-            }
-
-            if (plagueAdvancedTier >= 2)
-            {
-                AddOrExtendBuff(npc, ModContent.BuffType<WhisperingDeath>(), addTime, maxTime);
-                AddOrExtendBuff(npc, ModContent.BuffType<AbsorberAffliction>(), addTime, maxTime);
-            }
+            AddOrExtendBuff(npc, ModContent.BuffType<BFPlagueDeathBuff>(), DeathDuration, DeathDuration);
+            ApplyStagedDiseaseDebuffs(npc);
         }
 
-        public void ApplyPermanentSpore(NPC npc)
-        {
-            BFPlagueRightStats stats = BFPlagueRightBalance.GetStats();
-            permanentSporeStacks = Utils.Clamp(permanentSporeStacks + 1, 0, stats.MaxPermanentStacks);
+        public void ApplySupportingDebuffs(NPC npc) => ApplyStagedDiseaseDebuffs(npc);
 
-            if (Main.dedServ)
+        public override void UpdateLifeRegen(NPC npc, ref int damage)
+        {
+            bool withered = npc.HasBuff(ModContent.BuffType<BFPlagueWitherBuff>());
+            bool dying = npc.HasBuff(ModContent.BuffType<BFPlagueDeathBuff>());
+
+            if (withered)
+            {
+                npc.lifeRegen -= 88;
+                damage = System.Math.Max(damage, 44);
+            }
+
+            if (!dying)
                 return;
 
-            for (int i = 0; i < 18; i++)
-            {
-                Dust dust = Dust.NewDustPerfect(
-                    npc.Center + Main.rand.NextVector2Circular(npc.width * 0.36f, npc.height * 0.36f),
-                    DustID.GreenTorch,
-                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.2f, 3.8f),
-                    120,
-                    Color.Lerp(new Color(62, 170, 58), new Color(210, 255, 96), Main.rand.NextFloat(0.15f, 0.65f)),
-                    Main.rand.NextFloat(0.72f, 1.2f));
-                dust.noGravity = true;
-            }
-        }
-
-        public override void PostAI(NPC npc)
-        {
-            if (pollutionTimeLeft <= 0)
-            {
-                pollutionStacks = 0;
-            }
-            else
-            {
-                pollutionTimeLeft--;
-                int buffType = ModContent.BuffType<BFPlaguePollutionBuff>();
-                int buffIndex = npc.FindBuffIndex(buffType);
-                if (buffIndex >= 0)
-                    npc.buffTime[buffIndex] = pollutionTimeLeft;
-                else
-                    npc.AddBuff(buffType, pollutionTimeLeft);
-            }
-
-            EmitPollutionDust(npc);
+            int diseaseCount = CountPlagueDiseaseDebuffs(npc, withered);
+            int damagePerSecond = 140 + 40 * diseaseCount;
+            npc.lifeRegen -= damagePerSecond * 2;
+            damage = System.Math.Max(damage, damagePerSecond);
         }
 
         public override void ModifyIncomingHit(NPC npc, ref NPC.HitModifiers modifiers)
         {
-            float pollutionReduction = GetDefenseReduction();
-            if (pollutionReduction > 0f)
-                modifiers.Defense *= 1f - pollutionReduction;
+            if (npc.HasBuff(ModContent.BuffType<BFPlagueWitherBuff>()))
+            {
+                modifiers.FinalDamage *= 1.05f;
+                modifiers.Defense.Base -= 1f;
+            }
 
-            if (permanentSporeStacks <= 0)
-                return;
-
-            BFPlagueRightStats stats = BFPlagueRightBalance.GetStats();
-            modifiers.Defense.Base -= stats.DefenseReductionPerStack * permanentSporeStacks;
+            if (npc.HasBuff(ModContent.BuffType<BFPlagueDeathBuff>()))
+                modifiers.FinalDamage *= 1.1f;
         }
 
-        public override void ModifyHitPlayer(NPC npc, Player target, ref Player.HurtModifiers modifiers)
+        public override void OnHitByProjectile(NPC npc, Projectile projectile, NPC.HitInfo hit, int damageDone)
         {
-            if (permanentSporeStacks <= 0)
+            if (!npc.HasBuff(ModContent.BuffType<BFPlagueDeathBuff>()) || !IsPlagueLeafFlow(projectile))
                 return;
 
-            BFPlagueRightStats stats = BFPlagueRightBalance.GetStats();
-            modifiers.FinalDamage *= 1f - stats.NpcDamageReductionPerStack * permanentSporeStacks;
+            ulong frame = Main.GameUpdateCount;
+            if (frame < lastLeafFlowDeathProcFrame + 2)
+                return;
+
+            lastLeafFlowDeathProcFrame = frame;
+            int extraDamage = System.Math.Max(1, (int)System.MathF.Round(damageDone * 0.1f));
+            npc.SimpleStrikeNPC(extraDamage, hit.HitDirection, false, 0f, DamageClass.Ranged, false, noPlayerInteraction: true);
         }
 
         public override void DrawEffects(NPC npc, ref Color drawColor)
         {
-            float reduction = GetDefenseReduction();
-            if (reduction <= 0f && permanentSporeStacks <= 0)
+            bool withered = npc.HasBuff(ModContent.BuffType<BFPlagueWitherBuff>());
+            bool dying = npc.HasBuff(ModContent.BuffType<BFPlagueDeathBuff>());
+            if (!withered && !dying)
                 return;
 
-            float intensity = MathHelper.Clamp(0.14f + reduction * 0.28f + permanentSporeStacks * 0.06f, 0.12f, 0.48f);
-            drawColor = Color.Lerp(drawColor, new Color(94, 180, 72), intensity);
-            Lighting.AddLight(npc.Center, new Vector3(0.05f, 0.12f, 0.035f) * (0.4f + reduction + permanentSporeStacks * 0.12f));
-        }
+            float deathIntensity = dying ? 1f : 0f;
+            drawColor = Color.Lerp(drawColor, new Color(112, 178, 62), 0.12f + deathIntensity * 0.1f);
+            Lighting.AddLight(npc.Center, new Vector3(0.035f, 0.10f, 0.018f) * (0.65f + deathIntensity * 0.5f));
 
-        private static void AddOrExtendBuff(NPC npc, int buffType, int addTime, int maxTime)
-        {
-            int index = npc.FindBuffIndex(buffType);
-            int finalTime = index >= 0 ? System.Math.Min(npc.buffTime[index] + addTime, maxTime) : addTime;
-            npc.AddBuff(buffType, finalTime);
-        }
-
-        private static bool HasAnyPlagueDebuff(NPC npc)
-        {
-            return
-                npc.FindBuffIndex(BuffID.Ichor) >= 0 ||
-                npc.FindBuffIndex(BuffID.Venom) >= 0 ||
-                npc.FindBuffIndex(ModContent.BuffType<Irradiated>()) >= 0 ||
-                npc.FindBuffIndex(ModContent.BuffType<Plague>()) >= 0 ||
-                npc.FindBuffIndex(ModContent.BuffType<MarkedforDeath>()) >= 0;
-        }
-
-        private void EmitPollutionDust(NPC npc)
-        {
-            if (Main.dedServ || Main.GameUpdateCount % 18 != 0)
+            if (Main.dedServ || Main.GameUpdateCount % (dying ? 8 : 14) != 0)
                 return;
 
-            if (pollutionTimeLeft <= 0 && permanentSporeStacks <= 0)
-                return;
-
-            Vector2 dustPosition = npc.Center + Main.rand.NextVector2Circular(npc.width * 0.36f, npc.height * 0.36f);
             Dust dust = Dust.NewDustPerfect(
-                dustPosition,
+                npc.Center + Main.rand.NextVector2Circular(npc.width * 0.32f, npc.height * 0.32f),
                 DustID.GreenTorch,
-                -Vector2.UnitY.RotatedByRandom(0.5f) * Main.rand.NextFloat(0.25f, 0.85f),
-                150,
-                Color.Lerp(new Color(58, 155, 50), new Color(160, 220, 76), GetDefenseReduction()),
-                Main.rand.NextFloat(0.5f, 0.82f));
+                new Vector2(Main.rand.NextFloat(-0.25f, 0.25f), Main.rand.NextFloat(-0.85f, -0.3f)),
+                120,
+                dying ? new Color(204, 236, 96) : new Color(96, 174, 64),
+                dying ? Main.rand.NextFloat(0.75f, 1.05f) : Main.rand.NextFloat(0.55f, 0.82f));
             dust.noGravity = true;
         }
 
-        private float GetDefenseReduction()
+        private static void ApplyStagedDiseaseDebuffs(NPC npc)
         {
-            if (pollutionTimeLeft <= 0 || pollutionStacks <= 0)
-                return 0f;
+            npc.AddBuff(BuffID.Venom, 180);
+            npc.AddBuff(BuffID.Poisoned, 180);
 
-            return MathHelper.Clamp(pollutionStacks * DefenseReductionPerStack, 0f, MaxPollutionStacks * DefenseReductionPerStack);
+            if (DownedBossSystem.downedPlaguebringer)
+                npc.AddBuff(ModContent.BuffType<Plague>(), 180);
+            if (DownedBossSystem.downedSignus)
+                npc.AddBuff(ModContent.BuffType<WhisperingDeath>(), 180);
+            if (DownedBossSystem.downedAquaticScourge)
+                npc.AddBuff(ModContent.BuffType<SulphuricPoisoning>(), 180);
+            if (DownedBossSystem.downedExoMechs)
+                npc.AddBuff(ModContent.BuffType<Irradiated>(), 180);
+        }
+
+        private static void AddOrExtendBuff(NPC npc, int buffType, int timeToAdd, int maxTime)
+        {
+            int index = npc.FindBuffIndex(buffType);
+            if (index < 0)
+            {
+                npc.AddBuff(buffType, timeToAdd);
+                return;
+            }
+
+            long extendedTime = (long)npc.buffTime[index] + timeToAdd;
+            npc.buffTime[index] = (int)System.Math.Min(extendedTime, maxTime);
+        }
+
+        private static int CountPlagueDiseaseDebuffs(NPC npc, bool withered)
+        {
+            int count = withered ? 1 : 0;
+            count += npc.HasBuff(BuffID.Venom) ? 1 : 0;
+            count += npc.HasBuff(BuffID.Poisoned) ? 1 : 0;
+            count += npc.HasBuff(ModContent.BuffType<Plague>()) ? 1 : 0;
+            count += npc.HasBuff(ModContent.BuffType<WhisperingDeath>()) ? 1 : 0;
+            count += npc.HasBuff(ModContent.BuffType<SulphuricPoisoning>()) ? 1 : 0;
+            count += npc.HasBuff(ModContent.BuffType<Irradiated>()) ? 1 : 0;
+            return count;
+        }
+
+        private static bool IsPlagueLeafFlow(Projectile projectile)
+        {
+            BFArrow_CDetecEffect leafFlow = projectile.GetGlobalProjectile<BFArrow_CDetecEffect>();
+            return leafFlow.BlossomFluxLeftArrow && leafFlow.Preset == BlossomFluxChloroplastPresetType.Chlo_EPlague;
+        }
+    }
+
+    internal sealed class BFPlagueTacticalGlobalProjectile : GlobalProjectile
+    {
+        public override void OnHitNPC(Projectile projectile, NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            BFArrow_CDetecEffect leafFlow = projectile.GetGlobalProjectile<BFArrow_CDetecEffect>();
+            if (!leafFlow.BlossomFluxLeftArrow || leafFlow.Preset != BlossomFluxChloroplastPresetType.Chlo_EPlague)
+                return;
+
+            target.GetGlobalNPC<BFPlaguePollutionNPC>().ApplyWither(target);
         }
     }
 }

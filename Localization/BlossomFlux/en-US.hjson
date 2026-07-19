@@ -35,10 +35,10 @@ Mods: {
 						[c/FFA07A:Left Click - Bombardment: converts wooden arrows into falling volleys.]
 						[c/FFA07A:Converted arrows detonate on impact; other arrows fire normally.]
 						'''
-					PresetLeft4:
-						'''
-						[c/DDA0FF:Left Click - Plague: fires reapers that erode enemy defense.]
-						[c/DDA0FF:Repeated hits refresh pollution and keep the target weakened.]
+			PresetLeft4:
+				'''
+				[c/DDA0FF:Left Click - Plague: inflicts Wither for 4 seconds; repeated hits extend its duration.]
+				[c/DDA0FF:Wither erodes defense and deals steady damage over time.]
 						'''
 					PresetRight0:
 						'''
@@ -60,10 +60,10 @@ Mods: {
 						[c/FFB347:Right Click - Bombardment: hold to place the reticle and launch a guide arrow.]
 						[c/FFB347:The strike falls from above and detonates at the marked point.]
 						'''
-					PresetRight4:
-						'''
-						[c/FFB347:Right Click - Plague: hold to fire a heavy spore cloud.]
-						[c/FFB347:The cloud permanently weakens the struck enemy.]
+			PresetRight4:
+				'''
+				[c/FFB347:Right Click - Plague: hold to fire a heavy spore cloud.]
+				[c/FFB347:The cloud inflicts Deathblight for 60 seconds and amplifies Leaf Flow hits.]
 						'''
 					PresetPassive0:
 						'''
@@ -425,9 +425,14 @@ Mods: {
 				Description: The recovery branchflow is protecting and healing you.
 			}
 
-			BFPlaguePollutionBuff: {
-				DisplayName: Plague Pollution
-				Description: Defense is being eroded by Plague layers.
+			BFPlagueWitherBuff: {
+				DisplayName: Wither
+				Description: Takes 5% more damage, loses 44 life per second, and loses 1 defense.
+			}
+
+			BFPlagueDeathBuff: {
+				DisplayName: Deathblight
+				Description: Takes 10% more damage and loses 140 life per second, plus 40 for each Plague disease.
 			}
 
 			CosmicDischargeChainKnifeBuff: {
