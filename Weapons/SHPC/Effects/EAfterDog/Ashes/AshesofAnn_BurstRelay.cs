@@ -23,6 +23,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
 
         private ref float Timer => ref Projectile.localAI[0];
         private ref float SweepPairsFired => ref Projectile.localAI[1];
+        private int MarkedTargetIndex = -1;
 
         private Vector2 ForwardDirection
         {
@@ -57,6 +58,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
 
             Player owner = Main.player[Projectile.owner];
             NPC markedTarget = FindMarkedTarget(owner.Center, 2600f);
+            MarkedTargetIndex = markedTarget?.whoAmI ?? -1;
             if (Projectile.owner == Main.myPlayer && markedTarget is not null)
             {
                 Vector2 attackDirection = (markedTarget.Center - owner.Center).SafeNormalize(ForwardDirection);
@@ -127,7 +129,46 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                 SpawnShotGlow(spawnPosition, direction, side);
             }
 
+            NPC markedTarget = GetMarkedTarget();
+            if (markedTarget is not null)
+                FireBrotherAmbushPair(markedTarget, pairIndex, completion);
+
             SoundEngine.PlaySound(SoundID.Item73 with { Volume = 0.54f, Pitch = MathHelper.Lerp(-0.24f, 0.12f, completion), MaxInstances = 8 }, Projectile.Center);
+        }
+
+        private void FireBrotherAmbushPair(NPC markedTarget, int pairIndex, float completion)
+        {
+            // Eight beats produce exactly eight red fists and eight tech-blue blades. Their
+            // launch points are genuinely random around the target; only their inward vector
+            // is fixed, so the target is crossed from a different lane on every strike.
+            for (int attackIndex = 0; attackIndex < 2; attackIndex++)
+            {
+                bool fist = attackIndex == 0;
+                float angle = Main.rand.NextFloat(MathHelper.TwoPi);
+                float radius = Main.rand.NextFloat(300f, 460f);
+                Vector2 spawnPosition = markedTarget.Center + angle.ToRotationVector2() * radius;
+                Vector2 direction = (markedTarget.Center - spawnPosition).SafeNormalize(ForwardDirection);
+                float speed = MathHelper.Lerp(42f, 35f, completion) * Main.rand.NextFloat(0.92f, 1.08f);
+                int damage = Math.Max(1, (int)(Projectile.damage * MathHelper.Lerp(0.52f, 0.64f, completion)));
+
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    spawnPosition,
+                    direction * speed,
+                    fist ? ModContent.ProjectileType<AshesofAnn_CataclysmFist>() : ModContent.ProjectileType<AshesofAnn_CatastropheSlash>(),
+                    damage,
+                    Projectile.knockBack,
+                    Projectile.owner,
+                    markedTarget.whoAmI,
+                    pairIndex);
+            }
+        }
+
+        private NPC GetMarkedTarget()
+        {
+            return MarkedTargetIndex >= 0 && MarkedTargetIndex < Main.maxNPCs && Main.npc[MarkedTargetIndex].CanBeChasedBy(null, false)
+                ? Main.npc[MarkedTargetIndex]
+                : null;
         }
 
         private static NPC FindMarkedTarget(Vector2 center, float range)

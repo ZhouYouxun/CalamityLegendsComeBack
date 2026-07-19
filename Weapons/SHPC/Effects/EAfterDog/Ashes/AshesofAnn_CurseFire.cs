@@ -259,6 +259,59 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
             else
             {
                 SpawnSoulHunterOrbit(direction, normal);
+                SpawnSupremeHomingFlightEffects(direction, normal);
+            }
+        }
+
+        // The seeker borrows SCal's cast trail hierarchy: hot glow-orbs as the readable
+        // silhouette, a restrained point wake, and occasional spell-ring/mist accents.
+        private void SpawnSupremeHomingFlightEffects(Vector2 direction, Vector2 normal)
+        {
+            if (Projectile.numUpdates != 0 || (int)Timer % 3 != 0)
+                return;
+
+            Color brimstone = Main.rand.NextBool() ? Color.Red : Color.Lerp(Color.Red, Color.Magenta, 0.48f);
+            Vector2 trailPosition = Projectile.Center - direction * Main.rand.NextFloat(8f, 18f) + normal * Main.rand.NextFloat(-5f, 5f);
+            GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                trailPosition,
+                -direction * Main.rand.NextFloat(1.2f, 3.1f) + normal * Main.rand.NextFloat(-0.45f, 0.45f),
+                false,
+                Main.rand.Next(8, 13),
+                Main.rand.NextFloat(0.22f, 0.36f),
+                brimstone,
+                true,
+                false));
+
+            if ((int)Timer % 6 == 0)
+            {
+                GeneralParticleHandler.SpawnParticle(new PointParticle(
+                    Projectile.Center - direction * 13f,
+                    -direction * Main.rand.NextFloat(2.2f, 4.6f) + normal * Main.rand.NextFloat(-0.7f, 0.7f),
+                    false,
+                    Main.rand.Next(8, 13),
+                    Main.rand.NextFloat(0.34f, 0.52f),
+                    Color.Lerp(brimstone, Color.White, 0.24f)));
+                GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
+                    Projectile.Center - direction * 15f,
+                    -direction * Main.rand.NextFloat(0.35f, 0.9f),
+                    brimstone,
+                    new Color(46, 0, 18),
+                    Main.rand.NextFloat(0.22f, 0.34f),
+                    Main.rand.NextFloat(110f, 150f),
+                    0.02f));
+            }
+
+            if ((int)Timer % 12 == 0)
+            {
+                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                    Projectile.Center - direction * 5f,
+                    -direction * 0.18f,
+                    brimstone,
+                    new Vector2(0.34f, 0.78f),
+                    direction.ToRotation(),
+                    0.03f,
+                    0.21f,
+                    11));
             }
         }
 
