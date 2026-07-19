@@ -11,13 +11,11 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
 {
-    // A locked enemy receives a short, readable brimstone brand. The brand then opens four
-    // paired lanes: fist and blade travel through that exact point without any late steering.
+    // A locked enemy receives a short, readable brimstone brand while the relay opens with
+    // homing embers. Fists and blades are intentionally reserved for ember impact callbacks.
     internal sealed class AshesofAnn_Located : ModProjectile, ILocalizedModType
     {
         private const int BrandFrames = 12;
-        private const int VolleyInterval = 3;
-        private const int VolleyCount = 4;
 
         private static readonly Color FireOuter = new(132, 12, 24);
         private static readonly Color FireCore = new(255, 104, 42);
@@ -27,7 +25,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         private ref float Timer => ref Projectile.localAI[0];
-        private ref float VolleysFired => ref Projectile.localAI[1];
         private int TargetIndex => (int)Projectile.ai[0];
 
         public override void SetDefaults()
@@ -36,7 +33,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
             Projectile.height = 10;
             Projectile.friendly = false;
             Projectile.hostile = false;
-            Projectile.timeLeft = BrandFrames + VolleyInterval * VolleyCount + 8;
+            Projectile.timeLeft = BrandFrames + 20;
             Projectile.penetrate = -1;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
@@ -66,10 +63,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
             if (!Main.dedServ)
                 SpawnBrandEffects(target);
 
-            if (Projectile.owner != Main.myPlayer || Timer <= BrandFrames || VolleysFired >= VolleyCount || (Timer - BrandFrames) % VolleyInterval != 0f)
-                return;
-
-            FireStraightVolley(target, (int)VolleysFired++);
         }
 
         private NPC GetTarget()
@@ -77,52 +70,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
             return TargetIndex >= 0 && TargetIndex < Main.maxNPCs && Main.npc[TargetIndex].CanBeChasedBy(Projectile, false)
                 ? Main.npc[TargetIndex]
                 : null;
-        }
-
-        private void FireStraightVolley(NPC target, int volleyIndex)
-        {
-            Player owner = Main.player[Projectile.owner];
-            Vector2 throughTarget = (target.Center - owner.Center).SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitX));
-            Vector2 normal = throughTarget.RotatedBy(MathHelper.PiOver2);
-            float completion = volleyIndex / (float)Math.Max(1, VolleyCount - 1);
-            float laneOffset = MathHelper.Lerp(26f, 8f, completion);
-            float angle = MathHelper.Lerp(0.115f, 0.028f, completion);
-            int projectileDamage = Math.Max(1, (int)(Projectile.damage * 0.52f));
-
-            for (int kind = 0; kind < 2; kind++)
-            {
-                int side = kind == 0 ? -1 : 1;
-                Vector2 direction = throughTarget.RotatedBy(angle * side).SafeNormalize(throughTarget);
-                Vector2 spawnPosition = target.Center - direction * 118f + normal * side * laneOffset;
-                int type = kind == 0
-                    ? ModContent.ProjectileType<AshesofAnn_CataclysmFist>()
-                    : ModContent.ProjectileType<AshesofAnn_CatastropheSlash>();
-
-                Projectile.NewProjectile(
-                    Projectile.GetSource_FromThis(),
-                    spawnPosition,
-                    direction * MathHelper.Lerp(32f, 27f, completion),
-                    type,
-                    projectileDamage,
-                    Projectile.knockBack,
-                    Projectile.owner,
-                    side,
-                    volleyIndex);
-            }
-
-            if (!Main.dedServ)
-            {
-                SoundEngine.PlaySound(SoundID.Item73 with { Volume = 0.52f, Pitch = -0.12f + volleyIndex * 0.09f, MaxInstances = 8 }, target.Center);
-                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
-                    target.Center,
-                    throughTarget * 0.5f,
-                    FireCore,
-                    new Vector2(0.46f, 1.18f),
-                    throughTarget.ToRotation(),
-                    0.04f,
-                    0.7f,
-                    16));
-            }
         }
 
         private void SpawnBrandEffects(NPC target)

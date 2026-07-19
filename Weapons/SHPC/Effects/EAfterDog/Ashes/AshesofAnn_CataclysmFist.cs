@@ -9,17 +9,20 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
 {
-    // Weapon-side version of Supreme Cataclysm's fist. The brand supplies its lane, therefore
-    // it never target-searches or turns after launch.
+    // Weapon-side version of Supreme Cataclysm's fist. CurseFire impact supplies a locked
+    // target, which the fist actively tracks until it connects.
     internal sealed class AshesofAnn_CataclysmFist : ModProjectile, ILocalizedModType
     {
-        private static readonly Color OutlineColor = new(181, 17, 72);
-        private static readonly Color AccentColor = new(255, 87, 152);
+        private const float VisualBrightness = 0.67f;
+        private static readonly Color OutlineColor = new Color(181, 17, 72) * VisualBrightness;
+        private static readonly Color AccentColor = new Color(255, 87, 152) * VisualBrightness;
 
         public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         private ref float Time => ref Projectile.localAI[0];
+        // ai[1] is synchronized, so the hit-fade is identical for every multiplayer client.
+        private ref float HitFadeStarted => ref Projectile.ai[1];
         public override void SetStaticDefaults()
         {
             Main.projFrames[Type] = 4;
@@ -37,8 +40,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
             Projectile.timeLeft = 96;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
+            // Each spawned fist owns its immunity record, then becomes visual-only after its first hit.
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = 8;
+            Projectile.localNPCHitCooldown = -1;
         }
 
         public override void OnSpawn(IEntitySource source)
@@ -52,30 +56,42 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
         {
             Time++;
             ApplyApproachSlowdown();
-            // A deliberate linear pass: high opening speed, then a gentle falloff that leaves
-            // time for the same target to be contacted repeatedly through local immunity.
-            float speed = MathHelper.Max(6f, Projectile.velocity.Length() * 0.9825f);
+            if (HitFadeStarted <= 0f)
+                HomeTowardTrackedTarget();
+            // A hit turns the fist into a short, fading aftershock instead of allowing it to
+            // travel across the encounter after connecting.
+            float speed = HitFadeStarted > 0f
+                ? Projectile.velocity.Length() * 0.92f
+                : MathHelper.Max(6f, Projectile.velocity.Length() * 0.9825f);
             Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitX) * speed;
 
             Projectile.frame = (int)(Time / 4f) % Main.projFrames[Type];
             Projectile.spriteDirection = Projectile.velocity.X < 0f ? -1 : 1;
             Projectile.rotation = Projectile.velocity.ToRotation();
-            // Fade over the full final 24 frames instead of popping out at the end.
-            Projectile.Opacity = Utils.GetLerpValue(0f, 5f, Time, true) * Utils.GetLerpValue(0f, 24f, Projectile.timeLeft, true);
+            float fadeOut = HitFadeStarted > 0f
+                ? Utils.GetLerpValue(0f, 20f, Projectile.timeLeft, true)
+                : Utils.GetLerpValue(0f, 24f, Projectile.timeLeft, true);
+            Projectile.Opacity = Utils.GetLerpValue(0f, 5f, Time, true) * fadeOut;
             Projectile.alpha = (int)MathHelper.Clamp(255f * (1f - Projectile.Opacity), 0f, 255f);
             Lighting.AddLight(Projectile.Center, OutlineColor.ToVector3() * Projectile.Opacity * 0.45f);
 
-            if (!Main.dedServ && (int)Time % 2 == 0)
-                SpawnFlightEffects();
+            if (!Main.dedServ)
+            {
+                if (HitFadeStarted > 0f && Projectile.timeLeft % 3 == 0)
+                    SpawnHitDissipationEffects();
+                else if (HitFadeStarted <= 0f && (int)Time % 2 == 0)
+                    SpawnFlightEffects();
+            }
         }
 
         private void SpawnFlightEffects()
         {
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 normal = direction.RotatedBy(MathHelper.PiOver2);
-            for (int i = 0; i < 2; i++)
+            float longitudinalExtent = Projectile.width * 0.56f;
+            for (int i = 0; i < 3; i++)
             {
-                Vector2 position = Projectile.Center - direction * Main.rand.NextFloat(10f, 25f) + normal * Main.rand.NextFloat(-13f, 13f);
+                Vector2 position = Projectile.Center + direction * Main.rand.NextFloat(-longitudinalExtent, longitudinalExtent) + normal * Main.rand.NextFloat(-14f, 14f);
                 Vector2 velocity = -direction * Main.rand.NextFloat(2f, 5f) + normal * Main.rand.NextFloat(-1.6f, 1.6f);
                 GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
                     position,
@@ -88,21 +104,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                     false));
             }
 
-            Dust dust = Dust.NewDustPerfect(Projectile.Center - direction * 14f + normal * Main.rand.NextFloat(-9f, 9f), DustID.SilverFlame, -direction * Main.rand.NextFloat(1.2f, 3.6f));
-            dust.noGravity = true;
-            dust.color = OutlineColor;
-            dust.scale = Main.rand.NextFloat(0.65f, 1.05f);
-
-            if ((int)Time % 4 == 0)
+            for (int i = 0; i < 2; i++)
             {
-                GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
-                    Projectile.Center - direction * 18f,
-                    -direction * Main.rand.NextFloat(0.45f, 1.15f) + normal * Main.rand.NextFloat(-0.4f, 0.4f),
-                    AccentColor,
-                    new Color(55, 0, 25),
-                    Main.rand.NextFloat(0.28f, 0.42f),
-                    Main.rand.NextFloat(135f, 180f),
-                    0.018f));
+                Dust dust = Dust.NewDustPerfect(
+                    Projectile.Center + direction * Main.rand.NextFloat(-longitudinalExtent, longitudinalExtent) + normal * Main.rand.NextFloat(-11f, 11f),
+                    DustID.SilverFlame,
+                    -direction * Main.rand.NextFloat(1.2f, 3.6f));
+                dust.noGravity = true;
+                dust.color = OutlineColor;
+                dust.scale = Main.rand.NextFloat(0.65f, 1.05f);
             }
         }
 
@@ -120,6 +130,59 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
             target.netUpdate = true;
         }
 
+        private void SpawnHitDissipationEffects()
+        {
+            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 normal = direction.RotatedBy(MathHelper.PiOver2);
+            float longitudinalExtent = Projectile.width * 0.56f;
+            float fadeCompletion = 1f - MathHelper.Clamp(Projectile.timeLeft / 20f, 0f, 1f);
+            Color fadeColor = Color.Lerp(AccentColor, OutlineColor, fadeCompletion);
+            Vector2 position = Projectile.Center + direction * Main.rand.NextFloat(-longitudinalExtent, longitudinalExtent) + normal * Main.rand.NextFloat(-14f, 14f);
+            Vector2 velocity = -direction * Main.rand.NextFloat(0.8f, 2.4f) + normal * Main.rand.NextFloat(-1.2f, 1.2f);
+
+            GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                position,
+                velocity,
+                false,
+                Main.rand.Next(10, 16),
+                Main.rand.NextFloat(0.28f, 0.48f),
+                fadeColor,
+                true,
+                false));
+            GeneralParticleHandler.SpawnParticle(new PointParticle(
+                position,
+                velocity * 1.45f,
+                false,
+                Main.rand.Next(9, 14),
+                Main.rand.NextFloat(0.36f, 0.58f),
+                fadeColor));
+
+            if (Projectile.timeLeft % 6 == 0)
+            {
+                GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
+                    Projectile.Center + direction * Main.rand.NextFloat(-longitudinalExtent, longitudinalExtent) + normal * Main.rand.NextFloat(-9f, 9f),
+                    -direction * 0.45f + normal * Main.rand.NextFloat(-0.3f, 0.3f),
+                    fadeColor,
+                    new Color(45, 0, 22),
+                    Main.rand.NextFloat(0.26f, 0.40f),
+                    Main.rand.NextFloat(125f, 175f),
+                    0.02f));
+            }
+        }
+
+        private void HomeTowardTrackedTarget()
+        {
+            int targetIndex = (int)Projectile.ai[0];
+            if (targetIndex < 0 || targetIndex >= Main.maxNPCs || !Main.npc[targetIndex].CanBeChasedBy(Projectile, false))
+                return;
+
+            NPC target = Main.npc[targetIndex];
+            Vector2 currentDirection = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 desiredDirection = (target.Center - Projectile.Center).SafeNormalize(currentDirection);
+            float targetSpeed = MathHelper.Clamp(MathHelper.Lerp(Projectile.velocity.Length(), 38f, 0.08f), 28f, 42f);
+            Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredDirection * targetSpeed, 0.12f);
+        }
+
         private void SpawnFistCastEffects()
         {
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
@@ -135,7 +198,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
             GeneralParticleHandler.SpawnParticle(new BloomParticle(
                 Projectile.Center,
                 Vector2.Zero,
-                AccentColor,
+                AccentColor * 0.5f,
                 0.04f,
                 0.58f,
                 15,
@@ -159,8 +222,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
             target.AddBuff(ModContent.BuffType<BrimstoneFlames>(), 150);
             if (Main.netMode != NetmodeID.MultiplayerClient)
             {
-                target.velocity *= 0.88f;
+                target.velocity *= 0.85f;
                 target.netUpdate = true;
+            }
+            if (HitFadeStarted <= 0f)
+            {
+                HitFadeStarted = 1f;
+                Projectile.friendly = false;
+                Projectile.timeLeft = 20;
+                Projectile.velocity *= 0.5f;
+                Projectile.netUpdate = true;
             }
             if (Main.dedServ)
                 return;
@@ -173,8 +244,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                 new Vector2(0.90f, 0.34f),
                 Projectile.rotation,
                 0.04f,
-                1.02f,
-                20));
+                0.82f,
+                15));
             GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
                 Projectile.Center,
                 Vector2.Zero,
@@ -182,38 +253,38 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                 new Vector2(0.70f, 0.70f),
                 direction.ToRotation(),
                 0.03f,
-                0.82f,
-                17));
+                0.56f,
+                12));
             GeneralParticleHandler.SpawnParticle(new BloomParticle(
                 Projectile.Center,
                 Vector2.Zero,
-                OutlineColor,
+                OutlineColor * 0.25f,
                 0.05f,
-                1.05f,
-                20,
+                0.72f,
+                15,
                 false));
             GeneralParticleHandler.SpawnParticle(new BloomParticle(
                 Projectile.Center,
                 Vector2.Zero,
-                Color.Lerp(AccentColor, Color.White, 0.35f),
+                Color.Lerp(AccentColor, Color.White * VisualBrightness, 0.35f) * 0.25f,
                 0.03f,
-                0.74f,
-                16,
+                0.40f,
+                11,
                 false));
 
-            for (int i = 0; i < 12; i++)
+            for (int i = 0; i < 8; i++)
             {
-                Vector2 velocity = direction.RotatedByRandom(1.05f) * Main.rand.NextFloat(3f, 10f);
+                Vector2 velocity = direction.RotatedByRandom(0.92f) * Main.rand.NextFloat(3f, 7.5f);
                 GeneralParticleHandler.SpawnParticle(new PointParticle(
                     Projectile.Center + velocity * 0.45f,
                     velocity,
                     false,
                     Main.rand.Next(11, 18),
-                    Main.rand.NextFloat(0.50f, 0.86f),
+                    Main.rand.NextFloat(0.42f, 0.68f),
                     Main.rand.NextBool() ? OutlineColor : AccentColor));
             }
 
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 2; i++)
             {
                 Vector2 velocity = direction.RotatedByRandom(0.72f) * Main.rand.NextFloat(1.8f, 4.8f);
                 GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
@@ -221,7 +292,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                     velocity,
                     false,
                     Main.rand.Next(12, 18),
-                    Main.rand.NextFloat(0.48f, 0.78f),
+                    Main.rand.NextFloat(0.34f, 0.56f),
                     Main.rand.NextBool() ? OutlineColor : AccentColor,
                     true,
                     false));
@@ -259,7 +330,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
             foreach (Vector2 offset in innerOutlineOffsets)
                 Main.EntitySpriteDraw(texture, drawPosition + offset, frame, AccentColor * Projectile.Opacity * 0.82f, Projectile.rotation, origin, Projectile.scale, effects, 0);
 
-            Main.EntitySpriteDraw(texture, drawPosition, frame, Color.White * Projectile.Opacity, Projectile.rotation, origin, Projectile.scale, effects, 0);
+            Main.EntitySpriteDraw(texture, drawPosition, frame, Color.White * Projectile.Opacity * VisualBrightness, Projectile.rotation, origin, Projectile.scale, effects, 0);
             return false;
         }
     }

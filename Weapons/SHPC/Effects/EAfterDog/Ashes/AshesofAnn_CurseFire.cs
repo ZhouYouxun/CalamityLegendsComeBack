@@ -37,10 +37,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
 
         private int ShotIndex => (int)Projectile.ai[1];
         private bool IsPiercingShot => Projectile.ai[0] > 0f;
+        private bool UsesGildedSoul => !IsPiercingShot && ShotIndex % 2 != 0;
         private float ShotCompletion => MathHelper.Clamp(ShotIndex / (float)(TotalRelayShots - 1), 0f, 1f);
+        private Color SoulMainColor => UsesGildedSoul ? new Color(255, 190, 48) : new Color(210, 44, 74);
+        private Color SoulAccentColor => UsesGildedSoul ? new Color(255, 102, 216) : new Color(255, 154, 178);
+        private string SoulTexturePath => UsesGildedSoul
+            ? "CalamityMod/Projectiles/Magic/RedirectingGildedSoul"
+            : "CalamityMod/Projectiles/Magic/RedirectingVengefulSoul";
 
         public override void SetStaticDefaults()
         {
+            Main.projFrames[Type] = 4;
             ProjectileID.Sets.TrailCacheLength[Type] = 26;
             ProjectileID.Sets.TrailingMode[Type] = 2;
         }
@@ -103,7 +110,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                 FreeDrift(FreeFlightDamping);
             }
 
-            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
+            if (IsPiercingShot)
+            {
+                Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
+            }
+            else
+            {
+                Projectile.frame = (int)(Timer / 5f) % Main.projFrames[Type];
+                Projectile.spriteDirection = Projectile.velocity.X > 0f ? 1 : -1;
+                Projectile.rotation = Projectile.velocity.ToRotation();
+                if (Projectile.spriteDirection == -1)
+                    Projectile.rotation += MathHelper.Pi;
+            }
             Projectile.alpha = Math.Max(0, Projectile.alpha - 24);
             Lighting.AddLight(Projectile.Center, new Color(255, 120, 48).ToVector3() * 0.55f);
 
@@ -196,6 +214,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
+            bool firstHit = HitSomething <= 0f;
             HitSomething = 1f;
             SoundEngine.PlaySound(SoundID.Item74, target.Center);
             target.AddBuff(ModContent.BuffType<VulnerabilityHex>(), 180);
@@ -203,8 +222,38 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
             target.AddBuff(BuffID.OnFire, 240);
             target.AddBuff(BuffID.CursedInferno, 180);
 
+            if (firstHit && !IsPiercingShot && Projectile.owner == Main.myPlayer)
+                SpawnBrotherChasePair(target);
+
             if (!Main.dedServ)
                 SpawnImpactEffects();
+        }
+
+        private void SpawnBrotherChasePair(NPC target)
+        {
+            float baseAngle = Main.rand.NextFloat(MathHelper.TwoPi);
+            int brotherDamage = Math.Max(1, (int)(Projectile.damage * MathHelper.Lerp(0.52f, 0.64f, ShotCompletion)));
+
+            for (int kind = 0; kind < 2; kind++)
+            {
+                bool fist = kind == 0;
+                float angle = baseAngle + kind * MathHelper.Pi + Main.rand.NextFloat(-0.24f, 0.24f);
+                float radius = Main.rand.NextFloat(300f, 460f);
+                Vector2 spawnPosition = target.Center + angle.ToRotationVector2() * radius;
+                Vector2 direction = (target.Center - spawnPosition).SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitX));
+                float speed = MathHelper.Lerp(42f, 35f, ShotCompletion) * Main.rand.NextFloat(0.92f, 1.08f);
+
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    spawnPosition,
+                    direction * speed,
+                    fist ? ModContent.ProjectileType<AshesofAnn_CataclysmFist>() : ModContent.ProjectileType<AshesofAnn_CatastropheSlash>(),
+                    brotherDamage,
+                    Projectile.knockBack,
+                    Projectile.owner,
+                    target.whoAmI,
+                    0f);
+            }
         }
 
         public override void OnKill(int timeLeft)
@@ -220,8 +269,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
 
         private void SpawnImpactEffects()
         {
-            Color orange = new(255, 140, 42);
-            Color red = new(180, 12, 8);
+            Color orange = IsPiercingShot ? new Color(255, 140, 42) : SoulAccentColor;
+            Color red = IsPiercingShot ? new Color(180, 12, 8) : SoulMainColor;
 
             SpawnSoulSignatureImpact();
 
@@ -270,7 +319,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
             if (Projectile.numUpdates != 0 || (int)Timer % 3 != 0)
                 return;
 
-            Color brimstone = Main.rand.NextBool() ? Color.Red : Color.Lerp(Color.Red, Color.Magenta, 0.48f);
+            Color soulColor = Main.rand.NextBool() ? SoulMainColor : Color.Lerp(SoulMainColor, SoulAccentColor, 0.52f);
             Vector2 trailPosition = Projectile.Center - direction * Main.rand.NextFloat(8f, 18f) + normal * Main.rand.NextFloat(-5f, 5f);
             GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
                 trailPosition,
@@ -278,7 +327,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                 false,
                 Main.rand.Next(8, 13),
                 Main.rand.NextFloat(0.22f, 0.36f),
-                brimstone,
+                soulColor,
                 true,
                 false));
 
@@ -290,12 +339,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                     false,
                     Main.rand.Next(8, 13),
                     Main.rand.NextFloat(0.34f, 0.52f),
-                    Color.Lerp(brimstone, Color.White, 0.24f)));
+                    Color.Lerp(soulColor, Color.White, 0.24f)));
                 GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
                     Projectile.Center - direction * 15f,
                     -direction * Main.rand.NextFloat(0.35f, 0.9f),
-                    brimstone,
-                    new Color(46, 0, 18),
+                    soulColor,
+                    Color.Lerp(SoulMainColor, Color.Black, 0.72f),
                     Main.rand.NextFloat(0.22f, 0.34f),
                     Main.rand.NextFloat(110f, 150f),
                     0.02f));
@@ -306,7 +355,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                 GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
                     Projectile.Center - direction * 5f,
                     -direction * 0.18f,
-                    brimstone,
+                    soulColor,
                     new Vector2(0.34f, 0.78f),
                     direction.ToRotation(),
                     0.03f,
@@ -366,7 +415,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                     Main.rand.NextBool() ? DustID.BlueTorch : DustID.GemSapphire,
                     -direction * Main.rand.NextFloat(0.4f, 1.2f) - offset.SafeNormalize(Vector2.Zero) * 0.25f,
                     90,
-                    Color.Lerp(new Color(20, 44, 122), new Color(64, 220, 255), Main.rand.NextFloat(0.25f, 0.72f)),
+                    Color.Lerp(SoulMainColor, SoulAccentColor, Main.rand.NextFloat(0.25f, 0.72f)),
                     Main.rand.NextFloat(0.65f, 1.0f));
                 dust.noGravity = true;
             }
@@ -376,7 +425,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                 GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
                     Projectile.Center - direction * 6f,
                     -direction * 0.4f,
-                    new Color(42, 82, 180) * 0.65f,
+                    SoulMainColor * 0.65f,
                     new Vector2(0.24f, 0.72f),
                     direction.ToRotation(),
                     0.08f,
@@ -406,8 +455,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
         private void SpawnSoulSignatureImpact()
         {
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-            Color mainColor = IsPiercingShot ? new Color(170, 16, 24) : new Color(30, 88, 190);
-            Color accent = IsPiercingShot ? new Color(255, 118, 42) : new Color(84, 225, 255);
+            Color mainColor = IsPiercingShot ? new Color(170, 16, 24) : SoulMainColor;
+            Color accent = IsPiercingShot ? new Color(255, 118, 42) : SoulAccentColor;
 
             GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
                 Projectile.Center,
@@ -445,7 +494,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
                 false,
                 Main.rand.Next(8, 13),
                 Main.rand.NextFloat(0.12f, 0.22f),
-                Color.Lerp(new Color(255, 76, 34), new Color(255, 220, 120), Main.rand.NextFloat(0.18f, 0.64f)),
+                IsPiercingShot
+                    ? Color.Lerp(new Color(255, 76, 34), new Color(255, 220, 120), Main.rand.NextFloat(0.18f, 0.64f))
+                    : Color.Lerp(SoulMainColor, SoulAccentColor, Main.rand.NextFloat(0.18f, 0.64f)),
                 true,
                 false,
                 true));
@@ -453,6 +504,34 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
 
         public override bool PreDraw(ref Color lightColor)
         {
+            if (!IsPiercingShot)
+            {
+                Texture2D soulTexture = ModContent.Request<Texture2D>(SoulTexturePath).Value;
+                Texture2D soulBloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+                Rectangle frame = soulTexture.Frame(1, Main.projFrames[Type], 0, Projectile.frame);
+                Vector2 soulDrawPosition = Projectile.Center - Main.screenPosition;
+                Vector2 origin = frame.Size() * 0.5f;
+                float soulOpacity = Utils.GetLerpValue(255f, 0f, Projectile.alpha, true);
+                Color soulColor = Color.Lerp(SoulMainColor, Color.White, 0.24f) * soulOpacity;
+                soulColor.A = 0;
+                float haloScale = UsesGildedSoul ? 0.26f : 0.31f;
+
+                Main.spriteBatch.SetBlendState(BlendState.Additive);
+                Main.EntitySpriteDraw(soulBloom, soulDrawPosition, null, SoulMainColor * (0.20f * soulOpacity), 0f, soulBloom.Size() * 0.5f, haloScale, SpriteEffects.None);
+                Main.EntitySpriteDraw(soulBloom, soulDrawPosition, null, SoulAccentColor * (0.10f * soulOpacity), 0f, soulBloom.Size() * 0.5f, haloScale * 0.55f, SpriteEffects.None);
+                Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
+
+                float afterimageRadius = UsesGildedSoul ? 0.5f : 1.5f;
+                SpriteEffects effects = Projectile.spriteDirection == 1 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
+                for (int i = 0; i < 4; i++)
+                {
+                    Vector2 offset = (MathHelper.TwoPi * i / 4f).ToRotationVector2() * afterimageRadius;
+                    Main.EntitySpriteDraw(soulTexture, soulDrawPosition + offset, frame, soulColor * 0.56f, Projectile.rotation, origin, Projectile.scale, effects, 0);
+                }
+                Main.EntitySpriteDraw(soulTexture, soulDrawPosition, frame, soulColor, Projectile.rotation, origin, Projectile.scale, effects, 0);
+                return false;
+            }
+
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Texture2D smear = ModContent.Request<Texture2D>("CalamityMod/Particles/VerticalSmear").Value;
             Texture2D star = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/SimpleStar").Value;
