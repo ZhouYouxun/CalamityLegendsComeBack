@@ -4,8 +4,6 @@ using CalamityMod.Dusts;
 using CalamityMod.Items.Materials;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using System;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
@@ -13,190 +11,317 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 {
-    // The travelling orb stays as the anchor of the effect. It is now a narrow, aggressively
-    // homing Phantom Spirit and periodically releases Shadowbolt-style frames that stop first,
-    // acquire a line, and only then fire their beam.
-    public sealed class NecroplasmEffect : DefaultEffect
+    public class NecroplasmEffect : DefaultEffect
     {
-        private const int FrameCount = 3;
-        private const int FrameFirstRelease = 20;
-        private const int FrameReleaseInterval = 16;
-
         public override int EffectID => 31;
+
         public override int AmmoType => ModContent.ItemType<Necroplasm>();
 
-        public override Color ThemeColor => new(87, 226, 255);
-        public override Color StartColor => new(185, 255, 255);
-        public override Color EndColor => new(92, 58, 192);
-        public override float SquishyLightParticleFactor => 0f;
-        public override float ExplosionPulseFactor => 0f;
-        public override float GlowScaleFactor => 0.42f;
-        public override float GlowIntensityFactor => 0.72f;
+        public override Color ThemeColor => new Color(255, 80, 180);
+        public override Color StartColor => new Color(255, 120, 200);
+        public override Color EndColor => new Color(200, 40, 140);
 
-        private static ref float Timer(Projectile projectile) => ref projectile.localAI[0];
-        private static ref float FramesReleased(Projectile projectile) => ref projectile.localAI[1];
+        public override float SquishyLightParticleFactor => 1.85f;
+        public override float ExplosionPulseFactor => 1.85f;
+
+        private float sinTimer;
+        private int timer;
+        private int homingTimer;
+        private int soulsFired;
 
         public override void OnSpawn(Projectile projectile, Player owner)
         {
-            projectile.width = 18;
-            projectile.height = 18;
-            projectile.scale = 0.78f;
-            projectile.penetrate = 4;
-            projectile.timeLeft = Math.Max(projectile.timeLeft, 210);
-            projectile.tileCollide = false;
-            projectile.ignoreWater = true;
-            projectile.velocity = projectile.velocity.SafeNormalize(new Vector2(owner.direction, 0f)) * Math.Max(projectile.velocity.Length(), 19f);
-            Timer(projectile) = 0f;
-            FramesReleased(projectile) = 0f;
+            sinTimer = 0f;
+            timer = 0;
+            homingTimer = 0;
+            soulsFired = 0;
+
+            projectile.penetrate = 5;
+            if (projectile.timeLeft < 240)
+                projectile.timeLeft = 240;
+            projectile.velocity *= 1.8f;
         }
 
         public override void AI(Projectile projectile, Player owner)
         {
-            Timer(projectile)++;
-            NPC target = projectile.Center.ClosestNPCAt(2900f);
-            Vector2 fallback = projectile.velocity.SafeNormalize(new Vector2(owner.direction, 0f));
+            timer++;
+            projectile.velocity *= 1.03f;
 
-            if (target is not null)
+            NPC target = projectile.Center.ClosestNPCAt(3000f);
+            if (target != null)
             {
-                Vector2 desiredDirection = projectile.SafeDirectionTo(target.Center, fallback);
-                float pressure = Utils.GetLerpValue(0f, 28f, Timer(projectile), true);
-                float desiredSpeed = MathHelper.Lerp(22f, 39f, pressure);
-                float inertia = MathHelper.Lerp(5.5f, 2.2f, pressure);
-                projectile.velocity = (projectile.velocity * inertia + desiredDirection * desiredSpeed) / (inertia + 1f);
+                homingTimer++;
+                Vector2 desired = projectile.SafeDirectionTo(target.Center);
+                float trackingPower = Utils.GetLerpValue(0f, 120f, homingTimer, true);
+                float targetSpeed = MathHelper.Lerp(20f, 34f, trackingPower);
+                float inertia = MathHelper.Lerp(5f, 2.5f, trackingPower);
+                projectile.velocity = (projectile.velocity * inertia + desired * targetSpeed) / (inertia + 1f);
             }
             else
-                projectile.velocity *= 0.993f;
+                homingTimer = 0;
 
-            float speed = MathHelper.Clamp(projectile.velocity.Length(), 14f, 42f);
-            projectile.velocity = projectile.velocity.SafeNormalize(fallback) * speed;
-            projectile.rotation = projectile.velocity.ToRotation();
-            Lighting.AddLight(projectile.Center, ThemeColor.ToVector3() * 0.52f);
+            float soulSpeedFactor = Utils.GetLerpValue(0f, 26f, soulsFired, true);
+            float minSpeed = MathHelper.Lerp(16f, 24f, soulSpeedFactor);
+            float maxSpeed = MathHelper.Lerp(34f, 54f, soulSpeedFactor);
+            float currentSpeed = projectile.velocity.Length();
+            if (currentSpeed > maxSpeed)
+                projectile.velocity = projectile.velocity.SafeNormalize(Vector2.UnitX) * maxSpeed;
+            else if (currentSpeed < minSpeed)
+                projectile.velocity = projectile.velocity.SafeNormalize(Vector2.UnitX) * minSpeed;
 
-            if (projectile.owner == Main.myPlayer && FramesReleased(projectile) < FrameCount && Timer(projectile) >= FrameFirstRelease + FramesReleased(projectile) * FrameReleaseInterval)
+            if (timer % 7 == 0)
             {
-                SpawnShadowFrame(projectile, target, (int)FramesReleased(projectile));
-                FramesReleased(projectile)++;
+                soulsFired++;
+                Projectile.NewProjectile(
+                    projectile.GetSource_FromThis(),
+                    projectile.Center,
+                    Vector2.Zero,
+                    ModContent.ProjectileType<SHPCNecroplasmDamage>(),
+                    (int)(projectile.damage * 0.30f),
+                    0f,
+                    projectile.owner
+                );
             }
 
-            if (projectile.owner == Main.myPlayer && (int)Timer(projectile) % 11 == 0)
-                SpawnDamageOrb(projectile, target);
+            sinTimer += 0.22f;
 
-            if (!Main.dedServ)
-                SpawnFlightEffects(projectile);
-        }
+            float pulse = (float)System.Math.Sin(sinTimer);
+            float angle = projectile.velocity.ToRotation() + MathHelper.Pi / 2f;
+            Vector2 normal = angle.ToRotationVector2();
+            float radius = 6f;
+            Vector2 offset = normal * pulse * radius;
 
-        private static void SpawnShadowFrame(Projectile projectile, NPC target, int index)
-        {
-            Vector2 forward = target is null
-                ? projectile.velocity.SafeNormalize(Vector2.UnitX)
-                : projectile.SafeDirectionTo(target.Center, projectile.velocity.SafeNormalize(Vector2.UnitX));
-            float side = index - 1f;
-            Vector2 direction = forward.RotatedBy(side * 0.22f + Main.rand.NextFloat(-0.06f, 0.06f));
+            CreateVoidDust(projectile.Center + offset);
+            CreateVoidDust(projectile.Center - offset);
 
-            Projectile.NewProjectile(
-                projectile.GetSource_FromThis(),
-                projectile.Center + direction * 14f,
-                direction * (16f + index * 2f),
-                ModContent.ProjectileType<SHPCNecroplasmFrame>(),
-                Math.Max(1, (int)(projectile.damage * 0.62f)),
-                projectile.knockBack * 0.45f,
-                projectile.owner,
-                index);
-        }
-
-        private static void SpawnDamageOrb(Projectile projectile, NPC target)
-        {
-            Vector2 forward = target is null
-                ? projectile.velocity.SafeNormalize(Vector2.UnitX)
-                : projectile.SafeDirectionTo(target.Center, projectile.velocity.SafeNormalize(Vector2.UnitX));
-            Vector2 direction = forward.RotatedByRandom(0.24f);
-            Projectile.NewProjectile(
-                projectile.GetSource_FromThis(),
-                projectile.Center - forward * 8f,
-                direction * Main.rand.NextFloat(7f, 11f),
-                ModContent.ProjectileType<SHPCNecroplasmDamage>(),
-                Math.Max(1, (int)(projectile.damage * 0.34f)),
-                projectile.knockBack * 0.25f,
-                projectile.owner);
-        }
-
-        private static void SpawnFlightEffects(Projectile projectile)
-        {
-            Vector2 direction = projectile.velocity.SafeNormalize(Vector2.UnitX);
-            Vector2 normal = direction.RotatedBy(MathHelper.PiOver2);
-            Color outer = new(63, 92, 224);
-            Color core = new(133, 245, 255);
-
-            if ((int)Timer(projectile) % 2 == 0)
+            if (Main.rand.NextBool(3))
             {
-                GeneralParticleHandler.SpawnParticle(new CustomSpark(
-                    projectile.Center - direction * Main.rand.NextFloat(4f, 18f) + normal * Main.rand.NextFloat(-4f, 4f),
-                    -direction * Main.rand.NextFloat(1.8f, 4.2f),
-                    "CalamityMod/Particles/VerticalSmear",
-                    false,
-                    Main.rand.Next(10, 15),
-                    Main.rand.NextFloat(0.45f, 0.72f),
-                    Color.Lerp(outer, core, Main.rand.NextFloat()),
-                    new Vector2(0.10f, 0.68f),
-                    true,
-                    true,
-                    shrinkSpeed: 0.86f,
-                    glowOpacity: 0.46f));
+                SquishyLightParticle particle = new(
+                    projectile.Center,
+                    -projectile.velocity.RotatedByRandom(0.3f) * Main.rand.NextFloat(0.05f, 0.2f),
+                    Main.rand.NextFloat(0.3f, 0.6f),
+                    Color.Lerp(StartColor, ThemeColor, Main.rand.NextFloat()),
+                    Main.rand.Next(10, 16)
+                );
+                GeneralParticleHandler.SpawnParticle(particle);
             }
 
-            if ((int)Timer(projectile) % 4 == 0)
-            {
-                Dust dust = Dust.NewDustPerfect(projectile.Center + normal * Main.rand.NextFloat(-7f, 7f), (int)CalamityDusts.Necroplasm,
-                    -direction * Main.rand.NextFloat(0.8f, 2.8f) + normal * Main.rand.NextFloat(-0.7f, 0.7f), 80,
-                    Color.Lerp(outer, core, Main.rand.NextFloat()), Main.rand.NextFloat(0.72f, 1.08f));
-                dust.noGravity = true;
-            }
+            Lighting.AddLight(projectile.Center, ThemeColor.ToVector3() * 0.35f);
+        }
+
+        public override void ModifyHitNPC(Projectile projectile, Player owner, NPC target, ref NPC.HitModifiers modifiers)
+        {
+        }
+
+        public override void OnHitNPC(Projectile projectile, Player owner, NPC target, NPC.HitInfo hit, int damageDone)
+        {
         }
 
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
-            if (projectile.owner != Main.myPlayer)
-                return;
+            owner.SetScreenshake(3.5f);
+            float power = 0.58f;
 
-            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ShadowboltReflect") { Volume = 0.55f, Pitch = -0.18f }, projectile.Center);
-            owner.SetScreenshake(2.7f);
-            GeneralParticleHandler.SpawnParticle(new CustomPulse(projectile.Center, Vector2.Zero, ThemeColor,
-                "CalamityMod/Particles/BloomRing", Vector2.One, 0f, 0.08f, 0.82f, 18));
+            SpawnNecroplasmCollapseDust(projectile, owner, power);
+            SpawnNecroplasmCollapsePulses(projectile, owner, power);
+            SpawnNecroplasmCollapseSmears(projectile, owner, power);
+            PlayNecroplasmCollapseSounds(projectile);
+            SpawnNecroplasmDamage(projectile);
+        }
 
-            for (int i = 0; i < 5; i++)
+        private void SpawnNecroplasmCollapseDust(Projectile projectile, Player owner, float power)
+        {
+            for (int i = 0; i < 24; i++)
             {
-                Vector2 direction = (MathHelper.TwoPi * i / 5f + Main.rand.NextFloat(-0.12f, 0.12f)).ToRotationVector2();
-                Projectile.NewProjectile(
-                    projectile.GetSource_FromThis(),
-                    projectile.Center + direction * 8f,
-                    direction * Main.rand.NextFloat(7f, 12f),
-                    ModContent.ProjectileType<SHPCNecroplasmDamage>(),
-                    Math.Max(1, (int)(projectile.damage * 0.42f)),
-                    projectile.knockBack * 0.3f,
-                    projectile.owner);
+                Color useColor = GetRandomNecroBurstColor(owner);
+                Vector2 dustVelocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.2f, 7.5f) * power;
+
+                Dust dust = Dust.NewDustPerfect(projectile.Center, DustID.FireworkFountain_Pink, dustVelocity);
+                dust.noGravity = true;
+                dust.scale = Main.rand.NextFloat(0.85f, 1.35f) * power;
+                dust.color = useColor;
+
+                if (i % 3 != 0)
+                    continue;
+
+                Vector2 sparkVelocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.8f, 6.8f) * power;
+                Particle spark = new CustomSpark(
+                    projectile.Center,
+                    sparkVelocity,
+                    "CalamityMod/Particles/Sparkle",
+                    false,
+                    18,
+                    Main.rand.NextFloat(0.45f, 0.82f) * power,
+                    useColor,
+                    new Vector2(0.4f, 1.1f));
+                GeneralParticleHandler.SpawnParticle(spark);
             }
         }
 
-        public override void PreDraw(Projectile projectile, Player owner, SpriteBatch spriteBatch)
+        private void SpawnNecroplasmCollapsePulses(Projectile projectile, Player owner, float power)
         {
-            Texture2D ghost = ModContent.Request<Texture2D>("CalamityMod/NPCs/NormalNPCs/PhantomSpirit").Value;
-            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            int frameHeight = ghost.Height / 3;
-            int frameIndex = ((int)(Timer(projectile) / 5f) + projectile.identity) % 3;
-            Rectangle frame = new(0, frameHeight * frameIndex, ghost.Width, frameHeight);
-            Vector2 drawPosition = projectile.Center - Main.screenPosition;
-            Vector2 origin = frame.Size() * 0.5f;
-            float pulse = 0.78f + MathF.Sin(Timer(projectile) * 0.32f) * 0.16f;
-
-            spriteBatch.SetBlendState(BlendState.Additive);
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 2; i++)
             {
-                Vector2 offset = (MathHelper.TwoPi * i / 5f + Timer(projectile) * 0.07f).ToRotationVector2() * 1.5f;
-                spriteBatch.Draw(ghost, drawPosition + offset, frame, ThemeColor * (0.19f * pulse), projectile.rotation * 0.08f, origin, 0.93f, SpriteEffects.None, 0f);
+                Color useColor = GetRandomNecroBurstColor(owner);
+                Particle softBurst = new CustomPulse(
+                    projectile.Center,
+                    Vector2.Zero,
+                    useColor,
+                    "CalamityMod/Particles/SoftRoundExplosion",
+                    Vector2.One,
+                    Main.rand.NextFloat(-10f, 10f),
+                    0f,
+                    (0.24f - i * 0.03f) * power,
+                    10);
+                GeneralParticleHandler.SpawnParticle(softBurst);
             }
-            spriteBatch.Draw(bloom, drawPosition, null, ThemeColor * (0.28f * pulse), 0f, bloom.Size() * 0.5f, 0.31f, SpriteEffects.None, 0f);
-            spriteBatch.Draw(ghost, drawPosition, frame, StartColor * (0.66f * pulse), projectile.rotation * 0.05f, origin, 0.82f, SpriteEffects.None, 0f);
-            spriteBatch.SetBlendState(BlendState.AlphaBlend);
+
+            Particle bloomRing = new CustomPulse(
+                projectile.Center,
+                Vector2.Zero,
+                ThemeColor,
+                "CalamityMod/Particles/BloomRing",
+                Vector2.One,
+                Main.rand.NextFloat(-10f, 10f),
+                0.06f * power,
+                0.86f * power,
+                22);
+            GeneralParticleHandler.SpawnParticle(bloomRing);
+        }
+
+        private void SpawnNecroplasmCollapseSmears(Projectile projectile, Player owner, float power)
+        {
+            int parts = 5;
+            float rot = Main.rand.NextFloat(-9f, 9f);
+
+            for (int i = 0; i < parts; i++)
+            {
+                Color useColor = GetRandomNecroBurstColor(owner);
+                Vector2 smearVelocity = new Vector2(0f, -15f * (i % 2 == 0 ? 1.8f : 1f) * power)
+                    .RotatedBy(i * (MathHelper.TwoPi / parts))
+                    .RotatedBy(rot);
+
+                Particle smear = new CustomSpark(
+                    projectile.Center,
+                    smearVelocity,
+                    "CalamityMod/Particles/VerticalSmear",
+                    false,
+                    13,
+                    1.35f * power,
+                    useColor,
+                    new Vector2(0.2f, 1f));
+                GeneralParticleHandler.SpawnParticle(smear);
+            }
+        }
+
+        private static void PlayNecroplasmCollapseSounds(Projectile projectile)
+        {
+            SoundStyle reflectSound = new("CalamityMod/Sounds/Item/ShadowboltReflect");
+            SoundEngine.PlaySound(reflectSound with { Volume = 0.48f, Pitch = -0.18f }, projectile.Center);
+        }
+
+        private static void SpawnNecroplasmDamage(Projectile projectile)
+        {
+            int projIndex = Projectile.NewProjectile(
+                projectile.GetSource_FromThis(),
+                projectile.Center,
+                Vector2.Zero,
+                ModContent.ProjectileType<NewLegendSHPE>(),
+                (int)(projectile.damage * 1),
+                projectile.knockBack,
+                projectile.owner
+            );
+
+            if (projIndex >= 0 && projIndex < Main.maxProjectiles)
+            {
+                Projectile proj = Main.projectile[projIndex];
+                proj.width = 250;
+                proj.height = 250;
+                proj.Center = projectile.Center;
+            }
+
+            const int shardCount = 6;
+            float baseRotation = Main.rand.NextFloat(MathHelper.TwoPi);
+            for (int i = 0; i < shardCount; i++)
+            {
+                float progress = i / (float)System.Math.Max(1, shardCount - 1);
+                float angle = baseRotation + i * MathHelper.Pi * 0.72f + Main.rand.NextFloat(-0.18f, 0.18f);
+                Vector2 direction = angle.ToRotationVector2();
+                Vector2 tangent = direction.RotatedBy(MathHelper.PiOver2);
+                float radius = MathHelper.Lerp(46f, 174f, progress) + Main.rand.NextFloat(-14f, 18f);
+                Vector2 spawnPosition = projectile.Center + direction * radius + tangent * Main.rand.NextFloat(-18f, 18f);
+                Vector2 velocity = direction * Main.rand.NextFloat(4.5f, 10.5f) + tangent * Main.rand.NextFloat(-2.8f, 2.8f);
+
+                Projectile.NewProjectile(
+                    projectile.GetSource_FromThis(),
+                    spawnPosition,
+                    velocity,
+                    ModContent.ProjectileType<SHPCNecroplasmDamage>(),
+                    (int)(projectile.damage * Main.rand.NextFloat(0.8f, 1.2f)),
+                    0f,
+                    projectile.owner
+                );
+            }
+        }
+
+        private void CreateVoidDust(Vector2 pos)
+        {
+            Dust dust = Dust.NewDustPerfect(
+                pos,
+                DustID.FireworkFountain_Pink,
+                Vector2.Zero,
+                0,
+                Color.Lerp(StartColor, EndColor, Main.rand.NextFloat()),
+                Main.rand.NextFloat(1.1f, 1.6f)
+            );
+            dust.noGravity = true;
+        }
+
+        private Color GetRandomNecroBurstColor(Player owner)
+        {
+            if (owner.shirtColor == Color.White && Main.rand.NextBool(8))
+                return new Color(Main.DiscoR, Main.DiscoG, Main.DiscoB);
+
+            return Main.rand.Next(5) switch
+            {
+                0 => ThemeColor,
+                1 => StartColor,
+                2 => EndColor,
+                3 => new Color(120, 16, 95),
+                _ => new Color(235, 70, 170)
+            };
+        }
+
+        private static void SpawnShortFlightSouls(Projectile projectile, NPC target, int flightTime)
+        {
+            float travelFactor = Utils.GetLerpValue(18f, 150f, flightTime, true);
+            int extraCount = System.Math.Max(1, (int)System.MathF.Round(MathHelper.Lerp(4f, 1f, travelFactor)));
+            int damage = (int)(projectile.damage * 0.65f);
+            if (damage < 1)
+                damage = 1;
+
+            Vector2 aimDirection = (target.Center - projectile.Center).SafeNormalize(projectile.velocity.SafeNormalize(Vector2.UnitX));
+            Vector2 normal = aimDirection.RotatedBy(MathHelper.PiOver2);
+            float speed = MathHelper.Lerp(9f, 15f, 1f - travelFactor);
+            for (int i = 0; i < extraCount; i++)
+            {
+                float side = i % 2 == 0 ? 1f : -1f;
+                float lane = (i + 1) / (float)extraCount;
+                Vector2 spawnPosition =
+                    target.Center -
+                    aimDirection * MathHelper.Lerp(24f, 62f, lane) +
+                    normal * side * MathHelper.Lerp(10f, 36f, lane);
+                Vector2 velocity = (aimDirection * speed + normal * side * Main.rand.NextFloat(1.2f, 4.2f)).RotatedByRandom(0.12f);
+
+                Projectile.NewProjectile(
+                    projectile.GetSource_FromThis(),
+                    spawnPosition,
+                    velocity,
+                    ModContent.ProjectileType<SHPCNecroplasmDamage>(),
+                    damage,
+                    0f,
+                    projectile.owner);
+            }
         }
     }
 }
