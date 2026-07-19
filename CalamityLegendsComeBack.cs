@@ -5,6 +5,7 @@ using CalamityLegendsComeBack.Weapons.A_Tools.Toys.PlayerLocker;
 using CalamityLegendsComeBack.Weapons.A_Tools.Toys.PlayerSaddle;
 using CalamityLegendsComeBack.Weapons.A_Tools.Toys.RetroGames;
 using CalamityLegendsComeBack.Weapons.A_Tools.Tools.ArtisanToken;
+using CalamityLegendsComeBack.BossAI.NewDiff.Core.Netcode;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -13,6 +14,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Terraria;
+using Terraria.Graphics.Effects;
+using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -21,6 +24,20 @@ namespace CalamityLegendsComeBack
 	// Please read https://github.com/tModLoader/tModLoader/wiki/Basic-tModLoader-Modding-Guide#mod-skeleton-contents for more information about the various files in a mod.
 	public class CalamityLegendsComeBack : Mod
 	{
+		internal const string AzureThunderGreenUltimateFilterKey = "CalamityLegendsComeBack:AzureThunderGreenUltimateFilter";
+
+        public override void Load()
+        {
+            if (Main.dedServ)
+                return;
+
+            Filters.Scene[AzureThunderGreenUltimateFilterKey] = new Filter(
+                new ScreenShaderData("FilterMiniTower")
+                    .UseColor(0.55f, 1f, 0.65f)
+                    .UseOpacity(0f),
+                EffectPriority.Medium);
+        }
+
         public override void Unload()
         {
         }
@@ -56,6 +73,12 @@ namespace CalamityLegendsComeBack
                     break;
                 case GamePacketType.ArtisanTokenPrefixApplied:
                     ArtisanTokenPackets.HandlePrefixApplied(reader);
+                    break;
+                case GamePacketType.NewDiffSyncMode:
+                    LegendsPacketHandler.HandleModeSyncPacket(reader, whoAmI);
+                    break;
+                case GamePacketType.NewDiffYharonState:
+                    LegendsPacketHandler.HandleYharonStatePacket(reader, whoAmI);
                     break;
                 default:
                     TetrisMultiplayerPackets.HandlePacket(packetType, reader, whoAmI);
