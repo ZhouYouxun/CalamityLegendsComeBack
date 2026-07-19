@@ -26,7 +26,8 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         ActivatedPeacock = 5,
         ActivatedAce = 6,
         StagedNormal = 7,
-        StuckToNPC = 8
+        StuckToNPC = 8,
+        StagedOrbitDash = 9
     }
 
     internal enum MalachiteKunaiVariant
@@ -45,6 +46,12 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         private const float StagedNormalLaunchSpeed = 44f;
         private const float PeacockHomingTurnRate = MathHelper.Pi / 60f;
         private const int StoredPeacockOpenFrames = 12;
+        private const int OrbitDashStaggerFrames = 4;
+        private const int OrbitDashSpreadFrames = 22;
+        private const float OrbitDashBurstSpeed = 31f;
+        private const float OrbitDashDecay = 0.84f;
+        private const float OrbitDashChargeSpeed = 46f;
+        private const float OrbitDashTargetRange = 1400f;
 
         public override string Texture => "CalamityLegendsComeBack/Weapons/Malachite/Malachite";
 
@@ -107,6 +114,9 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             if (Mode == MalachiteKunaiMode.ActivatedAce && Projectile.localAI[1] <= 0f)
                 return false;
 
+            if (Mode == MalachiteKunaiMode.StagedOrbitDash && Projectile.localAI[0] <= 0f)
+                return false;
+
             return true;
         }
 
@@ -116,6 +126,10 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                 return false;
 
             if (Mode == MalachiteKunaiMode.StagedNormal && Projectile.localAI[0] <= StagedNormalLaunchDelay)
+                return false;
+
+            // 散开减速阶段只是摆位，冲锋开始才伤人。
+            if (Mode == MalachiteKunaiMode.StagedOrbitDash && Projectile.localAI[0] <= OrbitDashSpreadFrames)
                 return false;
 
             return null;
@@ -157,6 +171,10 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                     AIStagedNormal(owner);
                     break;
 
+                case MalachiteKunaiMode.StagedOrbitDash:
+                    AIStagedOrbitDash(owner);
+                    break;
+
                 case MalachiteKunaiMode.StuckToNPC:
                     AIStuckToNPC();
                     break;
@@ -168,7 +186,8 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
 
             ApplyPeacockDartGravity(owner);
 
-            if (Projectile.velocity.LengthSquared() > 0.01f && !IsStored && Mode != MalachiteKunaiMode.StuckToNPC)
+            // 环绕刀在瞄准阶段自己锁朝向，不能被速度方向覆写，否则会跟着散开方向转起来。
+            if (Projectile.velocity.LengthSquared() > 0.01f && !IsStored && Mode != MalachiteKunaiMode.StuckToNPC && !IsOrbitDashAiming)
                 Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
 
             if (!IsStored && Mode != MalachiteKunaiMode.StuckToNPC && Variant == MalachiteKunaiVariant.Ace)
@@ -348,30 +367,76 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                 curve += 0.35f * MathF.Sign(curve == 0f ? player.direction : curve);
 
             float damageFactor = depletionBurst ? 0.78f : 1f;
-            for (int i = 0; i < count; i++)
+            int spawnDamage = Math.Max(1, (int)(damage * damageFactor));
+            int delay = Math.Max(0, launchDelayFrames);
+
+            // 主力一发照旧笔直掷出。
+            SpawnStagedNormalKunai(player, source, aimDirection, spawnDamage, knockback, speedMultiplier, curve, depletionBurst, delay);
+
+            // 其余全部转为环绕冲锋刀：整圈平分角度炸开，减速悬停锁定，再冲锋。
+            int orbitCount = count - 1;
+            if (orbitCount <= 0)
+                return;
+
+            float baseAngle = Main.rand.NextFloat(MathHelper.TwoPi);
+            for (int i = 0; i < orbitCount; i++)
             {
                 Projectile projectile = Projectile.NewProjectileDirect(
                     source,
                     player.MountedCenter,
-                    aimDirection * StagedNormalLaunchSpeed * speedMultiplier,
+                    aimDirection * OrbitDashBurstSpeed * speedMultiplier,
                     ModContent.ProjectileType<MalachiteKunai>(),
-                    Math.Max(1, (int)(damage * damageFactor)),
+                    spawnDamage,
                     knockback,
                     player.whoAmI,
-                    (float)MalachiteKunaiMode.StagedNormal,
-                    count * 10 + i,
-                    curve);
+                    (float)MalachiteKunaiMode.StagedOrbitDash,
+                    orbitCount * 10 + i,
+                    baseAngle);
 
                 projectile.Calamity().stealthStrike = false;
-                projectile.alpha = 150;
+                projectile.alpha = 255;
                 projectile.friendly = false;
                 projectile.tileCollide = false;
                 projectile.extraUpdates = 0;
                 projectile.penetrate = 1;
-                projectile.localAI[0] = -Math.Max(0, launchDelayFrames);
+                projectile.localAI[0] = -(delay + i * OrbitDashStaggerFrames);
                 projectile.localAI[1] = depletionBurst ? 2f : 0f;
                 projectile.netUpdate = true;
             }
+        }
+
+        private static void SpawnStagedNormalKunai(
+            Player player,
+            IEntitySource source,
+            Vector2 aimDirection,
+            int damage,
+            float knockback,
+            float speedMultiplier,
+            float curve,
+            bool depletionBurst,
+            int launchDelayFrames)
+        {
+            Projectile projectile = Projectile.NewProjectileDirect(
+                source,
+                player.MountedCenter,
+                aimDirection * StagedNormalLaunchSpeed * speedMultiplier,
+                ModContent.ProjectileType<MalachiteKunai>(),
+                damage,
+                knockback,
+                player.whoAmI,
+                (float)MalachiteKunaiMode.StagedNormal,
+                10, // count=1, slot=0：居中直飞
+                curve);
+
+            projectile.Calamity().stealthStrike = false;
+            projectile.alpha = 150;
+            projectile.friendly = false;
+            projectile.tileCollide = false;
+            projectile.extraUpdates = 0;
+            projectile.penetrate = 1;
+            projectile.localAI[0] = -launchDelayFrames;
+            projectile.localAI[1] = depletionBurst ? 2f : 0f;
+            projectile.netUpdate = true;
         }
 
         public static void SpawnFrenzyFan(Player player, IEntitySource source, int damage, float knockback)
@@ -650,6 +715,9 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             if (Mode == MalachiteKunaiMode.ActivatedAce && Projectile.localAI[1] <= 0f)
                 return;
 
+            if (Mode == MalachiteKunaiMode.StagedOrbitDash && Projectile.localAI[0] <= OrbitDashSpreadFrames)
+                return;
+
             Projectile.velocity.Y += 0.16f;
             Projectile.velocity.X *= 0.996f;
         }
@@ -701,6 +769,107 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
 
             Projectile.velocity *= 1.002f;
             Lighting.AddLight(Projectile.Center, 0.06f, 0.36f, 0.1f);
+        }
+
+        private void AIStagedOrbitDash(Player owner)
+        {
+            int encoded = Math.Max(10, (int)Projectile.ai[1]);
+            int orbitCount = Utils.Clamp(encoded / 10, 1, MalachiteBalance.DepletionBurstKunaiCount);
+            int slot = Utils.Clamp(encoded % 10, 0, orbitCount - 1);
+            float time = Projectile.localAI[0];
+
+            // 一段：藏在玩家身上错峰待机，每把晚 OrbitDashStaggerFrames 帧登场。
+            if (time <= 0f)
+            {
+                Projectile.friendly = false;
+                Projectile.tileCollide = false;
+                Projectile.extraUpdates = 0;
+                Projectile.timeLeft = Math.Max(Projectile.timeLeft, 150);
+                Projectile.Center = owner.MountedCenter;
+                Projectile.alpha = 255;
+                return;
+            }
+
+            Vector2 target = GetOrbitDashTarget(owner);
+
+            // 二段：整圈平分角度炸开，逐帧减速，刀尖始终指向目标且不自旋。
+            if (time <= OrbitDashSpreadFrames)
+            {
+                if (time == 1f)
+                {
+                    float angle = Projectile.ai[2] + MathHelper.TwoPi * slot / orbitCount;
+                    float speedMultiplier = owner.active ? owner.GetModPlayer<MCGeneralPlayer>().ProjectileSpeedMult : 1f;
+                    Projectile.velocity = angle.ToRotationVector2() * OrbitDashBurstSpeed * speedMultiplier;
+                    Projectile.alpha = 60;
+                    SpawnOrbitDashBurstVFX();
+                    Projectile.netUpdate = true;
+                }
+
+                Projectile.velocity *= OrbitDashDecay;
+                Projectile.rotation = (target - Projectile.Center).ToRotation() + MathHelper.PiOver2;
+                Projectile.scale = MathHelper.Lerp(0.72f, 1.06f, Utils.GetLerpValue(0f, 10f, time, true));
+                SpawnOrbitDashAimStreak(target);
+                return;
+            }
+
+            // 三段：锁定完成，冲锋。
+            if (time == OrbitDashSpreadFrames + 1f)
+            {
+                Projectile.friendly = true;
+                Projectile.tileCollide = true;
+                Projectile.extraUpdates = 1;
+                Projectile.penetrate = 1;
+                Projectile.velocity = (target - Projectile.Center).SafeNormalize(Vector2.UnitX * owner.direction) * OrbitDashChargeSpeed;
+                SoundEngine.PlaySound(SoundID.Item1 with { Volume = 0.46f, Pitch = 0.44f, MaxInstances = 4 }, Projectile.Center);
+                Projectile.netUpdate = true;
+                return;
+            }
+
+            Projectile.velocity *= 1.004f;
+            Lighting.AddLight(Projectile.Center, 0.06f, 0.36f, 0.1f);
+        }
+
+        private Vector2 GetOrbitDashTarget(Player owner)
+        {
+            NPC target = FindTarget(OrbitDashTargetRange, requireLineOfSight: false);
+            return target?.Center ?? GetMouseWorld(owner);
+        }
+
+        private void SpawnOrbitDashBurstVFX()
+        {
+            SoundEngine.PlaySound(SoundID.Item7 with { Volume = 0.32f, Pitch = 0.58f, MaxInstances = 3 }, Projectile.Center);
+
+            Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            for (int i = 0; i < 6; i++)
+            {
+                Dust dust = Dust.NewDustPerfect(
+                    Projectile.Center,
+                    DustID.Terra,
+                    forward * Main.rand.NextFloat(1.6f, 4.2f) + Main.rand.NextVector2Circular(0.6f, 0.6f),
+                    90,
+                    new Color(105, 245, 130),
+                    Main.rand.NextFloat(0.7f, 1.05f));
+                dust.noGravity = true;
+            }
+        }
+
+        private void SpawnOrbitDashAimStreak(Vector2 target)
+        {
+            if (Main.dedServ || !Main.rand.NextBool(2))
+                return;
+
+            // 线性拖痕沿瞄准轴向后拉，替掉参考里满屏的脉冲环。
+            Vector2 aim = (target - Projectile.Center).SafeNormalize(Vector2.UnitY);
+            Vector2 spawnPosition = Projectile.Center - aim * Main.rand.NextFloat(6f, 20f);
+            Color color = Color.Lerp(new Color(80, 255, 140), Color.White, Main.rand.NextFloat(0.05f, 0.2f)) * 0.7f;
+
+            GeneralParticleHandler.SpawnParticle(new LineParticle(
+                spawnPosition,
+                -aim * Main.rand.NextFloat(0.6f, 1.4f),
+                false,
+                Main.rand.Next(6, 10),
+                Main.rand.NextFloat(0.3f, 0.46f),
+                color));
         }
 
         private void AIStuckToNPC()
@@ -865,6 +1034,10 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                 return;
 
             if (Variant == MalachiteKunaiVariant.Ace)
+                return;
+
+            // 待机阶段整个人贴在玩家身上，别往玩家身上喷尘。
+            if (Mode == MalachiteKunaiMode.StagedOrbitDash && Projectile.localAI[0] <= 0f)
                 return;
 
             if (UsesOriginalMalachiteTrail)
@@ -1072,6 +1245,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             !WasActivated &&
             (Mode == MalachiteKunaiMode.NormalThrown ||
             Mode == MalachiteKunaiMode.StagedNormal ||
+            Mode == MalachiteKunaiMode.StagedOrbitDash ||
             Mode == MalachiteKunaiMode.FiredFrenzy ||
             Mode == MalachiteKunaiMode.FiredPeacock);
 
@@ -1080,8 +1254,12 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             Variant != MalachiteKunaiVariant.Ace &&
             (Mode == MalachiteKunaiMode.NormalThrown ||
             Mode == MalachiteKunaiMode.StagedNormal ||
+            Mode == MalachiteKunaiMode.StagedOrbitDash ||
             Mode == MalachiteKunaiMode.FiredFrenzy ||
             Mode == MalachiteKunaiMode.FiredPeacock);
+
+        private bool IsOrbitDashAiming =>
+            Mode == MalachiteKunaiMode.StagedOrbitDash && Projectile.localAI[0] <= OrbitDashSpreadFrames;
 
         private void SpawnLeftKunaiHitVisual(NPC target)
         {
@@ -1259,6 +1437,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         private bool UsesOriginalMalachiteTrail =>
             Mode == MalachiteKunaiMode.NormalThrown ||
             (Mode == MalachiteKunaiMode.StagedNormal && Projectile.localAI[0] > StagedNormalLaunchDelay) ||
+            (Mode == MalachiteKunaiMode.StagedOrbitDash && Projectile.localAI[0] > OrbitDashSpreadFrames) ||
             (!WasActivated && (Mode == MalachiteKunaiMode.FiredFrenzy || Mode == MalachiteKunaiMode.FiredPeacock));
 
         private bool IsPeacockOrAceKunai =>

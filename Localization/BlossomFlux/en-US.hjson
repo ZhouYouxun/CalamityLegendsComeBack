@@ -93,7 +93,7 @@ Mods: {
 					BF_Passive:
 						'''
 						[c/9AEF9E:Passive - Final Stand: blocks one lethal hit while held.]
-						[c/9AEF9E:Briefly grants invincibility and healing. Current: {0}]
+						[c/9AEF9E:Immediately restores 100 life, then begins recharging. Current: {0}]
 						'''
 					PassiveStateReady: "[c/7BFFB7:Ready]"
 					PassiveStateActive: "[c/FF9B8B:Final Stand Active]"
@@ -110,11 +110,14 @@ Mods: {
 					LegendaryHint: "[c/BABABA:Hold Shift to read the legendary record]"
 					LegendaryText:
 						'''
-						[c/66E6FF:The first Blossom Flux only chased faster firing, pushing enemies down with denser volleys.]
-						[c/66E6FF:The problem became clear later: speed can create pressure, but it cannot make every release feel different.]
-						[c/66E6FF:After the rebuild, one bow was split into five tactical branches, and arrows change shape with the current rhythm.]
-						[c/66E6FF:Plain wooden arrows are no longer just ammunition. Forest energy redistributes them into assault, recovery, recon, bombardment, and spread.]
-						[c/66E6FF:It is still fast, but what decides the fight is no longer fire rate. It is which branch you choose to let bloom first.]
+						[c/66E6FF:I once believed that, if the bowstring rang swiftly enough, the forest could bar every invader from its bounds.]
+						[c/66E6FF:But a thousand leaves without guidance are only blades scattered to the wind. True guardianship cannot have only one answer.]
+						[c/66E6FF:Floral beast, gather the power strewn throughout this canopy, and let every drawn string carry a purpose.]
+						[c/66E6FF:Let Breakthrough pierce the way ahead; let Recovery preserve the living; let Recon find the most dangerous foe; let Bombardment call down a rain of arrows; let Plague leave every sown affliction to linger.]
+						[c/66E6FF:With a common draw, let the five branches fulfill their duties. When the bowstring is drawn taut, awaken the deeper power within each.]
+						[c/66E6FF:Should the bowbearer stand at death's threshold, raise the Final Stand and turn aside that last step; when Bloom Energy overflows, let the whole canopy answer their call as a hail of arrows.]
+						[c/66E6FF:From this day forward, no Godseeker, whatever their station, may cross the boundary the forest has drawn.]
+						[c/66E6FF:Guard this land, still remembered by its people, until the last light leaves the boughs.]
 						'''
 				}
 
@@ -230,10 +233,13 @@ Mods: {
 				DisplayName: Silva Harp
 				Tooltip:
 					'''
-					+5 life per second. This regeneration cannot be reduced by any factor.
-					+60 frames of invincibility after taking damage.
-					Coexists with BlossomFlux Final Stand, but no longer changes its duration or cooldown rules.
-					Recipe: 12 Effulgent Feathers + 30 Planty Mush + 12 Gold Bars + 3 Divine Geodes @ Cosmic Anvil
+					Grants 150% of Bad Seed's positive attributes: +30% ranged damage, +15% ranged critical strike chance, and +22.5% arrow velocity.
+					BlossomFlux gains a further +7.5% damage and +12% critical strike chance.
+					+15 life per second. This regeneration cannot be reduced by any factor.
+					+90 frames of invincibility after taking damage.
+					Final Stand recharges twice as fast and can recharge during boss fights; it restores 300 life and immediately triggers an ultimate.
+					That ultimate skips charging without shortening its barrage. It neither halves defense nor inflicts Withered.
+					Recipe: Bad Seed + 12 Effulgent Feathers + 30 Planty Mush + 12 Gold Bars + 3 Divine Geodes @ Cosmic Anvil
 					'''
 			}
 
@@ -242,7 +248,7 @@ Mods: {
 				Tooltip:
 					'''
 					+4 life regeneration and +6 defense.
-					Summons pink, green, and blue fairies with distinct blessings.
+					Summons pink, green, and blue fairies.
 					Holding either attack with BlossomFlux sends them toward the cursor.
 					Fairies launch every 5 frames, with 2 frames between each color.
 					Contact deals 20 ranged damage, increased to 30 while holding right click.
@@ -328,6 +334,7 @@ Mods: {
 			Ranged: {
 				BFAimScope.DisplayName: BlossomFlux Aim Scope
 				SporeBomb.DisplayName: Spore Bomb
+				ResponsibilityRoverScrap.DisplayName: Responsibility Rover Scrap
 			}
 
 			PastLingeringShard.DisplayName: Lingering Remnant Shard
@@ -391,6 +398,8 @@ Mods: {
 				LazharBeacon.DisplayName: Lazhar Beacon
 				LazharLaser.DisplayName: Lazhar Laser
 				LazharOrbitalStrike.DisplayName: Lazhar Orbital Strike
+				SHPCNecroplasmBeam.DisplayName: S H P C Necroplasm Beam
+				SHPCNecroplasmFrame.DisplayName: S H P C Necroplasm Frame
 			}
 
 			PristineFuryHookSoul.DisplayName: Pristine Fury Hook Soul
@@ -411,21 +420,6 @@ Mods: {
 		TheSpecialText.BlossomFluxPresetSelected: Doctrine Selected: {0}
 
 		Buffs: {
-			PinkFairyBlessing: {
-				DisplayName: Pink Fairy Blessing
-				Description: The pink fairy's dance steadily restores life.
-			}
-
-			GreenFairyBlessing: {
-				DisplayName: Green Fairy Blessing
-				Description: The green fairy's dance increases ranged damage.
-			}
-
-			BlueFairyBlessing: {
-				DisplayName: Blue Fairy Blessing
-				Description: The blue fairy's dance reinforces your defense.
-			}
-
 			BFRecoveryLeafBuff: {
 				DisplayName: Recovery Leaf
 				Description: The recovery branchflow is protecting and healing you.

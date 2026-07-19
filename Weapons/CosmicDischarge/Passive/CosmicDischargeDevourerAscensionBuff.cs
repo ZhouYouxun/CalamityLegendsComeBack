@@ -27,10 +27,10 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             {
                 Dust d = Dust.NewDustPerfect(
                     player.Center + Main.rand.NextVector2Circular(player.width * 0.8f, player.height * 0.8f),
-                    DustID.PurpleTorch,
+                    DustID.TintableDustLighted,
                     new Vector2(Main.rand.NextFloat(-0.5f, 0.5f), Main.rand.NextFloat(-3f, -1.2f)),
                     110,
-                    CosmicDischargeCommon.RandomDoGColor(),
+                    CosmicDischargeCommon.RiftColor(),
                     Main.rand.NextFloat(0.9f, 1.35f)
                 );
                 d.noGravity = true;

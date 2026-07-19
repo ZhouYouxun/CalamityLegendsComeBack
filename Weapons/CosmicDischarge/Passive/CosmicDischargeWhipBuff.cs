@@ -19,7 +19,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         {
             player.GetAttackSpeed(DamageClass.Melee) += 0.12f;
             player.GetKnockback(DamageClass.Melee) += 0.15f;
-            Lighting.AddLight(player.Center, CosmicDischargeCommon.DoGCyanColor.ToVector3() * 0.22f);
+            Lighting.AddLight(player.Center, CosmicDischargeCommon.RiftLightBlue.ToVector3() * 0.22f);
         }
     }
 }

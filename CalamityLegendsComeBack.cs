@@ -6,6 +6,8 @@ using CalamityLegendsComeBack.Weapons.A_Tools.Toys.PlayerSaddle;
 using CalamityLegendsComeBack.Weapons.A_Tools.Toys.RetroGames;
 using CalamityLegendsComeBack.Weapons.A_Tools.Tools.ArtisanToken;
 using CalamityLegendsComeBack.BossAI.NewDiff.Core.Netcode;
+using CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone;
+using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -79,6 +81,24 @@ namespace CalamityLegendsComeBack
                     break;
                 case GamePacketType.NewDiffYharonState:
                     LegendsPacketHandler.HandleYharonStatePacket(reader, whoAmI);
+                    break;
+                case GamePacketType.ResponsibilityPhoneUltimateRequest:
+                    ResponsibilityPhonePackets.HandleUltimateRequest(whoAmI);
+                    break;
+                case GamePacketType.ResponsibilityPhoneCommandRequest:
+                    ResponsibilityPhonePackets.HandleCommand(reader, whoAmI);
+                    break;
+                case GamePacketType.ResponsibilityPhoneStateSync:
+                    ResponsibilityPhonePackets.HandleState(reader);
+                    break;
+                case GamePacketType.ResponsibilityPhoneLanguageSelection:
+                    ResponsibilityPhonePackets.HandleLanguageSelection(reader, whoAmI);
+                    break;
+                case GamePacketType.LeonidConstellationRequest:
+                    LeonidConstellationPackets.HandleRequest(reader, whoAmI);
+                    break;
+                case GamePacketType.LeonidConstellationStateSync:
+                    LeonidConstellationPackets.HandleState(reader);
                     break;
                 default:
                     TetrisMultiplayerPackets.HandlePacket(packetType, reader, whoAmI);

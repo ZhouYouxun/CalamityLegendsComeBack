@@ -36,6 +36,8 @@ Mods: {
 			}
 
 			ChangedWeapons.EAfterDog.OldEssenceFlame2.DisplayName: 旧日精华火焰2
+			// ResponsibilityPhoneHoldout.DisplayName: Responsibility Phone Holdout
+			// Summon.ResponsibilityRoverFusionBolt.DisplayName: Responsibility Rover Fusion Bolt
 		}
 	}
 }

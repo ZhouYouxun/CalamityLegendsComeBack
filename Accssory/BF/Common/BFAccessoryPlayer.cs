@@ -12,8 +12,11 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
 {
     internal sealed class BFAccessoryPlayer : ModPlayer
     {
-        public const int SilvaHarpPassiveCooldownFrames = 30 * 60;
-        public const int SilvaHarpFinalStandImmuneFrames = 10 * 60;
+        public const float BadSeedRangedDamageBonus = 0.20f;
+        public const float BadSeedRangedCritBonus = 10f;
+        public const float BadSeedArrowSpeedBonus = 0.15f;
+        public const float BadSeedBlossomFluxDamageBonus = 0.05f;
+        public const float BadSeedBlossomFluxCritBonus = 8f;
 
         public int QuiverTier;
         public bool DominationQuiverEquipped;
@@ -44,6 +47,8 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
         public bool ArrowConversionEquipped;
 
         public bool HoldingBlossomFlux => Player.HeldItem?.type == ModContent.ItemType<NewLegendBlossomFlux>();
+        public float BadSeedAttributeMultiplier => SilvaHarpEquipped ? 1.5f : BadSeedEquipped ? 1f : 0f;
+        public bool HasBadSeedAttributes => BadSeedAttributeMultiplier > 0f;
 
         public BlossomFluxChloroplastPresetType CurrentPreset =>
             HoldingBlossomFlux ? Player.GetModPlayer<BFRightUIPlayer>().CurrentPreset : BlossomFluxChloroplastPresetType.Chlo_BRecov;
@@ -118,15 +123,15 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
             if (!SilvaHarpEquipped)
                 return;
 
-            Player.lifeRegen += 10;
-            if (Player.lifeRegen < 10)
-                Player.lifeRegen = 10;
+            Player.lifeRegen += 15;
+            if (Player.lifeRegen < 15)
+                Player.lifeRegen = 15;
         }
 
         public override void OnHurt(Player.HurtInfo info)
         {
             if (SilvaHarpEquipped)
-                Player.immuneTime += 60;
+                Player.immuneTime += 90;
         }
 
         public void EquipQuiver(int tier)
@@ -176,7 +181,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
                 };
             }
 
-            return multiplier * (BadSeedEquipped ? 1.15f : 1f);
+            return multiplier * (1f + BadSeedArrowSpeedBonus * BadSeedAttributeMultiplier);
         }
 
         // 箭袋速度加成：备用 / 同调 / 共鸣 / 主宰

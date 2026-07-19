@@ -50,7 +50,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
         public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
         {
             bool stealthStrike = player.Calamity().StealthStrikeAvailable();
-            int[] effectIDs = LeonidMetalSelection.CaptureEffectIDs(player);
+            LeonidConstellationPlayer constellation = player.GetModPlayer<LeonidConstellationPlayer>();
 
             if (player.altFunctionUse == 2)
             {
@@ -65,9 +65,10 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                         ModContent.ProjectileType<LeonidLionHead>(),
                         damage * 3, // High damage
                         knockback * 1.5f,
-                        player.whoAmI,
-                        effectIDs[0],
-                        effectIDs[1]);
+                        player.whoAmI);
+
+                    if (constellation.IsUnlocked(LeonidStar.Alterf) && p.WithinBounds(Main.maxProjectiles))
+                        Main.projectile[p].damage = (int)(Main.projectile[p].damage * 1.25f);
                     
                     if (p.WithinBounds(Main.maxProjectiles))
                         Main.projectile[p].Calamity().stealthStrike = true;
@@ -82,9 +83,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                         ModContent.ProjectileType<LeonidRightClickHoldout>(),
                         damage,
                         knockback,
-                        player.whoAmI,
-                        effectIDs[0],
-                        effectIDs[1]);
+                        player.whoAmI);
                 }
             }
             else
@@ -101,9 +100,6 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                         ModContent.ProjectileType<LeonidStealthRainSpawner>(),
                         damage,
                         knockback,
-                        player.whoAmI,
-                        effectIDs[0],
-                        effectIDs[1],
                         player.direction);
                 }
                 else
@@ -115,29 +111,15 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                     Vector2 offset1 = new Vector2(-36f * player.direction, -20f);
                     Vector2 offset2 = new Vector2(36f * player.direction, -20f);
 
-                    int p1 = Projectile.NewProjectile(
-                        source,
-                        player.Center + offset1,
-                        targetVelocity,
-                        ModContent.ProjectileType<LeonidCometSmall>(),
-                        damage,
-                        knockback,
-                        player.whoAmI,
-                        effectIDs[0],
-                        effectIDs[1],
-                        0f);
-                    
-                    int p2 = Projectile.NewProjectile(
-                        source,
-                        player.Center + offset2,
-                        targetVelocity,
-                        ModContent.ProjectileType<LeonidCometSmall>(),
-                        damage,
-                        knockback,
-                        player.whoAmI,
-                        effectIDs[0],
-                        effectIDs[1],
-                        0f);
+                    int p1 = SpawnSmallComet(source, player, player.Center + offset1, targetVelocity, damage, knockback);
+                    int p2 = SpawnSmallComet(source, player, player.Center + offset2, targetVelocity, damage, knockback);
+
+                    int p3 = -1;
+                    if (constellation.IsUnlocked(LeonidStar.Adhafera))
+                    {
+                        Vector2 centerOffset = new Vector2(0f, -48f);
+                        p3 = SpawnSmallComet(source, player, player.Center + centerOffset, targetVelocity, damage, knockback);
+                    }
 
                     if (p1.WithinBounds(Main.maxProjectiles))
                     {
@@ -146,6 +128,10 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                     if (p2.WithinBounds(Main.maxProjectiles))
                     {
                         Main.projectile[p2].localAI[1] = 24f; // launch delay 24 ticks
+                    }
+                    if (p3.WithinBounds(Main.maxProjectiles))
+                    {
+                        Main.projectile[p3].localAI[1] = 18f;
                     }
                 }
             }
@@ -160,9 +146,6 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
         public override void HoldItem(Player player)
         {
-            LeonidSelectedMetal[] selection = LeonidMetalSelection.Scan(player);
-            player.GetModPlayer<LeonidMetalPlayer>().UpdateHighlights(selection);
-
             // Spawn UI
             int uiType = ModContent.ProjectileType<LeonidUltimateUI>();
             if (Main.myPlayer == player.whoAmI && player.ownedProjectileCounts[uiType] == 0)
@@ -197,8 +180,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                     // Spawn the Gravity Field projectile
                     Vector2 spawnPos = Main.MouseWorld;
                     int damage = (int)player.GetTotalDamage(Item.DamageType).ApplyTo(Item.damage * 10);
-                    int[] effectIDs = LeonidMetalSelection.CaptureEffectIDs(player);
-                    Projectile.NewProjectile(Item.GetSource_FromThis(), spawnPos, Vector2.Zero, ModContent.ProjectileType<LeonidGravityField>(), damage, Item.knockBack, player.whoAmI, effectIDs[0], effectIDs[1]);
+                    Projectile.NewProjectile(Item.GetSource_FromThis(), spawnPos, Vector2.Zero, ModContent.ProjectileType<LeonidGravityField>(), damage, Item.knockBack, player.whoAmI);
 
                     // Sound and Visual effects
                     SoundEngine.PlaySound(SoundID.Item74 with { Volume = 1.0f, Pitch = -0.5f }, player.Center);
@@ -212,7 +194,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
-            LeonidSelectedMetal[] selection = LeonidMetalSelection.Scan(Main.LocalPlayer);
+            LeonidConstellationPlayer constellation = Main.LocalPlayer.GetModPlayer<LeonidConstellationPlayer>();
             string leftClick = this.GetLocalizedValue("LeftClick");
             string stealthClick = this.GetLocalizedValue("StealthLeftClick");
             string rightClick = this.GetLocalizedValue("RightClick");
@@ -221,9 +203,13 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             string ultimateClick = string.Format(this.GetLocalizedValue("UltimateSkill"), ultimateKey);
             string passives = this.GetLocalizedValue("Passives");
 
-            string currentMetalHeader = this.GetLocalizedValue("CurrentMetals");
-            string lineA = BuildMetalLine(selection, 0);
-            string lineB = BuildMetalLine(selection, 1);
+            string constellationStatus = string.Format(
+                this.GetLocalizedValue("ConstellationStatus"),
+                constellation.AvailablePoints,
+                constellation.SpentPoints,
+                constellation.EarnedPoints,
+                LeonidConstellation.TotalCost);
+            string constellationHint = this.GetLocalizedValue("ConstellationHint");
             string legendaryBody = this.GetLocalizedValue("LegendaryText");
             string legendaryHint = this.GetLocalizedValue("LegendaryHint");
             bool shiftPressed = Main.keyState.PressingShift();
@@ -235,9 +221,8 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 rightClick + "\n" +
                 ultimateClick + "\n" +
                 passives + "\n\n" +
-                currentMetalHeader + "\n" +
-                lineA + "\n" +
-                lineB;
+                constellationStatus + "\n" +
+                constellationHint;
 
             if (shiftPressed)
                 tooltips.RemoveAll(t => t.Text == "[GFB]");
@@ -251,16 +236,10 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             Item.DrawItemGlowmaskSingleFrame(spriteBatch, rotation, ModContent.Request<Texture2D>("CalamityMod/Items/Weapons/Rogue/LeonidProgenitorGlow").Value);
         }
 
-        private string BuildMetalLine(LeonidSelectedMetal[] selection, int index)
+        private static int SpawnSmallComet(EntitySource_ItemUse_WithAmmo source, Player player, Vector2 spawnPosition, Vector2 velocity, int damage, float knockback)
         {
-            if (selection == null || index < 0 || index >= selection.Length || !selection[index].IsValid)
-                return this.GetLocalizedValue("EmptyMetalLine");
-
-            int effectID = selection[index].Entry.EffectID;
-            string metalName = this.GetLocalizedValue($"MetalName{effectID}");
-            string metalDesc = this.GetLocalizedValue($"MetalDesc{effectID}");
-            string metalIcon = $"[i:{selection[index].Entry.ItemType}]";
-            return string.Format(this.GetLocalizedValue("MetalLine"), metalIcon, metalName, metalDesc);
+            float speedMultiplier = player.GetModPlayer<LeonidConstellationPlayer>().IsUnlocked(LeonidStar.Algieba) ? 1.2f : 1f;
+            return Projectile.NewProjectile(source, spawnPosition, velocity * speedMultiplier, ModContent.ProjectileType<LeonidCometSmall>(), damage, knockback, player.whoAmI);
         }
     }
 }

@@ -39,10 +39,16 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 Vector2 slashDirection = angle.ToRotationVector2();
                 SetBlade(slashDirection, SwordReach, second ? 0.12f : -0.12f, 38f);
                 PlayReleaseOnce(SoundID.Item71, 0.82f, second ? 0.14f : -0.08f, 3.8f);
-                CosmicDischargeCommon.SpawnSwordSwingTrail(TipPosition, Owner.MountedCenter + slashDirection * (SwordReach * 0.56f), angle, second);
 
                 if (!impactEffectsPlayed && t >= 0.58f)
                 {
+                    // 整次挥剑只画一道弧。正反挥靠角度差 π 区分，不靠换粒子种类。
+                    CosmicDischargeCommon.SpawnSwingSmear(
+                        Owner.MountedCenter + slashDirection * (SwordReach * 0.5f),
+                        angle + MathHelper.PiOver2 + (second ? MathHelper.Pi : 0f),
+                        4.2f,
+                        CosmicDischargeCommon.RiftMagenta);
+
                     EmitAirCrack(TipPosition, slashDirection, 0.74f);
                     SpawnSwordHomingBolts(TipPosition, slashDirection, second ? 4 : 3, second ? 0.42f : 0.36f);
                 }
@@ -57,22 +63,6 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 float recover = MathF.Sin(t * MathHelper.PiOver2);
                 float angle = AimAngle + MathHelper.Lerp(1.14f * swingSign, 0.18f * swingSign, recover);
                 SetBlade(angle.ToRotationVector2(), SwordReach, 0f, MathHelper.Lerp(30f, 18f, recover));
-            }
-
-            if (Time > SwordSwingWindup && Time <= strikeEnd)
-            {
-                float previousTime = Math.Max(SwordSwingWindup, Time - 1f);
-                for (int i = 1; i <= SwordTipTrailSubsteps; i++)
-                {
-                    float subTime = MathHelper.Lerp(previousTime, Time, i / (float)SwordTipTrailSubsteps);
-                    tipHistory.Add(GetSwordSwingTipPosition(subTime, swingSign));
-                }
-
-                TrimTipHistory(SwordSwingTipTrailFrames * SwordTipTrailSubsteps);
-            }
-            else
-            {
-                FadeTipHistory(SwordTipTrailSubsteps);
             }
 
             if (Time >= SwordSwingDuration)
@@ -99,31 +89,12 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 if (Time % 8f == 0f)
                     ApplyScreenShake(1.2f + t * 1.5f);
 
-                CosmicDischargeCommon.SpawnSwordFinisherCharge(Owner, Time);
-                SpawnSpinChargeDust(t);
+                // 蓄力照 DoG 的节奏：整个 36 帧前摇只脉冲 3 次（12/24/36），
+                // 不再逐帧撒漩涡火花 —— 那是原先"疯"的最大来源。
+                if (Time == 12f || Time == 24f || Time == 36f)
+                    CosmicDischargeCommon.SpawnChargePulse(Owner.MountedCenter, t, ultActive ? 1f : 0.8f);
 
-                if (!Main.dedServ)
-                {
-                    // Swirling vortex particle effects
-                    int spawnCount = ultActive ? 3 : 1;
-                    for (int pIndex = 0; pIndex < spawnCount; pIndex++)
-                    {
-                        float angle = Main.rand.NextFloat(MathHelper.TwoPi);
-                        float dist = MathHelper.Lerp(280f, 15f, t) + Main.rand.NextFloat(-20f, 20f);
-                        Vector2 particlePos = Owner.Center + angle.ToRotationVector2() * dist;
-                        Vector2 toPlayer = Owner.Center - particlePos;
-                        Vector2 particleVel = toPlayer.RotatedBy(0.55f * Owner.direction).SafeNormalize(Vector2.Zero) * (ultActive ? 7.5f : 4.8f);
-                        
-                        GeneralParticleHandler.SpawnParticle(new SparkParticle(
-                            particlePos,
-                            particleVel,
-                            false,
-                            Main.rand.Next(12, 22),
-                            Main.rand.NextFloat(0.45f, 0.82f) * 0.3f,
-                            CosmicDischargeCommon.RandomDoGColor()
-                        ));
-                    }
-                }
+                SpawnSpinChargeDust(t);
 
                 if (Main.myPlayer == Projectile.owner)
                 {
@@ -150,19 +121,9 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                         }
                     }
                 }
-                float previousTime = Math.Max(0f, Time - 1f);
-                for (int i = 1; i <= SwordTipTrailSubsteps; i++)
-                {
-                    float subTime = MathHelper.Lerp(previousTime, Time, i / (float)SwordTipTrailSubsteps);
-                    float subT = MathHelper.Clamp(subTime / SwordFinisherWindup, 0f, 1f);
-                    float subSpinAngle = AimAngle + Owner.direction * (MathHelper.TwoPi * 2f * subT - MathHelper.PiOver2);
-                    Vector2 subTip = Owner.MountedCenter + subSpinAngle.ToRotationVector2() * FinisherReach;
-
-                    tipHistory.Add(subTip);
-                }
-                TrimTipHistory(24 * SwordTipTrailSubsteps);
+                // 蓄力结束的释放：一次 Heavy 档爆发，玩家为中心。
                 if (Time == SwordFinisherWindup)
-                    CosmicDischargeCommon.SpawnSwordFinisherRelease(Owner);
+                    CosmicDischargeCommon.SpawnRiftBurst(Owner.MountedCenter, RiftTier.Heavy, default, CosmicDischargeCommon.RiftMagenta);
                 return;
             }
 
@@ -193,6 +154,14 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 if (!spawnedSwordWave && t >= 0.45f)
                 {
                     spawnedSwordWave = true;
+
+                    // 终结斩的落刃弧 —— 全武器最大的一道，但仍然只有一道。
+                    CosmicDischargeCommon.SpawnSwingSmear(
+                        Owner.MountedCenter + direction * (FinisherReach * 0.5f),
+                        angle + MathHelper.PiOver2,
+                        6f,
+                        CosmicDischargeCommon.RiftMagenta);
+
                     SpawnSwordWave(direction);
                     EmitAirCrack(TipPosition, direction, 1.35f);
                     SpawnSwordHomingBolts(TipPosition, direction, 6, 0.52f);
@@ -206,45 +175,8 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 SetBlade(angle.ToRotationVector2(), FinisherReach, 0f, MathHelper.Lerp(38f, 18f, recover));
             }
 
-            if (Time > SwordFinisherWindup && Time <= strikeEnd)
-            {
-                float previousTime = Math.Max(SwordFinisherWindup, Time - 1f);
-                for (int i = 1; i <= SwordTipTrailSubsteps; i++)
-                {
-                    float subTime = MathHelper.Lerp(previousTime, Time, i / (float)SwordTipTrailSubsteps);
-
-                    if (subTime <= SwordFinisherSlamFrame)
-                    {
-                        float lift = EaseOutCubic(Utils.GetLerpValue(SwordFinisherWindup, SwordFinisherSlamFrame, subTime, true));
-                        float angle = AimAngle - Owner.direction * MathHelper.Lerp(1.38f, 1.05f, lift);
-                        Vector2 subTip = Owner.MountedCenter + angle.ToRotationVector2() * FinisherReach;
-                        tipHistory.Add(subTip);
-                    }
-                    else
-                    {
-                        float t = (subTime - SwordFinisherSlamFrame) / strikeFrames;
-                        float slam = EaseOutCubic(t);
-                        float angle = AimAngle + MathHelper.Lerp(-1.05f * Owner.direction, 1.22f * Owner.direction, slam);
-                        Vector2 subTip = Owner.MountedCenter + angle.ToRotationVector2() * FinisherReach;
-                        tipHistory.Add(subTip);
-                    }
-                }
-                TrimTipHistory(SwordFinisherTipTrailFrames * SwordTipTrailSubsteps);
-            }
-            else
-            {
-                FadeTipHistory(SwordTipTrailSubsteps);
-            }
-
             if (Time >= SwordFinisherDuration)
                 Projectile.Kill();
-        }
-        private Vector2 GetSwordSwingTipPosition(float sampleTime, float swingSign)
-        {
-            float t = MathHelper.Clamp((sampleTime - SwordSwingWindup) / 8f, 0f, 1f);
-            float strike = EaseOutCubic(t);
-            float angle = AimAngle + MathHelper.Lerp(-0.86f * swingSign, 1.1f * swingSign, strike);
-            return Owner.MountedCenter + angle.ToRotationVector2() * SwordReach;
         }
         private void SpawnSwordWave(Vector2 direction)
         {
@@ -281,55 +213,21 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     Projectile.owner);
             }
         }
+        /// <summary>旋转蓄力时刀锋扫出的环形尘。DoGFire 的 dust 频率，不是每帧撒。</summary>
         private void SpawnSpinChargeDust(float charge)
         {
-            if (Main.dedServ || Main.rand.NextBool(2))
+            if (Main.dedServ || !Main.rand.NextBool(12))
                 return;
 
             Vector2 radius = Main.rand.NextVector2CircularEdge(58f + charge * 42f, 58f + charge * 42f);
             Dust dust = Dust.NewDustPerfect(
                 Owner.MountedCenter + radius,
-                DustID.PurpleTorch,
+                DustID.TintableDustLighted,
                 radius.RotatedBy(MathHelper.PiOver2 * Owner.direction).SafeNormalize(Vector2.Zero) * Main.rand.NextFloat(1.2f, 3.8f),
-                110,
-                CosmicDischargeCommon.RandomDoGColor(),
-                Main.rand.NextFloat(0.9f, 1.25f));
+                0,
+                CosmicDischargeCommon.RiftColor(),
+                Main.rand.NextFloat(0.6f, 0.8f));
             dust.noGravity = true;
-        }
-        private void DrawSwordSmear()
-        {
-            if (tipHistory.Count < 2)
-                return;
-
-            Texture2D pixel = TextureAssets.MagicPixel.Value;
-            Main.spriteBatch.SetBlendState(BlendState.Additive);
-
-            bool ultActive = Owner.GetModPlayer<CosmicDischargePlayer>().UltimateFieldActive;
-            bool empActive = Owner.GetModPlayer<CosmicDischargePlayer>().DevourerAscensionActive;
-            
-            float glowWidth = empActive ? 55f : (ultActive ? 40f : 25f);
-            float coreWidth = empActive ? 20f : (ultActive ? 14f : 8f);
-
-            for (int i = 0; i < tipHistory.Count - 1; i++)
-            {
-                float fade = 1f - i / (float)tipHistory.Count;
-                Color glowColor = Color.Lerp(CosmicDischargeCommon.DoGFuchsiaColor, CosmicDischargeCommon.DoGCyanColor, 1f - fade);
-                glowColor = CosmicDischargeCommon.Transparent(glowColor) * (0.55f * fade * Projectile.Opacity);
-                Color coreColor = CosmicDischargeCommon.DoGWhiteColor * (0.78f * fade * Projectile.Opacity);
-
-                Vector2 start = tipHistory[i] - Main.screenPosition + Vector2.UnitY * Owner.gfxOffY;
-                Vector2 end = tipHistory[i + 1] - Main.screenPosition + Vector2.UnitY * Owner.gfxOffY;
-                Vector2 segment = end - start;
-
-                if (segment.LengthSquared() < 0.1f)
-                    continue;
-
-                DrawLine(pixel, start, segment, glowColor, glowWidth * fade);
-                DrawLine(pixel, start, segment, CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGCyanColor) * (0.28f * fade * Projectile.Opacity), glowWidth * 0.42f * fade);
-                DrawLine(pixel, start, segment, coreColor, coreWidth * fade);
-            }
-
-            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
         }
     }
 }

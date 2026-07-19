@@ -35,7 +35,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.Toys.RetroGames
         ArtisanTokenApplyPrefix = 15,
         ArtisanTokenPrefixApplied = 16,
         NewDiffSyncMode = 17,
-        NewDiffYharonState = 18
+        NewDiffYharonState = 18,
+        ResponsibilityPhoneUltimateRequest = 19,
+        ResponsibilityPhoneCommandRequest = 20,
+        ResponsibilityPhoneStateSync = 21,
+        ResponsibilityPhoneLanguageSelection = 22,
+        LeonidConstellationRequest = 23,
+        LeonidConstellationStateSync = 24
     }
 
     internal enum TetrisInputCommand : byte

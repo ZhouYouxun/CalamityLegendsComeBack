@@ -1,4 +1,4 @@
-﻿Mods: {
+Mods: {
 	CalamityLegendsComeBack: {
 		Configs: {
 			CalamityLegendsComeBackConfig: {
@@ -17,6 +17,16 @@
 				AllowOtherRecipes: {
 					Label: Allow Extra QOL Recipes
 					Tooltip: If enabled, adds extra recipes that smooth out progression.
+				}
+
+				AllowWheelSlowdown: {
+					Label: Allow Wheel Slowdown
+					Tooltip: ""
+				}
+
+				GiveQuickStartBoxOnSpawn: {
+					Label: Give Quick Start Box On Spawn
+					Tooltip: ""
 				}
 			}
 

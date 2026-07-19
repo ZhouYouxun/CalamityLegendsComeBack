@@ -84,7 +84,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
         public BlossomFluxChloroplastPresetType Preset;
         private bool sunflowerEmpowered;
         private bool sunflowerContactTriggered;
-        private bool badSeedCritApplied;
+        private bool badSeedAttributesApplied;
 
         public override void AI(Projectile projectile)
         {
@@ -98,10 +98,10 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
             Player owner = Main.player[projectile.owner];
             BFAccessoryPlayer accessoryPlayer = owner.GetModPlayer<BFAccessoryPlayer>();
 
-            if (accessoryPlayer.BadSeedEquipped && !badSeedCritApplied)
+            if (accessoryPlayer.HasBadSeedAttributes && !badSeedAttributesApplied)
             {
-                badSeedCritApplied = true;
-                projectile.CritChance += 8;
+                badSeedAttributesApplied = true;
+                projectile.CritChance += (int)(BFAccessoryPlayer.BadSeedBlossomFluxCritBonus * accessoryPlayer.BadSeedAttributeMultiplier);
             }
 
             if (accessoryPlayer.DominationQuiverEquipped)
@@ -154,8 +154,12 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
             if (BFArrowCommon.InBounds(projectile.owner, Main.maxPlayers) && Main.player[projectile.owner].GetModPlayer<BFAccessoryPlayer>().DominationQuiverEquipped)
                 modifiers.DefenseEffectiveness *= 0f;
 
-            if (BFArrowCommon.InBounds(projectile.owner, Main.maxPlayers) && Main.player[projectile.owner].GetModPlayer<BFAccessoryPlayer>().BadSeedEquipped)
-                modifiers.FinalDamage *= 1.05f;
+            if (BFArrowCommon.InBounds(projectile.owner, Main.maxPlayers))
+            {
+                BFAccessoryPlayer accessoryPlayer = Main.player[projectile.owner].GetModPlayer<BFAccessoryPlayer>();
+                if (accessoryPlayer.HasBadSeedAttributes)
+                    modifiers.FinalDamage *= 1f + BFAccessoryPlayer.BadSeedBlossomFluxDamageBonus * accessoryPlayer.BadSeedAttributeMultiplier;
+            }
 
             if (sunflowerEmpowered && preset == BlossomFluxChloroplastPresetType.Chlo_ABreak)
             {

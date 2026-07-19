@@ -71,7 +71,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             { "Old Duke",                                620,    460 },
             { "Devourer of Gods",                       1280,    980 },
             { "Yharon",                                  1380,   1060 },
-            { "Exo Mechs and Supreme Calamitas",        16800,  12800 }
+            { "Exo Mechs and Supreme Calamitas",        2000,  1750 }
         };
 
         // Stage switches. Any later row should include earlier unlocked behavior.

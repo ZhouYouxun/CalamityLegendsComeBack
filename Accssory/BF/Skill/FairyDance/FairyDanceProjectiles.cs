@@ -68,7 +68,6 @@ namespace CalamityLegendsComeBack.Accssory.BF.FairyDance
             }
 
             Projectile.timeLeft = 2;
-            owner.AddBuff(GetFairyBuff(Variant), 2);
             Lighting.AddLight(Projectile.Center, GetFairyColor(Variant).ToVector3() * 0.35f);
 
             Projectile.frameCounter++;
@@ -181,12 +180,6 @@ namespace CalamityLegendsComeBack.Accssory.BF.FairyDance
             _ => Color.HotPink
         };
 
-        private static int GetFairyBuff(int variant) => variant switch
-        {
-            1 => ModContent.BuffType<GreenFairyBlessing>(),
-            2 => ModContent.BuffType<BlueFairyBlessing>(),
-            _ => ModContent.BuffType<PinkFairyBlessing>()
-        };
     }
 
     internal sealed class RainbowSpiritLacewing : ModProjectile
@@ -300,15 +293,25 @@ namespace CalamityLegendsComeBack.Accssory.BF.FairyDance
                 Projectile.GetSource_FromThis(),
                 Projectile.Center,
                 velocity,
-                ModContent.ProjectileType<RainbowSpiritBolt>(),
+                // 光之女皇武器的原版直线彩虹弹：931 的原版绘制会调用 GetFairyQueenWeaponsColor，
+                // 而非首领 873 的普通 HSL 色环。
+                ProjectileID.FairyQueenMagicItemShot,
                 damage,
                 1f,
                 Projectile.owner,
-                Projectile.Center.X,
-                Projectile.Center.Y);
+                owner.whoAmI,
+                Main.rand.NextFloat());
 
             if (index >= 0 && index < Main.maxProjectiles)
-                Main.projectile[index].CritChance = (int)Math.Round(owner.GetTotalCritChance(DamageClass.Ranged));
+            {
+                Projectile rainbowStreak = Main.projectile[index];
+                rainbowStreak.friendly = true;
+                rainbowStreak.hostile = false;
+                rainbowStreak.DamageType = DamageClass.Ranged;
+                rainbowStreak.penetrate = 1;
+                rainbowStreak.CritChance = (int)Math.Round(owner.GetTotalCritChance(DamageClass.Ranged));
+                rainbowStreak.netUpdate = true;
+            }
         }
 
         private void UpdateAnimation()

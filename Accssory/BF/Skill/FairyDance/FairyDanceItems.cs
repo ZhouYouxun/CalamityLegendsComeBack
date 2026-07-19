@@ -104,9 +104,16 @@ namespace CalamityLegendsComeBack.Accssory.BF.FairyDance
 
         public override void UpdateAccessory(Player player, bool hideVisual)
         {
-            player.GetDamage(DamageClass.Ranged) += 0.20f;
-            player.GetCritChance(DamageClass.Ranged) += 10f;
+            player.GetDamage(DamageClass.Ranged) += BFAccessoryPlayer.BadSeedRangedDamageBonus;
+            player.GetCritChance(DamageClass.Ranged) += BFAccessoryPlayer.BadSeedRangedCritBonus;
             player.GetModPlayer<BFAccessoryPlayer>().BadSeedEquipped = true;
+        }
+
+        public override bool CanAccessoryBeEquippedWith(Item equippedItem, Item incomingItem, Player player)
+        {
+            return equippedItem.type != ModContent.ItemType<SilvaHarp.SilvaHarp>() &&
+                   incomingItem.type != ModContent.ItemType<SilvaHarp.SilvaHarp>() &&
+                   base.CanAccessoryBeEquippedWith(equippedItem, incomingItem, player);
         }
 
         public override void AddRecipes()
@@ -120,38 +127,13 @@ namespace CalamityLegendsComeBack.Accssory.BF.FairyDance
         }
     }
 
-    internal abstract class FairyDanceBlessing : ModBuff
-    {
-        public override string Texture => "CalamityLegendsComeBack/Weapons/BlossomFlux/贴图/复苏之叶";
-
-        public override void SetStaticDefaults()
-        {
-            Main.buffNoSave[Type] = true;
-            Main.buffNoTimeDisplay[Type] = true;
-        }
-    }
-
-    internal sealed class PinkFairyBlessing : FairyDanceBlessing
-    {
-        public override void Update(Player player, ref int buffIndex) => player.lifeRegen += 4;
-    }
-
-    internal sealed class GreenFairyBlessing : FairyDanceBlessing
-    {
-        public override void Update(Player player, ref int buffIndex) => player.GetDamage(DamageClass.Ranged) += 0.06f;
-    }
-
-    internal sealed class BlueFairyBlessing : FairyDanceBlessing
-    {
-        public override void Update(Player player, ref int buffIndex) => player.statDefense += 6;
-    }
-
     internal sealed class BadSeedArrowSpeedGlobalItem : GlobalItem
     {
         public override void ModifyShootStats(Item item, Player player, ref Vector2 position, ref Vector2 velocity, ref int type, ref int damage, ref float knockback)
         {
-            if (item.useAmmo == AmmoID.Arrow && player.GetModPlayer<BFAccessoryPlayer>().BadSeedEquipped)
-                velocity *= 1.15f;
+            BFAccessoryPlayer accessoryPlayer = player.GetModPlayer<BFAccessoryPlayer>();
+            if (item.useAmmo == AmmoID.Arrow && accessoryPlayer.HasBadSeedAttributes)
+                velocity *= 1f + BFAccessoryPlayer.BadSeedArrowSpeedBonus * accessoryPlayer.BadSeedAttributeMultiplier;
         }
     }
 }

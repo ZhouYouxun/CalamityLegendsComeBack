@@ -17,60 +17,491 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 {
+    /// <summary>
+    /// 事件强度分级。
+    ///
+    /// 预算上限锚定 DoG 本体最强的一次特效 —— DoGTeleportRift.SpawnExplosionVisuals：
+    ///     25 SparkParticle + 20 SquishyLightParticle + 5 CustomPulse + 1 StrongBloom
+    ///     + 25 DoGRiftCrack + ~50 DoGDistortionMetaball
+    /// Ultimate 档 = 该数值本身；本武器任何单次事件都不得超过它。
+    /// </summary>
+    internal enum RiftTier
+    {
+        /// <summary>轻击（挥击擦到、非尖端）</summary>
+        Light,
+        /// <summary>普通命中</summary>
+        Medium,
+        /// <summary>重击 / 尖端命中</summary>
+        Heavy,
+        /// <summary>连招终结技 / QuickDraw</summary>
+        Finisher,
+        /// <summary>大招爆发 —— DoG 原始数值</summary>
+        Ultimate
+    }
 
+    /// <summary>单次爆发的粒子配额。每个字段对应一种粒子，绝不在别处临时加料。</summary>
+    internal readonly struct RiftBudget
+    {
+        public readonly int Sparks;
+        public readonly int Lights;
+        public readonly int Pulses;
+        public readonly int Blooms;
+        public readonly int Rings;
+        public readonly int Cracks;
+        public readonly int Metaballs;
+        /// <summary>尺寸/速度总系数。DoG 是 Boss 尺度，武器取其一半左右。</summary>
+        public readonly float Scale;
+
+        public RiftBudget(int sparks, int lights, int pulses, int blooms, int rings, int cracks, int metaballs, float scale)
+        {
+            Sparks = sparks;
+            Lights = lights;
+            Pulses = pulses;
+            Blooms = blooms;
+            Rings = rings;
+            Cracks = cracks;
+            Metaballs = metaballs;
+            Scale = scale;
+        }
+    }
 
     internal static class CosmicDischargeCommon
     {
         public const string ChainTexturePath = "CalamityLegendsComeBack/Weapons/CosmicDischarge/LeftClick/CosmicDischargeFlail";
         public const string RingTexturePath = "CalamityMod/Particles/BloomRing";
+
         private const int ChainHandleHeight = 62;
         private const int ChainBodyStartY = 64;
         private const int ChainBodyHeight = 28;
         private const int ChainTailStartY = 114;
         private const int ChainTailHeight = 84;
         private const float ChainBodyStartOffset = 30f;
-        public const float ShockwaveFinalScaleMultiplier = 0.3f;
-        public static readonly Color DoGCyanColor = Color.Cyan;
-        public static readonly Color DoGFuchsiaColor = Color.Fuchsia;
-        public static readonly Color DoGPurpleColor = new(136, 26, 186);
-        public static readonly Color DoGSkyBlueColor = Color.SkyBlue;
-        public static readonly Color DoGAliceColor = Color.AliceBlue;
-        public static readonly Color DoGWhiteColor = Color.White;
-        public static readonly Color DoGBlackColor = new(0, 0, 0, 0);
 
+        // ────────────────────────────────────────────────────────────────
+        // 一、调色板 —— 全部取自 DoG 源码，绝不新增颜色
+        // ────────────────────────────────────────────────────────────────
+
+        /// <summary>DoGSky.DoGLightBlue —— (0, 221, 250)</summary>
+        public static readonly Color RiftLightBlue = DoGSky.DoGLightBlue;
+
+        /// <summary>DoGSky.DoGTwlight —— (147, 24, 204)（Calamity 源码拼写如此）</summary>
+        public static readonly Color RiftTwilight = DoGSky.DoGTwlight;
+
+        /// <summary>DoG 裂缝三色中的品红分量</summary>
+        public static readonly Color RiftMagenta = Color.Fuchsia;
+
+        public static readonly Color DoGWhiteColor = Color.White;
+
+        /// <summary>
+        /// 唯一取色入口 —— DoGTeleportRift 的原式。
+        /// 三色随机取一再向白色插值 0.65，高度白化、低饱和：
+        /// 这正是 DoG 大量粒子叠加仍不糊、仍有秩序感的根本原因。
+        /// </summary>
+        public static Color RiftColor() => Color.Lerp(
+            Utils.SelectRandom(Main.rand, RiftMagenta, RiftLightBlue, RiftTwilight),
+            Color.White,
+            0.65f);
+
+        /// <summary>
+        /// DevourerofGodsHead.SpecialMoveColor 原式。
+        /// 仅用于确定性绘制（拖尾内芯、传送门、UI 文本），不用于随机粒子。
+        /// </summary>
         public static Color DoGSpecialColor =>
             Color.Lerp(
-                DoGFuchsiaColor,
-                DoGCyanColor,
+                RiftMagenta,
+                RiftLightBlue,
                 MathHelper.SmoothStep(0f, 1f, (MathF.Sin(Main.GlobalTimeWrappedHourly * 2f) + 1f) * 0.5f));
 
-        public static Color ThreeColorSpark =>
-            Color.Lerp(
-                Color.Lerp(DoGFuchsiaColor, DoGAliceColor, Main.rand.NextFloat(0.5f)),
-                DoGCyanColor,
-                Main.rand.NextFloat());
-
+        /// <summary>形态标识色。只用在确定性绘制上，粒子一律走 <see cref="RiftColor"/>。</summary>
         public static Color GetModeColor(CosmicDischargeAttackMode mode) => mode switch
         {
-            CosmicDischargeAttackMode.Whip => DoGCyanColor,
-            CosmicDischargeAttackMode.Sword => DoGFuchsiaColor,
-            CosmicDischargeAttackMode.ChainKnife => DoGPurpleColor,
+            CosmicDischargeAttackMode.Whip => RiftLightBlue,
+            CosmicDischargeAttackMode.Sword => RiftMagenta,
+            CosmicDischargeAttackMode.ChainKnife => RiftTwilight,
             _ => DoGSpecialColor
         };
 
         public static Color Transparent(Color color) => new(color.R, color.G, color.B, 0);
 
-        public static Color RandomDoGColor(bool includePurple = true)
+        // ────────────────────────────────────────────────────────────────
+        // 二、预算表
+        // ────────────────────────────────────────────────────────────────
+
+        private static RiftBudget GetBudget(RiftTier tier) => tier switch
         {
-            int max = includePurple ? 4 : 3;
-            return Main.rand.Next(max) switch
+            //                        spark light pulse bloom ring crack metaball scale
+            RiftTier.Light => new RiftBudget(5, 0, 0, 0, 1, 0, 0, 0.50f),
+            RiftTier.Medium => new RiftBudget(8, 4, 0, 0, 1, 0, 0, 0.60f),
+            RiftTier.Heavy => new RiftBudget(12, 7, 1, 0, 1, 3, 0, 0.72f),
+            RiftTier.Finisher => new RiftBudget(18, 12, 2, 1, 1, 5, 6, 0.85f),
+            _ => new RiftBudget(25, 20, 5, 1, 2, 8, 20, 1.00f),
+        };
+
+        /// <summary>DoG 爆炸的原始尺寸基准乘以该系数 —— Boss 尺度 → 武器尺度。</summary>
+        private const float WeaponScale = 0.55f;
+
+        // ────────────────────────────────────────────────────────────────
+        // 三、唯一的爆发入口
+        // ────────────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// 所有命中/爆炸特效的唯一出口。传入分级即可，不接受额外加料。
+        /// </summary>
+        /// <param name="direction">有方向的事件（突刺、斩击）传入朝向，冲击环会沿其拉长；否则传 default。</param>
+        /// <param name="accent">形态强调色，只影响冲击环与核心光，不影响火花。</param>
+        public static void SpawnRiftBurst(Vector2 center, RiftTier tier, Vector2 direction = default, Color? accent = null)
+        {
+            if (Main.dedServ)
+                return;
+
+            RiftBudget budget = GetBudget(tier);
+            float scale = budget.Scale;
+            Color accentColor = accent ?? DoGSpecialColor;
+            bool directional = direction != default && direction.LengthSquared() > 0.001f;
+            if (directional)
+                direction = direction.SafeNormalize(Vector2.UnitX);
+
+            // 火花 —— DoG 爆炸原值 scale 1.8~2.0 / 速度 12~16，按武器尺度缩放。
+            for (int i = 0; i < budget.Sparks; i++)
             {
-                0 => DoGCyanColor,
-                1 => DoGFuchsiaColor,
-                2 => DoGSpecialColor,
-                _ => DoGPurpleColor
-            };
+                Vector2 velocity = Vector2.UnitX.RotatedByRandom(MathHelper.TwoPi) * Main.rand.NextFloat(12f, 16f) * scale;
+                if (directional)
+                    velocity = Vector2.Lerp(velocity, direction * velocity.Length(), 0.35f);
+
+                GeneralParticleHandler.SpawnParticle(new SparkParticle(
+                    center,
+                    velocity,
+                    false,
+                    Main.rand.Next(30, 45),
+                    Main.rand.NextFloat(1.8f, 2f) * WeaponScale * scale,
+                    RiftColor()));
+            }
+
+            // 能量光点 —— DoG 爆炸原值 scale 1.8~2.0 / 速度 16~20。
+            for (int i = 0; i < budget.Lights; i++)
+            {
+                Vector2 velocity = Vector2.UnitX.RotatedByRandom(MathHelper.TwoPi) * Main.rand.NextFloat(16f, 20f) * scale;
+                GeneralParticleHandler.SpawnParticle(new SquishyLightParticle(
+                    center,
+                    velocity,
+                    Main.rand.NextFloat(1.8f, 2f) * WeaponScale * scale,
+                    RiftColor(),
+                    Main.rand.Next(30, 45)));
+            }
+
+            // 闪光 —— DoG 用 DoGTwlight 的 PlasmaExplosion 打底，白色 ShineExplosion2 收尾。
+            for (int i = 0; i < budget.Pulses; i++)
+            {
+                bool shine = i >= budget.Pulses - 2;
+                string texture = shine
+                    ? (i % 2 == 0 ? "CalamityMod/Particles/ShineExplosion1" : "CalamityMod/Particles/ShineExplosion2")
+                    : "CalamityMod/Particles/PlasmaExplosion";
+                Color pulseColor = shine ? Color.White * 0.6f : RiftTwilight * 0.8f;
+
+                GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                    center,
+                    Vector2.Zero,
+                    pulseColor,
+                    texture,
+                    Vector2.One,
+                    Main.rand.NextFloat(MathHelper.TwoPi),
+                    0f,
+                    (1.25f + i * 0.05f) * WeaponScale * scale,
+                    45));
+            }
+
+            // 核心白光 —— DoG 用 8f，武器取其零头。
+            for (int i = 0; i < budget.Blooms; i++)
+                GeneralParticleHandler.SpawnParticle(new StrongBloom(
+                    center,
+                    Vector2.Zero,
+                    Color.White * 0.8f,
+                    8f * WeaponScale * scale * 0.5f,
+                    30));
+
+            // 冲击环 —— 唯一的环形元素，有方向就用定向环。
+            for (int i = 0; i < budget.Rings; i++)
+            {
+                float ringScale = (0.7f + i * 0.35f) * scale;
+                if (directional)
+                    GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                        center,
+                        Vector2.Zero,
+                        Transparent(accentColor) * 0.5f,
+                        new Vector2(1.5f, 0.6f),
+                        direction.ToRotation(),
+                        0.04f,
+                        ringScale,
+                        20));
+                else
+                    GeneralParticleHandler.SpawnParticle(new PulseRing(
+                        center,
+                        Vector2.Zero,
+                        Transparent(accentColor) * 0.5f,
+                        0.04f,
+                        ringScale,
+                        20));
+            }
+
+            // 裂纹 —— 短促的线段，读作"现实开裂"。
+            for (int i = 0; i < budget.Cracks; i++)
+            {
+                Vector2 crackDirection = (MathHelper.TwoPi * i / budget.Cracks + Main.rand.NextFloat(-0.18f, 0.18f)).ToRotationVector2();
+                GeneralParticleHandler.SpawnParticle(new LineParticle(
+                    center + crackDirection * Main.rand.NextFloat(4f, 20f),
+                    crackDirection * Main.rand.NextFloat(5f, 11f) * scale,
+                    false,
+                    Main.rand.Next(10, 18),
+                    Main.rand.NextFloat(0.5f, 0.8f) * scale,
+                    Transparent(RiftColor()) * 0.8f));
+            }
+
+            // 空间扭曲元球 —— DoG 爆炸用 15~20 个飞散球，size 30~50。
+            for (int i = 0; i < budget.Metaballs; i++)
+                DoGDistortionMetaball.SpawnParticle(
+                    center,
+                    Main.rand.NextVector2Unit() * Main.rand.NextFloat(25f, 35f) * scale,
+                    Main.rand.NextFloat(30f, 50f) * scale);
         }
+
+        /// <summary>
+        /// 蓄力脉冲。DoG 的蓄力不是逐帧喷粒子，而是整个流程只触发 3 次
+        /// (DoGTeleportRift 每 RiftLifetime/3 帧一次：12 Spark + 8 SquishyLight + 1 CustomPulse)。
+        /// 调用方必须自己控制触发频率，不要每帧调。
+        /// </summary>
+        /// <param name="progress">蓄力进度 0→1，用于放大后续脉冲。</param>
+        public static void SpawnChargePulse(Vector2 center, float progress, float scale = 1f)
+        {
+            if (Main.dedServ)
+                return;
+
+            // DoG 原式：强度随进度从 1 线性升到 2。
+            float intensity = MathHelper.Lerp(1f, 2f, MathHelper.Clamp(progress, 0f, 1f)) * scale;
+
+            for (int i = 0; i < 12; i++)
+            {
+                Vector2 velocity = Vector2.UnitX.RotatedByRandom(MathHelper.TwoPi) * Main.rand.NextFloat(8f, 12f) * intensity * 0.7f;
+                GeneralParticleHandler.SpawnParticle(new SparkParticle(
+                    center,
+                    velocity,
+                    false,
+                    Main.rand.Next(30, 45),
+                    Main.rand.NextFloat(1.2f, 1.6f) * intensity * 0.62f * WeaponScale,
+                    RiftColor()));
+            }
+
+            for (int i = 0; i < 8; i++)
+            {
+                Vector2 velocity = Vector2.UnitX.RotatedByRandom(MathHelper.TwoPi) * Main.rand.NextFloat(12f, 14f) * intensity * 0.5f;
+                GeneralParticleHandler.SpawnParticle(new SquishyLightParticle(
+                    center,
+                    velocity,
+                    Main.rand.NextFloat(1.2f, 1.6f) * intensity * 0.62f * WeaponScale,
+                    RiftColor(),
+                    Main.rand.Next(30, 45)));
+            }
+
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                center,
+                Vector2.Zero,
+                Color.White,
+                "CalamityMod/Particles/ShineExplosion2",
+                Vector2.One,
+                Main.rand.NextFloat(MathHelper.TwoPi),
+                0f,
+                0.5f * intensity * WeaponScale,
+                45));
+        }
+
+        // ────────────────────────────────────────────────────────────────
+        // 四、拖尾 —— 逐帧调用，配比严格照抄 DoGFire
+        // ────────────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// 逐帧拖尾。DoGFire 的原始配比：50% 概率 3 个烟雾 + 8% 概率 2 个 dust。
+        /// 视觉主体由 primitive 拖尾承担，这里只是让边缘"活"起来，不承担观感。
+        /// </summary>
+        public static void SpawnTrailWake(Vector2 position, Vector2 backwardVelocity, Color innerColor, float scale = 1f)
+        {
+            if (Main.dedServ)
+                return;
+
+            if (Main.rand.NextBool(2))
+            {
+                for (int i = 0; i < 3; i++)
+                {
+                    Vector2 smokeVelocity = backwardVelocity * 0.7f + Main.rand.NextVector2Circular(1f, 1f) * 0.65f;
+                    Color flameColor = Color.Lerp(Color.White, innerColor, Main.rand.NextFloat(0.5f, 1f));
+
+                    GeneralParticleHandler.SpawnParticle(new HeavySmokeParticle(
+                        position + Main.rand.NextVector2Circular(8f, 8f),
+                        smokeVelocity,
+                        flameColor,
+                        Main.rand.Next(10, 15),
+                        Main.rand.NextFloat(0.25f, 0.45f) * scale,
+                        Main.rand.NextFloat(0.7f, 0.9f),
+                        0.02f,
+                        true));
+                }
+            }
+
+            if (Main.rand.NextBool(12))
+            {
+                for (int i = 0; i < 2; i++)
+                {
+                    Color dustColor = Color.Lerp(Color.White, innerColor, Main.rand.NextFloat(0.5f, 1f));
+                    Dust dust = Dust.NewDustPerfect(
+                        position + Main.rand.NextVector2Circular(6f, 6f),
+                        DustID.TintableDustLighted,
+                        backwardVelocity * 1.2f,
+                        0,
+                        dustColor,
+                        Main.rand.NextFloat(0.6f, 0.8f) * scale);
+                    dust.noGravity = true;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 挥砍弧。每次挥击**只调用一次**，不要逐帧调 —— 逐帧调正是原先"乱"的主因。
+        /// </summary>
+        public static void SpawnSwingSmear(Vector2 center, float angle, float scale, Color color)
+        {
+            if (Main.dedServ)
+                return;
+
+            GeneralParticleHandler.SpawnParticle(new CircularSmearVFX(
+                center,
+                Transparent(color) * 0.55f,
+                angle,
+                scale));
+        }
+
+        // ────────────────────────────────────────────────────────────────
+        // 五、DoG 原生技术 —— 弹幕裂缝 / 元球 / 激光
+        // ────────────────────────────────────────────────────────────────
+
+        /// <summary>生成真正的 DoGRiftCrack 弹幕（0 伤害，纯视觉，会被扭曲元球自动捕获绘制）。</summary>
+        public static void SpawnRiftCrackProjectiles(IEntitySource source, Vector2 center, int owner, int count, float minLength, float maxLength, float minWidth, float maxWidth)
+        {
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+                return;
+
+            for (int i = 0; i < count; i++)
+            {
+                Vector2 crackLength = (MathHelper.TwoPi * i / count).ToRotationVector2() * Main.rand.NextFloat(minLength, maxLength);
+                Projectile.NewProjectile(source, center, crackLength, ModContent.ProjectileType<DoGRiftCrack>(), 0, 0f, owner, 0f, Main.rand.NextFloat(minWidth, maxWidth));
+            }
+        }
+
+        /// <summary>空间扭曲元球。DoG 爆炸原值：飞散球 15~20 个、size 30~50。</summary>
+        public static void SpawnDistortionBurst(Vector2 center, int count, float speed = 30f, float size = 40f)
+        {
+            for (int i = 0; i < count; i++)
+                DoGDistortionMetaball.SpawnParticle(
+                    center,
+                    Main.rand.NextVector2Unit() * Main.rand.NextFloat(speed * 0.8f, speed * 1.2f),
+                    Main.rand.NextFloat(size * 0.75f, size * 1.25f));
+        }
+
+        /// <summary>
+        /// FriendlyLaserWallBeam 的正确用法：弹幕生成在**落点**上，
+        /// 光束起点由弹幕自己算 (beamStart = target + dir * laserLength)。
+        /// ai0 = attackSpeed（负值 = 瞬发），ai1 = laserType，ai2 = 震屏强度。
+        /// </summary>
+        public static void SpawnFriendlyLaser(IEntitySource source, Vector2 center, Vector2 direction, int damage, float knockBack, int owner, float attackSpeed, float scale, float shake)
+        {
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+                return;
+
+            direction = direction.SafeNormalize(Vector2.UnitX);
+            int laser = Projectile.NewProjectile(source, center, direction, ModContent.ProjectileType<FriendlyLaserWallBeam>(), damage, knockBack, owner, attackSpeed, 0f, shake);
+            if (Main.projectile.IndexInRange(laser))
+                Main.projectile[laser].scale *= scale;
+        }
+
+        // ────────────────────────────────────────────────────────────────
+        // 六、复合事件 —— 玩法（激光）+ 特效（走预算表）
+        // ────────────────────────────────────────────────────────────────
+
+        /// <summary>链刃终结：索敌激光 + Finisher 档爆发。</summary>
+        public static void SpawnChainFinisherBurst(IEntitySource source, Player player, Vector2 center, Vector2 aimDirection, int damage, float knockBack)
+        {
+            NPC target = FindNearestTarget(center, 1200f);
+            if (target != null)
+                SpawnFriendlyLaser(source, center, center.DirectionTo(target.Center), damage, knockBack, player.whoAmI, -1.5f, 0.45f, 2f);
+
+            SpawnRiftBurst(center, RiftTier.Finisher, aimDirection, RiftTwilight);
+        }
+
+        /// <summary>QuickDraw 爆发：索敌激光 + Finisher 档爆发。</summary>
+        public static void SpawnQuickDrawFullBurst(IEntitySource source, Player player, Vector2 center, int damage, float knockBack)
+        {
+            NPC target = FindNearestTarget(center, 1200f);
+            if (target != null)
+                SpawnFriendlyLaser(source, center, center.DirectionTo(target.Center), (int)(damage * 0.7f), knockBack, player.whoAmI, -1.5f, 0.5f, 2f);
+
+            SpawnRiftBurst(center, RiftTier.Finisher, default, RiftMagenta);
+            SpawnRiftCrackProjectiles(source, center, player.whoAmI, 10, 20f, 60f, 18f, 26f);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DoGLaserWallBigAttack") { Volume = 0.62f, MaxInstances = 2 }, center);
+        }
+
+        /// <summary>
+        /// 大招爆发：全场索敌激光 + Ultimate 档爆发。
+        /// Ultimate 档 = DoGTeleportRift 大爆炸的原始数值，是本武器的视觉天花板。
+        /// </summary>
+        public static void SpawnUltimateBurst(IEntitySource source, Player player, Vector2 center, int damage, float knockBack)
+        {
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (!npc.CanBeChasedBy() || Vector2.DistanceSquared(npc.Center, center) > 1800f * 1800f)
+                    continue;
+
+                Vector2 direction = center.DirectionTo(npc.Center);
+                SpawnFriendlyLaser(source, center, direction, damage, knockBack, player.whoAmI, 0f, 0.5f, 6f);
+                SpawnFriendlyLaser(source, center, direction.RotatedBy(0.15f), (int)(damage * 0.6f), knockBack, player.whoAmI, 1.5f, 0.42f, 5f);
+                SpawnFriendlyLaser(source, center, direction.RotatedBy(-0.15f), (int)(damage * 0.6f), knockBack, player.whoAmI, -1.5f, 0.42f, 5f);
+            }
+
+            // DoG 原始爆炸：25 裂缝弹幕（这里减半，因为武器不该盖满整屏）。
+            SpawnRiftCrackProjectiles(source, center, player.whoAmI, 12, 20f, 80f, 20f, 30f);
+            SpawnRiftBurst(center, RiftTier.Ultimate, default, DoGSpecialColor);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DoGLaserWallBigAttack") { Volume = 0.78f, MaxInstances = 2 }, center);
+        }
+
+        /// <summary>大招力场的持续氛围。每 20 帧一次，不逐帧喷。</summary>
+        public static void SpawnUltimateFieldIdle(Vector2 center, float radius, float time)
+        {
+            if (Main.dedServ || time % 20f != 0f)
+                return;
+
+            for (int i = 0; i < 4; i++)
+            {
+                Vector2 edge = center + Main.rand.NextVector2CircularEdge(radius, radius);
+                GeneralParticleHandler.SpawnParticle(new SquishyLightParticle(
+                    edge,
+                    (center - edge).SafeNormalize(Vector2.Zero) * 2f,
+                    Main.rand.NextFloat(0.5f, 0.7f),
+                    RiftColor(),
+                    Main.rand.Next(25, 35)));
+            }
+        }
+
+        /// <summary>形态切换传送门的伴随特效。只在开门(4)与定型(8)两帧触发。</summary>
+        public static void SpawnSwitchPortalAI(Player player, Vector2 center, float time, CosmicDischargeAttackMode targetMode)
+        {
+            if (Main.dedServ)
+                return;
+
+            if (time == 4f)
+                SpawnChargePulse(center, 0f, 0.5f);
+            else if (time == 8f)
+                SpawnRiftBurst(center, RiftTier.Medium, default, GetModeColor(targetMode));
+        }
+
+        // ────────────────────────────────────────────────────────────────
+        // 六、非特效工具 —— 原样保留
+        // ────────────────────────────────────────────────────────────────
 
         public static Vector2 GetAimDirection(Player player, Vector2 fallback)
         {
@@ -149,716 +580,6 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             target.AddBuff(ModContent.BuffType<GodSlayerInferno>(), duration);
         }
 
-        public static void SpawnWhipOverTrail(Player player, Vector2 handle, Vector2 tip, float whipAngle, float whipLength)
-        {
-            if (Main.dedServ)
-                return;
-
-            GeneralParticleHandler.SpawnParticle(new ElectricSpark(
-                tip + Main.rand.NextVector2Circular(15f, 15f),
-                Main.rand.NextVector2Circular(1.5f, 1.5f),
-                DoGSpecialColor,
-                DoGFuchsiaColor,
-                0.3f * 0.3f,
-                6,
-                MathHelper.PiOver4 * 0.5f,
-                6f,
-                0.75f));
-            GeneralParticleHandler.SpawnParticle(new NanoParticle(
-                handle + Main.rand.NextVector2Circular(8f, 8f),
-                Main.rand.NextVector2Circular(1.5f, 1.5f),
-                DoGCyanColor,
-                0.5f * 0.3f,
-                18,
-                emitsLight: true));
-            GeneralParticleHandler.SpawnParticle(new SemiCircularSmearVFX(
-                Vector2.Lerp(handle, tip, 0.58f),
-                DoGSpecialColor * 0.7f,
-                whipAngle + MathHelper.PiOver2,
-                MathHelper.Clamp(whipLength / 80f, 0.8f, 7.2f),
-                new Vector2(1f, 1.3f)));
-
-            if (Main.rand.NextBool(2))
-                GeneralParticleHandler.SpawnParticle(new HeavySmokeParticle(
-                    tip + Main.rand.NextVector2Circular(5f, 5f),
-                    Main.rand.NextVector2Circular(2f, 2f) - Vector2.UnitY * 1.5f,
-                    DoGFuchsiaColor * 0.6f,
-                    12,
-                    0.8f * 0.3f,
-                    0.5f,
-                    0.02f,
-                    true));
-        }
-
-        public static void SpawnWhipUnderTrail(Vector2 handle, Vector2 tip, float whipAngle, Vector2 swingDirection, float whipLength)
-        {
-            if (Main.dedServ)
-                return;
-
-            GeneralParticleHandler.SpawnParticle(new CircularSmearVFX(
-                Vector2.Lerp(handle, tip, 0.58f),
-                DoGCyanColor * 0.6f,
-                whipAngle + MathHelper.Pi + MathHelper.PiOver2,
-                MathHelper.Clamp(whipLength / 70f, 0.8f, 7.6f)));
-
-            if ((int)Main.GameUpdateCount % 3 == 0)
-            {
-                Vector2 velocity = swingDirection.SafeNormalize(Vector2.UnitX) * 4f;
-                GeneralParticleHandler.SpawnParticle(new BoltParticle(
-                    tip,
-                    velocity,
-                    false,
-                    10,
-                    0.7f * 0.3f,
-                    DoGCyanColor,
-                    new Vector2(0.12f, 3.5f),
-                    true,
-                    true));
-            }
-        }
-
-        public static void SpawnWhipThrustTrail(Player player, Vector2 tip, Vector2 thrustDirection, bool striking)
-        {
-            if (Main.dedServ)
-                return;
-
-            Vector2 handle = player.MountedCenter;
-            if (!striking)
-            {
-                GeneralParticleHandler.SpawnParticle(new LineVFX(
-                    handle,
-                    tip - handle,
-                    0.03f * 0.3f,
-                    DoGSpecialColor * 0.4f));
-
-                if ((int)Main.GameUpdateCount % 2 == 0)
-                {
-                    for (int i = 0; i < 3; i++)
-                    {
-                        float t = (i + 0.5f) / 3f;
-                        GeneralParticleHandler.SpawnParticle(new NanoParticle(
-                            Vector2.Lerp(handle, tip, t) + Main.rand.NextVector2Circular(6f, 6f),
-                            Main.rand.NextVector2Circular(2f, 2f),
-                            DoGSpecialColor,
-                            0.4f * 0.3f,
-                            12,
-                            emitsLight: true));
-                    }
-                }
-                return;
-            }
-
-            GeneralParticleHandler.SpawnParticle(new StaticGlowLine(
-                handle,
-                tip,
-                Vector2.Zero,
-                3,
-                0.08f * 0.3f,
-                1f,
-                DoGSpecialColor));
-
-            if ((int)Main.GameUpdateCount % 3 == 0)
-                GeneralParticleHandler.SpawnParticle(new CritSpark(
-                    tip + Main.rand.NextVector2Circular(8f, 8f),
-                    thrustDirection.SafeNormalize(Vector2.UnitX) * Main.rand.NextFloat(2f, 6f),
-                    DoGSpecialColor,
-                    DoGWhiteColor,
-                    0.5f * 0.3f,
-                    15,
-                    1.2f,
-                    1.5f,
-                    0.004f));
-        }
-
-        public static void SpawnSwordSwingTrail(Vector2 bladeTip, Vector2 bladeMidpoint, float swingAngle, bool secondSwing)
-        {
-            if (Main.dedServ)
-                return;
-
-            Color mainColor = secondSwing ? DoGFuchsiaColor : DoGCyanColor;
-            Vector2 bladeCenter = Vector2.Lerp(bladeMidpoint, bladeTip, 0.45f);
-            float bladeDiskAngle = swingAngle + MathHelper.PiOver2 + (secondSwing ? MathHelper.Pi : 0f);
-            GeneralParticleHandler.SpawnParticle(new CircularSmearVFX(
-                bladeCenter,
-                mainColor * 0.62f,
-                bladeDiskAngle,
-                4.6f));
-
-            GeneralParticleHandler.SpawnParticle(new SemiCircularSmearVFX(
-                bladeCenter,
-                DoGSpecialColor * 0.45f,
-                bladeDiskAngle,
-                3.6f,
-                new Vector2(1f, 1.2f)));
-        }
-
-        public static void SpawnSwordSwingFlare(Vector2 bladeTip)
-        {
-            if (Main.dedServ)
-                return;
-
-            for (int i = 0; i < 4; i++)
-            {
-                GeneralParticleHandler.SpawnParticle(new FlareShine(
-                    bladeTip,
-                    Main.rand.NextVector2Circular(2f, 2f),
-                    DoGWhiteColor,
-                    DoGCyanColor,
-                    MathHelper.PiOver2 * i,
-                    new Vector2(0.2f, 2.5f) * 0.3f,
-                    new Vector2(0.05f, 0.5f) * 0.3f,
-                    12,
-                    spawnDelay: i));
-            }
-        }
-
-        public static void SpawnChainTrail(IReadOnlyList<Vector2> chainPoints, Vector2 knifePosition, Vector2 knifeVelocity, bool secondArc, bool finisher)
-        {
-            if (Main.dedServ || chainPoints == null || chainPoints.Count <= 1)
-                return;
-
-            if (finisher)
-            {
-                StarsmokeMetaball.SpawnParticle(
-                    knifePosition + Main.rand.NextVector2Circular(15f, 15f),
-                    knifeVelocity * 0.3f,
-                    Main.rand.NextFloat(15f, 35f) * 0.3f,
-                    30,
-                    new Vector2(0.8f, 1.2f),
-                    0.15f,
-                    0.5f);
-
-                if ((int)Main.GameUpdateCount % 10 == 0)
-                    GeneralParticleHandler.SpawnParticle(new ConstellationRingVFX(
-                        knifePosition,
-                        DoGSpecialColor,
-                        Main.rand.NextFloat(MathHelper.TwoPi),
-                        0.6f * 0.3f,
-                        new Vector2(1f, 1f),
-                        starAmount: 8,
-                        spinSpeed: 0.06f));
-                return;
-            }
-
-            if (secondArc)
-            {
-                if (Main.rand.NextBool(3))
-                {
-                    Vector2 point = chainPoints[Main.rand.Next(chainPoints.Count)];
-                    GeneralParticleHandler.SpawnParticle(new FancyStars(
-                        point + Main.rand.NextVector2Circular(8f, 8f),
-                        Main.rand.NextFloat(MathHelper.TwoPi),
-                        Main.rand.NextFloat(0.2f, 0.45f) * 0.3f,
-                        Main.rand.NextVector2Circular(2f, 2f),
-                        Main.rand.NextFloat(0.03f, 0.08f),
-                        14,
-                        DoGFuchsiaColor));
-                }
-
-                if ((int)Main.GameUpdateCount % 4 == 0)
-                {
-                    Vector2 point = chainPoints[Main.rand.Next(chainPoints.Count)];
-                    GeneralParticleHandler.SpawnParticle(new GlowSquareParticle(
-                        point + Main.rand.NextVector2Circular(5f, 5f),
-                        Main.rand.NextVector2Circular(2f, 2f),
-                        false,
-                        10,
-                        Main.rand.NextFloat(0.04f, 0.09f) * 0.3f,
-                        DoGFuchsiaColor,
-                        rotation: Main.rand.NextFloat(0.05f, 0.12f)));
-                }
-                return;
-            }
-
-            for (int i = 0; i < chainPoints.Count; i += 3)
-            {
-                GeneralParticleHandler.SpawnParticle(new NanoParticle(
-                    chainPoints[i] + Main.rand.NextVector2Circular(4f, 4f),
-                    Main.rand.NextVector2Circular(1.5f, 1.5f),
-                    i % 6 < 3 ? DoGCyanColor : DoGFuchsiaColor,
-                    0.35f * 0.3f,
-                    10,
-                    emitsLight: true));
-            }
-
-            if ((int)Main.GameUpdateCount % 3 == 0)
-            {
-                Vector2 point = chainPoints[Main.rand.Next(chainPoints.Count)];
-                GeneralParticleHandler.SpawnParticle(new ElectricSpark(
-                    point + Main.rand.NextVector2Circular(6f, 6f),
-                    Main.rand.NextVector2Circular(1.5f, 1.5f),
-                    DoGCyanColor,
-                    DoGFuchsiaColor,
-                    0.275f * 0.3f,
-                    5,
-                    MathHelper.PiOver4 * 0.5f,
-                    5f,
-                    0.5f));
-            }
-
-            if (Main.rand.NextBool(4))
-                GeneralParticleHandler.SpawnParticle(new TechyHoloysquareParticle(
-                    knifePosition + Main.rand.NextVector2Circular(12f, 12f),
-                    Main.rand.NextVector2Circular(4f, 4f),
-                    Main.rand.NextFloat(0.4f, 0.8f) * 0.3f,
-                    DoGSpecialColor,
-                    14,
-                    0.8f));
-        }
-
-        public static void SpawnWhipOverHit(NPC target)
-        {
-            if (Main.dedServ)
-                return;
-
-            for (int i = 0; i < 10; i++)
-                GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(
-                    target.Center + Main.rand.NextVector2Circular(8f, 8f),
-                    Main.rand.NextVector2Circular(8f, 8f),
-                    true,
-                    14,
-                    Main.rand.NextFloat(0.6f, 1f) * 0.3f,
-                    Main.rand.NextBool() ? DoGCyanColor : DoGFuchsiaColor,
-                    new Vector2(0.1f, 0.5f),
-                    true));
-
-            GeneralParticleHandler.SpawnParticle(new FlameExplosion(target.Center, Vector2.Zero, DoGCyanColor, new Vector2(1.4f, 0.7f), Main.rand.NextFloat(MathHelper.TwoPi), 0.1f * 0.3f, 0.7f * 0.3f, 14, 0.8f));
-            GeneralParticleHandler.SpawnParticle(new FlameExplosion(target.Center, Vector2.Zero, DoGFuchsiaColor * 0.8f, new Vector2(0.7f, 1.3f), Main.rand.NextFloat(MathHelper.TwoPi), 0.08f * 0.3f, 0.55f * 0.3f, 12, 0.7f));
-            GeneralParticleHandler.SpawnParticle(new StaticPulseRing(target.Center, Vector2.Zero, DoGSpecialColor, Vector2.One, 0f, 0.04f, 0.45f * 0.3f * ShockwaveFinalScaleMultiplier, 14));
-        }
-
-        public static void SpawnWhipUnderHit(NPC target, float whipAngle)
-        {
-            if (Main.dedServ)
-                return;
-
-            for (int i = 0; i < 6; i++)
-            {
-                Vector2 velocity = Main.rand.NextVector2Unit() * Main.rand.NextFloat(3f, 8f);
-                GeneralParticleHandler.SpawnParticle(new BoltParticle(target.Center, velocity, true, 12, 0.6f * 0.3f, DoGCyanColor, new Vector2(0.1f, 4f), true, true));
-            }
-
-            for (int i = 0; i < 3; i++)
-                GeneralParticleHandler.SpawnParticle(new ImpactParticle(target.Center, 0.08f + i * 0.06f, 15 - i * 2, (0.6f + i * 0.2f) * 0.3f, DoGCyanColor));
-
-            for (int i = 0; i < 6; i++)
-                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(target.Center + Main.rand.NextVector2Circular(10f, 10f), Main.rand.NextVector2Circular(6f, 6f), true, 12, 0.12f * 0.3f, DoGCyanColor));
-
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(target.Center, Vector2.Zero, DoGCyanColor, new Vector2(1.5f, 0.6f), whipAngle, 0.04f, 0.5f * 0.3f * ShockwaveFinalScaleMultiplier, 15));
-        }
-
-        public static void SpawnWhipThrustHit(Player player, NPC target, Vector2 thrustDirection)
-        {
-            if (Main.dedServ)
-                return;
-
-            for (int i = 0; i < 8; i++)
-            {
-                Vector2 dir = (MathHelper.TwoPi * i / 8f).ToRotationVector2();
-                GeneralParticleHandler.SpawnParticle(new StaticGlowLine(target.Center, target.Center + dir * Main.rand.NextFloat(80f, 180f), Vector2.Zero, 18, 0.08f * 0.3f, 0.88f, i % 2 == 0 ? DoGCyanColor : DoGFuchsiaColor));
-            }
-
-            GeneralParticleHandler.SpawnParticle(new FlatGlow(target.Center, Vector2.Zero, DoGSpecialColor, thrustDirection.ToRotation(), new Vector2(0.1f, 3f) * 0.3f, new Vector2(3f, 0.1f) * 0.3f, 12));
-            GeneralParticleHandler.SpawnParticle(new BloomLineVFX(player.Center, (target.Center - player.Center) * 1.3f, 0.06f * 0.3f, DoGSpecialColor, 8, true));
-
-            for (int i = 0; i < 8; i++)
-                GeneralParticleHandler.SpawnParticle(new GlowSquareParticle(
-                    target.Center + Main.rand.NextVector2Circular(12f, 12f),
-                    Main.rand.NextVector2Circular(7f, 7f),
-                    true,
-                    14,
-                    Main.rand.NextFloat(0.05f, 0.12f) * 0.3f,
-                    ThreeColorSpark,
-                    rotation: Main.rand.NextFloat(0.05f)));
-        }
-
-        public static void SpawnSwordOneHit(NPC target)
-        {
-            if (Main.dedServ)
-                return;
-
-            SpawnDoGMediumExplosion(target.Center, DoGCyanColor);
-        }
-
-        public static void SpawnSwordTwoHit(NPC target, Vector2 swingDirection)
-        {
-            if (Main.dedServ)
-                return;
-
-            GeneralParticleHandler.SpawnParticle(new SlashThrough(DoGFuchsiaColor, target.Center, swingDirection.ToRotation(), 15, target));
-            for (int i = 0; i < 12; i++)
-                GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(
-                    target.Center + Main.rand.NextVector2Circular(10f, 10f),
-                    Main.rand.NextVector2Circular(9f, 9f) - Vector2.UnitY * 2f,
-                    true,
-                    Main.rand.Next(12, 20),
-                    Main.rand.NextFloat(0.7f, 1.1f) * 0.3f,
-                    ThreeColorSpark,
-                    new Vector2(0.1f, 0.5f),
-                    true));
-
-            for (int i = 0; i < 6; i++)
-                GeneralParticleHandler.SpawnParticle(new CritSpark(target.Center + Main.rand.NextVector2Circular(15f, 15f), Main.rand.NextVector2Circular(5f, 5f), DoGFuchsiaColor, DoGWhiteColor, 0.5f * 0.3f, 20, 1.5f, 1.2f, 0.006f));
-
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(target.Center, Vector2.Zero, DoGFuchsiaColor, new Vector2(1.8f, 0.5f), swingDirection.ToRotation(), 0.04f, 0.5f * 0.3f * ShockwaveFinalScaleMultiplier, 14));
-        }
-
-        public static void SpawnSwordFinisherCharge(Player player, float time)
-        {
-            if (Main.dedServ)
-                return;
-
-            if (time % 5f == 0f)
-                GeneralParticleHandler.SpawnParticle(new ConstellationRingVFX(player.Center, DoGSpecialColor, Main.rand.NextFloat(MathHelper.TwoPi), 0.7f * 0.3f, Vector2.One, starAmount: 6, spinSpeed: 0.04f));
-
-            if (time % 4f == 0f)
-            {
-                for (int i = 0; i < 4; i++)
-                {
-                    float dir = i * MathHelper.PiOver2 + time * 0.05f;
-                    GeneralParticleHandler.SpawnParticle(new ChargeUpLineVFX(player.Center + dir.ToRotationVector2() * 120f, dir + MathHelper.Pi, 0.035f * 0.3f, DoGSpecialColor, 20));
-                }
-            }
-
-            Vector2 particlePos = player.Center + Main.rand.NextVector2Circular(100f, 100f);
-            GeneralParticleHandler.SpawnParticle(new NanoParticle(particlePos, (player.Center - particlePos).SafeNormalize(Vector2.Zero) * 3f, DoGSpecialColor, 0.5f * 0.3f, 20, emitsLight: true));
-        }
-
-        public static void SpawnSwordFinisherRelease(Player player)
-        {
-            if (Main.dedServ)
-                return;
-
-            SpawnCustomPulse(player.Center, DoGWhiteColor * 0.8f, 0.3f, 2.5f, "CalamityMod/Particles/ShineExplosion1", 20);
-            SpawnCustomPulse(player.Center, DoGCyanColor * 0.7f, 0.5f, 3f, "CalamityMod/Particles/PlasmaExplosion", 22);
-            SpawnCustomPulse(player.Center, DoGFuchsiaColor * 0.6f, 0.7f, 3.5f, "CalamityMod/Particles/ShineExplosion2", 24);
-            GeneralParticleHandler.SpawnParticle(new PlayerCenteredPulseRing(player, Vector2.Zero, DoGCyanColor, Vector2.One, 0f, 0.04f, 0.6f * 0.3f * ShockwaveFinalScaleMultiplier, 16));
-            GeneralParticleHandler.SpawnParticle(new PlayerCenteredPulseRing(player, Vector2.Zero, DoGFuchsiaColor, Vector2.One, 0f, 0.06f, 0.9f * 0.3f * ShockwaveFinalScaleMultiplier, 20));
-            GeneralParticleHandler.SpawnParticle(new StrongBloom(player.Center, Vector2.Zero, DoGWhiteColor, 1.5f * 0.3f, 18));
-        }
-
-        public static void SpawnSwordFinisherHit(IEntitySource source, Player player, NPC target, Vector2 swingDirection)
-        {
-            if (Main.dedServ)
-                return;
-
-            Vector2 center = target.Center;
-            GeneralParticleHandler.SpawnParticle(new DetailedExplosion(center, Vector2.Zero, DoGCyanColor, new Vector2(1.3f, 0.75f), 0f, 0.25f * 0.3f, 1.8f * 0.3f, 22));
-            GeneralParticleHandler.SpawnParticle(new DetailedExplosion(center, Vector2.Zero, DoGWhiteColor, new Vector2(0.9f), MathHelper.PiOver4, 0.35f * 0.3f, 1.5f * 0.3f, 20));
-            GeneralParticleHandler.SpawnParticle(new DetailedExplosion(center, Vector2.Zero, DoGFuchsiaColor * 0.9f, new Vector2(0.7f, 1.3f), MathHelper.Pi / 3f, 0.3f * 0.3f, 1.2f * 0.3f, 18));
-
-            SpawnDistortionBurst(center, 12, 6, 50f, 30f);
-            SpawnRiftCrackProjectiles(source, center, player.whoAmI, 8, 4f, 10f, 18f, 26f);
-            GeneralParticleHandler.SpawnParticle(new SlashThrough(DoGSpecialColor, center, swingDirection.ToRotation(), 18, target));
-
-            for (int i = 0; i < 15; i++)
-                GeneralParticleHandler.SpawnParticle(new GenericSparkle(center + Main.rand.NextVector2Circular(20f, 20f), Main.rand.NextVector2Circular(7f, 7f), ThreeColorSpark, DoGWhiteColor, Main.rand.NextFloat(0.3f, 0.8f) * 0.3f, Main.rand.Next(20, 35), 2f, 1.5f));
-
-            for (int i = 0; i < 4; i++)
-                GeneralParticleHandler.SpawnParticle(new ImpactParticle(center + Main.rand.NextVector2Circular(5f, 5f), 0.1f + i * 0.07f, 18 - i * 2, (0.8f + i * 0.15f) * 0.3f, i % 2 == 0 ? DoGCyanColor : DoGFuchsiaColor));
-
-            SpawnRadiatingGlowLines(center, 12, 100f, 220f, 0.09f * 0.3f, 0.87f, 18);
-            SpawnCustomPulse(center, DoGCyanColor * 0.8f, 0.2f, 2f, "CalamityMod/Particles/ShineExplosion1", 18);
-            SpawnCustomPulse(center, DoGWhiteColor * 0.9f, 0.3f, 2.5f, "CalamityMod/Particles/PlasmaExplosion", 20);
-            SpawnCustomPulse(center, DoGFuchsiaColor * 0.7f, 0.45f, 3f, "CalamityMod/Particles/ShineExplosion2", 22);
-            GeneralParticleHandler.SpawnParticle(new StrongBloom(center, Vector2.Zero, DoGWhiteColor, 2f * 0.3f, 20));
-        }
-
-        public static void SpawnChainOneHit(NPC target)
-        {
-            if (Main.dedServ)
-                return;
-
-            for (int i = 0; i < 6; i++)
-                GalaxyMetaball.SpawnParticle(target.Center + Main.rand.NextVector2Circular(30f, 30f), Main.rand.NextVector2Circular(4f, 4f), Main.rand.NextFloat(20f, 45f) * 0.3f);
-
-            for (int i = 0; i < 8; i++)
-                GeneralParticleHandler.SpawnParticle(new BoltParticle(target.Center, Main.rand.NextVector2Unit() * Main.rand.NextFloat(4f, 9f), true, 12, 0.7f * 0.3f, DoGCyanColor, new Vector2(0.12f, 3.8f), true, true));
-
-            for (int i = 0; i < 5; i++)
-                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(target.Center, Main.rand.NextVector2Circular(7f, 7f), false, 14, 0.15f * 0.3f, DoGCyanColor));
-        }
-
-        public static void SpawnChainTwoHit(Player player, NPC target)
-        {
-            if (Main.dedServ)
-                return;
-
-            for (int i = 0; i < 8; i++)
-                GeneralParticleHandler.SpawnParticle(new RoundedStarParticle(target.Center + Main.rand.NextVector2Circular(50f, 50f), Main.rand.NextVector2Circular(3f, 3f), i % 2 == 0 ? DoGFuchsiaColor : DoGSpecialColor, Main.rand.NextFloat(0.4f, 0.8f) * 0.3f, 25, 0.05f, 0.95f, false, target.Center, player.whoAmI));
-
-            for (int i = 0; i < 10; i++)
-                GeneralParticleHandler.SpawnParticle(new TechyHoloysquareParticle(target.Center + Main.rand.NextVector2Circular(20f, 20f), Main.rand.NextVector2Unit() * Main.rand.NextFloat(3f, 8f), Main.rand.NextFloat(0.5f, 1f) * 0.3f, ThreeColorSpark, 16, 0.85f));
-
-            GeneralParticleHandler.SpawnParticle(new ImpactParticle(target.Center, 0.15f, 18, 0.9f * 0.3f, DoGFuchsiaColor));
-        }
-
-        public static void SpawnChainFinisherBurst(IEntitySource source, Player player, Vector2 center, Vector2 aimDirection, int damage, float knockBack)
-        {
-            NPC target = FindNearestTarget(center, 1200f);
-            if (target != null)
-                SpawnFriendlyLaser(source, center, center.DirectionTo(target.Center), damage, knockBack, player.whoAmI, -1.5f, 0.45f, 2f);
-
-            if (Main.dedServ)
-                return;
-
-            GeneralParticleHandler.SpawnParticle(new DetailedExplosion(center, Vector2.Zero, DoGCyanColor, new Vector2(1.2f, 0.8f), 0f, 0.3f * 0.3f, 2f * 0.3f, 24));
-            GeneralParticleHandler.SpawnParticle(new DetailedExplosion(center, Vector2.Zero, DoGFuchsiaColor, new Vector2(0.8f, 1.2f), MathHelper.Pi / 3f, 0.4f * 0.3f, 1.6f * 0.3f, 22));
-
-            for (int i = 0; i < 8; i++)
-                GalaxyMetaball.SpawnParticle(center + Main.rand.NextVector2Circular(60f, 60f), Main.rand.NextVector2Circular(5f, 5f), Main.rand.NextFloat(40f, 80f) * 0.3f);
-            SpawnDistortionBurst(center, 10, 5, 55f, 35f);
-            SpawnRiftCrackProjectiles(source, center, player.whoAmI, 6, 4f, 10f, 16f, 24f);
-
-            for (int i = 0; i < 15; i++)
-                GeneralParticleHandler.SpawnParticle(new GenericSparkle(center + Main.rand.NextVector2Circular(20f, 20f), Main.rand.NextVector2Circular(8f, 8f), ThreeColorSpark, DoGWhiteColor, Main.rand.NextFloat(0.3f, 0.8f) * 0.3f, Main.rand.Next(20, 35), 2f, 1.5f));
-            for (int i = 0; i < 4; i++)
-                GeneralParticleHandler.SpawnParticle(new ImpactParticle(center + Main.rand.NextVector2Circular(8f, 8f), 0.1f + i * 0.06f, 18 - i * 2, (0.8f + i * 0.15f) * 0.3f, i % 2 == 0 ? DoGCyanColor : DoGFuchsiaColor));
-            SpawnRadiatingGlowLines(center, 10, 100f, 220f, 0.09f * 0.3f, 0.87f, 18);
-            SpawnCustomPulse(center, DoGWhiteColor, 0.4f, 3.5f, "CalamityMod/Particles/PlasmaExplosion", 26);
-            GeneralParticleHandler.SpawnParticle(new StrongBloom(center, Vector2.Zero, DoGWhiteColor, 2.5f * 0.3f, 22));
-        }
-
-        public static void SpawnQuickDrawCharge(Player player, float time)
-        {
-            if (Main.dedServ)
-                return;
-
-            for (int i = 0; i < 8; i++)
-            {
-                Vector2 spawn = player.Center + Main.rand.NextVector2Circular(60f, 60f);
-                GeneralParticleHandler.SpawnParticle(new NanoParticle(spawn, (player.Center - spawn).SafeNormalize(Vector2.Zero) * 5f, DoGSpecialColor, 0.6f * 0.3f, 15, true, true));
-            }
-
-            for (int i = 0; i < 6; i++)
-            {
-                float dir = i * MathHelper.TwoPi / 6f;
-                GeneralParticleHandler.SpawnParticle(new ChargeUpLineVFX(player.Center + dir.ToRotationVector2() * 80f, dir + MathHelper.Pi, 0.04f * 0.3f, DoGSpecialColor, 18, fullFadeInPoint: 0.3f));
-            }
-
-            for (int i = 0; i < 5; i++)
-            {
-                Vector2 spawn = player.Center + Main.rand.NextVector2Circular(100f, 100f);
-                GeneralParticleHandler.SpawnParticle(new SquishyLightParticle(spawn, (player.Center - spawn).SafeNormalize(Vector2.Zero) * 12f, 0.18f * 0.3f, DoGSpecialColor, 10, hueShift: 0.003f));
-            }
-
-            if (time == 1f)
-            {
-                GeneralParticleHandler.SpawnParticle(new ConstellationRingVFX(player.Center, DoGCyanColor, 0f, 0.9f * 0.3f, Vector2.One, starAmount: 10, spinSpeed: 0.04f));
-                GeneralParticleHandler.SpawnParticle(new ConstellationRingVFX(player.Center, DoGFuchsiaColor, MathHelper.PiOver4, 0.8f * 0.3f, Vector2.One, starAmount: 8, spinSpeed: -0.035f));
-                for (int i = 0; i < 10; i++)
-                    GeneralParticleHandler.SpawnParticle(new RoundedStarParticle(player.Center + Main.rand.NextVector2Circular(80f, 80f), Vector2.Zero, DoGSpecialColor, 0.5f * 0.3f, 22, 0.05f, 1f, true, player.Center, player.whoAmI));
-            }
-        }
-
-        public static void SpawnQuickDrawFullBurst(IEntitySource source, Player player, Vector2 center, int damage, float knockBack)
-        {
-            NPC target = FindNearestTarget(center, 1200f);
-            if (target != null)
-                SpawnFriendlyLaser(source, center, center.DirectionTo(target.Center), (int)(damage * 0.7f), knockBack, player.whoAmI, -1.5f, 0.5f, 2f);
-
-            if (Main.dedServ)
-                return;
-
-            GeneralParticleHandler.SpawnParticle(new DetailedExplosion(center, Vector2.Zero, DoGCyanColor, new Vector2(1.4f, 0.7f), 0f, 0.3f * 0.3f, 2.5f * 0.3f, 25));
-            GeneralParticleHandler.SpawnParticle(new DetailedExplosion(center, Vector2.Zero, DoGWhiteColor, Vector2.One, MathHelper.PiOver4, 0.5f * 0.3f, 2f * 0.3f, 23));
-            GeneralParticleHandler.SpawnParticle(new DetailedExplosion(center, Vector2.Zero, DoGFuchsiaColor, new Vector2(0.7f, 1.3f), MathHelper.PiOver2, 0.4f * 0.3f, 1.8f * 0.3f, 21));
-
-            for (int i = 0; i < 4; i++)
-                GeneralParticleHandler.SpawnParticle(new FlameExplosion(center + Main.rand.NextVector2Circular(20f, 20f), Vector2.Zero, i % 2 == 0 ? DoGCyanColor : DoGFuchsiaColor, new Vector2(0.8f + Main.rand.NextFloat(0.6f), 0.8f + Main.rand.NextFloat(0.4f)), Main.rand.NextFloat(MathHelper.TwoPi), 0.15f * 0.3f, 1f * 0.3f, 16, 0.75f));
-
-            SpawnDistortionBurst(center, 20, 10, 60f, 40f);
-            SpawnRiftCrackProjectiles(source, center, player.whoAmI, 12, 3f, 10f, 18f, 30f);
-            SpawnAllDoGParticles(center, player, 1f);
-
-            GeneralParticleHandler.SpawnParticle(new StrongBloom(center, Vector2.Zero, DoGWhiteColor, 3f * 0.3f, 25));
-            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DoGLaserWallBigAttack") { Volume = 0.62f, MaxInstances = 2 }, center);
-        }
-
-        public static void SpawnSwitchPortalAI(Player player, Vector2 center, float time, CosmicDischargeAttackMode targetMode)
-        {
-            if (Main.dedServ)
-                return;
-
-            Color modeColor = GetModeColor(targetMode);
-            if (time <= 8f)
-            {
-                for (int i = 0; i < 2; i++)
-                    GeneralParticleHandler.SpawnParticle(new TechyHoloysquareParticle(center + Main.rand.NextVector2Circular(24f, 24f), Main.rand.NextVector2Circular(3f, 3f), Main.rand.NextFloat(0.45f, 0.85f) * 0.3f, Main.rand.NextBool() ? modeColor : ThreeColorSpark, 14, 0.8f));
-
-                for (int i = 0; i < 3; i++)
-                {
-                    Vector2 spawn = center + Main.rand.NextVector2Circular(46f, 46f);
-                    GeneralParticleHandler.SpawnParticle(new NanoParticle(spawn, (center - spawn).SafeNormalize(Vector2.Zero) * Main.rand.NextFloat(1.5f, 4f), DoGSpecialColor, 0.45f * 0.3f, 14, emitsLight: true));
-                }
-            }
-
-            if (time == 4f)
-            {
-                GeneralParticleHandler.SpawnParticle(new ConstellationRingVFX(center, DoGSpecialColor, 0f, 0.5f * 0.3f, Vector2.One, starAmount: 6, spinSpeed: 0.04f));
-                for (int i = 0; i < 5; i++)
-                    GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(center + Main.rand.NextVector2Circular(26f, 26f), Main.rand.NextVector2Circular(4f, 4f), false, 12, 0.14f * 0.3f, i % 2 == 0 ? DoGCyanColor : DoGFuchsiaColor));
-            }
-
-            if (time == 8f)
-            {
-                SpawnCustomPulse(center, DoGWhiteColor, 0.2f, 2f, "CalamityMod/Particles/ShineExplosion2", 16);
-                SpawnCustomPulse(center, DoGSpecialColor, 0.3f, 2.5f, "CalamityMod/Particles/PlasmaExplosion", 18);
-                for (int i = 0; i < 10; i++)
-                    GeneralParticleHandler.SpawnParticle(new TechyHoloysquareParticle(center + Main.rand.NextVector2Circular(18f, 18f), Main.rand.NextVector2Unit() * Main.rand.NextFloat(3f, 8f), Main.rand.NextFloat(0.5f, 1f) * 0.3f, ThreeColorSpark, 16, 0.9f));
-                GeneralParticleHandler.SpawnParticle(new StrongBloom(center, Vector2.Zero, DoGWhiteColor, 1.5f * 0.3f, 16));
-            }
-
-            if (time >= 8f)
-            {
-                for (int i = 0; i < 2; i++)
-                    GeneralParticleHandler.SpawnParticle(new ElectricSpark(center + Main.rand.NextVector2Circular(36f, 36f), Main.rand.NextVector2Circular(1.5f, 1.5f), DoGCyanColor, DoGFuchsiaColor, 0.25f * 0.3f, 5, MathHelper.PiOver4 * 0.5f, 5f, 0.5f));
-                GeneralParticleHandler.SpawnParticle(new FlatGlow(center, Vector2.Zero, modeColor, Main.rand.NextFloat(MathHelper.TwoPi), new Vector2(0.08f, 1.4f) * 0.3f, new Vector2(1.4f, 0.08f) * 0.3f, 10));
-            }
-        }
-
-        public static void SpawnUltimateCharge(Player player, float time)
-        {
-            if (Main.dedServ)
-                return;
-
-            if (time % 3f == 0f)
-            {
-                for (int i = 0; i < 10; i++)
-                {
-                    float dir = i * MathHelper.TwoPi / 10f + time * 0.02f;
-                    float radius = 150f + MathF.Sin(time * 0.1f) * 30f;
-                    GeneralParticleHandler.SpawnParticle(new ChargeUpLineVFX(player.Center + dir.ToRotationVector2() * radius, dir + MathHelper.Pi, 0.04f * 0.3f, DoGSpecialColor, 20));
-                }
-            }
-
-            if (time == 1f)
-            {
-                for (int i = 0; i < 12; i++)
-                    GeneralParticleHandler.SpawnParticle(new RoundedStarParticle(player.Center + Main.rand.NextVector2Circular(100f, 100f), Vector2.Zero, ThreeColorSpark, Main.rand.NextFloat(0.4f, 0.8f) * 0.3f, 65, 0.04f + i * 0.005f, 1f, true, player.Center, player.whoAmI));
-            }
-
-            if (time % 10f == 0f)
-            {
-                GeneralParticleHandler.SpawnParticle(new PlayerCenteredPulseRing(player, Vector2.Zero, DoGCyanColor, Vector2.One, 0f, 0.05f, 0.8f * 0.3f * ShockwaveFinalScaleMultiplier, 30));
-                GeneralParticleHandler.SpawnParticle(new PlayerCenteredPulseRing(player, Vector2.Zero, DoGFuchsiaColor, Vector2.One, 0f, 0.07f, 1.1f * 0.3f * ShockwaveFinalScaleMultiplier, 35));
-            }
-
-            if (time % 15f == 0f)
-            {
-                GeneralParticleHandler.SpawnParticle(new ConstellationRingVFX(player.Center, DoGCyanColor, 0f, 1.2f * 0.3f, Vector2.One, starAmount: 12, spinSpeed: 0.03f));
-                GeneralParticleHandler.SpawnParticle(new ConstellationRingVFX(player.Center, DoGFuchsiaColor, MathHelper.PiOver4, 1f * 0.3f, Vector2.One, starAmount: 8, spinSpeed: -0.025f));
-            }
-
-            for (int i = 0; i < 6; i++)
-            {
-                Vector2 spawn = player.Center + Main.rand.NextVector2Circular(120f, 120f);
-                GeneralParticleHandler.SpawnParticle(new NanoParticle(spawn, (player.Center - spawn).SafeNormalize(Vector2.Zero) * 4f, DoGSpecialColor, Main.rand.NextFloat(0.3f, 0.7f) * 0.3f, 20, emitsLight: true));
-            }
-        }
-
-        public static void SpawnUltimateBurst(IEntitySource source, Player player, Vector2 center, int damage, float knockBack)
-        {
-            foreach (NPC npc in Main.ActiveNPCs)
-            {
-                if (!npc.CanBeChasedBy() || Vector2.DistanceSquared(npc.Center, center) > 1800f * 1800f)
-                    continue;
-
-                Vector2 direction = center.DirectionTo(npc.Center);
-                SpawnFriendlyLaser(source, center, direction, damage, knockBack, player.whoAmI, 0f, 0.5f, 6f);
-                SpawnFriendlyLaser(source, center, direction.RotatedBy(0.15f), (int)(damage * 0.6f), knockBack, player.whoAmI, 1.5f, 0.42f, 5f);
-                SpawnFriendlyLaser(source, center, direction.RotatedBy(-0.15f), (int)(damage * 0.6f), knockBack, player.whoAmI, -1.5f, 0.42f, 5f);
-            }
-
-            if (Main.dedServ)
-                return;
-
-            GeneralParticleHandler.SpawnParticle(new DetailedExplosion(center, Vector2.Zero, DoGCyanColor, new Vector2(1.5f, 0.7f), 0f, 0.4f * 0.3f, 3f * 0.3f, 28));
-            GeneralParticleHandler.SpawnParticle(new DetailedExplosion(center, Vector2.Zero, DoGWhiteColor, Vector2.One, MathHelper.Pi / 5f, 0.6f * 0.3f, 2.5f * 0.3f, 26));
-            GeneralParticleHandler.SpawnParticle(new DetailedExplosion(center, Vector2.Zero, DoGFuchsiaColor, new Vector2(0.7f, 1.4f), MathHelper.Pi / 3f, 0.5f * 0.3f, 2.8f * 0.3f, 24));
-
-            SpawnDistortionBurst(center, 35, 18, 80f, 50f);
-            SpawnRiftCrackProjectiles(source, center, player.whoAmI, 25, 4f, 12f, 22f, 32f);
-            SpawnAllDoGParticles(center, player, 1.35f);
-            for (int i = 0; i < 15; i++)
-                GalaxyMetaball.SpawnParticle(center + Main.rand.NextVector2Circular(90f, 90f), Main.rand.NextVector2Circular(6f, 6f), Main.rand.NextFloat(40f, 90f) * 0.3f);
-            for (int i = 0; i < 8; i++)
-                StarsmokeMetaball.SpawnParticle(center + Main.rand.NextVector2Circular(80f, 80f), Main.rand.NextVector2Circular(5f, 5f), 40f * 0.3f, 40, new Vector2(0.8f, 1.2f), 0.15f, 0.5f);
-
-            for (int i = 0; i < 3; i++)
-                GeneralParticleHandler.SpawnParticle(new PlayerCenteredPulseRing(player, Vector2.Zero, ThreeColorSpark, Vector2.One, 0f, 0.05f + i * 0.03f, (1.5f + i * 0.5f) * 0.3f * ShockwaveFinalScaleMultiplier, 30 + i * 5));
-
-            GeneralParticleHandler.SpawnParticle(new ConstellationRingVFX(center, DoGSpecialColor, 0f, 1.5f * 0.3f, Vector2.One, starAmount: 16, spinSpeed: 0.05f));
-            GeneralParticleHandler.SpawnParticle(new ConstellationRingVFX(center, DoGCyanColor, MathHelper.PiOver4, 1.2f * 0.3f, Vector2.One, starAmount: 12, spinSpeed: -0.04f));
-            GeneralParticleHandler.SpawnParticle(new ConstellationRingVFX(center, DoGFuchsiaColor, MathHelper.PiOver2, 1f * 0.3f, Vector2.One, starAmount: 10, spinSpeed: 0.03f));
-            GeneralParticleHandler.SpawnParticle(new StrongBloom(center, Vector2.Zero, DoGWhiteColor, 4f * 0.3f, 32));
-            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DoGLaserWallBigAttack") { Volume = 0.78f, MaxInstances = 2 }, center);
-        }
-
-        public static void SpawnUltimateFieldIdle(Vector2 center, float radius, float time)
-        {
-            if (Main.dedServ)
-                return;
-
-            for (int i = 0; i < 4; i++)
-                GeneralParticleHandler.SpawnParticle(new NanoParticle(center + Main.rand.NextVector2Circular(radius, radius), Main.rand.NextVector2Circular(2f, 2f), DoGSpecialColor, 0.4f * 0.3f, 20, emitsLight: true));
-
-            if (time % 10f == 0f)
-                GeneralParticleHandler.SpawnParticle(new StaticPulseRing(center, Vector2.Zero, DoGSpecialColor, Vector2.One, 0f, 0.03f, (radius / 50f) * 0.3f * ShockwaveFinalScaleMultiplier, 20));
-
-            if (time % 15f == 0f)
-                GeneralParticleHandler.SpawnParticle(new ConstellationRingVFX(center, DoGSpecialColor, 0f, 0.8f * 0.3f, Vector2.One, starAmount: 8, spinSpeed: 0.02f));
-
-            if (time % 5f == 0f)
-                GeneralParticleHandler.SpawnParticle(new GenericBloom(center + Main.rand.NextVector2Circular(radius, radius), Vector2.Zero, DoGSpecialColor * 0.4f, 3f * 0.3f, 15));
-        }
-
-        public static void SpawnCustomPulse(Vector2 center, Color color, float originalScale, float finalScale, string texture, int lifeTime)
-        {
-            GeneralParticleHandler.SpawnParticle(new CustomPulse(
-                center,
-                Vector2.Zero,
-                color,
-                texture,
-                Vector2.One,
-                Main.rand.NextFloat(MathHelper.TwoPi),
-                originalScale * 0.3f,
-                finalScale * 0.3f * ShockwaveFinalScaleMultiplier,
-                lifeTime));
-        }
-
-        public static void SpawnDistortionBurst(Vector2 center, int squares, int circles, float squareSpread, float circleSpread)
-        {
-            for (int i = 0; i < squares; i++)
-                DoGDistortionMetaball.SpawnParticle(center + Main.rand.NextVector2Circular(squareSpread, squareSpread), Main.rand.NextVector2Circular(5f, 5f), Main.rand.NextFloat(30f, 70f) * 0.3f, true, Main.rand.NextFloat(MathHelper.TwoPi));
-
-            for (int i = 0; i < circles; i++)
-                DoGDistortionMetaball.SpawnParticle(center + Main.rand.NextVector2Circular(circleSpread, circleSpread), Main.rand.NextVector2Circular(2f, 2f), Main.rand.NextFloat(20f, 50f) * 0.3f);
-        }
-
-        public static void SpawnRiftCrackProjectiles(IEntitySource source, Vector2 center, int owner, int count, float minSpeed, float maxSpeed, float minWidth, float maxWidth)
-        {
-            if (Main.netMode == NetmodeID.MultiplayerClient)
-                return;
-
-            for (int i = 0; i < count; i++)
-            {
-                Vector2 velocity = (MathHelper.TwoPi * i / count).ToRotationVector2().RotatedByRandom(0.32f) * Main.rand.NextFloat(minSpeed, maxSpeed);
-                Projectile.NewProjectile(source, center, velocity, ModContent.ProjectileType<DoGRiftCrack>(), 0, 0f, owner, 0f, Main.rand.NextFloat(minWidth, maxWidth));
-            }
-        }
-
-        public static void SpawnFriendlyLaser(IEntitySource source, Vector2 center, Vector2 direction, int damage, float knockBack, int owner, float attackSpeed, float scale, float shake)
-        {
-            if (Main.netMode == NetmodeID.MultiplayerClient)
-                return;
-
-            direction = direction.SafeNormalize(Vector2.UnitX);
-            int laser = Projectile.NewProjectile(source, center, direction, ModContent.ProjectileType<FriendlyLaserWallBeam>(), damage, knockBack, owner, attackSpeed, 0f, shake);
-            if (Main.projectile.IndexInRange(laser))
-                Main.projectile[laser].scale *= scale;
-        }
-
         public static NPC FindNearestTarget(Vector2 center, float maxDistance)
         {
             NPC best = null;
@@ -879,133 +600,6 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             return best;
         }
 
-        private static void SpawnDoGMediumExplosion(Vector2 center, Color mainColor)
-        {
-            GeneralParticleHandler.SpawnParticle(new ImpactParticle(center, 0.12f, 18, 0.8f * 0.3f, DoGCyanColor));
-            GeneralParticleHandler.SpawnParticle(new ImpactParticle(center, 0.09f, 15, 0.6f * 0.3f, DoGFuchsiaColor));
-            for (int i = 0; i < 8; i++)
-                GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(center + Main.rand.NextVector2Circular(8f, 8f), Main.rand.NextVector2Circular(8f, 8f), true, 14, 0.8f * 0.3f, mainColor, new Vector2(0.1f, 0.5f), true));
-            for (int i = 0; i < 4; i++)
-                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(center, Main.rand.NextVector2Circular(5f, 5f), true, 12, 0.15f * 0.3f, DoGWhiteColor));
-            GeneralParticleHandler.SpawnParticle(new StaticPulseRing(center, Vector2.Zero, DoGCyanColor, Vector2.One, 0f, 0.05f, 0.5f * 0.3f * ShockwaveFinalScaleMultiplier, 12));
-            GeneralParticleHandler.SpawnParticle(new StaticPulseRing(center, Vector2.Zero, DoGFuchsiaColor, Vector2.One, 0f, 0.08f, 0.8f * 0.3f * ShockwaveFinalScaleMultiplier, 15));
-            GeneralParticleHandler.SpawnParticle(new FlameExplosion(center, Vector2.Zero, DoGCyanColor, Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.1f * 0.3f, 0.7f * 0.3f, 12, 0.7f));
-            GeneralParticleHandler.SpawnParticle(new FlameExplosion(center, Vector2.Zero, DoGFuchsiaColor, Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.08f * 0.3f, 0.6f * 0.3f, 10, 0.6f));
-        }
-
-        private static void SpawnRadiatingGlowLines(Vector2 center, int count, float minLength, float maxLength, float xScale, float xShrink, int lifetime)
-        {
-            for (int i = 0; i < count; i++)
-            {
-                Vector2 dir = Main.rand.NextVector2Unit();
-                GeneralParticleHandler.SpawnParticle(new StaticGlowLine(center, center + dir * Main.rand.NextFloat(minLength, maxLength), dir * 0.5f, lifetime, xScale, xShrink, i % 2 == 0 ? DoGCyanColor : DoGFuchsiaColor));
-            }
-        }
-
-        private static void SpawnAllDoGParticles(Vector2 center, Player player, float scale)
-        {
-            for (int i = 0; i < 25 * scale; i++)
-                GeneralParticleHandler.SpawnParticle(new SparkParticle(center + Main.rand.NextVector2Circular(20f, 20f), Main.rand.NextVector2Circular(12f, 12f), false, Main.rand.Next(18, 35), Main.rand.NextFloat(0.5f, 1.2f) * 0.3f, ThreeColorSpark));
-            for (int i = 0; i < 20 * scale; i++)
-                GeneralParticleHandler.SpawnParticle(new GenericSparkle(center + Main.rand.NextVector2Circular(15f, 15f), Main.rand.NextVector2Circular(10f, 10f), ThreeColorSpark, DoGWhiteColor, Main.rand.NextFloat(0.3f, 0.9f) * 0.3f, Main.rand.Next(18, 35), 2f, 1.5f));
-            for (int i = 0; i < 6 * scale; i++)
-                GeneralParticleHandler.SpawnParticle(new ImpactParticle(center, 0.07f + i * 0.08f, 20 - i * 2, (0.6f + i * 0.2f) * 0.3f, i % 2 == 0 ? DoGCyanColor : DoGFuchsiaColor));
-            for (int i = 0; i < 12 * scale; i++)
-                GeneralParticleHandler.SpawnParticle(new FlareShine(center + Main.rand.NextVector2Circular(20f, 20f), Main.rand.NextVector2Circular(2f, 2f), DoGWhiteColor, DoGCyanColor, i * MathHelper.PiOver4, new Vector2(0.15f, 2.5f) * 0.3f, new Vector2(0.02f, 0.4f) * 0.3f, 15, spawnDelay: i / 2));
-            for (int i = 0; i < 20 * scale; i++)
-                GeneralParticleHandler.SpawnParticle(new FancyStars(center + Main.rand.NextVector2Circular(30f, 30f), Main.rand.NextFloat(MathHelper.TwoPi), Main.rand.NextFloat(0.3f, 0.7f) * 0.3f, Main.rand.NextVector2Circular(8f, 8f), Main.rand.NextFloat(0.04f, 0.1f), 20, ThreeColorSpark));
-            SpawnCustomPulse(center, DoGCyanColor * 0.9f, 0.2f, 3f * scale, "CalamityMod/Particles/ShineExplosion1", 24);
-            SpawnCustomPulse(center, DoGWhiteColor * 0.85f, 0.4f, 3.5f * scale, "CalamityMod/Particles/PlasmaExplosion", 26);
-            SpawnCustomPulse(center, DoGFuchsiaColor * 0.8f, 0.6f, 4f * scale, "CalamityMod/Particles/ShineExplosion2", 28);
-            SpawnRadiatingGlowLines(center, (int)(16 * scale), 120f, 300f, 0.08f * 0.3f, 0.87f, 20);
-            for (int i = 0; i < 12 * scale; i++)
-                GeneralParticleHandler.SpawnParticle(new GlowSquareParticle(center + Main.rand.NextVector2Circular(20f, 20f), Main.rand.NextVector2Circular(8f, 8f), true, 16, Main.rand.NextFloat(0.06f, 0.13f) * 0.3f, ThreeColorSpark, rotation: Main.rand.NextFloat(0.08f, 0.15f)));
-            for (int i = 0; i < 25 * scale; i++)
-                GeneralParticleHandler.SpawnParticle(new SquishyLightParticle(center, Main.rand.NextVector2Unit() * Main.rand.NextFloat(10f, 20f), 0.2f * 0.3f, ThreeColorSpark, 12, hueShift: 0.005f));
-            for (int i = 0; i < 10 * scale; i++)
-                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(center, Main.rand.NextVector2Circular(8f, 8f), false, 14, 0.15f * 0.3f, i % 2 == 0 ? DoGCyanColor : DoGFuchsiaColor));
-            for (int i = 0; i < 15 * scale; i++)
-                GeneralParticleHandler.SpawnParticle(new TechyHoloysquareParticle(center + Main.rand.NextVector2Circular(24f, 24f), Main.rand.NextVector2Unit() * Main.rand.NextFloat(3f, 8f), Main.rand.NextFloat(0.5f, 1f) * 0.3f, ThreeColorSpark, 16, 0.85f));
-            for (int i = 0; i < 10 * scale; i++)
-                GeneralParticleHandler.SpawnParticle(new ElectricSpark(center + Main.rand.NextVector2Circular(36f, 36f), Main.rand.NextVector2Circular(2f, 2f), DoGCyanColor, DoGFuchsiaColor, 0.275f * 0.3f, 6, MathHelper.PiOver4 * 0.5f, 5f, 0.5f));
-            for (int i = 0; i < 12 * scale; i++)
-                GeneralParticleHandler.SpawnParticle(new BoltParticle(center, Main.rand.NextVector2Unit() * Main.rand.NextFloat(4f, 10f), true, 12, 0.65f * 0.3f, DoGCyanColor, new Vector2(0.12f, 4f), true, true));
-            for (int i = 0; i < 50 * scale; i++)
-                GeneralParticleHandler.SpawnParticle(new NanoParticle(center + Main.rand.NextVector2Circular(90f, 90f), Main.rand.NextVector2Circular(5f, 5f), ThreeColorSpark, Main.rand.NextFloat(0.3f, 0.7f) * 0.3f, 20, emitsLight: true));
-            for (int i = 0; i < 6 * scale; i++)
-                GeneralParticleHandler.SpawnParticle(new FlatGlow(center, Vector2.Zero, DoGSpecialColor, i * MathHelper.PiOver2, new Vector2(0.1f, 2.5f) * 0.3f, new Vector2(2.5f, 0.1f) * 0.3f, 14));
-        }
-
-        public static void SpawnDoGSparkBurst(Vector2 center, int count, float minSpeed, float maxSpeed, float scale = 0.65f, Vector2? bias = null)
-        {
-            if (Main.dedServ)
-                return;
-
-            scale *= 0.3f;
-            Vector2 biasDirection = bias.GetValueOrDefault(Vector2.Zero);
-            for (int i = 0; i < count; i++)
-            {
-                Vector2 direction = count <= 1
-                    ? Main.rand.NextVector2CircularEdge(1f, 1f)
-                    : (MathHelper.TwoPi * i / count).ToRotationVector2().RotatedByRandom(0.45f);
-                Vector2 velocity = direction * Main.rand.NextFloat(minSpeed, maxSpeed) + biasDirection;
-                GeneralParticleHandler.SpawnParticle(new SparkParticle(
-                    center + Main.rand.NextVector2Circular(18f, 18f),
-                    velocity,
-                    false,
-                    Main.rand.Next(14, 28),
-                    Main.rand.NextFloat(scale * 0.72f, scale * 1.25f),
-                    RandomDoGColor()));
-            }
-        }
-
-        public static void SpawnDoGRiftCracks(Vector2 center, int count, float minLength, float maxLength, float scale = 0.55f)
-        {
-            if (Main.dedServ)
-                return;
-
-            scale *= 0.3f;
-            for (int i = 0; i < count; i++)
-            {
-                Vector2 direction = (MathHelper.TwoPi * i / count + Main.rand.NextFloat(-0.18f, 0.18f)).ToRotationVector2();
-                GeneralParticleHandler.SpawnParticle(new LineParticle(
-                    center + direction * Main.rand.NextFloat(2f, 18f),
-                    direction * Main.rand.NextFloat(minLength, maxLength),
-                    false,
-                    Main.rand.Next(8, 15),
-                    Main.rand.NextFloat(scale * 0.7f, scale * 1.15f),
-                    Transparent(RandomDoGColor()) * 0.75f));
-            }
-        }
-
-        public static void SpawnDoGImpact(Vector2 center, Vector2 direction, bool heavy, bool tip = false)
-        {
-            if (Main.dedServ)
-                return;
-
-            direction = direction.SafeNormalize(Vector2.UnitX);
-            Color main = heavy ? DoGFuchsiaColor : DoGSpecialColor;
-            Color secondary = tip ? DoGWhiteColor : DoGCyanColor;
-            GeneralParticleHandler.SpawnParticle(new StrongBloom(
-                center,
-                Vector2.Zero,
-                Transparent(main) * (heavy ? 0.55f : 0.35f),
-                (heavy ? 0.68f : 0.44f) * 0.3f,
-                heavy ? 24 : 16));
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
-                center,
-                direction * 0.7f,
-                Transparent(secondary) * (heavy ? 0.45f : 0.3f),
-                Vector2.One,
-                direction.ToRotation(),
-                0.04f,
-                (heavy ? 0.32f : 0.19f) * 0.3f * ShockwaveFinalScaleMultiplier,
-                heavy ? 18 : 12));
-            SpawnDoGSparkBurst(center, heavy ? 22 : 12, 3f, heavy ? 13f : 8f, heavy ? 0.72f : 0.5f, direction * 1.2f);
-            if (heavy || tip)
-                SpawnDoGRiftCracks(center, tip ? 5 : 3, 4f, tip ? 10f : 7f, tip ? 0.72f : 0.48f);
-        }
-
         public static bool HasOwnedProjectile(Player player, params int[] projectileTypes)
         {
             foreach (Projectile projectile in Main.ActiveProjectiles)
@@ -1022,6 +616,10 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
             return false;
         }
+
+        // ────────────────────────────────────────────────────────────────
+        // 七、链条绘制 —— 确定性绘制，非粒子
+        // ────────────────────────────────────────────────────────────────
 
         public static void DrawChain(SpriteBatch spriteBatch, Vector2 startWorld, Vector2 endWorld, Color drawColor, float scale, bool rigid, float gfxOffY = 0f)
         {
@@ -1157,7 +755,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 texture,
                 tailPosition - Main.screenPosition + drawOffset,
                 tailFrame,
-                Color.Lerp(drawColor, DoGWhiteColor, 0.22f),
+                Color.Lerp(drawColor, Color.White, 0.22f),
                 lastDirection.ToRotation() + MathHelper.PiOver2,
                 new Vector2(tailFrame.Width * 0.5f, 0f),
                 scale,
@@ -1168,7 +766,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         {
             Texture2D ring = ModContent.Request<Texture2D>(RingTexturePath).Value;
             Vector2 drawPosition = player.Bottom - Main.screenPosition + new Vector2(0f, -6f + player.gfxOffY);
-            Color ringColor = Color.Lerp(DoGPurpleColor, DoGSpecialColor, 0.45f) * (0.35f * intensity);
+            Color ringColor = Transparent(RiftTwilight) * (0.3f * intensity);
 
             spriteBatch.SetBlendState(BlendState.Additive);
 
@@ -1186,7 +784,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 ring,
                 drawPosition,
                 null,
-                DoGSpecialColor * (0.18f * intensity),
+                Transparent(DoGSpecialColor) * (0.16f * intensity),
                 Main.GlobalTimeWrappedHourly * 0.8f,
                 ring.Size() * 0.5f,
                 new Vector2(0.45f, 0.14f) * (1f + 0.15f * intensity),
@@ -1216,7 +814,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
                 Main.EntitySpriteDraw(
                     texture,
-                    position - Main.screenPosition + drawOffset,
+                    position - Main.screenPosition + drawFrame.Size() * 0f + drawOffset,
                     drawFrame,
                     drawColor,
                     rotation,

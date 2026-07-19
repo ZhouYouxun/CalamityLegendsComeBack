@@ -49,6 +49,13 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
                 if (!impactEffectsPlayed && t >= 0.7f)
                 {
+                    // 整次挥鞭只画一道弧。这是鞭形唯一的"挥砍残像"。
+                    CosmicDischargeCommon.SpawnSwingSmear(
+                        Vector2.Lerp(Owner.MountedCenter, TipPosition, 0.58f),
+                        Projectile.velocity.ToRotation() + MathHelper.PiOver2,
+                        MathHelper.Clamp(Projectile.velocity.Length() / 90f, 1.2f, 5.5f),
+                        CosmicDischargeCommon.RiftLightBlue);
+
                     EmitAirCrack(TipPosition, baseDirection, 0.8f);
                     SpawnWhipRiftBombFan(baseDirection, ultActive || empActive ? 4 : 3, ultActive || empActive ? 0.48f : 0.36f);
                 }
@@ -69,11 +76,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             if (Time >= WhipArcDuration)
                 Projectile.Kill();
 
-            Vector2 swingDirection = Projectile.velocity.RotatedBy(sign * MathHelper.PiOver2).SafeNormalize(baseDirection);
-            if (Kind == CosmicDischargeAttackKind.WhipOver)
-                CosmicDischargeCommon.SpawnWhipOverTrail(Owner, Owner.MountedCenter, TipPosition, Projectile.velocity.ToRotation(), Projectile.velocity.Length());
-            else
-                CosmicDischargeCommon.SpawnWhipUnderTrail(Owner.MountedCenter, TipPosition, Projectile.velocity.ToRotation(), swingDirection, Projectile.velocity.Length());
+            // 逐帧拖尾统一由 AI() 里的 SpawnBladeWakeDust 处理，这里不再另开一套。
         }
         private void UpdateThrust(bool quickDraw)
         {
@@ -93,10 +96,9 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             {
                 float t = quickDraw ? 1f : EaseOutCubic(Time / windup);
                 SetBlade(direction.RotatedBy(-0.1f * Owner.direction), MathHelper.Lerp(58f, quickDraw ? 126f : 156f, t), -0.04f * Owner.direction, quickDraw ? 26f : 28f);
-                if (quickDraw)
-                    CosmicDischargeCommon.SpawnQuickDrawCharge(Owner, Time);
-                else
-                    CosmicDischargeCommon.SpawnWhipThrustTrail(Owner, TipPosition, direction, false);
+                // 蓄力照 DoG 的节奏 —— DoGTeleportRift 整个蓄力期只脉冲 3 次，不是逐帧喷。
+                if (quickDraw && (Time == 1f || Time == 8f || Time == 15f))
+                    CosmicDischargeCommon.SpawnChargePulse(Owner.MountedCenter, Time / QuickDrawWindup, 0.7f);
             }
             else if (Time <= snapEnd)
             {
@@ -105,7 +107,6 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 float over = MathF.Sin(MathHelper.Pi * t);
                 SetBlade(direction, MathHelper.Lerp(126f, maxReach + (quickDraw ? 70f : 34f), snap), 0f, 42f + over * 10f);
                 PlayReleaseOnce(SoundID.Item122, quickDraw ? 0.9f : 0.72f, quickDraw ? 0.28f : 0.06f, quickDraw ? 6.2f : 4.4f);
-                CosmicDischargeCommon.SpawnWhipThrustTrail(Owner, TipPosition, direction, true);
 
                 if (!impactEffectsPlayed && t >= 0.72f)
                     EmitAirCrack(TipPosition, direction, quickDraw ? 1.35f : 0.92f);
@@ -113,7 +114,6 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             else if (Time <= holdEnd)
             {
                 SetBlade(direction, maxReach + (quickDraw ? 38f : 8f), 0f, quickDraw ? 48f : 40f);
-                CosmicDischargeCommon.SpawnWhipThrustTrail(Owner, TipPosition, direction, true);
             }
             else
             {
@@ -122,8 +122,6 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 Projectile.localNPCHitCooldown = quickDraw ? 3 : 16;
                 float retract = MathF.Sin(t * MathHelper.PiOver2);
                 SetBlade(direction.RotatedBy(Owner.direction * MathHelper.Lerp(0f, 0.18f, retract)), MathHelper.Lerp(maxReach, 52f, retract), 0.08f * Owner.direction, MathHelper.Lerp(36f, 18f, retract));
-                if (!quickDraw)
-                    CosmicDischargeCommon.SpawnWhipThrustTrail(Owner, TipPosition, direction, true);
             }
 
             if (quickDraw && !quickDrawBurstPlayed && Time >= QuickDrawWindup)

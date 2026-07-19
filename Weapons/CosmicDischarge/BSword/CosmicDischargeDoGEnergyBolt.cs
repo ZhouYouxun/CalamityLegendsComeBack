@@ -60,69 +60,13 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 }
             }
 
-            if (Main.rand.NextBool(3))
-            {
-                Dust d = Dust.NewDustPerfect(
-                    Projectile.Center,
-                    DustID.PurpleTorch,
-                    Projectile.velocity * 0.2f,
-                    100,
-                    CosmicDischargeCommon.RandomDoGColor(false),
-                    0.9f * 0.3f
-                );
-                d.noGravity = true;
-            }
-
-            if (!Main.dedServ)
-            {
-                Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-                Vector2 back = -direction;
-
-                if (Main.rand.NextBool(2))
-                {
-                    GeneralParticleHandler.SpawnParticle(new LineParticle(
-                        Projectile.Center + Main.rand.NextVector2Circular(12f, 8f),
-                        back * Main.rand.NextFloat(2.5f, 6.5f),
-                        false,
-                        Main.rand.Next(12, 18),
-                        Main.rand.NextFloat(0.34f, 0.62f) * 0.3f,
-                        CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGSpecialColor) * 0.65f));
-                }
-
-                if (Main.rand.NextBool(2))
-                {
-                    GeneralParticleHandler.SpawnParticle(new NanoParticle(
-                        Projectile.Center + Main.rand.NextVector2Circular(10f, 10f),
-                        Main.rand.NextVector2Circular(1.5f, 1.5f) + back * Main.rand.NextFloat(0.5f, 1.6f),
-                        CosmicDischargeCommon.DoGSpecialColor,
-                        Main.rand.NextFloat(0.16f, 0.30f) * 0.3f,
-                        12,
-                        emitsLight: true));
-                }
-
-                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
-                    Projectile.Center + Main.rand.NextVector2Circular(6f, 6f),
-                    back * Main.rand.NextFloat(0.25f, 0.9f) + Main.rand.NextVector2Circular(0.12f, 0.12f),
-                    false,
-                    10,
-                    Main.rand.NextFloat(0.07f, 0.13f),
-                    CosmicDischargeCommon.ThreeColorSpark,
-                    true,
-                    false,
-                    true));
-
-                if (Main.rand.NextBool(4))
-                    GeneralParticleHandler.SpawnParticle(new BoltParticle(
-                        Projectile.Center,
-                        back.RotatedByRandom(0.5f) * Main.rand.NextFloat(2f, 6f),
-                        false,
-                        10,
-                        0.45f * 0.3f,
-                        CosmicDischargeCommon.DoGCyanColor,
-                        new Vector2(0.1f, 3.2f),
-                        true,
-                        true));
-            }
+            // 这个弹幕一次会射出 3~8 发，是全武器数量最大的弹幕 ——
+            // 所以每发的拖尾必须最省：只走统一的 DoGFire 配比，别的一概不加。
+            CosmicDischargeCommon.SpawnTrailWake(
+                Projectile.Center,
+                -Projectile.velocity.SafeNormalize(Vector2.UnitX),
+                CosmicDischargeCommon.RiftLightBlue,
+                0.55f);
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
@@ -139,40 +83,8 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 MaxInstances = 5
             }, target.Center);
 
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
-                target.Center,
-                direction,
-                CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGSpecialColor) * 0.3f,
-                Vector2.One,
-                direction.ToRotation(),
-                0.032f,
-                0.16f * 0.3f * CosmicDischargeCommon.ShockwaveFinalScaleMultiplier,
-                12));
-
-            for (int i = 0; i < 4; i++)
-            {
-                GeneralParticleHandler.SpawnParticle(new BoltParticle(
-                    target.Center + Main.rand.NextVector2Circular(10f, 10f),
-                    direction.RotatedByRandom(0.6f) * Main.rand.NextFloat(2f, 6f),
-                    false,
-                    Main.rand.Next(9, 14),
-                    Main.rand.NextFloat(0.26f, 0.48f) * 0.3f,
-                    Main.rand.NextBool() ? CosmicDischargeCommon.DoGCyanColor : CosmicDischargeCommon.DoGFuchsiaColor,
-                    new Vector2(0.08f, 2.7f),
-                    true,
-                    true));
-            }
-
-            for (int i = 0; i < 7; i++)
-            {
-                GeneralParticleHandler.SpawnParticle(new NanoParticle(
-                    target.Center + Main.rand.NextVector2Circular(18f, 18f),
-                    Main.rand.NextVector2Circular(2.2f, 2.2f),
-                    CosmicDischargeCommon.DoGSpecialColor,
-                    Main.rand.NextFloat(0.18f, 0.32f) * 0.3f,
-                    13,
-                    emitsLight: true));
-            }
+            // 命中同样只给 Light 档 —— 一次齐射有 8 发，8 个 Light 叠起来才等于一次重击。
+            CosmicDischargeCommon.SpawnRiftBurst(target.Center, RiftTier.Light, direction, CosmicDischargeCommon.RiftLightBlue);
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -189,7 +101,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     bloom,
                     drawPos,
                     null,
-                    CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGPurpleColor) * 0.32f * factor,
+                    CosmicDischargeCommon.Transparent(CosmicDischargeCommon.RiftTwilight) * 0.32f * factor,
                     0f,
                     origin,
                     0.12f * factor,

@@ -1,4 +1,4 @@
-﻿Mods: {
+Mods: {
 	CalamityLegendsComeBack: {
 		Configs: {
 			CalamityLegendsComeBackConfig: {
@@ -17,6 +17,16 @@
 				AllowOtherRecipes: {
 					Label: 允许额外 QOL 配方
 					Tooltip: 开启后，会加入部分改善流程体验的额外配方。
+				}
+
+				AllowWheelSlowdown: {
+					// Label: Allow Wheel Slowdown
+					// Tooltip: ""
+				}
+
+				GiveQuickStartBoxOnSpawn: {
+					// Label: Give Quick Start Box On Spawn
+					// Tooltip: ""
 				}
 			}
 

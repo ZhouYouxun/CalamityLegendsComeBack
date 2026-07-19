@@ -4,6 +4,8 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.Audio;
+using Terraria.DataStructures;
+using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -82,6 +84,44 @@ namespace CalamityLegendsComeBack.BossAI.HDMC
                 DrawProjectedEdge(projected[start], projected[end], lineColor, 1.2f * iconScale);
         }
 
+        internal static void AddHeldDrawData(ref PlayerDrawSet drawInfo, Player player)
+        {
+            // The usual held-item pass only sees InvisibleProj, so queue the procedural prism in
+            // the player draw cache instead of trying to draw from an item update hook.
+            Vector2 center = player.MountedCenter - Main.screenPosition +
+                new Vector2(player.direction * 11f, player.gfxOffY - 31f);
+            Vector2[] projected = ProjectPrism(center, 16f, Main.GlobalTimeWrappedHourly);
+            // PlayerDrawLayer uses the normal alpha-blended draw pass, so these must retain
+            // a visible alpha channel (the weapon's additive-renderer convention uses A = 0).
+            Color glow = new Color(28, 126, 255, 82);
+            Color line = new Color(108, 238, 255, 255);
+
+            foreach ((int start, int end) in PrismEdges)
+            {
+                AddHeldLine(ref drawInfo, projected[start], projected[end], glow, 5.2f);
+                AddHeldLine(ref drawInfo, projected[start], projected[end], line, 1.35f);
+            }
+        }
+
+        private static void AddHeldLine(ref PlayerDrawSet drawInfo, Vector2 start, Vector2 end, Color color, float width)
+        {
+            Vector2 offset = end - start;
+            float length = offset.Length();
+            if (length <= 0.01f)
+                return;
+
+            drawInfo.DrawDataCache.Add(new DrawData(
+                TextureAssets.MagicPixel.Value,
+                start,
+                new Rectangle(0, 0, 1, 1),
+                color,
+                offset.ToRotation(),
+                new Vector2(0f, 0.5f),
+                new Vector2(length, width),
+                SpriteEffects.None,
+                0));
+        }
+
         private static Vector2[] ProjectPrism(Vector2 center, float radius, float time)
         {
             Matrix rotation = Matrix.CreateFromYawPitchRoll(time * 0.94f, time * 0.67f, time * 0.43f);
@@ -115,7 +155,7 @@ namespace CalamityLegendsComeBack.BossAI.HDMC
         }
 
         public override bool CanUseItem(Player player)
-            => !NPC.AnyNPCs(ModContent.NPCType<HDMCSovereign>());
+            => !Main.dayTime && !NPC.AnyNPCs(ModContent.NPCType<HDMCSovereign>());
 
         public override bool? UseItem(Player player)
         {

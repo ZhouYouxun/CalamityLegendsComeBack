@@ -572,9 +572,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
             GeneralParticleHandler.SpawnParticle(trail);
         }
 
-        internal static void SpawnLeafImpactFX(Projectile projectile, Vector2 center, BlossomFluxChloroplastPresetType preset, float intensity)
+        internal static void SpawnLeafImpactFX(Projectile projectile, Vector2 center, BlossomFluxChloroplastPresetType preset, float intensity, Vector2? burstOrigin = null)
         {
-            BFArrowCommon.EmitPresetBurst(projectile, preset, (int)(8 * intensity), 0.8f, 3.2f, 0.72f, 1.12f);
+            BFArrowCommon.EmitPresetBurst(projectile, preset, (int)(8 * intensity), 0.8f, 3.2f, 0.72f, 1.12f, burstOrigin ?? center);
 
             if (Main.dedServ)
                 return;

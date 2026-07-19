@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack;
-using CalamityLegendsComeBack.Weapons.BrinyBaron.TideValue;
 using CalamityMod;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
@@ -29,14 +28,13 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
         private static readonly float[] ShurikenTideHomingRanges = { 900f, 1040f, 1180f, 1320f };
         private static readonly float[] ShurikenRotationSpeeds = { 0.55f, 0.59f, 0.63f, 0.67f };
         private static readonly bool[] ShurikenStickySlashUnlocks = { false, false, true, true };
-        private const float TideHomingBlendTargetWeight = 44f;
-        private const float TideHomingBlendTotalWeight = 30f;
         private const float TideHomingFinalSpeed = 34f;
-        private const float TideHomingFinalSpeedLerp = 0.2f;
-        private const int TideHomingDelayFrames = 144;
-        private const float TideHomingIdleAcceleration = 1.006f;
-        private const float NonEmpoweredShurikenAcceleration = 1.0195f;
-        private const float NonEmpoweredShurikenMaxSpeed = 48f;
+        // Same curve as BrinyBaron_HomingLightOrb, tuned for a quicker spinning blade.
+        private const int ShurikenHomingDelayFrames = 10;
+        private const float ShurikenHomingInertia = 15f;
+        private const float ShurikenFreeFlightDamping = 0.998f;
+        private const float ShurikenNoTargetDamping = 0.994f;
+        private const float ShurikenWanderingTurnStrength = 0.0045f;
         private const float StickySlashDamageFactor = 0.42f;
         private const float StickySlashBaseScale = 0.9f;
         private const float StickySlashScalePerTier = 0.08f;
@@ -44,10 +42,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
 
         private float SizeScale => Projectile.width / (float)BaseSize;
         private float Radius => Projectile.width * 0.5f;
-        private bool ForceHoming => Projectile.ai[0] >= 1f;
-        private bool TideEmpowered => Main.player.IndexInRange(Projectile.owner) &&
-                                      Main.player[Projectile.owner].active &&
-                                      Main.player[Projectile.owner].GetModPlayer<BBTideValuePlayer>().TideFull;
         private ShurikenProfile shurikenProfile;
 
         private bool stuckInTarget;
@@ -267,9 +261,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
 
         private bool IsHomingAllowed()
         {
-            if (TideEmpowered) return true; // Full tide enables homing at all stages
-            if (shurikenProfile.GrowthTier < 2) return false;
-            return true; // Stage 3+: always homing
+            // The right-click blade itself now owns the light orb's graceful target-seeking behavior.
+            return true;
         }
 
         private void HandleFlightMovement()
@@ -280,60 +273,46 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
             float homingRange = shurikenProfile.TideHomingRange;
             NPC target = homing ? FindNearestTarget(homingRange) : null;
 
-            if (homing && target != null && target.active)
-            {
-                homingTimer++;
-                bool boatEnhanced = Main.player.IndexInRange(Projectile.owner) &&
-                    Main.player[Projectile.owner].GetModPlayer<global::CalamityLegendsComeBack.Accssory.BB.BBAccessoryPlayer>().ShurikenBoatEnhanced;
-                int delay = (shurikenProfile.GrowthTier >= 2 || boatEnhanced) ? 15 : TideHomingDelayFrames;
-                if (homingTimer <= delay)
-                {
-                    EnsureFallbackFallbackVelocity();
-                    Projectile.velocity *= TideHomingIdleAcceleration;
-                    ClampFlightSpeed(shurikenProfile.TideHomingFinalSpeed);
-                }
-                else
-                {
-                Vector2 desiredDir = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitX);
-                float loosen = Utils.GetLerpValue(TideHomingDelayFrames, TideHomingDelayFrames + 36f, homingTimer, true);
-                float closeTargetBoost = Utils.GetLerpValue(240f, 42f, Projectile.Distance(target.Center), true);
-                float pullStrength = MathHelper.Max(loosen, closeTargetBoost);
-                float targetSpeed = MathHelper.Lerp(shurikenProfile.TideHomingTotalWeight, shurikenProfile.TideHomingTargetWeight, pullStrength);
-                float inertia = MathHelper.Lerp(7.5f, 1.35f, pullStrength);
-
-                Projectile.velocity = (
-                    Projectile.velocity * inertia +
-                    desiredDir * targetSpeed
-                ) / (inertia + 1f);
-
-                float speed = Projectile.velocity.Length();
-                float targetFinalSpeed = MathHelper.Lerp(24f, shurikenProfile.TideHomingFinalSpeed, pullStrength);
-                float speedCorrection = MathHelper.Lerp(shurikenProfile.TideHomingFinalSpeedLerp, 0.55f, pullStrength);
-                speed = MathHelper.Lerp(speed, targetFinalSpeed, speedCorrection);
-                Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitX) * speed;
-                }
-            }
+            homingTimer++;
+            if (homingTimer <= ShurikenHomingDelayFrames)
+                FreeDrift(ShurikenFreeFlightDamping);
+            else if (target is null)
+                FreeDrift(ShurikenNoTargetDamping);
             else
-            {
-                homingTimer = 0;
-                EnsureFallbackFallbackVelocity();
-
-                if (homing)
-                {
-                    Projectile.velocity *= TideHomingIdleAcceleration;
-                    ClampFlightSpeed(shurikenProfile.TideHomingFinalSpeed);
-                }
-                else
-                {
-                    Projectile.velocity *= shurikenProfile.NonEmpoweredAcceleration;
-                    ClampFlightSpeed(shurikenProfile.NonEmpoweredMaxSpeed);
-                }
-            }
+                HomeTowardTarget(target);
 
             if (Projectile.velocity.X != 0f)
                 Projectile.direction = Projectile.velocity.X > 0f ? 1 : -1;
 
             Projectile.rotation += (Projectile.direction <= 0 ? -1f : 1f) * shurikenProfile.RotationSpeed;
+        }
+
+        private void HomeTowardTarget(NPC target)
+        {
+            Vector2 currentVelocity = Projectile.velocity;
+            if (currentVelocity.LengthSquared() < 0.01f)
+                currentVelocity = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitX) * 12f;
+
+            Vector2 desiredDirection = (target.Center - Projectile.Center).SafeNormalize(currentVelocity.SafeNormalize(Vector2.UnitX));
+            float warmup = Utils.GetLerpValue(ShurikenHomingDelayFrames, ShurikenHomingDelayFrames + 24f, homingTimer, true);
+            float closePressure = Utils.GetLerpValue(330f, 58f, Projectile.Distance(target.Center), true);
+            float pullStrength = MathHelper.Lerp(0.52f, 1f, MathHelper.Max(warmup, closePressure * 0.8f));
+
+            float targetSpeed = MathHelper.Lerp(22f, shurikenProfile.TideHomingFinalSpeed, pullStrength);
+            float inertia = MathHelper.Lerp(ShurikenHomingInertia, 5.5f, pullStrength);
+            Projectile.velocity = (currentVelocity * inertia + desiredDirection * targetSpeed) / (inertia + 1f);
+
+            float sideSway = (float)Math.Sin((homingTimer + Projectile.identity * 7f) * 0.075f) *
+                MathHelper.Lerp(0.009f, 0.003f, pullStrength);
+            Projectile.velocity = Projectile.velocity.RotatedBy(sideSway);
+            ClampFlightSpeed(shurikenProfile.TideHomingFinalSpeed);
+        }
+
+        private void FreeDrift(float damping)
+        {
+            EnsureFallbackFallbackVelocity();
+            float wander = (float)Math.Sin((homingTimer + Projectile.identity * 5f) * 0.08f) * ShurikenWanderingTurnStrength;
+            Projectile.velocity = Projectile.velocity.RotatedBy(wander) * damping;
         }
 
         private void EnsureFallbackFallbackVelocity()
@@ -561,12 +540,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
                 ShurikenTideHomingRanges[tier],
                 ShurikenRotationSpeeds[tier],
                 ShurikenStickySlashUnlocks[tier],
-                TideHomingBlendTargetWeight,
-                TideHomingBlendTotalWeight,
                 finalSpeed,
-                TideHomingFinalSpeedLerp,
-                NonEmpoweredShurikenAcceleration,
-                NonEmpoweredShurikenMaxSpeed,
                 StickySlashDamageFactor,
                 StickySlashBaseScale + tier * StickySlashScalePerTier);
         }
@@ -586,18 +560,13 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
             public readonly float TideHomingRange;
             public readonly float RotationSpeed;
             public readonly bool UnlocksStickySlash;
-            public readonly float TideHomingTargetWeight;
-            public readonly float TideHomingTotalWeight;
             public readonly float TideHomingFinalSpeed;
-            public readonly float TideHomingFinalSpeedLerp;
-            public readonly float NonEmpoweredAcceleration;
-            public readonly float NonEmpoweredMaxSpeed;
             public readonly float StickySlashDamageFactor;
             public readonly float StickySlashScale;
 
             public bool CanStick => StickySliceCount > 0;
 
-            public ShurikenProfile(int growthTier, int penetrate, int stickySliceCount, bool spawnsShpcExplosionOnDeath, bool spawnsCrossLightsOnDeath, float tideHomingRange, float rotationSpeed, bool unlocksStickySlash, float tideHomingTargetWeight, float tideHomingTotalWeight, float tideHomingFinalSpeed, float tideHomingFinalSpeedLerp, float nonEmpoweredAcceleration, float nonEmpoweredMaxSpeed, float stickySlashDamageFactor, float stickySlashScale)
+            public ShurikenProfile(int growthTier, int penetrate, int stickySliceCount, bool spawnsShpcExplosionOnDeath, bool spawnsCrossLightsOnDeath, float tideHomingRange, float rotationSpeed, bool unlocksStickySlash, float tideHomingFinalSpeed, float stickySlashDamageFactor, float stickySlashScale)
             {
                 GrowthTier = growthTier;
                 Penetrate = penetrate;
@@ -607,12 +576,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
                 TideHomingRange = tideHomingRange;
                 RotationSpeed = rotationSpeed;
                 UnlocksStickySlash = unlocksStickySlash;
-                TideHomingTargetWeight = tideHomingTargetWeight;
-                TideHomingTotalWeight = tideHomingTotalWeight;
                 TideHomingFinalSpeed = tideHomingFinalSpeed;
-                TideHomingFinalSpeedLerp = tideHomingFinalSpeedLerp;
-                NonEmpoweredAcceleration = nonEmpoweredAcceleration;
-                NonEmpoweredMaxSpeed = nonEmpoweredMaxSpeed;
                 StickySlashDamageFactor = stickySlashDamageFactor;
                 StickySlashScale = stickySlashScale;
             }

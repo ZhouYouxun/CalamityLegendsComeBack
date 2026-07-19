@@ -49,96 +49,36 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             Projectile.Opacity = Utils.GetLerpValue(0f, 8f, Time, true) * Utils.GetLerpValue(0f, 30f, Projectile.timeLeft, true);
             Lighting.AddLight(Projectile.Center, CosmicDischargeCommon.DoGSpecialColor.ToVector3() * 0.72f * Projectile.Opacity);
 
+            // 起爆：一次 Heavy 档爆发 + DoG 原生裂缝弹幕 + 扭曲元球。
+            // 观感主体来自下面 PreDraw 的传送门层，粒子只负责起爆那一瞬。
             if (Time == 1f)
             {
                 SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DoGLaserWallBigAttack") { Volume = 0.58f, Pitch = 0.18f, MaxInstances = 3 }, Projectile.Center);
-                CosmicDischargeCommon.SpawnRiftCrackProjectiles(Projectile.GetSource_FromThis(), Projectile.Center, Projectile.owner, 8, 3f, 10f, 14f, 24f);
-
-                if (!Main.dedServ)
-                {
-                    CosmicDischargeCommon.SpawnDistortionBurst(Projectile.Center, 12, 6, 58f, 38f);
-                    CosmicDischargeCommon.SpawnCustomPulse(Projectile.Center, CosmicDischargeCommon.DoGWhiteColor, 0.3f, 2.8f, "CalamityMod/Particles/PlasmaExplosion", 22);
-                    CosmicDischargeCommon.SpawnCustomPulse(Projectile.Center, CosmicDischargeCommon.DoGCyanColor, 0.5f, 3.2f, "CalamityMod/Particles/ShineExplosion1", 24);
-                    GeneralParticleHandler.SpawnParticle(new DetailedExplosion(Projectile.Center, Vector2.Zero, CosmicDischargeCommon.DoGCyanColor, new Vector2(1.2f, 0.75f), 0f, 0.28f * 0.3f, 1.8f * 0.3f, 22));
-                    GeneralParticleHandler.SpawnParticle(new DetailedExplosion(Projectile.Center, Vector2.Zero, CosmicDischargeCommon.DoGFuchsiaColor, new Vector2(0.75f, 1.2f), MathHelper.PiOver4, 0.28f * 0.3f, 1.6f * 0.3f, 20));
-                    GeneralParticleHandler.SpawnParticle(new DetailedExplosion(Projectile.Center, Vector2.Zero, CosmicDischargeCommon.DoGWhiteColor, Vector2.One, MathHelper.Pi / 3f, 0.40f * 0.3f, 1.4f * 0.3f, 18));
-                    GeneralParticleHandler.SpawnParticle(new StrongBloom(Projectile.Center, Vector2.Zero, CosmicDischargeCommon.DoGWhiteColor, 2.4f * 0.3f, 24));
-                }
+                CosmicDischargeCommon.SpawnRiftCrackProjectiles(Projectile.GetSource_FromThis(), Projectile.Center, Projectile.owner, 8, 20f, Radius, 14f, 24f);
+                CosmicDischargeCommon.SpawnDistortionBurst(Projectile.Center, 10, 28f, Radius * 0.3f);
+                CosmicDischargeCommon.SpawnRiftBurst(Projectile.Center, RiftTier.Heavy, default, CosmicDischargeCommon.DoGSpecialColor);
             }
 
-            // Periodic explosion burst every 14 frames — sustained detonation feel.
-            if (!Main.dedServ && Time % 14 == 0 && Time > 1f)
+            // 持续期只保留呼吸感的低频脉冲：每 28 帧一记，不再逐帧撒碎片。
+            if (!Main.dedServ && Time > 1f && Time % 28 == 0)
             {
                 SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DevourerAttack") { Volume = 0.30f, Pitch = Main.rand.NextFloat(-0.35f, 0.25f), MaxInstances = 6 }, Projectile.Center);
 
-                for (int k = 0; k < 2; k++)
-                {
-                    Vector2 offset = Main.rand.NextVector2Circular(Radius * 0.55f, Radius * 0.55f);
-                    GeneralParticleHandler.SpawnParticle(new DetailedExplosion(
-                        Projectile.Center + offset,
-                        Main.rand.NextVector2Circular(0.4f, 0.4f),
-                        k == 0 ? CosmicDischargeCommon.DoGCyanColor : CosmicDischargeCommon.DoGFuchsiaColor,
-                        new Vector2(Main.rand.NextFloat(0.7f, 1.15f), Main.rand.NextFloat(0.6f, 1.05f)),
-                        Main.rand.NextFloat(MathHelper.TwoPi),
-                        0.20f * 0.3f,
-                        1.5f * 0.3f,
-                        18));
-                }
-                GeneralParticleHandler.SpawnParticle(new StrongBloom(
-                    Projectile.Center + Main.rand.NextVector2Circular(Radius * 0.45f, Radius * 0.45f),
-                    Vector2.Zero,
-                    CosmicDischargeCommon.DoGWhiteColor,
-                    1.1f * 0.3f,
-                    14));
-            }
-
-            // Pulse shockwave every 28 frames.
-            if (!Main.dedServ && Time % 28 == 0 && Time > 1f)
-            {
                 GeneralParticleHandler.SpawnParticle(new PulseRing(
                     Projectile.Center,
                     Vector2.Zero,
-                    CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGSpecialColor),
+                    CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGSpecialColor) * 0.5f,
                     0.04f,
-                    Radius / 95f * 0.3f * CosmicDischargeCommon.ShockwaveFinalScaleMultiplier,
+                    Radius / 130f,
                     20));
-                CosmicDischargeCommon.SpawnCustomPulse(Projectile.Center, CosmicDischargeCommon.DoGSpecialColor * 0.65f, 0.18f, Radius / 50f, "CalamityMod/Particles/PlasmaExplosion", 18);
-            }
 
-            if (!Main.dedServ && Main.rand.NextBool(2))
-            {
-                Vector2 direction = Main.rand.NextVector2CircularEdge(1f, 1f);
-                GeneralParticleHandler.SpawnParticle(new StaticGlowLine(
-                    Projectile.Center,
-                    Projectile.Center + direction * Main.rand.NextFloat(60f, Radius),
-                    direction * 0.4f,
-                    14,
-                    0.07f * 0.3f,
-                    0.9f,
-                    Main.rand.NextBool() ? CosmicDischargeCommon.DoGCyanColor : CosmicDischargeCommon.DoGFuchsiaColor));
-                GeneralParticleHandler.SpawnParticle(new NanoParticle(
-                    Projectile.Center + Main.rand.NextVector2Circular(Radius * 0.7f, Radius * 0.7f),
-                    Main.rand.NextVector2Circular(2f, 2f),
-                    CosmicDischargeCommon.DoGSpecialColor,
-                    0.35f * 0.3f,
-                    18,
-                    emitsLight: true));
-
-                // Additional energy fragments flying outward.
-                if (Main.rand.NextBool(3))
-                {
-                    Vector2 fragDir = Main.rand.NextVector2CircularEdge(1f, 1f);
-                    GeneralParticleHandler.SpawnParticle(new BoltParticle(
-                        Projectile.Center + fragDir * Main.rand.NextFloat(20f, Radius * 0.6f),
-                        fragDir * Main.rand.NextFloat(1.5f, 4f),
-                        false,
-                        Main.rand.Next(8, 14),
-                        Main.rand.NextFloat(0.28f, 0.50f) * 0.3f,
-                        Main.rand.NextBool() ? CosmicDischargeCommon.DoGCyanColor : CosmicDischargeCommon.DoGFuchsiaColor,
-                        new Vector2(0.08f, 3.0f),
-                        true,
-                        true));
-                }
+                for (int i = 0; i < 4; i++)
+                    GeneralParticleHandler.SpawnParticle(new SquishyLightParticle(
+                        Projectile.Center + Main.rand.NextVector2Circular(Radius * 0.5f, Radius * 0.5f),
+                        Main.rand.NextVector2Unit() * Main.rand.NextFloat(4f, 7f),
+                        Main.rand.NextFloat(0.6f, 0.85f),
+                        CosmicDischargeCommon.RiftColor(),
+                        Main.rand.Next(25, 35)));
             }
         }
 
@@ -167,10 +107,10 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             float rotation = Main.GlobalTimeWrappedHourly * 7.5f + Projectile.identity * 0.18f;
 
             Main.spriteBatch.SetBlendState(BlendState.Additive);
-            Main.EntitySpriteDraw(bloom, drawPosition, null, CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGFuchsiaColor) * 0.22f * Projectile.Opacity, 0f, bloomOrigin, scale * 1.35f * pulse, SpriteEffects.None);
+            Main.EntitySpriteDraw(bloom, drawPosition, null, CosmicDischargeCommon.Transparent(CosmicDischargeCommon.RiftMagenta) * 0.22f * Projectile.Opacity, 0f, bloomOrigin, scale * 1.35f * pulse, SpriteEffects.None);
             Main.EntitySpriteDraw(portal, drawPosition, null, Color.Black * 0.42f * Projectile.Opacity, rotation, portalOrigin, scale * 0.8f, SpriteEffects.None);
-            Main.EntitySpriteDraw(portal, drawPosition, null, CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGCyanColor) * 0.55f * Projectile.Opacity, rotation * 0.6f, portalOrigin, scale * 0.8f, SpriteEffects.None);
-            Main.EntitySpriteDraw(portal, drawPosition, null, CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGFuchsiaColor) * 0.55f * Projectile.Opacity, -rotation * 0.7f, portalOrigin, scale * 0.8f, SpriteEffects.None);
+            Main.EntitySpriteDraw(portal, drawPosition, null, CosmicDischargeCommon.Transparent(CosmicDischargeCommon.RiftLightBlue) * 0.55f * Projectile.Opacity, rotation * 0.6f, portalOrigin, scale * 0.8f, SpriteEffects.None);
+            Main.EntitySpriteDraw(portal, drawPosition, null, CosmicDischargeCommon.Transparent(CosmicDischargeCommon.RiftMagenta) * 0.55f * Projectile.Opacity, -rotation * 0.7f, portalOrigin, scale * 0.8f, SpriteEffects.None);
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
             return false;
         }

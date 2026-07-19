@@ -706,11 +706,12 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         private void FireSkyfinTorpedo()
         {
             Vector2 dir = AimDirection;
-            Vector2 vel = dir.RotatedByRandom(MathHelper.ToRadians(4f)) * 11.5f;
+            // The torpedo is dropped beneath the player first; its AI chooses and commits to the target later.
+            Vector2 vel = Vector2.UnitY.RotatedByRandom(MathHelper.ToRadians(5f)) * Main.rand.NextFloat(6.5f, 8.5f);
 
             Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
-                GunTipPosition + dir * 16f, vel,
+                Owner.MountedCenter + Vector2.UnitY * 8f, vel,
                 ModContent.ProjectileType<SkyfinTorpedo>(),
                 Projectile.damage, Projectile.knockBack * 0.6f, Projectile.owner,
                 Main.rand.NextFloat(-1f, 1f));

@@ -26,6 +26,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
         public new string LocalizationCategory => "Projectiles.SHPC";
 
         private const int MissingParentGraceFrames = 12;
+        // The damaging beam is 10 tiles across: 160 px total, or 80 px from its centerline.
+        // This is deliberately independent from Projectile.scale, which only controls its visual animation.
+        private const float DamageBeamWidth = 10f * 16f;
 
         private int cachedOwnerIndex = -1;
         private int missingParentFrames;
@@ -137,6 +140,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             Projectile.velocity = Projectile.rotation.ToRotationVector2();
         }
 
+
+        public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
+        {
+            float collisionPoint = 0f;
+            return Collision.CheckAABBvLineCollision(
+                targetHitbox.TopLeft(),
+                targetHitbox.Size(),
+                Projectile.Center,
+                Projectile.Center + Projectile.velocity * LaserLength,
+                DamageBeamWidth,
+                ref collisionPoint);
+        }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {

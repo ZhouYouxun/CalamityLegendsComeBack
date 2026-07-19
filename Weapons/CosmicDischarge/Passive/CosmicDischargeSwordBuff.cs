@@ -19,7 +19,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         {
             player.GetCritChance(DamageClass.Generic) += 10f;
             player.GetDamage(DamageClass.Generic) += 0.12f;
-            Lighting.AddLight(player.Center, CosmicDischargeCommon.DoGFuchsiaColor.ToVector3() * 0.25f);
+            Lighting.AddLight(player.Center, CosmicDischargeCommon.RiftMagenta.ToVector3() * 0.25f);
         }
     }
 }

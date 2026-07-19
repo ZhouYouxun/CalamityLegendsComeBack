@@ -45,6 +45,7 @@ Mods: {
 			// TeachingProjectileL_SlashSmearAfterimage.DisplayName: Teaching Projectile L_ Slash Smear Afterimage
 			// TeachingProjectileM_TechHoloSquare.DisplayName: Teaching Projectile M_ Tech Holo Square
 			// TeachingProjectileN_ParticleSetsControllers.DisplayName: Teaching Projectile N_ Particle Sets Controllers
+			// TeachingProjectile.DisplayName: Teaching Projectile
 		}
 	}
 }

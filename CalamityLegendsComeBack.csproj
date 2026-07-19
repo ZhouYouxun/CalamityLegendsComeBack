@@ -26,13 +26,11 @@
 	  <Folder Include="Weapons\A_Dev\DesertEagle\SlowDown\" />
 	  <Folder Include="Weapons\A_Dev\MK14EBR\M14\" />
 	  <Folder Include="Weapons\A_Dev\SHPBow\参考文献\" />
-	  <Folder Include="Weapons\A_Olds\MarniteBayonet\" />
 	  <Folder Include="Weapons\A_Upgrade\DragoonDrizzlefish\" />
 	  <Folder Include="Weapons\BlossomFlux\EXSkill\SpecialEffects\" />
 	  <Folder Include="Weapons\BlossomFlux\Hold\" />
 	  <Folder Include="Weapons\BrinyBaron\SkillD_SuperDash\Effects\" />
 	  <Folder Include="Weapons\B_Report\规划\" />
-	  <Folder Include="Weapons\LeonidProgenitor\LPBook\" />
 	  <Folder Include="Weapons\PristineFury\EXSkill\" />
 	  <Folder Include="Weapons\PristineFury\LeftEffect\EAfterDog\EXOMech\Ares\" />
 	  <Folder Include="Weapons\PristineFury\LeftEffect\EAfterDog\EXOMech\ApolloArtemis\" />
@@ -94,14 +92,6 @@
 	  <Compile Remove="Weapons\PristineFury\特效参考总文件夹\**\*.cs" />
 	  <Compile Remove="Weapons\PristineFury\LeftEffect\**\*.cs" />
 	  <Compile Include="Weapons\PristineFury\LeftEffect\**\PF*.cs" />
-	  <Compile Include="Weapons\A_Olds\TheEnforcer\**\*.cs" />
-	  <None Include="Weapons\A_Olds\TheEnforcer\**\*.png" />
-	  <Compile Include="Weapons\A_Olds\PhoenixBlade\**\*.cs" />
-	  <Compile Include="Weapons\A_Olds\DiseasedPike\**\*.cs" />
-	  <None Include="Weapons\A_Olds\PhoenixBlade\**\*.png" />
-	  <None Include="Weapons\A_Olds\DiseasedPike\**\*.png" />
-	  <Compile Include="Weapons\A_Olds\Lazhar\**\*.cs" />
-	  <None Include="Weapons\A_Olds\Lazhar\**\*.png" />
 	  <Content Remove="Weapons\SHPC\Effects\BPrePlantera\StarblightSoot特效参考\**" />
 	  <AdditionalFiles Remove="Shader\**\*.zip" />
 	  <AdditionalFiles Remove="Shader\Archive\**" />
@@ -136,11 +126,6 @@
 	  <None Remove="Shader\XNBcoder\Effects\*.txt" />
 	  <None Remove="Shader\XNBcoder\logfile.txt" />
 	</ItemGroup>
-	<ItemGroup>
-	  <Content Include="Weapons\A_Olds\AstralBlade\幻星刀.png" />
-	  <Content Include="Weapons\A_Olds\ChargedDartBlaster\蓄能飞镖发射器.png" />
-	</ItemGroup>
-
 	<!-- References -->
 
 </Project>

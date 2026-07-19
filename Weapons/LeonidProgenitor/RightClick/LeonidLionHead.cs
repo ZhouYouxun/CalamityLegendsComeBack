@@ -16,8 +16,6 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
         public new string LocalizationCategory => "Projectiles.LeonidProgenitor";
 
         public Player Owner => Main.player[Projectile.owner];
-        public int PrimaryEffectID => (int)Projectile.ai[0];
-        public int SecondaryEffectID => (int)Projectile.ai[1];
 
         public Vector2 TargetPosition;
         public bool IsBiting;
@@ -108,9 +106,10 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                         int reflectiveType = ModContent.ProjectileType<LeonidReflectiveMeteor>();
                         int splitDamage = (int)(Projectile.damage * 0.45f);
 
-                        for (int i = 0; i < 14; i++)
+                        int meteorCount = Owner.GetModPlayer<LeonidConstellationPlayer>().IsUnlocked(LeonidStar.Alterf) ? 18 : 14;
+                        for (int i = 0; i < meteorCount; i++)
                         {
-                            float angle = i * MathHelper.TwoPi / 14f;
+                            float angle = i * MathHelper.TwoPi / meteorCount;
                             float speed = Main.rand.NextFloat(11.5f, 17f);
                             Vector2 splitVel = angle.ToRotationVector2() * speed;
 

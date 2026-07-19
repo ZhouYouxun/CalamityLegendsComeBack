@@ -1,0 +1,198 @@
+using System.Collections.Generic;
+using CalamityMod;
+using CalamityMod.Items;
+using CalamityMod.Items.Accessories;
+using CalamityMod.Items.Armor.Wulfrum;
+using CalamityMod.Items.Tools;
+using CalamityMod.Items.Weapons.Magic;
+using CalamityMod.Items.Weapons.Melee;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Terraria;
+using Terraria.GameContent;
+using Terraria.ID;
+using Terraria.ModLoader;
+
+namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
+{
+    public sealed class ResponsibilityPhone : ModItem, ILocalizedModType
+    {
+        internal const int BaseDamage = 280;
+        internal const int BaseSequenceInterval = 18;
+        internal const int MinimumSequenceInterval = 12;
+
+        private int inventoryFrame;
+        private int inventoryFrameCounter;
+
+        public new string LocalizationCategory => "Items.Weapons";
+        public override string Texture => "CalamityMod/Items/SummonItems/Invasion/MartianDistressRemote";
+
+        public override void SetStaticDefaults()
+        {
+            ItemID.Sets.ItemsThatAllowRepeatedRightClick[Type] = true;
+        }
+
+        public override void SetDefaults()
+        {
+            Item.width = 26;
+            Item.height = 52;
+            Item.damage = BaseDamage;
+            Item.DamageType = DamageClass.Summon;
+            Item.crit = 4;
+            Item.knockBack = 2f;
+            Item.useTime = BaseSequenceInterval;
+            Item.useAnimation = BaseSequenceInterval;
+            Item.useStyle = ItemUseStyleID.Shoot;
+            Item.noMelee = true;
+            Item.noUseGraphic = true;
+            Item.autoReuse = true;
+            Item.UseSound = null;
+            Item.shoot = ModContent.ProjectileType<ResponsibilityPhoneHoldout>();
+            Item.shootSpeed = 15f;
+            Item.value = CalamityGlobalItem.RarityRedBuyPrice;
+            Item.rare = ItemRarityID.Red;
+        }
+
+        public override bool AltFunctionUse(Player player) => true;
+        public override bool CanUseItem(Player player) => false;
+        public override bool CanShoot(Player player) => false;
+        public override bool ConsumeItem(Player player) => false;
+
+        public override void HoldItem(Player player)
+        {
+            ResponsibilityPhonePlayer phonePlayer = player.GetModPlayer<ResponsibilityPhonePlayer>();
+            phonePlayer.HoldingPhone = true;
+            player.Calamity().mouseWorldListener = true;
+
+            if (Main.myPlayer == player.whoAmI)
+                player.Calamity().rightClickListener = true;
+
+            int holdoutType = ModContent.ProjectileType<ResponsibilityPhoneHoldout>();
+            if (Main.myPlayer != player.whoAmI || player.ownedProjectileCounts[holdoutType] > 0)
+                return;
+
+            Vector2 aim = (GetMouseWorld(player) - player.MountedCenter).SafeNormalize(Vector2.UnitX * player.direction);
+            Projectile.NewProjectile(
+                player.GetSource_ItemUse(Item),
+                player.MountedCenter,
+                aim,
+                holdoutType,
+                0,
+                0f,
+                player.whoAmI);
+        }
+
+        public override void ModifyTooltips(List<TooltipLine> tooltips)
+        {
+            ResponsibilityPhonePlayer phonePlayer = Main.LocalPlayer.GetModPlayer<ResponsibilityPhonePlayer>();
+            ResponsibilityLanguageDefinition language = ResponsibilityLanguageRegistry.Get(phonePlayer.SelectedLanguageIndex);
+            string key = KeybindSystem.LegendarySkill?.GetAssignedKeys().Count > 0
+                ? KeybindSystem.LegendarySkill.GetAssignedKeys()[0]
+                : "P";
+
+            string compact = string.Format(this.GetLocalizedValue("Compact"), language?.Symbol ?? "!?", key);
+            tooltips.FindAndReplace("[GFB]", compact);
+
+            if (Main.keyState.PressingShift())
+            {
+                tooltips.Add(new TooltipLine(Mod, "ResponsibilityPhoneDetails", this.GetLocalizedValue("Details"))
+                {
+                    OverrideColor = new Color(132, 226, 255)
+                });
+            }
+            else
+            {
+                tooltips.Add(new TooltipLine(Mod, "ResponsibilityPhoneHint", this.GetLocalizedValue("DetailsHint"))
+                {
+                    OverrideColor = new Color(151, 173, 184)
+                });
+            }
+
+            tooltips.Add(new TooltipLine(Mod, "ResponsibilityPhoneLegendary", this.GetLocalizedValue("LegendaryText"))
+            {
+                OverrideColor = new Color(194, 255, 67)
+            });
+        }
+
+        public override void AddRecipes()
+        {
+            CreateRecipe()
+                .AddIngredient<RoverDrive>()
+                .AddIngredient<WulfrumDrill>()
+                .AddIngredient<WulfrumScrewdriver>()
+                .AddIngredient<WulfrumProsthesis>()
+                .AddIngredient<WulfrumHat>()
+                .AddIngredient<WulfrumJacket>()
+                .AddIngredient<WulfrumOveralls>()
+                .AddTile(TileID.LunarCraftingStation)
+                .Register();
+        }
+
+        public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
+        {
+            Texture2D texture = ModContent.Request<Texture2D>("CalamityMod/Items/SummonItems/Invasion/MartianDistressRemote_Animated").Value;
+            Rectangle source = Item.GetCurrentFrame(ref inventoryFrame, ref inventoryFrameCounter, 5, 12);
+            spriteBatch.Draw(texture, position, source, Color.White, 0f, source.Size() * 0.5f, scale, SpriteEffects.None, 0f);
+            return false;
+        }
+
+        public override bool PreDrawInWorld(SpriteBatch spriteBatch, Color lightColor, Color alphaColor, ref float rotation, ref float scale, int whoAmI)
+        {
+            Texture2D texture = ModContent.Request<Texture2D>("CalamityMod/Items/SummonItems/Invasion/MartianDistressRemote_Animated").Value;
+            Rectangle source = Item.GetCurrentFrame(ref inventoryFrame, ref inventoryFrameCounter, 5, 12);
+            spriteBatch.Draw(texture, Item.Center - Main.screenPosition, source, lightColor, rotation, source.Size() * 0.5f, scale, SpriteEffects.None, 0f);
+            return false;
+        }
+
+        internal static bool HasPhoneInMainInventory(Player player)
+        {
+            int inventorySlots = System.Math.Min(58, player.inventory.Length);
+            for (int i = 0; i < inventorySlots; i++)
+            {
+                if (player.inventory[i].type == ModContent.ItemType<ResponsibilityPhone>())
+                    return true;
+            }
+            return false;
+        }
+
+        internal static Item FindPhone(Player player)
+        {
+            if (player.HeldItem?.type == ModContent.ItemType<ResponsibilityPhone>())
+                return player.HeldItem;
+
+            int inventorySlots = System.Math.Min(58, player.inventory.Length);
+            for (int i = 0; i < inventorySlots; i++)
+            {
+                if (player.inventory[i].type == ModContent.ItemType<ResponsibilityPhone>())
+                    return player.inventory[i];
+            }
+            return null;
+        }
+
+        internal static bool HasEquippedRoverDrive(Player player)
+        {
+            int end = System.Math.Min(10, player.armor.Length);
+            for (int i = 3; i < end; i++)
+            {
+                if (player.armor[i].type == ModContent.ItemType<RoverDrive>())
+                    return true;
+            }
+            return false;
+        }
+
+        internal static bool CanUseWorldInput(Player player)
+        {
+            if (player.noItems || player.CCed || Main.mapFullscreen || Main.blockMouse || player.mouseInterface)
+                return false;
+            if (Main.playerInventory && !Main.HoverItem.IsAir)
+                return false;
+            return true;
+        }
+
+        internal static Vector2 GetMouseWorld(Player player)
+        {
+            Vector2 mouseWorld = player.Calamity().mouseWorld;
+            return mouseWorld == Vector2.Zero ? Main.MouseWorld : mouseWorld;
+        }
+    }
+}

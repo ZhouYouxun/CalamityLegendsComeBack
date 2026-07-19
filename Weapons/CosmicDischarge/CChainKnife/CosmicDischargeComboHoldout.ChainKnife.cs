@@ -120,13 +120,8 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             if (Time >= arcTotalDuration)
                 Projectile.Kill();
 
-            var chainPoints = GetActivePoints();
-            CosmicDischargeCommon.SpawnChainTrail(
-                chainPoints,
-                TipPosition,
-                Projectile.velocity.SafeNormalize(AimDirection) * Math.Max(2f, Projectile.velocity.Length() / 18f),
-                Kind == CosmicDischargeAttackKind.ChainKnifeScatter,
-                Kind == CosmicDischargeAttackKind.ChainKnifeBiteAll && Time <= arcSnapEnd);
+            // 逐帧拖尾由 AI() 的 SpawnBladeWakeDust 统一处理；
+            // 链条本身的观感来自 PreDraw 的双层图元 + 链节贴图，不靠沿链撒粒子。
         }
     }
 }

@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
+using ReLogic.Content;
 using Terraria;
 using Terraria.GameContent.UI.Elements;
 using Terraria.ModLoader;
@@ -13,8 +14,7 @@ using Terraria.UI;
 namespace CalamityLegendsComeBack.FancyIcon
 {
     /// <summary>
-    /// STATUS: DISABLED (see Enabled below). Fully working, just not turned on.
-    /// See FancyIcon/README.md for why, and for the one-line change to turn it back on.
+    /// STATUS: ENABLED. See FancyIcon/README.md for the visual timing and implementation notes.
     ///
     /// Makes our cover art shine in the Mods selection list (Mods menu / Workshop-installed list),
     /// before a world or even a player is chosen - the same thing StarsAbove does for its own
@@ -28,12 +28,12 @@ namespace CalamityLegendsComeBack.FancyIcon
     /// </summary>
     public class ModListIconShine : ModSystem
     {
-        // Flip to true to re-enable. Everything below is intact and was confirmed to compile;
-        // it was only turned off because it looked too busy on an 80x80 list thumbnail, not
-        // because anything was broken.
-        private const bool Enabled = false;
+        private const bool Enabled = true;
 
         private const string OurModName = "CalamityLegendsComeBack";
+
+        private static readonly FieldInfo UIImageTextureField = typeof(UIImage).GetField("_texture", BindingFlags.NonPublic | BindingFlags.Instance);
+        private static readonly FieldInfo UIImageNonReloadingTextureField = typeof(UIImage).GetField("_nonReloadingTexture", BindingFlags.NonPublic | BindingFlags.Instance);
 
         private ILHook uiModItemOnInitializeHook;
 
@@ -61,6 +61,12 @@ namespace CalamityLegendsComeBack.FancyIcon
         {
             uiModItemOnInitializeHook?.Dispose();
             uiModItemOnInitializeHook = null;
+
+            // ModSystem.Unload can run on tModLoader's background unload thread. The shine
+            // toolkit disposes runtime Texture2D instances, so that work must return to the
+            // main thread instead of touching FNA graphics resources here.
+            if (!Main.dedServ)
+                Main.QueueMainThreadAction(ShineEffectToolkit.Unload);
         }
 
         private static void ReplaceIconWithShineIcon(ILContext il)
@@ -86,11 +92,13 @@ namespace CalamityLegendsComeBack.FancyIcon
         private sealed class ShineIconElement : UIElement
         {
             private readonly UIImage originalIcon;
+            private readonly Texture2D originalIconTexture;
             private readonly ShineEffectToolkit.State shine = new();
 
             public ShineIconElement(UIImage originalIcon)
             {
                 this.originalIcon = originalIcon;
+                originalIconTexture = GetTexture(originalIcon);
 
                 Left = originalIcon.Left;
                 Top = originalIcon.Top;
@@ -116,10 +124,13 @@ namespace CalamityLegendsComeBack.FancyIcon
                 // icon child - so the shine has to go here, after base.Draw, to land on top.
                 base.Draw(spriteBatch);
 
-                CalculatedStyle dims = GetDimensions();
-                Vector2 center = new(dims.X + dims.Width * 0.5f, dims.Y + dims.Height * 0.5f);
-                float radius = Math.Max(dims.Width, dims.Height) * 0.5f;
-                ShineEffectToolkit.Draw(spriteBatch, shine, center, radius);
+                ShineEffectToolkit.Draw(spriteBatch, shine, originalIconTexture, originalIcon.GetDimensions().ToRectangle());
+            }
+
+            private static Texture2D GetTexture(UIImage image)
+            {
+                Asset<Texture2D> asset = UIImageTextureField?.GetValue(image) as Asset<Texture2D>;
+                return asset?.Value ?? UIImageNonReloadingTextureField?.GetValue(image) as Texture2D;
             }
         }
     }

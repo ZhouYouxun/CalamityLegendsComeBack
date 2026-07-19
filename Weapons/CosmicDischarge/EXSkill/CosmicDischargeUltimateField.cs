@@ -60,7 +60,10 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
             if (Time <= ChargeDuration)
             {
-                CosmicDischargeCommon.SpawnUltimateCharge(Owner, Time);
+                // 60 帧蓄力只脉冲 3 次（20/40/60），对齐 DoGTeleportRift 的 RiftLifetime/3 节奏。
+                if (Time % 20f == 0f)
+                    CosmicDischargeCommon.SpawnChargePulse(Owner.MountedCenter, Time / ChargeDuration, 1f);
+
                 ApplyScreenShake(Time / ChargeDuration * 5f);
                 return;
             }
@@ -139,22 +142,22 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 Texture2D star = ModContent.Request<Texture2D>("CalamityMod/Projectiles/StarProj").Value;
                 Main.EntitySpriteDraw(star, drawPosition, null, Color.White * 0.65f * chargeInterpolant, 0f, star.Size() * 0.5f, new Vector2(1f, 8f) * (0.45f + chargeInterpolant * 1.35f), SpriteEffects.None);
                 Main.EntitySpriteDraw(star, drawPosition, null, Color.White * 0.65f * chargeInterpolant, MathHelper.PiOver2, star.Size() * 0.5f, new Vector2(1f, 5f) * (0.45f + chargeInterpolant * 1.35f), SpriteEffects.None);
-                Main.EntitySpriteDraw(bloom, drawPosition, null, CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGCyanColor) * (0.35f * chargeInterpolant), 0f, origin, (1f - chargeInterpolant) * 2f, SpriteEffects.None);
+                Main.EntitySpriteDraw(bloom, drawPosition, null, CosmicDischargeCommon.Transparent(CosmicDischargeCommon.RiftLightBlue) * (0.35f * chargeInterpolant), 0f, origin, (1f - chargeInterpolant) * 2f, SpriteEffects.None);
             }
 
             Main.EntitySpriteDraw(
                 bloom,
                 drawPosition,
                 null,
-                CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGFuchsiaColor) * 0.15f * fieldOpacity,
+                CosmicDischargeCommon.Transparent(CosmicDischargeCommon.RiftMagenta) * 0.15f * fieldOpacity,
                 0f,
                 origin,
                 FieldRadius / bloom.Width * 2f * pulse,
                 SpriteEffects.None);
 
             Main.EntitySpriteDraw(portal, drawPosition, null, Color.Black * 0.28f * fieldOpacity, portalRotation, portalOrigin, 0.42f * pulse, SpriteEffects.None);
-            Main.EntitySpriteDraw(portal, drawPosition, null, CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGCyanColor) * 0.34f * fieldOpacity, portalRotation * 0.6f, portalOrigin, 0.42f * pulse, SpriteEffects.None);
-            Main.EntitySpriteDraw(portal, drawPosition, null, CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGFuchsiaColor) * 0.34f * fieldOpacity, -portalRotation * 0.7f, portalOrigin, 0.42f * pulse, SpriteEffects.None);
+            Main.EntitySpriteDraw(portal, drawPosition, null, CosmicDischargeCommon.Transparent(CosmicDischargeCommon.RiftLightBlue) * 0.34f * fieldOpacity, portalRotation * 0.6f, portalOrigin, 0.42f * pulse, SpriteEffects.None);
+            Main.EntitySpriteDraw(portal, drawPosition, null, CosmicDischargeCommon.Transparent(CosmicDischargeCommon.RiftMagenta) * 0.34f * fieldOpacity, -portalRotation * 0.7f, portalOrigin, 0.42f * pulse, SpriteEffects.None);
 
             DrawDoGFireFieldRing(FieldRadius * pulse, fieldOpacity);
 
@@ -173,9 +176,9 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             }
 
             float OuterWidth(float completion, Vector2 _) => MathHelper.Lerp(50f, 32f, completion);
-            Color OuterColor(float completion, Vector2 _) => Color.Lerp(CosmicDischargeCommon.DoGCyanColor, Color.Transparent, completion) * (0.44f * opacity);
+            Color OuterColor(float completion, Vector2 _) => Color.Lerp(CosmicDischargeCommon.RiftLightBlue, Color.Transparent, completion) * (0.44f * opacity);
             float InnerWidth(float completion, Vector2 _) => MathHelper.Lerp(20f, 10f, completion);
-            Color InnerColor(float completion, Vector2 _) => Color.Lerp(CosmicDischargeCommon.DoGFuchsiaColor, Color.Transparent, completion) * (0.58f * opacity);
+            Color InnerColor(float completion, Vector2 _) => Color.Lerp(CosmicDischargeCommon.RiftMagenta, Color.Transparent, completion) * (0.58f * opacity);
 
             GameShaders.Misc["CalamityMod:ImpFlameTrail"].SetShaderTexture(ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/ScarletDevilStreak"));
             PrimitiveRenderer.RenderTrail(ring, new PrimitiveSettings(OuterWidth, OuterColor, smoothen: true, pixelate: false, shader: GameShaders.Misc["CalamityMod:ImpFlameTrail"]), ring.Length + 8);

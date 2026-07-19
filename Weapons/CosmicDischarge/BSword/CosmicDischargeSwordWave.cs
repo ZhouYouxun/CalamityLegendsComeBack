@@ -64,40 +64,11 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 ApplyScreenShake(3.6f);
             }
 
-            if (!Main.dedServ && Main.rand.NextBool(2))
-            {
-                Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-                Dust dust = Dust.NewDustPerfect(
-                    Projectile.Center + direction.RotatedBy(MathHelper.PiOver2) * Main.rand.NextFloat(-26f, 26f),
-                    DustID.PurpleTorch,
-                    direction.RotatedByRandom(0.32f) * Main.rand.NextFloat(0.4f, 1.25f),
-                    120,
-                    CosmicDischargeCommon.RandomDoGColor(),
-                    Main.rand.NextFloat(0.9f, 1.25f) * 0.3f);
-                dust.noGravity = true;
-
-                if (Main.rand.NextBool(3))
-                {
-                    GeneralParticleHandler.SpawnParticle(new LineParticle(
-                        Projectile.Center + Main.rand.NextVector2Circular(34f, 18f),
-                        -direction * Main.rand.NextFloat(2.5f, 6.5f),
-                        false,
-                        Main.rand.Next(12, 18),
-                        Main.rand.NextFloat(0.34f, 0.62f) * 0.3f,
-                        CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGSpecialColor) * 0.65f));
-                }
-
-                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
-                    Projectile.Center + Main.rand.NextVector2Circular(22f, 10f),
-                    -direction * Main.rand.NextFloat(0.4f, 1.1f) + Main.rand.NextVector2Circular(0.18f, 0.18f),
-                    false,
-                    12,
-                    Main.rand.NextFloat(0.08f, 0.15f),
-                    CosmicDischargeCommon.ThreeColorSpark,
-                    true,
-                    false,
-                    true));
-            }
+            CosmicDischargeCommon.SpawnTrailWake(
+                Projectile.Center,
+                -Projectile.velocity.SafeNormalize(Vector2.UnitX),
+                CosmicDischargeCommon.RiftMagenta,
+                1.1f);
         }
 
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
@@ -138,49 +109,8 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 MaxInstances = 4
             }, target.Center);
 
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
-                target.Center,
-                direction,
-                CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGSpecialColor) * 0.34f,
-                Vector2.One,
-                direction.ToRotation(),
-                0.035f,
-                0.22f * 0.3f * CosmicDischargeCommon.ShockwaveFinalScaleMultiplier,
-                14));
-
-            // DoG-themed hit: precise electric arcs and energy particles instead of chaotic sparks.
-            for (int i = 0; i < 5; i++)
-            {
-                GeneralParticleHandler.SpawnParticle(new BoltParticle(
-                    target.Center + Main.rand.NextVector2Circular(12f, 12f),
-                    direction.RotatedByRandom(0.65f) * Main.rand.NextFloat(2f, 7f),
-                    false,
-                    Main.rand.Next(10, 16),
-                    Main.rand.NextFloat(0.30f, 0.55f) * 0.3f,
-                    Main.rand.NextBool() ? CosmicDischargeCommon.DoGCyanColor : CosmicDischargeCommon.DoGFuchsiaColor,
-                    new Vector2(0.08f, 3.0f),
-                    true,
-                    true));
-            }
-            for (int i = 0; i < 8; i++)
-            {
-                GeneralParticleHandler.SpawnParticle(new NanoParticle(
-                    target.Center + Main.rand.NextVector2Circular(22f, 22f),
-                    Main.rand.NextVector2Circular(2.5f, 2.5f),
-                    CosmicDischargeCommon.DoGSpecialColor,
-                    Main.rand.NextFloat(0.20f, 0.36f) * 0.3f,
-                    14,
-                    emitsLight: true));
-            }
-            GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(
-                target.Center,
-                direction * Main.rand.NextFloat(1.5f, 3.5f),
-                false,
-                12,
-                Main.rand.NextFloat(0.34f, 0.58f) * 0.3f,
-                CosmicDischargeCommon.ThreeColorSpark,
-                new Vector2(0.1f, 0.5f),
-                true));
+            // 剑气一次只放一发，可以给到 Medium。
+            CosmicDischargeCommon.SpawnRiftBurst(target.Center, RiftTier.Medium, direction, CosmicDischargeCommon.RiftMagenta);
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -188,7 +118,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Vector2 origin = bloom.Size() * 0.5f;
             Vector2 scale = new Vector2(1.65f, 0.32f) * Projectile.Opacity;
-            Color outer = CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGPurpleColor) * 0.18f * Projectile.Opacity;
+            Color outer = CosmicDischargeCommon.Transparent(CosmicDischargeCommon.RiftTwilight) * 0.18f * Projectile.Opacity;
             Color inner = CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGSpecialColor) * 0.34f * Projectile.Opacity;
 
             Main.spriteBatch.SetBlendState(BlendState.Additive);
@@ -200,7 +130,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     bloom,
                     oldCenters[i] - Main.screenPosition,
                     null,
-                    CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGPurpleColor) * 0.12f * fade * Projectile.Opacity,
+                    CosmicDischargeCommon.Transparent(CosmicDischargeCommon.RiftTwilight) * 0.12f * fade * Projectile.Opacity,
                     Projectile.rotation,
                     origin,
                     scale * MathHelper.Lerp(0.75f, 1.25f, fade),

@@ -198,8 +198,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             }
         }
 
-        public static void EmitPresetBurst(Projectile projectile, BlossomFluxChloroplastPresetType preset, int amount, float speedMin, float speedMax, float scaleMin = 0.9f, float scaleMax = 1.3f)
+        public static void EmitPresetBurst(Projectile projectile, BlossomFluxChloroplastPresetType preset, int amount, float speedMin, float speedMax, float scaleMin = 0.9f, float scaleMax = 1.3f, Vector2? origin = null)
         {
+            Vector2 center = origin ?? projectile.Center;
             Color mainColor = GetPresetColor(preset);
             Color accentColor = GetPresetAccentColor(preset);
             int dustType = GetPresetDustType(preset);
@@ -208,7 +209,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             {
                 Vector2 velocity = Main.rand.NextVector2CircularEdge(3f, 3f) * Main.rand.NextFloat(speedMin, speedMax);
                 Dust dust = Dust.NewDustPerfect(
-                    projectile.Center,
+                    center,
                     dustType,
                     velocity,
                     100,
@@ -220,7 +221,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             for (int i = 0; i < amount / 4; i++)
             {
                 Dust sparkle = Dust.NewDustPerfect(
-                    projectile.Center,
+                    center,
                     DustID.TerraBlade,
                     Main.rand.NextVector2CircularEdge(2.4f, 2.4f) * Main.rand.NextFloat(speedMin * 0.45f, speedMax * 0.8f),
                     100,
@@ -241,7 +242,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                 case BlossomFluxChloroplastPresetType.Chlo_ABreak:
                 {
                     DirectionalPulseRing pulse = new(
-                        projectile.Center,
+                        center,
                         projectile.velocity * 0.06f,
                         Color.Lerp(mainColor, accentColor, 0.2f),
                         new Vector2(0.76f, 2.2f),
@@ -254,7 +255,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                     for (int i = 0; i < 2; i++)
                     {
                         GenericSparkle sparkleBurst = new(
-                            projectile.Center + normal * (i == 0 ? -6f : 6f),
+                            center + normal * (i == 0 ? -6f : 6f),
                             Main.rand.NextVector2Circular(0.4f, 0.4f),
                             accentColor,
                             Color.White,
@@ -271,7 +272,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                 case BlossomFluxChloroplastPresetType.Chlo_BRecov:
                 {
                     DirectionalPulseRing pulse = new(
-                        projectile.Center,
+                        center,
                         Vector2.Zero,
                         Color.Lerp(mainColor, Color.White, 0.25f),
                         Vector2.One,
@@ -284,7 +285,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                     for (int i = 0; i < 3; i++)
                     {
                         GlowOrbParticle orb = new(
-                            projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
+                            center + Main.rand.NextVector2Circular(8f, 8f),
                             Main.rand.NextVector2Circular(0.9f, 0.9f),
                             false,
                             12,
@@ -322,7 +323,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                 case BlossomFluxChloroplastPresetType.Chlo_DBomb:
                 {
                     DetailedExplosion explosion = new(
-                        projectile.Center,
+                        center,
                         Vector2.Zero,
                         Color.Lerp(mainColor, accentColor, 0.25f),
                         Vector2.One,
@@ -333,7 +334,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                     GeneralParticleHandler.SpawnParticle(explosion);
 
                     HeavySmokeParticle smoke = new(
-                        projectile.Center,
+                        center,
                         Main.rand.NextVector2Circular(0.4f, 0.4f),
                         Color.Lerp(mainColor, Color.Black, 0.2f),
                         18,
@@ -348,7 +349,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                 case BlossomFluxChloroplastPresetType.Chlo_EPlague:
                 {
                     DirectionalPulseRing pulse = new(
-                        projectile.Center,
+                        center,
                         Vector2.Zero,
                         Color.Lerp(mainColor, accentColor, 0.25f),
                         new Vector2(1.12f, 1.3f),
@@ -361,7 +362,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                     for (int i = 0; i < 2; i++)
                     {
                         HeavySmokeParticle smoke = new(
-                            projectile.Center + Main.rand.NextVector2Circular(10f, 10f),
+                            center + Main.rand.NextVector2Circular(10f, 10f),
                             Main.rand.NextVector2Circular(0.45f, 0.45f) + new Vector2(0f, -0.12f),
                             Color.Lerp(mainColor, accentColor, 0.3f),
                             16,

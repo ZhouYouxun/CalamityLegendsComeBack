@@ -51,13 +51,13 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 Vector2.One,
                 0f,
                 0.04f,
-                0.3f * 0.3f * CosmicDischargeCommon.ShockwaveFinalScaleMultiplier,
+                0.55f,
                 18));
 
             for (int i = 0; i < 18; i++)
             {
                 Vector2 velocity = (MathHelper.TwoPi * i / 18f).ToRotationVector2() * Main.rand.NextFloat(4f, 10f);
-                Dust dust = Dust.NewDustPerfect(Owner.Center, Main.rand.NextBool() ? 67 : 187, velocity, 120, CosmicDischargeCommon.RandomDoGColor(), Main.rand.NextFloat(1.15f, 1.7f) * 0.3f);
+                Dust dust = Dust.NewDustPerfect(Owner.Center, Main.rand.NextBool() ? 67 : 187, velocity, 120, CosmicDischargeCommon.RiftColor(), Main.rand.NextFloat(1.15f, 1.7f) * 0.3f);
                 dust.noGravity = true;
             }
         }
@@ -96,7 +96,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                         Main.rand.NextBool() ? 67 : 187,
                         slashDirection.RotatedByRandom(0.35f) * Main.rand.NextFloat(1.5f, 5.5f),
                         120,
-                        CosmicDischargeCommon.RandomDoGColor(),
+                        CosmicDischargeCommon.RiftColor(),
                         Main.rand.NextFloat(1.15f, 1.8f) * 0.3f);
                     dust.noGravity = true;
                 }
@@ -106,11 +106,11 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
                         Projectile.Center,
                         slashDirection * 0.3f,
-                        CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGPurpleColor) * 0.3f,
+                        CosmicDischargeCommon.Transparent(CosmicDischargeCommon.RiftTwilight) * 0.3f,
                         Vector2.One,
                         slashDirection.ToRotation(),
                         0.02f,
-                        0.12f * 0.3f * CosmicDischargeCommon.ShockwaveFinalScaleMultiplier,
+                        0.25f,
                         10));
                 }
             }
@@ -155,7 +155,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 Vector2.One,
                 0f,
                 0.035f,
-                0.22f * 0.3f * CosmicDischargeCommon.ShockwaveFinalScaleMultiplier,
+                0.45f,
                 16));
 
             if (Main.myPlayer == Projectile.owner)
@@ -178,7 +178,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
         public override bool PreDraw(ref Color lightColor)
         {
-            Color drawColor = Color.Lerp(CosmicDischargeCommon.DoGPurpleColor, CosmicDischargeCommon.DoGSpecialColor, 0.75f);
+            Color drawColor = Color.Lerp(CosmicDischargeCommon.RiftTwilight, CosmicDischargeCommon.DoGSpecialColor, 0.75f);
             CosmicDischargeCommon.DrawChain(Main.spriteBatch, Owner.MountedCenter, Projectile.Center, drawColor, 1.06f, true, Owner.gfxOffY);
             CosmicDischargeCommon.DrawRightHoldIndicator(Main.spriteBatch, Owner, 1.35f);
             return false;

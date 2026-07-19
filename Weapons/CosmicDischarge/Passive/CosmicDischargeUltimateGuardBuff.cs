@@ -25,7 +25,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             }
 
             player.statDefense += 20;
-            Lighting.AddLight(player.Center, CosmicDischargeCommon.DoGPurpleColor.ToVector3() * 0.35f);
+            Lighting.AddLight(player.Center, CosmicDischargeCommon.RiftTwilight.ToVector3() * 0.35f);
         }
     }
 }

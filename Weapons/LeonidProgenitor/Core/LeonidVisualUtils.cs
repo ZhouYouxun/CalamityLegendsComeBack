@@ -16,22 +16,13 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
         public static readonly Color StarGold = new(255, 226, 104);
         public static readonly Color NightSkyBlue = new(12, 38, 128);
 
-        public static Color GetMeteorColor(int primaryEffectID, int secondaryEffectID)
+        public static Color GetMeteorColor(float phaseOffset = 0f)
         {
-            float phase = Main.GlobalTimeWrappedHourly * 2.2f + primaryEffectID * 0.17f + secondaryEffectID * 0.31f;
+            float phase = Main.GlobalTimeWrappedHourly * 2.2f + phaseOffset;
             float pulse = 0.5f + 0.5f * (float)System.Math.Sin(phase);
             Color skyBody = Color.Lerp(StratusBlue, MoonViolet, pulse * 0.7f);
             Color brightBody = Color.Lerp(skyBody, MoonWhite, 0.18f + 0.12f * pulse);
             return Color.Lerp(brightBody, StarGold, 0.05f + 0.04f * (1f - pulse));
-        }
-
-        public static Color GetMetalEnergyColor(int effectID, Color meteorColor, float metalWeight = 0.82f)
-        {
-            LeonidMetalEntry entry = LeonidMetalRegistry.GetByEffectID(effectID);
-            if (entry == null)
-                return meteorColor;
-
-            return Color.Lerp(meteorColor, entry.ThemeColor, MathHelper.Clamp(metalWeight, 0f, 1f));
         }
 
         public static Color GetCelestialColor(float progress = 0f, float phaseOffset = 0f)

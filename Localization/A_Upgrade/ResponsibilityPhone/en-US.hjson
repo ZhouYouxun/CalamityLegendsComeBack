@@ -1,0 +1,68 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				ResponsibilityPhone: {
+					DisplayName: Call of Responsibility
+					Tooltip: "[GFB]"
+					Compact:
+						'''
+						Left-click sends the current Wulfrum language: [c/8FDFFF:{0}]
+						Hold right-click, drag, and release to select a language from the communication wheel
+						Every language is available immediately; none is a stronger tier than another
+						A connected sequence builds a call; six calls forcibly put a Wulfrum hat on the target
+						Keeping this phone in your main inventory supplies a Rover Drive-equivalent shield
+						Equipping a real Rover Drive raises that same shield from 20 to 40 durability
+						Legendary skill ({1}): [c/C2FF43:Everyone, get over here]
+						Deploys one immobile Amplifier, then calls sixteen more Wulfrum machines after half a second
+						The army and cooldown both last 60 seconds; defeating a real boss immediately readies the call
+						'''
+					DetailsHint: "[c/97ADB8:Hold Shift for communication, hat, and squad details]"
+					Details:
+						'''
+						[c/FF654C:!?] Three fast alarms; [c/55B9FF:??] three tracking queries; [c/A3ADB4:...] four piercing silences; [c/66E867::)] five close confirmations
+						Hats increase summon damage by 8% and can fire a fusion array, mark a target, crash into a static ring, or arm the next array for eight shots
+
+						[c/C2FF43:Everyone, get over here:] 1 Amplifier, 6 Rovers, 4 Gyrators, 4 Drones, and 2 Hovercraft
+						Every ally has a blue outline, independent health, your full defense, and can physically intercept safe hostile projectiles
+						The Amplifier never moves; its 990-pixel field gives players 20 defense and phone machines 50% health, defense, and attack
+						Rovers charge, protect their front, and shamelessly reuse scrap volleys and fusion bolts
+						Gyrators spin up very seriously, then roll into something
+						Drone lasers hit reliably but lightly; Hovercraft fire missiles upward and let the missiles work out the rest
+						Left-click an enemy or the ground to command the squad; release right-click in the wheel center to recall; press the skill again to say “Never mind”
+						'''
+					LegendaryText:
+						'''
+						“Hello? Can you hear me?”
+						“Everyone, get over here.”
+						'''
+				}
+			}
+		}
+
+		Cooldowns.ResponsibilityPhone_Ultimate: Everyone, get over here
+		UI.ResponsibilityPhone.Return: Return
+
+		NPCs: {
+			ResponsibilityArmyAmplifier.DisplayName: Responsibility Squad Amplifier
+			ResponsibilityArmyRover.DisplayName: Responsibility Squad Rover
+			ResponsibilityArmyGyrator.DisplayName: Responsibility Squad Gyrator
+			ResponsibilityArmyDrone.DisplayName: Responsibility Squad Drone
+			ResponsibilityArmyHovercraft.DisplayName: Responsibility Squad Hovercraft
+		}
+
+		Projectiles: {
+			ResponsibilityCommunicationSequence.DisplayName: Wulfrum Communication Sequence
+			ResponsibilityCommunicationToken.DisplayName: Wulfrum Communication Token
+			ResponsibilityHatMarker.DisplayName: Wulfrum Hat
+			ResponsibilityHatImpact.DisplayName: Mandatory Hat Application
+			ResponsibilityStaticRing.DisplayName: Communication Static Ring
+			ResponsibilityUnitRamHitbox.DisplayName: Wulfrum Heavy Impact
+			ResponsibilityDroneLaser.DisplayName: Wulfrum Query Laser
+			ResponsibilityHovercraftMissile.DisplayName: Wulfrum Delayed Missile
+			ResponsibilityMissileExplosion.DisplayName: Wulfrum Missile Blast
+			ResponsibilityRoverScrap.DisplayName: Responsibility Scrap Round
+			ResponsibilityRoverFusionBolt.DisplayName: Responsibility Fusion Bolt
+		}
+	}
+}

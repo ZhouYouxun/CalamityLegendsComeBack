@@ -84,7 +84,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     Owner.Bottom + new Vector2(0f, -14f),
                     Vector2.Zero,
                     CosmicDischargeCommon.DoGSpecialColor,
-                    CosmicDischargeCommon.DoGFuchsiaColor,
+                    CosmicDischargeCommon.RiftMagenta,
                     Main.rand.NextFloat(1.2f, 1.8f) * 0.3f,
                     14,
                     Main.rand.NextFloat(-0.04f, 0.04f),
@@ -96,7 +96,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         {
             Vector2 aimDirection = AimAngle.ToRotationVector2();
             Vector2 endpoint = Owner.MountedCenter + aimDirection * MathHelper.Lerp(90f, 350f, ExtendProgress);
-            Color drawColor = Color.Lerp(CosmicDischargeCommon.DoGPurpleColor, CosmicDischargeCommon.DoGSpecialColor, 0.68f);
+            Color drawColor = Color.Lerp(CosmicDischargeCommon.RiftTwilight, CosmicDischargeCommon.DoGSpecialColor, 0.68f);
 
             CosmicDischargeCommon.DrawChain(Main.spriteBatch, Owner.MountedCenter, endpoint, drawColor, 1f, true, Owner.gfxOffY);
             CosmicDischargeCommon.DrawRightHoldIndicator(Main.spriteBatch, Owner, 1.15f);

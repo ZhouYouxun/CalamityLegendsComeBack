@@ -125,9 +125,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                     Owner.GetModPlayer<BFRightUIPlayer>().CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_EPlague;
                 if (!suppressReadyCritSpark && ChargePercent == 1f && Charge % 2 == 0)
                 {
-                    Vector2 sparkVelocity = scopeDirection.RotatedBy(Main.rand.NextFloat(-MathHelper.PiOver4, MathHelper.PiOver4)) * 6f;
-                    CritSpark spark = new CritSpark(sparkOrigin, sparkVelocity + Owner.velocity, scopeAccentColor, scopeMainColor, 1f, 16);
-                    GeneralParticleHandler.SpawnParticle(spark);
+                    // 暂时禁用：突击右键蓄满时瞄准镜持续产生的 CritSpark。
+                    // Vector2 sparkVelocity = scopeDirection.RotatedBy(Main.rand.NextFloat(-MathHelper.PiOver4, MathHelper.PiOver4)) * 6f;
+                    // CritSpark spark = new CritSpark(sparkOrigin, sparkVelocity + Owner.velocity, scopeAccentColor, scopeMainColor, 1f, 16);
+                    // GeneralParticleHandler.SpawnParticle(spark);
                 }
 
                 Projectile.netUpdate = true;

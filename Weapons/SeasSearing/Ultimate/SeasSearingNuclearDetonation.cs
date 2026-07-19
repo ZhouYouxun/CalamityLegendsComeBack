@@ -11,7 +11,14 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 {
     internal sealed class SeasSearingNuclearDetonation : ModProjectile, ILocalizedModType
     {
-        private const int Lifetime = 150;
+        // Keep the original nuke's three visual phases, but let the fallout zone occupy the battlefield five times longer.
+        private const int PhaseScale = 5;
+        private const int Lifetime = 150 * PhaseScale;
+        private const int DamageEndFrames = 45 * PhaseScale;
+        private const int RainStartFrames = 45 * PhaseScale;
+        private const int RainInterval = 10;
+        private const int FalloutMissilesPerWave = 3;
+        private const int PollutionJuicePerWave = 2;
         private bool initialized;
 
         public new string LocalizationCategory => "Projectiles.SeasSearing";
@@ -32,7 +39,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             Projectile.netImportant         = true;
         }
 
-        public override bool? CanDamage() => Projectile.timeLeft > 45;
+        public override bool? CanDamage() => Projectile.timeLeft > DamageEndFrames;
 
         public override void AI()
         {
@@ -40,12 +47,12 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 InitializeNuke();
 
             int age = Lifetime - Projectile.timeLeft;
-            Lighting.AddLight(Projectile.Center, Color.Lerp(SeasSearingPalette.WarningOrange, SeasSearingPalette.RadioactiveCyan, MathHelper.Clamp(age / 80f, 0f, 1f)).ToVector3() * 1.4f);
+            Lighting.AddLight(Projectile.Center, Color.Lerp(SeasSearingPalette.WarningOrange, SeasSearingPalette.RadioactiveCyan, MathHelper.Clamp(age / (80f * PhaseScale), 0f, 1f)).ToVector3() * 1.4f);
 
             if (age % 7 == 0)
                 SpawnNuclearDust(age);
 
-            if (Main.myPlayer == Projectile.owner && age > 45 && age % 10 == 0)
+            if (Main.myPlayer == Projectile.owner && age > RainStartFrames && age % RainInterval == 0)
                 SpawnFalloutRain();
         }
 
@@ -62,10 +69,10 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             Texture2D bloom  = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Texture2D ring   = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
             float age        = Lifetime - Projectile.timeLeft;
-            float shock      = MathHelper.Clamp(age / 42f, 0f, 1f);
-            float collapse   = MathHelper.Clamp((age - 42f) / 38f, 0f, 1f);
-            float fallout    = MathHelper.Clamp((age - 82f) / 60f, 0f, 1f);
-            float fade       = MathHelper.Clamp(Projectile.timeLeft / 34f, 0f, 1f);
+            float shock      = MathHelper.Clamp(age / (42f * PhaseScale), 0f, 1f);
+            float collapse   = MathHelper.Clamp((age - 42f * PhaseScale) / (38f * PhaseScale), 0f, 1f);
+            float fallout    = MathHelper.Clamp((age - 82f * PhaseScale) / (60f * PhaseScale), 0f, 1f);
+            float fade       = MathHelper.Clamp(Projectile.timeLeft / (34f * PhaseScale), 0f, 1f);
             Vector2 center   = Projectile.Center - Main.screenPosition;
 
             Color white  = (Color.White  with { A = 0 }) * fade;
@@ -104,14 +111,14 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
         private void SpawnNuclearDust(int age)
         {
-            int   count  = age < 45 ? 18 : 11;
-            float radius = age < 45 ? 620f : 760f;
+            int   count  = age < 45 * PhaseScale ? 18 : 11;
+            float radius = age < 45 * PhaseScale ? 620f : 760f;
 
             for (int i = 0; i < count; i++)
             {
                 Vector2 offset   = Main.rand.NextVector2CircularEdge(radius, radius * Main.rand.NextFloat(0.45f, 1f));
                 Vector2 velocity = offset.SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(2.2f, 7.5f);
-                if (age > 50) velocity = -Vector2.UnitY.RotatedByRandom(0.65f) * Main.rand.NextFloat(0.8f, 3.6f);
+                if (age > 50 * PhaseScale) velocity = -Vector2.UnitY.RotatedByRandom(0.65f) * Main.rand.NextFloat(0.8f, 3.6f);
 
                 Dust dust = Dust.NewDustPerfect(
                     Projectile.Center + offset * Main.rand.NextFloat(0.12f, 0.9f),
@@ -125,12 +132,29 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
         private void SpawnFalloutRain()
         {
-            Vector2 spawn    = Projectile.Center + new Vector2(Main.rand.NextFloat(-760f, 760f), -720f);
-            Vector2 velocity = new(Main.rand.NextFloat(-1.8f, 1.8f), Main.rand.NextFloat(9f, 16f));
-            Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(), spawn, velocity,
-                ModContent.ProjectileType<SeasSearingFalloutRain>(),
-                Math.Max(1, Projectile.damage / 9), 1.5f, Projectile.owner);
+            // Triple the original fallout-missile density, then interleave lower-damage liquid rain.
+            for (int i = 0; i < FalloutMissilesPerWave; i++)
+            {
+                Vector2 spawn = Projectile.Center + new Vector2(Main.rand.NextFloat(-760f, 760f), Main.rand.NextFloat(-780f, -650f));
+                Vector2 velocity = new(Main.rand.NextFloat(-1.8f, 1.8f), Main.rand.NextFloat(9f, 16f));
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(), spawn, velocity,
+                    ModContent.ProjectileType<SeasSearingFalloutRain>(),
+                    Math.Max(1, Projectile.damage / 9), 1.5f, Projectile.owner);
+            }
+
+            for (int i = 0; i < PollutionJuicePerWave; i++)
+            {
+                Vector2 spawn = Projectile.Center + new Vector2(Main.rand.NextFloat(-800f, 800f), Main.rand.NextFloat(-760f, -620f));
+                Vector2 velocity = new(Main.rand.NextFloat(-2.8f, 2.8f), Main.rand.NextFloat(10f, 15f));
+                int index = Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(), spawn, velocity,
+                    ModContent.ProjectileType<SeasSearingPollutionJuice>(),
+                    Math.Max(1, Projectile.damage / 14), 0.75f, Projectile.owner);
+
+                if (Main.projectile.IndexInRange(index))
+                    Main.projectile[index].scale = Main.rand.NextFloat(0.72f, 1.04f);
+            }
         }
     }
 }

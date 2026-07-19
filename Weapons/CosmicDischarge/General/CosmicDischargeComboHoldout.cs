@@ -53,8 +53,6 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         private float currentCollisionWidth = 30f;
         private bool currentlyRetracting;
         private float currentArmRotationOffset;
-        private readonly System.Collections.Generic.List<Vector2> tipHistory = new();
-        private readonly System.Collections.Generic.List<System.Collections.Generic.List<Vector2>> pointsHistory = new();
 
         private CosmicDischargeAttackKind Kind
         {
@@ -75,8 +73,8 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
              (Kind == CosmicDischargeAttackKind.ChainKnifeBiteAll && Time <= 9));
 
         public override Color SpecialDrawColor => CosmicDischargeCommon.DoGSpecialColor;
-        public override int ExudeDustType => DustID.PurpleTorch;
-        public override int WhipDustType => DustID.PurpleTorch;
+        public override int ExudeDustType => DustID.TintableDustLighted;
+        public override int WhipDustType => DustID.TintableDustLighted;
         public override int HandleHeight => 62;
         public override int BodyType1StartY => 64;
         public override int BodyType1SectionHeight => 28;
@@ -216,20 +214,8 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             ApplyScreenShake(5.8f);
             SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DevourerRiftOpen") { Volume = 0.64f, Pitch = 0.38f, MaxInstances = 2 }, Owner.Center);
 
-            if (!Main.dedServ)
-            {
-                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
-                    Owner.MountedCenter,
-                    direction * 1.8f,
-                    CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGFuchsiaColor) * 0.48f,
-                    Vector2.One,
-                    direction.ToRotation(),
-                    0.03f,
-                    0.2f * 0.3f * CosmicDischargeCommon.ShockwaveFinalScaleMultiplier,
-                    15));
-                CosmicDischargeCommon.SpawnDoGSparkBurst(Owner.MountedCenter, 8, 2.4f, 7f, 0.58f * 0.3f, -direction * 1.1f);
-                CosmicDischargeCommon.SpawnDoGRiftCracks(Owner.MountedCenter, 2, 3f, 7f, 0.4f * 0.3f);
-            }
+            // 起手只给一档提示。QuickDraw 真正的视觉留到命中那一下，不在这里预支。
+            CosmicDischargeCommon.SpawnRiftBurst(Owner.MountedCenter, RiftTier.Light, direction, CosmicDischargeCommon.RiftMagenta);
         }
 
 
@@ -257,36 +243,22 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         {
             Vector2 direction = Projectile.velocity.SafeNormalize(AimDirection);
             SetBlade(direction, Projectile.velocity.Length(), 0f, 0f);
-            if (!Main.dedServ && Main.rand.NextBool(2))
+            // 顿帧期间刃尖的滞留能量。DoGFire 的 dust 频率（1/12），不是每帧撒。
+            if (!Main.dedServ && Main.rand.NextBool(12))
             {
                 Dust dust = Dust.NewDustPerfect(
-                    TipPosition + Main.rand.NextVector2Circular(12f, 12f),
-                    DustID.PurpleTorch,
-                    Main.rand.NextVector2Circular(1.8f, 1.8f),
-                    100,
-                    CosmicDischargeCommon.RandomDoGColor(),
-                    Main.rand.NextFloat(0.8f, 1.25f) * 0.3f);
+                    TipPosition + Main.rand.NextVector2Circular(10f, 10f),
+                    DustID.TintableDustLighted,
+                    Main.rand.NextVector2Circular(1.2f, 1.2f),
+                    0,
+                    CosmicDischargeCommon.RiftColor(),
+                    Main.rand.NextFloat(0.6f, 0.8f));
                 dust.noGravity = true;
             }
         }
 
         private Vector2 TipPosition => Owner.MountedCenter + Projectile.velocity;
 
-
-        private void TrimTipHistory(int maxCount)
-        {
-            while (tipHistory.Count > maxCount)
-                tipHistory.RemoveAt(0);
-        }
-
-        private void FadeTipHistory(int count)
-        {
-            if (tipHistory.Count <= 0)
-                return;
-
-            int toRemove = Math.Min(tipHistory.Count, count);
-            tipHistory.RemoveRange(0, toRemove);
-        }
 
         private void PlayReleaseOnce(SoundStyle sound, float volume, float pitch, float shake)
         {
@@ -306,30 +278,17 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             if (Main.dedServ)
                 return;
 
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
-                center,
-                direction * 0.7f,
-                CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGSpecialColor) * (0.38f * intensity),
-                Vector2.One,
-                direction.ToRotation(),
-                0.035f,
-                0.22f * intensity * 0.3f * CosmicDischargeCommon.ShockwaveFinalScaleMultiplier,
-                14));
+            // 挥击破空。每次挥击只触发一次，强度决定档位，不额外加料。
+            RiftTier tier = intensity >= 1.2f ? RiftTier.Heavy
+                          : intensity >= 0.9f ? RiftTier.Medium
+                          : RiftTier.Light;
 
-            for (int i = 0; i < 6 + (int)(intensity * 8f); i++)
-            {
-                Vector2 velocity = direction.RotatedByRandom(0.72f) * Main.rand.NextFloat(3.2f, 9f) * intensity;
-                GeneralParticleHandler.SpawnParticle(new LineParticle(
-                    center + Main.rand.NextVector2Circular(24f, 18f),
-                    velocity,
-                    false,
-                    Main.rand.Next(10, 18),
-                    Main.rand.NextFloat(0.42f, 0.82f) * 0.3f,
-                    CosmicDischargeCommon.Transparent(CosmicDischargeCommon.RandomDoGColor()) * 0.75f));
-            }
-
-            CosmicDischargeCommon.SpawnDoGRiftCracks(center, intensity > 1f ? 5 : 3, 3f, 8f + intensity * 2f, 0.45f * intensity * 0.3f);
+            CosmicDischargeCommon.SpawnRiftBurst(center, tier, direction, ModeAccentColor);
         }
+
+        /// <summary>当前形态的强调色。只喂给冲击环与核心光，火花一律走 RiftColor()。</summary>
+        private Color ModeAccentColor => CosmicDischargeCommon.GetModeColor(
+            Owner.GetModPlayer<CosmicDischargePlayer>().AttackMode);
 
 
 
@@ -357,23 +316,14 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             if (Main.dedServ || Projectile.velocity.LengthSquared() < 4f)
                 return;
 
-            int dustCount = impactFlashTimer > 0 ? 3 : 1;
+            // 逐帧拖尾只在刃尖。观感主体由 DrawDoGFireTrail 的双层图元承担，
+            // 这里严格照 DoGFire 的配比（50%×3 烟雾 + 1/12×2 dust），不再沿整条刃身撒粒子。
             Vector2 direction = Projectile.velocity.SafeNormalize(AimDirection);
-            for (int i = 0; i < dustCount; i++)
-            {
-                if (!Main.rand.NextBool(impactFlashTimer > 0 ? 1 : 2))
-                    continue;
-
-                Vector2 point = Owner.MountedCenter + direction * Main.rand.NextFloat(32f, Projectile.velocity.Length());
-                Dust dust = Dust.NewDustPerfect(
-                    point + Main.rand.NextVector2Circular(8f, 8f),
-                    DustID.PurpleTorch,
-                    direction.RotatedByRandom(0.65f) * Main.rand.NextFloat(0.35f, 2.4f),
-                    120,
-                    CosmicDischargeCommon.RandomDoGColor(),
-                    Main.rand.NextFloat(0.85f, 1.32f) * 0.3f);
-                dust.noGravity = true;
-            }
+            CosmicDischargeCommon.SpawnTrailWake(
+                TipPosition,
+                -direction * 0.7f,
+                ModeAccentColor,
+                impactFlashTimer > 0 ? 1.2f : 1f);
         }
 
 
@@ -597,16 +547,14 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                         NPC.HitInfo mirrorHit = target.CalculateHitInfo(doubleDamage, hit.HitDirection, false, hit.Knockback * 0.8f);
                         target.StrikeNPC(mirrorHit);
 
+                        // 镜像鞭的追击只补一记核心白光，不再叠一整套粒子。
                         if (!Main.dedServ)
-                        {
                             GeneralParticleHandler.SpawnParticle(new StrongBloom(
                                 target.Center,
                                 Vector2.Zero,
-                                CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGWhiteColor) * 0.45f,
-                                0.5f * 0.3f,
-                                15
-                            ));
-                        }
+                                Color.White * 0.5f,
+                                1.1f,
+                                15));
                     }
                 }
 
@@ -635,31 +583,13 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                             Projectile.owner);
                     }
 
-                    if (!Main.dedServ)
-                    {
-                        SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DevourerRiftOpen") { Volume = 0.55f, Pitch = -0.05f, MaxInstances = 4 }, target.Center);
-                        GeneralParticleHandler.SpawnParticle(new PulseRing(
-                            target.Center,
-                            Vector2.Zero,
-                            CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGSpecialColor),
-                            0.04f,
-                            1.4f * 0.3f * CosmicDischargeCommon.ShockwaveFinalScaleMultiplier,
-                            22
-                        ));
-
-                        for (int k = 0; k < 20; k++)
-                        {
-                            Vector2 sparkVel = Main.rand.NextVector2Circular(6f, 6f) + (MathHelper.TwoPi * k / 20f).ToRotationVector2() * Main.rand.NextFloat(4f, 8.5f);
-                            GeneralParticleHandler.SpawnParticle(new SparkParticle(
-                                target.Center,
-                                sparkVel,
-                                false,
-                                Main.rand.Next(16, 28),
-                                Main.rand.NextFloat(0.7f, 1.1f) * 0.3f,
-                                CosmicDischargeCommon.RandomDoGColor()
-                            ));
-                        }
-                    }
+                    // 印记引爆 —— 走统一预算，不再手搓 20 个火花。
+                    SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DevourerRiftOpen") { Volume = 0.55f, Pitch = -0.05f, MaxInstances = 4 }, target.Center);
+                    CosmicDischargeCommon.SpawnRiftBurst(
+                        target.Center,
+                        empActive ? RiftTier.Finisher : RiftTier.Heavy,
+                        default,
+                        CosmicDischargeCommon.RiftMagenta);
                 }
 
                 // 3. CHAIN ARC FORM SYNERGIES
@@ -750,40 +680,36 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             if (heavy)
                 SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DevourerAttack") { Volume = 0.42f, Pitch = tip ? 0.18f : 0f, MaxInstances = 4 }, target.Center);
 
-            switch (Kind)
+            // 链刃终结额外带索敌激光（玩法），其余全部走同一个爆发出口。
+            if (Kind == CosmicDischargeAttackKind.ChainKnifeBiteAll)
             {
-                case CosmicDischargeAttackKind.WhipOver:
-                    CosmicDischargeCommon.SpawnWhipOverHit(target);
-                    break;
-                case CosmicDischargeAttackKind.WhipUnder:
-                    CosmicDischargeCommon.SpawnWhipUnderHit(target, Projectile.velocity.ToRotation());
-                    break;
-                case CosmicDischargeAttackKind.WhipThrust:
-                    CosmicDischargeCommon.SpawnWhipThrustHit(Owner, target, Projectile.velocity.SafeNormalize(AimDirection));
-                    break;
-                case CosmicDischargeAttackKind.SwordSwingOne:
-                    CosmicDischargeCommon.SpawnSwordOneHit(target);
-                    break;
-                case CosmicDischargeAttackKind.SwordSwingTwo:
-                    CosmicDischargeCommon.SpawnSwordTwoHit(target, Projectile.velocity.SafeNormalize(AimDirection));
-                    break;
-                case CosmicDischargeAttackKind.SwordFinisher:
-                    CosmicDischargeCommon.SpawnSwordFinisherHit(Projectile.GetSource_FromThis(), Owner, target, Projectile.velocity.SafeNormalize(AimDirection));
-                    break;
-                case CosmicDischargeAttackKind.ChainKnifeSingle:
-                    CosmicDischargeCommon.SpawnChainOneHit(target);
-                    break;
-                case CosmicDischargeAttackKind.ChainKnifeScatter:
-                    CosmicDischargeCommon.SpawnChainTwoHit(Owner, target);
-                    break;
-                case CosmicDischargeAttackKind.ChainKnifeBiteAll:
-                    CosmicDischargeCommon.SpawnChainFinisherBurst(Projectile.GetSource_FromThis(), Owner, target.Center, Projectile.velocity.SafeNormalize(AimDirection), Projectile.damage, Projectile.knockBack);
-                    break;
-                case CosmicDischargeAttackKind.QuickDraw:
-                    CosmicDischargeCommon.SpawnWhipThrustHit(Owner, target, Projectile.velocity.SafeNormalize(AimDirection));
-                    break;
+                CosmicDischargeCommon.SpawnChainFinisherBurst(
+                    Projectile.GetSource_FromThis(), Owner, target.Center, direction, Projectile.damage, Projectile.knockBack);
+                return;
             }
+
+            CosmicDischargeCommon.SpawnRiftBurst(target.Center, GetHitTier(tip), direction, ModeAccentColor);
         }
+
+        /// <summary>
+        /// 命中档位表。形态之间**不换粒子种类**，只换档位和强调色 ——
+        /// 这是整套特效有秩序感的核心：九种攻击共用一套视觉语言，差别只在强度。
+        /// </summary>
+        private RiftTier GetHitTier(bool tip) => Kind switch
+        {
+            CosmicDischargeAttackKind.QuickDraw => RiftTier.Finisher,
+            CosmicDischargeAttackKind.SwordFinisher => RiftTier.Finisher,
+
+            CosmicDischargeAttackKind.SwordSwingTwo => RiftTier.Heavy,
+            CosmicDischargeAttackKind.WhipThrust => tip ? RiftTier.Heavy : RiftTier.Light,
+
+            CosmicDischargeAttackKind.SwordSwingOne => RiftTier.Medium,
+            CosmicDischargeAttackKind.ChainKnifeSingle or CosmicDischargeAttackKind.ChainKnifeScatter
+                => tip ? RiftTier.Heavy : RiftTier.Medium,
+
+            // 挥鞭：收鞭阶段只算轻击，跟伤害衰减保持一致。
+            _ => currentlyRetracting ? RiftTier.Light : RiftTier.Medium,
+        };
 
         private void ApplyScreenShake(float power)
         {
@@ -802,23 +728,11 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             Vector2 direction = Projectile.velocity.SafeNormalize(AimDirection);
             var points = GetActivePoints();
 
-            bool isSword = Kind == CosmicDischargeAttackKind.SwordSwingOne ||
-                           Kind == CosmicDischargeAttackKind.SwordSwingTwo ||
-                           Kind == CosmicDischargeAttackKind.SwordFinisher;
             bool isWhip = Kind == CosmicDischargeAttackKind.WhipOver ||
                           Kind == CosmicDischargeAttackKind.WhipUnder;
             bool isChainArc = Kind == CosmicDischargeAttackKind.ChainKnifeSingle ||
                               Kind == CosmicDischargeAttackKind.ChainKnifeScatter ||
                               Kind == CosmicDischargeAttackKind.ChainKnifeBiteAll;
-
-            if (isSword)
-            {
-                pointsHistory.Clear();
-            }
-            else
-            {
-                pointsHistory.Clear();
-            }
 
             DrawDoGFireTrail(points);
             DrawCurvedBladeGlow(points);
@@ -828,7 +742,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             {
                 int chainCount = GetChainCount();
                 float reach = Projectile.velocity.Length();
-                Color chainColor = Color.Lerp(lightColor, CosmicDischargeCommon.DoGPurpleColor, 0.35f);
+                Color chainColor = Color.Lerp(lightColor, CosmicDischargeCommon.RiftTwilight, 0.35f);
                 for (int i = 0; i < chainCount; i++)
                 {
                     float lane = i - (chainCount - 1) * 0.5f;
@@ -876,14 +790,14 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             float OuterWidth(float completion, Vector2 _) => outerWidth * (1f - completion) + 8f * MathF.Sin(Main.GlobalTimeWrappedHourly * 20f + completion * MathHelper.Pi);
             Color OuterColor(float completion, Vector2 _)
             {
-                Color main = empowered ? Color.Purple : CosmicDischargeCommon.DoGCyanColor;
+                Color main = empowered ? Color.Purple : CosmicDischargeCommon.RiftLightBlue;
                 return Color.Lerp(main, Color.Transparent, completion) * opacity;
             }
 
             float InnerWidth(float completion, Vector2 _) => innerWidth * (1f - completion);
             Color InnerColor(float completion, Vector2 _)
             {
-                Color main = empowered ? CosmicDischargeCommon.DoGFuchsiaColor : CosmicDischargeCommon.DoGSkyBlueColor;
+                Color main = empowered ? CosmicDischargeCommon.RiftMagenta : CosmicDischargeCommon.RiftLightBlue;
                 return Color.Lerp(Color.Lerp(main, Color.White, 0.175f), Color.Transparent, completion) * opacity;
             }
 
@@ -899,9 +813,9 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             Texture2D pixel = TextureAssets.MagicPixel.Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             float flash = impactFlashTimer > 0 ? impactFlashTimer / 8f : 0f;
-            Color outer = CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGPurpleColor) * (0.18f + flash * 0.12f);
-            Color cyanGlow = CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGCyanColor) * (0.24f + flash * 0.22f);
-            Color fuchsiaGlow = CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGFuchsiaColor) * (0.18f + flash * 0.18f);
+            Color outer = CosmicDischargeCommon.Transparent(CosmicDischargeCommon.RiftTwilight) * (0.18f + flash * 0.12f);
+            Color cyanGlow = CosmicDischargeCommon.Transparent(CosmicDischargeCommon.RiftLightBlue) * (0.24f + flash * 0.22f);
+            Color fuchsiaGlow = CosmicDischargeCommon.Transparent(CosmicDischargeCommon.RiftMagenta) * (0.18f + flash * 0.18f);
             Color core = CosmicDischargeCommon.DoGWhiteColor * (0.25f + flash * 0.38f);
 
             Main.spriteBatch.SetBlendState(BlendState.Additive);

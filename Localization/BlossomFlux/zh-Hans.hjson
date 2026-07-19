@@ -93,7 +93,7 @@ Mods: {
 					BF_Passive:
 						'''
 						[c/9AEF9E:被动【终末防线】手持时抵消一次致命伤害。]
-						[c/9AEF9E:触发后获得短暂无敌与治疗。当前：{0}]
+						[c/9AEF9E:触发后立即恢复 100 点生命，随后开始充能。当前：{0}]
 						'''
 					PassiveStateReady: "[c/7BFFB7:已就绪]"
 					PassiveStateActive: "[c/FF9B8B:终末防线中]"
@@ -110,11 +110,14 @@ Mods: {
 					LegendaryHint: "[c/BABABA:按住 Shift 阅读完整传奇记录]"
 					LegendaryText:
 						'''
-						[c/66E6FF:最初的叶流只是在追求更快的连射，让箭矢以更密集的节奏压过敌人。]
-						[c/66E6FF:后来问题变得很明显：速度可以制造压力，却很难让每一次松弦都有区别。]
-						[c/66E6FF:重构后，同一把弓被拆成五条战术枝流，箭矢会根据当前节奏改变自己的形态。]
-						[c/66E6FF:普通木箭不再只是弹药，而是被森林能量重新分配为突击、复苏、侦查、轰炸与散播。]
-						[c/66E6FF:它仍然很快，但真正决定战斗的，已经不是射速，而是你选择让哪一条枝流先开花。]
+						[c/66E6FF:我曾以为，只要弓弦足够迅疾，森林便能将一切来犯者拒之门外。]
+						[c/66E6FF:可未经引导的万千枝叶，不过是随风散落的锋芒。真正的守护，不应只有一种回答。]
+						[c/66E6FF:花苞，收拢这片林冠中流散的力量，让每一次松弦都承载明确的意志。]
+						[c/66E6FF:以突击贯穿前路，以复苏挽留生命，以侦察寻出最危险的敌人，以歼灭召来天穹箭雨，以侵染让已经种下的苦痛久久不散。]
+						[c/66E6FF:寻常开弓时，让五条枝流各司其职；弓弦蓄满之时，则唤醒它们更深的权能。]
+						[c/66E6FF:若持弓者已经行至死亡之前，便张开终末防线，替他拦下最后一步；待森绿能量充盈，便使整片林冠化作箭幕，回应他的召唤。]
+						[c/66E6FF:从今往后，无论来犯的寻神者居于何等位置，都不得越过森林划下的界限。]
+						[c/66E6FF:守住这片仍被人铭记的土地，直到最后一缕日光从枝梢消逝。]
 						'''
 				}
 
@@ -229,9 +232,12 @@ Mods: {
 				DisplayName: 席尔瓦竖琴
 				Tooltip:
 					'''
-					每秒生命恢复 +5。此生命恢复不受任何因素削弱。
-					受击后的无敌时间增加 60 帧。
-					与叶流的终末防线共存，但不再改变复活持续时间或冷却规则。
+					提供坏掉的种子全部正面属性的 150%：远程伤害 +30%，远程暴击率 +15%，箭矢速度 +22.5%。
+					叶流额外提高 7.5% 伤害与 12% 暴击率。
+					每秒生命恢复 +15。此生命恢复不受任何因素削弱。
+					受击后的无敌时间增加 90 帧。
+					终末防线冷却减半，并可在首领战中充能；触发时恢复 300 点生命并立即发动一次终结技。
+					该终结技跳过蓄力，但不会缩短持续时间；不会降低防御或施加枯萎。
 					'''
 			}
 
@@ -240,7 +246,7 @@ Mods: {
 				Tooltip:
 					'''
 					生命再生提高4点，防御力提高6点。
-					召唤粉绿蓝三只仙灵，并获得三种不同祝福。
+					召唤粉绿蓝三只仙灵。
 					手持叶流按住左右键时，仙灵依次冲向鼠标。
 					仙灵每隔5帧出击，彼此的出击间隔为2帧。
 					接触伤害为20点，按住右键时提高至30点。
@@ -276,9 +282,9 @@ Mods: {
 					防御力减半，远程伤害提高20%。
 					远程暴击率提高10%，箭矢速度提高15%。
 					叶流额外提高5%伤害与8%暴击率。
-					现代林海复活触发时，立即发动一次终结技。
+					终末防线触发时，立即发动一次终结技。
 					该次终结技跳过蓄力，所有终结技持续时间减半。
-					现代林海复活冷却减半，并可在首领战中充能。
+					终末防线冷却减半，并可在首领战中充能。
 					复活不再提供临时无敌，而是恢复200点生命。
 					复活同时施加持续30秒的枯萎减益。
 					'''
@@ -326,6 +332,7 @@ Mods: {
 			Ranged: {
 				BFAimScope.DisplayName: 叶流瞄准镜
 				SporeBomb.DisplayName: 孢子炸弹
+				// ResponsibilityRoverScrap.DisplayName: Responsibility Rover Scrap
 			}
 
 			PastLingeringShard.DisplayName: 旧日残影碎片
@@ -389,6 +396,8 @@ Mods: {
 				// LazharBeacon.DisplayName: Lazhar Beacon
 				// LazharLaser.DisplayName: Lazhar Laser
 				// LazharOrbitalStrike.DisplayName: Lazhar Orbital Strike
+				// SHPCNecroplasmBeam.DisplayName: S H P C Necroplasm Beam
+				// SHPCNecroplasmFrame.DisplayName: S H P C Necroplasm Frame
 			}
 
 			// PristineFuryHookSoul.DisplayName: Pristine Fury Hook Soul
@@ -409,21 +418,6 @@ Mods: {
 		TheSpecialText.BlossomFluxPresetSelected: 已选择 {0} 战术
 
 		Buffs: {
-			PinkFairyBlessing: {
-				DisplayName: 粉色仙灵祝福
-				Description: 粉色仙灵的舞步正在持续恢复生命。
-			}
-
-			GreenFairyBlessing: {
-				DisplayName: 绿色仙灵祝福
-				Description: 绿色仙灵的舞步正在增强远程伤害。
-			}
-
-			BlueFairyBlessing: {
-				DisplayName: 蓝色仙灵祝福
-				Description: 蓝色仙灵的舞步正在强化玩家防御。
-			}
-
 			BFRecoveryLeafBuff: {
 				DisplayName: 复苏之叶
 				Description: 复苏枝流正在保护并治疗你。

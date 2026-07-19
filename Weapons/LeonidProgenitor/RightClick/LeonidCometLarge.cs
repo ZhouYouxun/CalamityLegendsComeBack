@@ -15,8 +15,6 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
         public new string LocalizationCategory => "Projectiles.LeonidProgenitor";
 
         public Player Owner => Main.player[Projectile.owner];
-        public int PrimaryEffectID => (int)Projectile.ai[0];
-        public int SecondaryEffectID => (int)Projectile.ai[1];
         public float Progress => Projectile.ai[2];
 
         private bool initialized;

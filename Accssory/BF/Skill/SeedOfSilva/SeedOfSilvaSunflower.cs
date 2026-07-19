@@ -49,7 +49,8 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
                 triggeringProjectile,
                 Projectile.Center,
                 BlossomFluxChloroplastPresetType.Chlo_ABreak,
-                1.15f);
+                1.15f,
+                Projectile.Center);
 
             if (triggeringProjectile.owner == Main.myPlayer)
             {

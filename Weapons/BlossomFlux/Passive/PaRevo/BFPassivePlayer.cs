@@ -21,6 +21,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
     {
         public const int PassiveCooldownFrames = 180 * 60;
         public const int FinalStandDurationFrames = 5 * 60;
+        public const int FinalStandRestoreLife = 100;
 
         private int finalStandBlockedHits;
         private BlossomFluxChloroplastPresetType finalStandPreset = BlossomFluxChloroplastPresetType.Chlo_ABreak;
@@ -31,14 +32,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
         // Do not depend on HoldItem's update order here. PreKill and cooldown charging both
         // need to recognise the weapon immediately on the frame it becomes held.
         private bool HoldingBlossomFluxNow => Player.HeldItem.type == ModContent.ItemType<NewLegendBlossomFlux>();
+        private bool BadSeedActive => Player.GetModPlayer<BFAccessoryPlayer>().BadSeedEquipped;
+        private bool SilvaHarpActive => Player.GetModPlayer<BFAccessoryPlayer>().SilvaHarpEquipped;
         public bool PassiveUnlocked => Main.hardMode;
         public bool FinalStandActive => FinalStandTimer > 0;
-        private bool BadSeedActive => Player.GetModPlayer<BFAccessoryPlayer>().BadSeedEquipped;
-        public int PassiveChargeFramesRequired => BadSeedActive ? PassiveCooldownFrames / 2 : PassiveCooldownFrames;
-        public bool PassiveReady => PassiveUnlocked && PassiveCooldownTimer >= PassiveChargeFramesRequired && !FinalStandActive;
-        public bool ShouldShowCooldownDisplay =>
-            (HoldingBlossomFluxNow && PassiveUnlocked) ||
-            FinalStandActive;
+        public int PassiveChargeFramesRequired => BadSeedActive || SilvaHarpActive ? PassiveCooldownFrames / 2 : PassiveCooldownFrames;
+        public bool PassiveReady => PassiveUnlocked && PassiveCooldownTimer >= PassiveChargeFramesRequired;
+        public bool ShouldShowCooldownDisplay => HoldingBlossomFluxNow && PassiveUnlocked;
 
         public int DisplayFrames => FinalStandActive ? FinalStandTimer : PassiveCooldownTimer;
         public int ChargeSeconds => System.Math.Min(PassiveChargeFramesRequired / 60, PassiveCooldownTimer / 60);
@@ -61,7 +61,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
             {
                 PassiveCooldownTimer = 0;
             }
-            else if (!FinalStandActive && HoldingBlossomFluxNow && (BadSeedActive || !AnyBossAlive()))
+            else if (HoldingBlossomFluxNow && (BadSeedActive || SilvaHarpActive || !AnyBossAlive()))
             {
                 int requiredFrames = PassiveChargeFramesRequired;
                 int previousTimer = PassiveCooldownTimer;
@@ -70,57 +70,30 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
                     SoundEngine.PlaySound(BlossomFluxSounds.PassivePlayerBuffSpawn, Player.Center);
             }
 
-            if (FinalStandTimer > 0)
-            {
-                ApplyFinalStandProtection();
-                FinalStandTimer--;
-                EmitFinalStandVisuals();
-                if (FinalStandTimer == 0 && Player.active && !Player.dead)
-                    ResolveFinalStandSurvival();
-            }
-
             SyncPassiveDisplay();
         }
 
         public override void ModifyHurt(ref Player.HurtModifiers modifiers)
         {
-            if (!FinalStandActive)
-                return;
-
-            finalStandBlockedHits++;
-            modifiers.FinalDamage *= 0f;
-            modifiers.ModifyHurtInfo += NullifyFinalStandHit;
+            return;
         }
 
         public override void UpdateBadLifeRegen()
         {
-            if (!FinalStandActive)
-                return;
-
-            if (Player.lifeRegen < 0)
-                Player.lifeRegen = 0;
-
-            Player.lifeRegenTime = 0;
+            return;
         }
 
         public override bool PreKill(double damage, int hitDirection, bool pvp, ref bool playSound, ref bool genGore, ref PlayerDeathReason damageSource)
         {
-            if (FinalStandActive)
-            {
-                finalStandBlockedHits++;
-                Player.statLife = 1;
-                playSound = false;
-                genGore = false;
-                return false;
-            }
-
             if (!CanTriggerFinalStand())
                 return true;
 
             if (CalamityReviveShouldGoFirst())
                 return true;
 
-            if (BadSeedActive)
+            if (SilvaHarpActive)
+                TriggerSilvaHarpRevival();
+            else if (BadSeedActive)
                 TriggerBadSeedRevival();
             else
                 TriggerFinalStand();
@@ -155,21 +128,19 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
         {
             return Player.HeldItem.type == ModContent.ItemType<NewLegendBlossomFlux>() &&
                    PassiveUnlocked &&
-                   PassiveReady &&
-                   FinalStandTimer <= 0;
+                   PassiveReady;
         }
 
         private void TriggerFinalStand()
         {
             finalStandPreset = Player.GetModPlayer<BFRightUIPlayer>().CurrentPreset;
-            Player.statLife = 1;
-            FinalStandTimer = FinalStandDurationFrames;
+            FinalStandTimer = 0;
             PassiveCooldownTimer = 0;
             finalStandBlockedHits = 0;
-            ApplyFinalStandProtection();
+            Player.HealPlayer(FinalStandRestoreLife);
 
-            SpawnRecoveryField(finalStandPreset);
             SpawnTriggerBurstFX(finalStandPreset);
+            SpawnResolveSurvivalFX(finalStandPreset);
 
             if (Player.whoAmI == Main.myPlayer)
             {
@@ -178,22 +149,36 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
             }
         }
 
+        // 坏种保持原有效果：200 生命、枯萎、跳过蓄力的终结技，以及终结技持续时间减半。
         private void TriggerBadSeedRevival()
+        {
+            TriggerSpecialSeedRevival(200, 200, applyWithered: true, ultimateFlags: 3f);
+        }
+
+        // 竖琴继承坏种的正面分支：半冷却、首领战充能与立即发动终结技；
+        // 舍弃防御减半、枯萎和终结技时长减半。
+        private void TriggerSilvaHarpRevival()
+        {
+            TriggerSpecialSeedRevival(300, 300, applyWithered: false, ultimateFlags: 2f);
+        }
+
+        private void TriggerSpecialSeedRevival(int restoreLife, int healNotification, bool applyWithered, float ultimateFlags)
         {
             finalStandPreset = Player.GetModPlayer<BFRightUIPlayer>().CurrentPreset;
             FinalStandTimer = 0;
             PassiveCooldownTimer = 0;
             finalStandBlockedHits = 0;
 
-            int restoredLife = System.Math.Min(Player.statLifeMax2, 200);
+            int restoredLife = System.Math.Min(Player.statLifeMax2, restoreLife);
             Player.statLife = System.Math.Max(1, restoredLife);
             Player.HealEffect(restoredLife, true);
-            Player.AddBuff(ModContent.BuffType<Withered>(), 30 * 60);
+            if (applyWithered)
+                Player.AddBuff(ModContent.BuffType<Withered>(), 30 * 60);
 
             SpawnRecoveryField(finalStandPreset);
             SpawnTriggerBurstFX(finalStandPreset);
-            Player.GetModPlayer<BFAccessoryPlayer>().NotifyLargeHeal(200);
-            SpawnBadSeedUltimate();
+            Player.GetModPlayer<BFAccessoryPlayer>().NotifyLargeHeal(healNotification);
+            SpawnSpecialSeedUltimate(ultimateFlags);
 
             if (Player.whoAmI == Main.myPlayer)
             {
@@ -202,7 +187,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
             }
         }
 
-        private void SpawnBadSeedUltimate()
+        private void SpawnSpecialSeedUltimate(float flags)
         {
             if (Player.whoAmI != Main.myPlayer || Player.ownedProjectileCounts[ModContent.ProjectileType<BFEXWeapon>()] > 0)
                 return;
@@ -217,7 +202,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
                 Player.HeldItem.knockBack,
                 Player.whoAmI,
                 0f,
-                3f);
+                flags);
         }
 
         internal void AccelerateCooldown(int frames)

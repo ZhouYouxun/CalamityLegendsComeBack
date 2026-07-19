@@ -16,8 +16,6 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
         public new string LocalizationCategory => "Projectiles.LeonidProgenitor";
 
         public Player Owner => Main.player[Projectile.owner];
-        public int PrimaryEffectID => (int)Projectile.ai[0];
-        public int SecondaryEffectID => (int)Projectile.ai[1];
 
         // Charge progress stored in localAI[0] (0 to 100)
         public float ChargeProgress
@@ -149,6 +147,8 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             
             // Damage scales from 60% to 150% based on charge progress
             int damage = (int)(Projectile.damage * (0.6f + 0.9f * prog));
+            if (Owner.GetModPlayer<LeonidConstellationPlayer>().IsUnlocked(LeonidStar.Subra))
+                damage = (int)(damage * 1.2f);
             
             int largeCometType = ModContent.ProjectileType<LeonidCometLarge>();
             int p = Projectile.NewProjectile(
@@ -159,8 +159,8 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 damage,
                 Projectile.knockBack * (0.8f + 0.4f * prog),
                 Projectile.owner,
-                PrimaryEffectID,
-                SecondaryEffectID,
+                0f,
+                0f,
                 prog); // pass progress as ai[2] for scale
 
             if (p.WithinBounds(Main.maxProjectiles))

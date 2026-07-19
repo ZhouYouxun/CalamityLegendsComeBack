@@ -118,6 +118,14 @@ namespace CalamityLegendsComeBack.BossAI.HDMC
 
         public override void AI()
         {
+            // The encounter belongs to the night.  At sunrise it stops attacking immediately,
+            // accelerates upward, and the normal NPC lifetime removes it after one second.
+            if (Main.dayTime)
+            {
+                DaytimeDespawnBehavior();
+                return;
+            }
+
             if (!ValidateTarget(out Player target))
             {
                 DespawnBehavior();
@@ -187,6 +195,16 @@ namespace CalamityLegendsComeBack.BossAI.HDMC
         {
             NPC.velocity.Y -= 0.5f;
             NPC.velocity.X *= 0.97f;
+            if (NPC.timeLeft > 60)
+                NPC.timeLeft = 60;
+        }
+
+        private void DaytimeDespawnBehavior()
+        {
+            NPC.dontTakeDamage = true;
+            NPC.damage = 0;
+            NPC.velocity = Vector2.Lerp(NPC.velocity, -Vector2.UnitY * 32f, 0.2f);
+            NPC.velocity.X *= 0.82f;
             if (NPC.timeLeft > 60)
                 NPC.timeLeft = 60;
         }

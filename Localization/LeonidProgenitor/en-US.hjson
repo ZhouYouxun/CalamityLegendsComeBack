@@ -7,149 +7,89 @@ Mods: {
 					Tooltip: "[GFB]"
 					LeftClick:
 						'''
-						[c/74D8FF:Left Click: Spawns 2 small purple-outlined comets near you that launch towards the cursor after a brief delay.]
-						[c/99CCFF:Comets bounce on reflective meteors, gaining damage, redirecting, and pushing them a short distance.]
-						[c/99CCFF:Redirects up to 7 times, then shoots towards the nearest enemy, gaining speed and +4% damage multiplier per bounce.]
-						[c/9AD8FF:Infused metal bar powers apply during small comet hits, bounces, and ultimate meteor impacts.]
+						[c/74D8FF:Left Click: Spawns two small comets near you that launch toward the cursor after a brief delay.]
+						[c/99CCFF:Comets bounce on reflective meteors, gain damage, and redirect through the battlefield.]
+						[c/9AD8FF:Light the Leo constellation to permanently reshape the meteor rain.]
 						'''
-					StealthLeftClick: "[c/B7A4FF:Stealth Left: Spawns 7 comets in the upper-diagonal of the cursor that rain down, prioritizing redirecting towards reflective meteors.]"
-					RightClick:
-						'''
-						[c/8DEBFF:Right Click: Hold to slow movement speed and charge an asteroid. Release to launch. On impact, it splits into 7 decelerating, hovering reflective comets.]
-						[c/9AD8FF:Charging pulls existing reflective comets (+4% progress each), which orbit and deal damage to enemies on their path.]
-						[c/5CD6FF:Stealth Right: Marks the cursor and fires a Lion Head that bites for massive damage and releases 14 reflective comets.]
-						'''
-					UltimateSkill: "[c/FFE85A:Ultimate (Press {0}): Spawns a massive gravity field. Enemies above receive 'Gravity of Stars' (forces speed to 0 and pulls down). Spawns comets in the sky for 3 seconds that rain down sequentially. Requires 100% Ultimate Energy and Stealth.]"
-					Passives:
-						'''
-						[c/AF80FF:【Passives】]
-						[c/BFAFFF:Gravitational Control: Grants gravity control, slow fall, and vortex/extreme gravity immunity while held.]
-						[c/BFAFFF:Kinetic Cycle: Left-click comets deal 15% more damage for every 3 reflections.]
-						[c/BFAFFF:Polar Chain: Max-bounce comets orbit the player for 6 seconds, dealing 50% damage (max 6 comets).]
-						'''
-					CurrentMetals: "[c/CFEFFF:Current infused bar powers:]"
-					EmptyMetalLine: >>> <<<
-					MetalLine: >>> {0} {1}: {2} <<<
+					StealthLeftClick: "[c/B7A4FF:Stealth Left: Summons a diagonal rain of comets above the cursor.]"
+					RightClick: "[c/8DEBFF:Right Click: Hold to charge a large meteor; Stealth Right sends a roaring Lion Head and reflective meteors.]"
+					UltimateSkill: "[c/FFE85A:Ultimate (Press {0}): Opens a gravity field that gathers a falling meteor storm. Requires full Ultimate Energy and Stealth.]"
+					Passives: "[c/BFAFFF:Kinetic Cycle: Reflected left-click comets accelerate, grow stronger, and return to orbit after their seventh reflection.]"
+					ConstellationStatus: "[c/FFE85A:Leo Starlight: {0} available | {1} spent | {2} earned | {3} to complete]"
+					ConstellationHint: "[c/B8A8FF:Middle-click while held, or middle-click this weapon in your inventory, to open the Leo Matrix.]"
 					LegendaryHint: "[c/BABABA:Hold Shift to read the legendary record]"
-					LegendaryText:
-						'''
-						[c/66E6FF:The first Leonid Progenitor felt like a weapon that called down meteors: land the hit, and let the sky add the follow-up.]
-						[c/66E6FF:That design was easy to read, but it never really explained why it reacted to the metals in your backpack.]
-						[c/66E6FF:After the rebuild, it no longer consumes materials. It reads the echoes of carried metals and turns them into different falling stars.]
-						[c/66E6FF:The main meteor opens the path, while smaller meteors keep rewriting their descent based on the bars in your inventory.]
-						[c/66E6FF:It is like the sky is searching your materials for you, except every search ends as another impact.]
-						'''
-					MetalName1: Copper Bar
-					MetalDesc1: Releases a small chain lightning burst on hit
-					MetalName2: Tin Bar
-					MetalDesc2: The meteor can bounce off tiles
-					MetalName3: Iron Bar
-					MetalDesc3: Ignores part of enemy defense
-					MetalName4: Lead Bar
-					MetalDesc4: Creates a small shockwave
-					MetalName5: Silver Bar
-					MetalDesc5: Splits once to both sides in midair
-					MetalName6: Tungsten Bar
-					MetalDesc6: Grows larger and pierces one extra time
-					MetalName7: Gold Bar
-					MetalDesc7: 10% chance to burst into 1 to 3 gold coin projectiles
-					MetalName8: Platinum Bar
-					MetalDesc8: Releases execution slashes, stronger against wounded targets
-					MetalName9: Demonite Bar
-					MetalDesc9: Releases small EatersBite projectiles
-					MetalName10: Crimtane Bar
-					MetalDesc10: Releases VampireKnife projectiles
-					MetalName11: Aerialite Bar
-					MetalDesc11: Glides without gravity, sheds Aerialite feather blades, and raises a pulling gale on hit
-					MetalName12: Meteorite Bar
-					MetalDesc12: Can call down an extra meteor at night
-					MetalName13: Hellstone Bar
-					MetalDesc13: Explodes harder on death
-					MetalName14: Cobalt Bar
-					MetalDesc14: Ricochets once in a random direction on hit
-					MetalName15: Palladium Bar
-					MetalDesc15: Heals on hit with a cooldown
-					MetalName16: Mythril Bar
-					MetalDesc16: Summons a nearby MythrilFlare that waits briefly, then homes in
-					MetalName17: Orichalcum Bar
-					MetalDesc17: Fires two FlowerPetal strikes from the screen edge
-					MetalName18: Adamantite Bar
-					MetalDesc18: Creates a burning area
-					MetalName19: Titanium Bar
-					MetalDesc19: Grants a short Interstellar Stompers-style mobility surge
-					MetalName20: Cryonic Bar
-					MetalDesc20: Gains light homing and armor piercing, then creates a cryonic field and delayed inward ice prisms
-					MetalName21: Hallowed Bar
-					MetalDesc21: Fires a short holy laser from a random angle
-					MetalName22: Chlorophyte Bar
-					MetalDesc22: Primary and small meteors gain homing
-					MetalName23: Perennial Bar
-					MetalDesc23: Sows vine seeds while flying, then releases healing light and homing petals on hit
-					MetalName24: Shroomite Bar
-					MetalDesc24: Leaves spinning fading mushrooms along the path
-					MetalName25: Spectre Bar
-					MetalDesc25: Leaves a ghost clone at the initial position
-					MetalName26: Scoria Bar
-					MetalDesc26: Sheds molten globs while flying, then erupts an Abyssal fire geyser on hit
-					MetalName27: Lunar Bar
-					MetalDesc27: Calls down mixed MoonlordArrowTrail and LunarFlare strikes
-					MetalName28: Astral Bar
-					MetalDesc28: Drops constellation nodes, then detonates Astral Infection blasts and a star ring on hit
-					MetalName29: Uelibloom Bar
-					MetalDesc29: Grows Tarragon thorns in flight, then forms an inward-stabbing blossom crown on hit
-					MetalName30: Cosmilite Bar
-					MetalDesc30: Tears open Cosmilite rifts and releases two-stage homing space fragments
-					MetalName31: Auric Bar
-					MetalDesc31: Calls down gold-blue Auric sky lances that pierce armor and leave rebuking pulses
-					MetalName32: Shadowspec Bar
-					MetalDesc32: Leaves Shadowspec echoes, then opens a pulling rift with God Slayer afterflame on hit
-					MetalName33: Life Alloy
-					MetalDesc33: Strengthens homing, emits tri-color reconstruction pulses, and bursts into Life Alloy gleams on hit
-				}
+					LegendaryText: "[c/66E6FF:Meteorfall no longer searches your inventory for metal. Each major foe overcome becomes a starlight in the Lion's sky.]"
 
-				LPBook: {
-					DisplayName: Leonid Matrix Codex
-					Tooltip: Opens the Leonid metal matrix and displays every bar infusion effect.
+					Constellation: {
+						Title: LEO // LEONID MATRIX
+						Subtitle: Regulus is the heart. Any principal star may be awakened from it.
+						Status: Available {0}    Spent {1}    Earned {2}    Full map {3}
+						HoverHint: Hover a principal star to read its celestial imprint.
+						Reset: Reset constellation (Free)
+						Heart: Heart star — always lit
+						Unlocked: Awakened
+						Cost: Cost: {0} starlight
+
+						Nodes: {
+							Regulus: {
+								Name: Regulus — Lion Heart
+								Description: The fixed heart of Leo. It anchors every unlocked star.
+							}
+
+							Algieba: {
+								Name: Algieba — Twin Mane
+								Description: Small comets launch 20% faster.
+							}
+
+							Adhafera: {
+								Name: Adhafera — Crown Thread
+								Description: Normal left-click releases a third small comet.
+							}
+
+							Rasalas: {
+								Name: Rasalas — Sickle Turn
+								Description: Every reflection grants 12% speed and 6% damage, instead of 5% and 4%.
+							}
+
+							Zosma: {
+								Name: Zosma — Falling Flank
+								Description: Stealth meteor rain gains two additional comets.
+							}
+
+							Chertan: {
+								Name: Chertan — Hunting Line
+								Description: A fully reflected comet restores 4 Ultimate Energy instead of 3.
+							}
+
+							Denebola: {
+								Name: Denebola — Tail of Dawn
+								Description: The Ultimate gravity field lasts 2 seconds longer.
+							}
+
+							Alterf: {
+								Name: Alterf — Roaring Crown
+								Description: Stealth Lion Head damage increases by 25% and releases 18 reflective meteors.
+							}
+
+							Subra: {
+								Name: Subra — Forepaw Comet
+								Description: A charged large meteor deals 20% more damage.
+							}
+						}
+					}
 				}
 			}
 		}
 
 		Projectiles: {
 			LeonidProgenitor: {
-				LeonidProgenitorBombshell.DisplayName: Primary Meteor
 				LeonidCometSmall.DisplayName: Small Meteor
-				LeonidCometStealthMark.DisplayName: Meteor Mark
-				Copper_ChainLightning.DisplayName: Leonid Chain Lightning
-				Shared_Shockwave.DisplayName: Leonid Shockwave
-				Shared_LingeringField.DisplayName: Leonid Elemental Field
-				Shared_SplitMeteor.DisplayName: Leonid Ghost Meteor
-				Aerialite_Feather.DisplayName: Aerialite Feather Blade
-				Aerialite_Gale.DisplayName: Aerialite Pulling Gale
-				Cryonic_PrismShard.DisplayName: Cryonic Prism
-				Perennial_HealingOrb.DisplayName: Perennial Healing Light
-				Perennial_BloomSeed.DisplayName: Perennial Bloom Seed
-				Perennial_Petal.DisplayName: Perennial Petal
-				Scoria_LavaGlob.DisplayName: Scoria Lava Glob
-				Scoria_Geyser.DisplayName: Scoria Abyssal Geyser
-				LifeAlloy_Gleam.DisplayName: Life Alloy Gleam
-				LifeAlloy_ReconstructionPulse.DisplayName: Life Alloy Reconstruction Ring
-				Hallowed_Laser.DisplayName: Hallowed Short Laser
-				Astral_Blast.DisplayName: Astral Infection Blast
-				Astral_ConstellationNode.DisplayName: Astral Constellation Node
-				Uelibloom_Thorn.DisplayName: Tarragon Thorn
-				Cosmilite_Rift.DisplayName: Cosmilite Rift
-				Cosmilite_Fragment.DisplayName: Cosmilite Fragment
-				Auric_SkyLance.DisplayName: Auric Sky Lance
-				Auric_Pulse.DisplayName: Auric Pulse
-				Shadowspec_Echo.DisplayName: Shadowspec Echo
-				Shadowspec_Rift.DisplayName: Shadowspec Rift
 				LeonidReflectiveMeteor.DisplayName: Reflective Meteor
 				LeonidCometLarge.DisplayName: Large Meteor
 				LeonidLionHead.DisplayName: Roaring Lion Head
 				LeonidGravityField.DisplayName: Leonid Echo Gravity Field
 				LeonidUltimateUI.DisplayName: Ultimate Energy Bar
 				LeonidRightClickHoldout.DisplayName: Leonid Right Click Holdout
-				LPBookPanel.DisplayName: Leonid Metal Matrix Panel
 				LeonidStealthRainSpawner.DisplayName: Leonid Stealth Rain Spawner
 			}
 		}
@@ -157,13 +97,8 @@ Mods: {
 		Buffs: {
 			LeonidGravityDebuff: {
 				DisplayName: Gravity of Stars
-				Description: The gravity field restricts you, preventing horizontal movement and pulling you down!
+				Description: The gravity field restricts horizontal movement and pulls you down.
 			}
-		}
-
-		TheSpecialText: {
-			LPBookNoRecords: No Leonid metal infusion records are registered.
-			LPBookMissingEffect: No effect record
 		}
 
 		Cooldowns.LeonidEX: Leonid Ultimate Energy

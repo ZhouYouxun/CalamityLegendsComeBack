@@ -4,7 +4,6 @@ using CalamityMod.Dusts;
 using CalamityMod.Enums;
 using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
-using CalamityLegendsComeBack.Weapons.A_Olds.TheEnforcer;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -348,13 +347,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
                 SpriteEffects.None,
                 0f);
 
-            TheNewEnforcerMagicCoreDraw.Draw(
-                drawPosition,
-                Projectile.rotation,
-                Projectile.scale * 1.48f,
-                opacity * 0.82f,
-                visualColor,
-                Projectile.identity);
+            DrawPristineMagicCore(drawPosition, Projectile.rotation, Projectile.scale * 1.48f, opacity * 0.82f, visualColor);
 
             for (int i = 0; i < 10; i++)
             {
@@ -384,6 +377,26 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
             PFLeftEffectRules.EndAdditive();
             return false;
+        }
+
+        // Kept local so Pristine Fury no longer depends on the archived A_Olds weapon folder.
+        private static void DrawPristineMagicCore(Vector2 drawPosition, float rotation, float visualScale, float opacity, Color primaryColor)
+        {
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D bloomRing = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
+            Texture2D circularSmear = ModContent.Request<Texture2D>("CalamityMod/Particles/CircularSmear").Value;
+
+            float spin = Main.GlobalTimeWrappedHourly * 1.7f;
+            Color primary = primaryColor with { A = 0 };
+            Color cyan = Color.Lerp(primary, Color.Cyan, 0.52f) with { A = 0 };
+            Color fuchsia = Color.Lerp(primary, Color.Magenta, 0.46f) with { A = 0 };
+
+            Main.EntitySpriteDraw(bloom, drawPosition, null, primary * 0.48f * opacity, 0f, bloom.Size() * 0.5f,
+                0.3f * visualScale, SpriteEffects.None, 0f);
+            Main.EntitySpriteDraw(bloomRing, drawPosition, null, cyan * 0.3f * opacity, rotation * 0.2f + spin,
+                bloomRing.Size() * 0.5f, 0.14f * visualScale, SpriteEffects.None, 0f);
+            Main.EntitySpriteDraw(circularSmear, drawPosition, null, fuchsia * 0.26f * opacity, -rotation * 0.16f - spin * 0.78f,
+                circularSmear.Size() * 0.5f, 0.13f * visualScale, SpriteEffects.None, 0f);
         }
 
         public void RenderPixelatedPrimitives(SpriteBatch spriteBatch, GeneralDrawLayer layer)

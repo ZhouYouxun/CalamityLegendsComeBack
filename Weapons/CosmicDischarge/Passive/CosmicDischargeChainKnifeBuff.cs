@@ -19,7 +19,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         {
             player.moveSpeed += 0.12f;
             player.GetArmorPenetration(DamageClass.Generic) += 15f;
-            Lighting.AddLight(player.Center, CosmicDischargeCommon.DoGPurpleColor.ToVector3() * 0.24f);
+            Lighting.AddLight(player.Center, CosmicDischargeCommon.RiftTwilight.ToVector3() * 0.24f);
         }
     }
 }

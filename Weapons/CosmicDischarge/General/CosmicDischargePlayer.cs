@@ -97,16 +97,18 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
             if (DevourerAscensionActive && Player.active && !Player.dead)
             {
-                if (Main.rand.NextBool(5))
+                // 升华状态是持续 12 秒的常驻光环，频率必须压到最低，
+                // 否则会盖过攻击本身的特效 —— 常驻效果永远不该比瞬时事件抢眼。
+                if (Main.rand.NextBool(12))
                 {
                     Vector2 dustPos = Player.Center + Main.rand.NextVector2Circular(24f, 32f);
                     Dust d = Dust.NewDustPerfect(
                         dustPos,
-                        DustID.PurpleTorch,
+                        DustID.TintableDustLighted,
                         new Vector2(Player.velocity.X * 0.4f, Main.rand.NextFloat(-2.5f, -0.6f)),
-                        120,
-                        CosmicDischargeCommon.RandomDoGColor(),
-                        Main.rand.NextFloat(0.75f, 1.2f)
+                        0,
+                        CosmicDischargeCommon.RiftColor(),
+                        Main.rand.NextFloat(0.6f, 0.85f)
                     );
                     d.noGravity = true;
                 }
@@ -120,7 +122,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                             Vector2.Zero,
                             CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGSpecialColor) * 0.42f,
                             0.035f,
-                            0.75f * CosmicDischargeCommon.ShockwaveFinalScaleMultiplier,
+                            0.55f,
                             20
                         ));
                     }
@@ -222,30 +224,12 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/DemonSwordKillMode") { Volume = 0.68f, Pitch = pitch, MaxInstances = 2 }, Player.Center);
             SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DevourerRiftOpen") { Volume = 0.34f, Pitch = pitch + 0.2f, MaxInstances = 2 }, Player.Center);
 
-            if (!Main.dedServ)
-            {
-                Color ringColor = CosmicDischargeCommon.Transparent(CosmicDischargeCommon.GetModeColor(AttackMode)) * 0.8f;
-
-                GeneralParticleHandler.SpawnParticle(new PulseRing(
-                    Player.MountedCenter,
-                    Vector2.Zero,
-                    ringColor,
-                    0.05f,
-                    0.85f * CosmicDischargeCommon.ShockwaveFinalScaleMultiplier,
-                    15));
-
-                for (int i = 0; i < 20; i++)
-                {
-                    Vector2 velocity = Main.rand.NextVector2Circular(4f, 4f);
-                    GeneralParticleHandler.SpawnParticle(new SparkParticle(
-                        Player.MountedCenter,
-                        velocity,
-                        false,
-                        Main.rand.Next(15, 25),
-                        Main.rand.NextFloat(0.5f, 0.9f),
-                        CosmicDischargeCommon.RandomDoGColor()));
-                }
-            }
+            // 切换形态是"仪式"而非"攻击"，给 Medium 档：能看出发生了什么，但不抢戏。
+            CosmicDischargeCommon.SpawnRiftBurst(
+                Player.MountedCenter,
+                RiftTier.Medium,
+                default,
+                CosmicDischargeCommon.GetModeColor(AttackMode));
         }
 
         public int ConsumeComboIndex(CosmicDischargeAttackMode mode)

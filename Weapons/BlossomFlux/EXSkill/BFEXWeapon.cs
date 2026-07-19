@@ -54,10 +54,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
             set => Projectile.ai[0] = value;
         }
 
-        private int BadSeedFlags => (int)Projectile.ai[1];
-        private bool BadSeedDuration => (BadSeedFlags & 1) != 0;
-        private bool ImmediateBarrage => (BadSeedFlags & 2) != 0;
-        private int CurrentBarrageFrames => BadSeedDuration ? BarrageFrames / 2 : BarrageFrames;
+        private int SpecialFlags => (int)Projectile.ai[1];
+        private bool ShortenedBarrage => (SpecialFlags & 1) != 0;
+        private bool ImmediateBarrage => (SpecialFlags & 2) != 0;
+        private int CurrentBarrageFrames => ShortenedBarrage ? BarrageFrames / 2 : BarrageFrames;
 
         private Vector2 AimDirection => Projectile.velocity.SafeNormalize(Vector2.UnitX * Owner.direction);
         private Vector2 GunTip => Projectile.Center + AimDirection * 44f;

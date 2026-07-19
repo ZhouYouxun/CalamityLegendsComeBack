@@ -81,8 +81,8 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             Main.spriteBatch.SetBlendState(BlendState.Additive);
             Main.EntitySpriteDraw(bloom, drawPosition, null, CosmicDischargeCommon.Transparent(modeColor) * 0.25f * opacity, 0f, bloomOrigin, scale * 0.72f, SpriteEffects.None);
             Main.EntitySpriteDraw(portal, drawPosition, null, Color.Black * 0.55f * opacity, rotation, portalOrigin, scale * 1.35f, SpriteEffects.None);
-            Main.EntitySpriteDraw(portal, drawPosition, null, CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGCyanColor) * 0.9f * opacity, rotation * 0.6f, portalOrigin, scale * 1.35f, SpriteEffects.None);
-            Main.EntitySpriteDraw(portal, drawPosition, null, CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGFuchsiaColor) * 0.9f * opacity, -rotation * 0.7f, portalOrigin, scale * 1.35f, SpriteEffects.None);
+            Main.EntitySpriteDraw(portal, drawPosition, null, CosmicDischargeCommon.Transparent(CosmicDischargeCommon.RiftLightBlue) * 0.9f * opacity, rotation * 0.6f, portalOrigin, scale * 1.35f, SpriteEffects.None);
+            Main.EntitySpriteDraw(portal, drawPosition, null, CosmicDischargeCommon.Transparent(CosmicDischargeCommon.RiftMagenta) * 0.9f * opacity, -rotation * 0.7f, portalOrigin, scale * 1.35f, SpriteEffects.None);
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
             return false;
         }

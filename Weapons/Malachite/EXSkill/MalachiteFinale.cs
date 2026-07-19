@@ -1,4 +1,5 @@
 using CalamityLegendsComeBack.Weapons.Malachite;
+using CalamityLegendsComeBack.Weapons.Malachite.RightGeneral.Stealth;
 using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Particles;
@@ -629,6 +630,14 @@ namespace CalamityLegendsComeBack.Weapons.Malachite.EXSkill
     {
         private const int FinalePetalCount = 23;
         private const float HomingRange = 500f * 16f;
+        private const int HomingDelay = 9;
+        private const int StuckDetonationTime = 48;
+        private const float HomingInertia = 27f;
+        private const float MinimumHomingSpeed = 58f;
+        private const float MaximumHomingSpeed = 82f;
+        private const float FreeFlightDamping = 0.996f;
+        private const float NoTargetDamping = 0.992f;
+        private const float WanderingTurnStrength = 0.006f;
 
         public override string Texture => "CalamityLegendsComeBack/Weapons/Malachite/Malachite";
 
@@ -639,6 +648,9 @@ namespace CalamityLegendsComeBack.Weapons.Malachite.EXSkill
         private int PetalIndex => Utils.Clamp((int)Projectile.ai[1], 0, FinalePetalCount - 1);
         private int Variant => PetalIndex % 3;
         private bool Launched => Timer > Delay;
+        private bool StuckToTarget => Projectile.ai[0] < 0f;
+        private int StuckTargetIndex => (int)Projectile.ai[2];
+        private float FlightTimer => Timer - Delay;
 
         public override void SetStaticDefaults()
         {
@@ -662,9 +674,9 @@ namespace CalamityLegendsComeBack.Weapons.Malachite.EXSkill
             Projectile.localNPCHitCooldown = 6;
         }
 
-        public override bool ShouldUpdatePosition() => Launched;
+        public override bool ShouldUpdatePosition() => Launched && !StuckToTarget;
 
-        public override bool? CanDamage() => Launched;
+        public override bool? CanDamage() => Launched && !StuckToTarget;
 
         public override void AI()
         {
@@ -680,6 +692,12 @@ namespace CalamityLegendsComeBack.Weapons.Malachite.EXSkill
                 return;
             }
 
+            if (StuckToTarget)
+            {
+                UpdateStuckPosition();
+                return;
+            }
+
             if (Timer == Delay + 1f)
             {
                 SoundEngine.PlaySound(SoundID.Item92 with { Volume = 0.42f, Pitch = 0.38f, MaxInstances = 8 }, Projectile.Center);
@@ -690,22 +708,9 @@ namespace CalamityLegendsComeBack.Weapons.Malachite.EXSkill
                 Projectile.netUpdate = true;
             }
 
-            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-            NPC target = GetHomingTarget();
-            if (target != null)
-            {
-                Projectile.ai[2] = target.whoAmI;
-                Vector2 desiredDirection = (target.Center - Projectile.Center).SafeNormalize(direction);
-                float speed = MathHelper.Clamp(Projectile.velocity.Length() * 1.012f, 58f, 82f);
-                direction = Vector2.Lerp(direction, desiredDirection, 0.34f).SafeNormalize(desiredDirection);
-                Projectile.velocity = direction * speed;
-            }
-            else
-            {
-                Projectile.velocity *= 1.002f;
-            }
+            HomeTowardTarget();
 
-            direction = Projectile.velocity.SafeNormalize(direction);
+            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Projectile.rotation = direction.ToRotation() + MathHelper.PiOver2;
             Projectile.scale = MathHelper.Lerp(Projectile.scale, 0.7f, 0.14f);
             Lighting.AddLight(Projectile.Center, 0.12f, 0.36f, 0.08f);
@@ -732,21 +737,34 @@ namespace CalamityLegendsComeBack.Weapons.Malachite.EXSkill
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
+            if (StuckToTarget)
+                return;
+
             target.AddBuff(BuffID.Poisoned, 8 * 60);
             target.AddBuff(ModContent.BuffType<Plague>(), 5 * 60);
 
-            if (Projectile.owner != Main.myPlayer)
+            // Match Calamity's Malachite stealth dagger: preserve the impact offset,
+            // lock to the victim, then allow the projectile's fuse to detonate it.
+            Projectile.ai[0] = -1f;
+            Projectile.ai[2] = target.whoAmI;
+            Projectile.velocity = (target.Center - Projectile.Center) * 0.75f;
+            Projectile.timeLeft = StuckDetonationTime;
+            Projectile.netUpdate = true;
+        }
+
+        public override void OnKill(int timeLeft)
+        {
+            if (!StuckToTarget || Projectile.owner != Main.myPlayer)
                 return;
 
             Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
-                target.Center,
+                Projectile.Center,
                 Vector2.Zero,
-                ModContent.ProjectileType<MalachiteFinaleImpactExplosion>(),
+                ModContent.ProjectileType<MalachiteRightFeatherExplosion>(),
                 Math.Max(1, (int)(Projectile.damage * 0.42f)),
                 0f,
-                Projectile.owner,
-                Projectile.rotation);
+                Projectile.owner);
         }
 
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
@@ -811,6 +829,63 @@ namespace CalamityLegendsComeBack.Weapons.Malachite.EXSkill
             }
 
             return bestTarget;
+        }
+
+        private void HomeTowardTarget()
+        {
+            if (FlightTimer <= HomingDelay)
+            {
+                FreeDrift();
+                return;
+            }
+
+            NPC target = GetHomingTarget();
+            if (target == null)
+            {
+                FreeDrift(NoTargetDamping);
+                return;
+            }
+
+            Projectile.ai[2] = target.whoAmI;
+            Vector2 currentVelocity = Projectile.velocity;
+            if (currentVelocity.Length() < 0.1f)
+                currentVelocity = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitX) * MinimumHomingSpeed;
+
+            Vector2 desiredDirection = (target.Center - Projectile.Center).SafeNormalize(currentVelocity.SafeNormalize(Vector2.UnitX));
+            float warmup = Utils.GetLerpValue(HomingDelay, HomingDelay + 36f, FlightTimer, true);
+            float closePressure = Utils.GetLerpValue(360f, 70f, Projectile.Distance(target.Center), true);
+            float pullStrength = MathHelper.Lerp(0.35f, 1f, MathHelper.Max(warmup, closePressure * 0.75f));
+            Vector2 desiredVelocity = desiredDirection * MathHelper.Lerp(MinimumHomingSpeed, MaximumHomingSpeed, pullStrength);
+
+            Projectile.velocity = (currentVelocity * HomingInertia + desiredVelocity) / (HomingInertia + 1f);
+            float sideSway = MathF.Sin((FlightTimer + Projectile.identity * 7f) * 0.075f) *
+                MathHelper.Lerp(0.012f, 0.004f, pullStrength);
+            Projectile.velocity = Projectile.velocity.RotatedBy(sideSway);
+
+            if (Projectile.velocity.Length() > MaximumHomingSpeed)
+                Projectile.velocity = Projectile.velocity.SafeNormalize(desiredDirection) * MaximumHomingSpeed;
+        }
+
+        private void FreeDrift(float damping = FreeFlightDamping)
+        {
+            float wander = MathF.Sin((FlightTimer + Projectile.identity * 5f) * 0.08f) * WanderingTurnStrength;
+            Projectile.velocity = Projectile.velocity.RotatedBy(wander) * damping;
+        }
+
+        private void UpdateStuckPosition()
+        {
+            if (!Main.npc.IndexInRange(StuckTargetIndex) || !Main.npc[StuckTargetIndex].active || Main.npc[StuckTargetIndex].dontTakeDamage)
+            {
+                Projectile.Kill();
+                return;
+            }
+
+            NPC target = Main.npc[StuckTargetIndex];
+            Projectile.Center = target.Center - Projectile.velocity * 2f;
+            Projectile.gfxOffY = target.gfxOffY;
+            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
+            Projectile.scale = MathHelper.Lerp(Projectile.scale, 0.7f, 0.14f);
+            Lighting.AddLight(Projectile.Center, 0.12f, 0.36f, 0.08f);
         }
 
         private static void ApplyLocalScreenShake(Vector2 center, float power)

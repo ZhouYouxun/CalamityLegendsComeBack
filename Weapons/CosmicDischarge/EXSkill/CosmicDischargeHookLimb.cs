@@ -58,7 +58,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     Main.rand.NextBool() ? 67 : 187,
                     Projectile.velocity.RotatedByRandom(0.55f) * Main.rand.NextFloat(0.15f, 0.65f),
                     120,
-                    CosmicDischargeCommon.RandomDoGColor(),
+                    CosmicDischargeCommon.RiftColor(),
                     Main.rand.NextFloat(0.9f, 1.2f) * 0.3f);
                 dust.noGravity = true;
             }

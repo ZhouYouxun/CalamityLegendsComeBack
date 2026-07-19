@@ -16,9 +16,9 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
         public override string Texture => "Terraria/Images/Projectile_533";
         public new string LocalizationCategory => "Projectiles.LeonidProgenitor";
 
-        private int PrimaryEffectID => (int)Projectile.ai[0];
-        private int SecondaryEffectID => (int)Projectile.ai[1];
-        private int ThrowDirection => Projectile.ai[2] >= 0f ? 1 : -1;
+        private int ThrowDirection => Projectile.ai[0] >= 0f ? 1 : -1;
+        private int MaxComets => TotalComets + (Owner.GetModPlayer<Core.LeonidConstellationPlayer>().IsUnlocked(Core.LeonidStar.Zosma) ? 2 : 0);
+        private Player Owner => Main.player[Projectile.owner];
 
         private int SpawnedComets
         {
@@ -40,7 +40,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.penetrate = -1;
-            Projectile.timeLeft = TotalComets * SpawnInterval + 10;
+            Projectile.timeLeft = (TotalComets + 2) * SpawnInterval + 10;
             Projectile.alpha = 255;
         }
 
@@ -52,7 +52,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             SpawnTimer++;
 
             // 第一颗立即掉落，之后每 5 帧一颗
-            if ((SpawnedComets == 0 || SpawnTimer >= SpawnInterval) && SpawnedComets < TotalComets)
+            if ((SpawnedComets == 0 || SpawnTimer >= SpawnInterval) && SpawnedComets < MaxComets)
             {
                 SpawnTimer = 0;
                 SpawnedComets++;
@@ -73,8 +73,6 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                         Projectile.damage,
                         Projectile.knockBack,
                         Projectile.owner,
-                        PrimaryEffectID,
-                        SecondaryEffectID,
                         LeonidCometSmall.FromStealthFlag);
 
                     if (p.WithinBounds(Main.maxProjectiles))
@@ -84,7 +82,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                     }
                 }
 
-                if (SpawnedComets >= TotalComets)
+                if (SpawnedComets >= MaxComets)
                     Projectile.Kill();
             }
         }

@@ -1,9 +1,7 @@
 using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core;
-using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Collections.Generic;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
@@ -21,15 +19,9 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
         public override string Texture => "CalamityMod/Items/Weapons/Rogue/LeonidProgenitor";
         public new string LocalizationCategory => "Projectiles.LeonidProgenitor";
 
-        private readonly HashSet<string> effectFlags = new();
-        private readonly Dictionary<string, float> effectStates = new();
-
-        private LeonidMetalEffect[] activeEffects = System.Array.Empty<LeonidMetalEffect>();
         private bool initialized;
         private Vector2 playerOffset;
 
-        public int PrimaryEffectID => (int)Projectile.ai[0];
-        public int SecondaryEffectID => (int)Projectile.ai[1];
         public int SpawnFlags => (int)Projectile.ai[2];
         public bool FromStealthRain => (SpawnFlags & FromStealthFlag) != 0;
         public Player Owner => Main.player[Projectile.owner];
@@ -70,19 +62,9 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
         public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
         {
             InitialCenter = Projectile.Center;
-            MeteorColor = LeonidVisualUtils.GetMeteorColor(PrimaryEffectID, SecondaryEffectID);
-            activeEffects = LeonidMetalEffectRegistry.ResolveEffects(PrimaryEffectID, SecondaryEffectID);
+            MeteorColor = LeonidVisualUtils.GetMeteorColor(Projectile.whoAmI * 0.13f);
             Projectile.DamageType = Owner.HeldItem.DamageType;
             playerOffset = Projectile.Center - Owner.Center;
-
-            if ((SpawnFlags & SilverSplitFlag) != 0)
-                SetFlag("silver_split");
-
-            if ((SpawnFlags & SpectreCloneFlag) != 0)
-                SetFlag("spectre_clone");
-
-            for (int i = 0; i < activeEffects.Length; i++)
-                activeEffects[i].OnSpawn(this, Owner);
 
             initialized = true;
         }
@@ -228,7 +210,8 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                             p.velocity = moveDir * 5f;
                             reflective.decelerateTimer = 15; // stay pushed before decelerating
 
-                            float speed = Projectile.velocity.Length() * 1.05f; // speed up by 5%
+                            bool hasRasalas = Owner.GetModPlayer<LeonidConstellationPlayer>().IsUnlocked(LeonidStar.Rasalas);
+                            float speed = Projectile.velocity.Length() * (hasRasalas ? 1.12f : 1.05f);
 
                             // Play billiard clink sound
                             SoundEngine.PlaySound(SoundID.Item10 with { Volume = 0.7f, Pitch = 0.3f }, Projectile.Center);
@@ -315,12 +298,6 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 }
             }
 
-            for (int i = 0; i < activeEffects.Length; i++)
-                activeEffects[i].AI(this, Owner);
-
-            for (int i = 0; i < activeEffects.Length; i++)
-                activeEffects[i].UpdateInjectedEnergy(this, Owner);
-
             if (Main.rand.NextBool(2))
             {
                 LeonidVisualUtils.SpawnStratusDust(
@@ -396,15 +373,14 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
             // Apply Kinetic Cycle and bounce bonus damage
-            float multiplier = 1f + BounceCount * 0.04f + (BounceCount / 3) * 0.15f;
+            bool hasRasalas = Owner.GetModPlayer<LeonidConstellationPlayer>().IsUnlocked(LeonidStar.Rasalas);
+            float multiplier = 1f + BounceCount * (hasRasalas ? 0.06f : 0.04f) + (BounceCount / 3) * 0.15f;
             if (IsOrbiting)
             {
                 multiplier *= 0.5f;
             }
             modifiers.SourceDamage *= multiplier;
 
-            for (int i = 0; i < activeEffects.Length; i++)
-                activeEffects[i].ModifyHitNPC(this, Owner, target, ref modifiers);
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
@@ -412,11 +388,9 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             if (BounceCount >= 7)
             {
                 // Regain 3 ultimate energy
-                Owner.GetModPlayer<LeonidProgenitorPlayer>().AddUltimateEnergy(3);
+                int energy = Owner.GetModPlayer<LeonidConstellationPlayer>().IsUnlocked(LeonidStar.Chertan) ? 4 : 3;
+                Owner.GetModPlayer<LeonidProgenitorPlayer>().AddUltimateEnergy(energy);
             }
-
-            for (int i = 0; i < activeEffects.Length; i++)
-                activeEffects[i].OnHitNPC(this, Owner, target, hit, damageDone);
         }
 
         public override bool OnTileCollide(Vector2 oldVelocity)
@@ -424,14 +398,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             if (IsOrbiting)
                 return false;
 
-            bool shouldDie = true;
-            for (int i = 0; i < activeEffects.Length; i++)
-            {
-                if (!activeEffects[i].OnTileCollide(this, Owner, oldVelocity))
-                    shouldDie = false;
-            }
-
-            return shouldDie;
+            return true;
         }
 
         public override void OnKill(int timeLeft)
@@ -441,8 +408,6 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             LeonidVisualUtils.SpawnCelestialPulse(Projectile.Center, Projectile.oldVelocity, MeteorColor, FromStealthRain ? 1.35f : 1f, FromStealthRain ? 24 : 18);
             CLCBLightingBoltsSystem.Spawn_LeonidStarfieldMatrixBurst(Projectile.Center, FromStealthRain ? 1.8f : 1f);
 
-            for (int i = 0; i < activeEffects.Length; i++)
-                activeEffects[i].OnKill(this, Owner, timeLeft);
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -486,9 +451,6 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             Main.EntitySpriteDraw(glow, headPos, null, Color.White * opacity,
                 Projectile.rotation, glow.Size() * 0.5f, Projectile.scale, SpriteEffects.None, 0f);
 
-            for (int i = 0; i < activeEffects.Length; i++)
-                activeEffects[i].DrawInjectedEnergy(this, Owner, Main.spriteBatch);
-
             // Additive night-sky glow ring
             float nsOpacity = (1f - Projectile.alpha / 255f) * 0.44f;
             for (int i = 0; i < 8; i++)
@@ -522,9 +484,6 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
             Main.EntitySpriteDraw(texture, drawPosition, null, drawColor, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0f);
 
-            for (int i = 0; i < activeEffects.Length; i++)
-                activeEffects[i].PostDraw(this, Owner, Main.spriteBatch);
-
             return false;
         }
 
@@ -539,11 +498,6 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             HomingStrength = System.Math.Max(HomingStrength, strength);
             HomingRange = System.Math.Max(HomingRange, range);
         }
-
-        public bool HasFlag(string key) => effectFlags.Contains(key);
-        public void SetFlag(string key) => effectFlags.Add(key);
-        public float GetState(string key) => effectStates.TryGetValue(key, out float value) ? value : 0f;
-        public void SetState(string key, float value) => effectStates[key] = value;
 
         public NPC FindClosestNPC(float range)
         {

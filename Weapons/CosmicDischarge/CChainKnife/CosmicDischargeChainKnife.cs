@@ -57,7 +57,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 return;
             }
 
-            Lighting.AddLight(Projectile.Center, CosmicDischargeCommon.DoGPurpleColor.ToVector3() * 0.35f);
+            Lighting.AddLight(Projectile.Center, CosmicDischargeCommon.RiftTwilight.ToVector3() * 0.35f);
 
             // State 0: Fly Out
             if (State == 0)
@@ -126,7 +126,8 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                             SoundEngine.PlaySound(SoundID.Item27 with { Volume = 0.65f, Pitch = -0.1f }, Projectile.Center);
                         }
 
-                        // Spawn tearing particles and play tearing sound
+                        // 撕咬每 6 帧触发一次，频率很高，所以只能给 Light 档。
+                        // 血 dust 是这里唯一的非 DoG 元素，保留作为"撕咬"的语义标记。
                         SoundEngine.PlaySound(SoundID.Item27 with { Volume = 0.35f, Pitch = 0.2f }, Projectile.Center);
                         for (int i = 0; i < 4; i++)
                         {
@@ -140,6 +141,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                             );
                             d.noGravity = true;
                         }
+                        CosmicDischargeCommon.SpawnRiftBurst(target.Center, RiftTier.Light, default, CosmicDischargeCommon.RiftTwilight);
 
                         if (ultActive || empActive)
                         {
@@ -154,20 +156,6 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                                 0f,
                                 empActive ? 150f : 118f
                             );
-
-                            // Spawn 6 radial line particles
-                            for (int i = 0; i < 6; i++)
-                            {
-                                Vector2 vel = (MathHelper.TwoPi * i / 6f).ToRotationVector2() * Main.rand.NextFloat(3f, 5.5f);
-                                GeneralParticleHandler.SpawnParticle(new LineParticle(
-                                    target.Center,
-                                    vel,
-                                    false,
-                                    Main.rand.Next(10, 15),
-                                    Main.rand.NextFloat(0.35f, 0.55f) * 0.3f,
-                                    CosmicDischargeCommon.RandomDoGColor()
-                                ));
-                            }
                         }
                     }
                 }

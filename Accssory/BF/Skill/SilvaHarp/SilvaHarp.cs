@@ -21,12 +21,22 @@ namespace CalamityLegendsComeBack.Accssory.BF.SilvaHarp
 
         public override void UpdateAccessory(Player player, bool hideVisual)
         {
+            player.GetDamage(DamageClass.Ranged) += BFAccessoryPlayer.BadSeedRangedDamageBonus * 1.5f;
+            player.GetCritChance(DamageClass.Ranged) += BFAccessoryPlayer.BadSeedRangedCritBonus * 1.5f;
             player.GetModPlayer<BFAccessoryPlayer>().SilvaHarpEquipped = true;
+        }
+
+        public override bool CanAccessoryBeEquippedWith(Item equippedItem, Item incomingItem, Player player)
+        {
+            return equippedItem.type != ModContent.ItemType<FairyDance.BadSeed>() &&
+                   incomingItem.type != ModContent.ItemType<FairyDance.BadSeed>() &&
+                   base.CanAccessoryBeEquippedWith(equippedItem, incomingItem, player);
         }
 
         public override void AddRecipes()
         {
             CreateRecipe()
+                .AddIngredient<FairyDance.BadSeed>()
                 .AddIngredient(ItemID.Feather, 12)
                 .AddIngredient(ItemID.ChlorophyteBar, 30)
                 .AddIngredient(ItemID.GoldBar, 12)

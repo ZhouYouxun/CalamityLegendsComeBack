@@ -37,7 +37,7 @@ namespace CalamityLegendsComeBack.Weapons.Visuals
             int drawCount = 18,
             bool manageBlendState = true)
         {
-            DrawOutline(texture, drawPosition, rotation, origin, scale, effects, radius, opacity, time, drawCount,
+            DrawOutline(texture, null, drawPosition, rotation, origin, scale, effects, radius, opacity, time, drawCount,
                 completion => Color.Lerp(StarmadaCycleColor(time * 60f), StarmadaCycleColor(time * 60f + completion * 90f), 0.45f),
                 manageBlendState);
         }
@@ -56,13 +56,36 @@ namespace CalamityLegendsComeBack.Weapons.Visuals
             int drawCount = 16,
             bool manageBlendState = true)
         {
-            DrawOutline(texture, drawPosition, rotation, origin, scale, effects, radius, opacity, time, drawCount,
+            DrawOutline(texture, null, drawPosition, rotation, origin, scale, effects, radius, opacity, time, drawCount,
+                completion => Color.Lerp(color, Color.White, 0.16f + completion * 0.16f),
+                manageBlendState);
+        }
+
+        // NPC sheets need their current animation cell passed through to the glow layer. Holdout
+        // callers continue using the overload above because their textures are single-frame.
+        public static void DrawSolidOutline(
+            Texture2D texture,
+            Rectangle sourceRectangle,
+            Vector2 drawPosition,
+            float rotation,
+            Vector2 origin,
+            Vector2 scale,
+            SpriteEffects effects,
+            Color color,
+            float radius,
+            float opacity,
+            float time,
+            int drawCount = 16,
+            bool manageBlendState = true)
+        {
+            DrawOutline(texture, sourceRectangle, drawPosition, rotation, origin, scale, effects, radius, opacity, time, drawCount,
                 completion => Color.Lerp(color, Color.White, 0.16f + completion * 0.16f),
                 manageBlendState);
         }
 
         private static void DrawOutline(
             Texture2D texture,
+            Rectangle? sourceRectangle,
             Vector2 drawPosition,
             float rotation,
             Vector2 origin,
@@ -105,7 +128,7 @@ namespace CalamityLegendsComeBack.Weapons.Visuals
                     Main.EntitySpriteDraw(
                         texture,
                         drawPosition + offset,
-                        null,
+                        sourceRectangle,
                         color * layerOpacity,
                         rotation,
                         origin,

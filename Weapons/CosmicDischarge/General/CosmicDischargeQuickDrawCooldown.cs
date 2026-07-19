@@ -30,7 +30,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         public override string OverlayTexture => "CalamityLegendsComeBack/Weapons/CosmicDischarge/General/CD/CosmicDischargeCooldownOverlay";
 
         public override Color OutlineColor => new(22, 48, 70);
-        public override Color CooldownStartColor => CosmicDischargeCommon.DoGPurpleColor;
+        public override Color CooldownStartColor => CosmicDischargeCommon.RiftTwilight;
         public override Color CooldownEndColor => CosmicDischargeCommon.DoGSpecialColor;
 
         public override void ApplyBarShaders(float opacity)

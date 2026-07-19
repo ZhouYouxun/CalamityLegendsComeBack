@@ -16,8 +16,6 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
         public new string LocalizationCategory => "Projectiles.LeonidProgenitor";
 
         public Player Owner => Main.player[Projectile.owner];
-        public int PrimaryEffectID => (int)Projectile.ai[0];
-        public int SecondaryEffectID => (int)Projectile.ai[1];
 
         private int timer;
 
@@ -32,6 +30,12 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             Projectile.timeLeft = 360; // 6 seconds
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = 30;
+        }
+
+        public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
+        {
+            if (Owner.GetModPlayer<LeonidConstellationPlayer>().IsUnlocked(LeonidStar.Denebola))
+                Projectile.timeLeft = 480;
         }
 
         public override bool? CanDamage() => timer >= 180; // only deal field damage when meteors start falling
@@ -103,8 +107,8 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                     Projectile.damage,
                     Projectile.knockBack,
                     Projectile.owner,
-                    PrimaryEffectID,
-                    SecondaryEffectID,
+                    0f,
+                    0f,
                     (float)LeonidCometSmall.GravityFieldFlag);
 
                 if (p.WithinBounds(Main.maxProjectiles))

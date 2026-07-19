@@ -8,20 +8,22 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.SeasSearing
 {
-    // Slow, weakly-homing air torpedo fired by the post-burst companion system.
+    // A dropped torpedo: it sinks, aligns on the nearest hostile, then makes one committed run.
     internal sealed class SkyfinTorpedo : ModProjectile
     {
         public override string Texture => "CalamityMod/Items/Weapons/Rogue/SkyfinBombers";
 
-        private const float HomingRange  = 700f;
-        private const float TurnFactor   = 0.045f;
-        private const float MaxSpeed     = 16f;
-        private const float MinSpeed     = 8.5f;
+        private const int DropFrames = 18;
+        private const int HoverFrames = 26;
+        private const float HomingRange = 1200f;
+        private const float DashSpeed = 31f;
+        private const float SpriteRotationOffset = MathHelper.PiOver2;
 
         private static readonly int TrailLength = 12;
 
-        private float Speed => Math.Clamp(Projectile.velocity.Length(), MinSpeed, MaxSpeed);
         private float LaunchCurve => Projectile.ai[0];
+        private float Age => Projectile.localAI[0];
+        private bool IsDashing => Projectile.localAI[1] > 0f;
 
         public override void SetStaticDefaults()
         {
@@ -36,7 +38,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             Projectile.friendly       = true;
             Projectile.DamageType     = DamageClass.Ranged;
             Projectile.penetrate      = 1;
-            Projectile.timeLeft       = 360;
+            Projectile.timeLeft       = 420;
             Projectile.tileCollide    = false;
             Projectile.ignoreWater    = true;
             Projectile.usesLocalNPCImmunity = true;
@@ -46,28 +48,48 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
         public override void AI()
         {
-            Projectile.rotation = Projectile.velocity.ToRotation();
             Projectile.localAI[0]++;
 
-            NPC target = FindTarget();
-            if (target != null)
+            if (!IsDashing)
             {
-                float curve = LaunchCurve * MathHelper.Lerp(0.26f, 0f, Utils.GetLerpValue(0f, 52f, Projectile.localAI[0], true));
-                Vector2 toTarget  = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY).RotatedBy(curve);
-                Projectile.velocity = Vector2.Lerp(
-                    Projectile.velocity.SafeNormalize(Vector2.UnitY),
-                    toTarget,
-                    TurnFactor).SafeNormalize(Vector2.UnitY) * (Speed + 0.12f);
+                NPC target = FindTarget();
+                Vector2 downward = Vector2.UnitY.RotatedBy(LaunchCurve * 0.08f);
+
+                // A real deployment first drops below the player instead of flying directly at the aim cursor.
+                if (Age <= DropFrames)
+                    Projectile.velocity = Vector2.Lerp(Projectile.velocity, downward * 10f, 0.11f);
+                else
+                    Projectile.velocity *= 0.84f;
+
+                // The torpedo immediately faces the closest target while still physically dropping downward.
+                if (target != null)
+                {
+                    Vector2 aim = (target.Center - Projectile.Center).SafeNormalize(downward);
+                    Projectile.rotation = aim.ToRotation();
+
+                    if (Age >= DropFrames + HoverFrames)
+                    {
+                        Projectile.velocity = aim * DashSpeed;
+                        Projectile.localAI[1] = 1f;
+                        Projectile.netUpdate = true;
+                        SoundEngine.PlaySound(SoundID.Item62 with { Volume = 0.52f, Pitch = -0.32f }, Projectile.Center);
+                        SeasSearingVisualUtility.SpawnPressureRing(Projectile.Center, 1.65f, 11f, 10, SeasSearingPalette.BiohazardLime);
+                    }
+                }
+                else
+                {
+                    Projectile.rotation = Projectile.velocity.SafeNormalize(downward).ToRotation();
+                }
             }
             else
             {
-                Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-                Projectile.velocity += Vector2.UnitY * 0.1f + direction.RotatedBy(MathHelper.PiOver2) * LaunchCurve * 0.05f;
+                // Deliberately no homing here: after the torpedo run begins it cannot correct course.
+                Projectile.rotation = Projectile.velocity.SafeNormalize(Vector2.UnitX).ToRotation();
             }
 
             Lighting.AddLight(Projectile.Center, SeasSearingPalette.BiohazardLime.ToVector3() * 0.42f);
 
-            if (!Main.dedServ && Main.GameUpdateCount % 2 == 0)
+            if (!Main.dedServ && Main.GameUpdateCount % (IsDashing ? 1 : 3) == 0)
             {
                 Dust trail = Dust.NewDustPerfect(
                     Projectile.Center - Projectile.velocity * 0.6f,
@@ -78,7 +100,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 trail.noGravity = true;
             }
 
-            if (!Main.dedServ && Main.GameUpdateCount % 14 == 0)
+            if (!Main.dedServ && IsDashing && Main.GameUpdateCount % 14 == 0)
                 SeasSearingVisualUtility.SpawnPressureRing(Projectile.Center, 1.15f, 9f, 8, SeasSearingPalette.BiohazardLime);
         }
 
@@ -116,6 +138,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             Texture2D bloom  = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Vector2   origin = tex.Size() * 0.5f;
             Vector2   bloomOrigin = bloom.Size() * 0.5f;
+            float visualRotation = Projectile.rotation + SpriteRotationOffset;
 
             for (int i = 1; i < TrailLength; i++)
             {
@@ -125,20 +148,20 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 tc.A       = 0;
                 Main.EntitySpriteDraw(bloom,
                     Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition,
-                    null, tc * 0.65f, 0f,
+                    null, tc * 0.65f, Projectile.oldRot[i] + SpriteRotationOffset,
                     bloomOrigin, 0.055f * t, SpriteEffects.None, 0);
                 Main.EntitySpriteDraw(tex,
                     Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition,
-                    null, tc, Projectile.oldRot[i],
+                    null, tc, Projectile.oldRot[i] + SpriteRotationOffset,
                     origin, Projectile.scale * MathHelper.Lerp(0.3f, 0.85f, t), SpriteEffects.None, 0);
             }
 
             Color main = SeasSearingPalette.BiohazardLime;
             main.A     = 0;
             Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition,
-                null, main * 0.58f, 0f, bloomOrigin, 0.09f, SpriteEffects.None, 0);
+                null, main * 0.58f, visualRotation, bloomOrigin, 0.09f, SpriteEffects.None, 0);
             Main.EntitySpriteDraw(tex, Projectile.Center - Main.screenPosition,
-                null, main, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0);
+                null, main, visualRotation, origin, Projectile.scale, SpriteEffects.None, 0);
             return false;
         }
 

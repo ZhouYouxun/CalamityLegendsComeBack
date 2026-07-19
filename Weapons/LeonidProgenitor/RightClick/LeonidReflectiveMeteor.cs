@@ -182,7 +182,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             Texture2D magic2 = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/magic_02").Value;
 
             // 星空色：随时间在层云蓝/月光紫/月白/星金间流动
-            Color starryColor = LeonidVisualUtils.GetMeteorColor(Projectile.whoAmI, Projectile.whoAmI * 2);
+            Color starryColor = LeonidVisualUtils.GetMeteorColor(Projectile.whoAmI * 0.19f);
             Color trailColor = Color.Lerp(starryColor, LeonidVisualUtils.StratusBlue, 0.32f);
 
             LeonidVisualUtils.BeginAdditiveSpriteBatch();
