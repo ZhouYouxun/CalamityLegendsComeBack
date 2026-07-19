@@ -37,31 +37,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.Tools.ArtisanToken
         {
             Item.width = 28;
             Item.height = 28;
-            Item.damage = 0;
-            Item.knockBack = 0f;
-            Item.DamageType = DamageClass.Generic;
-            Item.useTime = 15;
-            Item.useAnimation = 15;
-            Item.useStyle = ItemUseStyleID.HoldUp;
-            Item.noMelee = true;
-            Item.autoReuse = false;
-            Item.shoot = PanelType;
-            Item.shootSpeed = 0f;
-            Item.UseSound = null;
             Item.value = Item.sellPrice(gold: 15);
             Item.rare = ItemRarityID.Yellow;
             Item.maxStack = 9999;
-        }
-
-        public override bool AltFunctionUse(Player player) => true;
-
-        public override bool CanUseItem(Player player)
-        {
-            return Main.myPlayer == player.whoAmI &&
-                !Main.mapFullscreen &&
-                !Main.blockMouse &&
-                !player.mouseInterface &&
-                !(Main.playerInventory && Main.HoverItem.type == Type);
         }
 
         public override bool CanRightClick() => true;
@@ -71,13 +49,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.Tools.ArtisanToken
         {
             if (Main.myPlayer == player.whoAmI)
                 TogglePanel(player, Item.GetSource_FromThis());
-        }
-
-        public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position,
-            Vector2 velocity, int type, int damage, float knockback)
-        {
-            TogglePanel(player, source);
-            return false;
         }
 
         private static void TogglePanel(Player player, IEntitySource source)

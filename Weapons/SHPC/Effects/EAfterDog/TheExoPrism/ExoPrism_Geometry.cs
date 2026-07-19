@@ -1,7 +1,6 @@
 using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using Terraria;
@@ -16,22 +15,22 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
         public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "Terraria/Images/Projectile_1";
 
-        private int geometryType;
-
-        private float sizeMultiplier;
-        private float localTimeOffset;
         private const int HomingFrames = 54;
         private const int DriftFrames = 42;
         private const float HomingRange = 1400f;
         private const float BaseHomingSpeed = 8.5f;
         private const float MaxHomingSpeed = 13.5f;
 
+        private static readonly Color PrismCyan = new(96, 235, 255);
+        private static readonly Color MiracleGold = new(255, 205, 95);
+
+        private int geometryType;
+        private float sizeMultiplier;
+        private float localTimeOffset;
+        private float rotationSeed;
+
         private ref float Timer => ref Projectile.localAI[0];
 
-        // 这里写死当前上限，后面你要加新几何体，直接改这个数字最快
-        private const int MaxGeometryType = 2;
-
-        // ================= 几何结构定义 =================
         private class GeometryData
         {
             public Vector3[] Points;
@@ -42,7 +41,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
 
         public override void SetStaticDefaults()
         {
-            // 几何体绘制范围较大，给更宽松的屏幕检查范围
             ProjectileID.Sets.DrawScreenCheckFluff[Type] = 2000;
         }
 
@@ -59,28 +57,19 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
             EnsureGeometries();
         }
 
-        // 根据 Faces 自动生成 Edges
         private static int[,] BuildEdgesFromFaces(int[][] faces)
         {
-            HashSet<(int, int)> edgeSet = new HashSet<(int, int)>();
+            HashSet<(int, int)> edgeSet = new();
 
             for (int i = 0; i < faces.Length; i++)
             {
                 int[] face = faces[i];
-                int count = face.Length;
-
-                for (int j = 0; j < count; j++)
+                for (int j = 0; j < face.Length; j++)
                 {
                     int a = face[j];
-                    int b = face[(j + 1) % count];
-
-                    // 统一顺序，避免重复边（a,b 和 b,a）
+                    int b = face[(j + 1) % face.Length];
                     if (a > b)
-                    {
-                        int temp = a;
-                        a = b;
-                        b = temp;
-                    }
+                        (a, b) = (b, a);
 
                     edgeSet.Add((a, b));
                 }
@@ -88,179 +77,125 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
 
             int[,] edges = new int[edgeSet.Count, 2];
             int index = 0;
-
-            foreach (var e in edgeSet)
+            foreach ((int a, int b) in edgeSet)
             {
-                edges[index, 0] = e.Item1;
-                edges[index, 1] = e.Item2;
+                edges[index, 0] = a;
+                edges[index, 1] = b;
                 index++;
             }
 
             return edges;
         }
 
-        // 随机生成几何体（作为第2号方案）
         private static GeometryData GenerateRandomGeometry()
         {
-            int pointCount = Main.rand.Next(6, 10); // 点数量控制一下，太多会乱
-
+            int pointCount = Main.rand.Next(6, 10);
             Vector3[] points = new Vector3[pointCount];
 
-            // ===== 随机点（球面分布）=====
             for (int i = 0; i < pointCount; i++)
             {
-                Vector3 v = new Vector3(
+                Vector3 point = new(
                     Main.rand.NextFloat(-1f, 1f),
                     Main.rand.NextFloat(-1f, 1f),
-                    Main.rand.NextFloat(-1f, 1f)
-                );
+                    Main.rand.NextFloat(-1f, 1f));
 
-                if (v.Length() < 0.001f)
-                    v = Vector3.UnitX;
+                if (point.Length() < 0.001f)
+                    point = Vector3.UnitX;
 
-                v.Normalize();
-                points[i] = v;
+                point.Normalize();
+                points[i] = point;
             }
 
-            // ===== 最近邻连线 =====
-            HashSet<(int, int)> edges = new HashSet<(int, int)>();
-
+            HashSet<(int, int)> edges = new();
             for (int i = 0; i < pointCount; i++)
             {
-                List<(float dist, int index)> list = new List<(float, int)>();
-
+                List<(float distance, int index)> nearbyPoints = new();
                 for (int j = 0; j < pointCount; j++)
                 {
-                    if (i == j) continue;
-
-                    float d = Vector3.Distance(points[i], points[j]);
-                    list.Add((d, j));
+                    if (i != j)
+                        nearbyPoints.Add((Vector3.Distance(points[i], points[j]), j));
                 }
 
-                list.Sort((a, b) => a.dist.CompareTo(b.dist));
-
+                nearbyPoints.Sort((a, b) => a.distance.CompareTo(b.distance));
                 int connectCount = Main.rand.Next(2, 4);
-
                 for (int k = 0; k < connectCount; k++)
                 {
-                    int j = list[k].index;
-
-                    int a = Math.Min(i, j);
-                    int b = Math.Max(i, j);
-
+                    int a = Math.Min(i, nearbyPoints[k].index);
+                    int b = Math.Max(i, nearbyPoints[k].index);
                     edges.Add((a, b));
                 }
             }
 
             int[,] edgeArray = new int[edges.Count, 2];
-            int idx = 0;
-
-            foreach (var e in edges)
+            int edgeIndex = 0;
+            foreach ((int a, int b) in edges)
             {
-                edgeArray[idx, 0] = e.Item1;
-                edgeArray[idx, 1] = e.Item2;
-                idx++;
+                edgeArray[edgeIndex, 0] = a;
+                edgeArray[edgeIndex, 1] = b;
+                edgeIndex++;
             }
 
-            return new GeometryData
-            {
-                Points = points,
-                Edges = edgeArray
-            };
+            return new GeometryData { Points = points, Edges = edgeArray };
         }
 
-        // ================= 初始化几何体 =================
         private static void EnsureGeometries()
         {
             if (geometries != null)
                 return;
 
-            geometries = new List<GeometryData>();
-
-            // ===== 0：立方体 =====
-            geometries.Add(new GeometryData
+            geometries = new List<GeometryData>
             {
-                Points = new Vector3[]
+                new GeometryData
                 {
-                    new(-1,-1,-1), new( 1,-1,-1), new( 1, 1,-1), new(-1, 1,-1),
-                    new(-1,-1, 1), new( 1,-1, 1), new( 1, 1, 1), new(-1, 1, 1)
+                    Points = new[]
+                    {
+                        new Vector3(-1, -1, -1), new Vector3(1, -1, -1), new Vector3(1, 1, -1), new Vector3(-1, 1, -1),
+                        new Vector3(-1, -1, 1), new Vector3(1, -1, 1), new Vector3(1, 1, 1), new Vector3(-1, 1, 1)
+                    },
+                    Edges = new[,]
+                    {
+                        { 0, 1 }, { 1, 2 }, { 2, 3 }, { 3, 0 }, { 4, 5 }, { 5, 6 }, { 6, 7 }, { 7, 4 },
+                        { 0, 4 }, { 1, 5 }, { 2, 6 }, { 3, 7 }
+                    }
                 },
-                Edges = new int[,]
+                new GeometryData
                 {
-                    {0,1},{1,2},{2,3},{3,0},
-                    {4,5},{5,6},{6,7},{7,4},
-                    {0,4},{1,5},{2,6},{3,7}
-                }
-            });
-
-            // ===== 1：八面体 =====
-            geometries.Add(new GeometryData
-            {
-                Points = new Vector3[]
-                {
-                    new( 0, 0,-1), new( 0, 0, 1),
-                    new(-1, 0, 0), new( 1, 0, 0),
-                    new( 0,-1, 0), new( 0, 1, 0)
+                    Points = new[]
+                    {
+                        new Vector3(0, 0, -1), new Vector3(0, 0, 1), new Vector3(-1, 0, 0),
+                        new Vector3(1, 0, 0), new Vector3(0, -1, 0), new Vector3(0, 1, 0)
+                    },
+                    Edges = new[,]
+                    {
+                        { 0, 2 }, { 0, 3 }, { 0, 4 }, { 0, 5 }, { 1, 2 }, { 1, 3 }, { 1, 4 }, { 1, 5 }
+                    }
                 },
-                Edges = new int[,]
+                new GeometryData
                 {
-                    {0,2},{0,3},{0,4},{0,5},
-                    {1,2},{1,3},{1,4},{1,5}
+                    Points = new[]
+                    {
+                        new Vector3(1, 1, 1), new Vector3(-1, -1, 1), new Vector3(-1, 1, -1), new Vector3(1, -1, -1)
+                    },
+                    Edges = new[,]
+                    {
+                        { 0, 1 }, { 0, 2 }, { 0, 3 }, { 1, 2 }, { 1, 3 }, { 2, 3 }
+                    }
                 }
-            });
-
-            // ===== 2：四面体 =====
-            geometries.Add(new GeometryData
-            {
-                Points = new Vector3[]
-                {
-                    new( 1, 1, 1),
-                    new(-1,-1, 1),
-                    new(-1, 1,-1),
-                    new( 1,-1,-1)
-                },
-                Edges = new int[,]
-                {
-                    {0,1},{0,2},{0,3},
-                    {1,2},{1,3},{2,3}
-                }
-            });
-
-
-
-
-
-
-
-
-
-
-
-
+            };
         }
-        private GeometryData runtimeGeometry;
 
-        // ================= OnSpawn 随机选择 =================
         public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
         {
             EnsureGeometries();
-
-            int safeMax = Math.Min(MaxGeometryType, geometries.Count - 1);
-            geometryType = Main.rand.Next(3); // 固定3种：0,1,2
-
-            // 如果是随机方案（2号），动态替换
+            geometryType = Main.rand.Next(3);
             if (geometryType == 2)
-            {
-                runtimeGeometry = GenerateRandomGeometry();
-            }
-            // 尺寸：0.5x ~ 2.0x
-            sizeMultiplier = Main.rand.NextFloat(0.5f, 2f);
+                _ = GenerateRandomGeometry(); // Preserve the original RNG sequence; draw the stable tetrahedron instead.
 
-            // 时间偏移：让每个实例不同步
+            sizeMultiplier = Main.rand.NextFloat(0.5f, 2f);
             localTimeOffset = Main.rand.NextFloat(0f, MathHelper.TwoPi);
+            rotationSeed = Projectile.identity * 0.61803398875f;
         }
 
-        // ================= AI =================
         public override void AI()
         {
             Timer++;
@@ -340,97 +275,86 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.TheExoPrism
             Projectile.velocity = Projectile.velocity.RotatedBy(sway) * 0.986f;
         }
 
-        public override void OnKill(int timeLeft)
-        {
-        }
-
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             SoundEngine.PlaySound(SoundID.Item92 with { Volume = 0.16f, Pitch = 0.28f, PitchVariance = 0.1f, MaxInstances = 6 }, target.Center);
-            target.AddBuff(ModContent.BuffType<MiracleBlight>(), 300); // 超位崩解
+            target.AddBuff(ModContent.BuffType<MiracleBlight>(), 300);
         }
 
-        // ================= 绘制 =================
         public override bool PreDraw(ref Color lightColor)
         {
             EnsureGeometries();
-
             if (geometries == null || geometries.Count == 0)
                 return false;
 
-            if (geometryType < 0 || geometryType >= geometries.Count)
-                geometryType = 0;
+            GeometryData geometry = geometries[Math.Clamp(geometryType, 0, geometries.Count - 1)];
+            float t = Timer * 0.065f + localTimeOffset + rotationSeed;
+            float pulse = 0.78f + 0.22f * (float)Math.Sin(Timer * 0.14f + rotationSeed);
+            float size = 32f * sizeMultiplier;
 
-            Vector2 center = Projectile.Center;
-            float t = Main.GlobalTimeWrappedHourly + localTimeOffset;
+            // Counter-rotating nested copies turn every polyhedron into a readable two-layer matrix.
+            Matrix outerRotation = Matrix.CreateFromYawPitchRoll(t * 1.15f, t * 0.92f, t * 0.76f);
+            Matrix innerRotation = Matrix.CreateFromYawPitchRoll(-t * 2.45f + 0.7f, t * 1.83f, -t * 1.52f - 0.45f);
 
-            Color GetExoColor()
-            {
-                List<Color> eColors = new List<Color>()
-            {
-                Color.Lerp(Color.OrangeRed, Color.White, 0.55f),
-                Color.Lerp(Color.MediumTurquoise, Color.White, 0.55f),
-                Color.Lerp(Color.Orange, Color.White, 0.55f),
-                Color.Lerp(Color.LawnGreen, Color.White, 0.55f)
-            };
-
-                float rate = Main.GlobalTimeWrappedHourly * 8f;
-                int colorIndex = (int)(rate / 2f % eColors.Count);
-                Color currentColor = eColors[colorIndex];
-                Color nextColor = eColors[(colorIndex + 1) % eColors.Count];
-                float lerpValue = rate % 2f > 1f ? 1f : rate % 1f;
-
-                return Color.Lerp(currentColor, nextColor, lerpValue);
-            }
-
-            // 三轴旋转
-            float yaw = t * (0.6f + Projectile.identity * 0.0007f);
-            float pitch = t * (0.45f + Projectile.identity * 0.0009f);
-            float roll = t * (0.3f + Projectile.identity * 0.0011f);
-            Matrix rot = Matrix.CreateFromYawPitchRoll(yaw, pitch, roll);
-
-            float size = 2f * 16f * sizeMultiplier;
-            float focal = 1000f;
-            float zBias = 1000f;
-
-            Vector2 Project(Vector3 p)
-            {
-                Vector3 r = Vector3.Transform(p, rot);
-                float persp = focal / (focal + r.Z + zBias);
-                return center + new Vector2(r.X, r.Y) * persp;
-            }
-
-            GeometryData geo = geometryType == 2 ? runtimeGeometry : geometries[geometryType];
-
-            Vector2[] projected = new Vector2[geo.Points.Length];
-            for (int i = 0; i < geo.Points.Length; i++)
-                projected[i] = Project(geo.Points[i] * size);
-
-            int edgeCount = geo.Edges.GetLength(0);
-
-            Color lineColor = GetExoColor();
-
-            for (int i = 0; i < edgeCount; i++)
-            {
-                Main.spriteBatch.DrawLineBetter(
-                    projected[geo.Edges[i, 0]],
-                    projected[geo.Edges[i, 1]],
-                    lineColor,
-                    3f
-                );
-            }
-
+            DrawGeometryLayer(geometry, outerRotation, size, Color.Lerp(PrismCyan, Color.White, 0.35f) * pulse, 2.35f);
+            DrawGeometryLayer(geometry, innerRotation, size * 0.64f, Color.Lerp(MiracleGold, Color.White, 0.48f) * (0.88f * pulse), 1.55f);
+            DrawRefractionWake(pulse);
             return false;
         }
 
+        private Vector2 ProjectPoint(Vector3 point, Matrix rotation, float size)
+        {
+            Vector3 rotated = Vector3.Transform(point * size, rotation);
+            const float focalLength = 900f;
+            const float depthBias = 960f;
+            float perspective = focalLength / (focalLength + rotated.Z + depthBias);
+            return Projectile.Center + new Vector2(rotated.X, rotated.Y) * perspective;
+        }
 
+        private void DrawGeometryLayer(GeometryData geometry, Matrix rotation, float size, Color color, float width)
+        {
+            Vector2[] points = new Vector2[geometry.Points.Length];
+            for (int i = 0; i < geometry.Points.Length; i++)
+                points[i] = ProjectPoint(geometry.Points[i], rotation, size);
 
+            int edgeCount = geometry.Edges.GetLength(0);
+            for (int i = 0; i < edgeCount; i++)
+            {
+                Vector2 start = points[geometry.Edges[i, 0]];
+                Vector2 end = points[geometry.Edges[i, 1]];
+                Main.spriteBatch.DrawLineBetter(start, end, color * 0.28f, width + 2.1f);
+                Main.spriteBatch.DrawLineBetter(start, end, color, width);
+            }
+        }
 
+        // This wake is an independent refractive field, not a series of old geometry positions.
+        private void DrawRefractionWake(float pulse)
+        {
+            if (Projectile.velocity.LengthSquared() < 0.01f)
+                return;
 
+            Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 normal = forward.RotatedBy(MathHelper.PiOver2);
+            float phase = Timer * 0.18f + rotationSeed;
 
+            for (int side = -1; side <= 1; side += 2)
+            {
+                float lateralOffset = side * (10f + 3f * (float)Math.Sin(phase));
+                Vector2 railStart = Projectile.Center - forward * 10f + normal * lateralOffset;
+                Vector2 railEnd = Projectile.Center - forward * (74f + 12f * (float)Math.Sin(phase + side)) + normal * lateralOffset * 1.55f;
+                Color railColor = Color.Lerp(PrismCyan, MiracleGold, side > 0 ? 0.32f : 0.08f) * (0.42f * pulse);
 
+                Main.spriteBatch.DrawLineBetter(railStart, railEnd, railColor * 0.3f, 3.4f);
+                Main.spriteBatch.DrawLineBetter(railStart, railEnd, railColor, 1.05f);
 
-
-
+                for (int i = 1; i <= 2; i++)
+                {
+                    float completion = i / 3f;
+                    Vector2 sliceCenter = Vector2.Lerp(railStart, railEnd, completion);
+                    float sliceWidth = MathHelper.Lerp(5f, 13f, completion);
+                    Main.spriteBatch.DrawLineBetter(sliceCenter - normal * sliceWidth, sliceCenter + normal * sliceWidth, railColor * 0.58f, 0.9f);
+                }
+            }
+        }
     }
 }

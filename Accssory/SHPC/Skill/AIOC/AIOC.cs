@@ -2,6 +2,7 @@ using CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip;
 using CalamityLegendsComeBack.Accssory.SHPC.Skill.DiffuChip;
 using CalamityLegendsComeBack.Accssory.SHPC.Skill.FastChip;
 using CalamityLegendsComeBack.Accssory.SHPC.Skill.FlyChip;
+using CalamityLegendsComeBack.Accssory.SHPC.Skill.Barrier;
 using CalamityLegendsComeBack.Weapons.SHPC;
 using CalamityMod;
 using System.Collections.Generic;
@@ -38,6 +39,11 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.AIOC
             ctrlPlayer.CtrlChipVisualsHidden = hideVisual;
             player.GetCritChance(DamageClass.Generic) += 7f;
 
+            BarrierPlayer barrierPlayer = player.GetModPlayer<BarrierPlayer>();
+            barrierPlayer.BarrierEquipped = true;
+            barrierPlayer.BarrierVisible = !hideVisual;
+            barrierPlayer.AIOCBarrierBoost = true;
+
             // 飞升芯片：加速度/移速/跳跃恒定生效
             player.runAcceleration *= 1.7f;
             player.moveSpeed += 0.10f;
@@ -70,6 +76,7 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.AIOC
                 .AddIngredient(ItemID.FragmentStardust, 10)
                 .AddIngredient<FlyChip.FlyChip>()
                 .AddIngredient(ItemID.FragmentNebula, 10)
+                .AddIngredient<MatrixChargingBarrier>()
                 .AddIngredient(ItemID.LunarBar, 5)
                 .AddTile(TileID.LunarCraftingStation)
                 .Register();

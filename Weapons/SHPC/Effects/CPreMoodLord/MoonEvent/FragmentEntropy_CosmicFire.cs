@@ -30,7 +30,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
             Projectile.width = Projectile.height = 36;
             Projectile.friendly = true;
             Projectile.ignoreWater = true;
-            Projectile.tileCollide = false;
+            Projectile.tileCollide = true;
             Projectile.DamageType = DamageClass.Magic;
             Projectile.penetrate = 1;
             Projectile.timeLeft = 118;

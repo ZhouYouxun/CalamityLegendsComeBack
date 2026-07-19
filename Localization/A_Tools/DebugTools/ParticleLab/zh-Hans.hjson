@@ -6,6 +6,11 @@ Mods: {
 					DisplayName: 粒子实验室
 					Tooltip: 右键打开粒子矩阵。左键释放当前选中的单个粒子特效。
 				}
+
+				ProfanedGuardianProjectileSniper: {
+					DisplayName: 亵渎守卫弹幕测试狙
+					Tooltip: 左键向鼠标方向发射当前选中的亵渎守卫弹幕。\n右键打开弹幕矩阵进行选择。\n每次射击间隔 30 帧。
+				}
 			}
 		}
 

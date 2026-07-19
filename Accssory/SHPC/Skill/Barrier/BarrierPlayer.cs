@@ -1,5 +1,7 @@
 using CalamityLegendsComeBack.Weapons.SHPC;
 using CalamityMod;
+using CalamityMod.CalPlayer;
+using CalamityMod.Cooldowns;
 using CalamityMod.Items.Accessories;
 using Microsoft.Xna.Framework;
 using Terraria;
@@ -15,11 +17,12 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.Barrier
 
         public bool BarrierEquipped;
         public bool BarrierVisible;
+        public bool AIOCBarrierBoost;
         public int ShieldHitFlashTimer;
 
         private int chargeDelayTimer;
         private float shieldHitPoints;
-        private bool _roverDriveWasActive;
+        private bool spongeShieldDeferred;
 
         public bool HoldingSHPC =>
             Player.HeldItem?.ModItem is NewLegendSHPC;
@@ -29,7 +32,8 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.Barrier
             get
             {
                 int rawShield = (int)System.MathF.Floor(Player.statLifeMax2 * 0.25f);
-                return System.Math.Max(5, rawShield / 5 * 5);
+                int baseShield = System.Math.Max(5, rawShield / 5 * 5);
+                return AIOCBarrierBoost ? (int)System.MathF.Round(baseShield * 1.5f) : baseShield;
             }
         }
 
@@ -57,15 +61,19 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.Barrier
         {
             BarrierEquipped = false;
             BarrierVisible = false;
+            AIOCBarrierBoost = false;
+            spongeShieldDeferred = false;
         }
 
         public override void UpdateDead()
         {
             BarrierEquipped = false;
             BarrierVisible = false;
+            AIOCBarrierBoost = false;
             chargeDelayTimer = 0;
             shieldHitPoints = 0f;
             ShieldHitFlashTimer = 0;
+            spongeShieldDeferred = false;
         }
 
         public override void PostUpdate()
@@ -119,36 +127,55 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.Barrier
             if (!BarrierEquipped || !HoldingSHPC)
                 return;
 
-            // RoverDrive 仍有护盾时拥有完全优先权，MatrixChargingBarrier 退后
-            _roverDriveWasActive = Player.Calamity().roverDrive &&
-                                   Player.Calamity().RoverDriveShieldDurability > 0;
+            CalamityPlayer calamityPlayer = Player.Calamity();
+            bool roverDriveShieldActive = calamityPlayer.roverDrive &&
+                                          calamityPlayer.RoverDriveShieldDurability > 0;
 
-            if (ShieldActive && !_roverDriveWasActive)
+            // Rover Drive owns its hit, including the source-damage reduction it provides.
+            if (ShieldActive && !roverDriveShieldActive)
                 modifiers.SourceDamage *= 0.9f;
 
-            modifiers.ModifyHurtInfo += ApplyShieldAndResetCharge;
+            // Calamity normally processes The Sponge before this callback. Defer it while the
+            // matrix shield is active, so the final order is Rover Drive -> Matrix -> Sponge.
+            spongeShieldDeferred = ShieldActive && calamityPlayer.sponge &&
+                                   calamityPlayer.SpongeShieldDurability > 0;
+            if (spongeShieldDeferred)
+                calamityPlayer.sponge = false;
+
+            modifiers.ModifyHurtInfo += ApplyShieldAndRecharge;
         }
 
-        private void ApplyShieldAndResetCharge(ref Player.HurtInfo info)
+        private void ApplyShieldAndRecharge(ref Player.HurtInfo info)
         {
-            // RoverDrive 本次命中前有护盾：由它负责吸收，我们完全不介入
-            if (_roverDriveWasActive)
+            CalamityPlayer calamityPlayer = Player.Calamity();
+            if (info.Cancelled)
+            {
+                RestoreDeferredSponge(calamityPlayer);
                 return;
+            }
 
             if (ShieldActive && info.Damage > 0)
             {
                 int incomingDamage = info.Damage;
-                int absorbedDamage = System.Math.Min(incomingDamage, ShieldCurrentHitPoints);
-                bool fullyAbsorbedByShield = absorbedDamage >= incomingDamage;
+                // A single hit can never destroy a fully charged matrix shield. It absorbs the
+                // entire hit, but the durability cost is capped at half of its maximum capacity.
+                float maximumLossFromOneHit = ShieldMaxHitPoints * 0.5f;
+                float absorbedDamage = System.Math.Min(incomingDamage, System.Math.Min(shieldHitPoints, maximumLossFromOneHit));
+                bool wasFullyCharged = shieldHitPoints >= ShieldMaxHitPoints;
 
                 shieldHitPoints = System.Math.Max(0f, shieldHitPoints - absorbedDamage);
-                info.Damage = System.Math.Max(0, incomingDamage - absorbedDamage);
+                // Do not use Calamity's freeDodgeFromShieldAbsorption flag here. That path still
+                // applies the standard shield-hit Adrenaline penalty. A zero-damage hurt keeps
+                // the shield feedback and iframes while leaving Adrenaline untouched.
+                info.Damage = 0;
                 ShieldHitFlashTimer = 18;
 
-                Player.GiveIFrames(info.CooldownCounter, Player.ComputeHitIFrames(info), true);
-                if (fullyAbsorbedByShield)
-                    Player.Calamity().freeDodgeFromShieldAbsorption = true;
+                // Start a delay only for a new recharge cycle. Damage taken during an existing
+                // delay or recharge period deliberately leaves that progress untouched.
+                if (wasFullyCharged && shieldHitPoints < ShieldMaxHitPoints)
+                    chargeDelayTimer = 0;
 
+                Player.GiveIFrames(info.CooldownCounter, Player.ComputeHitIFrames(info), true);
                 if (Main.myPlayer == Player.whoAmI)
                 {
                     SoundEngine.PlaySound(
@@ -157,7 +184,51 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.Barrier
                 }
             }
 
-            chargeDelayTimer = 0;
+            AbsorbWithDeferredSponge(ref info, calamityPlayer);
+        }
+
+        private void AbsorbWithDeferredSponge(ref Player.HurtInfo info, CalamityPlayer calamityPlayer)
+        {
+            if (!spongeShieldDeferred)
+                return;
+
+            RestoreDeferredSponge(calamityPlayer);
+
+            if (info.Damage > 0 && calamityPlayer.SpongeShieldDurability > 0)
+            {
+                int absorbedDamage = System.Math.Min(info.Damage, calamityPlayer.SpongeShieldDurability);
+                bool fullyAbsorbedByShield = absorbedDamage >= info.Damage;
+                calamityPlayer.SpongeShieldDurability -= absorbedDamage;
+                info.Damage -= absorbedDamage;
+
+                if (calamityPlayer.SpongeShieldDurability <= 0)
+                {
+                    calamityPlayer.SpongeShieldDurability = 0;
+                    SoundEngine.PlaySound(TheSponge.BreakSound, Player.Center);
+                    calamityPlayer.GeneralScreenShakePower += 2f;
+                }
+
+                if (fullyAbsorbedByShield)
+                {
+                    Player.GiveIFrames(info.CooldownCounter, Player.ComputeHitIFrames(info), true);
+                    calamityPlayer.freeDodgeFromShieldAbsorption = true;
+                }
+
+                if (calamityPlayer.cooldowns.TryGetValue(SpongeDurability.ID, out var durabilityCooldown))
+                    durabilityCooldown.timeLeft = calamityPlayer.SpongeShieldDurability;
+            }
+
+            // The Sponge keeps Calamity's default behavior: every hit restarts its recharge delay.
+            Player.AddCooldown(SpongeRecharge.ID, TheSponge.ShieldRechargeDelay, true);
+        }
+
+        private void RestoreDeferredSponge(CalamityPlayer calamityPlayer)
+        {
+            if (!spongeShieldDeferred)
+                return;
+
+            calamityPlayer.sponge = true;
+            spongeShieldDeferred = false;
         }
 
         private void SyncCooldownDisplays()

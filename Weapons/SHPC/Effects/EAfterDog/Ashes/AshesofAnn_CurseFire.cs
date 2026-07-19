@@ -27,7 +27,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
         private const float NoTargetDamping = 0.992f;
         private const float WanderingTurnStrength = 0.006f;
         private const float NonHomingTurnStrength = 0.011f;
-        private const int TotalRelayShots = 17;
+        private const int TotalRelayShots = 16;
 
         public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
@@ -52,14 +52,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
             Projectile.friendly = true;
             Projectile.hostile = false;
             Projectile.DamageType = DamageClass.Magic;
-            Projectile.penetrate = 1;
-            Projectile.timeLeft = 150; // homing template lifetime
+            // Each ember survives its first connection. The paired sweep is eight beats on
+            // each side, and every individual ember is allowed to strike twice.
+            Projectile.penetrate = 2;
+            Projectile.timeLeft = 150;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.extraUpdates = 1;
             Projectile.alpha = 255;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = 10;
+            Projectile.localNPCHitCooldown = 12;
         }
 
         public override void OnSpawn(IEntitySource source)
@@ -201,15 +203,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
             target.AddBuff(BuffID.OnFire, 240);
             target.AddBuff(BuffID.CursedInferno, 180);
 
-            if (IsPiercingShot)
-            {
-                if (!Main.dedServ)
-                    SpawnImpactEffects();
-            }
-            else
-            {
-                Projectile.Kill();
-            }
+            if (!Main.dedServ)
+                SpawnImpactEffects();
         }
 
         public override void OnKill(int timeLeft)
@@ -264,6 +259,59 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
             else
             {
                 SpawnSoulHunterOrbit(direction, normal);
+                SpawnSupremeHomingFlightEffects(direction, normal);
+            }
+        }
+
+        // The seeker borrows SCal's cast trail hierarchy: hot glow-orbs as the readable
+        // silhouette, a restrained point wake, and occasional spell-ring/mist accents.
+        private void SpawnSupremeHomingFlightEffects(Vector2 direction, Vector2 normal)
+        {
+            if (Projectile.numUpdates != 0 || (int)Timer % 3 != 0)
+                return;
+
+            Color brimstone = Main.rand.NextBool() ? Color.Red : Color.Lerp(Color.Red, Color.Magenta, 0.48f);
+            Vector2 trailPosition = Projectile.Center - direction * Main.rand.NextFloat(8f, 18f) + normal * Main.rand.NextFloat(-5f, 5f);
+            GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                trailPosition,
+                -direction * Main.rand.NextFloat(1.2f, 3.1f) + normal * Main.rand.NextFloat(-0.45f, 0.45f),
+                false,
+                Main.rand.Next(8, 13),
+                Main.rand.NextFloat(0.22f, 0.36f),
+                brimstone,
+                true,
+                false));
+
+            if ((int)Timer % 6 == 0)
+            {
+                GeneralParticleHandler.SpawnParticle(new PointParticle(
+                    Projectile.Center - direction * 13f,
+                    -direction * Main.rand.NextFloat(2.2f, 4.6f) + normal * Main.rand.NextFloat(-0.7f, 0.7f),
+                    false,
+                    Main.rand.Next(8, 13),
+                    Main.rand.NextFloat(0.34f, 0.52f),
+                    Color.Lerp(brimstone, Color.White, 0.24f)));
+                GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
+                    Projectile.Center - direction * 15f,
+                    -direction * Main.rand.NextFloat(0.35f, 0.9f),
+                    brimstone,
+                    new Color(46, 0, 18),
+                    Main.rand.NextFloat(0.22f, 0.34f),
+                    Main.rand.NextFloat(110f, 150f),
+                    0.02f));
+            }
+
+            if ((int)Timer % 12 == 0)
+            {
+                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                    Projectile.Center - direction * 5f,
+                    -direction * 0.18f,
+                    brimstone,
+                    new Vector2(0.34f, 0.78f),
+                    direction.ToRotation(),
+                    0.03f,
+                    0.21f,
+                    11));
             }
         }
 
@@ -345,7 +393,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
             for (int side = -1; side <= 1; side += 2)
             {
                 Vector2 velocity = (-direction * Main.rand.NextFloat(1.2f, 3.6f) + normal * side * Main.rand.NextFloat(1.6f, 4.4f));
-                GeneralParticleHandler.SpawnParticle(new SparkParticle(
+                GeneralParticleHandler.SpawnParticle(new PointParticle(
                     Projectile.Center - direction * Main.rand.NextFloat(3f, 12f) + normal * side * Main.rand.NextFloat(3f, 7f),
                     velocity,
                     false,

@@ -127,8 +127,9 @@ Mods: {
 					'''
 					手持SHPC时充能一层护盾
 					护盾血量为最大生命值的25%
-					受伤后延迟10秒开始充能，5秒充满
+					满护盾受伤后延迟10秒开始充能，5秒充满；等待与充能期间受伤不会中断进度
 					护盾存在时受到的防前伤害降低10%
+					与其他屏障相互不冲突
 					“矩阵科技，小子”
 					'''
 			}
@@ -171,8 +172,9 @@ Mods: {
 				Tooltip: "[GFB]"
 				TooltipCompact:
 					'''
-					拥有4种芯片的所有功能
-					按住Shift显示每一个芯片提供的效果
+					拥有4种芯片与矩阵充能屏障的所有功能
+					按住Shift显示每一个芯片与矩阵充能屏障提供的效果
+					矩阵充能屏障的护盾血量提升50%
 					不再拥有部分芯片的负面作用
 					“你好，世界”
 					'''
@@ -182,6 +184,7 @@ Mods: {
 					扩散芯片：魔法伤害和魔法暴击率各+7%，强化热量攻击的集中度
 					火控芯片：暴击率+7%，手持SHPC时获得可吸附、追踪、自瞄的准星
 					飞升芯片：手持SHPC时飞行时间+70%，移动速度、跳跃速度和加速度提高
+					矩阵充能屏障：手持SHPC时获得其充能护盾，护盾血量提升50%，与其他屏障相互不冲突
 					不再拥有部分芯片的负面作用
 					“你好，世界”
 					'''
@@ -256,6 +259,7 @@ Mods: {
 					'''
 					SHPC伤害+20%，暴击率+10%，允许激光扫射暴击，缩短激光扫射的前摇
 					手持SHPC时获得无限魔力，发射能量光球有50%几率不消耗弹药
+					右键的激光扫射永不过热
 					增加能量光球储罐，弹药装填量+100%
 					'''
 			}
@@ -418,6 +422,10 @@ Mods: {
 				PlagueCell_Nuke.DisplayName: 瘟疫细胞核爆
 				SHPC_ChargeSpiralInv.DisplayName: SHPC蓄能螺旋视觉体
 				// StellarVortexShard.DisplayName: Stellar Vortex Shard
+				// AshesofAnn_CataclysmFist.DisplayName: Ashesof Ann_ Cataclysm Fist
+				// AshesofAnn_CatastropheSlash.DisplayName: Ashesof Ann_ Catastrophe Slash
+				// AshesofAnn_VerdictHunter.DisplayName: Ashesof Ann_ Verdict Hunter
+				// AshesofAnn_VerdictPiercer.DisplayName: Ashesof Ann_ Verdict Piercer
 			}
 
 			SHPCRight_HeatUI.DisplayName: SHPC右键热量界面

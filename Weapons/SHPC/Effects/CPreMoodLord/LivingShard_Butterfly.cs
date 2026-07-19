@@ -143,37 +143,82 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord
         // 形成一次性绽放开的蝴蝶形尘爆。
         private static void SpawnButterflyDeathBurst(Vector2 center, Vector2 velocity)
         {
-            const int steps = 96;
-            const float thetaMax = 12f * MathHelper.Pi;
-            const float scale = 15f;
-
+            // Two mirrored, scalloped wing fields make the silhouette readable immediately.
+            // Dust fills the wings, while the glow-orbs only trace their outer edges.
             float baseRotation = velocity.LengthSquared() > 0.01f
                 ? velocity.ToRotation() - MathHelper.PiOver2
                 : Main.rand.NextFloat(MathHelper.TwoPi);
 
-            for (int i = 0; i < steps; i++)
+            const int wingSegments = 30;
+            const int wingBands = 3;
+            for (int side = -1; side <= 1; side += 2)
             {
-                float theta = thetaMax * i / steps;
-                float r = MathF.Exp(MathF.Sin(theta)) - 2f * MathF.Cos(4f * theta)
-                    + MathF.Pow(MathF.Sin((2f * theta - MathHelper.Pi) / 24f), 5f);
+                for (int i = 0; i < wingSegments; i++)
+                {
+                    float t = MathHelper.Lerp(-1f, 1f, i / (float)(wingSegments - 1));
+                    float lobe = 1f - t * t;
+                    float scallop = 3.5f * MathF.Cos(t * MathHelper.Pi * 2f);
+                    float wingWidth = 8f + lobe * 26f + scallop;
+                    float wingHeight = t * 27f + MathF.Sin(t * MathHelper.Pi) * 5f;
 
-                float angle = theta + baseRotation;
-                Vector2 offset = new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * r * scale;
+                    for (int band = 0; band < wingBands; band++)
+                    {
+                        float fill = MathHelper.Lerp(0.30f, 1f, band / (float)(wingBands - 1));
+                        Vector2 localOffset = new(side * wingWidth * fill, wingHeight * (0.62f + fill * 0.38f));
+                        Vector2 offset = localOffset.RotatedBy(baseRotation);
+                        Vector2 outward = offset.SafeNormalize(Vector2.UnitY);
+                        Color color = Color.Lerp(new Color(255, 192, 220), new Color(120, 255, 156), (t + 1f) * 0.5f);
 
-                Vector2 outward = offset.SafeNormalize(Vector2.UnitX);
-                Vector2 dustVelocity = outward * Main.rand.NextFloat(1.4f, 2.4f);
+                        Dust dust = Dust.NewDustPerfect(
+                            center + offset,
+                            band == wingBands - 1 ? DustID.TintableDustLighted : DustID.GreenTorch,
+                            outward * Main.rand.NextFloat(1.45f, 2.8f) + localOffset.RotatedBy(baseRotation + MathHelper.PiOver2).SafeNormalize(Vector2.Zero) * Main.rand.NextFloat(-0.45f, 0.45f),
+                            90,
+                            color,
+                            Main.rand.NextFloat(0.72f, 1.08f));
+                        dust.noGravity = true;
+                        dust.fadeIn = 0.26f;
 
-                Color color = Color.Lerp(new Color(255, 170, 210), new Color(140, 255, 170), i / (float)steps);
+                        if (band == wingBands - 1 && i % 3 == 0)
+                        {
+                            GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                                center + offset,
+                                outward * Main.rand.NextFloat(1.0f, 2.0f),
+                                false,
+                                Main.rand.Next(14, 21),
+                                Main.rand.NextFloat(0.14f, 0.23f),
+                                Color.Lerp(color, Color.White, 0.28f),
+                                true,
+                                false));
+                        }
+                    }
+                }
+            }
 
-                Dust dust = Dust.NewDustPerfect(
-                    center + offset,
-                    Main.rand.NextBool() ? DustID.GreenTorch : DustID.TintableDustLighted,
-                    dustVelocity,
-                    100,
-                    color,
-                    Main.rand.NextFloat(0.8f, 1.25f));
-                dust.noGravity = true;
-                dust.fadeIn = 0.3f;
+            // A thin body and a pair of antennae keep the expanding wing cloud from reading as
+            // a simple radial burst during the first few frames.
+            Vector2 bodyDirection = baseRotation.ToRotationVector2();
+            Vector2 bodyNormal = bodyDirection.RotatedBy(MathHelper.PiOver2);
+            for (int i = -3; i <= 4; i++)
+            {
+                Vector2 bodyOffset = bodyDirection * i * 4.2f;
+                Dust bodyDust = Dust.NewDustPerfect(center + bodyOffset, DustID.GreenTorch,
+                    bodyOffset.SafeNormalize(Vector2.Zero) * Main.rand.NextFloat(0.8f, 1.7f), 80, Color.White, 0.92f);
+                bodyDust.noGravity = true;
+            }
+
+            for (int side = -1; side <= 1; side += 2)
+            {
+                Vector2 antenna = bodyDirection * 18f + bodyNormal * side * 8f;
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    center + antenna,
+                    antenna.SafeNormalize(Vector2.Zero) * 1.4f,
+                    false,
+                    18,
+                    0.16f,
+                    new Color(225, 255, 190),
+                    true,
+                    false));
             }
         }
 

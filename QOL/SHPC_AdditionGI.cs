@@ -17,6 +17,7 @@ namespace CalamityLegendsComeBack.QOL
             RegisterEarlyGameRecipes();
             RegisterMidGameRecipes();
             RegisterLateGameRecipes();
+            RegisterEctoplasmDuplicationRecipes();
             RegisterLunarFragmentRecipes();
         }
 
@@ -220,6 +221,28 @@ namespace CalamityLegendsComeBack.QOL
             recipeExoPrism.AddIngredient(ItemID.Glass, 100);
             recipeExoPrism.AddTile(TileID.LunarCraftingStation);
             recipeExoPrism.Register();
+        }
+
+        private static void RegisterEctoplasmDuplicationRecipes()
+        {
+            RegisterEctoplasmDuplicationRecipe(ModContent.ItemType<BloodOrb>());
+            RegisterEctoplasmDuplicationRecipe(ModContent.ItemType<EffulgentFeather>());
+            RegisterEctoplasmDuplicationRecipe(ModContent.ItemType<Necroplasm>());
+            RegisterEctoplasmDuplicationRecipe(ModContent.ItemType<UnholyEssence>());
+
+            RegisterEctoplasmDuplicationRecipe(ItemID.FragmentSolar);
+            RegisterEctoplasmDuplicationRecipe(ItemID.FragmentVortex);
+            RegisterEctoplasmDuplicationRecipe(ItemID.FragmentNebula);
+            RegisterEctoplasmDuplicationRecipe(ItemID.FragmentStardust);
+        }
+
+        private static void RegisterEctoplasmDuplicationRecipe(int materialType)
+        {
+            Recipe recipe = Recipe.Create(materialType, 2);
+            recipe.AddIngredient(materialType);
+            recipe.AddIngredient(ItemID.Ectoplasm);
+            recipe.AddTile(TileID.LunarCraftingStation);
+            recipe.Register();
         }
 
         private static void RegisterLunarFragmentRecipes()

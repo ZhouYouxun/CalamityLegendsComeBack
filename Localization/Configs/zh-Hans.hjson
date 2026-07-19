@@ -4,29 +4,19 @@
 			CalamityLegendsComeBackConfig: {
 				DisplayName: 传奇归来设置
 
-				AllowWheelSlowdown: {
-					Label: 允许轮盘减速
-					Tooltip: 开启后，单人模式中部分传奇武器呼出轮盘期间会将游戏速度放慢 50%。
-				}
-
 				AllowMassMaterialRecipes: {
 					Label: 允许大量材料可制作
 					Tooltip: 开启后可以允许大量材料以较简单的方式进行复制或制作
 				}
 
 				AllowBossRelicWeaponRecipes: {
-					Label: 允许Boss圣遗物转化武器
-					Tooltip: 开启后可以允许将Boss纪念章/圣遗物在空手状态下制作成该Boss对应的专属武器
+					Label: 允许 Boss 遗物兑换武器
+					Tooltip: 开启后，可以用部分 Boss 遗物制作对应掉落武器。
 				}
 
 				AllowOtherRecipes: {
-					Label: 允许其他合成配方
-					Tooltip: 开启后允许以简易配方合成一些原版或额外的其他物品（例如大自然恩赐）
-				}
-
-				GiveQuickStartBoxOnSpawn: {
-					Label: 开局赠送快速发展道具箱
-					Tooltip: 开启后，新玩家/新角色创号生成时，背包内将自动获得一个【快速发展道具箱】（注意：此功能会极大地破坏游戏平衡，请谨慎开启）
+					Label: 允许额外 QOL 配方
+					Tooltip: 开启后，会加入部分改善流程体验的额外配方。
 				}
 			}
 
@@ -36,6 +26,11 @@
 				ShowMatrixBossBar: {
 					Label: 显示矩阵风格Boss血条
 					Tooltip: 开启后，在屏幕正上方居中显示我们自制的矩阵风格 Boss 血条。
+				}
+
+				ShowInternalEnglishNames: {
+					Label: 显示内部英文名
+					Tooltip: 开启后，当游戏语言不是英文时，会在所有物品的提示名称后追加其内部英文名。
 				}
 			}
 		}

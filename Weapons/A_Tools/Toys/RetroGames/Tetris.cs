@@ -32,8 +32,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.Toys.RetroGames
         PlayerLockerClearSlot = 12,
         PlayerSaddleMount = 13,
         PlayerSaddleDismount = 14,
-        NewDiffSyncMode = 15,
-        NewDiffYharonState = 16
+        ArtisanTokenApplyPrefix = 15,
+        ArtisanTokenPrefixApplied = 16
     }
 
     internal enum TetrisInputCommand : byte
