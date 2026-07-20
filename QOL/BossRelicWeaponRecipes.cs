@@ -14,13 +14,13 @@ namespace CalamityLegendsComeBack.QOL
             { "AstrumDeusRelic", new[] { "RegulusRiot", "StarShower", "StarSputter", "StarspawnHelixStaff", "TheMicrowave" } },
             { "BrimstoneElementalRelic", new[] { "Brimlance", "DormantBrimseeker", "Hellborn", "SeethingDischarge" } },
             { "CalamitasCloneRelic", new[] { "Animosity", "EntropysVigil", "LashesofChaos", "Oblivion" } },
-            { "CalamitasRelic", new[] { "Animosity", "ColdheartIcicle", "Condemnation", "EntropysVigil", "GaelsGreatsword", "Heresy", "LashesofChaos", "Oblivion", "Perdition", "Sacrifice", "Vehemence", "Vigilance", "Violence" } },
+            { "CalamitasRelic", new[] { "ColdheartIcicle", "Condemnation", "GaelsGreatsword", "Heresy", "Perdition", "Sacrifice", "Vehemence", "Vigilance", "Violence" } },
             { "CeaselessVoidRelic", new[] { "MirrorBlade", "VoidConcentrationStaff" } },
             { "CrabulonRelic", new[] { "Fungicide", "HyphaeRod", "InfestedClawmerang", "MycelialClaws", "Mycoroot", "PuffShroom" } },
             { "CragmawMireRelic", new[] { "SpentFuelContainer" } },
             { "CryogenRelic", new[] { "Avalanche", "GlacialEmbrace", "HoarfrostBow", "Icebreaker", "SnowstormStaff" } },
             { "DesertScourgeRelic", new[] { "Barinade", "BrittleStarStaff", "SaharaSlicers", "SandstreamScepter", "ScourgeoftheDesert" } },
-            { "DevourerOfGodsRelic", new[] { "CosmicDischarge", "DimensionTearingDisk", "HyperdeathRiftScepter", "MawOfInfinity", "TheObliterator", "TheWand", "ThreadOfEradication", "VoidEaterMarionette" } },
+            { "DevourerOfGodsRelic", new[] { "CosmicDischarge", "DimensionTearingDisk", "HyperdeathRiftScepter", "MawOfInfinity", "TheObliterator", "ThreadOfEradication", "VoidEaterMarionette" } },
             { "DraedonRelic", new[] { "AresExoskeleton", "AtlasMunitionsBeacon", "PhotonRipper", "RefractionRotor", "SpineOfThanatos", "SurgeDriver", "TheAtomSplitter", "TheJailor" } },
             { "DragonfollyRelic", new[] { "GildedProboscis", "GoldenEagle", "RougeSlash" } },
             { "GiantClamRelic", new[] { "ClamCrusher", "ClamorRifle", "Poseidon", "ShellfishStaff" } },
@@ -31,14 +31,14 @@ namespace CalamityLegendsComeBack.QOL
             { "OldDukeRelic", new[] { "CadaverousCarrion", "FetidEmesis", "InsidiousImpaler", "MutatedTruffle", "SepticSkewer", "TheOldReaper", "ToxicantTwister", "VitriolicViper" } },
             { "PerforatorsRelic", new[] { "Aorta", "BloodBath", "Eviscerator", "FleshOfInfidelity", "SausageMaker", "ToothBall", "VeinBurster" } },
             { "PlaguebringerGoliathRelic", new[] { "FuelCellBundle", "InfectedRemote", "Malachite", "Malevolence", "PlagueStaff", "TheSyringe", "Virulence" } },
-            { "PolterghastRelic", new[] { "BansheeHook", "DaemonsFlame", "EtherealSubjugator", "FatesReveal", "GhastlyVisage", "GhoulishGouger", "TerrorBlade", "Violence" } },
-            { "ProfanedGuardiansRelic", new[] { "RelicOfDeliverance" } },
+            { "PolterghastRelic", new[] { "BansheeHook", "DaemonsFlame", "EtherealSubjugator", "FatesReveal", "GhastlyVisage", "GhoulishGouger", "TerrorBlade" } },
+            { "ProfanedGuardiansRelic", new[] { "RelicOfDeliverance", "RelicOfResilience", "RelicOfConvergence" } },
             { "ProvidenceRelic", new[] { "BlissfulBombardier", "BurningRevelation", "DazzlingStabberStaff", "HolyCollider", "MoltenAmputator", "PristineFury", "PurgeGuzzler", "TelluricGlare" } },
             { "RavagerRelic", new[] { "CorpusAvertor", "CraniumSmasher", "Hematemesis", "RealmRavager", "SpikecragStaff", "UltimusCleaver", "Vesuvius" } },
             { "SignusRelic", new[] { "CosmicKunai", "Cosmilamp" } },
             { "SlimeGodRelic", new[] { "AbyssalTome", "CorroslimeStaff", "CrimslimeStaff", "EldritchTome", "OverloadedBlaster" } },
             { "StormWeaverRelic", new[] { "SkytideDragoon", "TheStorm", "Volterion" } },
-            { "YharonRelic", new[] { "ChickenCannon", "DragonRage", "DragonsBreath", "PhoenixFlameBarrage", "TheBurningSky", "TheFinalDawn", "Wrathwing", "YharimsCrystal", "YharonsKindleStaff" } }
+            { "YharonRelic", new[] { "ChickenCannon", "DragonRage", "DragonsBreath", "PhoenixFlameBarrage", "TheBurningSky", "TheFinalDawn", "TheWand", "Wrathwing", "YharimsCrystal", "YharonsKindleStaff" } }
         };
 
         private static readonly Dictionary<string, string[]> VanillaRelicToWeapons = new()
@@ -46,7 +46,7 @@ namespace CalamityLegendsComeBack.QOL
             { "KingSlimeRelic", new[] { "SlimeStaff", "SlimySaddle", "SlimeHook", "SlimeGun", "NinjaHood", "NinjaShirt", "NinjaPants" } },
             { "EyeofCthulhuRelic", new[] { "Binoculars", "ShieldofCthulhu", "EoCShield" } },
             { "BrainofCthulhuRelic", new[] { "TheRottedFork" } },
-            { "QueenBeeRelic", new[] { "BeeHat", "BeeShirt", "BeePants", "HoneyComb", "BeeGun", "TheBeesKnees", "BeesKnees", "BeeKeeper", "Beenade" } },
+            { "QueenBeeRelic", new[] { "BeeHat", "BeeShirt", "BeePants", "HoneyComb", "BeeGun", "TheBeesKnees", "BeesKnees", "BeeKeeper" } },
             { "SkeletronRelic", new[] { "BookofSkulls", "BoneGlove", "SkeletronHand" } },
             { "WallofFleshRelic", new[] { "BreakerBlade", "ClockworkAssaultRifle", "LaserRifle", "FireWhip", "Pwnhammer", "WarriorEmblem", "RangerEmblem", "SorcererEmblem", "SummonerEmblem" } },
             { "QueenSlimeRelic", new[] { "CrystalNinjaHelmet", "CrystalNinjaChestplate", "CrystalNinjaLeggings", "QueenSlimeMinionStaff", "Smolstar", "QueenSlimeMountSaddle", "QueenSlimeHook" } },
@@ -173,11 +173,23 @@ namespace CalamityLegendsComeBack.QOL
                 }
             }
 
+            RegisterQueenBeeBeenadeRecipe();
+
             foreach (string[] cycle in MimicItemCycles)
                 RegisterCycleRecipes(cycle, TileID.Anvils);
 
             foreach (string[] pair in MaterialConversionPairs)
                 RegisterBidirectionalConversion(pair[0], pair[1]);
+        }
+
+        private static void RegisterQueenBeeBeenadeRecipe()
+        {
+            if (!TryGetVanillaItem("QueenBeeRelic", out int relicType))
+                return;
+
+            Recipe recipe = Recipe.Create(ItemID.Beenade, 100);
+            recipe.AddIngredient(relicType);
+            recipe.Register();
         }
 
         private static void RegisterCycleRecipes(string[] itemNames, int tileType)

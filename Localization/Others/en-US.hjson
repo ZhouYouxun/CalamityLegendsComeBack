@@ -56,35 +56,26 @@ Mods: {
 					DisplayName: STG
 				}
 
-				SacredThunder: {
-					DisplayName: Sacred Thunder
-					Tooltip: "[GFB]"
-					LegendaryText:
-						'''
-						Throws a holy thunder disk that strikes up to five times before returning
-						Stealth strike: the disk stops in the air for 15 seconds, escalating its borrowed lightning and holy beams before detonating
-						[c/FFE85A:"But I think it is pretty sacred."]
-						[c/6FDFFF:"Sacred? More like thunder."]
-						'''
-				}
-
 				LegendaryCodex: {
-					DisplayName: Legendary Codex
+					DisplayName: Legendary Guide
 					Tooltip:
 						'''
-						Welcome to Calamity: Legend!
-						This mod has just gotten started and is under active development.
-						Every legendary weapon will be reworked over time, with plenty more new content on the way -- stay tuned.
-						Feedback and suggestions are welcome -- please leave a rational comment in the review section.
-						[c/FF5555:If your screen turns black while a Legendary weapon's tooltip is shown]
+						[c/55DFFF:Welcome to Calamity: Legend!]
+						[c/FF5555:If your screen turns black while a Legendary weapon's tooltip is shown ]
 						[c/FF5555:Go to Mod Configuration > Calamity > Client Config > the 2nd option, Extra Text Effects, and turn it off.]
-						Left-click to view the Legendary Codex.
+						[c/70E0A0:This mod also includes many QOL features See Mod Configuration for details:]
+						[c/70E0A0:Bulk material crafting and many extra recipes that improve gameplay flow]
+						[c/70E0A0:The Zoologist sells Boss summons when appropriate]
+						[c/70E0A0:A custom Boss health bar and internal item names]
+						[c/70E0A0:Faster decryption and charging]
+						[c/70E0A0:Hostile projectile outlines and more]
+						[c/FFFFFF:Left-click to view the Legendary Guide]
 						'''
 				}
 
 				CTRLBoss: {
-					DisplayName: Boss Progress & Summoner
-					Tooltip: Left click to open or close the boss progress debug panel. Right click to open or close the boss summon panel.
+					DisplayName: Boss Progress Controller
+					Tooltip: Left click to open or close the boss progress debug panel.
 				}
 
 				SoundproofEarmuffs: {
@@ -103,51 +94,12 @@ Mods: {
 			Consumables: {
 				LegendarySupplyBox: {
 					DisplayName: Legendary Supply Box
-					Tooltip: Right click to claim the currently available legendary weapons.
+					Tooltip: Right click to claim the current legendary weapon and its guide disc.
 				}
 
 				RetroGameConsoleSupplyBox: {
 					DisplayName: Retro Game Console Supply Box
 					Tooltip: Right click to claim the currently available retro game consoles.
-				}
-
-				QuickStartBox: {
-					DisplayName: Quick Start Supply Box
-					Tooltip:
-						'''
-						Right click to open. Grants strong early-game equipment, potions, and bulk resources.
-						[WARNING: This item severely breaks game balance. Think twice before opening!]
-						'''
-				}
-
-				Prime2041Summoner: {
-					DisplayName: Strange Mechanical Skull
-					Tooltip:
-						'''
-						Summons a Skeletron Prime from version 2.0.4.1
-						Only works when summoned in Master Mode
-						Only usable at night
-						'''
-				}
-
-				Destroyer2041Summoner: {
-					DisplayName: Strange Mechanical Worm
-					Tooltip:
-						'''
-						Summons a Destroyer from version 2.0.4.1
-						Only works when summoned in Master Mode
-						Only usable at night
-						'''
-				}
-
-				Twins2041Summoner: {
-					DisplayName: Strange Mechanical Lens
-					Tooltip:
-						'''
-						Summons the Twins from version 2.0.4.1
-						Only works when summoned in Master Mode
-						Only usable at night
-						'''
 				}
 			}
 
@@ -155,18 +107,11 @@ Mods: {
 				DisplayName: Legendary Emblem
 				Tooltip: Permanently unlocks every legendary weapon ultimate for this character
 				AlreadyConsumed: This character has already received the Legendary Emblem's permanent boost.
-				UnconsumedStatus: This character has not received the Legendary Emblem's permanent boost yet.
-				ConsumedStatus: This character has already received the Legendary Emblem's permanent boost.
 			}
 
 			LegendaryUltimateTester: {
 				DisplayName: Legendary Ultimate Tester
-				Tooltip: Test accessory: legendary weapon ultimates fully recharge in 1 second
-			}
-
-			TestWeapon: {
-				DisplayName: Test Weapon
-				Tooltip: ""
+				Tooltip: Test accessory: SHPC ultimate fully recharges in 1 second
 			}
 		}
 
@@ -178,12 +123,23 @@ Mods: {
 				MinesweeperPanel.DisplayName: Minesweeper Board
 				STGPanel.DisplayName: STG Shooter Board
 				CTRLBossPanel.DisplayName: Boss Progress Panel
-				DesertEagleHeavyRound.DisplayName: Desert Eagle Heavy Round
-				DesertEagleLifeRound.DisplayName: Desert Eagle Life Round
 			}
 
-			SacredThunder.SacredThunderPROJ.DisplayName: Sacred Thunder
-			TestWeaponProj.DisplayName: Test Weapon Proj
+			TeachingProjectileA_LineTrailLaser.DisplayName: Teaching Projectile A_ Line Trail Laser
+			TeachingProjectileB_FlashSparklePoint.DisplayName: Teaching Projectile B_ Flash Sparkle Point
+			TeachingProjectileC_BloomGlowCore.DisplayName: Teaching Projectile C_ Bloom Glow Core
+			TeachingProjectileD_PulseRingField.DisplayName: Teaching Projectile D_ Pulse Ring Field
+			TeachingProjectileE_ExplosionImpact.DisplayName: Teaching Projectile E_ Explosion Impact
+			TeachingProjectileF_SmokeMistDust.DisplayName: Teaching Projectile F_ Smoke Mist Dust
+			TeachingProjectileG_FireAshBurn.DisplayName: Teaching Projectile G_ Fire Ash Burn
+			TeachingProjectileH_WaterFoamOcean.DisplayName: Teaching Projectile H_ Water Foam Ocean
+			TeachingProjectileI_BloodFleshBiology.DisplayName: Teaching Projectile I_ Blood Flesh Biology
+			TeachingProjectileJ_DebrisMechanicalParts.DisplayName: Teaching Projectile J_ Debris Mechanical Parts
+			TeachingProjectileK_MagicStatusUI.DisplayName: Teaching Projectile K_ Magic Status U I
+			TeachingProjectileL_SlashSmearAfterimage.DisplayName: Teaching Projectile L_ Slash Smear Afterimage
+			TeachingProjectileM_TechHoloSquare.DisplayName: Teaching Projectile M_ Tech Holo Square
+			TeachingProjectileN_ParticleSetsControllers.DisplayName: Teaching Projectile N_ Particle Sets Controllers
+			TeachingProjectile.DisplayName: Teaching Projectile
 
 			GhostSniperRifle: {
 				GhostSniperRound.DisplayName: Ghost Sniper Round
@@ -238,22 +194,7 @@ Mods: {
 		Keybinds: {
 			LegendarySkill.DisplayName: Legendary Skill
 			LegendaryWeaponFormSwitch.DisplayName: Legendary Weapon Form Switch
-			WeaponLoadingUI.DisplayName: Weapon Loading UI
-			ExtraBackpack.DisplayName: Extra Backpack
-		}
-
-		NPCs: {
-			Prime2041.DisplayName: Skeletron Prime (2024 Master AI)
-			Prime2041SecondHead.DisplayName: Skeletron Prime (2024 Master AI) - Second Head
-			Prime2041Saw.DisplayName: Prime Saw (2024)
-			Prime2041Laser.DisplayName: Prime Laser (2024)
-			Prime2041Vice.DisplayName: Prime Vice (2024)
-			Prime2041Cannon.DisplayName: Prime Cannon (2024)
-			Destroyer2041Head.DisplayName: The Destroyer (2024 Master AI)
-			Destroyer2041Body.DisplayName: The Destroyer (2024 Master AI)
-			Destroyer2041Tail.DisplayName: The Destroyer (2024 Master AI)
-			Twins2041Retinazer.DisplayName: Retinazer (2024 Master AI)
-			Twins2041Spazmatism.DisplayName: Spazmatism (2024 Master AI)
+			SHPCLoadingUI.DisplayName: SHPC Loading UI
 		}
 	}
 }

@@ -10,8 +10,8 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
 {
-    // The primary fire is a paired muzzle fan. Every soul starts from the relay itself, then
-    // the two lanes widen gradually while their independent homing corrects toward enemies.
+    // The primary fire is a paired spiral fired from the relay at the gun muzzle. The two
+    // lanes tighten over time, then independently home after leaving that fixed origin.
     internal sealed class AshesofAnn_BurstRelay : ModProjectile, ILocalizedModType
     {
         private const int SweepPairCount = 8;
@@ -103,7 +103,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
         {
             Vector2 forward = ForwardDirection;
             float completion = pairIndex / (float)Math.Max(1, SweepPairCount - 1);
-            float sweepAngle = MathHelper.Lerp(0.055f, 0.38f, completion);
+            float sweepAngle = MathHelper.Lerp(0.38f, 0.055f, completion);
             int damage = Math.Max(1, (int)(Projectile.damage * MathHelper.Lerp(0.78f, 0.94f, completion)));
 
             for (int side = -1; side <= 1; side += 2)

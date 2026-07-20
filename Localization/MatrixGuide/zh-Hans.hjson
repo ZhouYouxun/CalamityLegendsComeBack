@@ -7,6 +7,8 @@ Mods: {
 			}
 
 			TestWeapon: {
+				// DisplayName: Test Weapon
+				// Tooltip: ""
 			}
 		}
 
@@ -17,6 +19,8 @@ Mods: {
 			// CtrlChipReticle.DisplayName: Ctrl Chip Reticle
 			// LegendaryCodexPanel.DisplayName: Legendary Codex Panel
 			// BossSummonerPanel.DisplayName: Boss Summoner Panel
+			// TestWeaponProj.DisplayName: Test Weapon Proj
+			// Magic.AnodizedWulfrumShard.DisplayName: Anodized Wulfrum Shard
 			// PurifiedGel_Ball.DisplayName: Purified Gel_ Ball
 			// NewSHPS.DisplayName: New S H P S
 			// DepthCells_Drop.DisplayName: Depth Cells_ Drop
@@ -28,6 +32,11 @@ Mods: {
 			// NL_SHPC_EXWeapon.DisplayName: N L_ S H P C_ E X Weapon
 			// SHPCLeftClickHoldout.DisplayName: S H P C Left Click Holdout
 			// SHPCMagazineStatusPanel.DisplayName: S H P C Magazine Status Panel
+
+			SHPC: {
+				// SHPCNecroplasmBeam.DisplayName: S H P C Necroplasm Beam
+				// SHPCNecroplasmFrame.DisplayName: S H P C Necroplasm Frame
+			}
 		}
 
 		// Projectile.EndothermicEnergy_Split.DisplayName: Endothermic Energy_ Split

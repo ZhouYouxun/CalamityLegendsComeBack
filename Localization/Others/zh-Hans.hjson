@@ -57,35 +57,26 @@ Mods: {
 					DisplayName: STG
 				}
 
-				SacredThunder: {
-					DisplayName: 神圣雷霆
-					Tooltip: "[GFB]"
-					LegendaryText:
-						'''
-						丢出雷电神圣飞盘，反复攻击5次后飞回玩家
-						潜伏攻击：飞盘停在空中滞留15秒，不断释放越来越多的闪电与圣光，结束后巨型爆炸并消失
-						[c/FFE85A:“可是我觉得很神圣啊”]
-						[c/6FDFFF:”神圣你雷霆“]
-						'''
-				}
-
 				LegendaryCodex: {
 					DisplayName: 传奇图鉴
 					Tooltip:
 						'''
-						欢迎游玩《灾厄-传奇》
-						本模组刚刚起步，正在持续发展
-						后续会重做每一把传奇武器，并加入更多新内容的，敬请期待
-						反馈与建议，欢迎加入群聊进行讨论：876728711
+						[c/55DFFF:欢迎游玩《灾厄-传奇》 欢迎加入群聊进行讨论：876728711]
 						[c/FF5555:如果遇到显示传奇武器时屏幕变黑的情况]
 						[c/FF5555:请前往 模组配置 > 灾厄 > 客户端配置 > 第2个：额外文本特效，将其关闭。]
-						点击左键查看传奇法典
+						[c/70E0A0:本模组还包含许多QOL相关内容 详情请看配置选项：]
+						[c/70E0A0:大量材料的制作以及许多额外的改善体验的配方]
+						[c/70E0A0:动物学家会在合适的时候出售Boss召唤物]
+						[c/70E0A0:自定义Boss血条 以及显示物品内部名]
+						[c/70E0A0:可以快速加速破译和充能的时间]
+						[c/70E0A0:敌方弹幕包边等等更多功能]
+						[c/FFFFFF:点击左键查看传奇图鉴]
 						'''
 				}
 
 				CTRLBoss: {
-					DisplayName: Boss进度与召唤器
-					Tooltip: 左键打开或关闭 Boss 进度调试面板，右键打开或关闭 Boss 召唤面板。
+					DisplayName: Boss进度修改器
+					Tooltip: 左键打开或关闭 Boss 进度调试面板。
 				}
 
 				SoundproofEarmuffs: {
@@ -103,56 +94,13 @@ Mods: {
 
 			Consumables: {
 				LegendarySupplyBox: {
-					DisplayName: 传奇补给箱
-					Tooltip:
-						'''
-						右键打开，领取目前已经准备好的传奇武器。
-						“你根本想象不到在另一个世界的人们想要获得这个箱子两个月的使用权需要经历多少种苦难”
-						'''
+					DisplayName: 传奇补给包
+					Tooltip: 右键打开，领取当前版本的传奇武器和配套图鉴。
 				}
 
 				RetroGameConsoleSupplyBox: {
 					DisplayName: 复古游戏机补给包
 					Tooltip: 右键打开，领取目前已经准备好的复古游戏机。
-				}
-
-				QuickStartBox: {
-					DisplayName: 快速发展道具箱
-					Tooltip:
-						'''
-						右键打开，获得一些快速发展的强力装备、海量药水与物资。
-						【注意：这个道具很破坏平衡，想好了再开启】
-						'''
-				}
-
-				Prime2041Summoner: {
-					DisplayName: 奇怪的机械骷髅头
-					Tooltip:
-						'''
-						这将召唤一个来自 2.0.4.1 版本的机械骷髅王
-						必须在大师模式召唤才有效
-						仅在夜间可用
-						'''
-				}
-
-				Destroyer2041Summoner: {
-					DisplayName: 奇怪的机械蠕虫
-					Tooltip:
-						'''
-						这将召唤一个来自 2.0.4.1 版本的毁灭者
-						必须在大师模式召唤才有效
-						仅在夜间可用
-						'''
-				}
-
-				Twins2041Summoner: {
-					DisplayName: 奇怪的机械晶状体
-					Tooltip:
-						'''
-						这将召唤一个来自 2.0.4.1 版本的双子魔眼
-						必须在大师模式召唤才有效
-						仅在夜间可用
-						'''
 				}
 			}
 
@@ -160,18 +108,11 @@ Mods: {
 				DisplayName: 黄金饰章
 				Tooltip: 使用后永久解锁此角色手持所有传奇武器的大招
 				AlreadyConsumed: 这个角色已经获得了黄金饰章的永久强化。
-				UnconsumedStatus: 这个角色尚未获得黄金饰章的永久强化。
-				ConsumedStatus: 这个角色已经获得黄金饰章的永久强化。
 			}
 
 			LegendaryUltimateTester: {
 				DisplayName: 传奇大招测试器
-				Tooltip: 仅限测试用：所有传奇武器的大招会在1秒内充能完成
-			}
-
-			TestWeapon: {
-				// DisplayName: Test Weapon
-				// Tooltip: ""
+				Tooltip: 仅限测试用：SHPC大招会在1秒内充能完成
 			}
 		}
 
@@ -183,12 +124,23 @@ Mods: {
 				MinesweeperPanel.DisplayName: 扫雷面板
 				STGPanel.DisplayName: STG 弹幕射击面板
 				CTRLBossPanel.DisplayName: Boss进度面板
-				// DesertEagleHeavyRound.DisplayName: Desert Eagle Heavy Round
-				// DesertEagleLifeRound.DisplayName: Desert Eagle Life Round
 			}
 
-			SacredThunder.SacredThunderPROJ.DisplayName: 神圣雷霆
-			TestWeaponProj.DisplayName: 测试武器弹幕
+			TeachingProjectileA_LineTrailLaser.DisplayName: 教学弹幕A线状拖尾激光
+			TeachingProjectileB_FlashSparklePoint.DisplayName: 教学弹幕B闪光星点
+			TeachingProjectileC_BloomGlowCore.DisplayName: 教学弹幕C绽放辉光核心
+			TeachingProjectileD_PulseRingField.DisplayName: 教学弹幕D脉冲环场
+			TeachingProjectileE_ExplosionImpact.DisplayName: 教学弹幕E爆炸冲击
+			TeachingProjectileF_SmokeMistDust.DisplayName: 教学弹幕F烟雾粉尘
+			TeachingProjectileG_FireAshBurn.DisplayName: 教学弹幕G火灰燃烧
+			TeachingProjectileH_WaterFoamOcean.DisplayName: 教学弹幕H水沫海洋
+			TeachingProjectileI_BloodFleshBiology.DisplayName: 教学弹幕I血肉生物
+			TeachingProjectileJ_DebrisMechanicalParts.DisplayName: 教学弹幕J机械碎片
+			TeachingProjectileK_MagicStatusUI.DisplayName: 教学弹幕K魔法状态界面
+			TeachingProjectileL_SlashSmearAfterimage.DisplayName: 教学弹幕L斩击残影拖痕
+			TeachingProjectileM_TechHoloSquare.DisplayName: 教学弹幕M科技全息方块
+			TeachingProjectileN_ParticleSetsControllers.DisplayName: 教学弹幕N粒子组控制器
+			// TeachingProjectile.DisplayName: Teaching Projectile
 
 			GhostSniperRifle: {
 				GhostSniperRound.DisplayName: 幽灵狙击弹
@@ -242,23 +194,8 @@ Mods: {
 
 		Keybinds: {
 			LegendarySkill.DisplayName: 传奇技能
-			LegendaryWeaponFormSwitch.DisplayName: 传奇武器轮盘
-			WeaponLoadingUI.DisplayName: 武器界面
-			ExtraBackpack.DisplayName: 额外背包
-		}
-
-		NPCs: {
-			Prime2041.DisplayName: 机械骷髅王 Prime (2024 大师 AI版)
-			Prime2041SecondHead.DisplayName: 机械骷髅王 Prime (2024 大师 AI版) - 副头
-			Prime2041Saw.DisplayName: 机械吴克锯 (2024)
-			Prime2041Laser.DisplayName: 机械吴克激光 (2024)
-			Prime2041Vice.DisplayName: 机械吴克钳 (2024)
-			Prime2041Cannon.DisplayName: 机械吴克炮 (2024)
-			// Destroyer2041Head.DisplayName: The Destroyer (2024 Master AI)
-			// Destroyer2041Body.DisplayName: The Destroyer (2024 Master AI)
-			// Destroyer2041Tail.DisplayName: The Destroyer (2024 Master AI)
-			// Twins2041Retinazer.DisplayName: Retinazer (2024 Master AI)
-			// Twins2041Spazmatism.DisplayName: Spazmatism (2024 Master AI)
+			LegendaryWeaponFormSwitch.DisplayName: 传奇武器形态切换
+			SHPCLoadingUI.DisplayName: SHPC界面
 		}
 	}
 }

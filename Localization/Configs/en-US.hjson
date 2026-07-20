@@ -1,46 +1,71 @@
-Mods: {
+﻿Mods: {
 	CalamityLegendsComeBack: {
 		Configs: {
 			CalamityLegendsComeBackConfig: {
 				DisplayName: Calamity Legends Come Back Settings
 
+				Headers: {
+					RecipeSettings: Recipe Settings
+					DraedonTechnology: Draedon Technology
+				}
+
 				AllowMassMaterialRecipes: {
-					Label: Allow Bulk Material Crafting
-					Tooltip: If enabled, many materials can be copied or crafted in a simpler way.
+					Label: "[i:CrystalBall] Allow Bulk Material Crafting"
+					Tooltip: Allows many in-game raw materials to be crafted quickly
 				}
 
 				AllowBossRelicWeaponRecipes: {
-					Label: Allow Boss Relic Weapon Recipes
-					Tooltip: If enabled, some boss relics can be crafted into their related weapon drops.
+					Label: "[i:CalamityMod/ProvidenceRelic] Allow Boss Relic Weapon Exchanges"
+					Tooltip: Allows Master or Revenge Mode relics to be exchanged directly for weapons
 				}
 
 				AllowOtherRecipes: {
-					Label: Allow Extra QOL Recipes
-					Tooltip: If enabled, adds extra recipes that smooth out progression.
+					Label: "[i:Toolbox] Allow Extra QOL Recipes"
+					Tooltip: Enables many recipes that improve gameplay flow
 				}
 
-				AllowWheelSlowdown: {
-					Label: Allow Wheel Slowdown
-					Tooltip: ""
+				AllowBossSummonShop: {
+					Label: "[i:BestiaryGirl] Allow Zoologist Boss Summons"
+					Tooltip: The Zoologist sells Boss summons at the appropriate progression; a few recipes that would return pre-kill materials are temporarily disabled.
 				}
 
-				GiveQuickStartBoxOnSpawn: {
-					Label: Give Quick Start Box On Spawn
-					Tooltip: ""
+				LightningDecryption: {
+					Label: "[i:CalamityMod/CodebreakerBase] Rapid Decryption and Charging"
+					Tooltip: Codebreaker schematics and charging-station lab-seeking mechanisms complete within one second while retaining their normal power-cell costs
 				}
 			}
 
 			CLCBClientConfig: {
 				DisplayName: Calamity Legends Come Back Client Settings
 
+				Headers: {
+					Interface: Interface
+					Readability: Readability
+				}
+
 				ShowMatrixBossBar: {
-					Label: Show Matrix Boss Health Bar
-					Tooltip: If enabled, displays a custom matrix-style boss health bar at the top-center of the screen.
+					Label: "[i:CalamityMod/DraedonsHeart] Custom Health Bar Display"
+					Tooltip: Displays a new custom health bar at the top of the screen
+				}
+
+				LockAmmoWheelToScreenCenter: {
+					Label: "[i:CalamityMod/PlasmaDriveCore] Lock SHPC Ammo Wheel to Screen Center"
+					Tooltip: When enabled, holding the Legendary Weapon Form Switch key opens the ammo wheel at the center of the screen.
 				}
 
 				ShowInternalEnglishNames: {
-					Label: Show Internal English Names
-					Tooltip: If enabled, appends every item's internal English name to its tooltip name while the game language is not English.
+					Label: "[i:Book] Show Internal English Names"
+					Tooltip: Enabled by default and shows an item's internal name while viewing it but has no effect when the game language is English
+				}
+
+				ShowHostileProjectileOutlines: {
+					Label: "[i:RainbowGun] Show Hostile Projectile Outlines"
+					Tooltip: Makes enemy projectile borders easier to see
+				}
+
+				HostileProjectileOutlineWidth: {
+					Label: "[i:RainbowGun] Hostile Projectile Outline Width"
+					Tooltip: Levels 1 through 4 correspond to 1 through 4 pixels; only applies when Show Hostile Projectile Outlines is enabled.
 				}
 			}
 		}
