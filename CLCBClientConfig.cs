@@ -17,6 +17,10 @@ namespace CalamityLegendsComeBack
         [DefaultValue(true)]
         public bool ShowMatrixBossBar;
 
+        [BackgroundColor(20, 93, 160, 210)]
+        [DefaultValue(false)]
+        public bool LockAmmoWheelToScreenCenter;
+
         [Header("Readability")]
         [BackgroundColor(20, 93, 160, 210)]
         [DefaultValue(true)]
@@ -25,5 +29,11 @@ namespace CalamityLegendsComeBack
         [BackgroundColor(20, 93, 160, 210)]
         [DefaultValue(false)]
         public bool ShowHostileProjectileOutlines;
+
+        [BackgroundColor(20, 93, 160, 210)]
+        [DefaultValue(2)]
+        [Range(1, 4)]
+        [Slider]
+        public int HostileProjectileOutlineWidth;
     }
 }

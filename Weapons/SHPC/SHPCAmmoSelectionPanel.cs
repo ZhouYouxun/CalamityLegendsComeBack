@@ -81,7 +81,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
             if (!positionInitialized && Main.myPlayer == Projectile.owner)
             {
-                screenCenter = Main.MouseScreen;
+                screenCenter = CLCBClientConfig.Instance?.LockAmmoWheelToScreenCenter == true
+                    ? Main.ScreenSize.ToVector2() * 0.5f
+                    : Main.MouseScreen;
                 positionInitialized = true;
             }
 

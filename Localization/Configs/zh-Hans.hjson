@@ -48,6 +48,11 @@
 					Tooltip: 在屏幕顶端显示一种新的自定义血条
 				}
 
+				LockAmmoWheelToScreenCenter: {
+					Label: "[i:CalamityMod/PlasmaDriveCore] 固定SHPC弹药轮盘"
+					Tooltip: 开启后，按住传奇武器形态切换键时的弹药轮盘将固定在屏幕中心。
+				}
+
 				ShowInternalEnglishNames: {
 					Label: "[i:Book] 显示内部英文名"
 					Tooltip: 默认开启 查看物品时会一起看到其内部名 英文游戏语言下不会生效
@@ -56,6 +61,11 @@
 				ShowHostileProjectileOutlines: {
 					Label: "[i:RainbowGun] 显示敌方弹幕包边"
 					Tooltip: 更好的看清楚敌人的弹幕边框
+				}
+
+				HostileProjectileOutlineWidth: {
+					Label: "[i:RainbowGun] 敌方弹幕包边宽度"
+					Tooltip: 1至4档分别对应1至4像素宽度；仅在“显示敌方弹幕包边”开启时生效。
 				}
 			}
 		}

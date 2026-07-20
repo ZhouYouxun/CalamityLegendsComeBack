@@ -18,8 +18,6 @@ namespace CalamityLegendsComeBack.Systems
         private const byte MinimumVisibleAlpha = 40;
         private const float MinimumLuminance = 0.14f;
         private const int MinimumVisiblePixels = 4;
-        private const int OutlineDrawCount = 12;
-        private const float OutlineRadius = 2.35f;
 
         private static readonly Dictionary<int, OutlineTextureInfo> CachedTextureInfo = new();
 
@@ -41,9 +39,11 @@ namespace CalamityLegendsComeBack.Systems
             if (drawColor.A <= 0)
                 return true;
 
-            for (int index = 0; index < OutlineDrawCount; index++)
+            int outlineWidth = CLCBClientConfig.Instance?.HostileProjectileOutlineWidth ?? 2;
+            int outlineDrawCount = 8 + outlineWidth * 4;
+            for (int index = 0; index < outlineDrawCount; index++)
             {
-                Vector2 offset = (MathHelper.TwoPi * index / OutlineDrawCount).ToRotationVector2() * OutlineRadius;
+                Vector2 offset = (MathHelper.TwoPi * index / outlineDrawCount).ToRotationVector2() * outlineWidth;
                 Main.EntitySpriteDraw(texture, drawPosition + offset, frame, drawColor, projectile.rotation, origin, projectile.scale, effects, 0);
             }
 

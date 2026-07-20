@@ -48,6 +48,11 @@
 					Tooltip: Displays a new custom health bar at the top of the screen
 				}
 
+				LockAmmoWheelToScreenCenter: {
+					Label: "[i:CalamityMod/PlasmaDriveCore] Lock SHPC Ammo Wheel to Screen Center"
+					Tooltip: When enabled, holding the Legendary Weapon Form Switch key opens the ammo wheel at the center of the screen.
+				}
+
 				ShowInternalEnglishNames: {
 					Label: "[i:Book] Show Internal English Names"
 					Tooltip: Enabled by default and shows an item's internal name while viewing it but has no effect when the game language is English
@@ -56,6 +61,11 @@
 				ShowHostileProjectileOutlines: {
 					Label: "[i:RainbowGun] Show Hostile Projectile Outlines"
 					Tooltip: Makes enemy projectile borders easier to see
+				}
+
+				HostileProjectileOutlineWidth: {
+					Label: "[i:RainbowGun] Hostile Projectile Outline Width"
+					Tooltip: Levels 1 through 4 correspond to 1 through 4 pixels; only applies when Show Hostile Projectile Outlines is enabled.
 				}
 			}
 		}

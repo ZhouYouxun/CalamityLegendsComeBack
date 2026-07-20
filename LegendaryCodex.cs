@@ -179,7 +179,8 @@ namespace CalamityLegendsComeBack
 
             DrawWorldOutline(spriteBatch, texture, drawPosition, rotation, scale, deepOutline, 5f + activeOpacity * 2f);
             DrawWorldOutline(spriteBatch, texture, drawPosition, rotation, scale, outline, 2f + pulse * 1.5f);
-            DrawScannerBrackets(spriteBatch, drawPosition, texture.Size() * scale, outline * activeOpacity, pulse, activeOpacity);
+            // Disabled: the world-item scanner brackets can stretch into long screen-space lines.
+            // DrawScannerBrackets(spriteBatch, drawPosition, texture.Size() * scale, outline * activeOpacity, pulse, activeOpacity);
             DrawDropStuntBeam(spriteBatch, drawPosition, texture.Height * scale, activeOpacity);
             return true;
         }
