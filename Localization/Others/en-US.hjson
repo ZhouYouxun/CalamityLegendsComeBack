@@ -60,13 +60,16 @@ Mods: {
 					DisplayName: Legendary Codex
 					Tooltip:
 						'''
-						Welcome to Calamity: Legend!
-						This mod has just gotten started and is under active development.
-						Every legendary weapon will be reworked over time, with plenty more new content on the way -- stay tuned.
-						Feedback and suggestions are welcome -- please leave a rational comment in the review section.
+						[c/55DFFF:Welcome to Calamity: Legend!]
 						[c/FF5555:If your screen turns black while a Legendary weapon's tooltip is shown ]
 						[c/FF5555:Go to Mod Configuration > Calamity > Client Config > the 2nd option, Extra Text Effects, and turn it off.]
-						Left-click to view the Legendary Codex.
+						[c/70E0A0:Enabled by default: Bulk Material Crafting, Extra QOL Recipes, and Boss Relic Weapon Exchanges]
+						[c/70E0A0:Enabled by default: The Zoologist sells Boss summons as progression advances]
+						[c/6FC8FF:Enabled by default: Custom Health Bar Display and Internal English Names]
+						[c/FFD45A:Hostile Projectile Outlines are disabled by default and can be enabled in Client Settings]
+						[c/C89BFF:Rapid Decryption and Charging is disabled by default and can be enabled in Server Settings]
+						[c/AAB4C8:All extra features can be adjusted in Mod Configuration]
+						[c/FFFFFF:Left-click to view the Legendary Codex]
 						'''
 				}
 

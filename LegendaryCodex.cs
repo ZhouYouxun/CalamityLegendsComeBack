@@ -410,6 +410,7 @@ namespace CalamityLegendsComeBack
         private static readonly LegendaryEntry[] Entries =
         {
             new("SHPC", () => ModContent.ItemType<NewLegendSHPC>(), true),
+            new("ProjectileOutline", () => ModContent.ItemType<LegendaryCodex>(), true, "ProjectileOutline.Name"),
         };
 
         private Vector2 panelTopLeft;
@@ -626,7 +627,7 @@ namespace CalamityLegendsComeBack
                 DrawCenteredText("?", new Rectangle(iconArea.X, iconArea.Y + 18, iconArea.Width, 96), new Color(78, 255, 164), 2.1f, 0.9f, opacity);
 
             Rectangle nameArea = new(area.X + 26, area.Y + 214, area.Width - 52, 36);
-            string name = entry.Unlocked ? Lang.GetItemNameValue(itemType) : "???";
+            string name = entry.Unlocked ? entry.GetDisplayName(itemType) : "???";
             DrawCenteredText(name, nameArea, text, 0.9f, 0.48f, opacity);
 
             Rectangle tagArea = new(area.X + 42, area.Y + 260, area.Width - 84, 28);
@@ -836,13 +837,19 @@ namespace CalamityLegendsComeBack
             public readonly string Key;
             public readonly Func<int> ItemType;
             public readonly bool Unlocked;
+            public readonly string DisplayNameKey;
 
-            public LegendaryEntry(string key, Func<int> itemType, bool unlocked)
+            public LegendaryEntry(string key, Func<int> itemType, bool unlocked, string displayNameKey = null)
             {
                 Key = key;
                 ItemType = itemType;
                 Unlocked = unlocked;
+                DisplayNameKey = displayNameKey;
             }
+
+            public string GetDisplayName(int itemType) => DisplayNameKey is null
+                ? Lang.GetItemNameValue(itemType)
+                : Language.GetTextValue($"Mods.CalamityLegendsComeBack.LegendaryCodex.{DisplayNameKey}");
 
             public string GetLocalizedTag() => Language.GetTextValue($"Mods.CalamityLegendsComeBack.LegendaryCodex.{Key}.Tag");
 

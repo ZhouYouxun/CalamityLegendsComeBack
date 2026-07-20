@@ -3,6 +3,7 @@ using Terraria.ModLoader.Config;
 
 namespace CalamityLegendsComeBack
 {
+    [BackgroundColor(15, 27, 52, 230)]
     public sealed class CLCBClientConfig : ModConfig
     {
         public static CLCBClientConfig Instance;
@@ -11,10 +12,18 @@ namespace CalamityLegendsComeBack
 
         public override void OnLoaded() => Instance = this;
 
+        [Header("Interface")]
+        [BackgroundColor(20, 93, 160, 210)]
         [DefaultValue(true)]
         public bool ShowMatrixBossBar;
 
+        [Header("Readability")]
+        [BackgroundColor(20, 93, 160, 210)]
         [DefaultValue(true)]
         public bool ShowInternalEnglishNames;
+
+        [BackgroundColor(20, 93, 160, 210)]
+        [DefaultValue(false)]
+        public bool ShowHostileProjectileOutlines;
     }
 }

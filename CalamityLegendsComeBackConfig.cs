@@ -3,6 +3,7 @@ using Terraria.ModLoader.Config;
 
 namespace CalamityLegendsComeBack
 {
+    [BackgroundColor(15, 27, 52, 230)]
     public sealed class CalamityLegendsComeBackConfig : ModConfig
     {
         public static CalamityLegendsComeBackConfig Instance;
@@ -14,16 +15,29 @@ namespace CalamityLegendsComeBack
             Instance = this;
         }
 
+        [Header("RecipeSettings")]
+        [BackgroundColor(20, 93, 160, 210)]
         [DefaultValue(true)]
         [ReloadRequired]
         public bool AllowMassMaterialRecipes;
 
+        [BackgroundColor(20, 93, 160, 210)]
         [DefaultValue(true)]
         [ReloadRequired]
         public bool AllowBossRelicWeaponRecipes;
 
+        [BackgroundColor(20, 93, 160, 210)]
         [DefaultValue(true)]
         [ReloadRequired]
         public bool AllowOtherRecipes;
+
+        [DefaultValue(true)]
+        [ReloadRequired]
+        public bool AllowBossSummonShop;
+
+        [Header("DraedonTechnology")]
+        [BackgroundColor(20, 93, 160, 210)]
+        [DefaultValue(false)]
+        public bool LightningDecryption;
     }
 }
