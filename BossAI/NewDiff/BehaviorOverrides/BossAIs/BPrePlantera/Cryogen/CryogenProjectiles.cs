@@ -1,4 +1,5 @@
 using System;
+using CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossAIs.Common;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
@@ -1959,33 +1960,20 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
     // Director-layer template: 占位由Boss完成, 预告由弹幕本体承担 (CanDamage=false), 到点才落下真正的危险矛.
     // Copy this pattern for any "danger appears here in N frames" attack.
     // =====================================================================================================================
-    public class CryogenFrostColumnTelegraph : ModProjectile
+    // 这个类现在建在公共基类 LegendsTelegraph 上 —— 它原本是全项目唯一的独立预告弹幕，
+    // 计时/无伤契约/加法混合/MagicPixel 采样这些通用部分已经上移，这里只剩它自己的形状：
+    // 一根从天而降的冰柱预告。其余 boss 照这个样子实现 SpawnPayload 就能拿到同一套预警语言。
+    public class CryogenFrostColumnTelegraph : LegendsTelegraph
     {
-        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
-
         private const float ColumnHeight = 620f;
 
-        // ai[0] = telegraph duration (frames); ai[1] = spear damage
-        public override void SetDefaults()
+        protected override int DefaultDuration => 45;
+        protected override SoundStyle? FireSound => SoundID.Item28 with { Volume = 0.45f, Pitch = 0.35f };
+
+        private Vector2 ColumnTop => new(Projectile.Center.X, Projectile.Center.Y - ColumnHeight);
+
+        protected override void WarningTick(float progress)
         {
-            Projectile.width = 24;
-            Projectile.height = 24;
-            Projectile.hostile = false;
-            Projectile.friendly = false;
-            Projectile.penetrate = -1;
-            Projectile.timeLeft = 300;
-            Projectile.tileCollide = false;
-            Projectile.ignoreWater = true;
-        }
-
-        public override bool? CanDamage() => false;
-
-        public override void AI()
-        {
-            Projectile.localAI[0]++;
-            float dur = Projectile.ai[0] <= 0f ? 45f : Projectile.ai[0];
-            float progress = MathHelper.Clamp(Projectile.localAI[0] / dur, 0f, 1f);
-
             // Frost motes rain down the column, thickening as the strike nears — reads unmistakably as "danger here soon".
             if (Main.rand.NextFloat() < progress * 0.9f)
             {
@@ -1993,52 +1981,17 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 Dust d = Dust.NewDustPerfect(new Vector2(Projectile.Center.X + Main.rand.NextFloat(-6f, 6f), y), DustID.Ice, new Vector2(0f, Main.rand.NextFloat(2f, 6f)), 90, Color.Cyan, 0.7f + progress * 0.6f);
                 d.noGravity = true;
             }
+        }
 
-            if (Projectile.localAI[0] >= dur)
-            {
-                if (Main.netMode != NetmodeID.MultiplayerClient)
-                {
-                    Vector2 spawn = new Vector2(Projectile.Center.X, Projectile.Center.Y - ColumnHeight);
-                    Projectile.NewProjectile(Projectile.GetSource_FromThis(), spawn, new Vector2(0f, 17f), ModContent.ProjectileType<CryogenFrostSpear>(), (int)Projectile.ai[1], 0f, Main.myPlayer, Projectile.Center.Y);
-                }
-                SoundEngine.PlaySound(SoundID.Item28 with { Volume = 0.45f, Pitch = 0.35f }, Projectile.Center);
-                Projectile.Kill();
-            }
+        protected override void SpawnPayload(int damage)
+        {
+            Projectile.NewProjectile(Projectile.GetSource_FromThis(), ColumnTop, new Vector2(0f, 17f), ModContent.ProjectileType<CryogenFrostSpear>(), damage, 0f, Main.myPlayer, Projectile.Center.Y);
         }
 
         public override bool PreDraw(ref Color lightColor)
         {
-            float dur = Projectile.ai[0] <= 0f ? 45f : Projectile.ai[0];
-            float progress = MathHelper.Clamp(Projectile.localAI[0] / dur, 0f, 1f);
-
-            SpriteBatch sb = Main.spriteBatch;
-            Vector2 top = new Vector2(Projectile.Center.X, Projectile.Center.Y - ColumnHeight);
-            Vector2 bottom = Projectile.Center;
-
-            sb.End();
-            sb.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
-
-            // Wide faint glow that sharpens into a bright hot core as fire time approaches.
-            float flash = 0.35f + 0.65f * progress;
-            float wide = MathHelper.Lerp(10f, 4f, progress);
-            float core = MathHelper.Lerp(1.5f, 3.5f, progress);
-            Color glow = Color.Lerp(Color.DeepSkyBlue, Color.White, progress) * flash;
-
-            DrawLine(sb, top, bottom, glow * 0.7f, wide);
-            DrawLine(sb, top, bottom, Color.White * flash, core);
-
-            sb.End();
-            sb.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            DrawStandardWarnBeam(Main.spriteBatch, ColumnTop, Projectile.Center, Color.DeepSkyBlue, Progress);
             return false;
-        }
-
-        private static void DrawLine(SpriteBatch sb, Vector2 start, Vector2 end, Color color, float width)
-        {
-            Vector2 delta = end - start;
-            float length = delta.Length();
-            float rot = delta.ToRotation();
-            // MagicPixel is 1x1000 — must sample a single pixel
-            sb.Draw(TextureAssets.MagicPixel.Value, start - Main.screenPosition, new Rectangle(0, 0, 1, 1), color, rot, new Vector2(0f, 0.5f), new Vector2(length, width), SpriteEffects.None, 0f);
         }
     }
 

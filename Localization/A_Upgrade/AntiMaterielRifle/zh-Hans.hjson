@@ -5,10 +5,10 @@ Mods: {
 				NewLegendAntiMaterielRifle: {
 					DisplayName: 小传奇-反器材狙击步枪
 					Tooltip: "[GFB]"
-					LeftClick: "[左键] 持枪进行低射速全自动射击；每发子弹只能命中一个目标"
-					RightClick: "[右键] 按住展开瞄准，瞄准线逐渐收束；松开后发射无限贯穿敌人的处决弹"
+					LeftClick: 发射.408重型反器材狙击弹
+					RightClick: 右键扩大视野，并进入沉浸式狙击模式
 					CurrentStage: 当前战绩：{0}
-					InventoryToggle: "[背包内右键] 开关瞄准时的视野拉远；瞄准线不受影响"
+					InventoryToggle: 可自行在背包中右键开关视角变化功能
 					ZoomState: 视野拉远：{0}
 					ZoomEnabled: 开启
 					ZoomDisabled: 关闭

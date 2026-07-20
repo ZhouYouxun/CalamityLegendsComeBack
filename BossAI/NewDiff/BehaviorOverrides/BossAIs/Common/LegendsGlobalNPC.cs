@@ -3,6 +3,7 @@ using CalamityLegendsComeBack.BossAI.NewDiff.Core.Systems;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 
@@ -28,6 +29,10 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
         internal int BroadcastedAttackIndex = -1;
 
+        // 开场重置的信号位。InstancePerEntity 保证每个 NPC 个体拿到自己的一份，SetDefaults 生成时置位，
+        // 第一次 PreAI 消费掉 —— 也就是"这个个体刚刚出生"这一帧。见 LegendsBossAI.ResetFightState 的说明。
+        private bool needsFightReset = true;
+
         public override void SetDefaults(NPC npc)
         {
             CurrentPhase = 1;
@@ -38,6 +43,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             AttackState = LegendsAttackState.MatrixHover;
             BroadcastedPhase = 0;
             BroadcastedAttackIndex = -1;
+            needsFightReset = true;
         }
 
         public override bool PreAI(NPC npc)
@@ -48,7 +54,42 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             if (!LegendsBossAIRegistry.TryGetAI(npc.type, out LegendsBossAI ai))
                 return true;
 
+            TryResetFightState(npc, ai);
+
             return ai.PreAI(npc, this);
+        }
+
+        // 跨场次状态清理的唯一触发点。两道闸门缺一不可：
+        //   1) npc.type == ai.NPCType —— 虫类 Boss（AstrumDeus/StormWeaver/AquaticScourge）的身体和尾巴
+        //      共用同一个 AI 实例，不筛主体的话，每生成一节身体都会把打到一半的状态清一次。
+        //   2) 场上没有别的同类个体 —— 防住"一场战斗里出现第二个主体"的情况（例如虫类分裂），
+        //      那种时候是同一场战斗的延续，不是新一场。
+        private void TryResetFightState(NPC npc, LegendsBossAI ai)
+        {
+            if (!needsFightReset)
+                return;
+
+            needsFightReset = false;
+
+            if (npc.type != ai.NPCType || !IsOnlyOneOfTypeAlive(npc))
+                return;
+
+            if (npc.target < 0 || npc.target >= Main.maxPlayers || !Main.player[npc.target].active)
+                npc.TargetClosest(false);
+
+            Player target = npc.target >= 0 && npc.target < Main.maxPlayers ? Main.player[npc.target] : Main.LocalPlayer;
+            ai.ResetFightState(npc, target);
+        }
+
+        private static bool IsOnlyOneOfTypeAlive(NPC npc)
+        {
+            for (int i = 0; i < Main.maxNPCs; i++)
+            {
+                NPC other = Main.npc[i];
+                if (other.active && other.whoAmI != npc.whoAmI && other.type == npc.type)
+                    return false;
+            }
+            return true;
         }
 
         // 自定义状态同步。刻意【不】检查 LegendsModeEnabled：收发两端必须写入/读出完全相同的字节数，
@@ -79,6 +120,13 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 return;
 
             ai.PostAI(npc, this);
+
+            // 声明过的玩法状态一旦真的变了就推送。放在这里而不是让各 Boss 在每一处扣血/破盾后手写
+            // netUpdate —— 那种约定漏一处就静默失效，而且新 Boss 作者根本不会知道有这条规矩。
+            // 只有服务端推：NPC 的权威状态归服务端，客户端置 netUpdate 没有意义。
+            if (Main.netMode == NetmodeID.Server && ai.SyncedStateChanged())
+                npc.netUpdate = true;
+
             LegendsDebugSystem.Report(npc, ai, this);
         }
 

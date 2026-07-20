@@ -13,7 +13,7 @@ using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone.Ultimate
+namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty.Ultimate
 {
     internal sealed class ResponsibilityArmyAmplifier : ResponsibilityArmyUnitBase
     {
@@ -48,12 +48,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone.Ultimate
                 return false;
 
             Vector2 spawnPosition = ResponsibilityArmyGround.FindGround(player.Bottom, 44, 44);
-            IEntitySource source = player.GetSource_Misc("ResponsibilityPhoneUltimate");
+            IEntitySource source = player.GetSource_Misc("CallofDutyUltimate");
             int index = NPC.NewNPC(source, (int)spawnPosition.X, (int)spawnPosition.Y, ModContent.NPCType<ResponsibilityArmyAmplifier>());
             if (!Main.npc.IndexInRange(index) || Main.npc[index].ModNPC is not ResponsibilityArmyAmplifier amplifier)
                 return false;
 
-            amplifier.InitializeFromOwner(player, generation, 0, snapshotDamage, ResponsibilityPhonePlayer.UltimateDurationFrames);
+            amplifier.InitializeFromOwner(player, generation, 0, snapshotDamage, CallofDutyPlayer.UltimateDurationFrames);
             amplifier.lockedCenter = Main.npc[index].Center;
             Main.npc[index].netUpdate = true;
             return true;
@@ -113,7 +113,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone.Ultimate
                 return;
             deployedSquad = true;
 
-            int remaining = Math.Max(1, ResponsibilityPhonePlayer.UltimateDurationFrames - 30);
+            int remaining = Math.Max(1, CallofDutyPlayer.UltimateDurationFrames - 30);
             for (int i = 0; i < 6; i++)
             {
                 float side = i % 2 == 0 ? -1f : 1f;

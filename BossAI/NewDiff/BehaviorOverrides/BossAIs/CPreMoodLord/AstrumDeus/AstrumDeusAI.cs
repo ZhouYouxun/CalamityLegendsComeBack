@@ -98,6 +98,11 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         private readonly Dictionary<int, float> segmentCoreHP = new();
         private const float CoreMaxHP = 250f;
 
+        // 节段核心血量 gate 95% 减伤 / 200% 承伤 —— 40 倍的伤害差，是全项目摆动最大的一处。
+        // 整表同步（而不是逐项合并），服务端的表就是真相。
+        protected override void DeclareSyncedFields(LegendsSyncedFields f) => f
+            .IntFloatDict(segmentCoreHP);
+
         // 穿过式咬合 timer, per-head (Deus can split into two Heads; all four localAI slots are taken).
         private readonly Dictionary<int, int> carveTimers = new();
 
@@ -107,6 +112,27 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         private readonly Dictionary<int, int> headTrailIndex = new();
 
         private float transitionFlashAlpha = 0f;
+        #endregion
+
+        #region Per-fight State Reset
+        // 跨场次状态清理（为什么需要见基类 LegendsBossAI.ResetFightState；调用时机由框架负责）。
+        // 本 Boss 的三个字典全部以 whoAmI 为键 —— 这是跨场次残留里最阴的一种：NPC 槽位会被复用，
+        // 上一场某节段死在 whoAmI=42 且核心已破，下一场新虫的第 42 号节段一生成就直接顶着一条
+        // "核心已经打碎"的记录，玩家白打一个部位。必须整表清空，不能只清计时器。
+        //
+        // 注意：Deus 中途分裂出第二个 Head 时不会触发本方法 —— 框架侧要求"场上没有别的同类个体"，
+        // 分裂属于同一场战斗的延续，见 LegendsGlobalNPC.TryResetFightState 的两道闸门。
+        public override void ResetFightState(NPC npc, Player target)
+        {
+            ticksRunning = 0;
+            transitionFlashAlpha = 0f;
+            Array.Clear(attackVariant, 0, attackVariant.Length);
+
+            segmentCoreHP.Clear();
+            carveTimers.Clear();
+            headTrails.Clear();
+            headTrailIndex.Clear();
+        }
         #endregion
 
         #region Core AI Hooks

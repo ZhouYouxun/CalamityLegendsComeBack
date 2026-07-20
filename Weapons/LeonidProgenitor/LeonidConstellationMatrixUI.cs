@@ -18,6 +18,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
     /// A draw-only matrix UI. It deliberately has two opening contexts:
     /// held in the world (closing the inventory closes it) and hovered in the inventory
     /// (closing the inventory immediately closes it).
+    /// Both contexts share the WeaponLoadingUI keybind with SHPC's loading UI, falling back to middle click.
     /// </summary>
     internal sealed class LeonidConstellationMatrixUI : ModSystem
     {
@@ -31,6 +32,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
         private static bool isOpen;
         private static bool openedFromInventory;
         private static bool previousMiddleMouse;
+        private static bool previousKeybind;
         private static Rectangle resetArea;
 
         public static bool IsOpen => isOpen;
@@ -51,13 +53,17 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 InterfaceScaleType.UI));
         }
 
-        public override void PostUpdatePlayers()
+        private static void UpdateActivation()
         {
-            if (Main.netMode == NetmodeID.Server || Main.myPlayer < 0 || !Main.player.IndexInRange(Main.myPlayer))
+            if (Main.myPlayer < 0 || !Main.player.IndexInRange(Main.myPlayer))
                 return;
 
             Player player = Main.LocalPlayer;
+            bool keyBound = InventoryActivationInput.HasBoundKey(KeybindSystem.WeaponLoadingUI);
+            bool keybindPressed = InventoryActivationInput.IsPressed(KeybindSystem.WeaponLoadingUI);
+            bool justPressedKeybind = keybindPressed && !previousKeybind;
             bool justPressedMiddle = Main.mouseMiddle && !previousMiddleMouse;
+            previousKeybind = keybindPressed;
             previousMiddleMouse = Main.mouseMiddle;
 
             if (isOpen)
@@ -75,16 +81,16 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 }
             }
 
-            if (!justPressedMiddle)
-                return;
-
-            if (Main.playerInventory && Main.HoverItem?.ModItem is LeonidProgenitor)
+            // In the inventory the bound key replaces middle click, matching how SHPC's loading UI opens.
+            if (Main.playerInventory)
             {
-                Toggle(true);
+                if ((keyBound ? justPressedKeybind : justPressedMiddle) && Main.HoverItem?.ModItem is LeonidProgenitor)
+                    Toggle(true);
                 return;
             }
 
-            if (!Main.playerInventory && player.HeldItem?.ModItem is LeonidProgenitor)
+            // Held in the world middle click always works, and the bound key is an extra shortcut alongside it.
+            if ((justPressedMiddle || justPressedKeybind) && player.HeldItem?.ModItem is LeonidProgenitor)
                 Toggle(false);
         }
 
@@ -112,7 +118,13 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
         private static void Draw(SpriteBatch spriteBatch)
         {
-            if (!isOpen || Main.netMode == NetmodeID.Server)
+            if (Main.netMode == NetmodeID.Server)
+                return;
+
+            // Activation lives in the draw phase so the inventory context still responds while auto-pause holds the update loop.
+            UpdateActivation();
+
+            if (!isOpen)
                 return;
 
             Player player = Main.LocalPlayer;
@@ -148,7 +160,9 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             DrawCenteredText(spriteBatch, status, new Vector2(panel.Center.X, panel.Bottom - 46f), Color.White, 0.72f);
 
             Vector2 constellationCenter = new(panel.X + 402f, panel.Y + 320f);
-            DrawConstellationLines(spriteBatch, constellationCenter, progress);
+            // The constellation itself uses Galaxia's additive star and line assets.
+            // Only the surrounding matrix frame and numeric node boxes are custom UI.
+            DrawGalaxiaConstellation(spriteBatch, constellationCenter, progress);
 
             LeonidConstellationNode? hoveredNode = null;
             foreach (LeonidConstellationNode node in LeonidConstellation.Nodes)
@@ -181,8 +195,14 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                     0.58f);
         }
 
-        private static void DrawConstellationLines(SpriteBatch spriteBatch, Vector2 center, LeonidConstellationPlayer progress)
+        private static void DrawGalaxiaConstellation(SpriteBatch spriteBatch, Vector2 center, LeonidConstellationPlayer progress)
         {
+            // GenericSparkle and BloomLineVFX are world particles, so they cannot be handed directly to
+            // an interface layer. This is their CustomDraw code using the original textures, origins,
+            // caps and additive blending rather than stretching MagicPixel as a substitute.
+            spriteBatch.End();
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone, null, Main.UIScaleMatrix);
+
             foreach (LeonidConstellationNode node in LeonidConstellation.Nodes)
             {
                 Vector2 start = center + node.Position;
@@ -190,9 +210,22 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 {
                     LeonidConstellationNode connected = LeonidConstellation.GetNode(connectedStar);
                     bool bright = progress.IsUnlocked(node.Star) && progress.IsUnlocked(connectedStar);
-                    DrawLine(spriteBatch, start, center + connected.Position, bright ? Lit * 0.72f : Dormant * 0.52f, bright ? 2f : 1f);
+                    DrawGalaxiaLine(spriteBatch, start, center + connected.Position, bright ? Lit : Dormant, bright ? 0.46f : 0.22f);
                 }
             }
+
+            foreach (LeonidConstellationNode node in LeonidConstellation.Nodes)
+            {
+                bool unlocked = progress.IsUnlocked(node.Star);
+                bool affordable = !unlocked && progress.AvailablePoints >= node.Cost;
+                Color starColor = unlocked ? Color.White : affordable ? new Color(224, 213, 255) : new Color(125, 142, 206);
+                Color bloomColor = unlocked ? Lit : affordable ? Available : Dormant;
+                float scale = node.Star == LeonidStar.Regulus ? 0.78f : unlocked ? 0.54f : affordable ? 0.44f : 0.34f;
+                DrawGalaxiaSparkle(spriteBatch, center + node.Position, starColor, bloomColor, scale, (int)node.Star);
+            }
+
+            spriteBatch.End();
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone, null, Main.UIScaleMatrix);
         }
 
         private static void DrawNode(SpriteBatch spriteBatch, Vector2 position, LeonidConstellationNode node, bool unlocked, bool affordable, bool hovered)
@@ -205,7 +238,8 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             Rectangle core = Utils.CenteredRectangle(position, new Vector2(radius * 2f));
 
             spriteBatch.Draw(pixel, glow, color * (unlocked ? 0.16f + pulse * 0.1f : 0.08f));
-            spriteBatch.Draw(pixel, core, color * (unlocked ? 0.95f : 0.66f));
+            // The numerical matrix frame stays intact, while its transparent fill exposes the Galaxia star below.
+            spriteBatch.Draw(pixel, core, color * (unlocked ? 0.30f : 0.20f));
             DrawOutline(spriteBatch, core, Color.White * (unlocked ? 0.92f : 0.4f), 1);
 
             string label = node.Star == LeonidStar.Regulus ? "★" : node.Cost.ToString();
@@ -281,14 +315,38 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             }
         }
 
-        private static void DrawLine(SpriteBatch spriteBatch, Vector2 start, Vector2 end, Color color, float thickness)
+        private static void DrawGalaxiaSparkle(SpriteBatch spriteBatch, Vector2 position, Color color, Color bloom, float scale, int index)
         {
-            Vector2 offset = end - start;
-            float length = offset.Length();
-            if (length <= 0.01f)
+            Texture2D starTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/Sparkle").Value;
+            Texture2D bloomTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            float properBloomSize = (float)starTexture.Height / bloomTexture.Height;
+            float opacity = 0.78f + 0.22f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 3.1f + index * 0.83f);
+            float rotation = Main.GlobalTimeWrappedHourly * (0.85f + index * 0.03f) + index * 0.71f;
+
+            // Matches GenericSparkle.CustomDraw: bloom, offset star layer, then its sharp core.
+            spriteBatch.Draw(bloomTexture, position, null, bloom * opacity * 0.5f, 0f, bloomTexture.Size() * 0.5f, scale * 3f * properBloomSize, SpriteEffects.None, 0f);
+            spriteBatch.Draw(starTexture, position, null, color * opacity * 0.5f, rotation + MathHelper.PiOver4, starTexture.Size() * 0.5f, scale * 0.75f, SpriteEffects.None, 0f);
+            spriteBatch.Draw(starTexture, position, null, color * opacity, rotation, starTexture.Size() * 0.5f, scale, SpriteEffects.None, 0f);
+        }
+
+        private static void DrawGalaxiaLine(SpriteBatch spriteBatch, Vector2 start, Vector2 end, Color color, float thickness)
+        {
+            Vector2 lineVector = end - start;
+            if (lineVector.LengthSquared() <= 0.01f)
                 return;
 
-            spriteBatch.Draw(TextureAssets.MagicPixel.Value, start, null, color, offset.ToRotation(), Vector2.Zero, new Vector2(length, thickness), SpriteEffects.None, 0f);
+            Texture2D lineTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomLine").Value;
+            float rotation = lineVector.ToRotation() + MathHelper.PiOver2;
+            Vector2 origin = new(lineTexture.Width * 0.5f, lineTexture.Height);
+            Vector2 scale = new(thickness, lineVector.Length() / lineTexture.Height);
+            spriteBatch.Draw(lineTexture, start, null, color, rotation, origin, scale, SpriteEffects.None, 0f);
+
+            // BloomLineVFX draws this matching cap at both endpoints.
+            Texture2D capTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomLineCap").Value;
+            Vector2 capOrigin = new(capTexture.Width * 0.5f, capTexture.Height);
+            Vector2 capScale = new(thickness, thickness);
+            spriteBatch.Draw(capTexture, start, null, color, rotation + MathHelper.Pi, capOrigin, capScale, SpriteEffects.None, 0f);
+            spriteBatch.Draw(capTexture, end, null, color, rotation, capOrigin, capScale, SpriteEffects.None, 0f);
         }
 
         private static void DrawOutline(SpriteBatch spriteBatch, Rectangle area, Color color, int thickness)

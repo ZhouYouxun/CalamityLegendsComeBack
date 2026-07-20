@@ -2,7 +2,7 @@ Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
 			Weapons: {
-				ResponsibilityPhone: {
+				CallofDuty: {
 					DisplayName: Call of Responsibility
 					Tooltip: "[GFB]"
 					Compact:
@@ -40,8 +40,8 @@ Mods: {
 			}
 		}
 
-		Cooldowns.ResponsibilityPhone_Ultimate: Everyone, get over here
-		UI.ResponsibilityPhone.Return: Return
+		Cooldowns.CallofDuty_Ultimate: Everyone, get over here
+		UI.CallofDuty.Return: Return
 
 		NPCs: {
 			ResponsibilityArmyAmplifier.DisplayName: Responsibility Squad Amplifier

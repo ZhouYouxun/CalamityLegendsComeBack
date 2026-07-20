@@ -8,9 +8,9 @@ using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.UI;
 
-namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
+namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty
 {
-    internal sealed class ResponsibilityPhoneUISystem : ModSystem
+    internal sealed class CallofDutyUISystem : ModSystem
     {
         internal const float CancelRadius = 22f;
         private const float SlotRadius = 70f;
@@ -41,7 +41,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
                 return true;
             }
 
-            ResponsibilityPhonePlayer phonePlayer = Main.LocalPlayer.GetModPlayer<ResponsibilityPhonePlayer>();
+            CallofDutyPlayer phonePlayer = Main.LocalPlayer.GetModPlayer<CallofDutyPlayer>();
             if (!phonePlayer.WheelOpen || ResponsibilityLanguageRegistry.Count <= 0)
             {
                 wheelOpacity = 0f;
@@ -87,7 +87,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
             }
 
             string centerText = phonePlayer.ArmyActive
-                ? Language.GetTextValue("Mods.CalamityLegendsComeBack.UI.ResponsibilityPhone.Return")
+                ? Language.GetTextValue("Mods.CalamityLegendsComeBack.UI.CallofDuty.Return")
                 : "脳";
             Vector2 centerSize = FontAssets.MouseText.Value.MeasureString(centerText);
             Color centerColor = phonePlayer.ArmyActive ? new Color(194, 255, 67) : Color.LightGray;

@@ -35,13 +35,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
         };
 
         public const int InitialDamage = 168;
-        public const int BaseFireInterval = 30;
+        public const int BaseFireInterval = 60;
         public const int MechanicalFireInterval = 24;
         public const int ScopeChargeFrames = 90;
         public const int MinimumScopeChargeFrames = 12;
         public const int SlideFrames = 15;
         public const int SlideChainWindowFrames = 120;
         public const int SlideCooldownFrames = 30 * 60;
+        public const float FlightSpeedScale = 0.67f;
 
         public static AMRProgressionStage Stage
         {
@@ -83,8 +84,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
         public static bool DimensionalSlideUnlocked => Stage >= AMRProgressionStage.DevourerOfGods;
         public static bool OnyxSequenceUnlocked => Stage >= AMRProgressionStage.Finale;
 
-        public static float LeftProjectileSpeed => 32f + (int)Stage * 1.8f;
-        public static float RightProjectileSpeed(float charge) => MathHelper.Lerp(38f, 62f, charge);
+        public static float LeftProjectileSpeed => (32f + (int)Stage * 1.8f) * FlightSpeedScale;
+        public static float RightProjectileSpeed(float charge) => MathHelper.Lerp(38f, 62f, charge) * FlightSpeedScale;
         public static float RightDamageMultiplier(float charge) => MathHelper.Lerp(1.15f, 2.5f, charge);
     }
 }

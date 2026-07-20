@@ -238,7 +238,7 @@ Mods: {
 		Keybinds: {
 			LegendarySkill.DisplayName: Legendary Skill
 			LegendaryWeaponFormSwitch.DisplayName: Legendary Weapon Form Switch
-			SHPCLoadingUI.DisplayName: SHPC Loading UI
+			WeaponLoadingUI.DisplayName: Weapon Loading UI
 			ExtraBackpack.DisplayName: Extra Backpack
 		}
 

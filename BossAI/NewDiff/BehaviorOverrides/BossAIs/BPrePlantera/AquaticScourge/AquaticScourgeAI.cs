@@ -96,6 +96,14 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         private int pustuleStunTimer = 0;
         private int pustuleRespawnTimer = 0;
 
+        // 脓疮血量 gate 95% 减伤、pustuleStunTimer gate 150% 承伤 —— 30 倍的伤害差。
+        // pustuleSegment 也要过网：它存的是脓疮绑在哪几节身体上，各端必须指向同一批节段，
+        // 否则玩家打的位置在别人那端根本不算脓疮。
+        protected override void DeclareSyncedFields(LegendsSyncedFields f) => f
+            .FloatArray(pustuleHPs)
+            .Int(() => pustuleStunTimer, v => pustuleStunTimer = v)
+            .Int(() => pustuleRespawnTimer, v => pustuleRespawnTimer = v);
+
         private int tideTimer = 0;
         private int ticksRunning = 0;
 
@@ -114,6 +122,36 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         private int outOfBiomeTimer = 0;
         private float enrageSpeedMultiplier = 1f;
         private bool wasEnraged = false;
+        #endregion
+
+        #region Per-fight State Reset
+        // 跨场次状态清理（为什么需要见基类 LegendsBossAI.ResetFightState；调用时机由框架负责）。
+        // 本 Boss 残留最要命的是 pustuleHPs/pustuleSegment —— 脓疮血量和它们绑定的节段 whoAmI 都是
+        // 上一条虫的，不清的话下一场开局脓疮要么已经是破的、要么指向一堆早就不存在的节段索引。
+        public override void ResetFightState(NPC npc, Player target)
+        {
+            ticksRunning = 0;
+            currentRepetition = 0;
+            attackCycleIndex = 0;
+            Array.Clear(attackVariant, 0, attackVariant.Length);
+
+            for (int i = 0; i < pustuleSegment.Length; i++)
+                pustuleSegment[i] = -1;
+            Array.Clear(pustuleHPs, 0, pustuleHPs.Length);
+            pustuleStunTimer = 0;
+            pustuleRespawnTimer = 0;
+
+            tideTimer = 0;
+            carvePassTimer = 0;
+
+            for (int i = 0; i < headOldPos.Length; i++)
+                headOldPos[i] = npc.Center;
+            headOldPosIndex = 0;
+
+            outOfBiomeTimer = 0;
+            enrageSpeedMultiplier = 1f;
+            wasEnraged = false;
+        }
         #endregion
 
         #region Core AI Hooks

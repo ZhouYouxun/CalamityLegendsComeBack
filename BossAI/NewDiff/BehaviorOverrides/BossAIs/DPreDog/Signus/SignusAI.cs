@@ -75,9 +75,16 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         private bool centerSet = false;
 
         // Phantom Evasion Step
+        // coreExposed 是全项目最硬的一道伤害门槛：核心没暴露时 FinalDamage 直接乘 0。它必须过网 ——
+        // 不同步的话，某个客户端一直以为核心是收着的，那个玩家整场打出的是字面意义的零伤害，
+        // 而且屏幕上还会看到"打中了"的特效，完全无法自查。
         private bool coreExposed = false;
         private bool wasCoreExposed = false;
         private int stunTimer = 0;
+
+        protected override void DeclareSyncedFields(LegendsSyncedFields f) => f
+            .Bool(() => coreExposed, v => coreExposed = v)
+            .Int(() => stunTimer, v => stunTimer = v);
 
         // Twisting Mine Grid
         private int mineGridTimer = 0;
@@ -119,9 +126,6 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         #region Core AI Hooks
         public override bool PreAI(NPC npc, LegendsGlobalNPC data)
         {
-            if ((int)npc.ai[0] == 0)
-                ResetFightState();
-
             ticksRunning++;
 
             if (!TryGetTarget(npc, out Player target))
@@ -273,7 +277,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             return false;
         }
 
-        private void ResetFightState()
+        public override void ResetFightState(NPC npc, Player target)
         {
             ticksRunning = 0;
             currentRepetition = 0;

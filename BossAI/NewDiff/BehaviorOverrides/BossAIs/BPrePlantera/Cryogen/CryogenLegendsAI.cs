@@ -72,6 +72,50 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         }
         #endregion
 
+        #region Shared Attack Timing (telegraph contract)
+        // ==============================================================================================================
+        // 预警契约：任何"到点才出现的危险"，它的开火帧和它的预警窗口必须来自这里的同一个常量。
+        //
+        // 为什么必须这样：预警线画在 PreDraw、开火写在 AI，是两段互不相干的代码。变体系统加进来的时候，AI 里的
+        // 时间轴改了、PreDraw 里那份手抄的帧号没跟着改，于是雪崩变体B的预警画在俯冲【之后】、暗夜巨剑变体B的
+        // 第2/3次冲斩完全没预警、破冰者变体B画出一条威胁"一次根本不存在的冲刺"的红线。这类失配不会报错、
+        // 不会崩，只会让玩家觉得"这boss有时候乱打"——是最难被发现的一类伤害。
+        //
+        // CrystalPiercer 的注释里早就写过这个风险（见 PreDraw 3.9 段），但当时只有它自己遵守了。现在把帧号收
+        // 敛到这一处，两边都引用常量，改一个数就两边同时生效，物理上无法再漂移。
+        // 新增招式请照此办理：先在这里定义 XxxTelegraphStart / XxxFireTime，再在 AI 和 PreDraw 里引用。
+        // ==============================================================================================================
+
+        // 破冰者：变体A的两次冲刺；变体B不冲刺（原地扔双锤），因此没有冲刺预警线。
+        private const float IcebreakerDash1Fire = 30f;
+        private const float IcebreakerDash2Fire = 130f;
+        private const float IcebreakerTelegraphLead = 15f;   // 冲刺前多少帧开始画线
+
+        // 雪崩：变体A单次中央砸地；变体B每一拍都复用同一套 rise->lock->dive 形状，只是相对该拍起点计时。
+        private const float AvalancheTelegraphStart = 70f;
+        private const float AvalancheDiveFire = 92f;
+        private const float AvalancheBeatTelegraphStart = 46f;  // 相对 avalancheBeatStart
+        private const float AvalancheBeatDiveFire = 68f;        // 相对 avalancheBeatStart
+
+        // 暗夜巨剑：变体A一次(P6追加第二次)；变体B三连短冲。
+        private const float DarklightSpawnA = 26f;
+        private const float DarklightDashA = 60f;
+        private const float DarklightSpawnA2 = 126f;            // 仅 P6
+        private const float DarklightDashA2 = 150f;             // 仅 P6
+        private const float DarklightFlurryFirstSpawn = 20f;
+        private const float DarklightFlurryInterval = 66f;
+        private const float DarklightFlurryWindup = 20f;        // spawn -> dash 的间隔
+        private const int DarklightFlurryStrikes = 3;
+        private static float DarklightFlurrySpawn(int strike) => DarklightFlurryFirstSpawn + strike * DarklightFlurryInterval;
+        private static float DarklightFlurryDash(int strike) => DarklightFlurrySpawn(strike) + DarklightFlurryWindup;
+
+        // 极寒之魂：滑翔起点即"航道变危险"的时刻，预警线提前 SoulGlideLead 帧画在该航道高度上。
+        private const float SoulGlideStartA = 30f;
+        private const float SoulGlideStartB1 = 26f;
+        private const float SoulGlideStartB2 = 172f;
+        private const float SoulGlideLead = 16f;
+        #endregion
+
         #region Local Fields
         private float shieldRotation = 0f;
         private float coreRotation = 0f;
@@ -106,9 +150,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         private float wingDrawScale = 0f;
 
         // Telegraphed teleport system — replaces hard npc.Center warps so blinks read as intent, not glitches
-        private int teleportTimer = 0;
-        private int teleportDuration = 0;
-        private Vector2 teleportDestination = Vector2.Zero;
+        // 传送状态现在住在基类里（TeleportTimer/TeleportDuration/TeleportDestination），本地不再另存一份。
 
         // Hoarfrost Bow "read the gap" state
         private float hoarfrostLaneStartX = 0f;
@@ -173,6 +215,89 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         private int outOfBiomeTimer = 0;
         private float enrageSpeedMultiplier = 1f;
         private bool wasEnraged = false;
+        #endregion
+
+        #region Multiplayer Sync
+        // 冰川之拥 10 次护盾：ProcessShieldHit 用 shieldActive + shieldChargeProgress 把伤害直接乘 0，
+        // 而 ModifyHitBy* 只在【攻击方客户端和服务端】跑 —— 别的玩家那一端根本不会执行 shieldHealth--。
+        // 不同步的结果：A 把盾打破了，B 的客户端里盾还好端端立着，B 打出去的每一下都在本地被吞。
+        // 这正是基类 DeclareSyncedFields 文档里"我明明在打却不掉血"说的那个原型案例 —— 讽刺的是
+        // 它一直就出在写下那套护盾机制的这个 Boss 身上。
+        //
+        // 只同步真正决定判定的四项；shieldRotation / 粒子 / 充能特效各端自己算就行，不占带宽。
+        protected override void DeclareSyncedFields(LegendsSyncedFields f) => f
+            .Bool(() => shieldActive, v => shieldActive = v)
+            .Int(() => shieldHealth, v => shieldHealth = v)
+            .Int(() => shieldRegenTimer, v => shieldRegenTimer = v)
+            .Float(() => shieldChargeProgress, v => shieldChargeProgress = v);
+        #endregion
+
+        #region Per-fight State Reset
+        // 跨场次状态清理（为什么需要见基类 LegendsBossAI.ResetFightState；调用时机由框架负责）。
+        // Cryogen 是这套框架的第一个 Boss，反而一直漏了这一步。它身上残留最要命的三项：
+        //   · shieldHealth/shieldActive —— 上一场破着盾死的话，下一场开局直接没护盾或只剩几点
+        //   · teleportDuration —— 若在闪现途中脱战，下一场刚出生就会被瞬移到上一场的坐标
+        //   · cryoOldPos —— 残影会从上一场的死亡点across整张地图拖一条线过来
+        public override void ResetFightState(NPC npc, Player target)
+        {
+            ticksRunning = 0;
+            shieldRotation = 0f;
+            coreRotation = 0f;
+
+            targetSubphase = 1;
+            transitionFlashAlpha = 0f;
+            attackCycleIndex = 0;
+            Array.Clear(attackVariant, 0, attackVariant.Length);
+
+            // 护盾回到"未生成"状态：PreAI 第一帧会看到 !shieldActive && shieldRegenTimer==0，
+            // 于是重新起盾并用 5 秒充能 —— 和全新一场战斗的表现完全一致。
+            shieldActive = false;
+            shieldHealth = 10;
+            shieldRegenTimer = 0;
+            shieldChargeProgress = 0f;
+            shieldFxCooldown = 0;
+            hitFxCooldown = 0;
+
+            wingDrawScale = 0f;
+
+            ResetTeleport();
+
+            hoarfrostLaneStartX = 0f;
+            hoarfrostLaneDir = 1f;
+            hoarfrostVolleyIndex = 0;
+            hoarfrostVariantB = false;
+
+            avalancheImpacted = false;
+            avalancheImpactX = 0f;
+            avalancheImpactTime = 0;
+            avalancheVariantB = false;
+            avalancheBeat = 0;
+            avalancheBeatStart = 0;
+
+            icebreakerVariantB = false;
+            soulVariantB = false;
+            soulPass = 1;
+            darklightVariantB = false;
+            starnightVariantB = false;
+            shadecrystalVariantB = false;
+            daedalusVariantB = false;
+            darkechoVariantB = false;
+            piercerVariantB = false;
+
+            lanceDir1 = Vector2.Zero;
+            lanceDir2 = Vector2.Zero;
+            lanceDir3 = Vector2.Zero;
+            daedalusAimDir = Vector2.Zero;
+
+            // 拖尾全部塌到出生点，否则残影会从上一场的死亡位置拖过来
+            for (int i = 0; i < cryoOldPos.Length; i++)
+                cryoOldPos[i] = npc.Center;
+            cryoOldPosIndex = 0;
+
+            outOfBiomeTimer = 0;
+            enrageSpeedMultiplier = 1f;
+            wasEnraged = false;
+        }
         #endregion
 
         #region Core AI Hooks
@@ -528,7 +653,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers)
         {
             ProcessShieldHit(npc, player, ref modifiers);
-            InterceptLethalHit(npc, ref modifiers);
+            InterceptLethalHit(npc, ref modifiers, (int)AttackState.DeathAnimation, () => BeginDeathAnimation(npc, player));
         }
 
         public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers)
@@ -550,28 +675,16 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             }
 
             ProcessShieldHit(npc, Main.player[projectile.owner], ref modifiers);
-            InterceptLethalHit(npc, ref modifiers);
+            InterceptLethalHit(npc, ref modifiers, (int)AttackState.DeathAnimation, () => BeginDeathAnimation(npc, Main.player[projectile.owner]));
         }
 
-        // The killing blow doesn't delete the boss — it triggers the death performance.
-        // The final strike is capped at 1 HP, the boss becomes untouchable, and DeathAnimation
-        // plays out before a proper loot-dropping kill.
-        private void InterceptLethalHit(NPC npc, ref NPC.HitModifiers modifiers)
+        // 致命伤拦截本身已经泛化进基类了（基类那份注释里写着"generalized from Cryogen's InterceptLethalHit"），
+        // 但 Cryogen 自己一直留着私有副本没换过去，也从来没接过 TriggerDeathCinematic —— 其余 15 个 boss
+        // 死的时候镜头会拉近，只有这个"标杆"没有。现在统一。
+        private void BeginDeathAnimation(NPC npc, Player target)
         {
-            if ((AttackState)(int)npc.ai[1] == AttackState.DeathAnimation)
-            {
-                modifiers.FinalDamage *= 0f;
-                return;
-            }
-
-            modifiers.ModifyHitInfo += (ref NPC.HitInfo info) =>
-            {
-                if (npc.life - info.Damage > 1)
-                    return;
-                info.Damage = Math.Max(npc.life - 1, 0);
-                npc.dontTakeDamage = true;
-                TransitionToAttack(npc, AttackState.DeathAnimation);
-            };
+            TransitionToAttack(npc, AttackState.DeathAnimation);
+            TriggerDeathCinematic(npc, target, focusStrength: 0.6f, holdFrames: 60, shakePower: 12f);
         }
 
         private void ProcessShieldHit(NPC npc, Player player, ref NPC.HitModifiers modifiers)
@@ -580,6 +693,11 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             {
                 // Decrement shield health by 1
                 shieldHealth--;
+
+                // 每一次扣血都要下发。ModifyHit 只在攻击方那一端跑，其他客户端不会自己减 —— 不推的话
+                // 他们会一直以为盾是满的，然后把自己打出的伤害在本地吞掉（护盾一共就 10 下，
+                // 每下一个包，量完全可以接受）。
+                npc.netUpdate = true;
 
                 // Hit sound & ring are throttled so rapid-fire weapons don't flood the screen and ears;
                 // the shield HP itself still ticks down on every hit.
@@ -776,7 +894,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
             if (!icebreakerVariantB)
             {
-                if (timer < 30)
+                if (timer < IcebreakerDash1Fire)
                 {
                     // Slow down and tilt back preparing dash
                     npc.velocity *= 0.85f;
@@ -790,7 +908,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                         d.noGravity = true;
                     }
                 }
-                else if (timer == 30)
+                else if (timer == IcebreakerDash1Fire)
                 {
                     // First dash
                     Vector2 dashVel = (target.Center - npc.Center).SafeNormalize(Vector2.UnitY) * 21f;
@@ -819,7 +937,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                         }
                     }
                 }
-                else if (timer > 30 && timer < 100)
+                else if (timer > IcebreakerDash1Fire && timer < 100)
                 {
                     // Decelerate dash
                     npc.velocity *= 0.96f;
@@ -833,7 +951,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     Vector2 dest = target.Center + new Vector2(-side * 360f, -220f);
                     BeginTeleport(npc, dest, 22);
                 }
-                else if (timer == 130)
+                else if (timer == IcebreakerDash2Fire)
                 {
                     // Second dash
                     Vector2 dashVel = (target.Center - npc.Center).SafeNormalize(Vector2.UnitY) * 21f;
@@ -862,7 +980,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                         }
                     }
                 }
-                else if (timer > 130 && timer < 200)
+                else if (timer > IcebreakerDash2Fire && timer < 200)
                 {
                     npc.velocity *= 0.96f;
                 }
@@ -945,12 +1063,12 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             const int duration = 300;
             if (!avalancheImpacted)
             {
-                if (timer < 70)
+                if (timer < AvalancheTelegraphStart)
                 {
                     // Rise high above the player, still tracking
                     SmoothMove(npc, target.Center + new Vector2(0f, -380f), 0.07f, 15f);
                 }
-                else if (timer < 92)
+                else if (timer < AvalancheDiveFire)
                 {
                     // Lock X (stop tracking so the drop is dodgeable) and telegraph the slam lane with falling frost
                     npc.velocity *= 0.8f;
@@ -961,7 +1079,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                         d.noGravity = true;
                     }
                 }
-                else if (timer == 92)
+                else if (timer == AvalancheDiveFire)
                 {
                     npc.velocity = new Vector2(0f, 12f);
                     SoundEngine.PlaySound(SoundID.Item71, npc.Center);
@@ -1050,11 +1168,11 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
             if (avalancheBeat == 0 || avalancheBeat == 2)
             {
-                if (localT < 46)
+                if (localT < AvalancheBeatTelegraphStart)
                 {
                     SmoothMove(npc, new Vector2(lockX, target.Center.Y - 380f), 0.07f, 15f);
                 }
-                else if (localT < 68)
+                else if (localT < AvalancheBeatDiveFire)
                 {
                     npc.velocity *= 0.8f;
                     for (int k = 0; k < 3; k++)
@@ -1064,7 +1182,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                         d.noGravity = true;
                     }
                 }
-                else if (localT == 68)
+                else if (localT == AvalancheBeatDiveFire)
                 {
                     npc.velocity = new Vector2(0f, 12f);
                     SoundEngine.PlaySound(SoundID.Item71, npc.Center);
@@ -1219,7 +1337,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             if (!soulVariantB)
             {
                 duration = 320;
-                if (timer >= 30 && timer <= 260)
+                if (timer >= SoulGlideStartA && timer <= 260)
                 {
                     wingDrawScale = MathHelper.Lerp(wingDrawScale, 1.0f, 0.1f);
                     npc.velocity = new Vector2(-stateTracker * 6.5f, 0f);
@@ -1236,7 +1354,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 duration = 380;
                 if (soulPass == 1)
                 {
-                    if (timer >= 26 && timer <= 130)
+                    if (timer >= SoulGlideStartB1 && timer <= 130)
                     {
                         wingDrawScale = MathHelper.Lerp(wingDrawScale, 1.0f, 0.1f);
                         npc.velocity = new Vector2(-stateTracker * 7f, 0f);
@@ -1259,7 +1377,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 }
                 else
                 {
-                    if (timer >= 172 && timer <= 300)
+                    if (timer >= SoulGlideStartB2 && timer <= 300)
                     {
                         wingDrawScale = MathHelper.Lerp(wingDrawScale, 1.0f, 0.1f);
                         npc.velocity = new Vector2(-stateTracker * 7f, 0f);
@@ -1330,15 +1448,15 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 // Held greatsword per slash: spawned with the telegraph so the windup burns alongside the warning line,
                 // then it re-aims along the actual dash velocity at slash start — blade and body always agree.
                 // Slash #2's telegraph window is 24f (not 34f), so its windup is overridden via ai[2] to land exactly on the dash.
-                if ((timer == 26 || (timer == 126 && phase == 6)) && Main.netMode != NetmodeID.MultiplayerClient)
+                if ((timer == DarklightSpawnA || (timer == DarklightSpawnA2 && phase == 6)) && Main.netMode != NetmodeID.MultiplayerClient)
                 {
                     Vector2 aim = (target.Center - npc.Center).SafeNormalize(Vector2.UnitY);
                     float swingDir = aim.X >= 0f ? 1f : -1f;
-                    float windupOverride = timer == 126 ? 24f : 0f;
+                    float windupOverride = timer == DarklightSpawnA2 ? 24f : 0f;
                     Projectile.NewProjectile(npc.GetSource_FromAI(), npc.Center, aim, ModContent.ProjectileType<CryogenHeldDarklight>(), npc.damage / 3, 0f, Main.myPlayer, npc.whoAmI, swingDir, windupOverride);
                 }
 
-                if (timer == 60)
+                if (timer == DarklightDashA)
                 {
                     // First diagonal slash dash
                     Vector2 dashVel = (target.Center - npc.Center).SafeNormalize(Vector2.UnitY) * 26f;
@@ -1367,7 +1485,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                         Projectile.NewProjectile(npc.GetSource_FromAI(), npc.Center - dir * 20f - dir.RotatedBy(MathHelper.PiOver2) * 26f, dir, ModContent.ProjectileType<CryogenLightBeam>(), npc.damage / 3, 0f, Main.myPlayer);
                     }
                 }
-                else if (timer > 60 && timer < 120)
+                else if (timer > DarklightDashA && timer < 120)
                 {
                     // Decelerate
                     npc.velocity *= 0.94f;
@@ -1378,7 +1496,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     Vector2 dest = target.Center + new Vector2(-stateTracker * 360f, -180f);
                     BeginTeleport(npc, dest, 24);
                 }
-                else if (timer == 150 && phase == 6)
+                else if (timer == DarklightDashA2 && phase == 6)
                 {
                     // Second slash dash (Phase 6 only)
                     Vector2 dashVel = (target.Center - npc.Center).SafeNormalize(Vector2.UnitY) * 26f;
@@ -1404,7 +1522,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                         Projectile.NewProjectile(npc.GetSource_FromAI(), npc.Center - dir * 20f - dir.RotatedBy(MathHelper.PiOver2) * 26f, dir, ModContent.ProjectileType<CryogenLightBeam>(), npc.damage / 3, 0f, Main.myPlayer);
                     }
                 }
-                else if (timer > 150 && timer < 200)
+                else if (timer > DarklightDashA2 && timer < 200)
                 {
                     npc.velocity *= 0.94f;
                 }
@@ -1436,10 +1554,10 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 BeginTeleport(npc, dest, 22);
             }
 
-            for (int strike = 0; strike < 3; strike++)
+            for (int strike = 0; strike < DarklightFlurryStrikes; strike++)
             {
-                float spawnT = 20 + strike * 66;
-                float dashT = spawnT + 20;
+                float spawnT = DarklightFlurrySpawn(strike);
+                float dashT = DarklightFlurryDash(strike);
                 float repositionT = dashT + 30;
 
                 if (timer == spawnT && Main.netMode != NetmodeID.MultiplayerClient)
@@ -2095,67 +2213,36 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
         // --- Director-layer helpers ------------------------------------------------------------------------------------
 
-        // Begin a telegraphed blink: Cryogen dissolves, frost converges on the destination, then it reforms there.
-        private void BeginTeleport(NPC npc, Vector2 destination, int windup = 26)
+        // 传送的时序骨架（淡出→落位→淡入、隐身不许撞人）已经上移到基类 LegendsBossAI，供全部 boss 用。
+        // 这里只留冰霜自己的视觉语言：冰尘往目的地聚拢，落位时炸开一圈霜环。
+        protected override void OnTeleportBegin(NPC npc, Vector2 destination)
         {
-            teleportDestination = destination;
-            teleportDuration = windup;
-            teleportTimer = 0;
             SoundEngine.PlaySound(SoundID.Item8 with { Volume = 0.6f, Pitch = 0.2f }, npc.Center);
-            npc.netUpdate = true;
         }
 
-        // Runs every frame (no-op unless teleporting). Owns velocity/opacity/position while active. Returns true if mid-blink.
-        private bool UpdateTeleport(NPC npc)
+        protected override void OnTeleportDissolve(NPC npc, Vector2 destination, float progress)
         {
-            if (teleportDuration <= 0)
-                return false;
-
-            teleportTimer++;
-            int half = Math.Max(1, teleportDuration / 2);
-            npc.velocity *= 0.8f;
-
-            if (teleportTimer < half)
+            // 冰尘朝【目的地】收拢 —— 这是玩家唯一能提前知道它要出现在哪的线索
+            for (int i = 0; i < 3; i++)
             {
-                // Dissolve at the old spot; pull convergent frost toward the destination so the move telegraphs itself
-                npc.Opacity = MathHelper.Lerp(1f, 0f, teleportTimer / (float)half);
-                for (int i = 0; i < 3; i++)
-                {
-                    Vector2 around = teleportDestination + (MathHelper.TwoPi * Main.rand.NextFloat()).ToRotationVector2() * Main.rand.NextFloat(70f, 130f);
-                    Vector2 vel = (teleportDestination - around) * 0.06f;
-                    Dust d = Dust.NewDustPerfect(around, DustID.Ice, vel, 100, Color.Cyan, Main.rand.NextFloat(1.1f, 1.4f));
-                    d.fadeIn = 1.3f;
-                    d.noGravity = true;
-                }
-                EmitFrostBurst(teleportDestination, 3f, 3);
+                Vector2 around = destination + (MathHelper.TwoPi * Main.rand.NextFloat()).ToRotationVector2() * Main.rand.NextFloat(70f, 130f);
+                Vector2 vel = (destination - around) * 0.06f;
+                Dust d = Dust.NewDustPerfect(around, DustID.Ice, vel, 100, Color.Cyan, Main.rand.NextFloat(1.1f, 1.4f));
+                d.fadeIn = 1.3f;
+                d.noGravity = true;
             }
-            else if (teleportTimer == half)
-            {
-                npc.Center = teleportDestination;
-                npc.velocity = Vector2.Zero;
-                SoundEngine.PlaySound(SoundID.Item28 with { Volume = 0.7f }, npc.Center);
-                EmitCryoDustRing(npc.Center, 46f, 22, 4f);
-                EmitFrostBurst(npc.Center, 4f, 40);
+            EmitFrostBurst(destination, 3f, 3);
+        }
 
-                // Collapse the afterimage trail onto the new spot so the blink doesn't smear across the arena
-                for (int i = 0; i < cryoOldPos.Length; i++)
-                    cryoOldPos[i] = npc.Center;
-            }
-            else
-            {
-                npc.Opacity = MathHelper.Lerp(0f, 1f, (teleportTimer - half) / (float)half);
-            }
+        protected override void OnTeleportArrive(NPC npc)
+        {
+            SoundEngine.PlaySound(SoundID.Item28 with { Volume = 0.7f }, npc.Center);
+            EmitCryoDustRing(npc.Center, 46f, 22, 4f);
+            EmitFrostBurst(npc.Center, 4f, 40);
 
-            // Never cheese contact damage while invisible
-            if (npc.Opacity < 0.5f)
-                npc.damage = 0;
-
-            if (teleportTimer >= teleportDuration)
-            {
-                teleportDuration = 0;
-                npc.Opacity = 1f;
-            }
-            return true;
+            // Collapse the afterimage trail onto the new spot so the blink doesn't smear across the arena
+            for (int i = 0; i < cryoOldPos.Length; i++)
+                cryoOldPos[i] = npc.Center;
         }
 
         // The CryoStoneBarrier defines a fixed arena. Read its center/floor so attacks can lay geometry relative to it.
@@ -2321,11 +2408,13 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             AttackState state = (AttackState)(int)npc.ai[1];
             float timer = npc.ai[2];
 
-            if (state == AttackState.Icebreaker)
+            // 蓄力压扁 / 冲刺拉伸只属于会冲刺的变体A。变体B原地悬停扔双锤, 以前照跑这套演出,
+            // Boss 会一边纹丝不动一边做出完整的"我要冲了"身体语言 —— 和预警红线一样是假情报。
+            if (state == AttackState.Icebreaker && !icebreakerVariantB)
             {
                 // Dash 1 is frame 30-100, Dash 2 is frame 130-200
-                bool charging = timer < 30f || (timer >= 100f && timer < 130f);
-                bool dashing = (timer >= 30f && timer < 80f) || (timer >= 130f && timer < 180f);
+                bool charging = timer < IcebreakerDash1Fire || (timer >= 100f && timer < IcebreakerDash2Fire);
+                bool dashing = (timer >= IcebreakerDash1Fire && timer < 80f) || (timer >= IcebreakerDash2Fire && timer < 180f);
 
                 if (charging)
                 {
@@ -2472,43 +2561,54 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 0f
             );
 
-            // 3.5 Draw dash warning telegraph lines for Icebreaker
-            if (state == AttackState.Icebreaker)
+            // 3.5 Draw dash warning telegraph lines for Icebreaker.
+            // 变体B原地悬停扔双锤、根本不冲刺 —— 以前这里照画一条指向玩家的红线, 预告一次永远不会发生的冲刺,
+            // 是纯粹的假情报。现在只有真的会冲的变体A才画。
+            if (state == AttackState.Icebreaker && !icebreakerVariantB)
             {
-                bool showTelegraph = (timer >= 15f && timer < 30f) || (timer >= 115f && timer < 130f);
-                if (showTelegraph)
+                Player playerTarget = Main.player[npc.target];
+                if (playerTarget.active && !playerTarget.dead)
                 {
-                    Player playerTarget = Main.player[npc.target];
-                    if (playerTarget.active && !playerTarget.dead)
+                    float dashAt = TelegraphPhaseOf(timer, IcebreakerDash1Fire, IcebreakerDash2Fire, IcebreakerTelegraphLead);
+                    if (dashAt > 0f)
                     {
-                        float progress = (timer < 30f) ? (timer - 15f) / 15f : (timer - 115f) / 15f;
+                        float progress = 1f - (dashAt - timer) / IcebreakerTelegraphLead;
                         Vector2 delta = playerTarget.Center - npc.Center;
-                        float len = delta.Length();
-                        float rot = delta.ToRotation();
-                        spriteBatch.End();
-                        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
-                        spriteBatch.Draw(TextureAssets.MagicPixel.Value, npc.Center - screenPos, new Rectangle(0, 0, 1, 1), Color.Red * progress * 0.65f, rot, new Vector2(0f, 0.5f), new Vector2(len, 3f), SpriteEffects.None, 0f);
-                        spriteBatch.End();
-                        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+                        BeginAdditive(spriteBatch);
+                        spriteBatch.Draw(TextureAssets.MagicPixel.Value, npc.Center - screenPos, new Rectangle(0, 0, 1, 1), Color.Red * progress * 0.65f, delta.ToRotation(), new Vector2(0f, 0.5f), new Vector2(delta.Length(), 3f), SpriteEffects.None, 0f);
+                        EndAdditive(spriteBatch);
                     }
                 }
             }
 
-            // 3.6 Draw vertical warning telegraph line for Avalanche
+            // 3.6 Draw vertical warning telegraph line for Avalanche.
+            // 变体B的每一拍都相对 avalancheBeatStart 计时, 所以预警窗口必须跟着那个起点走 —— 以前这里写死了
+            // 变体A的 70~92, 结果变体B第一拍的线画在俯冲【之后】、第二拍完全没有线。
             if (state == AttackState.Avalanche)
             {
-                if (timer >= 70f && timer < 92f)
+                float diveAt, telegraphAt;
+                if (!avalancheVariantB)
+                {
+                    diveAt = AvalancheDiveFire;
+                    telegraphAt = AvalancheTelegraphStart;
+                }
+                else
+                {
+                    // 只有"正在逼近某一拍"的时候才有俯冲要预警; 已落地的拍(1/3)没有
+                    bool approaching = avalancheBeat == 0 || avalancheBeat == 2;
+                    diveAt = approaching ? avalancheBeatStart + AvalancheBeatDiveFire : -1f;
+                    telegraphAt = avalancheBeatStart + AvalancheBeatTelegraphStart;
+                }
+
+                if (diveAt > 0f && timer >= telegraphAt && timer < diveAt)
                 {
                     float floorY = TryGetArenaFloorY(Main.player[npc.target]);
                     Vector2 top = npc.Center;
-                    Vector2 bottom = new Vector2(npc.Center.X, floorY);
-                    float progress = (timer - 70f) / 22f;
+                    float progress = (timer - telegraphAt) / Math.Max(diveAt - telegraphAt, 1f);
 
-                    spriteBatch.End();
-                    spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
-                    spriteBatch.Draw(TextureAssets.MagicPixel.Value, top - screenPos, new Rectangle(0, 0, 1, 1), Color.Red * progress * 0.7f, MathHelper.PiOver2, new Vector2(0f, 0.5f), new Vector2(bottom.Y - top.Y, 4f), SpriteEffects.None, 0f);
-                    spriteBatch.End();
-                    spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+                    BeginAdditive(spriteBatch);
+                    spriteBatch.Draw(TextureAssets.MagicPixel.Value, top - screenPos, new Rectangle(0, 0, 1, 1), Color.Red * progress * 0.7f, MathHelper.PiOver2, new Vector2(0f, 0.5f), new Vector2(floorY - top.Y, 4f), SpriteEffects.None, 0f);
+                    EndAdditive(spriteBatch);
                 }
             }
 
@@ -2572,24 +2672,52 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 }
             }
 
-            // 3.8 Draw diagonal warning telegraph lines for Darklight Greatsword
+            // 3.8 Draw diagonal warning telegraph lines for Darklight Greatsword.
+            // 变体B是三连短冲(40/106/172), 以前这里只画变体A的 26~60 窗口 —— 等于第2、3次冲斩完全没预警,
+            // 而第1次的线还会在冲刺开始后继续画 20 帧。现在两个变体各按自己的开火帧算窗口。
             if (state == AttackState.DarklightGreatsword)
             {
-                bool showTelegraph = (timer >= 26f && timer < 60f) || (currentSubphase == 6 && timer >= 126f && timer < 150f);
-                if (showTelegraph)
+                Player playerTarget = Main.player[npc.target];
+                if (playerTarget.active && !playerTarget.dead)
                 {
-                    Player playerTarget = Main.player[npc.target];
-                    if (playerTarget.active && !playerTarget.dead)
+                    float spawnAt = -1f, dashAt = -1f;
+
+                    if (!darklightVariantB)
                     {
-                        float progress = (timer < 60f) ? (timer - 26f) / 34f : (timer - 126f) / 24f;
+                        if (timer >= DarklightSpawnA && timer < DarklightDashA)
+                        {
+                            spawnAt = DarklightSpawnA;
+                            dashAt = DarklightDashA;
+                        }
+                        else if (currentSubphase == 6 && timer >= DarklightSpawnA2 && timer < DarklightDashA2)
+                        {
+                            spawnAt = DarklightSpawnA2;
+                            dashAt = DarklightDashA2;
+                        }
+                    }
+                    else
+                    {
+                        for (int strike = 0; strike < DarklightFlurryStrikes; strike++)
+                        {
+                            float s = DarklightFlurrySpawn(strike);
+                            float d = DarklightFlurryDash(strike);
+                            if (timer >= s && timer < d)
+                            {
+                                spawnAt = s;
+                                dashAt = d;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (dashAt > 0f)
+                    {
+                        float progress = (timer - spawnAt) / Math.Max(dashAt - spawnAt, 1f);
                         Vector2 delta = playerTarget.Center - npc.Center;
                         float len = delta.Length() + 400f; // extend warning line past player
-                        float rot = delta.ToRotation();
-                        spriteBatch.End();
-                        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
-                        spriteBatch.Draw(TextureAssets.MagicPixel.Value, npc.Center - screenPos, new Rectangle(0, 0, 1, 1), Color.Purple * progress * 0.75f, rot, new Vector2(0f, 0.5f), new Vector2(len, 6f), SpriteEffects.None, 0f);
-                        spriteBatch.End();
-                        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+                        BeginAdditive(spriteBatch);
+                        spriteBatch.Draw(TextureAssets.MagicPixel.Value, npc.Center - screenPos, new Rectangle(0, 0, 1, 1), Color.Purple * progress * 0.75f, delta.ToRotation(), new Vector2(0f, 0.5f), new Vector2(len, 6f), SpriteEffects.None, 0f);
+                        EndAdditive(spriteBatch);
                     }
                 }
             }
@@ -2694,18 +2822,28 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
             }
 
-            // 3.11 Horizontal strafe-lane warning for Soul of Cryogen — painted at the sweep altitude before the boss enters it
-            if (state == AttackState.SoulofCryogen && timer >= 14f && timer < 30f)
+            // 3.11 Horizontal strafe-lane warning for Soul of Cryogen — painted at the sweep altitude before the boss enters it.
+            // 变体B飞两程(26 / 172), 第二程换了高度和方向, 是需要重新读一次的新题 —— 以前只画第一程的窗口,
+            // 第二程玩家完全看不到航道在哪。两个变体的每一程现在都各自画一次。
+            if (state == AttackState.SoulofCryogen)
             {
-                float progress = (timer - 14f) / 16f;
-                float arenaX = TryGetArenaCenterX(Main.player[npc.target]);
-                Vector2 lineStart = new Vector2(arenaX - 840f, npc.Center.Y);
+                float glideAt = !soulVariantB
+                    ? SoulGlideStartA
+                    : (soulPass == 1 ? SoulGlideStartB1 : SoulGlideStartB2);
 
-                spriteBatch.End();
-                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
-                spriteBatch.Draw(TextureAssets.MagicPixel.Value, lineStart - screenPos, new Rectangle(0, 0, 1, 1), Color.Cyan * progress * 0.5f, 0f, new Vector2(0f, 0.5f), new Vector2(1680f, 3f), SpriteEffects.None, 0f);
-                spriteBatch.End();
-                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+                if (timer >= glideAt - SoulGlideLead && timer < glideAt)
+                {
+                    float progress = 1f - (glideAt - timer) / SoulGlideLead;
+                    float arenaX = TryGetArenaCenterX(Main.player[npc.target]);
+                    // 预警窗口可能和入场闪现重叠, 此时 npc.Center.Y 还是【上一个】高度。画将要扫的那条航道,
+                    // 而不是身体当前所在的位置, 否则玩家会照着一条马上就作废的线站位。
+                    float laneY = IsTeleporting ? TeleportDestination.Y : npc.Center.Y;
+                    Vector2 lineStart = new Vector2(arenaX - 840f, laneY);
+
+                    BeginAdditive(spriteBatch);
+                    spriteBatch.Draw(TextureAssets.MagicPixel.Value, lineStart - screenPos, new Rectangle(0, 0, 1, 1), Color.Cyan * progress * 0.5f, 0f, new Vector2(0f, 0.5f), new Vector2(1680f, 3f), SpriteEffects.None, 0f);
+                    EndAdditive(spriteBatch);
+                }
             }
 
             // 3.12 Staff beam warning for Daedalus Golem Staff — tracks the player, then the beam rides the final line
@@ -2731,6 +2869,30 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             }
 
             return false;
+        }
+
+        // 加法混合作用域。全文件九处预警绘制以前各自手抄一遍 End/Begin, 收敛到这里之后
+        // "加法混合画完必须恢复 AlphaBlend" 这条规则只有一个地方能写错。
+        private static void BeginAdditive(SpriteBatch sb)
+        {
+            sb.End();
+            sb.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+        }
+
+        private static void EndAdditive(SpriteBatch sb)
+        {
+            sb.End();
+            sb.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+        }
+
+        // 当前 timer 落在哪一次开火的预警前摇里; 都不在则返回 -1。
+        private static float TelegraphPhaseOf(float timer, float fire1, float fire2, float lead)
+        {
+            if (timer >= fire1 - lead && timer < fire1)
+                return fire1;
+            if (timer >= fire2 - lead && timer < fire2)
+                return fire2;
+            return -1f;
         }
 
         // One Starnight aim-line: locked at lockTime, intensifies until its beam fires at fireTime, then vanishes.

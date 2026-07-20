@@ -10,7 +10,7 @@ using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
+namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty
 {
     internal sealed class ResponsibilityCommunicationSequence : ModProjectile
     {
@@ -132,7 +132,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
 
             if (definition.HomingStrength > 0f && Projectile.timeLeft < definition.Lifetime - 3)
             {
-                NPC target = ResponsibilityPhoneGlobalNPC.FindPriorityTarget(Projectile.owner, Projectile.Center, 520f);
+                NPC target = CallofDutyGlobalNPC.FindPriorityTarget(Projectile.owner, Projectile.Center, 520f);
                 if (target != null)
                 {
                     Vector2 desiredVelocity = Projectile.SafeDirectionTo(target.Center) * definition.ProjectileSpeed;
@@ -168,7 +168,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
             if (definition.Id == ResponsibilityLanguage.Static)
                 target.velocity *= target.boss ? 0.98f : 0.92f;
 
-            ResponsibilityPhoneGlobalNPC.RegisterSequenceHit(target, Projectile.owner, SequenceId, definition.Id, BaseWeaponDamage);
+            CallofDutyGlobalNPC.RegisterSequenceHit(target, Projectile.owner, SequenceId, definition.Id, BaseWeaponDamage);
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -283,7 +283,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
 
                 case ResponsibilityLanguage.Query when queryCooldown <= 0:
                     Projectile.ai[1] = 180f;
-                    Main.player[Projectile.owner].GetModPlayer<ResponsibilityPhonePlayer>().SetPriorityTarget(TargetIndex, 180);
+                    Main.player[Projectile.owner].GetModPlayer<CallofDutyPlayer>().SetPriorityTarget(TargetIndex, 180);
                     queryCooldown = 120;
                     Projectile.netUpdate = true;
                     SoundEngine.PlaySound(SoundID.Item4 with { Volume = 0.35f, Pitch = 0.45f }, Projectile.Center);

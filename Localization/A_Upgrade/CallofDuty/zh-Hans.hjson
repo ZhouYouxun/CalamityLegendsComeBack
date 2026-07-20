@@ -2,7 +2,7 @@ Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
 			Weapons: {
-				ResponsibilityPhone: {
+				CallofDuty: {
 					DisplayName: 责任的电话
 					Tooltip: "[GFB]"
 					Compact:
@@ -40,8 +40,8 @@ Mods: {
 			}
 		}
 
-		Cooldowns.ResponsibilityPhone_Ultimate: 都过来
-		UI.ResponsibilityPhone.Return: 回来
+		Cooldowns.CallofDuty_Ultimate: 都过来
+		UI.CallofDuty.Return: 回来
 
 		NPCs: {
 			ResponsibilityArmyAmplifier.DisplayName: 责任分队·钨钢放大器

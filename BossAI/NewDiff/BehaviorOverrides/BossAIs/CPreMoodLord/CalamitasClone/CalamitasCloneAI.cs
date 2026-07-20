@@ -41,7 +41,8 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             CrushsawCrasher = 4,
             HavocsBreath = 5,
             DesperationOverload = 6,
-            BrotherTransition = 7
+            BrotherTransition = 7,
+            DeathAnimation = 8
         }
         #endregion
 
@@ -59,6 +60,13 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         private int shieldRegenTimer = 0;
         private int shieldStunTimer = 0;
         private int shieldFxCooldown = 0;
+
+        // shieldActive 直接 gate 95% 减伤。不同步 = 破盾玩家全力输出、没参与破盾的队友却还在打 5% 伤害，
+        // 而且他们那一端永远看不到盾已经碎了。
+        protected override void DeclareSyncedFields(LegendsSyncedFields f) => f
+            .Bool(() => shieldActive, v => shieldActive = v)
+            .Int(() => shieldRegenTimer, v => shieldRegenTimer = v)
+            .Int(() => shieldStunTimer, v => shieldStunTimer = v);
 
         // Per-attack A/B variant toggle: flips deterministically each time that attack comes up (no RNG).
         private readonly bool[] attackVariant = new bool[8];
@@ -89,9 +97,6 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         #region Core AI Hooks
         public override bool PreAI(NPC npc, LegendsGlobalNPC data)
         {
-            if ((int)npc.ai[0] == 0)
-                ResetFightState();
-
             ticksRunning++;
             oldPositions[oldPositionsIndex] = npc.Center;
             oldPositionsIndex = (oldPositionsIndex + 1) % oldPositions.Length;
@@ -228,6 +233,9 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     case AttackState.BrotherTransition:
                         ExecuteBrotherTransition(npc, target, ref timer, ref stateTracker, currentPhase);
                         break;
+                    case AttackState.DeathAnimation:
+                        ExecuteDeathAnimation(npc, ref timer);
+                        break;
                 }
             }
             else
@@ -240,7 +248,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             return false;
         }
 
-        private void ResetFightState()
+        public override void ResetFightState(NPC npc, Player target)
         {
             ticksRunning = 0;
             currentRepetition = 0;
@@ -265,8 +273,19 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             lashesChargeT = 0f;
         }
 
-        public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers) => ApplyDefense(npc, ref modifiers);
-        public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers) => ApplyDefense(npc, ref modifiers);
+        // 顺序要紧：先按护盾算减伤，再判这一下是不是致命伤。反过来的话，致命伤拦截会拿到还没被
+        // 护盾削减的原始伤害，盾还在的时候就可能被判定成"打死了"，直接跳进死亡演出。
+        public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers)
+        {
+            ApplyDefense(npc, ref modifiers);
+            InterceptLethalHit(npc, ref modifiers, (int)AttackState.DeathAnimation, () => BeginDeathAnimation(npc, player));
+        }
+
+        public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers)
+        {
+            ApplyDefense(npc, ref modifiers);
+            InterceptLethalHit(npc, ref modifiers, (int)AttackState.DeathAnimation, () => BeginDeathAnimation(npc, Main.player[projectile.owner]));
+        }
 
         private void ApplyDefense(NPC npc, ref NPC.HitModifiers modifiers)
         {
@@ -357,6 +376,99 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 npc.damage = npc.defDamage; // restore contact damage — without this the zero sticks forever
             }
         }
+
+        #region Death Performance
+        // 全项目 18 个 boss 里，只有灾厄克隆体连死亡演出的骨架都没有 —— 之前那份自检报告把它算进
+        // "已完成"的名单里，但枚举里根本没有 DeathAnimation 这个状态。补上。
+        //
+        // 演出取她自己的身份："不稳定生化晶体核心"在熔炉里失控。五拍：
+        //   吸气(核心把满场硫火吸回来) → 内爆 → 连锁爆燃(一圈圈向外炸) → 白热定格 → 真正死亡。
+        // 刻意不用通用大爆炸，让她死得像"炉子炸了"，而不是像随便一个敌人。
+        // （致命伤拦截挂在上面的 ModifyHitBy* 里，和护盾减伤共用同一个入口。）
+        private void BeginDeathAnimation(NPC npc, Player target)
+        {
+            // 硫火裂步可能正进行到一半；主循环的 switch 挂在 blinkDuration <= 0 底下，
+            // 不清掉的话死亡演出会被瞬移窗口整个吞掉。
+            blinkTimer = 0;
+            blinkDuration = 0;
+            npc.Opacity = 1f;
+
+            CleanupHeldWeapons(npc);
+            npc.ai[1] = (float)AttackState.DeathAnimation;
+            npc.ai[2] = 0f;
+            npc.ai[3] = 0f;
+            npc.netUpdate = true;
+
+            TriggerDeathCinematic(npc, target, focusStrength: 0.6f, holdFrames: 60, shakePower: 11f);
+        }
+
+        private void ExecuteDeathAnimation(NPC npc, ref float timer)
+        {
+            timer++;
+            npc.damage = 0;
+            npc.velocity *= 0.9f;
+
+            // 第一拍：核心开始把整个熔炉的火往回吸 —— 死前的"吸气"
+            if (timer == 1)
+            {
+                SoundEngine.PlaySound(SoundID.NPCDeath52 with { Pitch = -0.4f, Volume = 0.9f }, npc.Center);
+                Main.LocalPlayer.Calamity().GeneralScreenShakePower = 6f;
+            }
+
+            if (timer < 42)
+            {
+                npc.rotation += 0.02f + timer * 0.0018f; // 越转越快
+                for (int i = 0; i < 4; i++)
+                {
+                    Vector2 around = npc.Center + Main.rand.NextVector2CircularEdge(320f, 320f);
+                    Dust d = Dust.NewDustPerfect(around, DustID.Torch, (npc.Center - around) * 0.055f, 120, default, Main.rand.NextFloat(1.1f, 1.8f));
+                    d.noGravity = true;
+                    d.fadeIn = 1.3f;
+                }
+            }
+            // 第二拍：内爆 —— 吸进去的东西一次性回吐
+            else if (timer == 42)
+            {
+                SoundEngine.PlaySound(SoundID.Item14 with { Pitch = -0.5f }, npc.Center);
+                Main.LocalPlayer.Calamity().GeneralScreenShakePower = 18f;
+                BrimstoneFx.Burst(npc.Center, 14f, 60);
+            }
+            // 第三拍：连锁爆燃，一圈比一圈大
+            else if (timer < 96)
+            {
+                npc.rotation += 0.16f;
+                if ((int)timer % 9 == 0)
+                {
+                    float ring = (timer - 42f) / 54f;
+                    SoundEngine.PlaySound(SoundID.Item14 with { Pitch = 0.2f + ring * 0.4f, Volume = 0.8f }, npc.Center);
+                    Vector2 at = npc.Center + Main.rand.NextVector2Circular(70f, 70f);
+                    BrimstoneFx.Burst(at, 5f + ring * 9f, 18 + (int)(ring * 26f));
+                    Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(Main.LocalPlayer.Calamity().GeneralScreenShakePower, 8f + ring * 6f);
+                }
+            }
+            // 第四拍：白热定格 —— 炸开前最后半秒，一切都亮起来
+            else if (timer < 112)
+            {
+                npc.rotation += 0.24f;
+                for (int i = 0; i < 6; i++)
+                {
+                    Dust d = Dust.NewDustPerfect(npc.Center + Main.rand.NextVector2Circular(50f, 50f), DustID.Torch, Main.rand.NextVector2Circular(3f, 3f), 0, Color.Lerp(BrimBright, Color.White, Main.rand.NextFloat()), Main.rand.NextFloat(1.6f, 2.4f));
+                    d.noGravity = true;
+                    d.fadeIn = 1.8f;
+                }
+            }
+            else
+            {
+                SoundEngine.PlaySound(SoundID.NPCDeath14 with { Pitch = -0.3f }, npc.Center);
+                BrimstoneFx.Burst(npc.Center, 20f, 120);
+                Main.LocalPlayer.Calamity().GeneralScreenShakePower = 22f;
+
+                // 走 StrikeInstantKill 而不是 npc.active = false —— 后者会把掉落/死亡音效/gore 一起吃掉。
+                npc.dontTakeDamage = false;
+                npc.StrikeInstantKill();
+            }
+        }
+        #endregion
 
         private static void CleanupHeldWeapons(NPC npc)
         {

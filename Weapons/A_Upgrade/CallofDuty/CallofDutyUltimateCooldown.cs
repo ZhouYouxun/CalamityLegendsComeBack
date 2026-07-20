@@ -4,17 +4,17 @@ using Terraria;
 using Terraria.Localization;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
+namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty
 {
-    internal sealed class ResponsibilityPhoneUltimateCooldown : CooldownHandler
+    internal sealed class CallofDutyUltimateCooldown : CooldownHandler
     {
-        public static new string ID => "ResponsibilityPhone_Ultimate";
+        public static new string ID => "CallofDuty_Ultimate";
 
-        private ResponsibilityPhonePlayer PhonePlayer => instance.player.GetModPlayer<ResponsibilityPhonePlayer>();
+        private CallofDutyPlayer PhonePlayer => instance.player.GetModPlayer<CallofDutyPlayer>();
 
         public override bool CanTickDown => false;
         public override bool ShouldDisplay => PhonePlayer.HoldingPhone || !PhonePlayer.UltimateReady || PhonePlayer.ArmyActive;
-        public override LocalizedText DisplayName => Language.GetText("Mods.CalamityLegendsComeBack.Cooldowns.ResponsibilityPhone_Ultimate");
+        public override LocalizedText DisplayName => Language.GetText("Mods.CalamityLegendsComeBack.Cooldowns.CallofDuty_Ultimate");
         public override string Texture => "CalamityMod/Cooldowns/WulfrumRoverDriveActive";
         public override string OutlineTexture => "CalamityMod/Cooldowns/WulfrumRoverDriveOutline";
         public override string OverlayTexture => "CalamityMod/Cooldowns/WulfrumRoverDriveOverlay";

@@ -87,6 +87,15 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         private float yellowCrystalHP = 800f;
         private float orangeCrystalHP = 800f;
         private float purpleCrystalHP = 800f;
+
+        // 三色晶核必须过网 —— 这是全项目里同步缺失最严重的一处：RotateAttack 用它们决定【跳过哪些招】
+        // (见该方法里的 skip 判定)。不同步的话各客户端各自算自己的晶核血量，于是从某一轮开始
+        // 每个人看到的招式序列都不一样，boss 在谁那边打哪一招都对不上，比"打不掉血"严重一个量级。
+        protected override void DeclareSyncedFields(LegendsSyncedFields f) => f
+            .Float(() => yellowCrystalHP, v => yellowCrystalHP = v)
+            .Float(() => orangeCrystalHP, v => orangeCrystalHP = v)
+            .Float(() => purpleCrystalHP, v => purpleCrystalHP = v)
+            .Int(() => stunTimer, v => stunTimer = v);
         private int stunTimer = 0;
         private int respawnCrystalsTimer = 0;
         private int crystalFxCooldown = 0;
@@ -114,9 +123,6 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         #region Core AI Hooks
         public override bool PreAI(NPC npc, LegendsGlobalNPC data)
         {
-            if ((int)npc.ai[0] == 0)
-                ResetFightState();
-
             ticksRunning++;
             oldPositions[oldPositionsIndex] = npc.Center;
             oldPositionsIndex = (oldPositionsIndex + 1) % oldPositions.Length;
@@ -246,7 +252,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             return false;
         }
 
-        private void ResetFightState()
+        public override void ResetFightState(NPC npc, Player target)
         {
             ticksRunning = 0;
             currentRepetition = 0;

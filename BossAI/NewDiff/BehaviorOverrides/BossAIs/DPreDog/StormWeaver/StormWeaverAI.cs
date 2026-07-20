@@ -105,6 +105,30 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         private bool wasEnraged = false;
         #endregion
 
+        #region Per-fight State Reset
+        // 跨场次状态清理（为什么需要见基类 LegendsBossAI.ResetFightState；调用时机由框架负责）。
+        // 虫类 Boss：框架只在头部(主体类型)生成时调用一次，身体和尾巴节段不会重复触发。
+        public override void ResetFightState(NPC npc, Player target)
+        {
+            ticksRunning = 0;
+            currentRepetition = 0;
+            attackCycleIndex = 0;
+            Array.Clear(attackVariant, 0, attackVariant.Length);
+
+            teslaHurtCooldown = 0;
+            carvePassTimer = 0;
+            transitionFlashAlpha = 0f;
+
+            for (int i = 0; i < headOldPos.Length; i++)
+                headOldPos[i] = npc.Center;
+            headOldPosIndex = 0;
+
+            outOfBiomeTimer = 0;
+            enrageSpeedMultiplier = 1f;
+            wasEnraged = false;
+        }
+        #endregion
+
         #region Core AI Hooks
         public override bool PreAI(NPC npc, LegendsGlobalNPC data)
         {

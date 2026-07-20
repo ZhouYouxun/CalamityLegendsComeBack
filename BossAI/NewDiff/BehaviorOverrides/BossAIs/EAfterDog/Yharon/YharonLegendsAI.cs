@@ -139,7 +139,6 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             // Set Initial Phase
             if (currentPhase == 0)
             {
-                ResetFightState();
                 npc.ai[0] = 1f;
                 currentPhase = 1;
                 npc.netUpdate = true;
@@ -204,18 +203,10 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             // Empty bypass override
         }
 
-        public override void SendExtraAI(NPC npc, LegendsGlobalNPC data, BinaryWriter writer)
-        {
-            writer.Write(solarArenaAnchored);
-            writer.Write(solarArenaCenter.X);
-            writer.Write(solarArenaCenter.Y);
-        }
-
-        public override void ReceiveExtraAI(NPC npc, LegendsGlobalNPC data, BinaryReader reader)
-        {
-            solarArenaAnchored = reader.ReadBoolean();
-            solarArenaCenter = new Vector2(reader.ReadSingle(), reader.ReadSingle());
-        }
+        // 日冕结界的锚点：越界惩罚以它为基准，各端必须一致，否则有人会在"自己这边看着还在圈内"时挨罚。
+        protected override void DeclareSyncedFields(LegendsSyncedFields f) => f
+            .Bool(() => solarArenaAnchored, v => solarArenaAnchored = v)
+            .Vec2(() => solarArenaCenter, v => solarArenaCenter = v);
 
         public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers) =>
             InterceptLethalHit(npc, ref modifiers, (int)AttackState.DeathAnimation, () => BeginDeathAnimation(npc, player));
@@ -979,7 +970,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             }
         }
 
-        private void ResetFightState()
+        public override void ResetFightState(NPC npc, Player target)
         {
             solarArenaCenter = Vector2.Zero;
             solarArenaAnchored = false;

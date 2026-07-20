@@ -119,26 +119,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
 
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
-            string zoomState = ScopeZoomEnabled
-                ? this.GetLocalizedValue("ZoomEnabled")
-                : this.GetLocalizedValue("ZoomDisabled");
             string text =
                 this.GetLocalizedValue("LeftClick") + "\n" +
                 this.GetLocalizedValue("RightClick") + "\n" +
-                this.GetLocalizedValue("InventoryToggle") + "\n" +
-                string.Format(this.GetLocalizedValue("ZoomState"), zoomState);
+                this.GetLocalizedValue("InventoryToggle");
 
-            bool shiftPressed = Main.keyState.PressingShift();
-            string legendarySection = shiftPressed
-                ? this.GetLocalizedValue("LegendaryText")
-                : this.GetLocalizedValue("LegendaryHint");
+            tooltips.FindAndReplace("[GFB]", text);
 
-            if (shiftPressed)
-                tooltips.RemoveAll(line => line.Text == "[GFB]");
-            else
-                tooltips.FindAndReplace("[GFB]", text);
-
-            tooltips.Add(new TooltipLine(Mod, "AMRLegendaryText", legendarySection)
+            tooltips.Add(new TooltipLine(Mod, "AMRLegendaryText", this.GetLocalizedValue("LegendaryText"))
             {
                 OverrideColor = new Color(102, 230, 255)
             });

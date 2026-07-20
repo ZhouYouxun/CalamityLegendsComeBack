@@ -75,6 +75,12 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         private int shieldRegenTimer = 0;
         private int shieldFxCooldown = 0;
 
+        // shieldActive 直接 gate 90% 减伤，必须过网，否则各端算出的伤害差 10 倍。
+        protected override void DeclareSyncedFields(LegendsSyncedFields f) => f
+            .Bool(() => shieldActive, v => shieldActive = v)
+            .Int(() => shieldStunTimer, v => shieldStunTimer = v)
+            .Int(() => shieldRegenTimer, v => shieldRegenTimer = v);
+
         // Arena steam variables. Lane coordinates LOCK at warning start (design doc) — the old version read
         // the player's position again at detonation, which made the steam untellably track you to the last frame.
         private int steamWarnTimer = 0;
@@ -124,9 +130,6 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         #region Core AI Hooks
         public override bool PreAI(NPC npc, LegendsGlobalNPC data)
         {
-            if ((int)npc.ai[0] == 0)
-                ResetFightState();
-
             ticksRunning++;
             oldPositions[oldPositionsIndex] = npc.Center;
             oldPositionsIndex = (oldPositionsIndex + 1) % oldPositions.Length;
@@ -292,7 +295,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             return false;
         }
 
-        private void ResetFightState()
+        public override void ResetFightState(NPC npc, Player target)
         {
             ticksRunning = 0;
             currentRepetition = 0;

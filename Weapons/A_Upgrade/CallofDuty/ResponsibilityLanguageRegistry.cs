@@ -1,6 +1,6 @@
 using Microsoft.Xna.Framework;
 
-namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
+namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty
 {
     internal enum ResponsibilityLanguage : byte
     {

@@ -95,6 +95,14 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         private int shieldRegenTimer = 0;
         private int shieldFxCooldown = 0;
 
+        // 阿纳西塔的棱镜护盾 gate 80% 减伤。shieldHitsRemaining 是按"命中次数"扣的，而 ModifyHit 只在
+        // 攻击方客户端和服务端跑 —— 不同步的话每个玩家都在扣自己那份计数，谁也不知道盾到底还剩几下。
+        protected override void DeclareSyncedFields(LegendsSyncedFields f) => f
+            .Bool(() => shieldActive, v => shieldActive = v)
+            .Int(() => shieldHitsRemaining, v => shieldHitsRemaining = v)
+            .Int(() => shieldStunTimer, v => shieldStunTimer = v)
+            .Int(() => shieldRegenTimer, v => shieldRegenTimer = v);
+
         // Tidal Current Forcefield (Y=200px to bottomTideY, rises every 10s)
         private float bottomTideY = 1200f;
         private int tideTimer = 0;
@@ -113,6 +121,45 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         // desync or interrupt the other's still-ongoing fight. So each death runs on its own per-whoAmI timer
         // instead of going through the normal AttackState machine at all.
         private readonly Dictionary<int, int> deathAnimTimer = new();
+        #endregion
+
+        #region Per-fight State Reset
+        // 跨场次状态清理（为什么需要见基类 LegendsBossAI.ResetFightState；调用时机由框架负责）。
+        // 本组合残留最要命的两项：
+        //   · shieldActive/shieldHitsRemaining —— 上一场破着盾死，下一场开局直接是无盾状态
+        //   · deathAnimTimer —— 以 whoAmI 为键，上一场的死亡计时器会被新个体复用同槽位后命中，
+        //     表现为刚出生就开始播死亡演出
+        // 注意：框架只在主体类型(Leviathan)生成时调用一次，Anahita 侧不会重复触发。
+        public override void ResetFightState(NPC npc, Player target)
+        {
+            ticksRunning = 0;
+            currentRepetition = 0;
+            attackCycleIndex = 0;
+            Array.Clear(attackVariant, 0, attackVariant.Length);
+
+            shieldActive = true;
+            shieldHitsRemaining = 45;
+            shieldStunTimer = 0;
+            shieldRegenTimer = 0;
+            shieldFxCooldown = 0;
+
+            bottomTideY = 1200f;
+            tideTimer = 0;
+            arenaHurtCooldown = 0;
+            transitionFlashAlpha = 0f;
+            deathAnimTimer.Clear();
+
+            for (int i = 0; i < oldPositionsL.Length; i++)
+                oldPositionsL[i] = npc.Center;
+            oldPositionsIndexL = 0;
+            for (int i = 0; i < oldPositionsA.Length; i++)
+                oldPositionsA[i] = npc.Center;
+            oldPositionsIndexA = 0;
+
+            outOfBiomeTimer = 0;
+            enrageSpeedMultiplier = 1f;
+            wasEnraged = false;
+        }
         #endregion
 
         #region Core AI Hooks

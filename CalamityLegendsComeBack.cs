@@ -6,7 +6,7 @@ using CalamityLegendsComeBack.Weapons.A_Tools.Toys.PlayerSaddle;
 using CalamityLegendsComeBack.Weapons.A_Tools.Toys.RetroGames;
 using CalamityLegendsComeBack.Weapons.A_Tools.Tools.ArtisanToken;
 using CalamityLegendsComeBack.BossAI.NewDiff.Core.Netcode;
-using CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone;
+using CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty;
 using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core;
 using Microsoft.Xna.Framework;
 using System;
@@ -82,17 +82,17 @@ namespace CalamityLegendsComeBack
                 case GamePacketType.NewDiffYharonState:
                     LegendsPacketHandler.HandleYharonStatePacket(reader, whoAmI);
                     break;
-                case GamePacketType.ResponsibilityPhoneUltimateRequest:
-                    ResponsibilityPhonePackets.HandleUltimateRequest(whoAmI);
+                case GamePacketType.CallofDutyUltimateRequest:
+                    CallofDutyPackets.HandleUltimateRequest(whoAmI);
                     break;
-                case GamePacketType.ResponsibilityPhoneCommandRequest:
-                    ResponsibilityPhonePackets.HandleCommand(reader, whoAmI);
+                case GamePacketType.CallofDutyCommandRequest:
+                    CallofDutyPackets.HandleCommand(reader, whoAmI);
                     break;
-                case GamePacketType.ResponsibilityPhoneStateSync:
-                    ResponsibilityPhonePackets.HandleState(reader);
+                case GamePacketType.CallofDutyStateSync:
+                    CallofDutyPackets.HandleState(reader);
                     break;
-                case GamePacketType.ResponsibilityPhoneLanguageSelection:
-                    ResponsibilityPhonePackets.HandleLanguageSelection(reader, whoAmI);
+                case GamePacketType.CallofDutyLanguageSelection:
+                    CallofDutyPackets.HandleLanguageSelection(reader, whoAmI);
                     break;
                 case GamePacketType.LeonidConstellationRequest:
                     LeonidConstellationPackets.HandleRequest(reader, whoAmI);

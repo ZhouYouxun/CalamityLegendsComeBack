@@ -85,6 +85,14 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         private int shieldRegenTimer = 0;
         private int shieldFxCooldown = 0;
 
+        // shieldStunTimer 决定"反应堆暴露"的 150% 承伤窗口。护盾本身的免伤是靠 AnyEmitterAlive 判真实
+        // NPC（天然同步），但这个硬直计时器是纯本地的 —— 不同步的话，服务端认为窗口开着、其他客户端
+        // 认为没开，同一发子弹在各端算出来的伤害差 1.5 倍。
+        protected override void DeclareSyncedFields(LegendsSyncedFields f) => f
+            .Bool(() => shieldActive, v => shieldActive = v)
+            .Int(() => shieldStunTimer, v => shieldStunTimer = v)
+            .Int(() => shieldRegenTimer, v => shieldRegenTimer = v);
+
         // Stellar Gravity Anomaly Well
         private int gravityCycleTimer = 0;
         private bool superGravity = true;
@@ -100,10 +108,9 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         // 玩家站着没动就被判出界、挨推+诅咒+掉血。锚死之后这类"Boss 自己飞走连累玩家"的问题整类消失。
         private Vector2 arenaCenter;
 
-        // Registry 里每个 Boss 类型只 new 一个 AI 实例（静态字典持有），因此下面这些实例字段
-        // 是整个游戏会话共享、跨场次不重置的。不重置的话：上一场护盾破着死 -> 下一场 shieldActive
-        // 仍是 false，新 Boss 直接没护盾。开场（ai[0]==0）时统一清一次。
-        private void ResetFightState(NPC npc, Player target)
+        // 跨场次状态清理。为什么需要（AI 实例是会话共享的）见基类 LegendsBossAI.ResetFightState 的说明。
+        // 调用时机由框架负责，本方法只管把字段清干净。
+        public override void ResetFightState(NPC npc, Player target)
         {
             ticksRunning = 0;
             currentRepetition = 0;
@@ -151,10 +158,10 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             ref float timer = ref npc.ai[2];
             ref float stateTracker = ref npc.ai[3];
 
-            // Re-normalize phase/state. ai[0]==0 只在一场战斗的第一帧成立，是清掉上一场残留状态的唯一时机。
+            // Re-normalize phase/state。（跨场次状态清理已移交框架：见 LegendsBossAI.ResetFightState，
+            // 由 LegendsGlobalNPC 在本类型第一个个体生成那一帧调用，不再依赖 ai[0]==0 这个时机。）
             if (currentPhase == 0)
             {
-                ResetFightState(npc, target);
                 currentPhase = 1;
                 npc.ai[0] = 1f;
                 state = AttackState.Nebulash;

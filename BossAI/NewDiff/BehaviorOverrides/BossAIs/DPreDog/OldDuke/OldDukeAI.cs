@@ -129,11 +129,10 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         #endregion
 
         #region Per-fight State Reset
-        // Registry 里每个 Boss 类型只 new 一个 AI 实例（静态字典持有），因此下面这些实例字段是
-        // 整个游戏会话共享、跨场次不重置的。原来的初始化只清了 4 样，漏掉的里面最要命的是
-        // blubberStunTimer —— 若 boss 死在脂肪垫全破的 7 秒硬直里，下一场开局它就是
-        // damage=0 + 承伤150% 的喘气状态，整场白给。这里一次清干净。
-        private void ResetFightState(NPC npc, Player target)
+        // 跨场次状态清理（为什么需要见基类 LegendsBossAI.ResetFightState；调用时机由框架负责）。
+        // 本 Boss 最要命的一项是 blubberStunTimer —— 若 boss 死在脂肪垫全破的 7 秒硬直里，
+        // 下一场开局它就是 damage=0 + 承伤150% 的喘气状态，整场白给。这里一次清干净。
+        public override void ResetFightState(NPC npc, Player target)
         {
             ticksRunning = 0;
             currentRepetition = 0;
@@ -185,10 +184,9 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             ref float timer = ref npc.ai[2];
             ref float tracker = ref npc.ai[3];
 
-            // ai[0]==0 只在一场战斗的第一帧成立，是清掉上一场残留状态的唯一时机。
+            // 开场初始化。（跨场次状态清理已移交框架，不再挂在这个时机上。）
             if (npc.ai[0] == 0f)
             {
-                ResetFightState(npc, target);
                 npc.ai[0] = 1f;
                 state = AttackState.InsidiousImpaler;
                 npc.ai[1] = (float)state;
@@ -450,21 +448,11 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             }
         }
 
-        public override void SendExtraAI(NPC npc, LegendsGlobalNPC data, BinaryWriter writer)
-        {
-            for (int i = 0; i < 3; i++)
-                writer.Write(blubberHPs[i]);
-            writer.Write((short)blubberStunTimer);
-            writer.Write((short)blubberRespawnTimer);
-        }
-
-        public override void ReceiveExtraAI(NPC npc, LegendsGlobalNPC data, BinaryReader reader)
-        {
-            for (int i = 0; i < 3; i++)
-                blubberHPs[i] = reader.ReadSingle();
-            blubberStunTimer = reader.ReadInt16();
-            blubberRespawnTimer = reader.ReadInt16();
-        }
+        // 脂肪垫血量决定 damage/承伤倍率，必须由服务端算完下发；客户端只读结果。
+        protected override void DeclareSyncedFields(LegendsSyncedFields f) => f
+            .FloatArray(blubberHPs)
+            .Int(() => blubberStunTimer, v => blubberStunTimer = v)
+            .Int(() => blubberRespawnTimer, v => blubberRespawnTimer = v);
 
         // 只在服务端改状态；破盾的音效/爆散/屏震交给下面的 UpdateBlubberBreakFx 在各端自行触发，
         // 否则联机时客户端既听不到也震不到（状态是服务端算的，反馈必须各端自己放）。

@@ -71,6 +71,15 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         // Golden Feather Wing Armor
         private float leftWingHP = 2000f;
         private float rightWingHP = 2000f;
+
+        // 翼甲血量 gate 80% 减伤、stunTimer gate 140% 承伤 —— 两端加起来是 7 倍的伤害差。
+        // 不同步的话，破甲的那个玩家在打真伤，没打到翼甲的队友却一直在打 20%，而且他们那边永远
+        // 看不到翼甲已经碎了。
+        protected override void DeclareSyncedFields(LegendsSyncedFields f) => f
+            .Float(() => leftWingHP, v => leftWingHP = v)
+            .Float(() => rightWingHP, v => rightWingHP = v)
+            .Int(() => stunTimer, v => stunTimer = v)
+            .Int(() => respawnArmorTimer, v => respawnArmorTimer = v);
         private int stunTimer = 0;
         private int respawnArmorTimer = 0;
         private int wingFxCooldown = 0;
@@ -85,6 +94,36 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
         // Committed-dash state: attacks own their movement; the bird never beelines nonstop.
         private Vector2 dashDir = Vector2.Zero;
+        #endregion
+
+        #region Per-fight State Reset
+        // 跨场次状态清理（为什么需要见基类 LegendsBossAI.ResetFightState；调用时机由框架负责）。
+        // 本 Boss 残留最要命的是 leftWingHP/rightWingHP —— 金羽翼甲是它的核心部位机制，
+        // 上一场把两边翼甲都打爆才杀掉的话，下一场开局就是"无甲"形态，破甲阶段直接不存在。
+        public override void ResetFightState(NPC npc, Player target)
+        {
+            ticksRunning = 0;
+            currentRepetition = 0;
+            attackCycleIndex = 0;
+            Array.Clear(attackVariant, 0, attackVariant.Length);
+
+            leftWingHP = 2000f;
+            rightWingHP = 2000f;
+            stunTimer = 0;
+            respawnArmorTimer = 0;
+            wingFxCooldown = 0;
+
+            teslaGridTimer = 0;
+            teslaHitThisActivation = false;
+            arenaCenter = Vector2.Zero;
+            centerSet = false;
+            transitionFlashAlpha = 0f;
+            dashDir = Vector2.Zero;
+
+            for (int i = 0; i < oldPositions.Length; i++)
+                oldPositions[i] = npc.Center;
+            oldPositionsIndex = 0;
+        }
         #endregion
 
         #region Movement Helpers

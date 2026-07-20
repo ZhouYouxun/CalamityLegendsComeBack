@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using CalamityMod;
 using CalamityMod.Events;
+using CalamityMod.NPCs;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
@@ -388,64 +390,50 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.BossProgress
         {
             if (Main.netMode == NetmodeID.MultiplayerClient)
                 return;
+
             Vector2 pos = player.Center - Vector2.UnitY * 480f;
             int index = NPC.NewNPC(player.GetSource_Misc("BossSummoner"), (int)pos.X, (int)pos.Y, npcType);
-            DebugBossEnvironmentBypass.Track(index);
+            if (index >= 0 && index < Main.maxNPCs)
+            {
+                NPC npc = Main.npc[index];
+                npc.target = player.whoAmI;
+                npc.timeLeft = 1800;
+                npc.netUpdate = true;
+                npc.Calamity().DoesNotDisappearInBossRush = true;
+
+                if (Main.netMode == NetmodeID.Server)
+                    NetMessage.SendData(MessageID.SyncNPC, -1, -1, null, index);
+            }
+
+            SoundEngine.PlaySound(SoundID.Roar with { Volume = 0.8f, Pitch = 0.1f }, player.Center);
         }
 
         private static void SpawnCal(Player player, string npcName)
         {
             if (Main.netMode == NetmodeID.MultiplayerClient)
                 return;
+
             if (!ModContent.TryFind<ModNPC>("CalamityMod/" + npcName, out ModNPC npc))
             {
                 Main.NewText($"未找到：CalamityMod/{npcName}", Color.OrangeRed);
                 return;
             }
+
             Vector2 pos = player.Center - Vector2.UnitY * 480f;
             int index = NPC.NewNPC(player.GetSource_Misc("BossSummoner"), (int)pos.X, (int)pos.Y, npc.Type);
-            DebugBossEnvironmentBypass.Track(index);
-        }
-    }
-
-    // Debug-summoned bosses must not enrage or misbehave from being outside their normal biome/arena.
-    // CalamityMod gates nearly every biome-based enrage check behind BossRushEvent.BossRushActive
-    // (that's exactly what Boss Rush mode does: any boss, anywhere, at full behavior), so we force it
-    // on for as long as a debug-summoned boss is alive, then restore it if we're the ones who set it.
-    internal static class DebugBossEnvironmentBypass
-    {
-        private static readonly HashSet<(int whoAmI, int type)> trackedNpcs = new();
-        private static bool weForcedBossRush;
-
-        public static void Track(int npcIndex)
-        {
-            if (npcIndex < 0 || npcIndex >= Main.maxNPCs || !Main.npc[npcIndex].active)
-                return;
-
-            trackedNpcs.Add((npcIndex, Main.npc[npcIndex].type));
-            if (!BossRushEvent.BossRushActive)
+            if (index >= 0 && index < Main.maxNPCs)
             {
-                BossRushEvent.BossRushActive = true;
-                weForcedBossRush = true;
+                NPC spawned = Main.npc[index];
+                spawned.target = player.whoAmI;
+                spawned.timeLeft = 1800;
+                spawned.netUpdate = true;
+                spawned.Calamity().DoesNotDisappearInBossRush = true;
+
+                if (Main.netMode == NetmodeID.Server)
+                    NetMessage.SendData(MessageID.SyncNPC, -1, -1, null, index);
             }
+
+            SoundEngine.PlaySound(SoundID.Roar with { Volume = 0.8f, Pitch = 0.1f }, player.Center);
         }
-
-        public static void Update()
-        {
-            if (!weForcedBossRush)
-                return;
-
-            trackedNpcs.RemoveWhere(t => !(Main.npc[t.whoAmI].active && Main.npc[t.whoAmI].type == t.type));
-            if (trackedNpcs.Count == 0)
-            {
-                BossRushEvent.BossRushActive = false;
-                weForcedBossRush = false;
-            }
-        }
-    }
-
-    internal sealed class DebugBossEnvironmentBypassSystem : ModSystem
-    {
-        public override void PostUpdateNPCs() => DebugBossEnvironmentBypass.Update();
     }
 }

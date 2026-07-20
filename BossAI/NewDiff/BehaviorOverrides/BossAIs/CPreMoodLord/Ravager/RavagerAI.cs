@@ -94,7 +94,46 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         private bool clawsAlive = true;
         private bool limbsActive = true;
 
+        // limbsActive gate 90% 减伤，三个标志位共同决定当前处于哪个肢体阶段 —— 必须过网，
+        // 否则打断肢体的玩家在打真伤、队友却还在打 10%，而且他们那端看到的肢体形态也是错的。
+        protected override void DeclareSyncedFields(LegendsSyncedFields f) => f
+            .Bool(() => legsAlive, v => legsAlive = v)
+            .Bool(() => clawsAlive, v => clawsAlive = v)
+            .Bool(() => limbsActive, v => limbsActive = v);
+
         private float transitionFlashAlpha = 0f;
+        #endregion
+
+        #region Per-fight State Reset
+        // 跨场次状态清理（为什么需要见基类 LegendsBossAI.ResetFightState；调用时机由框架负责）。
+        // 本 Boss 残留最要命的是三个肢体标志位：上一场把腿和爪都打断了才杀掉的话，
+        // 下一场 Ravager 一出生就是"四肢已断"的形态，整套肢体阶段直接被跳过。
+        // totemNPCIndex 也必须还原成 -1，否则会指向上一场那个早就不存在的图腾槽位。
+        public override void ResetFightState(NPC npc, Player target)
+        {
+            ticksRunning = 0;
+            currentRepetition = 0;
+            attackCycleIndex = 0;
+            Array.Clear(attackVariant, 0, attackVariant.Length);
+
+            legsAlive = true;
+            clawsAlive = true;
+            limbsActive = true;
+
+            totemSpawnTimer = 0;
+            totemNPCIndex = -1;
+            totemCenter = Vector2.Zero;
+            wasTotemAlive = false;
+            totemSlowTimer = 0;
+            arenaHurtCooldown = 0;
+
+            transitionFlashAlpha = 0f;
+            ultimusVariantB = false;
+
+            for (int i = 0; i < oldPositions.Length; i++)
+                oldPositions[i] = npc.Center;
+            oldPositionsIndex = 0;
+        }
         #endregion
 
         #region Core AI Hooks

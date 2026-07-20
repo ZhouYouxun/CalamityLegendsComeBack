@@ -16,12 +16,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
 {
     internal sealed class AMRRound : ModProjectile, ILocalizedModType
     {
-        private const int HiddenFrames = 5;
+        private const int HiddenSubSteps = 10;
         private const float GoldenAngle = 2.39996323f;
 
         private bool hitAnyTarget;
         private bool configured;
         private int visualAgeFrames;
+        private int visualAgeSubSteps;
 
         public new string LocalizationCategory => "Projectiles.AntiMaterielRifle";
         public override string Texture => "CalamityMod/Projectiles/Ranged/AMRShot";
@@ -65,14 +66,18 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
             Lighting.AddLight(Projectile.Center, new Color(255, 196, 64).ToVector3() * 0.7f);
 
+            // Counted in sub-steps rather than real frames: extraUpdates 7 means
+            // one frame is eight steps, so a frame-based delay would keep the
+            // round invisible for over a thousand pixels of flight.
+            visualAgeSubSteps++;
+            if (visualAgeSubSteps == HiddenSubSteps + 1)
+                SpawnBreakthroughReveal();
+
             if (!CalamityUtils.FinalExtraUpdate(Projectile))
                 return;
 
             visualAgeFrames++;
             SpawnFlightWake();
-
-            if (visualAgeFrames == HiddenFrames + 1)
-                SpawnBreakthroughReveal();
         }
 
         private void SpawnBreakthroughReveal()
@@ -345,6 +350,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             Vector2 drawCenter = Projectile.Center - Main.screenPosition;
             float pulse = 0.94f + MathF.Sin(Main.GlobalTimeWrappedHourly * 18f + Projectile.identity * 0.31f) * 0.06f;
 
+            // Only Calamity's AMRShot sprite is delayed. The pressure trail and
+            // optical structures are immediate.
+            bool bodyVisible = visualAgeSubSteps > HiddenSubSteps;
+
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState,
                 DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
@@ -353,30 +362,44 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Vector2 bloomOrigin = bloom.Size() * 0.5f;
             Main.EntitySpriteDraw(bloom, drawCenter, null, new Color(255, 171, 24, 0), 0f,
-                bloomOrigin, 0.16f * pulse, SpriteEffects.None, 0f);
+                bloomOrigin, 0.22f * pulse, SpriteEffects.None, 0f);
             Main.EntitySpriteDraw(bloom, drawCenter + forward * 2f, null, new Color(255, 249, 220, 0), 0f,
-                bloomOrigin, 0.06f * pulse, SpriteEffects.None, 0f);
-            Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState,
-                DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+                bloomOrigin, 0.09f * pulse, SpriteEffects.None, 0f);
 
-            // Only Calamity's AMRShot sprite is hidden for the first five
-            // frames. The pressure trail and optical structures are immediate.
-            if (visualAgeFrames > HiddenFrames)
+            // The halo belongs in the additive batch, where its zero alpha is
+            // what the blend mode expects. AMRShot is only two pixels wide, so
+            // widening it across the streak is what makes the round readable
+            // against its own trail.
+            if (bodyVisible)
             {
                 Color outlineColor = new(255, 187, 42, 0);
                 const int glowDraws = 4;
                 for (int i = 0; i < glowDraws; i++)
                 {
-                    Vector2 offset = (MathHelper.TwoPi * i / glowDraws).ToRotationVector2() * 1.8f;
+                    Vector2 offset = (MathHelper.TwoPi * i / glowDraws).ToRotationVector2() * 2.6f;
                     Main.EntitySpriteDraw(texture, drawCenter + offset, null,
-                        outlineColor * 0.48f, Projectile.rotation, origin,
-                        Projectile.scale * 1.04f, SpriteEffects.None, 0f);
+                        outlineColor * 0.55f, Projectile.rotation, origin,
+                        new Vector2(Projectile.scale * 2.1f, Projectile.scale * 1.02f),
+                        SpriteEffects.None, 0f);
                 }
 
+                Main.EntitySpriteDraw(texture, drawCenter, null, new Color(255, 236, 170, 0),
+                    Projectile.rotation, origin,
+                    new Vector2(Projectile.scale * 1.2f, Projectile.scale),
+                    SpriteEffects.None, 0f);
+            }
+
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState,
+                DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+
+            if (bodyVisible)
+            {
                 Color mainColor = GetAlpha(lightColor) ?? Color.White;
                 Main.EntitySpriteDraw(texture, drawCenter, null, mainColor,
-                    Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0f);
+                    Projectile.rotation, origin,
+                    new Vector2(Projectile.scale * 1.35f, Projectile.scale),
+                    SpriteEffects.None, 0f);
             }
 
             return false;

@@ -11,7 +11,7 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 
-namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
+namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty
 {
     internal enum ResponsibilityCommandMode : byte
     {
@@ -20,7 +20,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
         Attack
     }
 
-    public sealed class ResponsibilityPhonePlayer : ModPlayer
+    public sealed class CallofDutyPlayer : ModPlayer
     {
         public const int UltimateDurationFrames = 60 * 60;
         public const int UltimateCooldownFrames = 60 * 60;
@@ -77,8 +77,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
         public override void ResetEffects()
         {
             HoldingPhone = false;
-            PhonePassiveActive = ResponsibilityPhone.HasPhoneInMainInventory(Player);
-            RoverDriveBoosted = PhonePassiveActive && ResponsibilityPhone.HasEquippedRoverDrive(Player);
+            PhonePassiveActive = CallofDuty.HasPhoneInMainInventory(Player);
+            RoverDriveBoosted = PhonePassiveActive && CallofDuty.HasEquippedRoverDrive(Player);
             ApplyRoverDriveFlags();
         }
 
@@ -104,16 +104,16 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
         {
             if (Main.myPlayer != Player.whoAmI || KeybindSystem.LegendarySkill?.JustPressed != true)
                 return;
-            if (Player.HeldItem?.type != ModContent.ItemType<ResponsibilityPhone>())
+            if (Player.HeldItem?.type != ModContent.ItemType<CallofDuty>())
                 return;
 
             if (!ArmyActive && !UltimateReady)
                 return;
 
             if (Main.netMode == NetmodeID.MultiplayerClient)
-                ResponsibilityPhonePackets.SendUltimateRequest();
+                CallofDutyPackets.SendUltimateRequest();
             else
-                ResponsibilityPhonePackets.ToggleUltimate(Player);
+                CallofDutyPackets.ToggleUltimate(Player);
         }
 
         public override void PostUpdate()
@@ -136,7 +136,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
             if (ArmyActive && Main.netMode != NetmodeID.MultiplayerClient && !Ultimate.ResponsibilityArmyUnitBase.AnyActiveUnitFor(Player.whoAmI, ArmyGeneration))
             {
                 ArmyActive = false;
-                ResponsibilityPhonePackets.SendState(Player);
+                CallofDutyPackets.SendState(Player);
             }
 
             UpdateBoostedRoverDriveShield();
@@ -231,13 +231,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
                 return;
 
             int timeLeft = UltimateCooldownFrames - UltimateCharge;
-            if (Player.Calamity().cooldowns.TryGetValue(ResponsibilityPhoneUltimateCooldown.ID, out var cooldown))
+            if (Player.Calamity().cooldowns.TryGetValue(CallofDutyUltimateCooldown.ID, out var cooldown))
             {
                 cooldown.duration = UltimateCooldownFrames;
                 cooldown.timeLeft = timeLeft;
                 return;
             }
-            Player.AddCooldown(ResponsibilityPhoneUltimateCooldown.ID, UltimateCooldownFrames).timeLeft = timeLeft;
+            Player.AddCooldown(CallofDutyUltimateCooldown.ID, UltimateCooldownFrames).timeLeft = timeLeft;
         }
 
         public override void UpdateDead()
@@ -263,7 +263,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
         public override void SyncPlayer(int toWho, int fromWho, bool newPlayer)
         {
             if (Main.netMode == NetmodeID.Server)
-                ResponsibilityPhonePackets.SendState(Player, toWho, fromWho);
+                CallofDutyPackets.SendState(Player, toWho, fromWho);
         }
 
         internal int AllocateSequenceId()
@@ -284,7 +284,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
         internal int UpdateWheel(Vector2 mousePosition)
         {
             Vector2 offset = mousePosition - WheelCenter;
-            if (offset.Length() < ResponsibilityPhoneUISystem.CancelRadius || ResponsibilityLanguageRegistry.Count <= 0)
+            if (offset.Length() < CallofDutyUISystem.CancelRadius || ResponsibilityLanguageRegistry.Count <= 0)
                 return WheelHoverIndex = -1;
 
             float angle = offset.ToRotation();
@@ -303,7 +303,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
             WheelHoverIndex = -1;
 
             if (changed && Main.netMode == NetmodeID.MultiplayerClient)
-                ResponsibilityPhonePackets.SendLanguageSelection(SelectedLanguageIndex);
+                CallofDutyPackets.SendLanguageSelection(SelectedLanguageIndex);
             return changed;
         }
 

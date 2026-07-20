@@ -6,7 +6,7 @@ using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone.Ultimate
+namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty.Ultimate
 {
     /// <summary>
     /// The regular Wulfrum Drone fires the vanilla Saucer Laser. This friendly version keeps that
@@ -56,7 +56,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone.Ultimate
             int targetIndex = (int)Projectile.ai[0];
             if (Main.npc.IndexInRange(targetIndex) && Main.npc[targetIndex].CanBeChasedBy())
                 return Main.npc[targetIndex];
-            return ResponsibilityPhoneGlobalNPC.FindPriorityTarget(Projectile.owner, Projectile.Center, 500f);
+            return CallofDutyGlobalNPC.FindPriorityTarget(Projectile.owner, Projectile.Center, 500f);
         }
     }
 
@@ -134,7 +134,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone.Ultimate
             int targetIndex = (int)Projectile.ai[0];
             if (Main.npc.IndexInRange(targetIndex) && Main.npc[targetIndex].CanBeChasedBy())
                 return Main.npc[targetIndex];
-            return ResponsibilityPhoneGlobalNPC.FindPriorityTarget(Projectile.owner, Projectile.Center, 700f);
+            return CallofDutyGlobalNPC.FindPriorityTarget(Projectile.owner, Projectile.Center, 700f);
         }
 
         public override void OnKill(int timeLeft)

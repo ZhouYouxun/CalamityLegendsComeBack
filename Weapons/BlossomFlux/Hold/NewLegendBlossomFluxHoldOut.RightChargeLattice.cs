@@ -4,15 +4,16 @@ using Terraria;
 
 namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 {
-    // 右键蓄力专属视觉：每16/20 tick 各生成一个短命的“斜圆环”粒子（具体实现见 BFRightChargeHaloParticle.cs），
+    // 右键蓄力专属视觉：每16/20 tick 各生成一个短命的“斜圆环”着色器弹幕（具体实现见 BFRightChargeHaloProj.cs），
     // 靠持续不断地新生成来维持观感，只在 rightChargeActive 时触发，左键攻击完全不会调用这里。
     internal sealed partial class NewLegendBlossomFluxHoldOut
     {
         private int lastChargeHaloSpawnTick = -1;
 
-        // 供 BFRightChargeHaloParticle 跨类查询的只读入口：ChargeReady 本身是私有的，粒子那边需要每帧读取它
+        // 供 BFRightChargeHaloProj 跨类查询的只读入口：ChargeReady 本身是私有的，光环那边需要每帧读取它
         // 才能知道“什么时候该从加速转圈切换成减速淡出”。
         internal bool GetHaloChargeReady() => ChargeReady;
+        internal bool GetHaloRightChargeActive() => rightChargeActive;
 
         private void UpdateRightChargeHaloSpawning(float chargeCompletion)
         {
@@ -40,7 +41,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 float zRot = Main.rand.NextFromList(0.6f, MathHelper.Pi - 0.6f) + Main.rand.NextFloat(-0.4f, 0.4f);
                 float exRot = Main.rand.Next(4) * MathHelper.TwoPi * 0.6f + Main.rand.NextFloat(-0.4f, 0.4f);
 
-                BFRightChargeHaloParticle.Spawn(Projectile, radius, startRot, zRot, exRot, Color.Lerp(mainColor, accentColor, 0.24f) * charge, charge);
+                BFRightChargeHaloProj.Spawn(Projectile, radius, startRot, zRot, exRot, Color.Lerp(mainColor, accentColor, 0.24f) * charge, charge);
             }
 
             if (tick % 20 == 0)
@@ -50,7 +51,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 float zRot = Main.rand.NextFromList(0.7f, MathHelper.Pi - 0.7f) + Main.rand.NextFloat(-0.3f, 0.3f);
                 float exRot = Main.rand.Next(4) * MathHelper.TwoPi * 0.6f + Main.rand.NextFloat(-0.4f, 0.4f);
 
-                BFRightChargeHaloParticle.Spawn(Projectile, radius, startRot, zRot, exRot, accentColor * (0.55f * charge), charge);
+                BFRightChargeHaloProj.Spawn(Projectile, radius, startRot, zRot, exRot, accentColor * (0.55f * charge), charge);
             }
         }
     }

@@ -7,14 +7,14 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
+namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty
 {
-    internal static class ResponsibilityPhonePackets
+    internal static class CallofDutyPackets
     {
         public static void SendUltimateRequest()
         {
             ModPacket packet = ModContent.GetInstance<global::CalamityLegendsComeBack.CalamityLegendsComeBack>().GetPacket();
-            packet.Write((byte)GamePacketType.ResponsibilityPhoneUltimateRequest);
+            packet.Write((byte)GamePacketType.CallofDutyUltimateRequest);
             packet.Send();
         }
 
@@ -27,7 +27,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
 
         public static void ToggleUltimate(Player player)
         {
-            ResponsibilityPhonePlayer phonePlayer = player.GetModPlayer<ResponsibilityPhonePlayer>();
+            CallofDutyPlayer phonePlayer = player.GetModPlayer<CallofDutyPlayer>();
             if (phonePlayer.ArmyActive)
             {
                 Ultimate.ResponsibilityArmyUnitBase.DismissAllFor(player.whoAmI, phonePlayer.ArmyGeneration);
@@ -38,12 +38,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
 
             if (!phonePlayer.UltimateReady || player.dead || !player.active)
                 return;
-            if (player.HeldItem?.type != ModContent.ItemType<ResponsibilityPhone>() || !ResponsibilityPhone.HasPhoneInMainInventory(player))
+            if (player.HeldItem?.type != ModContent.ItemType<CallofDuty>() || !CallofDuty.HasPhoneInMainInventory(player))
                 return;
 
             int generation = phonePlayer.ArmyGeneration + 1;
-            Item phone = ResponsibilityPhone.FindPhone(player);
-            int snapshotDamage = phone == null ? ResponsibilityPhone.BaseDamage : player.GetWeaponDamage(phone);
+            Item phone = CallofDuty.FindPhone(player);
+            int snapshotDamage = phone == null ? CallofDuty.BaseDamage : player.GetWeaponDamage(phone);
             if (!Ultimate.ResponsibilityArmyAmplifier.SpawnFor(player, generation, snapshotDamage))
                 return;
 
@@ -54,7 +54,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
         public static void SendCommand(ResponsibilityCommandMode mode, Vector2 position, int target)
         {
             ModPacket packet = ModContent.GetInstance<global::CalamityLegendsComeBack.CalamityLegendsComeBack>().GetPacket();
-            packet.Write((byte)GamePacketType.ResponsibilityPhoneCommandRequest);
+            packet.Write((byte)GamePacketType.CallofDutyCommandRequest);
             packet.Write((byte)mode);
             packet.WriteVector2(position);
             packet.Write((short)target);
@@ -71,7 +71,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
                 return;
 
             Player player = Main.player[whoAmI];
-            ResponsibilityPhonePlayer phonePlayer = player.GetModPlayer<ResponsibilityPhonePlayer>();
+            CallofDutyPlayer phonePlayer = player.GetModPlayer<CallofDutyPlayer>();
             if (!phonePlayer.ArmyActive || mode > ResponsibilityCommandMode.Attack)
                 return;
             if (Vector2.DistanceSquared(position, player.Center) > 2400f * 2400f)
@@ -85,7 +85,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
         public static void SendLanguageSelection(int index)
         {
             ModPacket packet = ModContent.GetInstance<global::CalamityLegendsComeBack.CalamityLegendsComeBack>().GetPacket();
-            packet.Write((byte)GamePacketType.ResponsibilityPhoneLanguageSelection);
+            packet.Write((byte)GamePacketType.CallofDutyLanguageSelection);
             packet.Write((byte)Main.myPlayer);
             packet.Write((byte)index);
             packet.Send();
@@ -99,12 +99,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
             if (!Main.player.IndexInRange(playerIndex))
                 return;
 
-            Main.player[playerIndex].GetModPlayer<ResponsibilityPhonePlayer>().ReceiveLanguageSelection(index);
+            Main.player[playerIndex].GetModPlayer<CallofDutyPlayer>().ReceiveLanguageSelection(index);
 
             if (Main.netMode == NetmodeID.Server)
             {
                 ModPacket relay = ModContent.GetInstance<global::CalamityLegendsComeBack.CalamityLegendsComeBack>().GetPacket();
-                relay.Write((byte)GamePacketType.ResponsibilityPhoneLanguageSelection);
+                relay.Write((byte)GamePacketType.CallofDutyLanguageSelection);
                 relay.Write((byte)playerIndex);
                 relay.Write((byte)index);
                 relay.Send(-1, whoAmI);
@@ -116,9 +116,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
             if (Main.netMode != NetmodeID.Server)
                 return;
 
-            ResponsibilityPhonePlayer phonePlayer = player.GetModPlayer<ResponsibilityPhonePlayer>();
+            CallofDutyPlayer phonePlayer = player.GetModPlayer<CallofDutyPlayer>();
             ModPacket packet = ModContent.GetInstance<global::CalamityLegendsComeBack.CalamityLegendsComeBack>().GetPacket();
-            packet.Write((byte)GamePacketType.ResponsibilityPhoneStateSync);
+            packet.Write((byte)GamePacketType.CallofDutyStateSync);
             packet.Write((byte)player.whoAmI);
             packet.Write((short)phonePlayer.UltimateCharge);
             packet.Write(phonePlayer.ArmyActive);
@@ -133,7 +133,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
             bool active = reader.ReadBoolean();
             int generation = reader.ReadInt32();
             if (Main.player.IndexInRange(playerIndex))
-                Main.player[playerIndex].GetModPlayer<ResponsibilityPhonePlayer>().ReceiveState(charge, active, generation);
+                Main.player[playerIndex].GetModPlayer<CallofDutyPlayer>().ReceiveState(charge, active, generation);
         }
     }
 }

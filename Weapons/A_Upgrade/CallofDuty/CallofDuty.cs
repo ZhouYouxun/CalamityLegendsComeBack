@@ -13,9 +13,9 @@ using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
+namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty
 {
-    public sealed class ResponsibilityPhone : ModItem, ILocalizedModType
+    public sealed class CallofDuty : ModItem, ILocalizedModType
     {
         internal const int BaseDamage = 280;
         internal const int BaseSequenceInterval = 18;
@@ -47,7 +47,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
             Item.noUseGraphic = true;
             Item.autoReuse = true;
             Item.UseSound = null;
-            Item.shoot = ModContent.ProjectileType<ResponsibilityPhoneHoldout>();
+            Item.shoot = ModContent.ProjectileType<CallofDutyHoldout>();
             Item.shootSpeed = 15f;
             Item.value = CalamityGlobalItem.RarityRedBuyPrice;
             Item.rare = ItemRarityID.Red;
@@ -60,14 +60,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
 
         public override void HoldItem(Player player)
         {
-            ResponsibilityPhonePlayer phonePlayer = player.GetModPlayer<ResponsibilityPhonePlayer>();
+            CallofDutyPlayer phonePlayer = player.GetModPlayer<CallofDutyPlayer>();
             phonePlayer.HoldingPhone = true;
             player.Calamity().mouseWorldListener = true;
 
             if (Main.myPlayer == player.whoAmI)
                 player.Calamity().rightClickListener = true;
 
-            int holdoutType = ModContent.ProjectileType<ResponsibilityPhoneHoldout>();
+            int holdoutType = ModContent.ProjectileType<CallofDutyHoldout>();
             if (Main.myPlayer != player.whoAmI || player.ownedProjectileCounts[holdoutType] > 0)
                 return;
 
@@ -84,7 +84,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
 
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
-            ResponsibilityPhonePlayer phonePlayer = Main.LocalPlayer.GetModPlayer<ResponsibilityPhonePlayer>();
+            CallofDutyPlayer phonePlayer = Main.LocalPlayer.GetModPlayer<CallofDutyPlayer>();
             ResponsibilityLanguageDefinition language = ResponsibilityLanguageRegistry.Get(phonePlayer.SelectedLanguageIndex);
             string key = KeybindSystem.LegendarySkill?.GetAssignedKeys().Count > 0
                 ? KeybindSystem.LegendarySkill.GetAssignedKeys()[0]
@@ -95,20 +95,20 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
 
             if (Main.keyState.PressingShift())
             {
-                tooltips.Add(new TooltipLine(Mod, "ResponsibilityPhoneDetails", this.GetLocalizedValue("Details"))
+                tooltips.Add(new TooltipLine(Mod, "CallofDutyDetails", this.GetLocalizedValue("Details"))
                 {
                     OverrideColor = new Color(132, 226, 255)
                 });
             }
             else
             {
-                tooltips.Add(new TooltipLine(Mod, "ResponsibilityPhoneHint", this.GetLocalizedValue("DetailsHint"))
+                tooltips.Add(new TooltipLine(Mod, "CallofDutyHint", this.GetLocalizedValue("DetailsHint"))
                 {
                     OverrideColor = new Color(151, 173, 184)
                 });
             }
 
-            tooltips.Add(new TooltipLine(Mod, "ResponsibilityPhoneLegendary", this.GetLocalizedValue("LegendaryText"))
+            tooltips.Add(new TooltipLine(Mod, "CallofDutyLegendary", this.GetLocalizedValue("LegendaryText"))
             {
                 OverrideColor = new Color(194, 255, 67)
             });
@@ -149,7 +149,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
             int inventorySlots = System.Math.Min(58, player.inventory.Length);
             for (int i = 0; i < inventorySlots; i++)
             {
-                if (player.inventory[i].type == ModContent.ItemType<ResponsibilityPhone>())
+                if (player.inventory[i].type == ModContent.ItemType<CallofDuty>())
                     return true;
             }
             return false;
@@ -157,13 +157,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
 
         internal static Item FindPhone(Player player)
         {
-            if (player.HeldItem?.type == ModContent.ItemType<ResponsibilityPhone>())
+            if (player.HeldItem?.type == ModContent.ItemType<CallofDuty>())
                 return player.HeldItem;
 
             int inventorySlots = System.Math.Min(58, player.inventory.Length);
             for (int i = 0; i < inventorySlots; i++)
             {
-                if (player.inventory[i].type == ModContent.ItemType<ResponsibilityPhone>())
+                if (player.inventory[i].type == ModContent.ItemType<CallofDuty>())
                     return player.inventory[i];
             }
             return null;

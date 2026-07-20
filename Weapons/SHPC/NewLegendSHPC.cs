@@ -1712,7 +1712,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         private string GetSHPCLoadingUIKeyText(bool isChinese)
         {
             return InventoryActivationInput.GetDisplayKeyOrDefault(
-                KeybindSystem.SHPCLoadingUI,
+                KeybindSystem.WeaponLoadingUI,
                 isChinese ? "鼠标中键" : "Middle Mouse");
         }
 

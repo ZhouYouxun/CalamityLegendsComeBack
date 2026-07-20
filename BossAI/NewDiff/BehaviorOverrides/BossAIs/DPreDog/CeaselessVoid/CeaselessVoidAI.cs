@@ -85,6 +85,12 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         private readonly float[] orbiterHPs = new float[6];
         private int stunTimer = 0;
         private int respawnOrbitersTimer = 0;
+
+        // 六个环绕体的血量 gate 95% 减伤、stunTimer gate 150% 惩罚窗口 —— 30 倍的伤害差。
+        protected override void DeclareSyncedFields(LegendsSyncedFields f) => f
+            .FloatArray(orbiterHPs)
+            .Int(() => stunTimer, v => stunTimer = v)
+            .Int(() => respawnOrbitersTimer, v => respawnOrbitersTimer = v);
         private int orbiterFxCooldown = 0;
 
         private int arenaHurtCooldown = 0;
@@ -94,6 +100,31 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         // still benefit from the same ghost-trail convention the rest of the roster uses.
         private readonly Vector2[] oldPos = new Vector2[9];
         private int oldPosIndex = 0;
+        #endregion
+
+        #region Per-fight State Reset
+        // 跨场次状态清理（为什么需要见基类 LegendsBossAI.ResetFightState；调用时机由框架负责）。
+        // 本 Boss 残留最要命的是 orbiterHPs —— 六个环绕体的血量若带着上一场的残值进场，
+        // 玩家会发现有几个"一打就碎"甚至开局就是碎的，整个部位阶段被跳过。
+        public override void ResetFightState(NPC npc, Player target)
+        {
+            ticksRunning = 0;
+            currentRepetition = 0;
+            attackCycleIndex = 0;
+            Array.Clear(attackVariant, 0, attackVariant.Length);
+
+            Array.Clear(orbiterHPs, 0, orbiterHPs.Length);
+            stunTimer = 0;
+            respawnOrbitersTimer = 0;
+            orbiterFxCooldown = 0;
+
+            arenaHurtCooldown = 0;
+            transitionFlashAlpha = 0f;
+
+            for (int i = 0; i < oldPos.Length; i++)
+                oldPos[i] = npc.Center;
+            oldPosIndex = 0;
+        }
         #endregion
 
         #region Core AI Hooks

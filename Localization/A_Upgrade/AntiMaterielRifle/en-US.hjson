@@ -5,10 +5,10 @@ Mods: {
 				NewLegendAntiMaterielRifle: {
 					DisplayName: Little Legend - Anti-materiel Rifle
 					Tooltip: "[GFB]"
-					LeftClick: "[Left Click] Fire slowly in full-auto; each round can strike only one target"
-					RightClick: "[Right Click] Hold to aim as the sight lines converge; release an execution round that pierces enemies infinitely"
+					LeftClick: Fires .408 heavy anti-materiel rounds
+					RightClick: Right click to widen your view and enter immersive sniping mode
 					CurrentStage: Current record: {0}
-					InventoryToggle: "[Right Click in inventory] Toggle camera zoom while aiming; sight lines remain enabled"
+					InventoryToggle: Right click in your inventory to toggle the view change
 					ZoomState: Aiming zoom: {0}
 					ZoomEnabled: Enabled
 					ZoomDisabled: Disabled

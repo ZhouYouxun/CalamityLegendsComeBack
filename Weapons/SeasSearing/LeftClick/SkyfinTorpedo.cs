@@ -17,8 +17,6 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         private const int HoverFrames = 26;
         private const float HomingRange = 1200f;
         private const float DashSpeed = 31f;
-        private const float SpriteRotationOffset = MathHelper.PiOver2;
-
         private static readonly int TrailLength = 12;
 
         private float LaunchCurve => Projectile.ai[0];
@@ -65,7 +63,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 if (target != null)
                 {
                     Vector2 aim = (target.Center - Projectile.Center).SafeNormalize(downward);
-                    Projectile.rotation = aim.ToRotation();
+                    SetVisualRotation(aim);
 
                     if (Age >= DropFrames + HoverFrames)
                     {
@@ -78,13 +76,13 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 }
                 else
                 {
-                    Projectile.rotation = Projectile.velocity.SafeNormalize(downward).ToRotation();
+                    SetVisualRotation(Projectile.velocity.SafeNormalize(downward));
                 }
             }
             else
             {
                 // Deliberately no homing here: after the torpedo run begins it cannot correct course.
-                Projectile.rotation = Projectile.velocity.SafeNormalize(Vector2.UnitX).ToRotation();
+                SetVisualRotation(Projectile.velocity.SafeNormalize(Vector2.UnitX));
             }
 
             Lighting.AddLight(Projectile.Center, SeasSearingPalette.BiohazardLime.ToVector3() * 0.42f);
@@ -138,7 +136,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             Texture2D bloom  = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Vector2   origin = tex.Size() * 0.5f;
             Vector2   bloomOrigin = bloom.Size() * 0.5f;
-            float visualRotation = Projectile.rotation + SpriteRotationOffset;
+            float visualRotation = Projectile.rotation;
 
             for (int i = 1; i < TrailLength; i++)
             {
@@ -148,11 +146,11 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 tc.A       = 0;
                 Main.EntitySpriteDraw(bloom,
                     Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition,
-                    null, tc * 0.65f, Projectile.oldRot[i] + SpriteRotationOffset,
+                    null, tc * 0.65f, Projectile.oldRot[i],
                     bloomOrigin, 0.055f * t, SpriteEffects.None, 0);
                 Main.EntitySpriteDraw(tex,
                     Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition,
-                    null, tc, Projectile.oldRot[i] + SpriteRotationOffset,
+                    null, tc, Projectile.oldRot[i],
                     origin, Projectile.scale * MathHelper.Lerp(0.3f, 0.85f, t), SpriteEffects.None, 0);
             }
 
@@ -169,6 +167,13 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         {
             SeasSearingVisualUtility.SpawnAbyssDust(Projectile.Center, 10, 2.5f, 16f);
             SeasSearingVisualUtility.SpawnPressureRing(Projectile.Center, 2f, 12f, 10, SeasSearingPalette.ToxicGreen);
+        }
+
+        // This custom torpedo draw uses the SkyfinBombers texture inverted relative to SkyfinNuke.
+        private void SetVisualRotation(Vector2 direction)
+        {
+            Projectile.spriteDirection = Projectile.direction = (direction.X > 0f).ToDirectionInt();
+            Projectile.rotation = direction.ToRotation() + (Projectile.spriteDirection == 1 ? MathHelper.Pi : 0f);
         }
 
         private NPC FindTarget()

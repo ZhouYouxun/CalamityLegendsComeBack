@@ -92,6 +92,13 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         // Ghostly Twin Mirror Clones
         private float hateCloneHP = 1500f;
         private float fearCloneHP = 1500f;
+
+        // 两个分身的血量 gate 85% 减伤，stunTimer gate 150% 惩罚窗口 —— 合起来是 10 倍的伤害差。
+        protected override void DeclareSyncedFields(LegendsSyncedFields f) => f
+            .Float(() => hateCloneHP, v => hateCloneHP = v)
+            .Float(() => fearCloneHP, v => fearCloneHP = v)
+            .Int(() => stunTimer, v => stunTimer = v)
+            .Int(() => respawnClonesTimer, v => respawnClonesTimer = v);
         private readonly float[] cloneFlash = new float[2];
         private int stunTimer = 0;
         private int respawnClonesTimer = 0;
@@ -127,9 +134,6 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         #region Core AI Hooks
         public override bool PreAI(NPC npc, LegendsGlobalNPC data)
         {
-            if ((int)npc.ai[0] == 0)
-                ResetFightState();
-
             ticksRunning++;
 
             if (!TryGetTarget(npc, out Player target))
@@ -275,7 +279,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             return false;
         }
 
-        private void ResetFightState()
+        public override void ResetFightState(NPC npc, Player target)
         {
             ticksRunning = 0;
             currentRepetition = 0;

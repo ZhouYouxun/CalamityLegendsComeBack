@@ -7,9 +7,9 @@ using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
+namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty
 {
-    internal sealed class ResponsibilityPhoneHoldout : ModProjectile
+    internal sealed class CallofDutyHoldout : ModProjectile
     {
         private int fireCooldown;
         private bool previousLeft;
@@ -38,10 +38,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
 
         public override void AI()
         {
-            if (!Owner.active || Owner.dead || Owner.HeldItem?.type != ModContent.ItemType<ResponsibilityPhone>())
+            if (!Owner.active || Owner.dead || Owner.HeldItem?.type != ModContent.ItemType<CallofDuty>())
             {
                 if (Projectile.owner == Main.myPlayer)
-                    Owner.GetModPlayer<ResponsibilityPhonePlayer>().CloseWheel();
+                    Owner.GetModPlayer<CallofDutyPlayer>().CloseWheel();
                 Projectile.Kill();
                 return;
             }
@@ -51,7 +51,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
             Vector2 aim = Projectile.velocity.SafeNormalize(Vector2.UnitX * Owner.direction);
             if (Projectile.owner == Main.myPlayer)
             {
-                aim = (ResponsibilityPhone.GetMouseWorld(Owner) - Owner.MountedCenter).SafeNormalize(Vector2.UnitX * Owner.direction);
+                aim = (CallofDuty.GetMouseWorld(Owner) - Owner.MountedCenter).SafeNormalize(Vector2.UnitX * Owner.direction);
                 Projectile.velocity = aim;
                 if (Vector2.Dot(oldAim.SafeNormalize(aim), aim) < 0.998f)
                     Projectile.netUpdate = true;
@@ -76,10 +76,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
 
         private void HandleOwnerInput(Vector2 aim)
         {
-            bool validInput = ResponsibilityPhone.CanUseWorldInput(Owner);
+            bool validInput = CallofDuty.CanUseWorldInput(Owner);
             bool left = validInput && Main.mouseLeft;
             bool right = validInput && Main.mouseRight;
-            ResponsibilityPhonePlayer phonePlayer = Owner.GetModPlayer<ResponsibilityPhonePlayer>();
+            CallofDutyPlayer phonePlayer = Owner.GetModPlayer<CallofDutyPlayer>();
             Vector2 mouseScreen = new(Main.mouseX, Main.mouseY);
 
             if (right && !previousRight)
@@ -113,13 +113,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
             {
                 FireSequence(aim);
                 float attackSpeed = Math.Max(0.1f, Owner.GetAttackSpeed(DamageClass.Summon));
-                fireCooldown = Math.Max(ResponsibilityPhone.MinimumSequenceInterval,
-                    (int)MathF.Round(ResponsibilityPhone.BaseSequenceInterval / attackSpeed));
+                fireCooldown = Math.Max(CallofDuty.MinimumSequenceInterval,
+                    (int)MathF.Round(CallofDuty.BaseSequenceInterval / attackSpeed));
             }
 
             if (left && !previousLeft && phonePlayer.ArmyActive && !phonePlayer.WheelOpen)
             {
-                Vector2 mouseWorld = ResponsibilityPhone.GetMouseWorld(Owner);
+                Vector2 mouseWorld = CallofDuty.GetMouseWorld(Owner);
                 int target = FindTargetUnderMouse(mouseWorld);
                 SendCommand(target >= 0 ? ResponsibilityCommandMode.Attack : ResponsibilityCommandMode.Move, mouseWorld, target);
             }
@@ -130,7 +130,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
 
         private void FireSequence(Vector2 aim)
         {
-            ResponsibilityPhonePlayer phonePlayer = Owner.GetModPlayer<ResponsibilityPhonePlayer>();
+            CallofDutyPlayer phonePlayer = Owner.GetModPlayer<CallofDutyPlayer>();
             int sequenceId = phonePlayer.AllocateSequenceId();
             int damage = Owner.GetWeaponDamage(Owner.HeldItem);
             Vector2 muzzle = Projectile.Center + aim * 14f;
@@ -178,9 +178,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
 
         private void SendCommand(ResponsibilityCommandMode mode, Vector2 position, int target)
         {
-            Owner.GetModPlayer<ResponsibilityPhonePlayer>().SetCommand(mode, position, target);
+            Owner.GetModPlayer<CallofDutyPlayer>().SetCommand(mode, position, target);
             if (Main.netMode == NetmodeID.MultiplayerClient)
-                ResponsibilityPhonePackets.SendCommand(mode, position, target);
+                CallofDutyPackets.SendCommand(mode, position, target);
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -190,7 +190,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
             int frame = (int)(Main.GameUpdateCount / 5 % 12);
             Rectangle source = new(0, frame * frameHeight, texture.Width, frameHeight);
             SpriteEffects effects = Owner.direction < 0 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
-            Color screenGlow = ResponsibilityLanguageRegistry.Get(Owner.GetModPlayer<ResponsibilityPhonePlayer>().SelectedLanguageIndex)?.Color ?? Color.White;
+            Color screenGlow = ResponsibilityLanguageRegistry.Get(Owner.GetModPlayer<CallofDutyPlayer>().SelectedLanguageIndex)?.Color ?? Color.White;
 
             Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, source, lightColor, Projectile.rotation, source.Size() * 0.5f, Projectile.scale, effects);
             Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, source, screenGlow * 0.18f, Projectile.rotation, source.Size() * 0.5f, Projectile.scale * 1.05f, effects);

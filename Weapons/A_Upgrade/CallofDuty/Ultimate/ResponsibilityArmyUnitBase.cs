@@ -11,7 +11,7 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using CalamityLegendsComeBack.Weapons.Visuals;
 
-namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone.Ultimate
+namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty.Ultimate
 {
     internal abstract class ResponsibilityArmyUnitBase : ModNPC
     {
@@ -168,7 +168,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone.Ultimate
             if (Owner == null)
                 return null;
 
-            ResponsibilityPhonePlayer phonePlayer = Owner.GetModPlayer<ResponsibilityPhonePlayer>();
+            CallofDutyPlayer phonePlayer = Owner.GetModPlayer<CallofDutyPlayer>();
             if (phonePlayer.CommandMode == ResponsibilityCommandMode.Attack && Main.npc.IndexInRange(phonePlayer.CommandTarget))
             {
                 NPC commanded = Main.npc[phonePlayer.CommandTarget];
@@ -177,14 +177,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone.Ultimate
             }
 
             // A manually marked target or a Wulfrum hat remains a deliberate focus-fire order.
-            NPC focusTarget = ResponsibilityPhoneGlobalNPC.FindPriorityTarget(OwnerIndex, NPC.Center, maximumDistance, includeNearest: false);
+            NPC focusTarget = CallofDutyGlobalNPC.FindPriorityTarget(OwnerIndex, NPC.Center, maximumDistance, includeNearest: false);
             if (focusTarget != null)
                 return focusTarget;
 
             // Without a direct order, each chassis occupies a stable squad slot. The slots cycle
             // over the available enemies, turning a spread-out pack into several small fights
             // instead of making all sixteen machines chase the closest slime.
-            return ResponsibilityPhoneGlobalNPC.FindDistributedTarget(OwnerIndex, GetSquadOrder(), NPC.Center, maximumDistance);
+            return CallofDutyGlobalNPC.FindDistributedTarget(OwnerIndex, GetSquadOrder(), NPC.Center, maximumDistance);
         }
 
         protected bool IsRamLaunchWindow(int cycleFrames = 120, int windowFrames = 9)
@@ -215,7 +215,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone.Ultimate
             if (Owner == null)
                 return NPC.Center;
 
-            ResponsibilityPhonePlayer phonePlayer = Owner.GetModPlayer<ResponsibilityPhonePlayer>();
+            CallofDutyPlayer phonePlayer = Owner.GetModPlayer<CallofDutyPlayer>();
             if (phonePlayer.CommandMode == ResponsibilityCommandMode.Move)
                 return phonePlayer.CommandPosition + formationOffset;
             return Owner.Center + formationOffset;

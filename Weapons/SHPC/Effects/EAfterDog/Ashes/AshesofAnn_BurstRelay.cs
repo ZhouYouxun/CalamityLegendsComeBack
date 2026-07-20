@@ -10,8 +10,8 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
 {
-    // The primary fire is a paired reverse cross. Every beat calls one soul from each outer
-    // side of the marked target and sends them inward along converging homing lanes.
+    // The primary fire is a paired muzzle fan. Every soul starts from the relay itself, then
+    // the two lanes widen gradually while their independent homing corrects toward enemies.
     internal sealed class AshesofAnn_BurstRelay : ModProjectile, ILocalizedModType
     {
         private const int SweepPairCount = 8;
@@ -102,24 +102,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
         private void FireHomingSweepPair(int pairIndex)
         {
             Vector2 forward = ForwardDirection;
-            Vector2 normal = forward.RotatedBy(MathHelper.PiOver2);
             float completion = pairIndex / (float)Math.Max(1, SweepPairCount - 1);
-            float sweepAngle = MathHelper.Lerp(0.38f, 0.055f, completion);
+            float sweepAngle = MathHelper.Lerp(0.055f, 0.38f, completion);
             int damage = Math.Max(1, (int)(Projectile.damage * MathHelper.Lerp(0.78f, 0.94f, completion)));
-            NPC markedTarget = FindMarkedTarget(Projectile.Center, 2600f);
 
             for (int side = -1; side <= 1; side += 2)
             {
                 Vector2 direction = forward.RotatedBy(sweepAngle * side).SafeNormalize(forward);
-                Vector2 spawnPosition = Projectile.Center + forward * 20f + normal * side * MathHelper.Lerp(30f, 8f, completion);
-                if (markedTarget is not null)
-                {
-                    Vector2 entryDirection = forward.RotatedBy(-sweepAngle * side).SafeNormalize(forward);
-                    Vector2 entryNormal = entryDirection.RotatedBy(MathHelper.PiOver2);
-                    float outerDistance = MathHelper.Lerp(430f, 310f, completion);
-                    spawnPosition = markedTarget.Center - entryDirection * outerDistance + entryNormal * side * MathHelper.Lerp(74f, 22f, completion);
-                    direction = (markedTarget.Center - spawnPosition).SafeNormalize(entryDirection);
-                }
+                Vector2 spawnPosition = Projectile.Center;
                 int shotIndex = pairIndex * 2 + (side > 0 ? 1 : 0);
 
                 Projectile.NewProjectile(

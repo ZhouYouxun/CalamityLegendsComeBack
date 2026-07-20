@@ -108,14 +108,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 {
                     Close();
                     prevMouseMiddle = Main.mouseMiddle;
-                    prevKeybindPressed = InventoryActivationInput.IsPressed(KeybindSystem.SHPCLoadingUI);
+                    prevKeybindPressed = InventoryActivationInput.IsPressed(KeybindSystem.WeaponLoadingUI);
                     return;
                 }
 
                 if (Main.playerInventory)
                 {
-                    bool keyBound = InventoryActivationInput.HasBoundKey(KeybindSystem.SHPCLoadingUI);
-                    bool keybindPressed = InventoryActivationInput.IsPressed(KeybindSystem.SHPCLoadingUI);
+                    bool keyBound = InventoryActivationInput.HasBoundKey(KeybindSystem.WeaponLoadingUI);
+                    bool keybindPressed = InventoryActivationInput.IsPressed(KeybindSystem.WeaponLoadingUI);
                     bool keybindJustPressed = keybindPressed && !prevKeybindPressed;
                     prevKeybindPressed = keybindPressed;
 

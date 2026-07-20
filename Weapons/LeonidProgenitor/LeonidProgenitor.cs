@@ -10,6 +10,7 @@ using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
@@ -209,7 +210,11 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 constellation.SpentPoints,
                 constellation.EarnedPoints,
                 LeonidConstellation.TotalCost);
-            string constellationHint = this.GetLocalizedValue("ConstellationHint");
+            string constellationHint = string.Format(
+                this.GetLocalizedValue("ConstellationHint"),
+                InventoryActivationInput.GetDisplayKeyOrDefault(
+                    KeybindSystem.WeaponLoadingUI,
+                    Language.ActiveCulture.Name.StartsWith("zh") ? "鼠标中键" : "Middle Mouse"));
             string legendaryBody = this.GetLocalizedValue("LegendaryText");
             string legendaryHint = this.GetLocalizedValue("LegendaryHint");
             bool shiftPressed = Main.keyState.PressingShift();

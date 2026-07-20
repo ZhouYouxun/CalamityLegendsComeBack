@@ -35,10 +35,11 @@ Mods: {
 						[c/FFA07A:Left Click - Bombardment: converts wooden arrows into falling volleys.]
 						[c/FFA07A:Converted arrows detonate on impact; other arrows fire normally.]
 						'''
-			PresetLeft4:
-				'''
-				[c/DDA0FF:Left Click - Plague: inflicts Wither for 4 seconds; repeated hits extend its duration.]
-				[c/DDA0FF:Wither erodes defense and deals steady damage over time.]
+					PresetLeft4:
+						'''
+						[c/DDA0FF:Left Click - Plague: inflicts Wither for 4 seconds; repeated hits extend its duration.]
+						[c/DDA0FF:Wither erodes defense and deals steady damage over time.]
+								
 						'''
 					PresetRight0:
 						'''
@@ -60,10 +61,11 @@ Mods: {
 						[c/FFB347:Right Click - Bombardment: hold to place the reticle and launch a guide arrow.]
 						[c/FFB347:The strike falls from above and detonates at the marked point.]
 						'''
-			PresetRight4:
-				'''
-				[c/FFB347:Right Click - Plague: hold to fire a heavy spore cloud.]
-				[c/FFB347:The cloud inflicts Deathblight for 60 seconds and amplifies Leaf Flow hits.]
+					PresetRight4:
+						'''
+						[c/FFB347:Right Click - Plague: hold to fire a heavy spore cloud.]
+						[c/FFB347:The cloud inflicts Deathblight for 60 seconds and amplifies Leaf Flow hits.]
+								
 						'''
 					PresetPassive0:
 						'''
@@ -329,6 +331,7 @@ Mods: {
 				BFArrow_DBombVisual.DisplayName: B F Arrow_ D Bomb Visual
 				BFEXConvergingLeaf.DisplayName: B F E X Converging Leaf
 				BFEXConvergingWisp.DisplayName: B F E X Converging Wisp
+				BFRightChargeHaloProj.DisplayName: Charge Halo
 			}
 
 			Ranged: {

@@ -36,10 +36,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.Toys.RetroGames
         ArtisanTokenPrefixApplied = 16,
         NewDiffSyncMode = 17,
         NewDiffYharonState = 18,
-        ResponsibilityPhoneUltimateRequest = 19,
-        ResponsibilityPhoneCommandRequest = 20,
-        ResponsibilityPhoneStateSync = 21,
-        ResponsibilityPhoneLanguageSelection = 22,
+        CallofDutyUltimateRequest = 19,
+        CallofDutyCommandRequest = 20,
+        CallofDutyStateSync = 21,
+        CallofDutyLanguageSelection = 22,
         LeonidConstellationRequest = 23,
         LeonidConstellationStateSync = 24
     }

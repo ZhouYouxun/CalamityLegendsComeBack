@@ -7,9 +7,9 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
+namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty
 {
-    internal sealed class ResponsibilityPhoneGlobalNPC : GlobalNPC
+    internal sealed class CallofDutyGlobalNPC : GlobalNPC
     {
         private sealed class ConnectionState
         {
@@ -68,12 +68,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
 
             foreach (Player player in Main.ActivePlayers)
             {
-                if (!ResponsibilityPhone.HasPhoneInMainInventory(player))
+                if (!CallofDuty.HasPhoneInMainInventory(player))
                     continue;
 
-                ResponsibilityPhonePlayer phonePlayer = player.GetModPlayer<ResponsibilityPhonePlayer>();
+                CallofDutyPlayer phonePlayer = player.GetModPlayer<CallofDutyPlayer>();
                 phonePlayer.FillUltimate();
-                ResponsibilityPhonePackets.SendState(player);
+                CallofDutyPackets.SendState(player);
             }
         }
 
@@ -82,7 +82,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
             if (!Main.player.IndexInRange(owner) || !target.active)
                 return;
 
-            ResponsibilityPhoneGlobalNPC global = target.GetGlobalNPC<ResponsibilityPhoneGlobalNPC>();
+            CallofDutyGlobalNPC global = target.GetGlobalNPC<CallofDutyGlobalNPC>();
             global.connections ??= new Dictionary<int, ConnectionState>();
             if (!global.connections.TryGetValue(owner, out ConnectionState state))
             {
@@ -231,7 +231,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.ResponsibilityPhone
             if (!Main.player.IndexInRange(owner))
                 return null;
 
-            ResponsibilityPhonePlayer phonePlayer = Main.player[owner].GetModPlayer<ResponsibilityPhonePlayer>();
+            CallofDutyPlayer phonePlayer = Main.player[owner].GetModPlayer<CallofDutyPlayer>();
             if (phonePlayer.PriorityTargetTimer > 0 && Main.npc.IndexInRange(phonePlayer.PriorityTarget))
             {
                 NPC forced = Main.npc[phonePlayer.PriorityTarget];

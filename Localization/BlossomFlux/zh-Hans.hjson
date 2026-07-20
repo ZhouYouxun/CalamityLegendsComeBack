@@ -35,10 +35,11 @@ Mods: {
 						[c/FFA07A:左键 - 歼灭：将木箭转化为坠落箭雨。]
 						[c/FFA07A:转化箭命中爆炸，其他箭矢正常发射。]
 						'''
-			PresetLeft4:
-				'''
-				[c/DDA0FF:左键 - 侵染：施加 4 秒凋萎；重复命中可叠加持续时间。]
-				[c/DDA0FF:凋萎会削弱防御并持续造成伤害。]
+					PresetLeft4:
+						'''
+						[c/DDA0FF:左键 - 侵染：施加 4 秒凋萎；重复命中可叠加持续时间。]
+						[c/DDA0FF:凋萎会削弱防御并持续造成伤害。]
+								
 						'''
 					PresetRight0:
 						'''
@@ -60,10 +61,11 @@ Mods: {
 						[c/FFB347:右键 - 歼灭：按住布置准星并发射引导箭。]
 						[c/FFB347:打击会从空中坠落，在标记处爆炸。]
 						'''
-			PresetRight4:
-				'''
-				[c/FFB347:右键 - 侵染：按住发射大型孢子云。]
-				[c/FFB347:孢子云会施加 60 秒凋亡，并强化叶流命中。]
+					PresetRight4:
+						'''
+						[c/FFB347:右键 - 侵染：按住发射大型孢子云。]
+						[c/FFB347:孢子云会施加 60 秒凋亡，并强化叶流命中。]
+								
 						'''
 					PresetPassive0:
 						'''
@@ -327,6 +329,7 @@ Mods: {
 				BFArrow_DBombVisual.DisplayName: 歼灭上射视觉箭
 				BFEXConvergingLeaf.DisplayName: 叶流EX汇聚叶片
 				BFEXConvergingWisp.DisplayName: 叶流EX汇聚鬼火
+				BFRightChargeHaloProj.DisplayName: 蓄力光环
 			}
 
 			Ranged: {

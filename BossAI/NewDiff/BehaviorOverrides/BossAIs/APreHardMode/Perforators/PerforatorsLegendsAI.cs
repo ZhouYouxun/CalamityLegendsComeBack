@@ -200,9 +200,6 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         /// </summary>
         public override bool PreAI(NPC npc, LegendsGlobalNPC data)
         {
-            if ((int)npc.ai[0] == 0)
-                ResetFightState();
-
             ticksRunning++;
 
             // Verify target players
@@ -330,6 +327,21 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             return false;
         }
 
+        // 死亡演出的入口。以前这套演出是【完全够不到的死代码】：AttackState.DeathAnimation 只在 switch 里
+        // 有一个 case，全文件没有任何一处把 ai[1] 设成它，所以 ExecuteState_DeathAnimation 从来没被执行过，
+        // 玩家看到的一直是原版的瞬间暴毙。现在按全项目统一的做法接上致命伤拦截。
+        public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers) =>
+            InterceptLethalHit(npc, ref modifiers, (int)AttackState.DeathAnimation, () => BeginDeathAnimation(npc, player));
+
+        public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers) =>
+            InterceptLethalHit(npc, ref modifiers, (int)AttackState.DeathAnimation, () => BeginDeathAnimation(npc, Main.player[projectile.owner]));
+
+        private void BeginDeathAnimation(NPC npc, Player target)
+        {
+            TransitionToAttack(npc, AttackState.DeathAnimation);
+            TriggerDeathCinematic(npc, target, focusStrength: 0.55f, holdFrames: 55, shakePower: 10f);
+        }
+
         /// <summary>
         /// Instantly switches the boss to a new attack state and resets relevant timers/counters.
         /// </summary>
@@ -357,7 +369,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
         // The registry reuses this object. Encounter-only state must not make a later Perforator
         // start with a prior hive's active minions, prediction line, or invulnerability timer.
-        private void ResetFightState()
+        public override void ResetFightState(NPC npc, Player target)
         {
             arenaAlpha = 0f;
             desperationCenter = Vector2.Zero;
@@ -977,10 +989,10 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
             if (timer >= 90)
             {
-                npc.life = 0;
-                npc.HitEffect();
-                npc.active = false;
-                npc.netUpdate = true;
+                // 必须走 StrikeInstantKill 而不是 npc.active = false —— 后者是直接把实体抹掉，
+                // 掉落、死亡音效和 gore 全都不会触发，玩家打完一场拿不到任何东西。
+                npc.dontTakeDamage = false;
+                npc.StrikeInstantKill();
             }
         }
 

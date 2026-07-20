@@ -231,6 +231,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             Owner.velocity -= direction * (rightShot ? 0.75f : 0.42f);
             Owner.Calamity().GeneralScreenShakePower = rightShot ? 8f : 5f;
             SpawnMuzzleBurst(direction, rightShot);
+            EjectSpentCasing(direction, rightShot);
 
             SoundStyle fireSound = CommonCalamitySounds.LargeWeaponFireSound with
             {
@@ -240,6 +241,21 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             };
             SoundEngine.PlaySound(fireSound, GunTipPosition);
             return true;
+        }
+
+        private void EjectSpentCasing(Vector2 direction, bool rightShot)
+        {
+            if (Main.netMode == NetmodeID.Server)
+                return;
+
+            // Calamity registers its spent casings as ModGore and throws them out
+            // of the breech this way (see OmniGunHoldout / M1GarandHoldout).
+            Vector2 breech = Projectile.Center + direction * (HoldoutDistance + 6f);
+            Vector2 ejectVelocity = (-direction * 1.7f + new Vector2(0f, -3.1f)).RotatedByRandom(0.22f) *
+                Main.rand.NextFloat(0.85f, 1.2f) * (rightShot ? 1.25f : 1f);
+
+            Gore.NewGore(Projectile.GetSource_FromThis(), breech, ejectVelocity,
+                ModContent.Find<ModGore>("CalamityMod/OmniSniperCasing").Type);
         }
 
         private Vector2 GetSafeMuzzlePosition(Vector2 direction)
