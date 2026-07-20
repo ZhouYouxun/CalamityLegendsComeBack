@@ -22,12 +22,12 @@ Mods: {
 
 					Constellation: {
 						Title: 狮子座流星雨矩阵
-						Subtitle: "\u8f69\u8f95\u5341\u56db\u4e3a\u72ee\u5fc3\uff1b\u53ef\u4efb\u9009\u4e00\u9897\u4e3b\u661f\u70b9\u4eae\u3002"
+						Subtitle: 轩辕十四为狮心；可任选一颗主星点亮。
 						Status: 可用 {0}    已消耗 {1}    已获得 {2}    全图需 {3}
 						HoverHint: 悬停主星查看星辉印记
 						Reset: 重置星图（免费）
 						Heart: 狮心主星 — 恒常点亮
-						Unlocked: "\u5df2\u70b9\u4eae"
+						Unlocked: 已点亮
 						Cost: 消耗：{0} 星辉
 
 						Nodes: {
@@ -42,8 +42,8 @@ Mods: {
 							}
 
 							Adhafera: {
-								Name: "\u8f69\u8f95\u5341\u4e00 \u51a0\u5195\u4e1d\u7ebf"
-								Description: "\u666e\u901a\u5de6\u952e\u989d\u5916\u91ca\u653e\u4e00\u9897\u5c0f\u6d41\u661f"
+								Name: 轩辕十一 冠冕丝线
+								Description: 普通左键额外释放一颗小流星
 							}
 
 							Rasalas: {
@@ -52,23 +52,23 @@ Mods: {
 							}
 
 							Zosma: {
-								Name: "\u8f69\u8f95\u5341\u4e94 \u843d\u661f\u4fa7\u7ffc"
-								Description: "\u6f5c\u4f0f\u6d41\u661f\u96e8\u989d\u5916\u589e\u52a0\u4e24\u9897\u5c0f\u6d41\u661f"
+								Name: 轩辕十五 落星侧翼
+								Description: 潜伏流星雨额外增加两颗小流星
 							}
 
 							Chertan: {
-								Name: "\u8f69\u8f95\u5341\u4e09 \u72e9\u730e\u8f68\u8ff9"
-								Description: "\u5b8c\u5168\u53cd\u5c04\u7684\u5c0f\u6d41\u661f\u56de\u590d4\u70b9\u7ec8\u7ed3\u80fd\u91cf"
+								Name: 轩辕十三 狩猎轨迹
+								Description: 完全反射的小流星回复4点终结能量
 							}
 
 							Denebola: {
-								Name: "\u4e94\u5e1d\u5ea7\u4e00 \u5c3e\u661f\u66d9\u5149"
-								Description: "\u7ec8\u7ed3\u6280\u5f15\u529b\u573a\u989d\u5916\u6301\u7eed2\u79d2"
+								Name: 五帝座一 尾星曙光
+								Description: 终结技引力场额外持续2秒
 							}
 
 							Alterf: {
-								Name: "\u8f69\u8f95\u516b \u5486\u54ee\u51a0\u5195"
-								Description: "\u6f5c\u4f0f\u72ee\u9996\u4f24\u5bb3\u63d0\u9ad825%\uff0c\u5e76\u653e\u51fa18\u9897\u6d41\u661f"
+								Name: 轩辕八 咆哮冠冕
+								Description: 潜伏狮首伤害提高25%，并放出18颗流星
 							}
 
 							Subra: {
@@ -83,24 +83,24 @@ Mods: {
 
 		Projectiles: {
 			LeonidProgenitor: {
-				LeonidCometSmall.DisplayName: "\u5c0f\u6d41\u661f"
-				LeonidReflectiveMeteor.DisplayName: "\u53cd\u5c04\u6d41\u661f"
-				LeonidCometLarge.DisplayName: "\u5927\u6d41\u661f"
-				LeonidLionHead.DisplayName: "\u5486\u54ee\u72ee\u9996"
-				LeonidGravityField.DisplayName: "\u72ee\u5b50\u5ea7\u5f15\u529b\u573a"
-				LeonidUltimateUI.DisplayName: "\u7ec8\u7ed3\u80fd\u91cf"
-				LeonidRightClickHoldout.DisplayName: "\u6d41\u661f\u84c4\u529b"
-				LeonidStealthRainSpawner.DisplayName: "\u6f5c\u4f0f\u6d41\u661f\u96e8"
+				LeonidCometSmall.DisplayName: 小流星
+				LeonidReflectiveMeteor.DisplayName: 反射流星
+				LeonidCometLarge.DisplayName: 大流星
+				LeonidLionHead.DisplayName: 咆哮狮首
+				LeonidGravityField.DisplayName: 狮子座引力场
+				LeonidUltimateUI.DisplayName: 终结能量
+				LeonidRightClickHoldout.DisplayName: 流星蓄力
+				LeonidStealthRainSpawner.DisplayName: 潜伏流星雨
 			}
 		}
 
 		Buffs: {
 			LeonidGravityDebuff: {
-				DisplayName: "\u661f\u8fb0\u5f15\u529b"
-				Description: "\u5f15\u529b\u573a\u9650\u5236\u6c34\u5e73\u79fb\u52a8\uff0c\u5e76\u5c06\u4f60\u5411\u4e0b\u62c9\u626f\u3002"
+				DisplayName: 星辰引力
+				Description: 引力场限制水平移动，并将你向下拉扯。
 			}
 		}
 
-		Cooldowns.LeonidEX: "\u72ee\u5b50\u5ea7\u7ec8\u7ed3\u80fd\u91cf"
+		Cooldowns.LeonidEX: 狮子座终结能量
 	}
 }

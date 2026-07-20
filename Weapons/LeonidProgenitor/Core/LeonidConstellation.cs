@@ -136,7 +136,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
 
             foreach (byte starID in tag.GetList<byte>("LeonidUnlockedStars"))
             {
-                if (Enum.IsDefined(typeof(LeonidStar), (int)starID) && starID != (byte)LeonidStar.Regulus)
+                if (Enum.IsDefined(typeof(LeonidStar), starID) && starID != (byte)LeonidStar.Regulus)
                     unlockedStars.Add((LeonidStar)starID);
             }
         }
