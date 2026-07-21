@@ -33,18 +33,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         private static readonly int[] DefaultLeftClickProgressDamage =
         {
             21, // Initial / 初始
-            31, // Eye of Cthulhu / 克苏鲁之眼
-            35, // Evil Boss / 腐化或猩红 Boss T2
-            45, // Skeletron / 骷髅王
-            50, // Hardmode / 困难模式
-            56, // Any Mechanical Boss / 任意机械 Boss
-            63, // Plantera / 世纪之花
-            68, // Golem / 石巨人
-            69, // Moon Lord / 月亮领主
-            70, // Providence / 亵渎天神
-            90, // Polterghast / 噬魂幽花
-            101, // Devourer of Gods / 神明吞噬者
-            113, // Yharon / 犽戎
+            29, // Eye of Cthulhu / 克苏鲁之眼
+            33, // Evil Boss / 腐化或猩红 Boss T2
+            41, // Skeletron / 骷髅王
+            45, // Hardmode / 困难模式
+            50, // Any Mechanical Boss / 任意机械 Boss
+            55, // Plantera / 世纪之花
+            60, // Golem / 石巨人
+            62, // Moon Lord / 月亮领主
+            64, // Providence / 亵渎天神
+            77, // Polterghast / 噬魂幽花
+            81, // Devourer of Gods / 神明吞噬者
+            93, // Yharon / 犽戎
             125 // Exo Mechs and Supreme Calamitas / 星流巨械与至尊灾厄
         };
 
@@ -54,17 +54,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             16, // Initial / 初始
             21, // Eye of Cthulhu / 克苏鲁之眼
             28, // Evil Boss / 腐化或猩红 Boss T2
-            35, // Skeletron / 骷髅王
-            50, // Hardmode / 困难模式
-            63, // Any Mechanical Boss / 任意机械 Boss
-            80, // Plantera / 世纪之花
-            90, // Golem / 石巨人
-            105, // Moon Lord / 月亮领主
-            113, // Providence / 亵渎天神
-            125, // Polterghast / 噬魂幽花
-            159, // Devourer of Gods / 神明吞噬者
-            250, // Yharon / 犽戎
-            416 // Exo Mechs and Supreme Calamitas / 星流巨械与至尊灾厄
+            30, // Skeletron / 骷髅王
+            45, // Hardmode / 困难模式
+            56, // Any Mechanical Boss / 任意机械 Boss
+            70, // Plantera / 世纪之花
+            81, // Golem / 石巨人
+            95, // Moon Lord / 月亮领主
+            103, // Providence / 亵渎天神
+            112, // Polterghast / 噬魂幽花
+            142, // Devourer of Gods / 神明吞噬者
+            225, // Yharon / 犽戎
+            377 // Exo Mechs and Supreme Calamitas / 星流巨械与至尊灾厄
         };
 
         // 迫击炮模式倍率
@@ -131,7 +131,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             3.25f, // EffectID 37: Yharon Soul Fragment / 龙魂碎片
             2.72f, // EffectID 38: Exo Prism / 星流棱晶
             2.69f, // EffectID 39: Ashes of Annihilation / 湮灭余烬
-            2.80f, // EffectID 40: Armored Shell / 装甲外壳
+            2.87f, // EffectID 40: Armored Shell / 装甲外壳
             0.42f, // EffectID 41: Pearl Shard / 珍珠碎片
             2.64f, // EffectID 42: Darksun Fragment / 日蚀之阴碎片
             4.00f, // EffectID 43: Cynosure / 填 0 = 使用阶段默认倍率；填正数 n = 最终伤害倍率为 (1+n)，例如填 1.5 = 2.5 倍

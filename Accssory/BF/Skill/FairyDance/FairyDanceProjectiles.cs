@@ -475,7 +475,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.FairyDance
         private void FireRainbowBolt(Player owner, Vector2 target)
         {
             Vector2 velocity = (target - Projectile.Center).SafeNormalize(Vector2.UnitX * owner.direction) * 28f;
-            int damage = Math.Max(1, (int)owner.GetTotalDamage(DamageClass.Ranged).ApplyTo(60f));
+            int damage = Math.Max(1, (int)owner.GetTotalDamage(DamageClass.Ranged).ApplyTo(135f));
             int index = Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
                 Projectile.Center,
@@ -637,7 +637,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.FairyDance
             Texture2D pixel = TextureAssets.MagicPixel.Value;
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Color color = Main.hslToRgb((float)(Main.GlobalTimeWrappedHourly * 0.6f + Projectile.identity * 0.17f) % 1f, 1f, 0.65f);
-            // 颜色包边：外层更宽的 A=0 加法光边
+            // 颜色包边：外层更宽的 A=0 加法光边damage
             Main.EntitySpriteDraw(pixel, Projectile.Center - Main.screenPosition - direction * 21f, null, (color with { A = 0 }) * 0.55f, Projectile.rotation, new Vector2(0f, 0.5f), new Vector2(42f, 7f), SpriteEffects.None);
             Main.EntitySpriteDraw(pixel, Projectile.Center - Main.screenPosition - direction * 18f, null, color * 0.8f, Projectile.rotation, new Vector2(0f, 0.5f), new Vector2(36f, 4f), SpriteEffects.None);
             Main.EntitySpriteDraw(pixel, Projectile.Center - Main.screenPosition - direction * 10f, null, Color.White, Projectile.rotation, new Vector2(0f, 0.5f), new Vector2(20f, 1.5f), SpriteEffects.None);

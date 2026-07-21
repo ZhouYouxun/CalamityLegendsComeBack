@@ -13,7 +13,7 @@ Mods: {
 					ZoomEnabled: Enabled
 					ZoomDisabled: Disabled
 					LegendaryHint: Hold Shift to view all unlocked upgrades and legendary text
-					LatestUnlockPrefix: "Latest Upgrade: {0}"
+					LatestUnlockPrefix: Latest Upgrade: {0}
 					Stage0: .408 proprietary round: extreme velocity with partial armor penetration
 					Stage1: Eye of Cthulhu executed: hits inflict Marked for Death and strip more defense
 					Stage2: Eater of Worlds or Brain of Cthulhu executed: impacts form a metal jet through the target

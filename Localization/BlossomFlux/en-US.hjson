@@ -332,6 +332,7 @@ Mods: {
 				BFEXConvergingLeaf.DisplayName: B F E X Converging Leaf
 				BFEXConvergingWisp.DisplayName: B F E X Converging Wisp
 				BFRightChargeHaloProj.DisplayName: Charge Halo
+				BFBombardCallSpear.DisplayName: B F Bombard Call Spear
 			}
 
 			Ranged: {
