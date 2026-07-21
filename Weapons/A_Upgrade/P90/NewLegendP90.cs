@@ -16,7 +16,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.P90
         internal const int ReloadConsumeCount = 10;
         internal const int ReloadFrames = 20;
         internal const int RollFrames = 30;
-        internal const int RollCooldownFrames = 7 * 60;
+        internal const int RollCooldownFrames = (int)(1.5f * 60);
         internal const int DodgeEmpowerFrames = 3 * 60;
 
         private static int HoldoutType => ModContent.ProjectileType<NewLegendP90Holdout>();

@@ -13,7 +13,8 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
     // BOSS-HELD WEAPON FRAMEWORK
     // Ported from the anchor/easing/damage-gate design of CalamityMod's BaseCustomUseStyleProjectile, adapted for NPCs:
     //   - The weapon is its own projectile, pinned every frame to the anchor NPC (ai[0] = npc.whoAmI).
-    //   - The sprite rotates around its HANDLE (bottom-left of the item sprite), like a hand gripping it.
+    //   - Melee/staff sprites rotate around their HANDLE (bottom-left of the item sprite), like a hand gripping it;
+    //     guns and bows (useStyle Shoot) instead pivot at the sprite centre along the aim, per IsHoldoutStyle.
     //   - FinalRotation = BaseRotation (aim) + RotationOffset (animation). Blade direction == FinalRotation.
     //   - Damage is gated by CanHit and collides along the blade via a projected hitbox (Colliding, hostile-vs-player).
     //
@@ -120,6 +121,26 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         /// <summary>World position at dist pixels along the blade — for edge particles.</summary>
         public Vector2 BladePoint(float dist) => Projectile.Center + new Vector2(dist, 0f).RotatedBy(FinalRotation);
 
+        /// <summary>
+        /// True when the item's art is already drawn along its firing line instead of up-right at 45°.
+        /// Calamity splits its own holdouts the same way: <see cref="ItemUseStyleID.Shoot"/> weapons (guns AND bows)
+        /// go through BaseGunHoldoutProjectile, which draws them at the raw aim angle with the pivot in the middle
+        /// of the sprite and mirrors them vertically when aiming left. Everything else (swords, spears, staves,
+        /// rogue gear) is an ordinary item sprite pointing up-right, gripped by its handle — that one gets the +45°.
+        /// Reading useStyle per item is what keeps this honest: 90 of the weapons this framework holds are Shoot
+        /// style, and tilting a gun 45° off its own barrel is visible from across the arena.
+        /// </summary>
+        public bool IsHoldoutStyle
+        {
+            get
+            {
+                int itemType = LegendsWeaponBossRegistry.GetItemType(WeaponName);
+                return itemType > 0
+                    && ContentSamples.ItemsByType.TryGetValue(itemType, out Item sample)
+                    && sample.useStyle == ItemUseStyleID.Shoot;
+            }
+        }
+
         public override bool PreDraw(ref Color lightColor)
         {
             int itemType = LegendsWeaponBossRegistry.GetItemType(WeaponName);
@@ -130,10 +151,19 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             if (tex == null)
                 return false;
 
-            // Item sprites point up-right (blade at -45°); rotating the sprite by aim+45° puts the blade on FinalRotation.
-            // Origin at the bottom-left = the handle, so everything pivots around the grip.
-            Vector2 origin = new(0f, tex.Height);
-            float drawRot = FinalRotation + MathHelper.PiOver4;
+            // Animated items (MirrorBlade, DarkSpark, TheStorm, TelluricGlare...) are vertical sheets. Passing null
+            // as the source rect draws every frame stacked into one smear, so pull the live frame the same way
+            // the inventory does.
+            Rectangle frame = itemType < Main.itemAnimations.Length && Main.itemAnimations[itemType] != null
+                ? Main.itemAnimations[itemType].GetFrame(tex)
+                : tex.Frame();
+
+            // How the art is drawn decides how it is held — see IsHoldoutStyle.
+            bool holdout = IsHoldoutStyle;
+            Vector2 origin = holdout ? frame.Size() * 0.5f : new Vector2(0f, frame.Height);
+            float drawRot = holdout ? FinalRotation : FinalRotation + MathHelper.PiOver4;
+            SpriteEffects effects = holdout && MathF.Cos(FinalRotation) < 0f ? SpriteEffects.FlipVertically : SpriteEffects.None;
+
             Vector2 drawPos = Projectile.Center - Main.screenPosition;
             float scale = SpriteScale * Anchor.scale;
             float opacity = Projectile.Opacity * Anchor.Opacity;
@@ -145,7 +175,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 {
                     float ghostRot = drawRot - TrailStep * i;
                     Color ghostColor = GlowColor * MotionGhost * (1f - i / 5f) * opacity;
-                    Main.EntitySpriteDraw(tex, drawPos, null, ghostColor, ghostRot, origin, scale, SpriteEffects.None);
+                    Main.EntitySpriteDraw(tex, drawPos, frame, ghostColor, ghostRot, origin, scale, effects);
                 }
             }
 
@@ -155,9 +185,9 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             for (int i = 0; i < 12; i++)
             {
                 Vector2 off = (MathHelper.TwoPi * i / 12f).ToRotationVector2() * 3.5f;
-                Main.EntitySpriteDraw(tex, drawPos + off, null, glow, drawRot, origin, scale, SpriteEffects.None);
+                Main.EntitySpriteDraw(tex, drawPos + off, frame, glow, drawRot, origin, scale, effects);
             }
-            Main.EntitySpriteDraw(tex, drawPos, null, Color.White * opacity, drawRot, origin, scale, SpriteEffects.None);
+            Main.EntitySpriteDraw(tex, drawPos, frame, Color.White * opacity, drawRot, origin, scale, effects);
             return false;
         }
     }

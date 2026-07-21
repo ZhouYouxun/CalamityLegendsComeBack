@@ -39,8 +39,8 @@ Mods: {
 						'''
 					BB_Right_DefaultShuriken:
 						'''
-						[c/FFB347:右键：丢出一发潮汐手里剑，切割敌人。]
-						[c/FFB347:满潮时，手里剑可追踪敌人。]
+						[c/FFB347:右键：化作潮汐短冲刺。]
+						[c/FFB347:撞击第一个敌人后会反向弹开一次。]
 						'''
 					BB_Right_LostGarment:
 						'''
@@ -49,8 +49,8 @@ Mods: {
 						'''
 					BB_Right_CeruleanShield:
 						'''
-						[c/FFB347:右键：碧蓝护盾将攻击改为反弹突进。]
-						[c/FFB347:撞击敌人会向外爆发，并缩短突进冷却。]
+						[c/FFB347:右键：碧蓝护盾会生成随身泡泡盾。]
+						[c/FFB347:泡泡盾可以拦截敌对弹幕，破裂后提供短暂无敌。]
 						'''
 					BB_Right_VortexPortal:
 						'''
@@ -84,6 +84,7 @@ Mods: {
 					Dash4_Unlock: "[c/66FFAA:已解锁：大招【潮狱处刑】]"
 					Dash4_Lock: "[c/FFB347:大招【潮狱处刑】当前大招未解锁。]"
 					BB_Final: "[c/9FD8A2:大招【潮狱处刑】满潮且大招就绪时，按传奇技能键标记猎物；左键确认处刑。]"
+					UltimateOutOfRange: 超出范围
 					LegendaryHint: "[c/6C8EFF:按住Shift键以读取记录]"
 					LegendaryText:
 						'''

@@ -39,8 +39,8 @@ Mods: {
 						'''
 					BB_Right_DefaultShuriken:
 						'''
-						[c/FFB347:Right Click: throw a tide shuriken to cut through enemies.]
-						[c/FFB347:At full tide, the shuriken can home in on enemies.]
+						[c/FFB347:Right Click: perform a tide short dash.]
+						[c/FFB347:Striking the first enemy rebounds you once.]
 						'''
 					BB_Right_LostGarment:
 						'''
@@ -49,8 +49,8 @@ Mods: {
 						'''
 					BB_Right_CeruleanShield:
 						'''
-						[c/FFB347:Right Click: Cerulean Shield converts the attack into a rebound dash.]
-						[c/FFB347:Striking an enemy bursts outward and shortens the dash cooldown.]
+						[c/FFB347:Right Click: Cerulean Shield creates a bubble shield around you.]
+						[c/FFB347:The bubble shield blocks hostile projectiles and grants brief immunity when it bursts.]
 						'''
 					BB_Right_VortexPortal:
 						'''
@@ -84,6 +84,7 @@ Mods: {
 					Dash4_Unlock: "[c/66FFAA:Unlocked: EX Skill「Tidal Jail Execution」]"
 					Dash4_Lock: "[c/FFB347:EX Skill「Tidal Jail Execution」locked (Equip Legendary Emblem to unlock)]"
 					BB_Final: "[c/9FD8A2:At full tide, press the Legendary Skill key to mark prey; left click confirms the execution.]"
+					UltimateOutOfRange: Out of Range
 					LegendaryHint: "[c/6C8EFF:Hold Shift to read the record]"
 					LegendaryText:
 						'''

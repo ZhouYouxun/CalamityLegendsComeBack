@@ -8,7 +8,7 @@ Mods: {
 					LeftClick: Left-click fully automatic fire from a fixed fifty-round magazine
 					Conversion: Converts Musket Balls into 5.7x28mm personal defense rounds
 					Reload: Reloading spends ten special bullets to load fifty shots
-					Roll: Right-click rolls horizontally; the first 30 frames grant immunity, with a 7-second cooldown
+					Roll: Right-click dashes backward rapidly; the first 30 frames grant immunity, stops on hitting enemies, with a 1.5-second cooldown
 					Dodge: Touching any hostile projectile during the roll counts as a successful dodge
 					Empower: A successful dodge empowers bullets with golden energy for 3 seconds, increasing damage by 20%
 					Modes: Close targets triple knockback; distant targets make bullets home

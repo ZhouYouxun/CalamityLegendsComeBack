@@ -1,3 +1,4 @@
+using CalamityMod.Items.Materials;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -21,6 +22,17 @@ namespace CalamityLegendsComeBack.Accssory.TS
         public override void UpdateAccessory(Player player, bool hideVisual)
         {
             player.GetModPlayer<AzureThunderAccessoryPlayer>().QianDingWanDingEquipped = true;
+        }
+
+        public override void AddRecipes()
+        {
+            CreateRecipe()
+                .AddIngredient<YiGanYiYing>()
+                .AddIngredient<LifeAlloy>(5)
+                .AddIngredient<LivingShard>(5)
+                .AddIngredient(ItemID.ChlorophyteBar, 8)
+                .AddTile(TileID.MythrilAnvil)
+                .Register();
         }
     }
 }

@@ -397,7 +397,9 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
         public override void AI()
         {
-            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
+            // DazzlingStabberStaff is an item sprite with its point in the top-right corner — +45°, not +90°,
+            // puts the spear tip on the flight path.
+            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
             if (Main.rand.NextBool(2))
             {
                 Dust d = Dust.NewDustPerfect(Projectile.Center, DustID.GoldFlame, -Projectile.velocity * 0.06f, 100, default, 1f);
@@ -700,11 +702,14 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D tex = ModContent.Request<Texture2D>(Texture).Value;
-            Vector2 origin = tex.Size() * 0.5f;
+            // DarkSpark is an ANIMATED item: Calamity registers DrawAnimationVertical(_, 4), so its PNG is a
+            // 38x184 four-frame sheet — a null source rect drew all four stacked.
+            Rectangle frame = tex.Frame(1, 4, 0, (int)(Main.GameUpdateCount / 6) % 4);
+            Vector2 origin = frame.Size() * 0.5f;
             Vector2 pos = Projectile.Center - Main.screenPosition;
             bool armed = Projectile.localAI[0] >= TelegraphTime;
-            ProvFx.DrawBackglow(Main.spriteBatch, tex, pos, null, Projectile.rotation, origin, Projectile.scale, new Color(160, 60, 220));
-            Main.spriteBatch.Draw(tex, pos, null, Color.White, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0f);
+            ProvFx.DrawBackglow(Main.spriteBatch, tex, pos, frame, Projectile.rotation, origin, Projectile.scale, new Color(160, 60, 220));
+            Main.spriteBatch.Draw(tex, pos, frame, Color.White, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0f);
             if (armed)
             {
                 Texture2D pixel = TextureAssets.MagicPixel.Value;
@@ -730,7 +735,9 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
         public override void AI()
         {
-            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
+            // GalactusBlade is an item sprite: its tip is in the top-RIGHT corner, so it lines up with the fall
+            // direction at +45°. +PiOver2 had the meteor blade flying a quarter-turn sideways.
+            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
             if (Main.rand.NextBool(2))
             {
                 Dust d = Dust.NewDustPerfect(Projectile.Center, DustID.GoldFlame, -Projectile.velocity * 0.06f, 100, default, 1f);

@@ -97,9 +97,18 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             }
 
             // 软 bloom（低亮度）+ 细核心流线——注意：无白色高亮核心，这是与威胁弹的关键区分
+            // BloomCircle 是一张【没有 alpha 通道】的纯加法贴图：底色是不透明黑，只有加法混合下黑色才不贡献颜色。
+            // 以前这里在默认的 AlphaBlend 批次里画它，于是每一枚陪跑弹身上都糊了一个半透明黑方块。
+            // 灾厄自己（CalamityPlayerDrawEffects）也是先 Begin(BlendState.Additive) 再画这张图的。
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Vector2 screen = Projectile.Center - Main.screenPosition;
-            Main.spriteBatch.Draw(bloom, screen, null, tint * 0.6f, 0f, bloom.Size() * 0.5f, 0.09f, SpriteEffects.None, 0f);
+            SpriteBatch sb = Main.spriteBatch;
+            sb.End();
+            sb.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            sb.Draw(bloom, screen, null, tint * 0.6f, 0f, bloom.Size() * 0.5f, 0.09f, SpriteEffects.None, 0f);
+            sb.End();
+            sb.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+
             Main.spriteBatch.DrawLineBetter(
                 Projectile.Center - forward * 7f, Projectile.Center + forward * 5f, tint, 1.6f);
 

@@ -8,7 +8,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.FairyDance
 {
     public sealed class FairyDance : ModItem
     {
-        public override string Texture => "CalamityLegendsComeBack/Accssory/BF/General/BFTunedQuiver";
+        public override string Texture => "CalamityLegendsComeBack/Accssory/BF/Skill/FairyDance/妖精舞";
 
         public override void SetDefaults()
         {
@@ -48,7 +48,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.FairyDance
 
     public sealed class RainbowSpiritDance : ModItem
     {
-        public override string Texture => "CalamityLegendsComeBack/Accssory/BF/General/BFDominationQuiver";
+        public override string Texture => "CalamityLegendsComeBack/Accssory/BF/Skill/FairyDance/虹灵";
 
         public override void SetDefaults()
         {

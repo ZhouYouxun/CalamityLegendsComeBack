@@ -15,7 +15,10 @@ namespace CalamityLegendsComeBack
             Instance = this;
         }
 
-        [Header("RecipeSettings")]
+        [BackgroundColor(20, 93, 160, 210)]
+        [DefaultValue(true)]
+        public bool AllowWheelSlowdown;
+
         [BackgroundColor(20, 93, 160, 210)]
         [DefaultValue(true)]
         [ReloadRequired]
@@ -34,6 +37,10 @@ namespace CalamityLegendsComeBack
         [DefaultValue(true)]
         [ReloadRequired]
         public bool AllowBossSummonShop;
+
+        [BackgroundColor(20, 93, 160, 210)]
+        [DefaultValue(false)]
+        public bool GiveQuickStartBoxOnSpawn;
 
         [Header("DraedonTechnology")]
         [BackgroundColor(20, 93, 160, 210)]

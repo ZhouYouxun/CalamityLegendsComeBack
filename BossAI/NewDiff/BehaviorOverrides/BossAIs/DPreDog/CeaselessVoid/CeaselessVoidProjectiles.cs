@@ -139,9 +139,13 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D tex = ModContent.Request<Texture2D>(Texture).Value;
-            Vector2 origin = tex.Size() * 0.5f;
-            VoidFx.DrawBackglow(Main.spriteBatch, tex, Projectile.Center - Main.screenPosition, null, Projectile.rotation, origin, 1f, new Color(160, 60, 220));
-            Main.spriteBatch.Draw(tex, Projectile.Center - Main.screenPosition, null, Color.White, Projectile.rotation, origin, 1f, SpriteEffects.None, 0f);
+            // MirrorBlade is an ANIMATED item: Calamity registers it as DrawAnimationVertical(_, 5), so its PNG is a
+            // 114x640 five-frame sheet. Drawing it with a null source rect stacked all five blades into one
+            // 640px-tall smear. Slice a single frame out instead.
+            Rectangle frame = tex.Frame(1, 5, 0, (int)(Main.GameUpdateCount / 6) % 5);
+            Vector2 origin = frame.Size() * 0.5f;
+            VoidFx.DrawBackglow(Main.spriteBatch, tex, Projectile.Center - Main.screenPosition, frame, Projectile.rotation, origin, 1f, new Color(160, 60, 220));
+            Main.spriteBatch.Draw(tex, Projectile.Center - Main.screenPosition, frame, Color.White, Projectile.rotation, origin, 1f, SpriteEffects.None, 0f);
             return false;
         }
     }
@@ -239,11 +243,14 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D tex = ModContent.Request<Texture2D>(Texture).Value;
-            Vector2 origin = tex.Size() * 0.5f;
+            // DarkSpark is an ANIMATED item: Calamity registers DrawAnimationVertical(_, 4), so its PNG is a
+            // 38x184 four-frame sheet — a null source rect drew all four stacked.
+            Rectangle frame = tex.Frame(1, 4, 0, (int)(Main.GameUpdateCount / 6) % 4);
+            Vector2 origin = frame.Size() * 0.5f;
             Vector2 pos = Projectile.Center - Main.screenPosition;
             bool armed = Projectile.localAI[0] >= TelegraphTime;
-            VoidFx.DrawBackglow(Main.spriteBatch, tex, pos, null, Projectile.rotation, origin, 1f, new Color(160, 60, 220));
-            Main.spriteBatch.Draw(tex, pos, null, Color.White, Projectile.rotation, origin, 1f, SpriteEffects.None, 0f);
+            VoidFx.DrawBackglow(Main.spriteBatch, tex, pos, frame, Projectile.rotation, origin, 1f, new Color(160, 60, 220));
+            Main.spriteBatch.Draw(tex, pos, frame, Color.White, Projectile.rotation, origin, 1f, SpriteEffects.None, 0f);
             if (armed)
             {
                 Texture2D pixel = TextureAssets.MagicPixel.Value;
@@ -312,7 +319,8 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             Vector2 perp = new(-baseDir.Y, baseDir.X);
             float wave = MathF.Sin(Projectile.localAI[0] * 0.15f + Projectile.ai[2]) * 3.6f;
             Projectile.velocity = baseDir * 11f + perp * wave;
-            Projectile.rotation = Projectile.velocity.ToRotation();
+            // Mistlestorm is an item sprite pointing up-right; the leaf blade needs +45° to ride its own flight path.
+            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
             if (Main.rand.NextBool(2))
             {
                 Dust d = Dust.NewDustPerfect(Projectile.Center, DustID.PurpleTorch, -Projectile.velocity * 0.06f, 100, default, 0.85f);

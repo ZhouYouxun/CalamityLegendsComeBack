@@ -142,16 +142,17 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.P90
             return true;
         }
 
-        public bool TryStartRoll(Item weapon, int direction)
+        public bool TryStartRoll(Item weapon, int inputDirection)
         {
             if (DashCooldownTimer > 0 || IsRolling || Player.dead || Player.CCed || Player.mount.Active)
                 return false;
 
-            direction = direction == 0 ? Math.Sign(Player.direction) : Math.Sign(direction);
-            if (direction == 0)
-                direction = 1;
+            // 向后转移：如果玩家面向右(1)，则向左(-1)退；如果面向左(-1)，则向右(1)退
+            int rollDir = -Player.direction;
+            if (rollDir == 0)
+                rollDir = -1;
 
-            RollDirection = direction;
+            RollDirection = rollDir;
             RollTimer = NewLegendP90.RollFrames;
             DashCooldownTimer = NewLegendP90.RollCooldownFrames;
             dodgedHostileProjectileThisRoll = false;
@@ -178,6 +179,15 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.P90
             return true;
         }
 
+        public void StopRollOnHit()
+        {
+            if (IsRolling)
+            {
+                RollTimer = 0;
+                Player.fullRotation = 0f;
+            }
+        }
+
         private void UpdateRoll()
         {
             if (RollTimer <= 0)
@@ -189,15 +199,17 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.P90
             int elapsed = NewLegendP90.RollFrames - RollTimer;
             float progress = elapsed / (float)NewLegendP90.RollFrames;
             Player.fullRotationOrigin = Player.Size * 0.5f;
+            // 保持原本朝向，旋转方向跟着退防方向
             Player.fullRotation = RollDirection * MathHelper.TwoPi * 2f * progress * Player.gravDir;
-            Player.direction = RollDirection;
             Player.noKnockback = true;
             Player.immune = true;
             Player.immuneNoBlink = true;
             Player.immuneTime = Math.Max(Player.immuneTime, 2);
             Player.GiveUniversalIFrames(2, false);
             Player.fallStart = (int)(Player.position.Y / 16f);
-            Player.velocity.X = RollDirection * 16.8f;
+
+            // 迅速向后突进
+            Player.velocity.X = RollDirection * 18.5f;
             if (Player.velocity.Y > 1.2f)
                 Player.velocity.Y = 1.2f;
 

@@ -224,8 +224,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             bool convertToLeaf = arrowConversion ? convertWoodenArrow : true;
             int finalProjectileType = convertToLeaf ? ModContent.ProjectileType<BFLeafProj>() : projectileType;
             float projectileSpeed = speed;
-            Vector2 visualVelocity = direction * Owner.HeldItem.shootSpeed * 0.55f;
-            Projectile.velocity = visualVelocity;
+            // 弓不做武器后坐力：holdout 没有关闭引擎位移，velocity 塞大数值会让弓每枪前冲回弹，只同步单位朝向
+            Projectile.velocity = direction;
 
             for (int i = 0; i < 3; i++)
             {
@@ -367,7 +367,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 float speedY = mouseYDist + Main.rand.Next(-120, 121) * 0.01f;
                 float progress = arrowCount <= 1 ? 0f : i / (arrowCount - 1f);
                 float fallSpeedScale = MathHelper.Lerp(0.9f, 0.78f, progress);
-                SpawnBombardStormArrow(source, realPlayerPos, new Vector2(speedX, speedY * fallSpeedScale), projectileType, damage, knockback, stats);
+                SpawnBombardStormArrow(source, realPlayerPos, new Vector2(speedX, speedY * fallSpeedScale), damage, knockback);
             }
 
             SpawnSHPCLeftMuzzleParticles(GetCurrentMouseWorld(), Vector2.UnitY * Owner.gravDir, CurrentPreset, 0.92f);
@@ -399,15 +399,30 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             SpawnSHPCLeftMuzzleParticles(target, Vector2.UnitY * Owner.gravDir, CurrentPreset, 1.08f);
         }
 
-        private void SpawnBombardStormArrow(IEntitySource source, Vector2 spawnPosition, Vector2 velocity, int projectileType, int damage, float knockback, BFBombardLeftStats stats)
+        private void SpawnBombardStormArrow(IEntitySource source, Vector2 spawnPosition, Vector2 velocity, int damage, float knockback)
         {
-            int projectileIndex = SpawnLeftProjectile(source, spawnPosition, velocity, projectileType, damage, knockback, CurrentPreset);
-            if (!BFArrowCommon.InBounds(projectileIndex, Main.maxProjectiles) || Main.projectile[projectileIndex].type != ModContent.ProjectileType<BFLeafProj>())
+            // 借亵渎矛的收束后加速节奏，但实体、叶片和爆点全部保留为叶流自己的呼叫落矛。
+            int projectileIndex = Projectile.NewProjectile(
+                source,
+                spawnPosition,
+                velocity,
+                ModContent.ProjectileType<BFBombardCallSpear>(),
+                damage,
+                knockback,
+                Owner.whoAmI);
+            if (!BFArrowCommon.InBounds(projectileIndex, Main.maxProjectiles))
                 return;
 
-            Main.projectile[projectileIndex].ai[1] = stats.ExplosionsPerArrow;
-            Main.projectile[projectileIndex].scale *= stats.ExplosionRadiusMultiplier;
-            Main.projectile[projectileIndex].netUpdate = true;
+            Projectile rainSpear = Main.projectile[projectileIndex];
+            rainSpear.friendly = true;
+            rainSpear.hostile = false;
+            rainSpear.DamageType = DamageClass.Ranged;
+            rainSpear.noDropItem = true;
+            rainSpear.netUpdate = true;
+
+            BFAccessoryGlobalProjectile accessoryEffect = rainSpear.GetGlobalProjectile<BFAccessoryGlobalProjectile>();
+            accessoryEffect.BlossomFluxArrow = true;
+            accessoryEffect.Preset = BlossomFluxChloroplastPresetType.Chlo_DBomb;
         }
 
         private void FirePlagueReapers(IEntitySource source, int projectileType, float speed, int damage, float knockback)

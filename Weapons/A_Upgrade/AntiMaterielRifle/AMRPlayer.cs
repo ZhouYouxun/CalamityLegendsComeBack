@@ -154,7 +154,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             rotationRecoveryTimer = 12;
             Player.ChangeDir(direction);
             Player.dashTime = 0;
-            Player.dashDelay = 1;
+            Player.dashDelay = AMRBalance.SlideCooldownFrames;
             Player.Calamity().dashTimeMod = 0;
             Player.Calamity().GeneralScreenShakePower = 3f;
             SpawnSlideStartEffects();
@@ -187,12 +187,15 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
                 Player.immuneTime = System.Math.Max(Player.immuneTime, 2);
                 Player.fallStart = (int)(Player.position.Y / 16f);
                 Player.dashTime = 0;
-                Player.dashDelay = System.Math.Max(Player.dashDelay, 1);
+                Player.dashDelay = AMRBalance.SlideCooldownFrames;
                 Player.Calamity().dashTimeMod = 0;
                 Player.fullRotation = -0.22f * slideDirection.X * Player.gravDir;
                 Player.fullRotationOrigin = Player.Size * 0.5f;
                 slideVisualAge++;
                 SpawnSlideTrailEffects();
+
+                CheckSlideCollision();
+
                 slideTimer--;
 
                 if (slideTimer <= 0)
@@ -208,6 +211,50 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
 
             if (!holdingWeapon && calibrationTimer <= 0)
                 ResetCalibration();
+        }
+
+        private void CheckSlideCollision()
+        {
+            Rectangle hitArea = Player.getRect();
+            hitArea.Inflate(8, 8);
+
+            foreach (NPC n in Main.ActiveNPCs)
+            {
+                if (Player.dontHurtCritters && NPCID.Sets.CountsAsCritter[n.type])
+                    continue;
+
+                if (!n.dontTakeDamage && !n.friendly && n.Calamity().dashImmunityTime[Player.whoAmI] <= 0)
+                {
+                    if (hitArea.Intersects(n.getRect()) && (n.noTileCollide || Player.CanHit(n)))
+                    {
+                        n.Calamity().dashImmunityTime[Player.whoAmI] = 12;
+                        Player.GiveImmuneTimeForCollisionAttack(12);
+
+                        if (Main.myPlayer == Player.whoAmI)
+                        {
+                            int dashDamage = (int)Player.GetTotalDamage<RangedDamageClass>().ApplyTo(Player.GetWeaponDamage(Player.HeldItem) * 2.5f);
+                            TriggerSlideExplosion(n.Center, dashDamage);
+                        }
+                    }
+                }
+            }
+        }
+
+        private void TriggerSlideExplosion(Vector2 center, int damage)
+        {
+            Player.Calamity().GeneralScreenShakePower = 8f;
+
+            int proj = Projectile.NewProjectile(
+                Player.GetSource_FromThis(),
+                center,
+                Vector2.Zero,
+                ModContent.ProjectileType<AMRSlideExplosion>(),
+                damage,
+                8f,
+                Player.whoAmI);
+
+            if (Main.projectile.IndexInRange(proj))
+                Main.projectile[proj].CritChance = Player.GetWeaponCrit(Player.HeldItem);
         }
 
         private void SpawnSlideStartEffects()

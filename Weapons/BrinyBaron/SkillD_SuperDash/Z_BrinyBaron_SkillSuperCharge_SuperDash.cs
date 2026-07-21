@@ -29,8 +29,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
         }
 
         private const int ChargeFrames = 120;
-        private const int ChargeSearchInterval = 6;
-        private const int LockSearchInterval = 10;
         private const int TeleportWindupFrames = 1;
         private const int NormalStrikeCount = 24;
         private const int StartingStrikeFrames = 15;
@@ -71,7 +69,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
         private int totalStrikes;
         private int strikeIndex;
         private int targetNpcIndex = -1;
-        private int targetSearchCooldown;
         private bool initialized;
         private bool hadLockedTarget;
         private bool impactTriggeredThisStrike;
@@ -146,7 +143,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             writer.Write(totalStrikes);
             writer.Write(strikeIndex);
             writer.Write(targetNpcIndex);
-            writer.Write(targetSearchCooldown);
             writer.Write(initialized);
             writer.Write(hadLockedTarget);
             writer.Write(impactTriggeredThisStrike);
@@ -170,7 +166,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             totalStrikes = reader.ReadInt32();
             strikeIndex = reader.ReadInt32();
             targetNpcIndex = reader.ReadInt32();
-            targetSearchCooldown = reader.ReadInt32();
             initialized = reader.ReadBoolean();
             hadLockedTarget = reader.ReadBoolean();
             impactTriggeredThisStrike = reader.ReadBoolean();
@@ -204,9 +199,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             UpdateFocusPoint(owner);
             DecayExecutionGlow();
             MaintainCameraLock(owner);
-
-            if (targetSearchCooldown > 0)
-                targetSearchCooldown--;
 
             NPC target = ResolveTarget(owner);
 
@@ -284,7 +276,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             strikeIndex = 0;
             totalStrikes = NormalStrikeCount;
             targetNpcIndex = -1;
-            targetSearchCooldown = 0;
             hadLockedTarget = false;
             impactTriggeredThisStrike = false;
             finishedNormally = false;
@@ -323,20 +314,19 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
         private NPC ResolveTarget(Player owner)
         {
             // ===== 闂備礁銇樼粈渚€鎮炬ィ鍐ㄨЕ閹肩补鈧櫕閿柣鐘遍檷閸婃洜绱炵€ｎ喖绀堢€广儱娲︾粣妤呮煛瀹ュ懏绁紒閬嶄憾閹锋垿宕熼銏╂綕闂佸搫鐗忛崰搴ㄥ垂椤栫偛鐭楃€广儱鎷嬪Σ濠氭⒑閹绘帞校闁哄苯锕﹂幏鐘诲礋椤忓嫬鎸?=====
-            if (hadLockedTarget && phase != SuperDashPhase.Charging && !BBSuperDashTargeting.IsTargetValid(targetNpcIndex))
-                return null;
+            // ===== 一旦选定就咬死不放：无论跑多远、无论哪个阶段，只有目标死亡才会换 =====
+            if (BBSuperDashTargeting.IsTargetValid(targetNpcIndex))
+                return Main.npc[targetNpcIndex];
 
-            bool shouldKeepLockedTarget = hadLockedTarget && phase != SuperDashPhase.Charging;
-            if (Main.myPlayer == Projectile.owner && targetSearchCooldown <= 0 && !shouldKeepLockedTarget)
+            // ===== 目标死亡/尚未选定：立刻重新索敌，锁不到任何目标才返回 null =====
+            if (Main.myPlayer == Projectile.owner)
             {
-                int nextTarget = BBSuperDashTargeting.FindBestTargetIndex(owner, focusPoint, targetNpcIndex);
+                int nextTarget = BBSuperDashTargeting.FindBestTargetIndex(owner, focusPoint);
                 if (nextTarget != targetNpcIndex)
                 {
                     targetNpcIndex = nextTarget;
                     Projectile.netUpdate = true;
                 }
-
-                targetSearchCooldown = phase == SuperDashPhase.Charging ? ChargeSearchInterval : LockSearchInterval;
             }
 
             return CurrentTarget;

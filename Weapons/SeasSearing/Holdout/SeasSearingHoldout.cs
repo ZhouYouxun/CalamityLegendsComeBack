@@ -327,11 +327,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
         private bool FirePollutionRound(int burstIndex, int stage)
         {
-            // 检查是否持有特殊子弹（非火枪弹且非无子弹）
-            if (TryFireWithSpecialAmmo(burstIndex, stage))
-                return false;
-
-            // 无子弹或火枪弹 → 使用标准辐射弹幕
+            // 标准深渊污染弹幕
             float   speed = (24f + Math.Clamp(stage, 0, 5) * 2f) * SS_Balance.PollutionRoundSpeedMultiplier;
             Vector2 dir   = AimDirection;
             Vector2 vel   = dir.RotatedByRandom(MathHelper.ToRadians(0.65f + burstIndex * 0.22f)) * speed;
@@ -449,53 +445,6 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, 3.6f + sprayIndex * 1.1f);
             SpawnReleaseSprayVisuals(dir, sprayIndex);
             SeasSearingVisualUtility.PlayDeepShot(GunTipPosition, -0.18f + sprayIndex * 0.08f);
-        }
-
-        // 尝试使用背包中的特殊子弹开火，返回 true 表示已处理（跳过默认弹幕）
-        private bool TryFireWithSpecialAmmo(int burstIndex, int stage)
-        {
-            if (Main.myPlayer != Projectile.owner) return false;
-
-            // 扫描背包找到第一个非火枪弹的子弹类型
-            for (int i = 0; i < 58; i++)
-            {
-                Item ammoItem = Owner.inventory[i];
-                if (ammoItem.IsAir || ammoItem.ammo != AmmoID.Bullet) continue;
-                if (ammoItem.type == ItemID.MusketBall) continue; // 火枪弹 → 默认弹幕
-
-                // 找到特殊子弹，消耗一发并发射（附加辐射特效）
-                if (!Owner.PickAmmo(Owner.HeldItem, out int projType, out float speed, out _, out _, out int usedAmmoId))
-                    return false;
-                if (usedAmmoId == ItemID.MusketBall) return false;
-
-                Vector2 dir = AimDirection;
-                Vector2 vel = dir.RotatedByRandom(MathHelper.ToRadians(0.5f + burstIndex * 0.15f)) * speed;
-
-                int idx = Projectile.NewProjectile(
-                    Projectile.GetSource_FromThis(),
-                    GunTipPosition + dir * 8f,
-                    vel,
-                    projType,
-                    Projectile.damage,
-                    Projectile.knockBack,
-                    Projectile.owner);
-
-                if (Main.projectile.IndexInRange(idx))
-                {
-                    Main.projectile[idx].CritChance = Owner.GetWeaponCrit(Owner.HeldItem);
-                    // 标记为辐射子弹（用于击中时添加特效）
-                    Main.projectile[idx].GetGlobalProjectile<SeasSearingRadiationBulletGlobal>().IsRadiationBullet = true;
-                    Main.projectile[idx].netUpdate = true;
-                }
-
-                FireReconSoul(dir, burstIndex, stage);
-                SpawnRadiationBulletAura(dir, burstIndex);
-                ApplyRecoil(4.8f + burstIndex * 1.2f);
-                TriggerMuzzleFlash(12);
-                SeasSearingVisualUtility.PlayDeepShot(GunTipPosition, burstIndex * 0.06f - 0.1f);
-                return true;
-            }
-            return false;
         }
 
         // 辐射子弹的专属发射特效（辐射光环）
@@ -706,15 +655,21 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         private void FireSkyfinTorpedo()
         {
             Vector2 dir = AimDirection;
-            // The torpedo is dropped beneath the player first; its AI chooses and commits to the target later.
-            Vector2 vel = Vector2.UnitY.RotatedByRandom(MathHelper.ToRadians(5f)) * Main.rand.NextFloat(6.5f, 8.5f);
 
-            Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(),
-                Owner.MountedCenter + Vector2.UnitY * 8f, vel,
-                ModContent.ProjectileType<SkyfinTorpedo>(),
-                Projectile.damage, Projectile.knockBack * 0.6f, Projectile.owner,
-                Main.rand.NextFloat(-1f, 1f));
+            // Two torpedoes per deployment: they are dropped sideways off the aim line, one to each side,
+            // so the pair always straddles the player-to-cursor axis. Their AI commits to a target later.
+            for (int side = -1; side <= 1; side += 2)
+            {
+                Vector2 drop = dir.RotatedBy(MathHelper.PiOver2 * side);
+                Vector2 vel  = drop.RotatedByRandom(MathHelper.ToRadians(5f)) * Main.rand.NextFloat(6.5f, 8.5f);
+
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    Owner.MountedCenter + drop * 10f, vel,
+                    ModContent.ProjectileType<SkyfinTorpedo>(),
+                    Projectile.damage, Projectile.knockBack * 0.6f, Projectile.owner,
+                    Main.rand.NextFloat(-1f, 1f), drop.ToRotation());
+            }
 
             TriggerMuzzleFlash(10);
             SpawnMuzzleBurst(dir, 0, SeasSearingPalette.BiohazardLime);

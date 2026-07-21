@@ -8,7 +8,7 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.SeasSearing
 {
-    // A dropped torpedo: it sinks, aligns on the nearest hostile, then makes one committed run.
+    // A dropped torpedo: it coasts off its launch line, aligns on the nearest hostile, then makes one committed run.
     internal sealed class SkyfinTorpedo : ModProjectile
     {
         public override string Texture => "CalamityMod/Items/Weapons/Rogue/SkyfinBombers";
@@ -20,13 +20,16 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         private static readonly int TrailLength = 12;
 
         private float LaunchCurve => Projectile.ai[0];
+        // ai[1] is the launch line the holdout picked: perpendicular to the aim direction, one torpedo per side.
+        private Vector2 DropDirection => Projectile.ai[1].ToRotationVector2();
         private float Age => Projectile.localAI[0];
         private bool IsDashing => Projectile.localAI[1] > 0f;
 
         public override void SetStaticDefaults()
         {
             ProjectileID.Sets.TrailCacheLength[Type] = TrailLength;
-            ProjectileID.Sets.TrailingMode[Type]     = 0;
+            // Mode 2, not 0: PreDraw rotates each trail ghost by oldRot, and only mode 2+ actually records it.
+            ProjectileID.Sets.TrailingMode[Type]     = 2;
         }
 
         public override void SetDefaults()
@@ -51,18 +54,18 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             if (!IsDashing)
             {
                 NPC target = FindTarget();
-                Vector2 downward = Vector2.UnitY.RotatedBy(LaunchCurve * 0.08f);
+                Vector2 drop = DropDirection.RotatedBy(LaunchCurve * 0.08f);
 
-                // A real deployment first drops below the player instead of flying directly at the aim cursor.
+                // A real deployment first coasts off the aim line instead of flying directly at the aim cursor.
                 if (Age <= DropFrames)
-                    Projectile.velocity = Vector2.Lerp(Projectile.velocity, downward * 10f, 0.11f);
+                    Projectile.velocity = Vector2.Lerp(Projectile.velocity, drop * 10f, 0.11f);
                 else
                     Projectile.velocity *= 0.84f;
 
-                // The torpedo immediately faces the closest target while still physically dropping downward.
+                // The torpedo immediately faces the closest target while still physically drifting outward.
                 if (target != null)
                 {
-                    Vector2 aim = (target.Center - Projectile.Center).SafeNormalize(downward);
+                    Vector2 aim = (target.Center - Projectile.Center).SafeNormalize(drop);
                     SetVisualRotation(aim);
 
                     if (Age >= DropFrames + HoverFrames)
@@ -76,7 +79,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 }
                 else
                 {
-                    SetVisualRotation(Projectile.velocity.SafeNormalize(downward));
+                    SetVisualRotation(Projectile.velocity.SafeNormalize(drop));
                 }
             }
             else
@@ -151,7 +154,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 Main.EntitySpriteDraw(tex,
                     Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition,
                     null, tc, Projectile.oldRot[i],
-                    origin, Projectile.scale * MathHelper.Lerp(0.3f, 0.85f, t), SpriteEffects.None, 0);
+                    origin, Projectile.scale * MathHelper.Lerp(0.3f, 0.85f, t), FlipFor(Projectile.oldRot[i]), 0);
             }
 
             Color main = SeasSearingPalette.BiohazardLime;
@@ -159,7 +162,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition,
                 null, main * 0.58f, visualRotation, bloomOrigin, 0.09f, SpriteEffects.None, 0);
             Main.EntitySpriteDraw(tex, Projectile.Center - Main.screenPosition,
-                null, main, visualRotation, origin, Projectile.scale, SpriteEffects.None, 0);
+                null, main, visualRotation, origin, Projectile.scale, FlipFor(visualRotation), 0);
             return false;
         }
 
@@ -169,12 +172,20 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             SeasSearingVisualUtility.SpawnPressureRing(Projectile.Center, 2f, 12f, 10, SeasSearingPalette.ToxicGreen);
         }
 
-        // This custom torpedo draw uses the SkyfinBombers texture inverted relative to SkyfinNuke.
+        // The SkyfinBombers texture is drawn nose-right, dorsal-up. SkyfinNuke keeps it upright with vanilla's
+        // horizontal flip plus a Pi offset, but that offset makes rotation jump 180 degrees every time the
+        // torpedo crosses the vertical axis - which the trail below would then bake into oldRot. So here
+        // rotation stays the true heading and the sprite is mirrored vertically instead when the nose points
+        // left: same upright result, but a continuous angle history the trail ghosts can follow.
         private void SetVisualRotation(Vector2 direction)
         {
             Projectile.spriteDirection = Projectile.direction = (direction.X > 0f).ToDirectionInt();
-            Projectile.rotation = direction.ToRotation() + (Projectile.spriteDirection == 1 ? MathHelper.Pi : 0f);
+            Projectile.rotation = direction.ToRotation();
         }
+
+        // Nose pointing left means a bare rotation would render the fish belly-up; mirror it back over.
+        private static SpriteEffects FlipFor(float rotation) =>
+            MathF.Cos(rotation) < 0f ? SpriteEffects.FlipVertically : SpriteEffects.None;
 
         private NPC FindTarget()
         {

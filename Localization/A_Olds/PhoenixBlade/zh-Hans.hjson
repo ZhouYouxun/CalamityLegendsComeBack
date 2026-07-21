@@ -31,21 +31,6 @@ Mods: {
 			// CryogenFrostMote.DisplayName: Cryogen Frost Mote
 			// AureusStarMote.DisplayName: Aureus Star Mote
 			// YCAuricJudgementMatrix.DisplayName: Y C Auric Judgement Matrix
-			// TeachingProjectileA_LineTrailLaser.DisplayName: Teaching Projectile A_ Line Trail Laser
-			// TeachingProjectileB_FlashSparklePoint.DisplayName: Teaching Projectile B_ Flash Sparkle Point
-			// TeachingProjectileC_BloomGlowCore.DisplayName: Teaching Projectile C_ Bloom Glow Core
-			// TeachingProjectileD_PulseRingField.DisplayName: Teaching Projectile D_ Pulse Ring Field
-			// TeachingProjectileE_ExplosionImpact.DisplayName: Teaching Projectile E_ Explosion Impact
-			// TeachingProjectileF_SmokeMistDust.DisplayName: Teaching Projectile F_ Smoke Mist Dust
-			// TeachingProjectileG_FireAshBurn.DisplayName: Teaching Projectile G_ Fire Ash Burn
-			// TeachingProjectileH_WaterFoamOcean.DisplayName: Teaching Projectile H_ Water Foam Ocean
-			// TeachingProjectileI_BloodFleshBiology.DisplayName: Teaching Projectile I_ Blood Flesh Biology
-			// TeachingProjectileJ_DebrisMechanicalParts.DisplayName: Teaching Projectile J_ Debris Mechanical Parts
-			// TeachingProjectileK_MagicStatusUI.DisplayName: Teaching Projectile K_ Magic Status U I
-			// TeachingProjectileL_SlashSmearAfterimage.DisplayName: Teaching Projectile L_ Slash Smear Afterimage
-			// TeachingProjectileM_TechHoloSquare.DisplayName: Teaching Projectile M_ Tech Holo Square
-			// TeachingProjectileN_ParticleSetsControllers.DisplayName: Teaching Projectile N_ Particle Sets Controllers
-			// TeachingProjectile.DisplayName: Teaching Projectile
 		}
 	}
 }

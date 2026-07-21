@@ -49,6 +49,17 @@ Mods: {
 			ResponsibilityArmyGyrator.DisplayName: 责任分队·钨钢回旋仪
 			ResponsibilityArmyDrone.DisplayName: 责任分队·钨钢无人机
 			ResponsibilityArmyHovercraft.DisplayName: 责任分队·钨钢气垫船
+			// Destroyer2041Body.DisplayName: Destroyer2041 Body
+			// Destroyer2041Head.DisplayName: Destroyer2041 Head
+			// Destroyer2041Tail.DisplayName: Destroyer2041 Tail
+			// Prime2041.DisplayName: Prime2041
+			// Prime2041Cannon.DisplayName: Prime2041 Cannon
+			// Prime2041Laser.DisplayName: Prime2041 Laser
+			// Prime2041Saw.DisplayName: Prime2041 Saw
+			// Prime2041SecondHead.DisplayName: Prime2041 Second Head
+			// Prime2041Vice.DisplayName: Prime2041 Vice
+			// Twins2041Retinazer.DisplayName: Twins2041 Retinazer
+			// Twins2041Spazmatism.DisplayName: Twins2041 Spazmatism
 		}
 
 		Projectiles: {

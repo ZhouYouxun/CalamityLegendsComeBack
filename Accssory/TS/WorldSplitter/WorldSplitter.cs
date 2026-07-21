@@ -1,3 +1,4 @@
+using CalamityMod.Items.Materials;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -21,6 +22,16 @@ namespace CalamityLegendsComeBack.Accssory.TS
         public override void UpdateAccessory(Player player, bool hideVisual)
         {
             player.GetModPlayer<AzureThunderAccessoryPlayer>().WorldSplitterEquipped = true;
+        }
+
+        public override void AddRecipes()
+        {
+            CreateRecipe()
+                .AddIngredient<RuinousSoul>(5)
+                .AddIngredient<DarkPlasma>(2)
+                .AddIngredient<TwistingNether>(2)
+                .AddTile(TileID.LunarCraftingStation)
+                .Register();
         }
     }
 }

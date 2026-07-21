@@ -1,12 +1,7 @@
 Mods: {
 	CalamityLegendsComeBack: {
 		Projectiles.A_Dev.ExtraBackpackPanel.DisplayName: Extra Backpack
-
-		Keybinds: {
-			ExtraBackpack: {
-			}
-		}
-
+		Keybinds.ExtraBackpack.DisplayName: Extra Backpack
 		TheSpecialText.ExtraBackpackTitle: Extra Backpack [20x10]
 	}
 }

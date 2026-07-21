@@ -49,6 +49,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 KillAimScopeProjectiles();
 
             SoundEngine.PlaySound(BlossomFluxSounds.RightBeginCharge, Projectile.Center);
+
+            // 瘟疫形态一进蓄力就把孢子球挂在准星前方，之后随蓄力长大。
+            SpawnPlagueSporeOrb();
         }
 
         private void UpdateRightChargeState(BFRightUIPlayer rightUIPlayer)
@@ -67,6 +70,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
             UpdateBombardReticle();
             UpdateRecoveryChargeBuff();
+            UpdatePlagueSporeOrb();
             EnsureAimScopeExists();
 
             if (reloadTimer > 0)
@@ -175,6 +179,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             // 退出右键蓄力时，立刻移除瞄准镜弹幕
             bombardReticleVelocity = Vector2.Zero;
             Owner.GetModPlayer<BFRecoveryEcologyPlayer>().SetRecoveryChargeDamageReduction(0f);
+
+            // 没甩出去的孢子球随蓄力一起散掉，已经脱手的不受影响。
+            CancelPlagueSporeOrb();
             KillAimScopeProjectiles();
         }
 
@@ -215,7 +222,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                     break;
 
                 case BlossomFluxChloroplastPresetType.Chlo_EPlague:
-                    FireSpecialArrow(chargeCompletion, ModContent.ProjectileType<BFArrow_EPlague>(), 18.6f, 0.98f);
+                    ReleasePlagueSporeOrb(chargeCompletion);
                     break;
             }
         }

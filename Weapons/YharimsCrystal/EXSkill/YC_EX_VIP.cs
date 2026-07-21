@@ -431,6 +431,14 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
                         0);
 
                     Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
+
+                    // 实体剑本体：像左键斩杀那样把剑清晰地握在手里画出来。此前这段只有加法混合(A=0)的
+                    // 残影和光晕，所以蓄力全程根本看不到剑——补一层不透明剑体 + 描金发光，握持大小接近
+                    // 左键；上面那层放大到 3.2 的加法能量则作为"特效更猛"的能量回响留在剑体外围。
+                    float bladeScale = Projectile.scale * MathHelper.Lerp(1.15f, 1.8f, charge);
+                    Color bladeBody = Color.Lerp(lightColor, new Color(255, 226, 120), charge * 0.5f);
+                    Main.EntitySpriteDraw(texture, drawPos, null, bladeBody, rotation, origin, bladeScale, effects, 0);
+                    Main.EntitySpriteDraw(glow, drawPos, null, new Color(255, 214, 88) * (0.72f + charge * 0.28f), rotation, origin, bladeScale, effects, 0);
                 }
             }
             else
@@ -439,7 +447,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
                 {
                     float charge = MathHelper.Clamp(Timer / CrystalChargeTime, 0f, 1f);
 
-                    Texture2D droneTexture = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/YharimsCrystal/YC_Right_Drone").Value;
+                    Texture2D droneTexture = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/YharimsCrystal/图片/默认战机2").Value;
                     Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
                     Texture2D pixel = Terraria.GameContent.TextureAssets.MagicPixel.Value;
 

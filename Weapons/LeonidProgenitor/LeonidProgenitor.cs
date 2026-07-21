@@ -101,6 +101,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                         ModContent.ProjectileType<LeonidStealthRainSpawner>(),
                         damage,
                         knockback,
+                        player.whoAmI,
                         player.direction);
                 }
                 else

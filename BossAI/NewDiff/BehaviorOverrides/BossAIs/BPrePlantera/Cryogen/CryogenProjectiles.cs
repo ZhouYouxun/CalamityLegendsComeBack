@@ -131,15 +131,23 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             // Draw core bright line
             DrawLineHelper(spriteBatch, start, end, coreColor, 2f);
 
-            // Draw end cap runs/nodes
-            Texture2D capTex = TextureAssets.Npc[ModContent.NPCType<CalamityMod.NPCs.Cryogen.Cryogen>()].Value;
-            if (capTex != null)
+            // Draw end cap runes/nodes. These used to reuse the Cryogen NPC spritesheet, which drew every frame of
+            // the boss's own body stacked into a smear at each end of the floor. A bloom core plus a slow spinning
+            // cross is what an anchor node should look like — and BloomCircle is safe here because this whole
+            // block is inside the additive scope (that texture has no alpha channel, only additive hides its black).
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle", AssetRequestMode.ImmediateLoad).Value;
+            Color capColor = Color.DeepSkyBlue * pulse * 0.8f;
+            foreach (Vector2 node in new[] { start, end })
             {
-                Vector2 origin = capTex.Size() * 0.5f;
-                float capScale = 0.25f;
-                Color drawColor = Color.DeepSkyBlue * pulse * 0.8f;
-                spriteBatch.Draw(capTex, start - Main.screenPosition, null, drawColor, Main.GameUpdateCount * 0.02f, origin, capScale, SpriteEffects.None, 0f);
-                spriteBatch.Draw(capTex, end - Main.screenPosition, null, drawColor, -Main.GameUpdateCount * 0.02f, origin, capScale, SpriteEffects.None, 0f);
+                if (bloom != null)
+                    spriteBatch.Draw(bloom, node - Main.screenPosition, null, capColor * 0.75f, 0f, bloom.Size() * 0.5f, 0.28f, SpriteEffects.None, 0f);
+
+                float spin = Main.GameUpdateCount * 0.02f * (node == start ? 1f : -1f);
+                for (int i = 0; i < 4; i++)
+                {
+                    float a = spin + MathHelper.PiOver2 * i;
+                    DrawLineHelper(spriteBatch, node - a.ToRotationVector2() * 16f, node + a.ToRotationVector2() * 16f, capColor, 2.5f);
+                }
             }
 
             spriteBatch.End();
@@ -597,10 +605,27 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             Projectile.ignoreWater = true;
         }
 
+        // CrystalPiercerShard.png is SIX pixels across. Eight of these come out of every ice bomb, and at native
+        // size against a snow biome they were effectively invisible — the player ate damage from something they
+        // never saw. Scaled up, given a glowing streak and a lit trail, they read as real shrapnel.
+        public override void SetStaticDefaults()
+        {
+            ProjectileID.Sets.TrailCacheLength[Type] = 6;
+            ProjectileID.Sets.TrailingMode[Type] = 2;
+        }
+
         public override void AI()
         {
             Projectile.velocity.Y += 0.15f; // Gravity
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
+
+            Lighting.AddLight(Projectile.Center, new Color(140, 220, 255).ToVector3() * 0.4f);
+
+            if (!Main.dedServ && Main.rand.NextBool(2))
+            {
+                Dust d = Dust.NewDustPerfect(Projectile.Center, DustID.BlueCrystalShard, -Projectile.velocity * 0.15f, 0, Color.White, Main.rand.NextFloat(0.9f, 1.3f));
+                d.noGravity = true;
+            }
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -609,14 +634,35 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             if (tex == null)
                 return true;
 
+            Vector2 origin = tex.Size() * 0.5f;
+            const float Scale = 2.4f;
+
+            // Motion streak: the shards fall fast, so a stretched afterimage is what actually catches the eye.
+            for (int i = Projectile.oldPos.Length - 1; i >= 1; i--)
+            {
+                if (Projectile.oldPos[i] == Vector2.Zero)
+                    continue;
+                float pct = 1f - i / (float)Projectile.oldPos.Length;
+                Vector2 ghost = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
+                Main.spriteBatch.Draw(tex, ghost, null, new Color(90, 200, 255, 0) * pct * 0.5f, Projectile.rotation, origin, Scale * pct, SpriteEffects.None, 0f);
+            }
+
+            // Zero-alpha backglow ring — brightens without darkening what is behind it
+            Color glow = new Color(90, 210, 255, 0) * 0.55f;
+            for (int i = 0; i < 8; i++)
+            {
+                Vector2 off = (MathHelper.TwoPi * i / 8f).ToRotationVector2() * 4f;
+                Main.spriteBatch.Draw(tex, Projectile.Center + off - Main.screenPosition, null, glow, Projectile.rotation, origin, Scale, SpriteEffects.None, 0f);
+            }
+
             Main.spriteBatch.Draw(
                 tex,
                 Projectile.Center - Main.screenPosition,
                 null,
-                Color.White * 0.9f,
+                Color.White,
                 Projectile.rotation,
-                tex.Size() * 0.5f,
-                Projectile.scale,
+                origin,
+                Scale,
                 SpriteEffects.None,
                 0f
             );
@@ -627,6 +673,12 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
     public class CryogenIceStar : ModProjectile
     {
         public override string Texture => "CalamityMod/Projectiles/Typeless/KelvinCatalystStar";
+
+        public override void SetStaticDefaults()
+        {
+            ProjectileID.Sets.TrailCacheLength[Type] = 6;
+            ProjectileID.Sets.TrailingMode[Type] = 2;
+        }
 
         public override void SetDefaults()
         {
@@ -644,6 +696,14 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         {
             Projectile.velocity.Y += 0.1f;
             Projectile.rotation += 0.05f;
+
+            Lighting.AddLight(Projectile.Center, new Color(120, 210, 255).ToVector3() * 0.4f);
+
+            if (!Main.dedServ && Main.rand.NextBool(3))
+            {
+                Dust d = Dust.NewDustPerfect(Projectile.Center, DustID.IceTorch, -Projectile.velocity * 0.12f, 0, Color.White, Main.rand.NextFloat(0.9f, 1.2f));
+                d.noGravity = true;
+            }
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -652,14 +712,33 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             if (tex == null)
                 return true;
 
+            Vector2 origin = tex.Size() * 0.5f;
+            const float Scale = 1.5f;
+
+            for (int i = Projectile.oldPos.Length - 1; i >= 1; i--)
+            {
+                if (Projectile.oldPos[i] == Vector2.Zero)
+                    continue;
+                float pct = 1f - i / (float)Projectile.oldPos.Length;
+                Vector2 ghost = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
+                Main.spriteBatch.Draw(tex, ghost, null, new Color(60, 190, 255, 0) * pct * 0.45f, Projectile.rotation, origin, Scale * pct, SpriteEffects.None, 0f);
+            }
+
+            Color glow = new Color(60, 190, 255, 0) * 0.55f;
+            for (int i = 0; i < 8; i++)
+            {
+                Vector2 off = (MathHelper.TwoPi * i / 8f).ToRotationVector2() * 4f;
+                Main.spriteBatch.Draw(tex, Projectile.Center + off - Main.screenPosition, null, glow, Projectile.rotation, origin, Scale, SpriteEffects.None, 0f);
+            }
+
             Main.spriteBatch.Draw(
                 tex,
                 Projectile.Center - Main.screenPosition,
                 null,
-                Color.DeepSkyBlue * 0.95f,
+                Color.White,
                 Projectile.rotation,
-                tex.Size() * 0.5f,
-                Projectile.scale,
+                origin,
+                Scale,
                 SpriteEffects.None,
                 0f
             );
@@ -845,13 +924,22 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                         float rot = delta.ToRotation();
                         sb.Draw(TextureAssets.MagicPixel.Value, Projectile.Center - Main.screenPosition, new Rectangle(0, 0, 1, 1), Color.Red * progress * 0.72f, rot, new Vector2(0f, 0.5f), new Vector2(len, 2f + progress * 2f), SpriteEffects.None, 0f);
 
-                        // Draw target ring/reticle around player feet/center
-                        Texture2D capTex = TextureAssets.Npc[ModContent.NPCType<CalamityMod.NPCs.Cryogen.Cryogen>()].Value;
-                        if (capTex != null)
+                        // Draw target ring/reticle around the player. This used to blit the Cryogen NPC spritesheet —
+                        // the boss's whole body, every frame stacked, painted red over the player. An actual
+                        // reticle: a ring that tightens as the lock completes, plus four closing crosshair ticks.
+                        Color reticle = Color.Lerp(Color.OrangeRed, Color.Red, progress) * (0.35f + progress * 0.6f);
+                        float radius = MathHelper.Lerp(96f, 34f, progress);
+                        const int RingSegments = 24;
+                        for (int seg = 0; seg < RingSegments; seg++)
                         {
-                            Vector2 reticleOrigin = capTex.Size() * 0.5f;
-                            float reticleScale = (2f - progress) * 0.35f;
-                            sb.Draw(capTex, targetPos - Main.screenPosition, null, Color.Red * progress * 0.85f, Main.GameUpdateCount * 0.05f, reticleOrigin, reticleScale, SpriteEffects.None, 0f);
+                            float a0 = MathHelper.TwoPi * seg / RingSegments + Main.GameUpdateCount * 0.05f;
+                            float a1 = MathHelper.TwoPi * (seg + 1) / RingSegments + Main.GameUpdateCount * 0.05f;
+                            DrawLineHelper(sb,targetPos + a0.ToRotationVector2() * radius, targetPos + a1.ToRotationVector2() * radius, reticle, 2f + progress * 2f);
+                        }
+                        for (int tick = 0; tick < 4; tick++)
+                        {
+                            Vector2 outward = (MathHelper.PiOver2 * tick + MathHelper.PiOver4).ToRotationVector2();
+                            DrawLineHelper(sb,targetPos + outward * (radius + 18f), targetPos + outward * (radius + 4f), reticle, 3f);
                         }
 
                         sb.End();
@@ -879,6 +967,23 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             );
             return false;
         }
+
+        private static void DrawLineHelper(SpriteBatch spriteBatch, Vector2 start, Vector2 end, Color color, float width)
+        {
+            Vector2 delta = end - start;
+            // MagicPixel is 1x1000, NOT 1x1 — sample a single pixel or the "line" becomes a 1000x-tall sheet
+            spriteBatch.Draw(
+                TextureAssets.MagicPixel.Value,
+                start - Main.screenPosition,
+                new Rectangle(0, 0, 1, 1),
+                color,
+                delta.ToRotation(),
+                new Vector2(0f, 0.5f),
+                new Vector2(delta.Length(), width),
+                SpriteEffects.None,
+                0f
+            );
+        }
     }
 
     // =====================================================================================================================
@@ -887,6 +992,13 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
     public class CryogenSoulShard : ModProjectile
     {
         public override string Texture => "CalamityMod/Projectiles/Rogue/FrostShardFriendly";
+
+        // Calamity's FrostShardFriendly.png is a 5-frame vertical sheet (12x155). Without this the whole strip
+        // gets drawn as one 155px-long smear instead of a single 31px shard.
+        public override void SetStaticDefaults()
+        {
+            Main.projFrames[Projectile.type] = 5;
+        }
 
         public override void SetDefaults()
         {
@@ -905,11 +1017,27 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             Projectile.velocity.Y += 0.2f; // Downwards gravity acceleration
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
 
+            Projectile.frameCounter++;
+            if (Projectile.frameCounter >= 5)
+            {
+                Projectile.frame = (Projectile.frame + 1) % 5;
+                Projectile.frameCounter = 0;
+            }
+
             if (Main.rand.NextBool(2))
             {
                 Dust d = Dust.NewDustPerfect(Projectile.Center, DustID.Ice, -Projectile.velocity * 0.1f, 100, Color.Cyan, Main.rand.NextFloat(1f, 1.3f));
                 d.fadeIn = 1.2f;
                 d.noGravity = true;
+            }
+
+            // A raining shard has to be spotted against a snow biome; dust alone washes out. A short streak of
+            // bright ice motes with fadeIn gives it a readable "falling glass" trail.
+            if (!Main.dedServ && Main.rand.NextBool(2))
+            {
+                Dust spark = Dust.NewDustPerfect(Projectile.Center - Projectile.velocity * Main.rand.NextFloat(0.4f), DustID.BlueCrystalShard, Vector2.Zero, 0, Color.White, Main.rand.NextFloat(0.9f, 1.3f));
+                spark.noGravity = true;
+                spark.velocity = -Projectile.velocity * 0.05f;
             }
         }
 
@@ -919,13 +1047,25 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             if (tex == null)
                 return true;
 
+            Rectangle frame = tex.Frame(1, 5, 0, Projectile.frame);
+            Vector2 origin = frame.Size() * 0.5f;
+
+            // Zero-alpha backglow: brightens without darkening what's behind it, so the shard stays legible
+            // over both the snow and the boss's own light.
+            Color glow = new Color(60, 190, 255, 0) * 0.45f;
+            for (int i = 0; i < 8; i++)
+            {
+                Vector2 off = (MathHelper.TwoPi * i / 8f).ToRotationVector2() * 3.5f;
+                Main.spriteBatch.Draw(tex, Projectile.Center + off - Main.screenPosition, frame, glow, Projectile.rotation, origin, Projectile.scale * 1.2f, SpriteEffects.None, 0f);
+            }
+
             Main.spriteBatch.Draw(
                 tex,
                 Projectile.Center - Main.screenPosition,
-                null,
+                frame,
                 Color.DeepSkyBlue * 0.9f,
                 Projectile.rotation,
-                tex.Size() * 0.5f,
+                origin,
                 Projectile.scale * 1.2f,
                 SpriteEffects.None,
                 0f
@@ -1081,7 +1221,9 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 SoundEngine.PlaySound(SoundID.Item71 with { Volume = 0.7f, Pitch = 0.1f }, Projectile.Center);
             }
 
-            Projectile.rotation = Projectile.velocity.ToRotation();
+            // DarkBeam.png is the Darklight Greatsword's blade drawn diagonally (tip top-right). Pointing it along
+            // the lunge needs the same +45° every diagonal Calamity sprite needs.
+            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -1139,7 +1281,8 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             Projectile.localAI[0]++;
             float speed = Projectile.localAI[0] < 18f ? 7f : Math.Min(7f + (Projectile.localAI[0] - 18f) * 1.8f, 24f);
             Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitX) * speed;
-            Projectile.rotation = Projectile.velocity.ToRotation();
+            // Same diagonal blade sheet as its DarkBeam sibling — +45° to sit on the flight path.
+            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -1148,13 +1291,33 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             if (tex == null)
                 return true;
 
+            Vector2 origin = tex.Size() * 0.5f;
+
+            // Its DarkBeam sibling already sells the snap-forward with a stretched ghost trail; this one was left
+            // as a single flat sprite and read as much less dangerous than the attack it belongs to.
+            if (Projectile.localAI[0] > 18f)
+            {
+                for (int i = 3; i >= 1; i--)
+                {
+                    Vector2 ghostPos = Projectile.Center - Projectile.velocity * i * 0.45f;
+                    Main.spriteBatch.Draw(tex, ghostPos - Main.screenPosition, null, new Color(70, 190, 255, 0) * (0.4f - i * 0.1f), Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0f);
+                }
+            }
+
+            Color glow = new Color(70, 190, 255, 0) * 0.45f;
+            for (int i = 0; i < 8; i++)
+            {
+                Vector2 off = (MathHelper.TwoPi * i / 8f).ToRotationVector2() * 4f;
+                Main.spriteBatch.Draw(tex, Projectile.Center + off - Main.screenPosition, null, glow, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0f);
+            }
+
             Main.spriteBatch.Draw(
                 tex,
                 Projectile.Center - Main.screenPosition,
                 null,
                 Color.DeepSkyBlue * 0.85f,
                 Projectile.rotation,
-                tex.Size() * 0.5f,
+                origin,
                 Projectile.scale,
                 SpriteEffects.None,
                 0f
@@ -1188,7 +1351,9 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             Projectile.localAI[0]++;
             float speed = Projectile.localAI[0] < 8f ? 16f : Math.Min(16f + (Projectile.localAI[0] - 8f) * 4f, 44f);
             Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitX) * speed;
-            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
+            // StarnightBeam.png is a diagonal bolt whose tip sits in the top-right corner, so it lines up with
+            // the flight path at +45°, not +90°.
+            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -1323,6 +1488,13 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
     {
         public override string Texture => "CalamityMod/Projectiles/Summon/DaedalusPellet";
 
+        // Calamity's DaedalusPellet.png is a 3-frame vertical sheet (16x54); drawing it whole stretches one
+        // pellet into a 54px ribbon.
+        public override void SetStaticDefaults()
+        {
+            Main.projFrames[Projectile.type] = 3;
+        }
+
         public override void SetDefaults()
         {
             Projectile.width = 14;
@@ -1339,6 +1511,22 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         {
             Projectile.velocity.Y += 0.08f; // Falling gravity
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
+
+            Projectile.frameCounter++;
+            if (Projectile.frameCounter >= 5)
+            {
+                Projectile.frame = (Projectile.frame + 1) % 3;
+                Projectile.frameCounter = 0;
+            }
+
+            // A 14px pellet fired from an orbiting golem is easy to lose in a crowded arena — give it a
+            // short bright tracer so the incoming line is readable before it arrives.
+            if (!Main.dedServ && Main.rand.NextBool(2))
+            {
+                Dust d = Dust.NewDustPerfect(Projectile.Center, DustID.BlueCrystalShard, -Projectile.velocity * 0.12f, 0, Color.White, Main.rand.NextFloat(0.9f, 1.25f));
+                d.noGravity = true;
+            }
+            Lighting.AddLight(Projectile.Center, new Color(120, 200, 255).ToVector3() * 0.35f);
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -1347,14 +1535,24 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             if (tex == null)
                 return true;
 
+            Rectangle frame = tex.Frame(1, 3, 0, Projectile.frame);
+            Vector2 origin = frame.Size() * 0.5f;
+
+            Color glow = new Color(60, 170, 255, 0) * 0.5f;
+            for (int i = 0; i < 8; i++)
+            {
+                Vector2 off = (MathHelper.TwoPi * i / 8f).ToRotationVector2() * 3f;
+                Main.spriteBatch.Draw(tex, Projectile.Center + off - Main.screenPosition, frame, glow, Projectile.rotation, origin, Projectile.scale * 1.15f, SpriteEffects.None, 0f);
+            }
+
             Main.spriteBatch.Draw(
                 tex,
                 Projectile.Center - Main.screenPosition,
-                null,
+                frame,
                 Color.LightBlue,
                 Projectile.rotation,
-                tex.Size() * 0.5f,
-                Projectile.scale,
+                origin,
+                Projectile.scale * 1.15f,
                 SpriteEffects.None,
                 0f
             );
@@ -1399,6 +1597,36 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 Projectile.velocity = Vector2.Zero;
             }
             Projectile.localAI[0]++;
+
+            if (Main.dedServ)
+                return;
+
+            Vector2 dir = Projectile.rotation.ToRotationVector2();
+            Vector2 perp = new Vector2(-dir.Y, dir.X);
+            Vector2 laneStart = Projectile.Center - dir * 800f;
+
+            if (Projectile.timeLeft > 30)
+            {
+                // Charge-up motes converge onto the lane so the warning line is more than a thin red streak.
+                if (Main.rand.NextBool(2))
+                {
+                    Vector2 at = laneStart + dir * Main.rand.NextFloat(1600f);
+                    Dust d = Dust.NewDustPerfect(at + perp * Main.rand.NextFloat(-46f, 46f), DustID.Electric, Vector2.Zero, 0, Color.White, Main.rand.NextFloat(0.8f, 1.2f));
+                    d.velocity = -perp * Math.Sign(d.position.Y - at.Y) * Main.rand.NextFloat(1.5f, 3.5f);
+                    d.noGravity = true;
+                }
+            }
+            else
+            {
+                // Crackling sparks along the live bolt so it reads as lethal even at a glance
+                for (int i = 0; i < 2; i++)
+                {
+                    Vector2 sparkAt = laneStart + dir * Main.rand.NextFloat(1600f) + perp * Main.rand.NextFloat(-10f, 10f);
+                    Dust d = Dust.NewDustPerfect(sparkAt, DustID.Electric, perp * Main.rand.NextFloat(-4f, 4f), 0, Color.White, Main.rand.NextFloat(1f, 1.5f));
+                    d.noGravity = true;
+                }
+                Lighting.AddLight(Projectile.Center, new Color(150, 180, 255).ToVector3() * 0.6f);
+            }
         }
 
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
@@ -1444,36 +1672,27 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             }
             else
             {
-                // Load Calamity lightning texture if available, else fallback to magic pixel lines
-                Texture2D tex = ModContent.Request<Texture2D>("CalamityMod/Projectiles/Summon/DaedalusLightning", AssetRequestMode.ImmediateLoad).Value;
-                if (tex != null)
-                {
-                    // Draw repeating lightning texture across the screen along the rotated axis
-                    float length = 1600f;
-                    int segments = 12;
-                    float segLen = length / segments;
+                // NOT the DaedalusLightning sprite: Calamity never draws that PNG (DaedalusLightning.PreDraw renders
+                // a PrimitiveRenderer trail instead), so the file is an unused placeholder — a plain white octagon.
+                // Tiling it produced a row of stretched white lozenges, not a bolt. Draw the arc ourselves instead:
+                // a jagged polyline that reads as electricity, seeded off identity so every client draws the same one.
+                Vector2 perp = new Vector2(-dir.Y, dir.X);
+                const int Segments = 16;
+                float wobbleSeed = Projectile.identity * 1.37f;
 
-                    for (int i = 0; i < segments; i++)
-                    {
-                        Vector2 pos = start + dir * (i * segLen + segLen * 0.5f);
-                        spriteBatch.Draw(
-                            tex,
-                            pos - Main.screenPosition,
-                            null,
-                            color * opacity,
-                            Projectile.rotation,
-                            tex.Size() * 0.5f,
-                            new Vector2(segLen / tex.Width, 1.2f),
-                            SpriteEffects.None,
-                            0f
-                        );
-                    }
-                }
-                else
+                Vector2 prev = start;
+                for (int i = 1; i <= Segments; i++)
                 {
-                    // Fallback to additive line drawing
-                    DrawLineHelper(spriteBatch, start, end, color * opacity, 16f);
-                    DrawLineHelper(spriteBatch, start, end, Color.White * opacity, 4f);
+                    float t = i / (float)Segments;
+                    // Taper the jitter to zero at both ends so the bolt still spans the full lane.
+                    float taper = MathF.Sin(t * MathHelper.Pi);
+                    float jitter = (MathF.Sin(wobbleSeed + t * 21f + Main.GameUpdateCount * 0.55f) + MathF.Sin(wobbleSeed * 2.3f + t * 37f)) * 9f * taper;
+                    Vector2 node = start + dir * (1600f * t) + perp * jitter;
+
+                    DrawLineHelper(spriteBatch, prev, node, color * opacity * 0.55f, 18f);
+                    DrawLineHelper(spriteBatch, prev, node, color * opacity, 7f);
+                    DrawLineHelper(spriteBatch, prev, node, Color.White * opacity, 2.5f);
+                    prev = node;
                 }
             }
 
@@ -1874,7 +2093,9 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 Projectile.velocity *= 1.012f;
             }
 
-            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
+            // CrystalPiercer is an ITEM sprite: like every Calamity item icon its tip points up-RIGHT, i.e. 45°,
+            // not straight up. +PiOver2 was tilting the whole javelin a quarter-turn off its own flight path.
+            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
 
             // Emit shard trailing every 14 frames
             if (Projectile.localAI[0] % 14f == 0f && Main.netMode != NetmodeID.MultiplayerClient)
@@ -1932,6 +2153,14 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         {
             Projectile.velocity = new Vector2(0f, 6f); // Constant vertical falling speed
             Projectile.rotation += 0.05f;
+
+            Lighting.AddLight(Projectile.Center, new Color(120, 220, 255).ToVector3() * 0.35f);
+
+            if (!Main.dedServ && Main.rand.NextBool(3))
+            {
+                Dust d = Dust.NewDustPerfect(Projectile.Center, DustID.BlueCrystalShard, new Vector2(0f, -1f), 0, Color.White, Main.rand.NextFloat(0.8f, 1.1f));
+                d.noGravity = true;
+            }
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -1940,14 +2169,26 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             if (tex == null)
                 return true;
 
+            // Same 6px sprite as CryogenIceShard — the javelin curtain drops a lot of these, so they get the same
+            // scale-up and backglow treatment rather than a near-invisible speck.
+            Vector2 origin = tex.Size() * 0.5f;
+            const float Scale = 2f;
+
+            Color glow = new Color(70, 200, 255, 0) * 0.5f;
+            for (int i = 0; i < 8; i++)
+            {
+                Vector2 off = (MathHelper.TwoPi * i / 8f).ToRotationVector2() * 3.5f;
+                Main.spriteBatch.Draw(tex, Projectile.Center + off - Main.screenPosition, null, glow, Projectile.rotation, origin, Scale, SpriteEffects.None, 0f);
+            }
+
             Main.spriteBatch.Draw(
                 tex,
                 Projectile.Center - Main.screenPosition,
                 null,
-                Color.Cyan * 0.85f,
+                Color.White,
                 Projectile.rotation,
-                tex.Size() * 0.5f,
-                Projectile.scale,
+                origin,
+                Scale,
                 SpriteEffects.None,
                 0f
             );

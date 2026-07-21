@@ -2,6 +2,7 @@ using CalamityLegendsComeBack.Accssory.BF.Common;
 using CalamityLegendsComeBack.Weapons.BlossomFlux;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;
 using CalamityMod.Buffs.DamageOverTime;
+using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -77,6 +78,8 @@ namespace CalamityLegendsComeBack.Accssory.BF.FairyDance
                 Projectile.frame = (Projectile.frame + 1) % 4;
             }
 
+            SpawnFairySparkles();
+
             switch (State)
             {
                 case 1:
@@ -108,6 +111,8 @@ namespace CalamityLegendsComeBack.Accssory.BF.FairyDance
             dashTimer = 0;
             State = 1;
             Projectile.netUpdate = true;
+
+            SpawnDashBurst(direction);
         }
 
         private void UpdateOrbit(Player owner)
@@ -154,30 +159,131 @@ namespace CalamityLegendsComeBack.Accssory.BF.FairyDance
 
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers) => modifiers.DisableCrit();
 
+        // ===== 原版三色精灵同款拖尾（NPC.cs AI_112：FireworksRGB 双色渐变微尘）+ 灾厄辉光球 =====
+        private void SpawnFairySparkles()
+        {
+            if (Main.dedServ)
+                return;
+
+            Color mainColor = GetFairyColor(Variant);
+            Color accentColor = GetFairyAccentColor(Variant);
+            bool dashing = State == 1;
+
+            if (dashing || (int)Main.timeForVisualEffects % 2 == 0)
+            {
+                Dust dust = Dust.NewDustDirect(
+                    Projectile.Center - new Vector2(4f) * 0.5f, 8, 8,
+                    DustID.FireworksRGB, 0f, 0f, 200,
+                    Color.Lerp(mainColor, accentColor, Main.rand.NextFloat()),
+                    dashing ? 1.05f : 0.65f);
+                dust.velocity *= 0f;
+                dust.velocity += Projectile.velocity * (dashing ? 0.55f : 0.3f);
+                dust.noGravity = true;
+                dust.noLight = true;
+            }
+
+            if (dashing ? Main.rand.NextBool(2) : Main.rand.NextBool(9))
+            {
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    Projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
+                    dashing
+                        ? -Projectile.velocity * Main.rand.NextFloat(0.08f, 0.2f)
+                        : Main.rand.NextVector2Circular(0.7f, 0.7f) - Vector2.UnitY * 0.6f,
+                    false,
+                    Main.rand.Next(16, 28),
+                    Main.rand.NextFloat(0.22f, 0.4f) * (dashing ? 1.35f : 1f),
+                    Color.Lerp(mainColor, accentColor, Main.rand.NextFloat(0.5f)),
+                    true, false, true));
+            }
+        }
+
+        // ===== 突进启动爆点：仿原版 NPC.FairyEffects 的加速尘环，缩小规模按方向喷出 =====
+        private void SpawnDashBurst(Vector2 direction)
+        {
+            if (Main.dedServ)
+                return;
+
+            Color mainColor = GetFairyColor(Variant);
+            Color accentColor = GetFairyAccentColor(Variant);
+
+            for (int i = 0; i < 14; i++)
+            {
+                Dust dust = Dust.NewDustDirect(
+                    Projectile.Center - new Vector2(4f), 8, 8,
+                    DustID.FireworksRGB, 0f, 0f, 200,
+                    Color.Lerp(mainColor, accentColor, Main.rand.NextFloat()), 0.85f);
+                dust.velocity = dust.velocity * 1.5f + direction * Main.rand.NextFloat(1.5f, 5f);
+                dust.fadeIn = Main.rand.Next(0, 17) * 0.1f;
+                dust.noGravity = true;
+            }
+
+            for (int i = 0; i < 3; i++)
+            {
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    Projectile.Center,
+                    direction.RotatedByRandom(0.5f) * Main.rand.NextFloat(2f, 5f),
+                    false,
+                    Main.rand.Next(18, 28),
+                    Main.rand.NextFloat(0.3f, 0.5f),
+                    Color.Lerp(mainColor, Color.White, 0.25f),
+                    true, false, true));
+            }
+        }
+
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D texture = ModContent.Request<Texture2D>(FairyTextures[Variant]).Value;
             Rectangle frame = texture.Frame(1, 4, 0, Projectile.frame);
             SpriteEffects effects = Projectile.velocity.X < 0f ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+            Vector2 drawPosition = Projectile.Center - Main.screenPosition;
+            Vector2 origin = frame.Size() * 0.5f;
             Color drawColor = Color.Lerp(Projectile.GetAlpha(lightColor), Color.White, 0.35f);
+
+            // ===== 颜色包边：本体色 A=0 加法描边，环绕呼吸、突进时增强 =====
+            bool dashing = State == 1;
+            float outlinePulse = 0.5f + 0.5f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 3.4f + Projectile.identity * 0.7f);
+            float outlineOffset = dashing ? 3.2f : 1.8f + outlinePulse * 0.8f;
+            Color outlineColor = (GetFairyColor(Variant) with { A = 0 }) * (dashing ? 0.85f : 0.5f + outlinePulse * 0.15f);
+
+            for (int i = 0; i < 4; i++)
+            {
+                Vector2 offset = (MathHelper.PiOver2 * i + Main.GlobalTimeWrappedHourly * 2.6f).ToRotationVector2() * outlineOffset;
+                Main.EntitySpriteDraw(
+                    texture,
+                    drawPosition + offset,
+                    frame,
+                    outlineColor,
+                    Projectile.rotation,
+                    origin,
+                    Projectile.scale,
+                    effects);
+            }
 
             Main.EntitySpriteDraw(
                 texture,
-                Projectile.Center - Main.screenPosition,
+                drawPosition,
                 frame,
                 drawColor,
                 Projectile.rotation,
-                frame.Size() * 0.5f,
+                origin,
                 Projectile.scale,
                 effects);
             return false;
         }
 
+        // 原版 NPC.cs HitEffect / AI_112 的官方配色：粉/绿/蓝 各带一个浅色副色
         private static Color GetFairyColor(int variant) => variant switch
         {
             1 => Color.LimeGreen,
             2 => Color.RoyalBlue,
             _ => Color.HotPink
+        };
+
+        private static Color GetFairyAccentColor(int variant) => variant switch
+        {
+            1 => Color.LightSeaGreen,
+            2 => Color.LightBlue,
+            _ => Color.LightPink
         };
 
     }
@@ -227,7 +333,9 @@ namespace CalamityLegendsComeBack.Accssory.BF.FairyDance
             }
 
             UpdateAnimation();
-            Lighting.AddLight(Projectile.Center, Main.hslToRgb((float)(Main.GlobalTimeWrappedHourly * 0.35f + Projectile.identity * 0.11f) % 1f, 0.9f, 0.62f).ToVector3() * 0.48f);
+            // 原版七彩草蛉的灯光公式：hslToRgb(时间*0.33) * 0.3 + 0.1（NPC.cs type==661）
+            Lighting.AddLight(Projectile.Center, GetRainbowColor().ToVector3() * 0.3f + Vector3.One * 0.1f);
+            SpawnLacewingSparkles();
 
             if (State == 1)
             {
@@ -283,7 +391,86 @@ namespace CalamityLegendsComeBack.Accssory.BF.FairyDance
             Projectile.penetrate = 1;
             State = 1;
             Projectile.netUpdate = true;
+
+            SpawnReleaseBurst(Projectile.velocity.SafeNormalize(Vector2.UnitX * owner.direction));
         }
+
+        // ===== 释放突进的爆点：整圈彩虹尘环 + 辉光球沿突进方向喷出 =====
+        private void SpawnReleaseBurst(Vector2 direction)
+        {
+            if (Main.dedServ)
+                return;
+
+            GeneralParticleHandler.SpawnParticle(new StrongBloom(
+                Projectile.Center, Vector2.Zero,
+                GetRainbowColor() with { A = 0 }, 0.5f, 12));
+
+            for (int i = 0; i < 24; i++)
+            {
+                // 原版死亡爆点同款：按序号扫过整个色环（NPC.cs type==661 HitEffect）
+                Color ringColor = Main.hslToRgb(i / 24f, 1f, 0.5f) * 0.5f;
+                Vector2 ringVelocity = (MathHelper.TwoPi * i / 24f).ToRotationVector2() * Main.rand.NextFloat(1.5f, 4f) + direction * 2f;
+                Dust dust = Dust.NewDustPerfect(Projectile.Center, DustID.RainbowMk2, ringVelocity, 0, ringColor, 0.5f);
+                dust.noGravity = true;
+                dust.fadeIn = 0.7f + Main.rand.NextFloat() * 1.1f;
+            }
+
+            for (int i = 0; i < 5; i++)
+            {
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    Projectile.Center,
+                    direction.RotatedByRandom(0.6f) * Main.rand.NextFloat(2.5f, 6f),
+                    false,
+                    Main.rand.Next(18, 30),
+                    Main.rand.NextFloat(0.3f, 0.52f),
+                    GetRainbowColor(i / 5f * 0.4f),
+                    true, false, true));
+            }
+        }
+
+        // ===== 原版七彩草蛉同款微尘（RainbowMk2 半亮彩虹 + 白色半尺寸克隆）+ 灾厄辉光球 =====
+        private void SpawnLacewingSparkles()
+        {
+            if (Main.dedServ)
+                return;
+
+            bool dashing = State == 1;
+
+            if (dashing || Main.rand.NextBool(3))
+            {
+                Color sparkleColor = GetRainbowColor(Main.rand.NextFloat(0.08f)) * 0.5f;
+                Dust dust = Dust.NewDustDirect(Projectile.position, Projectile.width, Projectile.height, DustID.RainbowMk2, 0f, 0f, 0, sparkleColor);
+                dust.position = Projectile.Center + Main.rand.NextVector2Circular(Projectile.width, Projectile.height);
+                dust.velocity *= Main.rand.NextFloat() * 0.8f;
+                dust.velocity += Projectile.velocity * (dashing ? 0.8f : 0.6f);
+                dust.noGravity = true;
+                dust.fadeIn = 0.6f + Main.rand.NextFloat() * 0.7f;
+                dust.scale = dashing ? 0.5f : 0.35f;
+
+                Dust cloneDust = Dust.CloneDust(dust);
+                cloneDust.scale /= 2f;
+                cloneDust.fadeIn *= 0.85f;
+                cloneDust.color = new Color(255, 255, 255, 255) * 0.5f;
+            }
+
+            if (dashing ? Main.rand.NextBool(2) : Main.rand.NextBool(10))
+            {
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    Projectile.Center + Main.rand.NextVector2Circular(10f, 10f),
+                    dashing
+                        ? -Projectile.velocity * Main.rand.NextFloat(0.06f, 0.16f)
+                        : Main.rand.NextVector2Circular(0.6f, 0.6f) - Vector2.UnitY * 0.5f,
+                    false,
+                    Main.rand.Next(16, 28),
+                    Main.rand.NextFloat(0.24f, 0.42f) * (dashing ? 1.4f : 1f),
+                    GetRainbowColor(Main.rand.NextFloat(0.15f)),
+                    true, false, true));
+            }
+        }
+
+        // 原版色环公式（hslToRgb(时间*0.33, 1, 0.5)），identity 相位让 7 只草蛉铺满七彩
+        private Color GetRainbowColor(float extraOffset = 0f) =>
+            Main.hslToRgb((Main.GlobalTimeWrappedHourly * 0.33f + Projectile.identity * 0.13f + extraOffset) % 1f, 1f, 0.5f);
 
         private void FireRainbowBolt(Player owner, Vector2 target)
         {
@@ -342,10 +529,24 @@ namespace CalamityLegendsComeBack.Accssory.BF.FairyDance
             Texture2D texture = ModContent.Request<Texture2D>(LacewingTexture).Value;
             Rectangle frame = texture.Frame(1, 3, 0, Projectile.frame);
             SpriteEffects effects = Projectile.velocity.X < 0f ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
-            Color rainbow = Main.hslToRgb((float)(Main.GlobalTimeWrappedHourly * 0.4f + Projectile.identity * 0.13f) % 1f, 1f, 0.68f);
+            Vector2 drawPosition = Projectile.Center - Main.screenPosition;
+            Vector2 origin = frame.Size() * 0.5f;
 
-            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, frame, rainbow * 0.35f, Projectile.rotation, frame.Size() * 0.5f, Projectile.scale * 1.12f, effects);
-            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, frame, Color.White, Projectile.rotation, frame.Size() * 0.5f, Projectile.scale, effects);
+            // ===== 颜色包边：原版色环 A=0 加法描边，旋转呼吸、突进时增强 =====
+            bool dashing = State == 1;
+            float outlinePulse = 0.5f + 0.5f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 3.1f + Projectile.identity * 0.9f);
+            float outlineOffset = dashing ? 3.5f : 2f + outlinePulse * 0.9f;
+            Color outlineColor = (GetRainbowColor() with { A = 0 }) * (dashing ? 0.9f : 0.55f + outlinePulse * 0.15f);
+
+            for (int i = 0; i < 6; i++)
+            {
+                Vector2 offset = (MathHelper.TwoPi * i / 6f + Main.GlobalTimeWrappedHourly * 3f).ToRotationVector2() * outlineOffset;
+                Main.EntitySpriteDraw(texture, drawPosition + offset, frame, outlineColor, Projectile.rotation, origin, Projectile.scale, effects);
+            }
+
+            // 彩虹光晕底衬（A=0 防黑底）+ 白色本体
+            Main.EntitySpriteDraw(texture, drawPosition, frame, (GetRainbowColor() with { A = 0 }) * 0.45f, Projectile.rotation, origin, Projectile.scale * 1.12f, effects);
+            Main.EntitySpriteDraw(texture, drawPosition, frame, Color.White, Projectile.rotation, origin, Projectile.scale, effects);
             return false;
         }
     }
@@ -385,7 +586,45 @@ namespace CalamityLegendsComeBack.Accssory.BF.FairyDance
             {
                 Dust dust = Dust.NewDustPerfect(Projectile.Center, DustID.RainbowMk2, -Projectile.velocity * 0.04f, 100, color, 0.8f);
                 dust.noGravity = true;
+                dust.fadeIn = 0.5f + Main.rand.NextFloat() * 0.6f;
             }
+
+            // 灾厄辉光球：弹道上零星洒落的小彩虹光珠
+            if (!Main.dedServ && Main.rand.NextBool(7))
+            {
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    Projectile.Center,
+                    -Projectile.velocity * Main.rand.NextFloat(0.02f, 0.08f),
+                    false,
+                    Main.rand.Next(12, 20),
+                    Main.rand.NextFloat(0.16f, 0.28f),
+                    color,
+                    true, false, true));
+            }
+        }
+
+        public override void OnKill(int timeLeft)
+        {
+            if (Main.dedServ)
+                return;
+
+            // 命中/消散爆点：小圈彩虹尘 + 一颗辉光球
+            Color color = Main.hslToRgb((float)(Main.GlobalTimeWrappedHourly * 0.6f + Projectile.identity * 0.17f) % 1f, 1f, 0.65f);
+            for (int i = 0; i < 8; i++)
+            {
+                Color ringColor = Main.hslToRgb(i / 8f, 1f, 0.5f) * 0.6f;
+                Dust dust = Dust.NewDustPerfect(
+                    Projectile.Center,
+                    DustID.RainbowMk2,
+                    (MathHelper.TwoPi * i / 8f).ToRotationVector2() * Main.rand.NextFloat(1.2f, 3f),
+                    0, ringColor, 0.55f);
+                dust.noGravity = true;
+                dust.fadeIn = 0.5f + Main.rand.NextFloat() * 0.6f;
+            }
+
+            GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                Projectile.Center, Vector2.Zero, false, 14,
+                Main.rand.NextFloat(0.3f, 0.42f), color, true, false, true));
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
@@ -398,6 +637,8 @@ namespace CalamityLegendsComeBack.Accssory.BF.FairyDance
             Texture2D pixel = TextureAssets.MagicPixel.Value;
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Color color = Main.hslToRgb((float)(Main.GlobalTimeWrappedHourly * 0.6f + Projectile.identity * 0.17f) % 1f, 1f, 0.65f);
+            // 颜色包边：外层更宽的 A=0 加法光边
+            Main.EntitySpriteDraw(pixel, Projectile.Center - Main.screenPosition - direction * 21f, null, (color with { A = 0 }) * 0.55f, Projectile.rotation, new Vector2(0f, 0.5f), new Vector2(42f, 7f), SpriteEffects.None);
             Main.EntitySpriteDraw(pixel, Projectile.Center - Main.screenPosition - direction * 18f, null, color * 0.8f, Projectile.rotation, new Vector2(0f, 0.5f), new Vector2(36f, 4f), SpriteEffects.None);
             Main.EntitySpriteDraw(pixel, Projectile.Center - Main.screenPosition - direction * 10f, null, Color.White, Projectile.rotation, new Vector2(0f, 0.5f), new Vector2(20f, 1.5f), SpriteEffects.None);
             return false;

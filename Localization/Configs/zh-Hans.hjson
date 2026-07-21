@@ -1,4 +1,4 @@
-﻿Mods: {
+Mods: {
 	CalamityLegendsComeBack: {
 		Configs: {
 			CalamityLegendsComeBackConfig: {
@@ -7,6 +7,11 @@
 				Headers: {
 					RecipeSettings: 配方设置
 					DraedonTechnology: 嘉登科技
+				}
+
+				AllowWheelSlowdown: {
+					Label: 允许轮盘减速
+					Tooltip: 开启后，单人模式中部分传奇武器呼出轮盘期间会将游戏速度放慢 50%。
 				}
 
 				AllowMassMaterialRecipes: {
@@ -27,6 +32,11 @@
 				AllowBossSummonShop: {
 					Label: "[i:BestiaryGirl] 允许动物学家出售Boss召唤物"
 					Tooltip: 动物学家会在对应进度出售Boss召唤物；少数会反向产出首杀材料的配方将被暂时禁用。
+				}
+
+				GiveQuickStartBoxOnSpawn: {
+					Label: "[i:CalamityLegendsComeBack/QuickStartBox] 开局赠送快速发展道具箱"
+					Tooltip: 开启后，新玩家/新角色创号生成时，背包内将自动获得一个【快速发展道具箱】（注意：此功能会极大地破坏游戏平衡，请谨慎开启）
 				}
 
 				LightningDecryption: {

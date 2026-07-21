@@ -101,6 +101,26 @@ Mods: {
 					DisplayName: Retro Game Console Supply Box
 					Tooltip: Right click to claim the currently available retro game consoles.
 				}
+
+				Destroyer2041Summoner: {
+					DisplayName: Destroyer2041 Summoner
+					Tooltip: ""
+				}
+
+				Prime2041Summoner: {
+					DisplayName: Prime2041 Summoner
+					Tooltip: ""
+				}
+
+				Twins2041Summoner: {
+					DisplayName: Twins2041 Summoner
+					Tooltip: ""
+				}
+
+				QuickStartBox: {
+					DisplayName: Quick Start Box
+					Tooltip: ""
+				}
 			}
 
 			LegendaryEmblem: {
@@ -195,6 +215,7 @@ Mods: {
 			LegendarySkill.DisplayName: Legendary Skill
 			LegendaryWeaponFormSwitch.DisplayName: Legendary Weapon Form Switch
 			SHPCLoadingUI.DisplayName: SHPC Loading UI
+			WeaponLoadingUI.DisplayName: Weapon Loading U I
 		}
 	}
 }

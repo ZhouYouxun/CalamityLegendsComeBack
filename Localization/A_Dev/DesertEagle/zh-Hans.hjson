@@ -1,4 +1,4 @@
-﻿Mods: {
+Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
 			Weapons: {
@@ -16,6 +16,8 @@
 
 		Projectiles: {
 			A_Dev: {
+				// DesertEagleHeavyRound.DisplayName: Desert Eagle Heavy Round
+				// DesertEagleLifeRound.DisplayName: Desert Eagle Life Round
 			}
 		}
 	}

@@ -1,5 +1,6 @@
 using System;
 using CalamityMod;
+using CalamityMod.Dusts;
 using CalamityLegendsComeBack.Weapons.BlossomFlux;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick;
 using CalamityMod.Particles;
@@ -29,6 +30,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         private const float ContactDistance = 20f;
 
         private bool healedTarget;
+        private bool holyLightHomingForm;
 
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
@@ -135,9 +137,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             {
                 StateTimer--;
                 ScatterBehavior();
-
-                if (finalUpdate && StateTimer == HoverFramesInUpdates)
-                    SpawnTransferBurst(Projectile.Center, 0.9f, false);
             }
             else if (StateTimer > 0f)
             {
@@ -147,6 +146,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             else if (HasValidHealTarget())
             {
                 Player target = Main.player[(int)TargetPlayerIndex];
+                StartHolyLightHomingForm(target);
                 HomeToTarget(target);
 
                 if (Projectile.Hitbox.Intersects(target.Hitbox) || Vector2.Distance(Projectile.Center, target.Center) <= ContactDistance)
@@ -218,6 +218,21 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                 0.082f,
                 SpriteEffects.None,
                 0f);
+
+            if (holyLightHomingForm)
+            {
+                Texture2D starTexture = ModContent.Request<Texture2D>("CalamityMod/Projectiles/StarProj").Value;
+                Main.EntitySpriteDraw(
+                    starTexture,
+                    drawCenter,
+                    null,
+                    accentColor * 0.9f,
+                    Projectile.rotation,
+                    starTexture.Size() * 0.5f,
+                    new Vector2(0.52f, 0.76f) * Projectile.scale * pulse,
+                    SpriteEffects.None,
+                    0f);
+            }
 
             Main.EntitySpriteDraw(
                 bloomTexture,
@@ -392,6 +407,33 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             int minimumTimeLeft = 40 * Projectile.MaxUpdates;
             if (Projectile.timeLeft < minimumTimeLeft)
                 Projectile.timeLeft = minimumTimeLeft;
+        }
+
+        // HolyLight 的关键不是命中爆散，而是取得目标、开始追踪时的 BlastCone 变身闪。
+        private void StartHolyLightHomingForm(Player target)
+        {
+            if (holyLightHomingForm)
+                return;
+
+            holyLightHomingForm = true;
+            if (Main.dedServ)
+                return;
+
+            Vector2 direction = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY);
+            SoundStyle sound = SoundID.DD2_WitherBeastCrystalImpact with { MaxInstances = 10, Volume = 0.7f };
+            SoundEngine.PlaySound(sound, Projectile.Center);
+
+            Color holyGreen = new(54, 209, 54);
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                Projectile.Center,
+                Vector2.Zero,
+                holyGreen,
+                "CalamityMod/Particles/BlastCone",
+                new Vector2(Main.rand.NextFloat(4f, 7f), 1.5f),
+                direction.ToRotation(),
+                1f,
+                0f,
+                30));
         }
 
         private void HealTarget(Player target)

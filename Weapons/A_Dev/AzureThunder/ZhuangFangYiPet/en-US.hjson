@@ -7,6 +7,11 @@ Mods: {
 			}
 		}
 
-		Projectiles.AzureThunder.ZhuangFangYiPetProjectile.DisplayName: Zhuang Fangyi
+		Projectiles: {
+			AzureThunder.ZhuangFangYiPetProjectile.DisplayName: Zhuang Fangyi
+			BFPlagueBoom.DisplayName: B F Plague Boom
+			BFPlagueSporeBomb.DisplayName: B F Plague Spore Bomb
+			BrinyBaron_BubbleShield.DisplayName: Briny Baron_ Bubble Shield
+		}
 	}
 }

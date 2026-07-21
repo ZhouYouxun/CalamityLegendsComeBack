@@ -22,5 +22,15 @@ namespace CalamityLegendsComeBack.Accssory.TS
         {
             player.GetModPlayer<AzureThunderAccessoryPlayer>().GuZhouEquipped = true;
         }
+
+        public override void AddRecipes()
+        {
+            CreateRecipe()
+                .AddIngredient(ItemID.ManaFlower)
+                .AddIngredient(ItemID.SpectreBar, 10)
+                .AddIngredient(ItemID.Ectoplasm, 12)
+                .AddTile(TileID.MythrilAnvil)
+                .Register();
+        }
     }
 }

@@ -602,7 +602,8 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             }
             else
             {
-                Projectile.rotation = Projectile.velocity.ToRotation();
+                // RadiantStar is an item sprite pointing up-right; +45° puts the blade on its release direction.
+                Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
             }
 
             if (Main.rand.NextBool(2))

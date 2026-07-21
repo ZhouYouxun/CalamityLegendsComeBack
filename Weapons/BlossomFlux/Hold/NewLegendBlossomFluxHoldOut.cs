@@ -115,7 +115,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         private bool BombardChargePoseActive => rightChargeActive && CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_DBomb;
         private bool RecoveryChargePoseActive => rightChargeActive && CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_BRecov;
         private bool SpecialAimScopeAnchorActive => BombardChargePoseActive || RecoveryChargePoseActive;
-        private bool ShouldUseAimScope => rightChargeActive && CurrentPreset != BlossomFluxChloroplastPresetType.Chlo_BRecov && CurrentPreset != BlossomFluxChloroplastPresetType.Chlo_DBomb;
+        // 突击右键改为纯蓄箭/齐射，不再保留准星弹幕；其余形态维持原有瞄准镜规则。
+        private bool ShouldUseAimScope => rightChargeActive &&
+            CurrentPreset != BlossomFluxChloroplastPresetType.Chlo_ABreak &&
+            CurrentPreset != BlossomFluxChloroplastPresetType.Chlo_BRecov &&
+            CurrentPreset != BlossomFluxChloroplastPresetType.Chlo_DBomb;
 
         internal Color GetAimScopeMainColor() => Color.Lerp(PresetColor, AccentColor, 0.18f);
 

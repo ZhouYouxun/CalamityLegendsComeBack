@@ -1,3 +1,4 @@
+using CalamityMod.Items.Materials;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -21,6 +22,16 @@ namespace CalamityLegendsComeBack.Accssory.TS
         public override void UpdateAccessory(Player player, bool hideVisual)
         {
             player.GetModPlayer<AzureThunderAccessoryPlayer>().FengYunZhiBianEquipped = true;
+        }
+
+        public override void AddRecipes()
+        {
+            CreateRecipe()
+                .AddIngredient(ItemID.FragmentNebula, 15)
+                .AddIngredient<MeldBlob>(5)
+                .AddIngredient(ItemID.LunarBar, 10)
+                .AddTile(TileID.LunarCraftingStation)
+                .Register();
         }
     }
 }

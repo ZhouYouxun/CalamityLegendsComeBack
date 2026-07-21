@@ -145,7 +145,9 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     }
                 }
             }
-            Projectile.rotation = Projectile.localAI[1] >= 2f ? Projectile.velocity.ToRotation() : Projectile.rotation + 0.15f;
+            // CosmicKunai's art points straight UP (24x54 tall sprite), not up-right like most item icons, so the
+            // stab needs +90° to put the blades on the flight path.
+            Projectile.rotation = Projectile.localAI[1] >= 2f ? Projectile.velocity.ToRotation() + MathHelper.PiOver2 : Projectile.rotation + 0.15f;
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -552,7 +554,9 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
         public override void AI()
         {
-            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
+            // VenusianTrident is an item sprite with its prongs in the top-right corner — +45°, not +90°,
+            // is what puts the trident tip on the flight path.
+            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
             if (Main.rand.NextBool(2))
             {
                 Dust d = Dust.NewDustPerfect(Projectile.Center, DustID.Torch, -Projectile.velocity * 0.06f, 100, default, 1f);

@@ -652,7 +652,9 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             }
             else
             {
-                Projectile.rotation = Projectile.velocity.ToRotation();
+                // StellarKnife is an item sprite: the blade tip sits in the top-right corner, so the dive needs
+                // the +45° every diagonal Calamity item icon needs to line up with its own direction of travel.
+                Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
             }
 
             if (Main.rand.NextBool(3))

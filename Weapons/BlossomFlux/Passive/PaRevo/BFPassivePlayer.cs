@@ -138,6 +138,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
             PassiveCooldownTimer = 0;
             finalStandBlockedHits = 0;
             Player.HealPlayer(FinalStandRestoreLife);
+            ClearChaliceBleedout();
 
             SpawnTriggerBurstFX(finalStandPreset);
             SpawnResolveSurvivalFX(finalStandPreset);
@@ -172,6 +173,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
             int restoredLife = System.Math.Min(Player.statLifeMax2, restoreLife);
             Player.statLife = System.Math.Max(1, restoredLife);
             Player.HealEffect(restoredLife, true);
+            ClearChaliceBleedout();
             if (applyWithered)
                 Player.AddBuff(ModContent.BuffType<Withered>(), 30 * 60);
 
@@ -185,6 +187,18 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
                 SoundEngine.PlaySound(BlossomFluxSounds.PassivePlayerSpecialAction1, Player.Center);
                 SoundEngine.PlaySound(BlossomFluxSounds.PassivePlayerSpecialAction2, Player.Center);
             }
+        }
+
+        // 与星云核心、席尔瓦复活保持一致：复活时清掉血神圣杯攒下的流血缓冲，
+        // 否则刚被救起来就会被残留的流血伤害立刻二次打死。
+        private void ClearChaliceBleedout()
+        {
+            var calamity = Player.Calamity();
+            if (!calamity.chaliceOfTheBloodGod)
+                return;
+
+            calamity.chaliceBleedoutBuffer = 0D;
+            calamity.chaliceDamagePointPartialProgress = 0D;
         }
 
         private void SpawnSpecialSeedUltimate(float flags)
@@ -262,14 +276,29 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
             }
         }
 
+        // 本模组 sortAfter = CalamityMod，而 PlayerLoader.PreKill 会把所有 ModPlayer 都跑完再取交集，
+        // 所以执行到这里时灾厄的复活可能已经在同一帧生效，并且改写了它自己的判定条件。
+        // 因此这里要同时覆盖「灾厄接下来会救」和「灾厄本帧已经救过」两种情况，
+        // 否则一次死亡会把灾厄的复活和本被动一起消耗掉。
         private bool CalamityReviveShouldGoFirst()
         {
             var calamity = Player.Calamity();
-            return calamity.nebulousCore && !Player.HasCooldown(NebulousCore.ID) ||
+            return calamity.nebulousCore && CalamityCooldownReviveWins(NebulousCore.ID) ||
                 calamity.DashID == GodslayerArmorDash.ID && Player.dashDelay < 0 ||
                 calamity.silvaSet && calamity.silvaCountdown > 0 ||
-                calamity.necroSet && calamity.necroReviveCounter == -1 ||
-                calamity.permafrostsConcoction && !Player.HasCooldown(PermafrostConcoction.ID);
+                // 亡灵套发动后 necroReviveCounter 会立刻从 -1 变成 0，所以 -1（待发动）与 0（本帧刚发动）都算。
+                calamity.necroSet && calamity.necroReviveCounter <= 0 ||
+                calamity.permafrostsConcoction && CalamityCooldownReviveWins(PermafrostConcoction.ID);
+        }
+
+        // 冷却型复活（星云核心、永冻药剂）刚发动的那一帧 timeLeft 仍等于 duration，
+        // 因为冷却每帧只会 tick 一次，且那次 tick 不可能插在同一轮 PreKill 中间。
+        private bool CalamityCooldownReviveWins(string cooldownID)
+        {
+            if (!Player.Calamity().cooldowns.TryGetValue(cooldownID, out CooldownInstance cooldown))
+                return true;
+
+            return cooldown.timeLeft >= cooldown.duration;
         }
 
         private static bool AnyBossAlive()

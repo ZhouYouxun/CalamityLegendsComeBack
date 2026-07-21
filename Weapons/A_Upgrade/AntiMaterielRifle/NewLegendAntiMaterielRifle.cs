@@ -126,10 +126,49 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
 
             tooltips.FindAndReplace("[GFB]", text);
 
-            tooltips.Add(new TooltipLine(Mod, "AMRLegendaryText", this.GetLocalizedValue("LegendaryText"))
+            bool shiftPressed = Main.keyState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift) ||
+                               Main.keyState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.RightShift);
+
+            AMRProgressionStage currentStage = AMRBalance.Stage;
+            int maxStageIndex = (int)currentStage;
+
+            if (shiftPressed)
             {
-                OverrideColor = new Color(102, 230, 255)
-            });
+                for (int i = 0; i <= maxStageIndex; i++)
+                {
+                    string stageText = this.GetLocalizedValue($"Stage{i}");
+                    if (!string.IsNullOrEmpty(stageText))
+                    {
+                        tooltips.Add(new TooltipLine(Mod, $"AMRStageText_{i}", $"• {stageText}")
+                        {
+                            OverrideColor = i == maxStageIndex ? new Color(255, 215, 100) : new Color(180, 220, 255)
+                        });
+                    }
+                }
+
+                tooltips.Add(new TooltipLine(Mod, "AMRLegendaryText", this.GetLocalizedValue("LegendaryText"))
+                {
+                    OverrideColor = new Color(102, 230, 255)
+                });
+            }
+            else
+            {
+                string latestStageText = this.GetLocalizedValue($"Stage{maxStageIndex}");
+                if (!string.IsNullOrEmpty(latestStageText))
+                {
+                    string latestPrefix = this.GetLocalizedValue("LatestUnlockPrefix");
+                    string displayLatest = string.Format(latestPrefix, latestStageText);
+                    tooltips.Add(new TooltipLine(Mod, "AMRLatestStageText", displayLatest)
+                    {
+                        OverrideColor = new Color(255, 215, 100)
+                    });
+                }
+
+                tooltips.Add(new TooltipLine(Mod, "AMRLegendaryHint", this.GetLocalizedValue("LegendaryHint"))
+                {
+                    OverrideColor = Color.Gray
+                });
+            }
         }
 
         internal static bool CanUseWorldInput(Player player)

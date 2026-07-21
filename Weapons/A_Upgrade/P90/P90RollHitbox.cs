@@ -55,6 +55,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.P90
             target.velocity += direction * (7f + 7f * target.knockBackResist) - Vector2.UnitY * (2f + 3f * target.knockBackResist);
             SpawnImpact(target.Center, direction);
             SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.62f, Pitch = 0.28f }, target.Center);
+
+            // 撞到敌方目标立刻停止向后转移突进
+            P90Player.StopRollOnHit();
         }
 
         private static void SpawnImpact(Vector2 position, Vector2 direction)

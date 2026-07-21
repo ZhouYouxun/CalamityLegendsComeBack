@@ -94,9 +94,17 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 Main.spriteBatch.DrawLineBetter(a, b, tint * (pct * 0.5f), pct * 2.4f);
             }
 
+            // BloomCircle 没有 alpha 通道，底色是不透明黑，只有加法混合下黑色才不贡献颜色。
+            // 在默认 AlphaBlend 批次里画会给每一枚陪跑弹糊一个半透明黑方块（Cryogen 的 FrostMote 同源问题）。
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Main.spriteBatch.Draw(bloom, Projectile.Center - Main.screenPosition, null, tint * 0.6f, 0f,
+            SpriteBatch sb = Main.spriteBatch;
+            sb.End();
+            sb.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+            sb.Draw(bloom, Projectile.Center - Main.screenPosition, null, tint * 0.6f, 0f,
                 bloom.Size() * 0.5f, 0.09f, SpriteEffects.None, 0f);
+            sb.End();
+            sb.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullCounterClockwise, null, Main.GameViewMatrix.TransformationMatrix);
+
             Main.spriteBatch.DrawLineBetter(
                 Projectile.Center - forward * 7f, Projectile.Center + forward * 5f, tint, 1.6f);
 

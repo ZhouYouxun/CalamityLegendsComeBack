@@ -22,9 +22,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
     {
         private const int PriorityMarkDuration = 15 * 60;
         private const float MaxScanRadius = 240f;
+        private const int MaxScannedTargets = 10;
 
         public new string LocalizationCategory => "Projectiles.BlossomFlux";
-        public override string Texture => "CalamityLegendsComeBack/Weapons/BlossomFlux/RightClick/CDetec/BFArrow_CDetec";
+        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
         public GeneralDrawLayer LayerToRenderTo => GeneralDrawLayer.BeforeProjectiles;
 
         private ref float BestTargetIndex => ref Projectile.ai[0];
@@ -33,17 +34,30 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         private ref float ScanRadius => ref Projectile.localAI[1];
         private int configuredMarkDuration = PriorityMarkDuration;
         private int configuredEffectTier;
+        private int scannedTargetCount;
+        private readonly bool[] scannedTargets = new bool[Main.maxNPCs];
 
         public override void SetStaticDefaults()
         {
-            ProjectileID.Sets.TrailCacheLength[Projectile.type] = 16;
+            ProjectileID.Sets.TrailCacheLength[Projectile.type] = 24;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 2;
         }
 
         public override void SetDefaults()
         {
-            BFArrowCommon.SetBaseArrowDefaults(Projectile, width: 14, height: 34, timeLeft: 240, penetrate: -1, extraUpdates: 6, tileCollide: true);
-            Projectile.localNPCHitCooldown = 12;
+            // Transformer 在 K 键释放后是高速、直线、无限贯穿的束状攻击；这里复刻那一段手感。
+            Projectile.width = 16;
+            Projectile.height = 16;
+            Projectile.friendly = true;
+            Projectile.hostile = false;
+            Projectile.DamageType = DamageClass.Ranged;
+            Projectile.ignoreWater = true;
+            Projectile.tileCollide = false;
+            Projectile.penetrate = -1;
+            Projectile.timeLeft = 62;
+            Projectile.extraUpdates = 8;
+            Projectile.usesLocalNPCImmunity = true;
+            Projectile.localNPCHitCooldown = -1;
         }
 
         public void ConfigureMark(int markDuration, int effectTier)
@@ -69,7 +83,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             BestTargetIndex = -1f;
             BestTargetLifeMax = -1f;
             ScanRadius = 28f;
-            BFArrowCommon.FaceForward(Projectile);
+            scannedTargetCount = 0;
+            Array.Clear(scannedTargets, 0, scannedTargets.Length);
+            Projectile.rotation = Projectile.velocity.ToRotation();
         }
 
         public override void AI()
@@ -78,8 +94,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             ScanRadius = MathHelper.Clamp(ScanRadius + 3.6f, 28f, MaxScanRadius);
 
             Lighting.AddLight(Projectile.Center, BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_CDetec).ToVector3() * 0.52f);
-            BFArrowCommon.FaceForward(Projectile);
-            BFArrowCommon.EmitPresetTrail(Projectile, BlossomFluxChloroplastPresetType.Chlo_CDetec, 1.18f);
+            Projectile.rotation = Projectile.velocity.ToRotation();
             EmitPenetrationFlightFX();
 
             if ((int)FlightTimer % 16 == 0 && Projectile.owner == Main.myPlayer)
@@ -88,6 +103,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
+            if (!BFArrowCommon.InBounds(target.whoAmI, scannedTargets.Length) || scannedTargets[target.whoAmI] || scannedTargetCount >= MaxScannedTargets)
+                return;
+
+            scannedTargets[target.whoAmI] = true;
+            scannedTargetCount++;
+            target.GetGlobalNPC<BFArrow_CDetecNPC>().ApplyMark(Projectile.owner, configuredMarkDuration);
+
             if (target.lifeMax > BestTargetLifeMax)
             {
                 BestTargetLifeMax = target.lifeMax;
@@ -95,17 +117,26 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                 Projectile.netUpdate = true;
             }
 
-            Projectile.localNPCImmunity[target.whoAmI] = 24;
-            BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_CDetec, 8, 0.7f, 2.6f, 0.72f, 1.05f);
-            SpawnPenetrationImpactFX(target.Center, 1f);
+            if (Projectile.owner == Main.myPlayer)
+            {
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    target.Center,
+                    Vector2.Zero,
+                    ModContent.ProjectileType<BFArrow_CDetecReticle>(),
+                    0,
+                    0f,
+                    Projectile.owner,
+                    target.whoAmI);
+            }
+
+            SpawnPenetrationImpactFX(target.Center, 0.82f);
             SoundEngine.PlaySound(BlossomFluxSounds.RightReconProjHit, target.Center);
         }
 
         public override bool OnTileCollide(Vector2 oldVelocity)
         {
-            BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_CDetec, 12, 1f, 3.8f, 0.82f, 1.18f);
-            SoundEngine.PlaySound(BlossomFluxSounds.RightReconTileCollide, Projectile.Center);
-            return true;
+            return false;
         }
 
         public override void OnKill(int timeLeft)
@@ -116,10 +147,17 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
 
         public override bool PreDraw(ref Color lightColor)
         {
-            Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-            DrawArrowHelix(Projectile.Center - Main.screenPosition, forward);
-            DrawReconOpticOverlay();
-            BFArrowCommon.DrawPresetArrow(Projectile, lightColor, BlossomFluxChloroplastPresetType.Chlo_CDetec, 1.05f);
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D spark = ModContent.Request<Texture2D>("CalamityMod/Particles/GlowSpark").Value;
+            Vector2 drawPosition = Projectile.Center - Main.screenPosition;
+            Color coreColor = new Color(225, 252, 255, 0) * Projectile.Opacity;
+            Color edgeColor = new Color(78, 194, 255, 0) * Projectile.Opacity;
+
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
+            Main.EntitySpriteDraw(bloom, drawPosition, null, edgeColor * 0.72f, 0f, bloom.Size() * 0.5f, 0.24f, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(bloom, drawPosition, null, coreColor * 0.82f, 0f, bloom.Size() * 0.5f, 0.1f, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(spark, drawPosition, null, coreColor, Projectile.rotation, spark.Size() * 0.5f, new Vector2(0.055f, 0.24f), SpriteEffects.None, 0);
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
             return false;
         }
 

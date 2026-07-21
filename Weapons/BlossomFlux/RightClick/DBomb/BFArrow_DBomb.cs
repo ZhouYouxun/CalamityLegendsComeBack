@@ -694,24 +694,28 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                     continue;
                 }
 
+                // 主弹只管锚定与波次；落下的是叶流自己的呼叫落矛，只借亵渎矛的下压节奏。
                 int projectileIndex = Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
                     spawnPosition, velocity,
-                    ModContent.ProjectileType<BFLeafProj>(),
+                    ModContent.ProjectileType<BFBombardCallSpear>(),
                     Math.Max(1, (int)(storedRainDamage * 0.8f)),
                     storedAmmoKnockback,
-                    Projectile.owner,
-                    (float)BlossomFluxChloroplastPresetType.Chlo_DBomb,
-                    1f);
+                    Projectile.owner);
 
                 if (!BFArrowCommon.InBounds(projectileIndex, Main.maxProjectiles))
                     continue;
 
-                Projectile rainArrow = Main.projectile[projectileIndex];
-                rainArrow.friendly = true;
-                rainArrow.hostile = false;
-                rainArrow.tileCollide = false;
-                rainArrow.noDropItem = true;
+                Projectile rainSpear = Main.projectile[projectileIndex];
+                rainSpear.friendly = true;
+                rainSpear.hostile = false;
+                rainSpear.DamageType = DamageClass.Ranged;
+                rainSpear.noDropItem = true;
+                rainSpear.netUpdate = true;
+
+                BFAccessoryGlobalProjectile accessoryEffect = rainSpear.GetGlobalProjectile<BFAccessoryGlobalProjectile>();
+                accessoryEffect.BlossomFluxArrow = true;
+                accessoryEffect.Preset = BlossomFluxChloroplastPresetType.Chlo_DBomb;
             }
 
             SpawnBombardAuraFX(center, 0.92f);

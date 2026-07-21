@@ -301,7 +301,9 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     GhastFx.Burst(Projectile.Center, 4f, 12);
                 }
             }
-            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
+            // GhastlyVisage's art is a mask already facing RIGHT, so the raw aim angle points the face at the
+            // player. +PiOver2 was flying the whole face sideways.
+            Projectile.rotation = Projectile.velocity.ToRotation();
         }
 
         public override bool PreDraw(ref Color lightColor)

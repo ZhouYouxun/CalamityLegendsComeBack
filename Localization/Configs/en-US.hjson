@@ -1,4 +1,4 @@
-﻿Mods: {
+Mods: {
 	CalamityLegendsComeBack: {
 		Configs: {
 			CalamityLegendsComeBackConfig: {
@@ -7,6 +7,11 @@
 				Headers: {
 					RecipeSettings: Recipe Settings
 					DraedonTechnology: Draedon Technology
+				}
+
+				AllowWheelSlowdown: {
+					Label: Allow Wheel Slowdown
+					Tooltip: If enabled, some legendary weapons will slow the game speed by 50% while their wheels are open in single player.
 				}
 
 				AllowMassMaterialRecipes: {
@@ -27,6 +32,11 @@
 				AllowBossSummonShop: {
 					Label: "[i:BestiaryGirl] Allow Zoologist Boss Summons"
 					Tooltip: The Zoologist sells Boss summons at the appropriate progression; a few recipes that would return pre-kill materials are temporarily disabled.
+				}
+
+				GiveQuickStartBoxOnSpawn: {
+					Label: "[i:CalamityLegendsComeBack/QuickStartBox] Give Quick Start Supply Box On Spawn"
+					Tooltip: If enabled, new players will automatically receive a [Quick Start Supply Box] upon spawning. (WARNING: This severely ruins game balance!)
 				}
 
 				LightningDecryption: {

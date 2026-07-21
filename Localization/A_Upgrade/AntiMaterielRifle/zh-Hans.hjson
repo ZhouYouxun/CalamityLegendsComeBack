@@ -12,7 +12,8 @@ Mods: {
 					ZoomState: 视野拉远：{0}
 					ZoomEnabled: 开启
 					ZoomDisabled: 关闭
-					LegendaryHint: 按住Shift查看传奇文本
+					LegendaryHint: 按住Shift查看全部已解锁强化与传奇文本
+					LatestUnlockPrefix: "当前最新强化：{0}"
 					Stage0: .408专用弹：高速飞行并穿透部分护甲
 					Stage1: 克苏鲁之眼已处决：命中施加死亡标记并进一步剥离防御
 					Stage2: 世界吞噬者或克苏鲁之脑已处决：命中产生贯穿目标的金属射流
@@ -39,6 +40,7 @@ Mods: {
 				AMRAimScope.DisplayName: 反器材瞄准线
 				AMRRound.DisplayName: .408反器材弹
 				AMROnyxDetonation.DisplayName: 黑玛瑙引爆
+				// AMRSlideExplosion.DisplayName: A M R Slide Explosion
 			}
 		}
 	}

@@ -151,6 +151,19 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             bool zoomEnabled = Owner.HeldItem.ModItem is NewLegendAntiMaterielRifle rifle && rifle.ScopeZoomEnabled;
             AMRPlayer.RequestScope(ScopeChargeCompletion, zoomEnabled);
 
+            float charge = ScopeChargeCompletion;
+
+            // 逐渐无法移动
+            float moveMult = MathHelper.Clamp(1f - charge, 0f, 1f);
+            Owner.moveSpeed *= moveMult;
+            Owner.maxRunSpeed *= moveMult;
+            Owner.accRunSpeed *= moveMult;
+            Owner.velocity.X *= MathHelper.Lerp(1f, 0.4f, charge);
+
+            // 逐渐防御力降低到自身的一半
+            float defMult = MathHelper.Clamp(1f - 0.5f * charge, 0.5f, 1f);
+            Owner.statDefense *= defMult;
+
             if (!playedReadySound && chargeFrames >= AMRBalance.ScopeChargeFrames)
             {
                 playedReadySound = true;
@@ -222,7 +235,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
                 return false;
 
             Projectile shot = Main.projectile[shotIndex];
-            shot.CritChance = Owner.GetWeaponCrit(Owner.HeldItem);
+            int baseCrit = Owner.GetWeaponCrit(Owner.HeldItem);
+            int bonusCrit = rightShot ? (int)(100f * charge) : 0;
+            shot.CritChance = baseCrit + bonusCrit;
             shot.netUpdate = true;
 
             recoilOffset = rightShot ? 17f : 11f;

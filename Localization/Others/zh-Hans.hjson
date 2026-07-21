@@ -102,6 +102,26 @@ Mods: {
 					DisplayName: 复古游戏机补给包
 					Tooltip: 右键打开，领取目前已经准备好的复古游戏机。
 				}
+
+				Destroyer2041Summoner: {
+					// DisplayName: Destroyer2041 Summoner
+					// Tooltip: ""
+				}
+
+				Prime2041Summoner: {
+					// DisplayName: Prime2041 Summoner
+					// Tooltip: ""
+				}
+
+				Twins2041Summoner: {
+					// DisplayName: Twins2041 Summoner
+					// Tooltip: ""
+				}
+
+				QuickStartBox: {
+					// DisplayName: Quick Start Box
+					// Tooltip: ""
+				}
 			}
 
 			LegendaryEmblem: {
@@ -196,6 +216,7 @@ Mods: {
 			LegendarySkill.DisplayName: 传奇技能
 			LegendaryWeaponFormSwitch.DisplayName: 传奇武器形态切换
 			SHPCLoadingUI.DisplayName: SHPC界面
+			// WeaponLoadingUI.DisplayName: Weapon Loading U I
 		}
 	}
 }

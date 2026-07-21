@@ -22,5 +22,15 @@ namespace CalamityLegendsComeBack.Accssory.TS
         {
             player.GetModPlayer<AzureThunderAccessoryPlayer>().YiGanYiYingEquipped = true;
         }
+
+        public override void AddRecipes()
+        {
+            CreateRecipe()
+                .AddIngredient(ItemID.BandofStarpower)
+                .AddIngredient(ItemID.SoulofLight, 10)
+                .AddIngredient(ItemID.SoulofNight, 10)
+                .AddTile(TileID.MythrilAnvil)
+                .Register();
+        }
     }
 }

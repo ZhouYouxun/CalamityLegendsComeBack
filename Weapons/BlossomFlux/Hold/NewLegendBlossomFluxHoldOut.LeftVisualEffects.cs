@@ -134,123 +134,109 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             }
         }
 
-        // 复苏：柔和有机云雾 — 圆弧扩散的 MediumMist + 漂浮 GlowOrb
+        // 复苏：生命光球托起十字治愈粒子，不再混入云雾与普通 Dust。
         private static void SpawnRecoveryMuzzle(Vector2 muzzle, Vector2 dir, Color theme, Color accent, float i)
         {
             GeneralParticleHandler.SpawnParticle(new StrongBloom(
-                muzzle, dir * 0.5f, Color.Lerp(theme, Color.White, 0.45f), 0.28f * i, 10));
-            for (int k = 0; k < 5; k++)
-            {
-                float angle = MathHelper.TwoPi * k / 5f;
-                GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
-                    muzzle + Main.rand.NextVector2Circular(8f, 8f),
-                    angle.ToRotationVector2() * Main.rand.NextFloat(1.2f, 3.5f) + dir * Main.rand.NextFloat(0.4f, 1.8f),
-                    Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.3f, 0.7f)),
-                    Color.Transparent,
-                    Main.rand.NextFloat(0.32f, 0.58f) * i,
-                    Main.rand.Next(18, 28),
-                    Main.rand.NextFloat(-0.04f, 0.04f)));
-            }
-            for (int k = 0; k < 3; k++)
+                muzzle, dir * 0.35f, Color.Lerp(theme, Color.White, 0.5f), 0.24f * i, 9));
+            for (int k = 0; k < 4; k++)
             {
                 GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
-                    muzzle + Main.rand.NextVector2Circular(10f, 10f),
-                    new Vector2(0f, -Main.rand.NextFloat(0.5f, 1.4f)) + dir * Main.rand.NextFloat(0.8f, 2.2f),
-                    false, Main.rand.Next(14, 22),
-                    Main.rand.NextFloat(0.16f, 0.28f) * i,
-                    Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.2f, 0.55f)),
+                    muzzle + Main.rand.NextVector2Circular(7f, 7f),
+                    dir * Main.rand.NextFloat(0.7f, 1.7f) + Vector2.UnitY * Main.rand.NextFloat(-1.6f, -0.45f),
+                    false, Main.rand.Next(16, 25),
+                    Main.rand.NextFloat(0.18f, 0.3f) * i,
+                    Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.3f, 0.7f)),
                     true, false, true));
             }
-            for (int k = 0; k < 6; k++)
+
+            for (int k = 0; k < 3; k++)
             {
-                Dust d = Dust.NewDustPerfect(muzzle + Main.rand.NextVector2Circular(8f, 8f), DustID.RainbowMk2);
-                d.velocity = dir.RotatedByRandom(0.6f) * Main.rand.NextFloat(1.8f, 5.2f);
-                d.color = Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.4f, 0.9f));
-                d.noGravity = true;
-                d.scale = Main.rand.NextFloat(0.65f, 1.05f) * i;
+                HealingPlus plus = new(
+                    muzzle + Main.rand.NextVector2Circular(8f, 8f),
+                    Main.rand.NextFloat(0.35f, 0.58f) * i,
+                    dir * Main.rand.NextFloat(0.45f, 1.25f) + Vector2.UnitY * Main.rand.NextFloat(-2.5f, -1.2f),
+                    Color.Lerp(theme, Color.White, 0.2f),
+                    Color.Lerp(accent, Color.White, 0.65f),
+                    Main.rand.Next(16, 24));
+                GeneralParticleHandler.SpawnParticle(plus);
             }
         }
 
-        // 侦查：电磁扫描式 — 全向 CritSpark 短爆 + 正前方 DirectionalPulseRing
+        // 侦查：只释放少量可读的扫描光点；飞行中的点阵绘制在叶矢 PreDraw 中完成。
         private static void SpawnReconMuzzle(Vector2 muzzle, Vector2 dir, Vector2 right, Color theme, Color accent, float i)
         {
             GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
                 muzzle, dir * 2.2f, Color.Lerp(theme, Color.White, 0.22f),
                 new Vector2(0.52f, 1.2f), dir.ToRotation(), 0.06f * i, 0.04f, 8));
-            for (int k = 0; k < 8; k++)
-            {
-                GeneralParticleHandler.SpawnParticle(new CritSpark(
-                    muzzle + Main.rand.NextVector2Circular(5f, 5f),
-                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.5f, 6.5f),
-                    theme,
-                    Color.Lerp(accent, Color.White, 0.55f),
-                    Main.rand.NextFloat(0.28f, 0.52f) * i,
-                    Main.rand.Next(7, 12)));
-            }
-            for (int k = 0; k < 4; k++)
-            {
-                Dust d = Dust.NewDustPerfect(muzzle + right * Main.rand.NextFloat(-7f, 7f), DustID.Electric);
-                d.velocity = dir.RotatedByRandom(0.25f) * Main.rand.NextFloat(3f, 7f);
-                d.color = Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.3f, 0.85f));
-                d.noGravity = true;
-                d.scale = Main.rand.NextFloat(0.7f, 1.1f) * i;
-            }
-        }
-
-        // 轰炸：爆炸冲击式 — StrongBloom 强闪 + 四面放射 SparkParticle
-        private static void SpawnBombardMuzzle(Vector2 muzzle, Vector2 dir, Color theme, Color accent, float i)
-        {
-            GeneralParticleHandler.SpawnParticle(new StrongBloom(
-                muzzle, Vector2.Zero, Color.Lerp(theme, Color.White, 0.25f), 0.45f * i, 12));
-            for (int k = 0; k < 10; k++)
-            {
-                GeneralParticleHandler.SpawnParticle(new SparkParticle(
-                    muzzle + Main.rand.NextVector2Circular(6f, 6f),
-                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(3.5f, 9.5f),
-                    false, Main.rand.Next(10, 18),
-                    Main.rand.NextFloat(0.45f, 0.85f) * i,
-                    Main.rand.NextBool(4) ? Color.White : Color.Lerp(theme, accent, Main.rand.NextFloat())));
-            }
-            for (int k = 0; k < 6; k++)
-            {
-                Dust d = Dust.NewDustPerfect(muzzle + Main.rand.NextVector2Circular(6f, 6f), DustID.GoldFlame);
-                d.velocity = dir.RotatedByRandom(MathHelper.PiOver2) * Main.rand.NextFloat(2f, 7f);
-                d.color = Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.1f, 0.45f));
-                d.noGravity = true;
-                d.scale = Main.rand.NextFloat(0.75f, 1.2f) * i;
-            }
-        }
-
-        // 瘟疫：毒素弥漫式 — 缓慢漂散 MediumMist 毒气 + 放射 SparkParticle 胞子
-        private static void SpawnPlagueMuzzle(Vector2 muzzle, Vector2 dir, Color theme, Color accent, float i)
-        {
-            for (int k = 0; k < 6; k++)
-            {
-                float angle = MathHelper.TwoPi * k / 6f + Main.rand.NextFloat(0.2f);
-                GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
-                    muzzle + Main.rand.NextVector2Circular(10f, 10f),
-                    angle.ToRotationVector2() * Main.rand.NextFloat(0.8f, 2.8f),
-                    Color.Lerp(theme, Color.Lerp(accent, Color.Black, 0.18f), Main.rand.NextFloat(0.3f, 0.75f)),
-                    Color.Transparent,
-                    Main.rand.NextFloat(0.38f, 0.72f) * i,
-                    Main.rand.Next(22, 38),
-                    Main.rand.NextFloat(-0.05f, 0.05f)));
-            }
-            for (int k = 0; k < 6; k++)
-            {
-                GeneralParticleHandler.SpawnParticle(new SparkParticle(
-                    muzzle + Main.rand.NextVector2Circular(7f, 7f),
-                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.8f, 5.5f),
-                    false, Main.rand.Next(12, 20),
-                    Main.rand.NextFloat(0.32f, 0.58f) * i,
-                    Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.15f, 0.5f))));
-            }
             for (int k = 0; k < 5; k++)
             {
-                Dust d = Dust.NewDustPerfect(muzzle + Main.rand.NextVector2Circular(9f, 9f), DustID.CursedTorch);
-                d.velocity = dir.RotatedByRandom(0.8f) * Main.rand.NextFloat(1.5f, 4.5f);
-                d.noGravity = true;
-                d.scale = Main.rand.NextFloat(0.65f, 1f) * i;
+                GeneralParticleHandler.SpawnParticle(new SquishyLightParticle(
+                    muzzle + right * Main.rand.NextFloat(-5f, 5f),
+                    dir.RotatedByRandom(0.18f) * Main.rand.NextFloat(2.6f, 5.4f),
+                    Main.rand.NextFloat(0.16f, 0.24f) * i,
+                    Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.25f, 0.65f)),
+                    Main.rand.Next(10, 15)));
+            }
+        }
+
+        // 轰炸：借鉴 Helium Flash 的烟火 Dust 与蒸汽 Dust，做成短促的机械点火。
+        private static void SpawnBombardMuzzle(Vector2 muzzle, Vector2 dir, Color theme, Color accent, float i)
+        {
+            for (int k = 0; k < 12; k++)
+            {
+                Dust dust = Dust.NewDustPerfect(
+                    muzzle + Main.rand.NextVector2Circular(5f, 5f),
+                    DustID.FireworksRGB,
+                    dir.RotatedByRandom(0.42f) * Main.rand.NextFloat(3.5f, 9f),
+                    80,
+                    Color.Lerp(theme, Main.rand.NextBool(4) ? Color.White : accent, Main.rand.NextFloat(0.2f, 0.7f)),
+                    Main.rand.NextFloat(0.65f, 1.05f) * i);
+                dust.noGravity = true;
+            }
+
+            for (int k = 0; k < 3; k++)
+            {
+                Dust steam = Dust.NewDustPerfect(
+                    muzzle - dir * Main.rand.NextFloat(1f, 5f),
+                    DustID.SteampunkSteam,
+                    (-dir).RotatedByRandom(0.42f) * Main.rand.NextFloat(0.7f, 2.2f),
+                    140,
+                    Color.Lerp(Color.SlateGray, theme, 0.4f),
+                    Main.rand.NextFloat(0.55f, 0.85f) * i);
+                steam.noGravity = false;
+            }
+        }
+
+        // 瘟疫：取 PBG 掉落武器的毒牙、针筒与燃料罐语言——黄绿毒液核心，带少量橙红警戒光。
+        private static void SpawnPlagueMuzzle(Vector2 muzzle, Vector2 dir, Color theme, Color accent, float i)
+        {
+            Color plagueCore = new(136, 238, 74);
+            Color plagueWarning = new(245, 157, 56);
+            for (int k = 0; k < 4; k++)
+            {
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    muzzle + Main.rand.NextVector2Circular(6f, 6f),
+                    dir.RotatedByRandom(0.35f) * Main.rand.NextFloat(0.8f, 2.8f),
+                    false,
+                    Main.rand.Next(10, 16),
+                    Main.rand.NextFloat(0.14f, 0.24f) * i,
+                    Color.Lerp(plagueCore, Main.rand.NextBool(5) ? plagueWarning : theme, Main.rand.NextFloat(0.12f, 0.45f)),
+                    true,
+                    false,
+                    true));
+            }
+
+            for (int k = 0; k < 6; k++)
+            {
+                Dust venom = Dust.NewDustPerfect(
+                    muzzle + Main.rand.NextVector2Circular(8f, 8f),
+                    Main.rand.NextBool() ? DustID.PoisonStaff : DustID.VenomStaff,
+                    dir.RotatedByRandom(0.55f) * Main.rand.NextFloat(1.4f, 4.4f),
+                    110,
+                    Color.Lerp(plagueCore, plagueWarning, Main.rand.NextFloat(0f, 0.22f)),
+                    Main.rand.NextFloat(0.65f, 1.05f) * i);
+                venom.noGravity = true;
             }
         }
 

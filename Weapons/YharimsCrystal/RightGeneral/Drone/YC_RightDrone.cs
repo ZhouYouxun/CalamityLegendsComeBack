@@ -22,7 +22,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         private static readonly Color DroneOrange = new(255, 104, 36);
 
         public new string LocalizationCategory => "Projectiles.YharimsCrystal";
-        public override string Texture => "CalamityLegendsComeBack/Weapons/YharimsCrystal/YC_Right_Drone";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/YharimsCrystal/图片/默认战机2";
 
         private const int ShutdownFrames = 120;
         private const float MaxOffsetLength = 5f;
@@ -348,16 +348,17 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             if (time <= 0)
                 return false;
 
-            Texture2D texture = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/YharimsCrystal/YC_Right_Drone").Value;
+            Texture2D texture = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/YharimsCrystal/图片/默认战机2").Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
 
             Vector2 drawPosition = Projectile.Center - Main.screenPosition + new Vector2(0f, Owner.gfxOffY);
             Color drawColor = Projectile.GetAlpha(lightColor);
             float drawRotation = Projectile.rotation + MathHelper.PiOver2;
             Vector2 rotationPoint = texture.Size() * 0.5f;
+            // 战机贴图左右对称、机头朝上，drawRotation 已让机头对准 aimDir 指向前方。竖直翻转会把机头
+            // 翻到机尾方向，让被翻转的那一侧战机"倒着飞"——这正是之前一侧始终反的原因。所以只保留用于朝向
+            // 的水平翻转（对称贴图下不可见但对朝向语义正确），绝不加竖直翻转。
             SpriteEffects flipSprite = Projectile.spriteDirection == -1 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
-            if (Projectile.spriteDirection == -1 ? movingUp : !movingUp)
-                flipSprite |= SpriteEffects.FlipVertically;
 
             // Soft gold ambient glow behind the drone
             Main.EntitySpriteDraw(bloom, drawPosition, null, DroneGold with { A = 0 } * 0.18f, 0f, bloom.Size() * 0.5f, Projectile.scale * 0.72f, SpriteEffects.None);

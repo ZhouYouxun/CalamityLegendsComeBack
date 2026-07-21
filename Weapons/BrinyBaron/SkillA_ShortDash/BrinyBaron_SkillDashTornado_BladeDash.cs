@@ -26,6 +26,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
         private const int DashHistoryLength = 8;
         private const float DashSpeed = 18f * 0.67f;
         private const float ReboundSpeed = 9f;
+        private const float DefaultReboundDashSpeedMultiplier = 0.6f;
         private const float DashTurnRate = 0.01f; // 转向最大角度限
         private const float ReadyBladeDistance = 28f;
         private const float DashBladeDistance = 20f;
@@ -48,7 +49,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
         private static readonly float[] ShortDashSpeedMultipliers = { 1.05f, 1.12f, 1.2f, 1.32f, 1.45f };
         private static readonly float[] ShortDashContactDamageMultipliers = { 1.05f, 1.1f, 1.2f, 1.35f, 1.55f };
         private static readonly bool[] ShortDashEnemyReboundUnlocks = { false, true, true, true, true };
-        private bool CeruleanShieldMode => Projectile.ai[0] == 2f;
+        private bool ReboundDashMode => Projectile.ai[0] == 2f;
+        private float DashSpeedMultiplier => ReboundDashMode ? DefaultReboundDashSpeedMultiplier : 1f;
 
         public override void SetStaticDefaults()
         {
@@ -175,7 +177,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
 
             Projectile.friendly = true;
             Projectile.Center = owner.MountedCenter + lockedDirection * DashBladeDistance;
-            Projectile.velocity = lockedDirection * (DashSpeed * dashSpeedMultiplier);
+            Projectile.velocity = lockedDirection * (DashSpeed * dashSpeedMultiplier * DashSpeedMultiplier);
             SyncOwnerToProjectile(owner, DashBladeDistance);
             RecordDashDirection(Projectile.velocity.SafeNormalize(lockedDirection));
             Projectile.netUpdate = true;
@@ -196,7 +198,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             float turnedRotation = lockedDirection.ToRotation().AngleTowards(aimDirection.ToRotation(), DashTurnRate);
             lockedDirection = turnedRotation.ToRotationVector2();
 
-            Vector2 desiredVelocity = lockedDirection * (DashSpeed * dashSpeedMultiplier);
+            Vector2 desiredVelocity = lockedDirection * (DashSpeed * dashSpeedMultiplier * DashSpeedMultiplier);
             Vector2 actualVelocity = ResolveSlidingVelocity(owner, desiredVelocity);
 
             Projectile.velocity = actualVelocity;
@@ -223,7 +225,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             stateTimer++;
 
             float speedFactor = MathHelper.Lerp(1f, 0.55f, stateTimer / (float)ReboundTimeMax);
-            Projectile.velocity = lockedDirection * ReboundSpeed * speedFactor;
+            Projectile.velocity = lockedDirection * ReboundSpeed * DashSpeedMultiplier * speedFactor;
             Projectile.Center += Projectile.velocity;
             SyncOwnerToProjectile(owner, ReboundBladeDistance);
             bladeRotation = lockedDirection.ToRotation() + MathHelper.PiOver4;
@@ -273,7 +275,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             if (Main.myPlayer == Projectile.owner)
                 owner.GetModPlayer<BBTideValuePlayer>().TryAddTideFromBlade();
 
-            if (CeruleanShieldMode)
+            if (ReboundDashMode)
             {
                 SpawnCeruleanShieldExplosion(target.Center, GetReliableDashDirection());
                 StartRebound(target.Center);
@@ -429,7 +431,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             bladeRotation = lockedDirection.ToRotation() + MathHelper.PiOver4;
 
             Projectile.friendly = false;
-            Projectile.velocity = lockedDirection * ReboundSpeed;
+            Projectile.velocity = lockedDirection * ReboundSpeed * DashSpeedMultiplier;
             Projectile.netUpdate = true;
 
             SpawnBounceBurst(impactCenter, reliableDashDirection);
@@ -490,7 +492,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
 
         private void TryFireDashProjectile(Player owner, Vector2 dashDirection)
         {
-            if (CeruleanShieldMode)
+            if (ReboundDashMode)
                 return;
 
             if (Main.myPlayer != Projectile.owner)

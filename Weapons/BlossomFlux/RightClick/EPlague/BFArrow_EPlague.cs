@@ -31,6 +31,18 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         private int storedGasDamage = 1;
         private Vector2 stickOffset;
 
+        // 由疫球（BFPlagueSporeBomb）散射出来的子箭。一次会同时出现十几根，
+        // 所以驻留时间、放毒频率和命中演出都要压下来，否则弹幕数和粒子数会直接爆掉。
+        private bool fromSporeBomb;
+
+        private int StickDuration => fromSporeBomb ? 105 : 180;
+
+        internal void ConfigureFromSporeBomb()
+        {
+            fromSporeBomb = true;
+            Projectile.netUpdate = true;
+        }
+
         private ref float State => ref Projectile.ai[0];
         private ref float AttachedNpcIndex => ref Projectile.ai[1];
         private ref float FlightTimer => ref Projectile.localAI[0];
@@ -118,12 +130,24 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             AttachedNpcIndex = target.whoAmI;
             Projectile.velocity = Vector2.Zero;
             Projectile.damage = 0;
-            Projectile.timeLeft = 180;
+            Projectile.timeLeft = StickDuration;
             Projectile.netUpdate = true;
 
             BFPlaguePollutionNPC pollution = target.GetGlobalNPC<BFPlaguePollutionNPC>();
             pollution.ApplyDeath(target);
             ExtendReconMark(target);
+
+            if (fromSporeBomb)
+            {
+                // 疫球子箭：只保留一层轻量演出，重头戏归疫球自己的引爆。
+                Main.player[Projectile.owner].SetScreenshake(1.8f);
+                SpawnPlagueCollapseBurst(target.Center, 0.5f);
+                SpawnPlagueAnchorFX(target.Center, 0.7f);
+                if (Main.rand.NextBool(3))
+                    SoundEngine.PlaySound(BlossomFluxSounds.RightPlagueProjHit1 with { Volume = 0.2f }, target.Center);
+                return;
+            }
+
             Main.player[Projectile.owner].SetScreenshake(6.5f);
             SpawnPlagueCollapseBurst(target.Center, 1.25f);
             SpawnSporeGasBurst(target.Center, System.Math.Max(1, (int)(storedGasDamage * 0.22f)), Main.rand.Next(2, 4), 1.2f);
@@ -155,11 +179,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         {
             State = 2f;
             Projectile.velocity = Vector2.Zero;
-            Projectile.timeLeft = 180;
+            Projectile.timeLeft = StickDuration;
             Projectile.netUpdate = true;
 
-            SpawnPlagueAnchorFX(Projectile.Center, 0.9f);
-            SoundEngine.PlaySound(BlossomFluxSounds.RightPlagueProjAction, Projectile.Center);
+            SpawnPlagueAnchorFX(Projectile.Center, fromSporeBomb ? 0.6f : 0.9f);
+            if (!fromSporeBomb || Main.rand.NextBool(3))
+                SoundEngine.PlaySound(BlossomFluxSounds.RightPlagueProjAction, Projectile.Center);
             return false;
         }
 
@@ -516,7 +541,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                 dust.noGravity = true;
             }
 
-            if (!Main.dedServ && Main.rand.NextBool(3))
+            if (!Main.dedServ && Main.rand.NextBool(fromSporeBomb ? 7 : 3))
             {
                 GeneralParticleHandler.SpawnParticle(new HeavySmokeParticle(
                     Projectile.Center + Main.rand.NextVector2Circular(14f, 14f),
@@ -538,10 +563,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                     Main.rand.Next(12, 18)));
             }
 
-            if (gasTimer % 8 != 0 || Projectile.owner != Main.myPlayer)
+            int gasInterval = fromSporeBomb ? 16 : 8;
+            if (gasTimer % gasInterval != 0 || Projectile.owner != Main.myPlayer)
                 return;
 
-            int burstCount = 2;
+            int burstCount = fromSporeBomb ? 1 : 2;
             float baseAngle = Main.rand.NextFloat(MathHelper.TwoPi);
             for (int i = 0; i < burstCount; i++)
             {
@@ -684,11 +710,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
 
         private void EmitPlagueAnchorAura()
         {
-            if (Main.dedServ || gasTimer % 6 != 0)
+            if (Main.dedServ || gasTimer % (fromSporeBomb ? 14 : 6) != 0)
                 return;
 
             Color mainColor = BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_EPlague);
-            for (int i = 0; i < 2; i++)
+            for (int i = 0; i < (fromSporeBomb ? 1 : 2); i++)
             {
                 GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
                     Projectile.Center + Main.rand.NextVector2Circular(20f, 20f),

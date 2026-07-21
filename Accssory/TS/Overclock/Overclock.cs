@@ -1,3 +1,4 @@
+using CalamityMod.Items.Materials;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -21,6 +22,16 @@ namespace CalamityLegendsComeBack.Accssory.TS
         public override void UpdateAccessory(Player player, bool hideVisual)
         {
             player.GetModPlayer<AzureThunderAccessoryPlayer>().OverclockEquipped = true;
+        }
+
+        public override void AddRecipes()
+        {
+            CreateRecipe()
+                .AddIngredient<CoreofCalamity>(3)
+                .AddIngredient<UnholyEssence>(10)
+                .AddIngredient<BloodstoneCore>(8)
+                .AddTile(TileID.LunarCraftingStation)
+                .Register();
         }
     }
 }

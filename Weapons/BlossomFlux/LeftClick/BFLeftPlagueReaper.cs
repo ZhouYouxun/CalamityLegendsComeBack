@@ -141,6 +141,21 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
 
             // 旋转
             Projectile.rotation += Projectile.velocity.X * 0.03f;
+
+            // PBG 掉落武器的毒牙/针筒语汇：黄绿毒液与少量橙色警戒火花，而不是彩虹色叶尘。
+            if (!Main.dedServ && Projectile.FinalExtraUpdate() && Main.rand.NextBool(3))
+            {
+                Color plagueCore = new(130, 236, 70);
+                Color plagueWarning = new(244, 153, 48);
+                Dust venom = Dust.NewDustPerfect(
+                    Projectile.Center - Projectile.velocity.SafeNormalize(Vector2.UnitX) * Main.rand.NextFloat(2f, 8f),
+                    Main.rand.NextBool() ? DustID.PoisonStaff : DustID.VenomStaff,
+                    -Projectile.velocity * Main.rand.NextFloat(0.04f, 0.11f) + Main.rand.NextVector2Circular(0.45f, 0.45f),
+                    110,
+                    Color.Lerp(plagueCore, plagueWarning, Main.rand.NextFloat(0f, 0.2f)),
+                    Main.rand.NextFloat(0.62f, 0.92f));
+                venom.noGravity = true;
+            }
         }
 
         // 搜索最近敌人
@@ -169,7 +184,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
         }
 
         public override Color? GetAlpha(Color lightColor)
-            => new(Main.DiscoR, 203, 103, Projectile.alpha);
+        {
+            Color plagueCore = new(130, 236, 70);
+            Color plagueWarning = new(244, 153, 48);
+            float warningPulse = 0.12f + 0.1f * (0.5f + 0.5f * MathF.Sin(Main.GlobalTimeWrappedHourly * 7f + Projectile.identity));
+            return Color.Lerp(plagueCore, plagueWarning, warningPulse) * Projectile.Opacity;
+        }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
@@ -180,22 +200,18 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
         {
             BlossomFluxSounds.PlayLeftPlagueProjKill(Projectile.Center);
 
-            for (int d = 0; d < 25; d++)
+            Color plagueCore = new(130, 236, 70);
+            Color plagueWarning = new(244, 153, 48);
+            for (int d = 0; d < 22; d++)
             {
-                int index = Dust.NewDust(
-                    Projectile.position,
-                    Projectile.width,
-                    Projectile.height,
-                    DustID.ChlorophyteWeapon,
-                    0f,
-                    0f,
-                    0,
-                    new Color(Main.DiscoR, 203, 103),
-                    1f);
-
-                Main.dust[index].noGravity = true;
-                Main.dust[index].velocity *= 1.5f;
-                Main.dust[index].scale = 1.5f;
+                Dust venom = Dust.NewDustPerfect(
+                    Projectile.Center + Main.rand.NextVector2Circular(7f, 7f),
+                    Main.rand.NextBool() ? DustID.PoisonStaff : DustID.VenomStaff,
+                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.8f, 5.6f),
+                    90,
+                    Color.Lerp(plagueCore, Main.rand.NextBool(5) ? plagueWarning : Color.White, Main.rand.NextFloat(0.08f, 0.38f)),
+                    Main.rand.NextFloat(0.85f, 1.3f));
+                venom.noGravity = true;
             }
 
             int sporeAmt = Main.rand.Next(3, 7);

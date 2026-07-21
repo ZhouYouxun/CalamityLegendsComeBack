@@ -19,24 +19,25 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
         private const int StateDirectedThrow = 2;
         private const int StateRightThrow = 3;
 
-        // StateRightThrow sub-phases mirror NeptunesBountyProjectile's spinMode/spinMode2
-        // structure exactly: thrown out, arcs under gravity while spinning (rotation speed
-        // tied to fall speed, exact same formula), then once Time>=75 && vel.Y>=22 (Neptune's
-        // literal trigger) it gets extraUpdates=3, doubled damage, a burst of particles/sound,
-        // and a single redirect toward the nearest enemy at fixed speed — after that it just
-        // flies straight (no further re-aiming), same as Neptune's spinMode2. On real contact
-        // it impales into the target for repeated ticks (our own addition beyond Neptune).
-        private const int RightThrowRising = 0;
-        private const int RightThrowTracking = 1;
+        // StateRightThrow now follows SHPCKFast's two-beat "throw, hang, then rocket in" feel
+        // instead of NeptunesBounty's spinning gravity arc: it is flung toward the aim point,
+        // decelerates to a near-stop in the air while turning its tip to lock onto the nearest
+        // enemy (RightThrowAiming), then a power surge grants extraUpdates=3 + doubled damage and
+        // launches it in a hard, gently-steered dash straight at that enemy (RightThrowDashing).
+        // The blade never free-spins now — it always points where it is going / at its target.
+        // On real contact it impales into the target for repeated ticks (RightThrowImpaled).
+        private const int RightThrowAiming = 0;
+        private const int RightThrowDashing = 1;
         private const int RightThrowImpaled = 2;
         private const int ImpaleTickCount = 10;
         private const int ImpaleTickInterval = 12;
-        private const float RightThrowGravity = 0.42f;
-        private const float RightThrowGravityCap = 22f;
-        private const float RightThrowAirDrag = 0.975f;
-        private const int RightThrowTriggerTime = 75;
-        private const float RightThrowLaunchSpeed = 28f;
-        private const float RightThrowRedirectSpeed = 25f;
+        private const float RightThrowLaunchSpeed = 28f;      // initial toss speed toward the aim point
+        private const float RightThrowDecelRate = 0.87f;      // per-frame slowdown of phase 1 (SHPCKFast uses 0.88)
+        private const float RightThrowHoverSpeed = 2.4f;      // speed at/under which phase 1 counts as "stopped in air"
+        private const int RightThrowAimHoldFrames = 10;       // brief mid-air charge/aim-lock before the dash
+        private const int RightThrowMaxAimFrames = 70;        // fallback so it never hangs if it can't stall/aim
+        private const float RightThrowDashSpeed = 26f;        // fixed dash speed (x extraUpdates = the "big acceleration")
+        private const float RightThrowDashSteer = 4.5f;       // deg/subframe course-correction so the lunge connects
         private const int RightThrowExtraUpdates = 3;
         private const int RightThrowJudgementCharges = 9;
         private static float UpwardBladeAngle => -MathHelper.PiOver4;
@@ -266,9 +267,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                 return;
             }
 
-            // Dimmer before the power surge, brighter after — mirrors Neptune's
-            // spinMode/spinMode2 light color swap.
-            Vector3 lightColor = Projectile.ai[1] == RightThrowTracking
+            // Dimmer while it hangs and aims, brighter once it surges into the dash.
+            Vector3 lightColor = Projectile.ai[1] == RightThrowDashing
                 ? new Vector3(1f, 0.85f, 0.35f) * 0.9f
                 : new Vector3(1f, 0.85f, 0.35f) * 0.5f;
             Lighting.AddLight(Projectile.Center, lightColor);
@@ -279,53 +279,72 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                 return;
             }
 
-            MaintainRightThrowSpinSound(Projectile.ai[1] == RightThrowTracking ? 0.2f : -0.1f);
+            MaintainRightThrowSpinSound(Projectile.ai[1] == RightThrowDashing ? 0.2f : -0.1f);
             PlayTravelWhoosh();
 
-            if (Projectile.ai[1] == RightThrowRising)
-                RunRightThrowRising();
+            if (Projectile.ai[1] == RightThrowAiming)
+                RunRightThrowAiming();
             else
-                RunRightThrowTracking();
+                RunRightThrowDashing();
         }
 
-        // Faithful port of NeptunesBounty's pre-trigger "spinMode": thrown toward the aim
-        // direction at speed 28, arcs under gravity (0.42/frame, capped at 22), bleeds X
-        // speed via 0.975 drag once falling, and spins at a rate tied to fall speed —
-        // exactly Neptune's formulas, just with our own particle trail.
-        private void RunRightThrowRising()
+        // Phase 1 (SHPCKFast's opening beat): flung toward the aim point at launch speed, then
+        // bled off with a flat per-frame deceleration until it hangs almost still in the air.
+        // Instead of free-spinning it continuously turns its tip to lock onto the nearest enemy,
+        // and once it has stalled + aimed (or the fallback timer trips) it fires the power surge.
+        private void RunRightThrowAiming()
         {
             Projectile.localAI[0]++; // Time
+            // localAI[1] = frames spent stalled/charging in the air before the dash
 
             if (Projectile.localAI[0] == 1f)
             {
                 Player launchOwner = Main.player[Projectile.owner];
                 Vector2 aimDirection = (launchOwner.Calamity().mouseWorld - Projectile.Center).SafeNormalize(Vector2.UnitX * launchOwner.direction);
                 Projectile.velocity = aimDirection * RightThrowLaunchSpeed;
+                Projectile.rotation = aimDirection.ToRotation() + MathHelper.PiOver4;
             }
 
-            if (Projectile.velocity.Y < RightThrowGravityCap)
-                Projectile.velocity.Y += RightThrowGravity;
-            if (Projectile.velocity.Y > 0f)
-                Projectile.velocity.X *= RightThrowAirDrag;
+            // 始终把刀尖对准最近的敌人（不再自旋）
+            NPC target = FindNearestTarget(1600f);
+            float aimAngle = target != null
+                ? (target.Center - Projectile.Center).ToRotation() + MathHelper.PiOver4
+                : Projectile.velocity.ToRotation() + MathHelper.PiOver4;
+            Projectile.rotation = Projectile.rotation.AngleLerp(aimAngle, 0.25f);
+            if (Projectile.velocity.X != 0f)
+                Projectile.direction = Projectile.velocity.X > 0f ? 1 : -1;
 
-            Projectile.direction = Projectile.velocity.X > 0f ? 1 : -1;
-            Projectile.rotation += (0.6f * (MathF.Abs(Projectile.velocity.Y) * 0.03f + 0.85f)) * Projectile.direction;
-
-            EmitRightThrowSpinTrail(postTrigger: false);
-
-            if (Projectile.localAI[0] >= RightThrowTriggerTime && Projectile.velocity.Y >= RightThrowGravityCap)
+            // 第一阶段减速：逐渐停在空中
+            bool stalled = Projectile.velocity.Length() <= RightThrowHoverSpeed;
+            if (!stalled)
             {
-                Projectile.ai[1] = RightThrowTracking;
+                Projectile.velocity *= RightThrowDecelRate;
+                EmitRightThrowFlightTrail(postTrigger: false);
+            }
+            else
+            {
+                // 悬停蓄力，把能量向刀身聚拢
+                Projectile.velocity *= 0.55f;
+                Projectile.localAI[1]++;
+                EmitRightThrowAimCharge(target);
+            }
+
+            bool aimed = target == null || Math.Abs(MathHelper.WrapAngle(aimAngle - Projectile.rotation)) < 0.16f;
+            if ((stalled && aimed && Projectile.localAI[1] >= RightThrowAimHoldFrames) || Projectile.localAI[0] >= RightThrowMaxAimFrames)
+            {
+                Projectile.ai[1] = RightThrowDashing;
                 Projectile.localAI[0] = 0f;
+                Projectile.localAI[1] = 0f;
                 Projectile.netUpdate = true;
                 TriggerRightThrowPowerSurge();
             }
         }
 
-        // Neptune's Time>=75 event, ported 1:1: extraUpdates=3, damage doubles, a single
-        // redirect toward the nearest enemy at fixed speed (no further re-aiming after
-        // this — matches Neptune's spinMode2, which never touches velocity again), a
-        // burst of particles, and the spin sound restarts pitched up.
+        // The mid-air power surge (SHPCKFast's "then it rockets in"): extraUpdates=3 + doubled
+        // damage make the dash feel explosively fast, the aim/whoosh sound restarts pitched up,
+        // and velocity is redirected to lead the nearest enemy at the fixed dash speed. The tip
+        // is snapped to face the dash so it launches pointing dead at the target; phase 2 keeps
+        // gently steering after this so the committed lunge actually connects.
         private void TriggerRightThrowPowerSurge()
         {
             Player owner = Main.player[Projectile.owner];
@@ -340,11 +359,13 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                 previousSpin.Stop();
             spinSoundSlot = SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/SpinningWoosh") { Volume = 0.65f, Pitch = 0.2f }, Projectile.Center);
 
-            NPC target = FindNearestTarget(1000f);
+            NPC target = FindNearestTarget(2000f);
             Vector2 desiredDirection = target != null
                 ? (target.Center + target.velocity * 5f - Projectile.Center).SafeNormalize(Vector2.UnitX * Projectile.direction)
                 : (owner.Calamity().mouseWorld - Projectile.Center).SafeNormalize(Vector2.UnitX * Projectile.direction);
-            Projectile.velocity = desiredDirection * RightThrowRedirectSpeed;
+            Projectile.velocity = desiredDirection * RightThrowDashSpeed;
+            Projectile.rotation = desiredDirection.ToRotation() + MathHelper.PiOver4;
+            Projectile.direction = desiredDirection.X >= 0f ? 1 : -1;
 
             if (Main.dedServ)
                 return;
@@ -353,17 +374,27 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Vector2.Zero, new Color(255, 111, 34), new Vector2(2f, 2f), Main.rand.NextFloat(MathHelper.TwoPi), 0.01f, 0.83f, 15));
         }
 
-        // Neptune's spinMode2: once redirected, velocity is never touched again — it just
-        // flies straight at the fixed speed (with extraUpdates=3 making it feel very fast),
-        // spinning at the same fall-speed-tied rate, until it collides or times out.
-        private void RunRightThrowTracking()
+        // Phase 2: the committed dash. It flies at the fixed dash speed (x extraUpdates = very
+        // fast) with a gentle course-correction toward the locked enemy so the lunge lands, and
+        // the blade's tip stays pointed exactly where it is going — never free-spinning.
+        private void RunRightThrowDashing()
         {
-            Projectile.localAI[0]++; // Time, reset at the trigger like Neptune's
+            Projectile.localAI[0]++; // Time, reset at the surge
 
-            Projectile.direction = Projectile.velocity.X > 0f ? 1 : -1;
-            Projectile.rotation += (0.6f * (MathF.Abs(Projectile.velocity.Y) * 0.03f + 0.85f)) * Projectile.direction;
+            NPC target = FindNearestTarget(2200f);
+            if (target != null)
+            {
+                float steered = Projectile.velocity.ToRotation().AngleTowards(
+                    (target.Center - Projectile.Center).ToRotation(),
+                    MathHelper.ToRadians(RightThrowDashSteer));
+                Projectile.velocity = steered.ToRotationVector2() * Projectile.velocity.Length();
+            }
 
-            EmitRightThrowSpinTrail(postTrigger: true);
+            if (Projectile.velocity.X != 0f)
+                Projectile.direction = Projectile.velocity.X > 0f ? 1 : -1;
+            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
+
+            EmitRightThrowFlightTrail(postTrigger: true);
         }
 
         // 钉入阶段：锁死在被命中的敌人身上，靠本地无敌帧持续跳伤（共10跳），期间完全不追踪。
@@ -510,12 +541,10 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             }
         }
 
-        // Faithful port of Neptune's two-point spark trail: two points diametrically
-        // opposite the blade (radius scaled to our sprite) sweep around as Projectile.rotation
-        // spins, throwing off tangential sparks — the actual mechanism behind Neptune's
-        // "spinning blade" look. Pre/post trigger use a different texture/density, exactly
-        // like Neptune's WaterFoam-vs-SmallBloom+Sparkle split.
-        private void EmitRightThrowSpinTrail(bool postTrigger)
+        // Gold/orange sparks streaming off behind the blade as it travels — the same CustomSpark
+        // + Sparkle vocabulary the spinning version used, but now shed along the flight path
+        // instead of flung off a spinning rim. Denser and brighter once it is dashing.
+        private void EmitRightThrowFlightTrail(bool postTrigger)
         {
             if (Main.dedServ)
                 return;
@@ -524,24 +553,21 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             if (Vector2.Distance(owner.Center, Projectile.Center) >= 1400f)
                 return;
 
-            float radius = 75f * Projectile.scale;
-            float directionSign = Projectile.velocity.X == 0f ? Projectile.direction : Math.Sign(Projectile.velocity.X);
-
-            for (int i = 0; i < 2; i++)
+            Vector2 travel = Projectile.velocity.SafeNormalize(Vector2.UnitX * Projectile.direction);
+            int count = postTrigger ? 2 : 1;
+            for (int i = 0; i < count; i++)
             {
-                Vector2 linePos = Projectile.Center + (i * MathHelper.Pi + Projectile.rotation + MathHelper.PiOver2).ToRotationVector2() * radius;
-                Vector2 tangentVelocity = (i * MathHelper.Pi + Projectile.rotation * directionSign).ToRotationVector2().RotatedByRandom(postTrigger ? 0.25f : 0.4f) * Main.rand.NextFloat(5f, 22f);
-                if (postTrigger)
-                    tangentVelocity -= Projectile.velocity * 2f;
+                Vector2 pos = Projectile.Center - travel * Main.rand.NextFloat(6f, 44f) + Main.rand.NextVector2Circular(12f, 12f);
+                Vector2 sparkVelocity = -travel * Main.rand.NextFloat(1f, postTrigger ? 7f : 3f) + Main.rand.NextVector2Circular(1.6f, 1.6f);
 
                 GeneralParticleHandler.SpawnParticle(new CustomSpark(
-                    linePos,
-                    tangentVelocity,
+                    pos,
+                    sparkVelocity,
                     "CalamityMod/Particles/Sparkle",
                     false,
-                    postTrigger ? Main.rand.Next(10, 13) : Main.rand.Next(7, 16),
-                    postTrigger ? Main.rand.NextFloat(0.2f, 0.55f) : Main.rand.NextFloat(0.4f, 0.7f),
-                    (postTrigger ? new Color(255, 214, 88) : new Color(255, 111, 34)) * (postTrigger ? 0.3f : 0.45f),
+                    postTrigger ? Main.rand.Next(10, 14) : Main.rand.Next(7, 15),
+                    postTrigger ? Main.rand.NextFloat(0.32f, 0.62f) : Main.rand.NextFloat(0.4f, 0.7f),
+                    (postTrigger ? new Color(255, 214, 88) : new Color(255, 111, 34)) * (postTrigger ? 0.4f : 0.45f),
                     new Vector2(1f, 1f),
                     true,
                     false,
@@ -559,6 +585,39 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                     Main.rand.NextFloat(1.0f, 1.2f),
                     new Color(255, 214, 88),
                     new Vector2(0.4f, 1f)));
+            }
+        }
+
+        // Mid-air charge while it hangs and locks aim: gold motes and dust are drawn inward to
+        // the blade, selling the "gathering power before it rockets in" beat.
+        private void EmitRightThrowAimCharge(NPC target)
+        {
+            if (Main.dedServ)
+                return;
+
+            if (Main.rand.NextBool())
+            {
+                Vector2 spawn = Projectile.Center + Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(52f, 104f);
+                Vector2 velocity = (Projectile.Center - spawn).SafeNormalize(Vector2.Zero) * Main.rand.NextFloat(3f, 7.5f);
+                GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                    spawn,
+                    velocity,
+                    "CalamityMod/Particles/Sparkle",
+                    false,
+                    Main.rand.Next(10, 18),
+                    Main.rand.NextFloat(0.4f, 0.8f),
+                    Main.rand.NextBool(3) ? Color.White : new Color(255, 200, 70),
+                    new Vector2(0.3f, 1f),
+                    true,
+                    true,
+                    shrinkSpeed: 0.15f));
+            }
+
+            if (Main.rand.NextBool(2))
+            {
+                Vector2 spawn = Projectile.Center + Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(40f, 82f);
+                Dust d = Dust.NewDustPerfect(spawn, DustID.GoldFlame, (Projectile.Center - spawn).SafeNormalize(Vector2.Zero) * Main.rand.NextFloat(2f, 5f), 0, default, 1.1f);
+                d.noGravity = true;
             }
         }
 
@@ -847,7 +906,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
 
                 Main.spriteBatch.SetBlendState(BlendState.Additive);
                 if (Projectile.ai[0] == StateRightThrow)
-                    DrawRightThrowSpinDisc(drawPos);
+                    DrawRightThrowMotionSmear(drawPos);
 
                 for (int i = 0; i < 5; i++)
                 {
@@ -914,44 +973,41 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             return false;
         }
 
-        // Ports Neptune's PreDraw spin-smear exactly: the smear rotation is a multiple of
-        // Projectile.rotation itself (not wall-clock time), so it visibly spins faster as
-        // the blade's own spin rate (tied to fall speed) climbs. Same two textures Neptune
-        // uses (CircularSmearSmokey + SemiCircularSmearSwipe), recolored to our own palette,
-        // brighter/bigger once past the power-surge trigger — matching spinMode2.
-        private void DrawRightThrowSpinDisc(Vector2 drawPos)
+        // Replaces the old spinning smear-disc now that the blade no longer free-spins: a soft
+        // energy sheath wraps the blade (gentle wall-clock pulse, brighter once dashing), and a
+        // directional motion streak stretches along the travel axis, growing with speed so it
+        // only streaks while actually moving fast. Same CircularSmearSmokey + gold/orange palette
+        // the disc used — just directional instead of rotational.
+        private void DrawRightThrowMotionSmear(Vector2 drawPos)
         {
             Texture2D smoke = ModContent.Request<Texture2D>("CalamityMod/Particles/CircularSmearSmokey").Value;
-            Texture2D swipe = ModContent.Request<Texture2D>("CalamityMod/Particles/SemiCircularSmearSwipe").Value;
-            bool postTrigger = Projectile.ai[1] == RightThrowTracking;
+            bool postTrigger = Projectile.ai[1] == RightThrowDashing;
             Color gold = new Color(255, 214, 88) with { A = 0 };
             Color orange = new Color(255, 111, 34) with { A = 0 };
-            float goldenAngle = MathHelper.Pi * (3f - MathF.Sqrt(5f));
-            float phase = Projectile.rotation * (postTrigger ? 1.45f : 1.2f);
 
-            Main.EntitySpriteDraw(swipe, drawPos, null,
-                (postTrigger ? gold : orange) * 0.55f,
-                Projectile.rotation * Main.rand.NextFloat(1.6f, 1.7f),
-                swipe.Size() * 0.5f,
-                (postTrigger ? 1.6f : 1.4f) * Main.rand.NextFloat(0.8f, 1.15f) * Projectile.scale,
-                SpriteEffects.None);
+            float speed = Projectile.velocity.Length();
+            float speedFactor = Utils.GetLerpValue(2f, 24f, speed, true); // 0 hovering, 1 dashing
+            float travelAngle = Projectile.velocity.ToRotation();
+            float pulse = 0.82f + 0.18f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 12f);
+
+            // Energy sheath around the blade (always present; the base of the glow/包边).
             Main.EntitySpriteDraw(smoke, drawPos, null,
-                (postTrigger ? gold : orange) * 0.75f,
-                Projectile.rotation * Main.rand.NextFloat(1.2f, 1.3f),
+                (postTrigger ? gold : orange) * (0.55f * pulse),
+                Main.GlobalTimeWrappedHourly * 2.4f,
                 smoke.Size() * 0.5f,
-                (postTrigger ? 1.4f : 1.2f) * Projectile.scale,
+                Projectile.scale * (0.95f + speedFactor * 0.55f),
                 SpriteEffects.None);
 
-            for (int i = 0; i < 5; i++)
+            // Directional motion streak stretched along the travel axis, scaled by speed.
+            if (speedFactor > 0.05f)
             {
-                float ratio = i / 4f;
-                Color color = Color.Lerp(orange, gold, ratio);
-                Main.EntitySpriteDraw(swipe, drawPos, null,
-                    color * MathHelper.Lerp(0.22f, 0.38f, ratio),
-                    phase + goldenAngle * i,
-                    swipe.Size() * 0.5f,
-                    Projectile.scale * MathHelper.Lerp(0.72f, postTrigger ? 1.18f : 1f, ratio),
-                    SpriteEffects.None);
+                Main.EntitySpriteDraw(smoke, drawPos, null,
+                    gold * (0.25f + 0.4f * speedFactor),
+                    travelAngle,
+                    smoke.Size() * 0.5f,
+                    new Vector2(1.1f + 1.9f * speedFactor, 0.6f) * Projectile.scale,
+                    SpriteEffects.None,
+                    0);
             }
         }
     }
