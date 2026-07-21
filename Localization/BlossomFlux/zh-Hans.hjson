@@ -1,0 +1,464 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				NewLegendBlossomFlux: {
+					DisplayName: 新传奇 - 叶流
+					Tooltip: "[GFB]"
+					BF_Intro:
+						'''
+						[c/7BE495:当前战术：{0}]
+						[c/F7D87C:右键长按：进入当前战术的蓄力姿态，松开后释放特殊箭。]
+						'''
+					PresetName0: 突击
+					PresetName1: 复苏
+					PresetName2: 侦察
+					PresetName3: 歼灭
+					PresetName4: 侵染
+					PresetLeft0:
+						'''
+						[c/8BE89A:左键 - 突击：将木箭转化为快速叶枝箭。]
+						[c/8BE89A:直线穿透射击，适合持续压制。]
+						'''
+					PresetLeft1:
+						'''
+						[c/70E0D0:左键 - 复苏：发射双链交错的叶弹。]
+						[c/70E0D0:命中可治疗玩家，并准备绿叶防护。]
+						'''
+					PresetLeft2:
+						'''
+						[c/66CCFF:左键 - 侦察：发射追踪侦察箭齐射。]
+						[c/66CCFF:侦察箭会重读目标，并在飞行中加速。]
+						'''
+					PresetLeft3:
+						'''
+						[c/FFA07A:左键 - 歼灭：将木箭转化为坠落箭雨。]
+						[c/FFA07A:转化箭命中爆炸，其他箭矢正常发射。]
+						'''
+					PresetLeft4:
+						'''
+						[c/DDA0FF:左键 - 侵染：施加 4 秒凋萎；重复命中可叠加持续时间。]
+						[c/DDA0FF:凋萎会削弱防御并持续造成伤害。]
+								
+						'''
+					PresetRight0:
+						'''
+						[c/FFB347:右键 - 突击：按住装填强化叶枝箭。]
+						[c/FFB347:松手后，将储存箭矢高速射出。]
+						'''
+					PresetRight1:
+						'''
+						[c/FFB347:右键 - 复苏：按住凝聚大范围复苏闪光。]
+						[c/FFB347:松手治疗玩家，但不会提供绿叶防护。]
+						'''
+					PresetRight2:
+						'''
+						[c/FFB347:右键 - 侦察：按住发射无重力标记箭。]
+						[c/FFB347:最高生命目标被标记后，会承受更高左键伤害。]
+						'''
+					PresetRight3:
+						'''
+						[c/FFB347:右键 - 歼灭：按住布置准星并发射引导箭。]
+						[c/FFB347:打击会从空中坠落，在标记处爆炸。]
+						'''
+					PresetRight4:
+						'''
+						[c/FFB347:右键 - 侵染：按住发射大型孢子云。]
+						[c/FFB347:孢子云会施加 60 秒凋亡，并强化叶流命中。]
+								
+						'''
+					PresetPassive0:
+						'''
+						[c/B7FFB0:战术被动 - 突击：没有其他冲刺时，双击左右方向键可高速冲刺。]
+						[c/B7FFB0:冲刺可穿过敌人并造成撞击伤害，期间拥有无敌效果。]
+						'''
+					PresetPassive1:
+						'''
+						[c/B7FFB0:战术被动 - 复苏：免疫防御损伤，大幅扩大红心拾取范围。]
+						[c/B7FFB0:减益造成的生命流失减半；单次伤害超过最大生命值 30% 时，超出部分减半。]
+						'''
+					PresetPassive2:
+						'''
+						[c/B7FFB0:战术被动 - 侦察：免疫移速降低，移动速度 +25%，加速度 +100%，飞行时间 +50%。]
+						[c/B7FFB0:钩爪发射、回收和牵引速度 +30%；钩中平台或斜坡后，抵达钩点会自动松钩。]
+						'''
+					PresetPassive3:
+						'''
+						[c/B7FFB0:战术被动 - 歼灭：根据屏幕内敌人数量提升射速。]
+						[c/B7FFB0:屏幕内有 5/10/20 个敌人时，叶流使用时间和左键循环延迟 -1/-2/-3。]
+						'''
+					PresetPassive4:
+						'''
+						[c/B7FFB0:战术被动 - 侵染：叶流攻击会延长目标身上已有的任何减益。]
+						[c/B7FFB0:任意敌人身上的减益以一半速度流逝。]
+						'''
+					BF_Passive:
+						'''
+						[c/9AEF9E:被动【终末防线】手持时抵消一次致命伤害。]
+						[c/9AEF9E:触发后立即恢复 100 点生命，随后开始充能。当前：{0}]
+						'''
+					PassiveStateReady: "[c/7BFFB7:已就绪]"
+					PassiveStateActive: "[c/FF9B8B:终末防线中]"
+					PassiveStateCooldown: "[c/F0D070:充能 {0}/{1} 秒]"
+					PassiveStateLocked: "[c/9A9A9A:困难模式后解锁]"
+					BF_EXHint:
+						'''
+						[c/8EF5A8:大招【森绿能量】手持开火与右键攻击会积蓄森绿能量。]
+						[c/8EF5A8:充满后按下] [[c/8EF5A8:{0}]] [c/8EF5A8:释放森绿箭幕。]
+						'''
+					BF_EXDisabledHint: "[c/9A9A9A:大招【森绿能量】当前大招未解锁。]"
+					BF_FormWheelHint: "[c/F7D87C:按住] [[c/F7D87C:{0}]] [c/F7D87C:打开战术轮盘，松手切换。]"
+					// BF_Final: "[c/9FD8A2:The bowstring hums, and the forest answers.]"
+					LegendaryHint: "[c/BABABA:按住 Shift 阅读完整传奇记录]"
+					LegendaryText:
+						'''
+						[c/66E6FF:我曾以为，只要弓弦足够迅疾，森林便能将一切来犯者拒之门外。]
+						[c/66E6FF:可未经引导的万千枝叶，不过是随风散落的锋芒。真正的守护，不应只有一种回答。]
+						[c/66E6FF:花苞，收拢这片林冠中流散的力量，让每一次松弦都承载明确的意志。]
+						[c/66E6FF:以突击贯穿前路，以复苏挽留生命，以侦察寻出最危险的敌人，以歼灭召来天穹箭雨，以侵染让已经种下的苦痛久久不散。]
+						[c/66E6FF:寻常开弓时，让五条枝流各司其职；弓弦蓄满之时，则唤醒它们更深的权能。]
+						[c/66E6FF:若持弓者已经行至死亡之前，便张开终末防线，替他拦下最后一步；待森绿能量充盈，便使整片林冠化作箭幕，回应他的召唤。]
+						[c/66E6FF:从今往后，无论来犯的寻神者居于何等位置，都不得越过森林划下的界限。]
+						[c/66E6FF:守住这片仍被人铭记的土地，直到最后一缕日光从枝梢消逝。]
+						'''
+				}
+
+				AegisBlade: {
+				}
+			}
+
+			BFSpareQuiver: {
+				DisplayName: 备用箭袋
+				Tooltip:
+					'''
+					远程伤害 +8%，防御力 +4
+					所有叶流右键蓄力时间缩短 10%
+					复苏：右键治疗闪光 +1。
+					侦察：右键标记时间小幅提高。
+					'''
+			}
+
+			BFTunedQuiver: {
+				DisplayName: 同调箭袋
+				Tooltip:
+					'''
+					远程伤害 +11%，远程暴击率 +6%
+					所有叶流右键蓄力时间缩短 20%
+					复苏：右键治疗闪光 +2。
+					侦察：右键标记时间提高。
+					歼灭：右键爆炸范围提高。
+					'''
+			}
+
+			BFResonatingQuiver: {
+				DisplayName: 共鸣箭袋
+				Tooltip:
+					'''
+					远程伤害 +14%，远程护甲穿透 +12
+					所有叶流右键蓄力时间缩短 35%
+					复苏：右键治疗闪光 +3。
+					侦察：右键标记时间大幅提高。
+					歼灭：右键弹幕伤害提高。
+					侵染：解锁第一批高级 Debuff。
+					'''
+			}
+
+			BFDominationQuiver: {
+				DisplayName: 主宰箭袋
+				Tooltip:
+					'''
+					远程伤害 +18%，远程暴击率 +8%
+					所有叶流右键蓄力时间缩短 50%
+					复苏：右键治疗闪光 +4。
+					侦察：右键标记时间达到最高。
+					歼灭：右键弹幕伤害与范围提高。
+					侵染：解锁全部高级 Debuff。
+					'''
+			}
+
+			PastLingering: {
+				DisplayName: 旧日残影
+				Tooltip:
+					'''
+					将“突击”战术改变为类似于幻影弓的模式
+					箭矢不再被转化，并在命中敌人时释放出强追踪幻影。
+					持续射击会逐渐提升攻击速度。
+					'''
+			}
+
+			SwordsplosionQuiver: {
+				DisplayName: 爆破剑箭袋
+				Tooltip:
+					'''
+					将歼灭战术从天而降的弹幕替换为爆破剑彩剑雨。
+					每把彩剑只能造成一次伤害。
+					'''
+			}
+
+			BlightSpewerQuiver: {
+				DisplayName: 枯萎散播者箭袋
+				Tooltip:
+					'''
+					将侵染战术左键替换为枯萎散播者的瘟疫火焰。
+					保留叶流自身的基础侵染效果。
+					'''
+			}
+
+			SeedOfSilva: {
+				DisplayName: 席尔瓦之种
+				Tooltip:
+					'''
+					生成五枚缓慢围绕玩家旋转并发出微弱绿光的种子。
+					手持叶流时，种子会根据当前战术绽放成不同的花朵。
+					突击：向日葵
+					向日葵会创造一个小区域。穿过该区域的突击箭获得 30% 伤害加成和 15% 暴击率加成。
+					复苏：雏菊
+					雏菊拥有 15 点最大生命值，每秒恢复 1.2 生命值，并继承玩家的防御和伤害减免。
+					如果雏菊承受 20 点或更多伤害，它会为玩家治疗其存储的生命恢复量（向下取整）。
+					侦察：飞燕草
+					飞燕草每 1.5 秒用弧光攻击附近的敌人一次，造成轻微伤害并眩晕 1秒。
+					被眩晕的敌人会大幅减速，且受到来自侦察箭的双倍伤害。
+					免疫击退的敌人只获得伤害加成，且降至 1.15 倍。
+					每次飞燕草成功造成眩晕，都会恢复 0.5 秒的飞行时间。
+					歼灭：火炬花
+					当敌人接近时，火炬花会喷射火焰。
+					穿过火炬花的箭矢也会触发一次有独立冷却时间的爆炸。
+					侵染：曼陀罗
+					曼陀罗会减速附近的敌人，并使其接触伤害降低 15%。
+					曼陀罗会像孢子囊一样持续产生孢子，每个孢子施加 3 秒的减益。其上限跟随当前武器。
+					曼陀罗还会偶尔发射追踪的毁灭性花朵弹幕，使敌人瘫痪并减速。
+					'''
+			}
+
+			SilvaHarp: {
+				DisplayName: 席尔瓦竖琴
+				Tooltip:
+					'''
+					提供坏掉的种子全部正面属性的 150%：远程伤害 +30%，远程暴击率 +15%，箭矢速度 +22.5%。
+					叶流额外提高 7.5% 伤害与 12% 暴击率。
+					每秒生命恢复 +15。此生命恢复不受任何因素削弱。
+					受击后的无敌时间增加 90 帧。
+					终末防线冷却减半，并可在首领战中充能；触发时恢复 300 点生命并立即发动一次终结技。
+					该终结技跳过蓄力，但不会缩短持续时间；不会降低防御或施加枯萎。
+					'''
+			}
+
+			FairyDance: {
+				DisplayName: 妖精舞
+				Tooltip:
+					'''
+					生命再生提高4点，防御力提高6点。
+					召唤粉绿蓝三只仙灵。
+					手持叶流按住左右键时，仙灵依次冲向鼠标。
+					仙灵每隔5帧出击，彼此的出击间隔为2帧。
+					接触伤害为20点，按住右键时提高至30点。
+					叶流右键攻击释放时，三只仙灵会同时突进。
+					同时突进各造成120点伤害，且拥有10点穿甲。
+					所有仙灵伤害受远程加成影响，但无法暴击。
+					'''
+			}
+
+			RainbowSpiritDance: {
+				DisplayName: 虹灵舞
+				Tooltip:
+					'''
+					生命再生提高6点，防御提高10点。
+					远程伤害提高10%，并继承妖精舞全部效果。
+					手持叶流每命中60次，召唤一只七彩草蛉。
+					草蛉存活18秒，场上最多同时存在7只。
+					按住左键时，每45帧发射一道高速七彩矢。
+					七彩矢造成60点远程伤害，并施加神圣之火。
+					七彩矢可以暴击，最远飞行距离为35格。
+					按住右键时，草蛉会绕着玩家高速旋转。
+					松开右键后，草蛉会一同冲向鼠标方向。
+					每只造成1200点远程伤害，并且必定暴击。
+					单次恢复至少200生命时，消耗一只仙灵。
+					随后恢复100生命，并缩短复活冷却60秒。
+					'''
+			}
+
+			BadSeed: {
+				DisplayName: 坏种
+				Tooltip:
+					'''
+					防御力减半，远程伤害提高20%。
+					远程暴击率提高10%，箭矢速度提高15%。
+					叶流额外提高5%伤害与8%暴击率。
+					终末防线触发时，立即发动一次终结技。
+					该次终结技跳过蓄力，所有终结技持续时间减半。
+					终末防线冷却减半，并可在首领战中充能。
+					复活不再提供临时无敌，而是恢复200点生命。
+					复活同时施加持续30秒的枯萎减益。
+					'''
+			}
+
+			BFArrowRest: {
+				DisplayName: 战术箭台
+				Tooltip:
+					'''
+					佩戴后，叶流的突击与歼灭战术会将木箭转化为自身弹幕，其余箭矢正常发射。
+					不佩戴时，突击与歼灭无论使用任何箭矢，均直接发射自身弹幕。
+					复苏、侦察与侵染战术不受影响，始终射出定制弹幕。
+					'''
+			}
+		}
+
+		Projectiles: {
+			BlossomFlux: {
+				NewLegendBlossomFluxHoldOut.DisplayName: 叶流持弓
+				BFSelectionPanel.DisplayName: 战术选择面板
+				BFArrow_ABreak.DisplayName: 突击箭
+				BFArrow_BRecov.DisplayName: 复苏箭
+				BFArrow_BRecovBlast.DisplayName: 复苏爆发
+				BFArrow_BRecovTransfer.DisplayName: 复苏转移箭
+				BFArrow_CDetec.DisplayName: 侦察箭
+				BFArrow_CDetecReticle.DisplayName: 侦察准星
+				BFArrow_DBomb.DisplayName: 歼灭箭
+				BFArrow_EPlague.DisplayName: 侵染箭
+				BFArrow_EPlagueGas.DisplayName: 侵染毒云
+				BFLeafProj.DisplayName: 战术叶弹
+				BFLeafBombExplosion.DisplayName: 枝爆
+				BFLeftPlagueFlame.DisplayName: 侵染火流
+				FuckYou.DisplayName: 枝爆视觉弹幕
+				BFPassiveRecoveryField.DisplayName: 复苏立场
+				BFPassiveRecoveryFieldWave.DisplayName: 复苏冲击波
+				BFEXWeapon.DisplayName: 叶流森绿箭幕
+				BFEXVernalShot.DisplayName: 森绿齐射箭
+				BFLeftPlagueReaper.DisplayName: 侵染收割者
+				BFRecoveryFlash.DisplayName: 复苏闪光
+				BFArrow_DBombVisual.DisplayName: 歼灭上射视觉箭
+				BFEXConvergingLeaf.DisplayName: 叶流EX汇聚叶片
+				BFEXConvergingWisp.DisplayName: 叶流EX汇聚鬼火
+				BFRightChargeHaloProj.DisplayName: 蓄力光环
+				// BFBombardCallSpear.DisplayName: B F Bombard Call Spear
+			}
+
+			Ranged: {
+				BFAimScope.DisplayName: 叶流瞄准镜
+				SporeBomb.DisplayName: 孢子炸弹
+				// ResponsibilityRoverScrap.DisplayName: Responsibility Rover Scrap
+			}
+
+			PastLingeringShard.DisplayName: 旧日残影碎片
+			SeedOfSilvaDelphiniumArc.DisplayName: 席尔瓦飞燕草弧光
+			SeedOfSilvaDelphinium.DisplayName: 席尔瓦飞燕草
+			SeedOfSilvaDaisy.DisplayName: 席尔瓦雏菊
+			SeedOfSilvaMandrake.DisplayName: 席尔瓦曼陀罗
+			SeedOfSilvaMandrakeDart.DisplayName: 席尔瓦曼陀罗飞刺
+			SeedOfSilvaMandrakeSpore.DisplayName: 席尔瓦曼陀罗孢子
+			SeedOfSilvaSunflower.DisplayName: 席尔瓦向日葵
+			SeedOfSilvaTorchflower.DisplayName: 席尔瓦火炬花
+			SeedOfSilvaTorchFlame.DisplayName: 席尔瓦火炬花火焰
+			SeedOfSilvaTorchShockwave.DisplayName: 席尔瓦火炬花冲击波
+			BFBreakthroughChargeConvergeFX.DisplayName: 叶流突破充能汇聚特效
+			BFBombardStrafeFX.DisplayName: 叶流轰炸扫射特效
+			BFPlagueNanomachineCloudFX.DisplayName: 叶流瘟疫纳米机械云特效
+			BFReconContractingWaveFX.DisplayName: 叶流侦察收缩波特效
+			BFRecoveryHeartConvergeFX.DisplayName: 叶流恢复之心汇聚特效
+			BFChargeGlowSparkFX.DisplayName: 叶流充能辉光火花特效
+			// TacticalComputerNEWReticle.DisplayName: Tactical Computer N E W Reticle
+			// AzureThunderGroundSwordMatrix.DisplayName: Azure Thunder Ground Sword Matrix
+			// AzureThunderHarmonyBar.DisplayName: Azure Thunder Harmony Bar
+			// DesertEagleHoldout.DisplayName: Desert Eagle Holdout
+			// BFLeftPlagueFlame.DisplayName: B F Left Plague Flame
+			// BFArrow_ABreak.DisplayName: B F Arrow_ A Break
+			// BFArrow_BRecov.DisplayName: B F Arrow_ B Recov
+			// BFArrow_BRecovTransfer.DisplayName: B F Arrow_ B Recov Transfer
+			// BFArrow_CDetec.DisplayName: B F Arrow_ C Detec
+			// BFArrow_CDetecReticle.DisplayName: B F Arrow_ C Detec Reticle
+			// BFArrow_DBomb.DisplayName: B F Arrow_ D Bomb
+			// BFArrow_EPlague.DisplayName: B F Arrow_ E Plague
+			// BFArrow_EPlagueGas.DisplayName: B F Arrow_ E Plague Gas
+			// FuckYou.DisplayName: Fuck You
+			// BrinyBaron_LeftClick_Swing.DisplayName: Briny Baron_ Left Click_ Swing
+			// BrinyBaron_SeafoamBlade.DisplayName: Briny Baron_ Seafoam Blade
+			// BrinyBaron_SeafoamExplosion.DisplayName: Briny Baron_ Seafoam Explosion
+			// BrinyBaron_SeaSpirit.DisplayName: Briny Baron_ Sea Spirit
+			// BrinyBaron_RightClick_Shuriken.DisplayName: Briny Baron_ Right Click_ Shuriken
+			// BrinyBaron_SkillSlashDash_SlashDash.DisplayName: Briny Baron_ Skill Slash Dash_ Slash Dash
+			// BrinyBaron.BBASD_Lighting.DisplayName: B B A S D_ Lighting
+			// BrinyBaron_SkillDashTornado_BladeDash.DisplayName: Briny Baron_ Skill Dash Tornado_ Blade Dash
+			// BBSD_Star.DisplayName: B B S D_ Star
+			// BBSD_VirtualPROJ.DisplayName: B B S D_ Virtual P R O J
+			// Z_BrinyBaron_SkillSuperCharge_SuperDash.DisplayName: Z_ Briny Baron_ Skill Super Charge_ Super Dash
+			// Copper_ChainLightning.DisplayName: Copper_ Chain Lightning
+			// Demonite_Wisp.DisplayName: Demonite_ Wisp
+			// Perennial_HealingOrb.DisplayName: Perennial_ Healing Orb
+			// Scoria_LavaGlob.DisplayName: Scoria_ Lava Glob
+			// Mythril_OrbitFlame.DisplayName: Mythril_ Orbit Flame
+			// Orichalcum_PetalBolt.DisplayName: Orichalcum_ Petal Bolt
+			// Lunar_Strike.DisplayName: Lunar_ Strike
+			// Shroomite_TrailMushroom.DisplayName: Shroomite_ Trail Mushroom
+			// Astral_Blast.DisplayName: Astral_ Blast
+			// PostLunar_Shard.DisplayName: Post Lunar_ Shard
+			// Shared_LingeringField.DisplayName: Shared_ Lingering Field
+			// Shared_Shockwave.DisplayName: Shared_ Shockwave
+			// Shared_SplitMeteor.DisplayName: Shared_ Split Meteor
+			// PFMarkStatusArc.DisplayName: P F Mark Status Arc
+
+			SHPC: {
+				// LazharBeacon.DisplayName: Lazhar Beacon
+				// LazharLaser.DisplayName: Lazhar Laser
+				// LazharOrbitalStrike.DisplayName: Lazhar Orbital Strike
+			}
+
+			// PristineFuryHookSoul.DisplayName: Pristine Fury Hook Soul
+
+			PristineFury: {
+				// PFBrimstoneElemental_StarBolt.DisplayName: P F Brimstone Elemental_ Star Bolt
+				// PFEmpress_ScatterBolt.DisplayName: P F Empress_ Scatter Bolt
+				// PFSkeletronWhiteBurst.DisplayName: P F Skeletron White Burst
+				// PFPolterghast_StarBolt.DisplayName: P F Polterghast_ Star Bolt
+			}
+		}
+
+		Cooldowns: {
+			BlossomFlux_Passive: 叶流终末防线
+			BlossomFlux_EX: 森绿能量
+		}
+
+		TheSpecialText.BlossomFluxPresetSelected: 已选择 {0} 战术
+
+		Buffs: {
+			BFRecoveryLeafBuff: {
+				DisplayName: 复苏之叶
+				Description: 复苏枝流正在保护并治疗你。
+			}
+
+			BFPlagueWitherBuff: {
+				DisplayName: 凋萎
+				Description: 受到的伤害增加 5%，每秒失去 44 点生命并失去 1 点防御。
+			}
+
+			BFPlagueDeathBuff: {
+				DisplayName: 凋亡
+				Description: 受到的伤害增加 10%，每秒失去 140 点生命；每种疫病系减益额外失去 40 点生命。
+			}
+
+			CosmicDischargeChainKnifeBuff: {
+				DisplayName: 链刃形态
+				Description: 移动速度与穿甲能力提高。
+			}
+
+			CosmicDischargeSwordBuff: {
+				DisplayName: 剑形态
+				Description: 暴击率与伤害提高。
+			}
+
+			CosmicDischargeWhipBuff: {
+				DisplayName: 鞭形态
+				Description: 攻击速度与击退力提高。
+			}
+
+			YharonSoulFragment_Buff: {
+				DisplayName: 丛龙灵火
+				Description: 正在被丛龙灵魂之火灼烧。
+			}
+
+			SHPCRight_DeBuff: {
+				DisplayName: SHPC热量积聚
+				Description: 处于IV~V级热量时，生命恢复受阻并持续耗损自身。
+			}
+		}
+	}
+}

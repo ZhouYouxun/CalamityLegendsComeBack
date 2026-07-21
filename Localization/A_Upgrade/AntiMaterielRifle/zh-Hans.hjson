@@ -1,0 +1,47 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				NewLegendAntiMaterielRifle: {
+					DisplayName: 小传奇-反器材狙击步枪
+					Tooltip: "[GFB]"
+					LeftClick: 发射.408重型反器材狙击弹
+					RightClick: 右键扩大视野，并进入沉浸式狙击模式
+					CurrentStage: 当前战绩：{0}
+					InventoryToggle: 可自行在背包中右键开关视角变化功能
+					ZoomState: 视野拉远：{0}
+					ZoomEnabled: 开启
+					ZoomDisabled: 关闭
+					LegendaryHint: 按住Shift查看全部已解锁强化与传奇文本
+					LatestUnlockPrefix: 当前最新强化：{0}
+					Stage0: .408专用弹：高速飞行并穿透部分护甲
+					Stage1: 克苏鲁之眼已处决：命中施加死亡标记并进一步剥离防御
+					Stage2: 世界吞噬者或克苏鲁之脑已处决：命中产生贯穿目标的金属射流
+					Stage3: 血肉墙已处决：按灾厄冲刺键或双击左右方向可连续滑步两次，强化下一发瞄准弹
+					Stage4: 任意机械首领已处决：循环机构重构，自动射击间隔缩短至24帧
+					Stage5: 世纪之花已处决：连续校准同一目标，第三次命中获得高额增伤
+					Stage6: 月亮领主已处决：超过100%的暴击率转化为额外暴击伤害
+					Stage7: 亵渎天神已处决：暴击撕裂目标核心，获得更高暴击伤害
+					Stage8: 神明吞噬者已处决：滑步进入维度间隙，瞄准弹强化幅度提升
+					Stage9: 星流巨械或至尊女巫已处决：黑玛瑙标记弹与引爆弹交替装填
+					LegendaryText:
+						'''
+						你和你的掩体让我感到发笑。
+						无需等待，只需要子弹击穿胸膛。
+						惨绝人寰，片甲不留。
+						'''
+				}
+			}
+		}
+
+		Projectiles: {
+			AntiMaterielRifle: {
+				AMRHoldout.DisplayName: 反器材狙击步枪
+				AMRAimScope.DisplayName: 反器材瞄准线
+				AMRRound.DisplayName: .408反器材弹
+				AMROnyxDetonation.DisplayName: 黑玛瑙引爆
+				// AMRSlideExplosion.DisplayName: A M R Slide Explosion
+			}
+		}
+	}
+}

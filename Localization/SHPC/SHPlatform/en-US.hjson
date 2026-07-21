@@ -4,7 +4,7 @@ Mods: {
 			Placeables: {
 				SHPPPlatform: {
 					DisplayName: SHPP Platform
-					Tooltip: ""
+					Tooltip: A high-tech platform you can place infinitely
 				}
 			}
 		}

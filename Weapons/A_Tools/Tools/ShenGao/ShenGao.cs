@@ -2,6 +2,7 @@ using CalamityMod;
 using CalamityMod.Items.Materials;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
@@ -206,20 +207,31 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.Tools.ShenGao
 
         // ─── 属性计算 ─────────────────────────────────────────────────────────────────
 
-        private static int GetPickPower() => GetTier() switch
+        private static int GetPickPower()
         {
-            0        => 59,                                        // 初始
-            1 or 2   => 100,                                       // 世吞/克脑 —— 熔岩镐
-            3 or 4   => 190,                                       // 肉山进入困难模式 —— 钛金镐
-            5 or 6   => 200,                                       // 三机械 —— 神圣镐斧 / 叶绿镐
-            7        => NPC.downedAncientCultist ? 230 : 210,       // 石巨人 —— 锯刃镐；拜月邪教徒 —— 激光钻
-            8  => 250,
-            9  => 268,
-            10 => 288,
-            11 => 310,
-            12 => 335,
-            _  => 365
-        };
+            int power = GetTier() switch
+            {
+                0      => 59,                                      // 初始
+                1 or 2 => 100,                                     // 世吞/克脑 —— 熔岩镐
+                3 or 4 => 190,                                     // 肉山进入困难模式 —— 钛金镐
+                5 or 6 => 200,                                     // 三机械 —— 神圣镐斧 / 叶绿镐
+                7      => 210,                                     // 石巨人 —— 锯刃镐
+                8      => 250,
+                9      => 268,
+                10     => 288,
+                11     => 310,
+                12     => 335,
+                _      => 365
+            };
+
+            // 越阶击杀的补正——始终取最高档，不会因为跳过前置 Boss 而卡在低档
+            if (NPC.downedGolemBoss || DownedBossSystem.downedRavager)   // 石巨人 / 毁灭魔像
+                power = Math.Max(power, 210);
+            if (NPC.downedAncientCultist)                                // 拜月邪教徒 —— 激光钻
+                power = Math.Max(power, 230);
+
+            return power;
+        }
 
         private static int GetTileBoost() => GetTier() switch
         {
