@@ -31,9 +31,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty.Ultimate
 
         private Vector2 lockedCenter;
         private bool deployedSquad;
+        private bool landed;
+        private int landedTimer;
         private ref float VisualChargeRadius => ref NPC.ai[1];
 
-        public bool FieldOnline => Initialized && Age >= 30 && !Dismissing;
+        public bool FieldOnline => Initialized && landed && landedTimer >= 30 && !Dismissing;
 
         public override void SetDefaults()
         {
@@ -47,27 +49,33 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty.Ultimate
             if (Main.netMode == NetmodeID.MultiplayerClient)
                 return false;
 
-            Vector2 spawnPosition = ResponsibilityArmyGround.FindGround(player.Bottom, 44, 44);
+            // The Amplifier is dropped in at the caller and falls under its own weight instead of
+            // being teleported onto whatever ground happens to be underneath the player.
+            Vector2 spawnPosition = player.Center - Vector2.UnitY * 24f;
             IEntitySource source = player.GetSource_Misc("CallofDutyUltimate");
             int index = NPC.NewNPC(source, (int)spawnPosition.X, (int)spawnPosition.Y, ModContent.NPCType<ResponsibilityArmyAmplifier>());
             if (!Main.npc.IndexInRange(index) || Main.npc[index].ModNPC is not ResponsibilityArmyAmplifier amplifier)
                 return false;
 
             amplifier.InitializeFromOwner(player, generation, 0, snapshotDamage, CallofDutyPlayer.UltimateDurationFrames);
-            amplifier.lockedCenter = Main.npc[index].Center;
             Main.npc[index].netUpdate = true;
             return true;
         }
 
         protected override void UpdateUnitAI()
         {
-            if (lockedCenter == Vector2.Zero)
-                lockedCenter = NPC.Center;
+            if (!landed)
+            {
+                UpdateFreeFall();
+                return;
+            }
+
             NPC.Center = lockedCenter;
             NPC.velocity = Vector2.Zero;
             NPC.direction = 1;
+            landedTimer++;
 
-            if (Age == 30)
+            if (landedTimer == 30)
             {
                 EmitDeploymentShockwave();
                 if (Main.netMode != NetmodeID.MultiplayerClient)
@@ -93,6 +101,56 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty.Ultimate
             }
         }
 
+        /// <summary>
+        /// The chassis drops from the caller and only anchors itself once it touches solid ground,
+        /// so it can never end up hovering in mid air over a pit or a platform gap.
+        /// </summary>
+        private void UpdateFreeFall()
+        {
+            NPC.direction = 1;
+            NPC.spriteDirection = -1;
+
+            // Landing is read from the previous movement step: tile collision zeroes velocity.Y and
+            // leaves the pre-collision speed in oldVelocity.
+            bool touchedGround = NPC.collideY && NPC.oldVelocity.Y > 0.1f;
+            bool buriedInTiles = Collision.SolidCollision(NPC.position, NPC.width, NPC.height);
+            bool droppedTooLong = Age >= 300;
+
+            if (touchedGround || buriedInTiles || droppedTooLong)
+            {
+                Land();
+                return;
+            }
+
+            NPC.velocity.X *= 0.9f;
+            NPC.velocity.Y = Math.Min(NPC.velocity.Y + 0.45f, 18f);
+            NPC.StepUpBlocks();
+
+            if (!Main.dedServ && Age % 3 == 0)
+                EmitSmoke(2);
+        }
+
+        private void Land()
+        {
+            landed = true;
+            landedTimer = 0;
+            NPC.velocity = Vector2.Zero;
+            lockedCenter = NPC.Center;
+            NPC.netUpdate = true;
+
+            if (Main.dedServ)
+                return;
+
+            SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.4f, Pitch = -0.45f }, NPC.Center);
+            for (int i = 0; i < 24; i++)
+            {
+                Vector2 velocity = new Vector2(Main.rand.NextFloat(-4.5f, 4.5f), Main.rand.NextFloat(-3.5f, -0.5f));
+                Dust dust = Dust.NewDustPerfect(NPC.Bottom + Main.rand.NextVector2Circular(NPC.width * 0.4f, 4f),
+                    i % 4 == 0 ? DustID.Electric : DustID.Smoke, velocity, 110, new Color(75, 210, 255), Main.rand.NextFloat(0.8f, 1.3f));
+                dust.noGravity = true;
+            }
+        }
+
         private void EmitDeploymentShockwave()
         {
             if (!Main.dedServ)
@@ -113,7 +171,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty.Ultimate
                 return;
             deployedSquad = true;
 
-            int remaining = Math.Max(1, CallofDutyPlayer.UltimateDurationFrames - 30);
+            int remaining = Math.Max(1, RemainingFrames);
             for (int i = 0; i < 6; i++)
             {
                 float side = i % 2 == 0 ? -1f : 1f;
@@ -159,12 +217,16 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty.Ultimate
         {
             writer.WriteVector2(lockedCenter);
             writer.Write(deployedSquad);
+            writer.Write(landed);
+            writer.Write(landedTimer);
         }
 
         protected override void ReadUnitExtraAI(BinaryReader reader)
         {
             lockedCenter = reader.ReadVector2();
             deployedSquad = reader.ReadBoolean();
+            landed = reader.ReadBoolean();
+            landedTimer = reader.ReadInt32();
         }
     }
 
@@ -355,11 +417,18 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty.Ultimate
         private int warmupTimer;
         private int chargeTimer;
         private int ramCooldown;
+        private int stuckTimer;
+        private int framesSinceImpact = 9999;
+        private Vector2 lastPosition;
 
         protected override void UpdateUnitAI()
         {
             if (ramCooldown > 0)
                 ramCooldown--;
+            if (framesSinceImpact < 9999)
+                framesSinceImpact++;
+
+            UpdateStuckRecovery();
 
             NPC target = AcquireTarget();
             if (target == null)
@@ -411,6 +480,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty.Ultimate
                 if (NPC.Hitbox.Intersects(target.Hitbox) && ramCooldown <= 0)
                 {
                     SpawnRamHitbox(target, 0.48f, 48);
+                    framesSinceImpact = 0;
                     ramCooldown = 36;
                     chargeTimer = 0;
                     NPC.velocity.X = -NPC.direction * 7f;
@@ -418,6 +488,62 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty.Ultimate
                 }
             }
             NPC.StepUpBlocks();
+        }
+
+        /// <summary>
+        /// A Gyrator spawned into a hillside can end up buried in solid tiles with nowhere to roll,
+        /// which parks it there for the whole Ultimate. If it is pinned and is not landing hits, it
+        /// gets recalled to the owner. A Gyrator that keeps connecting is doing its job wherever it
+        /// happens to be wedged, so it is left alone.
+        /// </summary>
+        private void UpdateStuckRecovery()
+        {
+            bool buried = Collision.SolidCollision(NPC.position, NPC.width, NPC.height);
+            bool pinned = Vector2.DistanceSquared(NPC.Center, lastPosition) < 4f;
+            lastPosition = NPC.Center;
+
+            // Still connecting with something: whatever it is wedged in, it is still a threat.
+            if (framesSinceImpact <= 120)
+            {
+                stuckTimer = 0;
+                return;
+            }
+
+            if (buried || pinned)
+                stuckTimer++;
+            else
+                stuckTimer = 0;
+
+            if (stuckTimer < 60)
+                return;
+
+            stuckTimer = 0;
+            TeleportNearOwner();
+        }
+
+        private void TeleportNearOwner()
+        {
+            if (Owner == null || Main.netMode == NetmodeID.MultiplayerClient)
+                return;
+
+            float side = SlotIndex % 2 == 0 ? -1f : 1f;
+            Vector2 destination = ResponsibilityArmyGround.FindGround(Owner.Bottom + new Vector2(side * (60f + SlotIndex * 24f), 0f), Width, Height);
+
+            // Never trade one burial for another.
+            if (Collision.SolidCollision(destination - new Vector2(Width, Height) * 0.5f, Width, Height))
+                destination = Owner.Center - Vector2.UnitY * 24f;
+
+            EmitSmoke(12);
+            NPC.Center = destination;
+            NPC.velocity = Vector2.Zero;
+            chargeTimer = 0;
+            warmupTimer = 0;
+            lastPosition = NPC.Center;
+            EmitSmoke(12);
+            NPC.netUpdate = true;
+
+            if (!Main.dedServ)
+                SoundEngine.PlaySound(SoundID.Item8 with { Volume = 0.4f, Pitch = 0.3f }, NPC.Center);
         }
 
         private void MoveTowards(Vector2 destination, float speed, float jumpSpeed)
@@ -477,9 +603,18 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty.Ultimate
 
                 if ((Age + SlotIndex * 7) % 30 == 0 && Main.netMode != NetmodeID.MultiplayerClient)
                 {
-                    Vector2 velocity = NPC.SafeDirectionTo(target.Center) * 13f;
-                    Projectile.NewProjectile(NPC.GetSource_FromAI(), NPC.Center, velocity,
-                        ModContent.ProjectileType<ResponsibilityDroneLaser>(), GetAttackDamage(0.18f), 0.6f, OwnerIndex, target.whoAmI);
+                    // Fires the Wulfrum Controller droid's own energy burst rather than a custom bolt.
+                    // That projectile drives its own ai[0]/ai[1] (launch rotation and homing target),
+                    // so no extra AI arguments may be handed to it.
+                    Vector2 velocity = NPC.SafeDirectionTo(target.Center) * 10f;
+                    int damage = GetAttackDamage(0.18f);
+                    int burst = Projectile.NewProjectile(NPC.GetSource_FromAI(), NPC.Center, velocity,
+                        ModContent.ProjectileType<WulfrumEnergyBurst>(), damage, 0.6f, OwnerIndex);
+                    if (Main.projectile.IndexInRange(burst))
+                    {
+                        Main.projectile[burst].originalDamage = damage;
+                        Main.projectile[burst].netUpdate = true;
+                    }
                     SoundEngine.PlaySound(SoundID.Item12 with { Volume = 0.28f, Pitch = 0.35f }, NPC.Center);
                 }
             }

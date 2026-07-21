@@ -40,7 +40,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
             plagueOrbIndex = Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
-                Owner.Center + AimDirection * 118f,
+                Projectile.Center,
                 AimDirection,
                 ModContent.ProjectileType<BFPlagueSporeBomb>(),
                 1,
@@ -57,7 +57,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 return;
             }
 
-            GetPlagueSporeOrb()?.PushCharge(ChargeCompletion);
+            // 锚在持握弹幕正中心，球跟着武器走。
+            GetPlagueSporeOrb()?.PushCharge(ChargeCompletion, Projectile.Center, AimDirection);
         }
 
         // 蓄满松手：甩球。球不在（被打断、多人不同步）就退回原来的单发瘟疫箭。

@@ -28,9 +28,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
 
         #region 常量
 
-        // 蓄力时球悬停在玩家前方的距离。
-        private const float HoverDistance = 118f;
-
         // 蓄力最低 / 最满时的环半径。
         private const float MinRadius = 13.2f;
         private const float MaxRadius = 70.8f;
@@ -69,8 +66,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         private int detonateCountdown = -1;
         private bool detonated;
 
+        // 蓄力锚点：持握弹幕每帧把自己的中心推过来，球就贴着武器聚，不再往准星方向甩出去。
+        private Vector2 hoverAnchor;
+        private bool hasHoverAnchor;
+
         private bool Charging => State == 0f;
-        private bool Collapsing => detonateCountdown >= 0 && detonateCountdown <= CollapseFrames;
 
         #endregion
 
@@ -117,15 +117,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         private void UpdateHover()
         {
             Player owner = Main.player[Projectile.owner];
-            Vector2 aim = owner.SafeDirectionTo(Main.MouseWorld, Vector2.UnitX * owner.direction);
 
-            // 远程客户端拿不到别人的鼠标，就退回沿用上一帧的朝向。
-            if (Projectile.owner != Main.myPlayer)
-                aim = Projectile.velocity.SafeNormalize(Vector2.UnitX * owner.direction);
-            else
-                Projectile.velocity = aim;
-
-            Projectile.Center = owner.Center + aim * HoverDistance;
+            // 锚点来自持握弹幕正中心；拿不到就退回玩家身上，绝不自己往准星方向偏。
+            Projectile.Center = hasHoverAnchor ? hoverAnchor : owner.MountedCenter;
 
             float target = MathHelper.Lerp(MinRadius, MaxRadius, MathHelper.Clamp(ChargePower, 0f, 1f));
             radius = MathHelper.Lerp(radius, target, 0.14f);
@@ -133,25 +127,26 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             Lighting.AddLight(Projectile.Center, PlagueMain.ToVector3() * (0.35f + 0.45f * ChargePower));
         }
 
-        // 蓄力表现：从持握端往球体抽孢子，环上跑光点，蓄满后额外冒毒雾。
+        // 蓄力表现：四周孢子向环内收拢，环上跑光点，蓄满后额外冒毒雾。
         private void EmitChargeFX()
         {
             if (Main.dedServ)
                 return;
 
-            Player owner = Main.player[Projectile.owner];
             float power = MathHelper.Clamp(ChargePower, 0f, 1f);
 
-            // 手 → 球 的孢子流，蓄得越满流得越急。
+            // 从环外往中心收拢的孢子，蓄得越满吸得越急——球贴在武器上，所以是「向内聚」而不是「从手里流出去」。
             if (Main.rand.NextFloat() < 0.35f + power * 0.55f)
             {
-                Vector2 from = owner.Center + Projectile.SafeDirectionTo(owner.Center, Vector2.UnitX) * -38f;
-                Vector2 toOrb = (Projectile.Center - from).SafeNormalize(Vector2.UnitX);
+                float angle = Main.rand.NextFloat(MathHelper.TwoPi);
+                float distance = radius * Main.rand.NextFloat(1.6f, 2.9f);
+                Vector2 from = Projectile.Center + angle.ToRotationVector2() * distance;
+                Vector2 inward = (Projectile.Center - from).SafeNormalize(Vector2.UnitX);
                 GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
-                    from + Main.rand.NextVector2Circular(10f, 10f),
-                    toOrb.RotatedByRandom(0.42f) * Main.rand.NextFloat(3.5f, 11f),
-                    false, Main.rand.Next(8, 14),
-                    Main.rand.NextFloat(0.24f, 0.42f),
+                    from,
+                    inward.RotatedByRandom(0.3f) * (distance / MathHelper.Lerp(14f, 8f, power)),
+                    false, Main.rand.Next(8, 13),
+                    Main.rand.NextFloat(0.2f, 0.36f),
                     Color.Lerp(PlagueMain, PlagueAccent, Main.rand.NextFloat(0.1f, 0.5f)),
                     true, false, true));
             }
@@ -438,13 +433,16 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
 
         #region 外部接口（由持握弹幕调用）
 
-        // 持握弹幕每帧喂蓄力进度，同时续命——它一死，球就自己散掉。
-        internal void PushCharge(float completion)
+        // 持握弹幕每帧喂蓄力进度和锚点，同时续命——它一死，球就自己散掉。
+        internal void PushCharge(float completion, Vector2 anchor, Vector2 aim)
         {
             if (!Charging)
                 return;
 
             ChargePower = MathHelper.Clamp(completion, 0f, 1f);
+            hoverAnchor = anchor;
+            hasHoverAnchor = true;
+            Projectile.velocity = aim.SafeNormalize(Vector2.UnitX);
             Projectile.timeLeft = 30;
         }
 

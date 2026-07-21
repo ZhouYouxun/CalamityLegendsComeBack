@@ -335,7 +335,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                 Main.rand.Next(58, 92),
                 Main.rand.NextFloat(0.006f, 0.018f)));
 
-            if (Projectile.FinalExtraUpdate() && (int)FlightTimer % 3 == 0)
+            // 疫球子箭不要光刺，十几根一起飞会糊成一片白。
+            if (!fromSporeBomb && Projectile.FinalExtraUpdate() && (int)FlightTimer % 3 == 0)
             {
                 GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(
                     Projectile.Center - direction * 10f + normal * Main.rand.NextFloat(-5f, 5f),
@@ -430,7 +431,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                     Main.rand.NextFloat(0.008f, 0.016f)));
             }
 
-            if ((int)FlightTimer % 3 == 0)
+            // 同上：螺旋上的酸液光束也只留给单发的那根主箭。
+            if (!fromSporeBomb && (int)FlightTimer % 3 == 0)
             {
                 float beamAngle = time * 1.3f;
                 GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(

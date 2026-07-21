@@ -96,6 +96,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             // 常驻底光：始终在弓体绘制一个低强度星芒核心，给武器"活着"的感觉。
             DrawSHPCMagicCore(CurrentPreset, 0.18f, 0f, false, true);
 
+            // 瘟疫形态专属：左键开火时在弓口叠一层六边形生化排放阀光圈。
+            if (CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_EPlague && !rightChargeActive)
+                DrawPlagueVentIris(leftFlash);
+
             if (rightChargeActive && reloadTimer <= 0)
             {
                 DrawSHPCRightChargeVisuals(CurrentPreset, chargeGlow);

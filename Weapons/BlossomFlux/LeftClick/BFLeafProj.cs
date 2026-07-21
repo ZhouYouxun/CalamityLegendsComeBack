@@ -256,13 +256,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
             Color accentColor = BFArrowCommon.GetPresetAccentColor(Preset) * Projectile.Opacity;
             float pulse = 0.92f + 0.08f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 7.2f + Projectile.identity * 0.23f);
 
-            if (Preset != BlossomFluxChloroplastPresetType.Chlo_CDetec)
-                DrawHelix(drawPosition, forward);
+            DrawHelix(drawPosition, forward);
 
             Main.spriteBatch.SetBlendState(BlendState.Additive);
-
-            if (Preset == BlossomFluxChloroplastPresetType.Chlo_CDetec)
-                DrawReconSignalPoints(drawPosition, forward, right, bloomTexture, sparkTexture, mainColor, accentColor, pulse);
 
             for (int i = 0; i < 7; i++)
             {
@@ -502,12 +498,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
                 return;
             }
 
-            if (preset == BlossomFluxChloroplastPresetType.Chlo_CDetec)
-            {
-                EmitReconSignalTrail();
-                return;
-            }
-
             if (Main.rand.NextBool(2))
                 BFArrowCommon.EmitPresetTrail(Projectile, preset, 0.95f);
 
@@ -529,39 +519,15 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
                     Main.rand.Next(8, 12)));
             }
 
-        }
-
-        private void EmitReconSignalTrail()
-        {
-            if (Main.dedServ || !Projectile.FinalExtraUpdate() || (int)FlightTimer % 4 != 0)
-                return;
-
-            Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-            Vector2 side = forward.RotatedBy(MathHelper.PiOver2);
-            Color mainColor = BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_CDetec);
-            Color accentColor = BFArrowCommon.GetPresetAccentColor(BlossomFluxChloroplastPresetType.Chlo_CDetec);
-
-            GeneralParticleHandler.SpawnParticle(new SquishyLightParticle(
-                Projectile.Center - forward * Main.rand.NextFloat(4f, 12f) + side * Main.rand.NextFloat(-7f, 7f),
-                -Projectile.velocity * 0.045f + side * Main.rand.NextFloat(-0.32f, 0.32f),
-                Main.rand.NextFloat(0.12f, 0.2f),
-                Color.Lerp(mainColor, accentColor, Main.rand.NextFloat(0.3f, 0.75f)),
-                Main.rand.Next(9, 14)));
-        }
-
-        private void DrawReconSignalPoints(Vector2 drawPosition, Vector2 forward, Vector2 right, Texture2D bloomTexture, Texture2D sparkTexture, Color mainColor, Color accentColor, float pulse)
-        {
-            float time = Main.GlobalTimeWrappedHourly * 5.4f + Projectile.identity * 0.47f;
-            for (int i = 0; i < 5; i++)
+            if (preset == BlossomFluxChloroplastPresetType.Chlo_CDetec && (int)FlightTimer % 6 == 0)
             {
-                float progress = i / 4f;
-                float lane = MathF.Sin(time + i * 1.7f) * MathHelper.Lerp(9f, 3.5f, progress);
-                Vector2 point = drawPosition - forward * MathHelper.Lerp(2f, 30f, progress) + right * lane;
-                Color pointColor = Color.Lerp(mainColor, Color.White, 0.4f + progress * 0.25f) * (0.62f - progress * 0.28f);
-                float scale = MathHelper.Lerp(0.16f, 0.055f, progress) * pulse;
-
-                Main.EntitySpriteDraw(bloomTexture, point, null, pointColor, 0f, bloomTexture.Size() * 0.5f, scale, SpriteEffects.None, 0);
-                Main.EntitySpriteDraw(sparkTexture, point, null, Color.Lerp(pointColor, accentColor, 0.45f), forward.ToRotation(), sparkTexture.Size() * 0.5f, new Vector2(0.025f, 0.085f) * (1f - progress * 0.35f), SpriteEffects.None, 0);
+                GeneralParticleHandler.SpawnParticle(new CritSpark(
+                    Projectile.Center + side * Main.rand.NextFloat(-6f, 6f),
+                    forward * Main.rand.NextFloat(1.2f, 2.4f),
+                    Color.White,
+                    accentColor,
+                    0.48f,
+                    10));
             }
         }
 
@@ -578,17 +544,32 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
             if (!Projectile.FinalExtraUpdate())
                 return;
 
-            if ((int)FlightTimer % 3 != 0)
+            if ((int)FlightTimer % 4 == 0)
+            {
+                GlowOrbParticle orb = new(
+                    Projectile.Center - forward * Main.rand.NextFloat(2f, 8f) + side * Main.rand.NextFloat(-3f, 3f),
+                    Main.rand.NextVector2Circular(0.12f, 0.12f),
+                    false,
+                    5,
+                    Main.rand.NextFloat(0.46f, 0.62f),
+                    Color.Lerp(mainColor, Color.White, 0.18f),
+                    true,
+                    false,
+                    true);
+                GeneralParticleHandler.SpawnParticle(orb);
+            }
+
+            if ((int)FlightTimer % 6 != 0)
                 return;
 
-            Dust dust = Dust.NewDustPerfect(
-                Projectile.Center - forward * Main.rand.NextFloat(5f, 14f) + side * Main.rand.NextFloat(-4f, 4f),
-                DustID.FireworksRGB,
-                -Projectile.velocity * 0.11f + side * Main.rand.NextFloat(-0.45f, 0.45f),
-                100,
-                Color.Lerp(mainColor, accentColor, Main.rand.NextFloat(0.2f, 0.6f)),
-                Main.rand.NextFloat(0.55f, 0.82f));
-            dust.noGravity = true;
+            Particle trail = new SparkParticle(
+                Projectile.Center - forward * Main.rand.NextFloat(6f, 16f) + side * Main.rand.NextFloat(-4f, 4f),
+                -Projectile.velocity * 0.16f + side * Main.rand.NextFloat(-0.24f, 0.24f),
+                false,
+                Main.rand.Next(24, 34),
+                Main.rand.NextFloat(0.5f, 0.72f),
+                Color.Lerp(mainColor, accentColor, Main.rand.NextFloat(0.2f, 0.55f)));
+            GeneralParticleHandler.SpawnParticle(trail);
         }
 
         internal static void SpawnLeafImpactFX(Projectile projectile, Vector2 center, BlossomFluxChloroplastPresetType preset, float intensity, Vector2? burstOrigin = null)
@@ -824,29 +805,36 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
             Color blastColor = BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_DBomb);
             Color highlight = Color.Lerp(Color.Goldenrod, BFArrowCommon.GetPresetAccentColor(BlossomFluxChloroplastPresetType.Chlo_DBomb), 0.45f);
 
-            // 缩小版 Helium Flash：亮屑先冲出，蒸汽随后拖开；轰炸连发时仍能看清落点。
-            for (int i = 0; i < 28; i++)
+            GeneralParticleHandler.SpawnParticle(new DetailedExplosion(
+                center,
+                Vector2.Zero,
+                Color.Lerp(blastColor, highlight, 0.35f),
+                Vector2.One,
+                Main.rand.NextFloat(-0.35f, 0.35f),
+                0f,
+                0.18f,
+                10));
+
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                center,
+                Vector2.Zero,
+                highlight,
+                new Vector2(1.25f, 1.25f),
+                0f,
+                0.16f,
+                0.032f,
+                12));
+
+            for (int i = 0; i < 16; i++)
             {
                 Dust dust = Dust.NewDustPerfect(
-                    center + Main.rand.NextVector2Circular(8f, 8f),
-                    DustID.FireworksRGB,
-                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.6f, 8.4f),
-                    70,
-                    Color.Lerp(blastColor, Main.rand.NextBool(4) ? Color.White : highlight, Main.rand.NextFloat(0.2f, 0.76f)),
-                    Main.rand.NextFloat(0.72f, 1.2f));
+                    center,
+                    Main.rand.NextBool(3) ? DustID.FireworksRGB : DustID.Torch,
+                    Main.rand.NextVector2CircularEdge(3.2f, 3.2f) * Main.rand.NextFloat(1.8f, 4.6f),
+                    0,
+                    Main.rand.NextBool(3) ? highlight : blastColor,
+                    Main.rand.NextFloat(0.9f, 1.35f));
                 dust.noGravity = true;
-            }
-
-            for (int i = 0; i < 9; i++)
-            {
-                Dust steam = Dust.NewDustPerfect(
-                    center + Main.rand.NextVector2Circular(12f, 12f),
-                    DustID.SteampunkSteam,
-                    Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(0.8f, 3.2f),
-                    140,
-                    Color.Lerp(Color.SlateGray, highlight, 0.35f),
-                    Main.rand.NextFloat(0.62f, 1.05f));
-                steam.noGravity = false;
             }
         }
     }

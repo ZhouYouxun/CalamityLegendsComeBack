@@ -230,7 +230,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                     (new Vector2(4f, 4f) * fxScale).RotatedByRandom(100f) * Main.rand.NextFloat(0.3f, 1.9f),
                     true,
                     13,
-                    Main.rand.NextFloat(0.1f, 0.15f) * fxScale,
+                    Main.rand.NextFloat(0.08f, 0.12f) * fxScale,
                     Main.rand.NextBool(5) ? Color.Cyan : Color.Orchid,
                     new Vector2(1.8f, 0.8f),
                     true,
@@ -245,7 +245,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
                     (new Vector2(5f, 5f) * fxScale).RotatedByRandom(100f) * Main.rand.NextFloat(0.5f, 1f),
                     0,
                     default,
-                    Main.rand.NextFloat(0.4f, 0.55f) * fxScale);
+                    Main.rand.NextFloat(0.32f, 0.44f) * fxScale);
                 dust.noGravity = !Main.rand.NextBool(3);
                 dust.color = Main.rand.NextBool(5) ? Color.Cyan : Color.Orchid;
             }
@@ -255,9 +255,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
 
             for (int i = 0; i < 2; i++)
             {
-                Particle orb = new CustomPulse(pos, Vector2.Zero, Color.Orchid, "CalamityMod/Particles/BloomCircle", Vector2.One, Main.rand.NextFloat(-10f, 10f), 0.966f * fxScale, 0.35f * fxScale, 14);
+                Particle orb = new CustomPulse(pos, Vector2.Zero, Color.Orchid, "CalamityMod/Particles/BloomCircle", Vector2.One, Main.rand.NextFloat(-10f, 10f), 0.966f * fxScale, 0.35f * fxScale, 14, true, 0.5f);
                 GeneralParticleHandler.SpawnParticle(orb);
-                Particle orb2 = new CustomPulse(pos, Vector2.Zero, Color.White, "CalamityMod/Particles/BloomCircle", Vector2.One, Main.rand.NextFloat(-10f, 10f), 0.6475f * fxScale, 0.14f * fxScale, 14);
+                Particle orb2 = new CustomPulse(pos, Vector2.Zero, Color.White, "CalamityMod/Particles/BloomCircle", Vector2.One, Main.rand.NextFloat(-10f, 10f), 0.6475f * fxScale, 0.14f * fxScale, 14, true, 0.5f);
                 GeneralParticleHandler.SpawnParticle(orb2);
             }
         }

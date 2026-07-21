@@ -4,7 +4,7 @@ Mods: {
 			Placeables: {
 				SHPPPlatform: {
 					DisplayName: SHPP
-					Tooltip: 如此优秀的平台，能够无限的放置，这就是科技
+					Tooltip: 一个可以无限放置的高科技平台
 				}
 			}
 		}

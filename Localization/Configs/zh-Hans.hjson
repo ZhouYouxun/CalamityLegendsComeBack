@@ -30,7 +30,7 @@ Mods: {
 				}
 
 				AllowBossSummonShop: {
-					Label: "[i:BestiaryGirl] 允许动物学家出售Boss召唤物"
+					Label: "[i:GuideVoodooDoll] 允许动物学家出售Boss召唤物"
 					Tooltip: 动物学家会在对应进度出售Boss召唤物；少数会反向产出首杀材料的配方将被暂时禁用。
 				}
 

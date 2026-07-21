@@ -30,7 +30,7 @@ Mods: {
 				}
 
 				AllowBossSummonShop: {
-					Label: "[i:BestiaryGirl] Allow Zoologist Boss Summons"
+					Label: "[i:GuideVoodooDoll] Allow Zoologist Boss Summons"
 					Tooltip: The Zoologist sells Boss summons at the appropriate progression; a few recipes that would return pre-kill materials are temporarily disabled.
 				}
 

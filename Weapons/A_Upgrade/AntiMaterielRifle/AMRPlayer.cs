@@ -181,7 +181,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
 
             if (slideTimer > 0)
             {
-                float speed = AMRBalance.DimensionalSlideUnlocked ? 28f : 22f;
+                float speed = AMRBalance.DimensionalSlideUnlocked ? 8.4f : 6.6f;
                 Player.velocity = slideDirection * speed;
                 Player.immune = true;
                 Player.immuneTime = System.Math.Max(Player.immuneTime, 2);

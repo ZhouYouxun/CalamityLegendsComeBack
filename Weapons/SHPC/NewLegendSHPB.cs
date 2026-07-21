@@ -274,17 +274,25 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
 
 
+            // ===== 爆炸整体尺寸系数（无弹药左键随进度阶段放大，所有特效共用这一个系数） =====
+            float defaultExplosionVisualScale = CurrentEffect.EffectID == -1
+                ? new BalanceSHPC().GetDefaultLeftClickNoAmmoExplosionRadius() / 112f
+                : 1f;
+            // 光粒散射用开方缩放：铺开范围跟着线性走，单颗体积和数量放缓，免得糊成一片
+            float particleSpreadScale = defaultExplosionVisualScale;
+            float particleSizeScale = MathF.Sqrt(defaultExplosionVisualScale);
+
             // 光粒子散射特效
             if (Projectile.owner == Main.myPlayer && SquishyLightParticleFactor > 0f)
             {
                 // ===== SquishyLightParticle 爆散 =====
-                int particleCount = (int)(25 * SquishyLightParticleFactor);
+                int particleCount = (int)(25 * SquishyLightParticleFactor * particleSizeScale);
 
                 for (int i = 0; i < particleCount; i++)
                 {
-                    Vector2 velocity = Vector2.One.RotatedByRandom(MathHelper.TwoPi) * Main.rand.NextFloat(6f, 11f) * SquishyLightParticleFactor * 0.5f;
+                    Vector2 velocity = Vector2.One.RotatedByRandom(MathHelper.TwoPi) * Main.rand.NextFloat(6f, 11f) * SquishyLightParticleFactor * 0.5f * particleSpreadScale;
 
-                    float scale = Main.rand.NextFloat(0.8f, 1.4f) * SquishyLightParticleFactor * 0.5f;
+                    float scale = Main.rand.NextFloat(0.8f, 1.4f) * SquishyLightParticleFactor * 0.5f * particleSizeScale;
 
                     Color particleColor = Color.Lerp(ThemeColor, Color.White, Main.rand.NextFloat());
 
@@ -307,28 +315,31 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             if (Projectile.owner == Main.myPlayer && ExplosionPulseFactor > 0f)
             {
                 // ===== 爆炸核心参数 =====
-                float defaultExplosionVisualScale = CurrentEffect.EffectID == -1
-                    ? new BalanceSHPC().GetDefaultLeftClickNoAmmoExplosionRadius() / 112f
-                    : 1f;
                 float startSize = 0.07f * ExplosionPulseFactor * defaultExplosionVisualScale;
                 float endSize = 0.33f * ExplosionPulseFactor * defaultExplosionVisualScale;
                 float num2 = Projectile.scale;
 
                 Color color = ThemeColor;
 
-                Particle p1 = new CustomPulse(Projectile.Center, Vector2.Zero, color, 
-                    "CalamityMod/Particles/BloomCircle", Vector2.One * 0.33f, 
-                    Main.rand.NextFloat(-10f, 10f), startSize, endSize, 30); 
+                // 三层脉冲的基础不透明度：实心光晕压得最狠，冲击环和等离子纹留多一点存在感
+                // 注意 CustomPulse 内部会把不透明度乘两次（Update 一次、CustomDraw 一次），实际观感≈平方
+                const float bloomCircleOpacity = 0.65f;
+                const float bloomRingOpacity = 0.8f;
+                const float plasmaExplosionOpacity = 0.75f;
+
+                Particle p1 = new CustomPulse(Projectile.Center, Vector2.Zero, color,
+                    "CalamityMod/Particles/BloomCircle", Vector2.One * 0.33f,
+                    Main.rand.NextFloat(-10f, 10f), startSize, endSize, 30, true, bloomCircleOpacity);
                 GeneralParticleHandler.SpawnParticle(p1);
 
-                Particle p2 = new CustomPulse(Projectile.Center, Vector2.Zero, color, 
-                    "CalamityMod/Particles/BloomRing", Vector2.One * 0.33f, 
-                    Main.rand.NextFloat(-10f, 10f), startSize, endSize, 30); 
+                Particle p2 = new CustomPulse(Projectile.Center, Vector2.Zero, color,
+                    "CalamityMod/Particles/BloomRing", Vector2.One * 0.33f,
+                    Main.rand.NextFloat(-10f, 10f), startSize, endSize, 30, true, bloomRingOpacity);
                 GeneralParticleHandler.SpawnParticle(p2);
 
-                Particle p3 = new CustomPulse(Projectile.Center, Vector2.Zero, color, 
-                    "CalamityMod/Particles/PlasmaExplosion", Vector2.One * 0.33f, 
-                    Main.rand.NextFloat(-10f, 10f), startSize, endSize, 30); 
+                Particle p3 = new CustomPulse(Projectile.Center, Vector2.Zero, color,
+                    "CalamityMod/Particles/PlasmaExplosion", Vector2.One * 0.33f,
+                    Main.rand.NextFloat(-10f, 10f), startSize, endSize, 30, true, plasmaExplosionOpacity);
                 GeneralParticleHandler.SpawnParticle(p3);
             }
 

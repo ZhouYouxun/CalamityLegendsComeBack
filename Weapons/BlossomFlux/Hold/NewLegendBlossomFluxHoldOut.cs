@@ -77,6 +77,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         private float leftStarburstSpinKick;
         private int leftOutlinePulseTimer;
         private int rightOutlinePulseTimer;
+        // 瘟疫形态枪口"生化排放阀"状态：逐发累计的排放次数、六边形阀口相位、开火后的残留计时与强排毒标记
+        private int plagueVentShotIndex;
+        private float plagueVentSpin;
+        private int plagueVentResidueTimer;
+        private bool plagueVentPurgeActive;
         private float breakthroughQueuedSpeed;
         private float breakthroughQueuedKnockback;
         private float breakthroughQueuedNoFalloff;
@@ -115,11 +120,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         private bool BombardChargePoseActive => rightChargeActive && CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_DBomb;
         private bool RecoveryChargePoseActive => rightChargeActive && CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_BRecov;
         private bool SpecialAimScopeAnchorActive => BombardChargePoseActive || RecoveryChargePoseActive;
-        // 突击右键改为纯蓄箭/齐射，不再保留准星弹幕；其余形态维持原有瞄准镜规则。
+        // 突击右键改为纯蓄箭/齐射，瘟疫右键改为聚球甩出，都不再保留准星弹幕；其余形态维持原有瞄准镜规则。
         private bool ShouldUseAimScope => rightChargeActive &&
             CurrentPreset != BlossomFluxChloroplastPresetType.Chlo_ABreak &&
             CurrentPreset != BlossomFluxChloroplastPresetType.Chlo_BRecov &&
-            CurrentPreset != BlossomFluxChloroplastPresetType.Chlo_DBomb;
+            CurrentPreset != BlossomFluxChloroplastPresetType.Chlo_DBomb &&
+            CurrentPreset != BlossomFluxChloroplastPresetType.Chlo_EPlague;
 
         internal Color GetAimScopeMainColor() => Color.Lerp(PresetColor, AccentColor, 0.18f);
 
@@ -295,6 +301,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             UpdateIdlePose();
             UpdateHeldProjectileVariables();
             ManipulatePlayerVariables();
+            // 放在位置更新之后：枪口排放阀的蓄压/滴漏要贴当前帧的弓口坐标
+            UpdatePlagueVentAmbience();
         }
 
         private void HandleOwnerLogic(BFRightUIPlayer rightUIPlayer)
