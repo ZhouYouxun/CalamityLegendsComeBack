@@ -208,14 +208,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.Tools.ShenGao
 
         private static int GetPickPower() => GetTier() switch
         {
-            0  => 65,
-            1  => 80,
-            2  => 96,
-            3  => 190,
-            4  => 200,
-            5  => 212,
-            6  => 218,
-            7  => 228,
+            0        => 59,                                        // 初始
+            1 or 2   => 100,                                       // 世吞/克脑 —— 熔岩镐
+            3 or 4   => 190,                                       // 肉山进入困难模式 —— 钛金镐
+            5 or 6   => 200,                                       // 三机械 —— 神圣镐斧 / 叶绿镐
+            7        => NPC.downedAncientCultist ? 230 : 210,       // 石巨人 —— 锯刃镐；拜月邪教徒 —— 激光钻
             8  => 250,
             9  => 268,
             10 => 288,
