@@ -18,20 +18,20 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
         private static readonly object[,] DefaultStageTable =
         {
             //                                      Damage  Scale
-            { "Initial",                              19,   0.6f   },
-            { "Eye of Cthulhu",                       25,   0.607f },
-            { "Evil Boss",                            33,   0.628f },
-            { "Skeletron",                            45,   0.664f },
-            { "Hardmode",                             70,   0.714f },
-            { "Any Mechanical Boss",                  80,   0.778f },
-            { "Plantera",                            101,   0.856f },
-            { "Golem",                               124,   0.948f },
-            { "Moon Lord",                           200,   1.054f },
-            { "Providence",                          250,   1.174f },
-            { "Polterghast",                         295,   1.3f   },
-            { "Devourer of Gods",                    435,   1.3f   },
-            { "Yharon",                              475,   1.3f   },
-            { "Exo Mechs and Supreme Calamitas",    1000,   1.3f   }
+            { "Initial",                              24,   0.64f   },
+            { "Eye of Cthulhu",                       30,   0.66f },
+            { "Evil Boss",                            33,   0.68f },
+            { "Skeletron",                            45,   0.72f },
+            { "Hardmode",                             60,   0.75f },
+            { "Any Mechanical Boss",                  70,   0.80f },
+            { "Plantera",                             92,   0.88f },
+            { "Golem",                               108,   1.0f },
+            { "Moon Lord",                           129,   1.1f },
+            { "Providence",                          325,   1.2f },
+            { "Polterghast",                         695,   1.3f   },
+            { "Devourer of Gods",                   1000,   1.3f   },
+            { "Yharon",                             1300,   1.35f   },
+            { "Exo Mechs and Supreme Calamitas",    2000,   1.35f   }
         };
 
         private static readonly string[] DefaultStageNames =

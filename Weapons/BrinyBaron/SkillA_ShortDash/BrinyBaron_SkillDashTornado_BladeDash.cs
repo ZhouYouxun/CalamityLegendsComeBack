@@ -46,8 +46,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
         private bool enemyReboundUnlocked;
         private int dashShotTimer;
         private readonly System.Collections.Generic.List<Vector2> dashDirectionHistory = new();
-        private static readonly float[] ShortDashSpeedMultipliers = { 1.05f, 1.12f, 1.2f, 1.32f, 1.45f };
-        private static readonly float[] ShortDashContactDamageMultipliers = { 1.05f, 1.1f, 1.2f, 1.35f, 1.55f };
+        private static readonly float[] ShortDashSpeedMultipliers = { 2.05f, 2.28f, 2.5f, 2.72f, 3.25f };
+        private static readonly float[] ShortDashContactDamageMultipliers = { 2.5f, 3.25f, 4f, 4.75f, 5.5f };
         private static readonly bool[] ShortDashEnemyReboundUnlocks = { false, true, true, true, true };
         private bool ReboundDashMode => Projectile.ai[0] == 2f;
         private float DashSpeedMultiplier => ReboundDashMode ? DefaultReboundDashSpeedMultiplier : 1f;
@@ -77,7 +77,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
         {
             InitializeDash(Main.player[Projectile.owner]);
         }
-
+        //speed
         public override void AI()
         {
             Player owner = Main.player[Projectile.owner];

@@ -271,7 +271,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         public static BFBreakthroughRightStats GetStats()
         {
             return new BFBreakthroughRightStats(
-                framesPerArrow: 30,
+                framesPerArrow: 20,
                 maxLoadedArrows: MathMax(1, BFBalanceTable.Get(BFStat.Breakthrough_Right_MaxArrows)),
                 penetrate: 7,
                 ignorePenetrationDamageFalloff: false,

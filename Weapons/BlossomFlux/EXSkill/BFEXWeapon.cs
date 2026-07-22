@@ -234,7 +234,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
             Vector2 forward = AimDirection;
             Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
             Vector2 backfieldCenter = Owner.Center - forward * BarrageSpawnBackDistance + Owner.velocity * 0.35f;
-            int shotDamage = (int)(Projectile.damage * 0.72f);
+            int shotDamage = (int)(Projectile.damage * 1f);
             NPC lockedTarget = FindBarrageTarget(forward);
 
             for (int i = 0; i < BarrageVolleyCount; i++)
