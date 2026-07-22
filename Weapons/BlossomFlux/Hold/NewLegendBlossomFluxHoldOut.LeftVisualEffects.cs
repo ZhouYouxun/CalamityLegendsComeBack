@@ -217,6 +217,42 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         // 瘟疫枪口 = 一具生化排放阀（取 PBG 掉落武器的毒牙/针筒/纳米蜂群语言）。
         // 一次开火串起六段动作：①阀口泄压环 ②六边形蜂巢排放格 ③涡流毒液喷射 ④纳米疫孢 ⑤警戒频闪 ⑥酸液滴落与余雾。
         // 每发相位推进 30°、旋涡逐发反向、每三发一次强排毒，所以连射时阀口是活的，不会两发长得一模一样。
+        // Bombard left-click only: an aimed, forward-cone counterpart to the all-direction target marker.
+        private static void SpawnBombardGunMuzzle(Vector2 center, Vector2 aimDirection, float intensity)
+        {
+            if (Main.dedServ)
+                return;
+
+            Color theme = BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_DBomb);
+            Color accent = BFArrowCommon.GetPresetAccentColor(BlossomFluxChloroplastPresetType.Chlo_DBomb);
+            Vector2 dir = aimDirection.SafeNormalize(Vector2.UnitX);
+            Vector2 muzzle = center + dir * 2f;
+            float i = MathHelper.Clamp(intensity, 0.55f, 1.45f);
+
+            Lighting.AddLight(muzzle, theme.ToVector3() * (0.18f + i * 0.18f));
+            GeneralParticleHandler.SpawnParticle(new StrongBloom(
+                muzzle, dir * 0.5f, Color.Lerp(theme, Color.White, 0.25f), 0.38f * i, 10));
+
+            for (int k = 0; k < 10; k++)
+            {
+                Vector2 velocity = dir.RotatedByRandom(0.38f) * Main.rand.NextFloat(3.5f, 9.5f);
+                GeneralParticleHandler.SpawnParticle(new SparkParticle(
+                    muzzle + Main.rand.NextVector2Circular(4f, 4f), velocity,
+                    false, Main.rand.Next(10, 18), Main.rand.NextFloat(0.45f, 0.85f) * i,
+                    Main.rand.NextBool(4) ? Color.White : Color.Lerp(theme, accent, Main.rand.NextFloat())));
+            }
+
+            for (int k = 0; k < 6; k++)
+            {
+                Dust dust = Dust.NewDustPerfect(muzzle + Main.rand.NextVector2Circular(4f, 4f), DustID.GoldFlame);
+                dust.velocity = dir.RotatedByRandom(0.44f) * Main.rand.NextFloat(2f, 7f);
+                dust.color = Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.1f, 0.45f));
+                dust.noGravity = true;
+                dust.scale = Main.rand.NextFloat(0.75f, 1.2f) * i;
+            }
+        }
+
+        // Plague muzzle routine.
         private void SpawnPlagueMuzzle(Vector2 muzzle, Vector2 dir, Color theme, Color accent, float i)
         {
             Color plagueCore = new(124, 238, 68);      // 毒液主绿

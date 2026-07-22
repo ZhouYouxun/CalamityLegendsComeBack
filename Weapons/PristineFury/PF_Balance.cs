@@ -85,6 +85,19 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             4.20f  // Finisher supernova
         };
 
+        // 大招（劫火重燃）伤害倍率：肉后/月后/神后三档。
+        // 大招基准 = 当前左键基础伤害 × 本档倍率；上面的 echo / finisher 两个系数
+        // 在这个基准之上作为相对权重继续生效。
+        private static readonly float[] UltimateTierDamageMultipliers =
+        {
+            2.50f, // Tier 0: 肉后（大招解锁起点，机械 Boss 之后）
+            3.20f, // Tier 1: 月后（月亮领主之后）
+            4.00f  // Tier 2: 神后（亵渎天神 Providence 之后）
+        };
+
+        public static float GetUltimateTierDamageMultiplier() =>
+            UltimateDamageTier.Resolve(SourceFile, nameof(UltimateTierDamageMultipliers), UltimateTierDamageMultipliers);
+
         public static int GetInitialBaseDamage() => GetProgressBaseDamage(0);
 
         public static int GetBaseDamage() => GetProgressBaseDamage(GetCompletedStageIndex());
@@ -115,9 +128,11 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         public static float GetRightOverheatContactDamageMultiplier() =>
             GetRightClickDamageMultiplier(RightClickOverheatContactIndex);
 
-        public static float GetUltimateEchoDamageMultiplier() => GetUltimateDamageMultiplier(0);
+        public static float GetUltimateEchoDamageMultiplier() =>
+            GetUltimateDamageMultiplier(0) * GetUltimateTierDamageMultiplier();
 
-        public static float GetUltimateFinisherDamageMultiplier() => GetUltimateDamageMultiplier(1);
+        public static float GetUltimateFinisherDamageMultiplier() =>
+            GetUltimateDamageMultiplier(1) * GetUltimateTierDamageMultiplier();
 
         internal static int GetCompletedStageIndex()
         {

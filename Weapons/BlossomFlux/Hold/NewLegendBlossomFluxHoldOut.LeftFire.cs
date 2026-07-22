@@ -371,6 +371,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             }
 
             SpawnSHPCLeftMuzzleParticles(GetCurrentMouseWorld(), Vector2.UnitY * Owner.gravDir, CurrentPreset, 0.92f);
+            SpawnBombardGunMuzzle(GetShootOrigin(AimDirection), AimDirection, 0.84f);
         }
 
         private void FireSwordsplosionRain(IEntitySource source, int damage, float knockback)
@@ -397,6 +398,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             }
 
             SpawnSHPCLeftMuzzleParticles(target, Vector2.UnitY * Owner.gravDir, CurrentPreset, 1.08f);
+            SpawnBombardGunMuzzle(GetShootOrigin(AimDirection), AimDirection, 0.96f);
         }
 
         private void SpawnBombardStormArrow(IEntitySource source, Vector2 spawnPosition, Vector2 velocity, int projectileType, int damage, float knockback, BFBombardLeftStats stats)

@@ -57,7 +57,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty
                     Projectile.netUpdate = true;
             }
 
-            Owner.direction = aim.X >= 0f ? 1 : -1;
+            Owner.ChangeDir(aim.X >= 0f ? 1 : -1);
             Owner.itemRotation = aim.ToRotation();
             if (Owner.direction < 0)
                 Owner.itemRotation += MathHelper.Pi;
@@ -65,7 +65,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty
 
             Projectile.Center = Owner.MountedCenter + aim * 18f + Vector2.UnitY * Owner.gfxOffY;
             Projectile.rotation = aim.ToRotation() + MathHelper.PiOver2;
+            Projectile.direction = Owner.direction;
             Projectile.spriteDirection = Owner.direction;
+
+            // 手机是竖向贴图，Projectile.rotation 比瞄准角多了 PiOver2，手臂要用瞄准角本身来算
+            float armRotation = (aim.ToRotation() - MathHelper.PiOver2) * Owner.gravDir;
+            if (Owner.gravDir == -1f)
+                armRotation += MathHelper.Pi;
+            Owner.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, armRotation);
 
             if (fireCooldown > 0)
                 fireCooldown--;
