@@ -28,9 +28,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
         private static readonly float[] ShurikenTideHomingRanges = { 900f, 1040f, 1180f, 1320f };
         private static readonly float[] ShurikenRotationSpeeds = { 0.55f, 0.59f, 0.63f, 0.67f };
         private static readonly bool[] ShurikenStickySlashUnlocks = { false, false, true, true };
-        private const float TideHomingFinalSpeed = 34f;
+        private const float TideHomingFinalSpeed = 36f;
         // Same curve as BrinyBaron_HomingLightOrb, tuned for a quicker spinning blade.
-        private const int ShurikenHomingDelayFrames = 10;
+        private const int ShurikenHomingDelayFrames = 30;
         private const float ShurikenHomingInertia = 15f;
         private const float ShurikenFreeFlightDamping = 0.998f;
         private const float ShurikenNoTargetDamping = 0.994f;
@@ -62,12 +62,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
             Projectile.height = BaseSize;
             Projectile.friendly = true;
             Projectile.penetrate = -1;
-            Projectile.timeLeft = 300;
+            Projectile.timeLeft = 180;
             Projectile.alpha = 255;
             Projectile.tileCollide = true;
             Projectile.ignoreWater = true;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = 8;
+            Projectile.localNPCHitCooldown = 20;
             Projectile.DamageType = DamageClass.Melee;
         }
 
