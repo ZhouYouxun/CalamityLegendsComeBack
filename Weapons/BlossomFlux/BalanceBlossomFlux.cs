@@ -20,7 +20,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             { "Queen Bee",                                  21,    12,     5,    1,      1 },
             { "Skeletron",                                  23,    17,     8,    1,      1 },
             { "Hardmode",                                   39,    40,    12,   12,      1 },
-            { "Any Mechanical Boss",                        48,    42,    16,   16,      1 },//�ĳ�2����
+            { "Any Mechanical Boss",                        48,    42,    16,   16,      1 },//�ĳ�2����
             { "Plantera",                                   36,    24,    14,   15,      1 },
             { "Golem",                                      42,    30,    15,   20,     51 },
             { "Plaguebringer Goliath",                      52,    44,    23,   30,     67 },
@@ -64,6 +64,20 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             { "Yharon",                                        2,     7,     4,       3,      18,     2,      6,      6,        7,        8 },
             { "Exo Mechs and Supreme Calamitas",               2,     7,     4,       3,      12,     2,      6,      6,        7,        8 },
         };
+
+        private const string SourceFile = "Weapons/BlossomFlux/BalanceBlossomFlux.cs";
+
+        // 大招（EX 春讯弹幕雨）伤害倍率：肉后/月后/神后三档
+        // 大招伤害 = 当前左键基础伤害 × 本档倍率
+        private static readonly float[] UltimateDamageMultipliers =
+        {
+            2.50f, // Tier 0: 肉后（大招解锁起点，机械 Boss 之后）
+            3.20f, // Tier 1: 月后（月亮领主之后）
+            4.00f  // Tier 2: 神后（亵渎天神 Providence 之后）
+        };
+
+        internal float GetUltimateDamageMultiplier() =>
+            UltimateDamageTier.Resolve(SourceFile, nameof(UltimateDamageMultipliers), UltimateDamageMultipliers);
 
         internal int GetLeftClickBaseDamage(BlossomFluxChloroplastPresetType preset) => BFBalanceTable.Get(GetLeftDamageStat(preset));
         internal int GetRightClickBaseDamage(BlossomFluxChloroplastPresetType preset) => BFBalanceTable.Get(GetRightDamageStat(preset));
@@ -366,23 +380,30 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
     {
         public readonly int ChargeFrames;
         public readonly int MarkDuration;
+        public readonly int DamageAmpDuration;
         public readonly int EffectTier;
 
-        public BFReconRightStats(int chargeFrames, int markDuration, int effectTier)
+        public BFReconRightStats(int chargeFrames, int markDuration, int damageAmpDuration, int effectTier)
         {
             ChargeFrames = chargeFrames;
             MarkDuration = markDuration;
+            DamageAmpDuration = damageAmpDuration;
             EffectTier = effectTier;
         }
     }
 
     internal static class BFReconRightBalance
     {
+        // 标记本体（描边/索敌）持续 15 秒，增伤窗口只有 5 秒——标记要「短暂放大」而不是常驻。
+        public const int DamageAmpDuration = 5 * 60;
+        public const float DamageAmpMultiplier = 1.15f;
+
         public static BFReconRightStats GetStats()
         {
             return new BFReconRightStats(
                 chargeFrames: 90,
                 markDuration: 15 * 60,
+                damageAmpDuration: DamageAmpDuration,
                 effectTier: 0);
         }
     }

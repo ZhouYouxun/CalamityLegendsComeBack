@@ -181,7 +181,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
                     // Spawn the Gravity Field projectile
                     Vector2 spawnPos = Main.MouseWorld;
-                    int damage = (int)player.GetTotalDamage(Item.DamageType).ApplyTo(Item.damage * 10);
+                    int damage = (int)player.GetTotalDamage(Item.DamageType).ApplyTo(LP_Balance.GetLeftClickBaseDamage() * LP_Balance.GetUltimateDamageMultiplier());
                     Projectile.NewProjectile(Item.GetSource_FromThis(), spawnPos, Vector2.Zero, ModContent.ProjectileType<LeonidGravityField>(), damage, Item.knockBack, player.whoAmI);
 
                     // Sound and Visual effects

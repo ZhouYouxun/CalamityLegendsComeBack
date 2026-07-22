@@ -297,7 +297,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             if (Main.projectile[projectileIndex].ModProjectile is BFArrow_CDetec reconArrow)
             {
                 int markDuration = stats.MarkDuration + Owner.GetModPlayer<BFAccessoryPlayer>().ReconExtraMarkFrames;
-                reconArrow.ConfigureMark(markDuration, stats.EffectTier);
+                reconArrow.ConfigureMark(markDuration, stats.DamageAmpDuration, stats.EffectTier);
             }
 
             Main.projectile[projectileIndex].netUpdate = true;

@@ -21,7 +21,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
     internal class BFArrow_CDetec : ModProjectile, IPixelatedPrimitiveRenderer
     {
         private const int PriorityMarkDuration = 15 * 60;
-        private const float MaxScanRadius = 240f;
         private const int MaxScannedTargets = 10;
 
         public new string LocalizationCategory => "Projectiles.BlossomFlux";
@@ -31,8 +30,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         private ref float BestTargetIndex => ref Projectile.ai[0];
         private ref float BestTargetLifeMax => ref Projectile.ai[1];
         private ref float FlightTimer => ref Projectile.localAI[0];
-        private ref float ScanRadius => ref Projectile.localAI[1];
         private int configuredMarkDuration = PriorityMarkDuration;
+        private int configuredAmpDuration = BFReconRightBalance.DamageAmpDuration;
         private int configuredEffectTier;
         private int scannedTargetCount;
         private readonly bool[] scannedTargets = new bool[Main.maxNPCs];
@@ -60,21 +59,24 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             Projectile.localNPCHitCooldown = -1;
         }
 
-        public void ConfigureMark(int markDuration, int effectTier)
+        public void ConfigureMark(int markDuration, int ampDuration, int effectTier)
         {
             configuredMarkDuration = System.Math.Max(60, markDuration);
+            configuredAmpDuration = System.Math.Max(30, ampDuration);
             configuredEffectTier = Utils.Clamp(effectTier, 0, 2);
         }
 
         public override void SendExtraAI(BinaryWriter writer)
         {
             writer.Write(configuredMarkDuration);
+            writer.Write(configuredAmpDuration);
             writer.Write(configuredEffectTier);
         }
 
         public override void ReceiveExtraAI(BinaryReader reader)
         {
             configuredMarkDuration = reader.ReadInt32();
+            configuredAmpDuration = reader.ReadInt32();
             configuredEffectTier = reader.ReadInt32();
         }
 
@@ -82,7 +84,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         {
             BestTargetIndex = -1f;
             BestTargetLifeMax = -1f;
-            ScanRadius = 28f;
             scannedTargetCount = 0;
             Array.Clear(scannedTargets, 0, scannedTargets.Length);
             Projectile.rotation = Projectile.velocity.ToRotation();
@@ -91,7 +92,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         public override void AI()
         {
             FlightTimer++;
-            ScanRadius = MathHelper.Clamp(ScanRadius + 3.6f, 28f, MaxScanRadius);
 
             Lighting.AddLight(Projectile.Center, BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_CDetec).ToVector3() * 0.52f);
             Projectile.rotation = Projectile.velocity.ToRotation();
@@ -108,7 +108,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
 
             scannedTargets[target.whoAmI] = true;
             scannedTargetCount++;
-            target.GetGlobalNPC<BFArrow_CDetecNPC>().ApplyMark(Projectile.owner, configuredMarkDuration);
+            // 命中的每一个目标都拿到完整标记：描边 + 短暂的全局受伤放大，不再只有最高血量那一个有用。
+            target.GetGlobalNPC<BFArrow_CDetecNPC>().ApplyDamageAmpMark(Projectile.owner, configuredMarkDuration, configuredAmpDuration);
 
             if (target.lifeMax > BestTargetLifeMax)
             {
@@ -317,7 +318,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             if (!target.active || target.dontTakeDamage)
                 return;
 
-            target.GetGlobalNPC<BFArrow_CDetecNPC>().ApplyPriorityMark(Projectile.owner, configuredMarkDuration);
+            BFArrow_CDetecNPC mark = target.GetGlobalNPC<BFArrow_CDetecNPC>();
+            mark.ApplyPriorityMark(Projectile.owner, configuredMarkDuration);
+            mark.ApplyDamageAmpMark(Projectile.owner, configuredMarkDuration, configuredAmpDuration);
             Main.player[Projectile.owner].GetModPlayer<BFRightUIPlayer>().SetReconPriorityTarget(target.whoAmI, configuredMarkDuration);
 
             SpawnMarkAcquireFX(target.Center);

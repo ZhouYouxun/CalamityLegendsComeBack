@@ -233,18 +233,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             }
 
             // 沿环甩出的酸液光条，转速跟着环走。
-            if (Main.rand.NextBool(2))
-            {
-                float angle = Main.GlobalTimeWrappedHourly * 6.2f + Main.rand.NextFloat(-0.9f, 0.9f);
-                Vector2 onRing = angle.ToRotationVector2();
-                GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(
-                    Projectile.Center + onRing * radius * 0.85f,
-                    onRing.RotatedBy(MathHelper.PiOver2) * Main.rand.NextFloat(2f, 5f),
-                    false, Main.rand.Next(6, 11),
-                    Main.rand.NextFloat(0.07f, 0.14f),
-                    Color.Lerp(PlagueAcid, Color.White, 0.25f) * 0.9f,
-                    new Vector2(0.24f, 1.15f), false, false, 0.85f));
-            }
         }
 
         // 环形判定：整个环都是杀伤范围，而不只是中心那 8 像素。

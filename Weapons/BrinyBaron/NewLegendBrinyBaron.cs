@@ -233,7 +233,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
                 player.Center,
                 dir,
                 ModContent.ProjectileType<Z_BrinyBaron_SkillSuperCharge_SuperDash>(),
-                BB_Balance.GetLeftClickBaseDamage() * 5,
+                (int)player.GetTotalDamage(Item.DamageType).ApplyTo(BB_Balance.GetLeftClickBaseDamage() * BB_Balance.GetUltimateDamageMultiplier()),
                 Item.knockBack,
                 player.whoAmI,
                 consumedTide);

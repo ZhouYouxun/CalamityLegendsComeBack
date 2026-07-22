@@ -53,8 +53,8 @@ Mods: {
 						'''
 					PresetRight2:
 						'''
-						[c/FFB347:Right Click - Reconnaissance: hold to fire a gravity-immune marking arrow.]
-						[c/FFB347:The marked high-life target takes increased left-click damage.]
+						[c/FFB347:Right Click - Reconnaissance: hold to fire a gravity-immune marking arrow that pierces and marks up to 10 enemies.]
+						[c/FFB347:Marked enemies briefly take 15% more damage from every source; the highest-life one also becomes the priority target.]
 						'''
 					PresetRight3:
 						'''

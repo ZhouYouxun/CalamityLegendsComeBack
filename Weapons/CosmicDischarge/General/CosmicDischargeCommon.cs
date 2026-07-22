@@ -389,8 +389,8 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
             for (int i = 0; i < count; i++)
             {
-                Vector2 crackLength = (MathHelper.TwoPi * i / count).ToRotationVector2() * Main.rand.NextFloat(minLength, maxLength);
-                Projectile.NewProjectile(source, center, crackLength, ModContent.ProjectileType<DoGRiftCrack>(), 0, 0f, owner, 0f, Main.rand.NextFloat(minWidth, maxWidth));
+                Vector2 crackLength = (MathHelper.TwoPi * i / count).ToRotationVector2() * Main.rand.NextFloat(minLength, maxLength) * 0.3f;
+                Projectile.NewProjectile(source, center, crackLength, ModContent.ProjectileType<CosmicDischargeRiftCrack>(), 0, 0f, owner, 0f, Main.rand.NextFloat(minWidth, maxWidth) * 0.3f);
             }
         }
 

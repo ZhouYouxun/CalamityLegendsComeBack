@@ -288,7 +288,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 Player.Center,
                 Vector2.Zero,
                 fieldType,
-                Player.GetWeaponDamage(Player.HeldItem),
+                (int)(Player.GetWeaponDamage(Player.HeldItem) * CD_Balance.GetUltimateDamageMultiplier()),
                 0f,
                 Player.whoAmI);
 

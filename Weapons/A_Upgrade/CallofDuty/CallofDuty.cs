@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using CalamityLegendsComeBack.Systems;
 using CalamityMod;
 using CalamityMod.Items;
 using CalamityMod.Items.Accessories;
@@ -18,6 +19,21 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty
     public sealed class CallofDuty : ModItem, ILocalizedModType
     {
         internal const int BaseDamage = 280;
+
+        private const string SourceFile = "Weapons/A_Upgrade/CallofDuty/CallofDuty.cs";
+
+        // 大招（责任军团）伤害倍率：肉后/月后/神后三档。
+        // 军团快照伤害 = 当前左键伤害 × 本档倍率；各单位自带的攻击系数在这个基准之上作为相对权重继续生效。
+        private static readonly float[] UltimateDamageMultipliers =
+        {
+            2.50f, // Tier 0: 肉后（大招解锁起点，机械 Boss 之后）
+            3.20f, // Tier 1: 月后（月亮领主之后）
+            4.00f  // Tier 2: 神后（亵渎天神 Providence 之后）
+        };
+
+        internal static float GetUltimateDamageMultiplier() =>
+            UltimateDamageTier.Resolve(SourceFile, nameof(UltimateDamageMultipliers), UltimateDamageMultipliers);
+
         internal const int BaseSequenceInterval = 18;
         internal const int MinimumSequenceInterval = 12;
 
@@ -90,7 +106,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty
                 ? KeybindSystem.LegendarySkill.GetAssignedKeys()[0]
                 : "P";
 
-            string compact = string.Format(this.GetLocalizedValue("Compact"), language?.Symbol ?? "!?", key);
+            // The second tooltip line explains whatever channel is currently selected, so the effect
+            // text is looked up per language instead of listing all four channels up front.
+            string effect = this.GetLocalizedValue("LanguageEffects." + (language?.Id ?? ResponsibilityLanguage.Alarm));
+            string compact = string.Format(this.GetLocalizedValue("Compact"), language?.Symbol ?? "!?", key, effect);
             tooltips.FindAndReplace("[GFB]", compact);
 
             if (Main.keyState.PressingShift())
