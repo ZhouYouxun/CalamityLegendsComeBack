@@ -668,13 +668,16 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty.Ultimate
             }
             else
             {
-                Vector2 away = target.SafeDirectionTo(NPC.Center);
-                if (away == Vector2.Zero)
-                    away = Vector2.UnitX * (SlotIndex == 0 ? -1f : 1f);
-                float desiredDistance = 650f;
-                destination = target.Center + away * desiredDistance;
+                // Every Hovercraft holds an assigned flank, standoff range, and hover altitude, so
+                // the pair spreads into a firing line instead of piling onto one point behind the
+                // target. The slow bob keeps them from looking welded to their anchors.
+                float side = SlotIndex % 2 == 0 ? -1f : 1f;
+                int rank = SlotIndex / 2;
+                float standoff = 620f + rank * 130f;
+                float altitude = 58f + (SlotIndex % 2 == 0 ? 0f : 52f) + rank * 34f;
+                destination = target.Center + new Vector2(side * standoff, 0f);
                 float groundY = ResponsibilityArmyGround.FindGroundY(destination.X, target.Center.Y, 340f);
-                destination.Y = groundY - 58f;
+                destination.Y = groundY - altitude - MathF.Sin((Age + SlotIndex * 40) * 0.04f) * 12f;
 
                 if ((Age + SlotIndex * 45) % 90 == 0 && Main.netMode != NetmodeID.MultiplayerClient)
                     FireMissileSalvo(target);

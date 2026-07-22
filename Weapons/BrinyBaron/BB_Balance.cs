@@ -18,20 +18,20 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
         private static readonly object[,] DefaultStageTable =
         {
             //                                      Damage  Scale
-            { "Initial",                              26,   0.65f   },
-            { "Eye of Cthulhu",                       31,   0.70f },
-            { "Evil Boss",                            35,   0.75f },
-            { "Skeletron",                            45,   0.85f },
-            { "Hardmode",                             60,   0.95f },
-            { "Any Mechanical Boss",                  70,   1.00f },
-            { "Plantera",                             92,   1.00f },
-            { "Golem",                               108,   1.1f },
-            { "Moon Lord",                           129,   1.15f },
-            { "Providence",                          325,   1.25f },
-            { "Polterghast",                         695,   1.35f   },
-            { "Devourer of Gods",                   1000,   1.35f   },
-            { "Yharon",                             1300,   1.4f   },
-            { "Exo Mechs and Supreme Calamitas",    2000,   1.5f   }
+            { "Initial",                              24,   0.64f   },
+            { "Eye of Cthulhu",                       30,   0.66f },
+            { "Evil Boss",                            33,   0.68f },
+            { "Skeletron",                            45,   0.72f },
+            { "Hardmode",                             60,   0.75f },
+            { "Any Mechanical Boss",                  70,   0.80f },
+            { "Plantera",                             92,   0.88f },
+            { "Golem",                               108,   1.0f },
+            { "Moon Lord",                           129,   1.1f },
+            { "Providence",                          325,   1.2f },
+            { "Polterghast",                         695,   1.3f   },
+            { "Devourer of Gods",                   1000,   1.3f   },
+            { "Yharon",                             1300,   1.35f   },
+            { "Exo Mechs and Supreme Calamitas",    2000,   1.35f   }
         };
 
         private static readonly string[] DefaultStageNames =
@@ -53,6 +53,18 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
         };
 
         public static string[] StageNames => DefaultStageNames;
+
+        // 大招（超级冲刺）伤害倍率：肉后/月后/神后三档
+        // 大招伤害 = 当前左键基础伤害 × 本档倍率
+        private static readonly float[] UltimateDamageMultipliers =
+        {
+            2.50f, // Tier 0: 肉后（大招解锁起点，机械 Boss 之后）
+            3.20f, // Tier 1: 月后（月亮领主之后）
+            4.00f  // Tier 2: 神后（亵渎天神 Providence 之后）
+        };
+
+        public static float GetUltimateDamageMultiplier() =>
+            UltimateDamageTier.Resolve(SourceFile, nameof(UltimateDamageMultipliers), UltimateDamageMultipliers);
 
         public static int GetInitialLeftClickBaseDamage() => GetStageDamage(0);
 

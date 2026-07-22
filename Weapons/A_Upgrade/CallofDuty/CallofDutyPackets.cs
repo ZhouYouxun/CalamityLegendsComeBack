@@ -43,7 +43,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty
 
             int generation = phonePlayer.ArmyGeneration + 1;
             Item phone = CallofDuty.FindPhone(player);
-            int snapshotDamage = phone == null ? CallofDuty.BaseDamage : player.GetWeaponDamage(phone);
+            int rawSnapshotDamage = phone == null ? CallofDuty.BaseDamage : player.GetWeaponDamage(phone);
+            int snapshotDamage = System.Math.Max(1, (int)(rawSnapshotDamage * CallofDuty.GetUltimateDamageMultiplier()));
             if (!Ultimate.ResponsibilityArmyAmplifier.SpawnFor(player, generation, snapshotDamage))
                 return;
 

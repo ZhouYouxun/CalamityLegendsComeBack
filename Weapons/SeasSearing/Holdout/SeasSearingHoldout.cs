@@ -813,7 +813,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 Projectile.GetSource_FromThis(),
                 GunTipPosition + direction * 16f, direction,
                 ModContent.ProjectileType<SeasSearingDesignatorBeam>(),
-                Math.Max(1, Projectile.damage / 8), 0f, Projectile.owner,
+                Math.Max(1, (int)(Projectile.damage * SS_Balance.GetUltimateDamageMultiplier() / 8f)), 0f, Projectile.owner,
                 Projectile.whoAmI);
 
             if (Main.projectile.IndexInRange(beamIndex))

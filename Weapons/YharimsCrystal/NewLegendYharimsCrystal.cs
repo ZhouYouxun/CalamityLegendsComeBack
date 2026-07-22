@@ -121,9 +121,10 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
 
             YharimsCrystalStatePlayer state = player.GetModPlayer<YharimsCrystalStatePlayer>();
             Vector2 aimDirection = (GetMouseWorld(player) - player.MountedCenter).SafeNormalize(Vector2.UnitX * player.direction);
+            float ultimateMultiplier = balance.GetUltimateDamageMultiplier();
             int damage = state.LastWeapon == YCWeaponForm.Blade
-                ? GetScaledDamage(player, balance.GetLeftClickBaseDamage() * 5)
-                : GetScaledDamage(player, balance.GetRightClickBaseDamage() * 4);
+                ? GetScaledDamage(player, (int)(balance.GetLeftClickBaseDamage() * ultimateMultiplier))
+                : GetScaledDamage(player, (int)(balance.GetRightClickBaseDamage() * ultimateMultiplier));
 
             int ultimate = Projectile.NewProjectile(
                 Item.GetSource_FromThis(),

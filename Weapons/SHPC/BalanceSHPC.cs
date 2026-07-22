@@ -148,17 +148,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         public float GetUltimateLaserDamageMultiplier()
         {
-            return GetFloatValueForStage(GetUltimateLaserDamageMultiplierValues(), GetUltimateLaserDamageTier());
+            return UltimateDamageTier.Resolve(GetUltimateLaserDamageMultiplierValues());
         }
 
-        public int GetUltimateLaserDamageTier()
-        {
-            if (DownedBossSystem.downedProvidence)
-                return 2;
-            if (NPC.downedMoonlord)
-                return 1;
-            return 0;
-        }
+        public int GetUltimateLaserDamageTier() => UltimateDamageTier.GetTier();
 
         public const int ForcedShutdownTime = 120;
         public const int NormalHeatDecayTime = 90;

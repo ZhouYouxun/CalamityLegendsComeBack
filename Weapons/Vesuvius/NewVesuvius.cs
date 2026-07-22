@@ -148,7 +148,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                     player.MountedCenter,
                     -Vector2.UnitY,
                     ModContent.ProjectileType<VesuviusEXWeapon>(),
-                    player.GetWeaponDamage(Item),
+                    (int)(player.GetWeaponDamage(Item) * VesuviusProgression.GetUltimateDamageMultiplier()),
                     Item.knockBack,
                     player.whoAmI);
 

@@ -234,7 +234,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
             Vector2 forward = AimDirection;
             Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
             Vector2 backfieldCenter = Owner.Center - forward * BarrageSpawnBackDistance + Owner.velocity * 0.35f;
-            int shotDamage = (int)(Projectile.damage * 0.72f);
+            int shotDamage = Math.Max(1,(int)(Projectile.damage * new BalanceBlossomFlux().GetUltimateDamageMultiplier()));
             NPC lockedTarget = FindBarrageTarget(forward);
 
             for (int i = 0; i < BarrageVolleyCount; i++)
@@ -314,17 +314,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
             if (timer % 2 == 0)
                 SpawnChargeConvergenceProjectile(ModContent.ProjectileType<BFEXConvergingLeaf>(), 12.5f, 17.5f);
 
-            if (timer % 3 == 0)
-                SpawnChargeConvergenceProjectile(ModContent.ProjectileType<BFEXConvergingWisp>(), 8.5f, 14.5f);
-
             if (chargeCompletion > 0.55f && timer % 5 == 0)
-            {
-                int extraType = Main.rand.NextBool()
-                    ? ModContent.ProjectileType<BFEXConvergingLeaf>()
-                    : ModContent.ProjectileType<BFEXConvergingWisp>();
-                SpawnChargeConvergenceProjectile(extraType, 11f, 18f);
-            }
-
+                SpawnChargeConvergenceProjectile(ModContent.ProjectileType<BFEXConvergingLeaf>(), 11f, 18f);
             SpawnEdgeGlowSparks(chargeCompletion);
         }
 

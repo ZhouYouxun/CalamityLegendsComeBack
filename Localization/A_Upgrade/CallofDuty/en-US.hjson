@@ -7,16 +7,23 @@ Mods: {
 					Tooltip: "[GFB]"
 					Compact:
 						'''
-						Left-click sends the current Wulfrum language: [c/8FDFFF:{0}]
-						Hold right-click, drag, and release to select a language from the communication wheel
-						Every language is available immediately; none is a stronger tier than another
-						A connected sequence builds a call; six calls forcibly put a Wulfrum hat on the target
-						Keeping this phone in your main inventory supplies a Rover Drive-equivalent shield
-						Equipping a real Rover Drive raises that same shield from 20 to 40 durability
-						Legendary skill ({1}): [c/C2FF43:Everyone, get over here]
-						Deploys one immobile Amplifier, then calls sixteen more Wulfrum machines after half a second
-						The army and cooldown both last 60 seconds; defeating a real boss immediately readies the call
+						[c/8FDFFF:Left-click fires the current language {0}; hold right-click to pick one from the wheel]
+						[c/8FDFFF:Current language: {2}]
+						[c/FFD84C:A connected sequence builds a call; six calls forcibly put a Wulfrum hat on the target]
+						[c/FFD84C:Wulfrum hats grant 8% summon damage and answer calls with fire, marks, and static rings]
+						[c/6FA8FF:Held in your main inventory it supplies a Rover Drive-equivalent shield; a worn Rover Drive raises each layer from 20 to 40]
+						[c/C2FF43:Legendary skill ({1}): Everyone, get over here]
+						[c/C2FF43:Drops one Amplifier that falls to the ground and locks down, then calls sixteen more Wulfrum machines after half a second]
+						[c/C2FF43:The army and cooldown both last 60 seconds; defeating a real boss immediately readies the call]
 						'''
+
+					LanguageEffects: {
+						Alarm: three fast straight alarms, 15% more total damage, no homing
+						Query: three mid-speed queries that steer themselves onto the target
+						Static: four slow silences that pierce 3 enemies, 10% less total damage
+						Confirm: five close-range confirmations, doubled call value, 10% less total damage
+					}
+
 					DetailsHint: "[c/97ADB8:Hold Shift for communication, hat, and squad details]"
 					Details:
 						'''
@@ -25,17 +32,13 @@ Mods: {
 
 						[c/C2FF43:Everyone, get over here:] 1 Amplifier, 6 Rovers, 4 Gyrators, 4 Drones, and 2 Hovercraft
 						Every ally has a blue outline, independent health, your full defense, and can physically intercept safe hostile projectiles
-						The Amplifier never moves; its 990-pixel field gives players 20 defense and phone machines 50% health, defense, and attack
+						The Amplifier free-falls on deployment and never moves once it lands; its 990-pixel field gives players 20 defense and phone machines 50% health, defense, and attack
 						Rovers charge, protect their front, and shamelessly reuse scrap volleys and fusion bolts
 						Gyrators spin up very seriously, then roll into something
 						Drone lasers hit reliably but lightly; Hovercraft fire missiles upward and let the missiles work out the rest
 						Left-click an enemy or the ground to command the squad; release right-click in the wheel center to recall; press the skill again to say “Never mind”
 						'''
-					LegendaryText:
-						'''
-						“Hello? Can you hear me?”
-						“Everyone, get over here.”
-						'''
+					LegendaryText: “Everyone, get over here.”
 				}
 			}
 		}

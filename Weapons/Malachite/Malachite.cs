@@ -276,7 +276,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             calamity.ConsumeStealthByAttacking();
 
             Vector2 direction = (GetMouseWorld(player) - player.Center).SafeNormalize(Vector2.UnitX * player.direction);
-            int finaleDamage = (int)player.GetTotalDamage(Item.DamageType).ApplyTo(MalachiteBalance.GetLeftClickBaseDamage() * 7.5f);
+            int finaleDamage = (int)player.GetTotalDamage(Item.DamageType).ApplyTo(MalachiteBalance.GetLeftClickBaseDamage() * MalachiteBalance.GetUltimateDamageMultiplier());
 
             Projectile.NewProjectile(
                 player.GetSource_ItemUse(Item),

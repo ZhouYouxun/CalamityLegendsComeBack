@@ -103,6 +103,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                     {
                         Vector2 targetVelocity = (Main.MouseWorld - Projectile.Center).SafeNormalize(Vector2.UnitY) * 14f;
                         Projectile.velocity = targetVelocity;
+                        SpawnNormalLaunchVFX();
                         Projectile.netUpdate = true;
                         SoundEngine.PlaySound(SoundID.Item8 with { Volume = 0.5f, Pitch = 0.2f }, Projectile.Center);
                     }
@@ -416,6 +417,21 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             Texture2D glow = ModContent.Request<Texture2D>("CalamityMod/Items/Weapons/Rogue/LeonidProgenitorGlow").Value;
             Texture2D bloomTex = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
 
+            // Normal left-click comets are held briefly before launch. Let the last few frames
+            // visibly gather starlight at their spawn point instead of appearing from nothing.
+            float launchCharge = !FromStealthRain && (SpawnFlags & GravityFieldFlag) == 0 && Projectile.localAI[1] > 0f
+                ? 1f - Utils.GetLerpValue(0f, 10f, Projectile.localAI[1], true)
+                : 0f;
+            if (launchCharge > 0f)
+            {
+                LeonidVisualUtils.BeginAdditiveSpriteBatch();
+                float chargeScale = MathHelper.Lerp(0.32f, 0.76f, launchCharge);
+                LeonidVisualUtils.DrawBloom(Projectile.Center, MeteorColor, chargeScale);
+                LeonidVisualUtils.DrawCelestialHead(Projectile.Center, MeteorColor, launchCharge * 0.9f, chargeScale, Main.GlobalTimeWrappedHourly * 2.6f);
+                LeonidVisualUtils.DrawSparkle(Projectile.Center, LeonidVisualUtils.MoonWhite, launchCharge * 0.72f, chargeScale * 0.62f, -Main.GlobalTimeWrappedHourly * 3.4f);
+                LeonidVisualUtils.BeginAlphaBlendSpriteBatch();
+            }
+
             float opacity = 1f - Projectile.alpha / 255f;
             Vector2 origin = texture.Size() * 0.5f;
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitY);
@@ -485,6 +501,29 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             Main.EntitySpriteDraw(texture, drawPosition, null, drawColor, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0f);
 
             return false;
+        }
+
+        private void SpawnNormalLaunchVFX()
+        {
+            if (FromStealthRain || (SpawnFlags & GravityFieldFlag) != 0)
+                return;
+
+            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitY);
+            LeonidVisualUtils.SpawnBloomBurst(Projectile.Center, MeteorColor, 0.68f, 16);
+            LeonidVisualUtils.SpawnCelestialPulse(Projectile.Center, direction, MeteorColor, 0.72f, 16);
+
+            for (int i = 0; i < 7; i++)
+            {
+                Vector2 velocity = -direction * Main.rand.NextFloat(0.5f, 2.2f) + Main.rand.NextVector2Circular(1.25f, 1.25f);
+                Dust dust = Dust.NewDustPerfect(
+                    Projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
+                    DustID.TintableDustLighted,
+                    velocity,
+                    100,
+                    Color.Lerp(MeteorColor, LeonidVisualUtils.MoonWhite, Main.rand.NextFloat(0.3f, 0.7f)),
+                    Main.rand.NextFloat(0.72f, 1.08f));
+                dust.noGravity = true;
+            }
         }
 
         public void DisableGravity()

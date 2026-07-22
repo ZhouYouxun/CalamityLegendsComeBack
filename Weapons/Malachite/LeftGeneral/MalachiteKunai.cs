@@ -399,6 +399,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                 projectile.tileCollide = false;
                 projectile.extraUpdates = 0;
                 projectile.penetrate = 1;
+                projectile.rotation = projectile.velocity.ToRotation() + MathHelper.PiOver2;
                 projectile.localAI[0] = -(delay + i * OrbitDashStaggerFrames);
                 projectile.localAI[1] = depletionBurst ? 2f : 0f;
                 projectile.netUpdate = true;
@@ -747,8 +748,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                 Vector2 targetOffset =
                     launchDirection * MathHelper.Lerp(-10f, 38f + MathF.Abs(curve) * 14f, open) +
                     side * centered * spacing * open -
-                    launchDirection * arcHeight * curve * open -
-                    Vector2.UnitY * MathHelper.Lerp(0f, 18f + arcHeight * 0.22f, open);
+                    launchDirection * arcHeight * curve * open;
 
                 Projectile.Center = Vector2.Lerp(Projectile.Center, owner.MountedCenter + targetOffset, 0.48f);
                 Projectile.rotation = launchDirection.ToRotation() + MathHelper.PiOver2;

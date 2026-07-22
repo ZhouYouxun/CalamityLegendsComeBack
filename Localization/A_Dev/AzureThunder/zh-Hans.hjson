@@ -209,6 +209,7 @@ Mods: {
 			// SkyfinTorpedoExplosion.DisplayName: Skyfin Torpedo Explosion
 			// AegisSparkExplosion.DisplayName: Aegis Spark Explosion
 			// BFRightChargeHaloProj.DisplayName: B F Right Charge Halo Proj
+			// CosmicDischargeRiftCrack.DisplayName: Cosmic Discharge Rift Crack
 		}
 
 		Cooldowns: {

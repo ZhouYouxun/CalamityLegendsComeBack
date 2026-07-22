@@ -55,16 +55,41 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             if (priorityTimers[owner] > 0)
                 priorityTimers[owner] = System.Math.Max(priorityTimers[owner], (int)System.Math.Ceiling(priorityTimers[owner] * multiplier));
 
+            // 增伤窗口跟着标记一起延长，否则侵染延长的只是描边。
+            if (damageAmpTimers[owner] > 0)
+                damageAmpTimers[owner] = System.Math.Max(damageAmpTimers[owner], (int)System.Math.Ceiling(damageAmpTimers[owner] * multiplier));
+
             return System.Math.Max(markTimers[owner], priorityTimers[owner]);
         }
 
-        public bool ApplyDamageAmpMark(int owner, int timeLeft)
+        // 侦查箭命中的每一个敌人都会走这里：标记本体负责视觉/索敌，增伤窗口独立且更短。
+        public bool ApplyDamageAmpMark(int owner, int markTime, int ampTime)
         {
-            bool isNewMark = ApplyMark(owner, timeLeft);
-            if (BFArrowCommon.InBounds(owner, Main.maxPlayers) && damageAmpTimers[owner] < timeLeft)
-                damageAmpTimers[owner] = timeLeft;
+            bool isNewMark = ApplyMark(owner, markTime);
+            if (BFArrowCommon.InBounds(owner, Main.maxPlayers) && damageAmpTimers[owner] < ampTime)
+                damageAmpTimers[owner] = ampTime;
 
             return isNewMark;
+        }
+
+        public bool HasDamageAmp()
+        {
+            for (int i = 0; i < Main.maxPlayers; i++)
+            {
+                if (damageAmpTimers[i] > 0)
+                    return true;
+            }
+
+            return false;
+        }
+
+        public float DamageAmpIntensity()
+        {
+            int strongest = 0;
+            for (int i = 0; i < Main.maxPlayers; i++)
+                strongest = System.Math.Max(strongest, damageAmpTimers[i]);
+
+            return strongest <= 0 ? 0f : Utils.GetLerpValue(0f, 45f, strongest, true);
         }
 
         public override void PostAI(NPC npc)
@@ -82,16 +107,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             }
         }
 
-        public override void ModifyHitByItem(NPC npc, Player player, Item item, ref NPC.HitModifiers modifiers)
+        // 全局判定：只要标记的增伤窗口还在，任何来源（近战/弹幕/召唤/DoT）打上来都吃这一层放大，
+        // 不需要为每种弹幕单独写特判。
+        public override void ModifyIncomingHit(NPC npc, ref NPC.HitModifiers modifiers)
         {
             if (HasDamageAmp())
-                modifiers.FinalDamage *= 1.1f;
-        }
-
-        public override void ModifyHitByProjectile(NPC npc, Projectile projectile, ref NPC.HitModifiers modifiers)
-        {
-            if (HasDamageAmp())
-                modifiers.FinalDamage *= 1.1f;
+                modifiers.FinalDamage *= BFReconRightBalance.DamageAmpMultiplier;
         }
 
         public override void DrawEffects(NPC npc, ref Color drawColor)
@@ -128,10 +149,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             Vector2 drawPosition = npc.Center - screenPos + new Vector2(0f, npc.gfxOffY);
             SpriteEffects effects = npc.spriteDirection == -1 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
 
-            float pulse = 0.5f + 0.5f * (float)System.Math.Sin(Main.GameUpdateCount * 0.09f + npc.whoAmI * 0.53f);
-            float outlineOpacity = (0.52f + 0.38f * pulse) * intensity;
-            Color outlineColor = new Color(100, 220, 255, 0) * outlineOpacity;
-            const float thickness = 2.8f;
+            // 增伤窗口内描边更快更亮并压出白芯，让「这一层放大还在」肉眼可读。
+            float amp = DamageAmpIntensity();
+            float pulseSpeed = MathHelper.Lerp(0.09f, 0.19f, amp);
+            float pulse = 0.5f + 0.5f * (float)System.Math.Sin(Main.GameUpdateCount * pulseSpeed + npc.whoAmI * 0.53f);
+            float outlineOpacity = (0.52f + 0.38f * pulse) * intensity * (1f + 0.35f * amp);
+            Color outlineColor = Color.Lerp(new Color(100, 220, 255), new Color(205, 250, 255), amp * 0.7f) with { A = 0 } * outlineOpacity;
+            float thickness = 2.8f + amp * 1.1f;
 
             for (int i = 0; i < 8; i++)
             {
@@ -159,17 +183,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             }
 
             return strongestTimer <= 0 ? 0f : Utils.GetLerpValue(0f, 180f, strongestTimer, true);
-        }
-
-        private bool HasDamageAmp()
-        {
-            for (int i = 0; i < Main.maxPlayers; i++)
-            {
-                if (damageAmpTimers[i] > 0)
-                    return true;
-            }
-
-            return false;
         }
     }
 }

@@ -381,7 +381,9 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.General
             var source = Player.GetSource_FromThis();
             Projectile.NewProjectile(source, Player.Center, Vector2.Zero,
                 ModContent.ProjectileType<GlacialDrillProj>(),
-                (int)(Player.HeldItem.damage * 2.5f), 4.5f, Player.whoAmI);
+                (int)Player.GetTotalDamage(Player.HeldItem.DamageType)
+                    .ApplyTo(Player.HeldItem.damage * GE_Balance.GetUltimateDamageMultiplier()),
+                4.5f, Player.whoAmI);
 
             SoundEngine.PlaySound(SoundID.Item123 with { Pitch = -0.2f, Volume = 1f }, Player.Center);
         }

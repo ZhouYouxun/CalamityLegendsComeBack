@@ -1,3 +1,4 @@
+using CalamityLegendsComeBack.Systems;
 using CalamityMod;
 using Microsoft.Xna.Framework;
 using Terraria;
@@ -14,6 +15,20 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
         };
 
         public const int ClickLockoutFrames = 30;
+
+        private const string SourceFile = "Weapons/Vesuvius/VesuviusProgression.cs";
+
+        // 大招伤害倍率：肉后/月后/神后三档
+        // 大招伤害 = 当前左键伤害 × 本档倍率
+        private static readonly float[] UltimateDamageMultipliers =
+        {
+            2.50f, // Tier 0: 肉后（大招解锁起点，机械 Boss 之后）
+            3.20f, // Tier 1: 月后（月亮领主之后）
+            4.00f  // Tier 2: 神后（亵渎天神 Providence 之后）
+        };
+
+        public static float GetUltimateDamageMultiplier() =>
+            UltimateDamageTier.Resolve(SourceFile, nameof(UltimateDamageMultipliers), UltimateDamageMultipliers);
 
         public static int GetMaxStage()
         {
