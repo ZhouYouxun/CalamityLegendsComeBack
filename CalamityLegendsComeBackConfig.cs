@@ -35,7 +35,10 @@ namespace CalamityLegendsComeBack
         [ReloadRequired]
         public bool AllowBossSummonShop;
 
-        [Header("DraedonTechnology")]
+        [DefaultValue(true)]
+        [ReloadRequired]
+        public bool AllowMechanicDraedonShop;
+
         [BackgroundColor(20, 93, 160, 210)]
         [DefaultValue(false)]
         public bool LightningDecryption;

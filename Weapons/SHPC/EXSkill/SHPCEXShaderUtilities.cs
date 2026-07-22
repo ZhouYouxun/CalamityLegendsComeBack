@@ -24,7 +24,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
                 pulseSpeed: 7.6f,
                 voidStrength: 0.74f,
                 bandDensity: 46f,
-                coreSharpness: 1.85f);
+                // A broad core makes the whole 10-tile trail read as the beam instead of a thin bright centerline.
+                coreSharpness: 0.65f);
 
             shader
                 .SetShaderTexture(ModContent.Request<Texture2D>(StreakTexture))

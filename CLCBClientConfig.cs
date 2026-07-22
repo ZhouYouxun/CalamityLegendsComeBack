@@ -21,6 +21,10 @@ namespace CalamityLegendsComeBack
         [DefaultValue(false)]
         public bool LockAmmoWheelToScreenCenter;
 
+        [BackgroundColor(20, 93, 160, 210)]
+        [DefaultValue(true)]
+        public bool ShowModListIconShine;
+
         [Header("Readability")]
         [BackgroundColor(20, 93, 160, 210)]
         [DefaultValue(true)]

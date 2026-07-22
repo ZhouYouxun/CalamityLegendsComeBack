@@ -112,7 +112,7 @@ Mods: {
 
 			LegendaryUltimateTester: {
 				DisplayName: 传奇大招测试器
-				Tooltip: 仅限测试用：SHPC大招会在1秒内充能完成
+				Tooltip: 仅供测试：让所有传奇武器的大招在1秒之内完成充能
 			}
 		}
 

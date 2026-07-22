@@ -26,9 +26,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
         public new string LocalizationCategory => "Projectiles.SHPC";
 
         private const int MissingParentGraceFrames = 12;
-        // The damaging beam is 10 tiles across: 160 px total, or 80 px from its centerline.
-        // This is deliberately independent from Projectile.scale, which only controls its visual animation.
+        // The beam is 10 tiles across: 160 px total, or 80 px from its centerline.
         private const float DamageBeamWidth = 10f * 16f;
+        // The requested visual diameter is twice the damage diameter: 320 px / 20 tiles.
+        private const float VisualBeamWidth = DamageBeamWidth * 2f;
 
         private int cachedOwnerIndex = -1;
         private int missingParentFrames;
@@ -272,8 +273,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             float time = Main.GlobalTimeWrappedHourly;
             const int intervalScale = 3;
 
-            // 光束理论半宽
-            float halfWidth = (Projectile.scale * Projectile.width + 180f) * 0.5f;
+            // 光束理论半宽：保持与10格碰撞直径一致，并随起止动画缩放。
+            float halfWidth = GetVisualBeamHalfWidth();
             Vector2 endPos = Projectile.Center + dir * LaserLength;
 
             // 颜色层次
@@ -473,7 +474,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             }
         }
 
-        public float LaserWidthFunction(float completionRatio, Vector2 vertexPos) => Projectile.scale * Projectile.width + 180;
+        // PrimitiveRenderer receives a half-width, so 160 px produces a 320 px / 20-tile visual diameter.
+        // Do not multiply this by Projectile.scale: this beam's long lifetime keeps that value near zero.
+        public float LaserWidthFunction(float completionRatio, Vector2 vertexPos) => GetVisualBeamHalfWidth();
+
+        private static float GetVisualBeamHalfWidth() => VisualBeamWidth * 0.5f;
 
         public static Color LaserColorFunction(float completionRatio, Vector2 vertexPos)
         {

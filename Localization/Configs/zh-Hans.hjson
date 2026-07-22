@@ -5,8 +5,7 @@
 				DisplayName: 传奇归来设置
 
 				Headers: {
-					RecipeSettings: 配方设置
-					DraedonTechnology: 嘉登科技
+					RecipeSettings: 改进体验
 				}
 
 				AllowMassMaterialRecipes: {
@@ -27,6 +26,11 @@
 				AllowBossSummonShop: {
 					Label: "[i:GuideVoodooDoll] 允许动物学家出售Boss召唤物"
 					Tooltip: 动物学家会在对应进度出售Boss召唤物；少数会反向产出首杀材料的配方将被暂时禁用。
+				}
+
+				AllowMechanicDraedonShop: {
+					Label: "[i:CalamityMod/CodebreakerBase] 允许机械师出售嘉登设备"
+					Tooltip: 机械师会在对应进度出售德拉顿能量电池与破译器的各级改造部件；加密图纸依然需要自行取得。
 				}
 
 				LightningDecryption: {
@@ -51,6 +55,11 @@
 				LockAmmoWheelToScreenCenter: {
 					Label: "[i:CalamityMod/PlasmaDriveCore] 固定SHPC弹药轮盘"
 					Tooltip: 开启后，按住传奇武器形态切换键时的弹药轮盘将固定在屏幕中心。
+				}
+
+				ShowModListIconShine: {
+					Label: "[i:GoldenCandelabra] 图标发光效果"
+					Tooltip: 在 Mods 列表中为本模组图标显示斜向扫光效果。
 				}
 
 				ShowInternalEnglishNames: {

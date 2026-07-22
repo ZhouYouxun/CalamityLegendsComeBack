@@ -5,8 +5,7 @@
 				DisplayName: Calamity Legends Come Back Settings
 
 				Headers: {
-					RecipeSettings: Recipe Settings
-					DraedonTechnology: Draedon Technology
+					RecipeSettings: Improved Experience
 				}
 
 				AllowMassMaterialRecipes: {
@@ -27,6 +26,11 @@
 				AllowBossSummonShop: {
 					Label: "[i:GuideVoodooDoll] Allow Zoologist Boss Summons"
 					Tooltip: The Zoologist sells Boss summons at the appropriate progression; a few recipes that would return pre-kill materials are temporarily disabled.
+				}
+
+				AllowMechanicDraedonShop: {
+					Label: "[i:CalamityMod/CodebreakerBase] Allow Mechanic Draedon Equipment"
+					Tooltip: The Mechanic sells Draedon Power Cells and every tier of Codebreaker upgrade at the appropriate progression; schematics must still be found yourself.
 				}
 
 				LightningDecryption: {
@@ -51,6 +55,11 @@
 				LockAmmoWheelToScreenCenter: {
 					Label: "[i:CalamityMod/PlasmaDriveCore] Lock SHPC Ammo Wheel to Screen Center"
 					Tooltip: When enabled, holding the Legendary Weapon Form Switch key opens the ammo wheel at the center of the screen.
+				}
+
+				ShowModListIconShine: {
+					Label: "[i:GoldenCandelabra] Icon Glow Effect"
+					Tooltip: Displays a diagonal shine effect over this mod's icon in the Mods list.
 				}
 
 				ShowInternalEnglishNames: {
