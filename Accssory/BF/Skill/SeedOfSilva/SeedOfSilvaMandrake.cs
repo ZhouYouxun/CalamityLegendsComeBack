@@ -15,7 +15,6 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
         private int mandrakeSporeCooldown;
         private int mandrakeDartCooldown;
 
-        protected override int FlowerSlot => 4;
         protected override BlossomFluxChloroplastPresetType FlowerPreset => BlossomFluxChloroplastPresetType.Chlo_EPlague;
         protected override string FlowerTexturePath => "CalamityLegendsComeBack/Accssory/BF/Skill/SeedOfSilva/SeedPack/Mandrake";
 

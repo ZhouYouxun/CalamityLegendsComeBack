@@ -7,6 +7,7 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using CalamityMod;
 using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core;
+using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects;
 
 namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 {
@@ -111,6 +112,19 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                                 d.noGravity = true;
                             }
 
+                            // 每吞下一颗反射陨星，都从核心迸出一小把星光，
+                            // 让"回收 → 增幅"这条链路在画面上有实感。
+                            LeonidStarlight.Burst(
+                                Projectile.Center,
+                                4,
+                                Color.Lerp(LeonidVisualUtils.StratusBlue, LeonidVisualUtils.MoonWhite, 0.4f),
+                                LeonidStarlightShape.Mote,
+                                speed: 4.5f,
+                                scale: 0.65f,
+                                hoverTime: 18,
+                                lifetime: 110,
+                                lanceSpeed: 15f);
+
                             SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.35f, Pitch = 0.5f }, Projectile.Center);
                             p.Kill();
                         }
@@ -134,6 +148,28 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                         Main.rand.NextFloat(1f, 1.4f));
                     d.noGravity = true;
                 }
+
+                // 蓄满：一圈金色星辉同步张开，之后各自去找目标。
+                LeonidStarlight.Ring(Projectile.Center, 12, 34f, LeonidVisualUtils.GetReadyGold(),
+                    LeonidStarlightShape.Shard, speed: 6.5f, scale: 1f, hoverTime: 26, lifetime: 170, lanceSpeed: 19f);
+                LeonidStarlight.Spawn(Projectile.Center, Vector2.Zero, LeonidVisualUtils.StarGold,
+                    LeonidStarlightShape.Halo, 1.2f, 12, 80, 12f, linksToSiblings: false);
+            }
+
+            // 蓄力期间持续吸入星屑：星光在核心外围绕着悬停，越接近满蓄越密。
+            if (ChargeProgress < 100f && Main.rand.NextBool(ChargeProgress > 60f ? 4 : 8))
+            {
+                float angle = Main.rand.NextFloat(MathHelper.TwoPi);
+                Vector2 spawnPosition = Projectile.Center + angle.ToRotationVector2() * Main.rand.NextFloat(58f, 96f);
+                LeonidStarlight.Spawn(
+                    spawnPosition,
+                    (Projectile.Center - spawnPosition).SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(1.6f, 3.2f),
+                    LeonidVisualUtils.GetCelestialColor(ChargeProgress / 100f, Main.rand.NextFloat(6f)),
+                    LeonidStarlightShape.Mote,
+                    0.55f,
+                    hoverTime: 34,
+                    lifetime: 120,
+                    lanceSpeed: 14f);
             }
         }
 
@@ -169,6 +205,20 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             }
 
             SoundEngine.PlaySound(SoundID.Item62 with { Volume = 0.9f, Pitch = -0.15f }, Projectile.Center);
+
+            // 出膛：星光沿发射轴向前泼出去，蓄得越满泼得越多越快。
+            LeonidStarlight.Spray(
+                Projectile.Center,
+                launchVel,
+                5 + (int)(prog * 6f),
+                LeonidVisualUtils.GetCelestialColor(prog),
+                LeonidStarlightShape.Needle,
+                speed: 8f + prog * 5f,
+                spread: 0.55f,
+                scale: 0.9f + prog * 0.4f,
+                hoverTime: 18,
+                lifetime: 140,
+                lanceSpeed: 18f);
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -203,6 +253,42 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 Vector2 orbitOffset = time.ToRotationVector2() * radius;
                 
                 Main.EntitySpriteDraw(sparkle, drawPos + orbitOffset, null, Color.Lerp(coreColor, Color.White, 0.32f) * 0.72f, -time, sparkle.Size() * 0.5f, size * 0.24f, SpriteEffects.None, 0f);
+            }
+
+            // 蓄力刻度环：外环随进度收紧，满蓄时并入核心并转为金色；
+            // 核心星芒的大小和亮度同样跟着进度走，不看数字也读得出蓄了多少。
+            LeonidStarlight.DrawReticle(
+                Projectile.Center,
+                Color.Lerp(LeonidVisualUtils.StratusBlue, LeonidVisualUtils.StarGold, prog),
+                0.22f + 0.4f * prog,
+                MathHelper.Lerp(0.4f, 0.15f, prog),
+                Main.GlobalTimeWrappedHourly * (0.8f + prog * 1.6f));
+
+            LeonidStarlight.DrawFlare(
+                Projectile.Center,
+                Color.Lerp(coreColor, LeonidVisualUtils.MoonWhite, 0.45f),
+                0.45f + 0.45f * prog,
+                size * 0.14f,
+                -Main.GlobalTimeWrappedHourly * 1.2f);
+
+            LeonidStarlight.DrawOrbitingStars(
+                Projectile.Center,
+                Color.Lerp(coreColor, LeonidVisualUtils.StarGold, prog * 0.5f),
+                0.3f + 0.35f * prog,
+                size * 0.035f,
+                MathHelper.Lerp(52f, 22f, prog),
+                5,
+                1.9f);
+
+            if (prog >= 1f)
+            {
+                // 满蓄的额外奖励：一枚缓慢自转的放射耀斑，宣告"可以放了"。
+                LeonidStarlight.DrawSunburst(
+                    Projectile.Center,
+                    LeonidVisualUtils.GetReadyGold(),
+                    0.3f,
+                    0.05f,
+                    Main.GlobalTimeWrappedHourly * 0.4f);
             }
 
             return false;

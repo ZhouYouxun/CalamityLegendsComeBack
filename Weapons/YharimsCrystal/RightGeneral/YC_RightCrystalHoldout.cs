@@ -18,28 +18,21 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         private static readonly Color HoldoutGold = new(255, 218, 88);
         private static readonly Color HoldoutOrange = new(255, 104, 36);
 
-        private const int CoordinatedShutdownFrames = 120;
-        private const float MainBatteryFireRate = 15f;
-        private const float MainBatteryStarterWindup = 60f;
-        private static readonly int[] DroneDeploySchedule = { 1, 1, 1, 1, 1, 1 };
-
         private readonly BalanceYharimsCrystal balance = new();
         private int shardIndex = -1;
         private int laserIndex = -1;
-        private bool heavyAttackQueued;
-        private bool leftHeldLastFrame;
-        private int coordinatedCooldown;
-        private int rightInputGraceFrames;
-        private float shootingTimer;
-        private float postFireCooldown;
-        private float maxFireRateShots;
-        private float windup = MainBatteryStarterWindup;
+
+        // Charge state: 0 = charging, 1 = charged/converged, 2 = charged + left-held (scattered)
+        // Stored in laser ai[1]: 0f=normal, 1f=converged, 2f=scattered
+        private const float LaserStateNormal = 0f;
+        private const float LaserStateConverged = 1f;
+        private const float LaserStateScattered = 2f;
 
         public float ChargeRatio => MathHelper.Clamp(HoldFrameCounter / balance.GetRightChargeFrames(), 0f, 1f);
         public bool Charged => HoldFrameCounter >= balance.GetRightChargeFrames();
         public Vector2 Muzzle => Projectile.Center + ForwardDirection * 32f;
-        // 所有无人机共用的同步时钟，保证编队一起往返
-        public float SharedSwayClock => HoldFrameCounter;
+        /// <summary>True when fully charged AND left mouse is held, causing scattered (wider turn) beam mode.</summary>
+        public bool IsScatteredMode => Charged && IsLeftHeld();
 
         protected override float HoldoutDistance => 12f;
         protected override float SoundPitch => 0.14f;
@@ -49,6 +42,15 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             Owner.GetModPlayer<YharimsCrystalStatePlayer>().SetLastWeapon(YCWeaponForm.Crystal);
             Projectile.scale = 1.06f;
             SoundEngine.PlaySound(SoundID.Item117 with { Volume = 0.5f, Pitch = -0.25f }, Owner.Center);
+
+            // Kill any background blade passive (it moves to background when crystal is active)
+            int bgBladeType = ModContent.ProjectileType<YC_BackgroundBlade>();
+            for (int i = 0; i < Main.maxProjectiles; i++)
+            {
+                Projectile p = Main.projectile[i];
+                if (p.active && p.owner == Projectile.owner && p.type == bgBladeType)
+                    p.Kill();
+            }
         }
 
         protected override void OnHoldoutAI()
@@ -61,95 +63,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             MaintainEmpoweredShard();
             MaintainMainLaser();
 
-            if (Projectile.owner == Main.myPlayer)
-            {
-                bool leftHeld = WantsHeavyAttack();
-                if (leftHeld && !leftHeldLastFrame)
-                {
-                    heavyAttackQueued = true;
-                    Projectile.netUpdate = true;
-                }
-                leftHeldLastFrame = leftHeld;
-            }
-
-            if (postFireCooldown > 0f)
-                PostFiringCooldown();
-
-            if (Projectile.owner == Main.myPlayer && heavyAttackQueued && postFireCooldown <= 0f && coordinatedCooldown <= 0)
-            {
-                if (Owner.CheckMana(Owner.HeldItem, (int)(Owner.HeldItem.mana * Owner.manaCost) * 13, true))
-                {
-                    postFireCooldown = 100f;
-                    FireMainBattery(true);
-                    CommandDrones();
-                    shootingTimer = 0f;
-                    coordinatedCooldown = CoordinatedShutdownFrames;
-                    Projectile.netUpdate = true;
-                }
-                else
-                {
-                    SoundEngine.PlaySound(SoundID.MaxMana with { Pitch = -0.5f }, Projectile.Center);
-                    shootingTimer = 0f;
-                }
-
-                heavyAttackQueued = false;
-            }
-            else if (shootingTimer >= MainBatteryFireRate && postFireCooldown <= 0f)
-            {
-                if (Owner.CheckMana(Owner.HeldItem, -1, true))
-                {
-                    maxFireRateShots++;
-                    if (maxFireRateShots == 5f)
-                    {
-                        windup = MainBatteryStarterWindup;
-                        maxFireRateShots = 1f;
-                    }
-
-                    FireMainBattery(false);
-                    shootingTimer = 0f;
-
-                    if (windup > 10f && maxFireRateShots > 0f)
-                        windup -= 12f;
-                    else
-                        windup = 10f;
-                }
-                else
-                {
-                    SoundEngine.PlaySound(SoundID.MaxMana with { Pitch = -0.5f }, Owner.Center);
-                    Projectile.Kill();
-                    return;
-                }
-            }
-
-            shootingTimer++;
-            if (coordinatedCooldown > 0)
-                coordinatedCooldown--;
-
-            if (Projectile.owner == Main.myPlayer)
-            {
-                for (int slot = 0; slot < DroneDeploySchedule.Length; slot++)
-                {
-                    if (HoldFrameCounter != DroneDeploySchedule[slot])
-                        continue;
-
-                    int drone = Projectile.NewProjectile(
-                        Projectile.GetSource_FromThis(),
-                        Projectile.Center,
-                        ForwardDirection,
-                        ModContent.ProjectileType<YC_RightDrone>(),
-                        Projectile.damage,
-                        Projectile.knockBack,
-                        Projectile.owner,
-                        slot,
-                        Projectile.whoAmI,
-                        0f);
-                    if (Main.projectile.IndexInRange(drone))
-                    {
-                        YharimsCrystalHellBladeGlobalProjectile.Mark(Main.projectile[drone], YCWeaponForm.Crystal);
-                    }
-                    SoundEngine.PlaySound(SoundID.Item76 with { Volume = 0.35f, Pitch = 0.2f }, Projectile.Center);
-                }
-            }
+            // Update laser state based on charge and left-hold
+            UpdateLaserChargeState();
         }
 
         public override void OnKill(int timeLeft)
@@ -157,17 +72,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             KillProjectile(shardIndex);
             KillProjectile(laserIndex);
 
-            // Kill all associated drones
-            for (int i = 0; i < Main.maxProjectiles; i++)
-            {
-                Projectile other = Main.projectile[i];
-                if (other.active && other.owner == Projectile.owner && other.type == ModContent.ProjectileType<YC_RightDrone>() && (int)other.ai[1] == Projectile.whoAmI)
-                {
-                    other.Kill();
-                }
-            }
-
-            // 右键holdout结束后短暂阻止左键holdout生成，防止autoReuse立刻切回左键形态
+            // Right-click holdout ended: briefly block left-click holdout to prevent autoReuse immediately re-spawning it
             if (Projectile.owner == Main.myPlayer)
             {
                 YharimsCrystalStatePlayer state = Main.player[Projectile.owner].GetModPlayer<YharimsCrystalStatePlayer>();
@@ -179,33 +84,13 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
 
         protected override bool IsRightHeld()
         {
-            bool rightHeld = (Main.mouseRight || Owner.Calamity().mouseRight || Owner.controlUseTile) &&
+            return (Main.mouseRight || Owner.Calamity().mouseRight || Owner.controlUseTile) &&
                 !Main.mapFullscreen &&
                 !Main.blockMouse &&
                 !Owner.mouseInterface;
-
-            if (rightHeld)
-            {
-                rightInputGraceFrames = 18;
-                return true;
-            }
-
-            if (WantsHeavyAttack())
-            {
-                rightInputGraceFrames = Math.Max(rightInputGraceFrames, 12);
-                return true;
-            }
-
-            if (rightInputGraceFrames > 0)
-            {
-                rightInputGraceFrames--;
-                return true;
-            }
-
-            return false;
         }
 
-        private bool WantsHeavyAttack()
+        private bool IsLeftHeld()
         {
             return Main.mouseLeft &&
                 !Main.mapFullscreen &&
@@ -213,156 +98,30 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
                 !Owner.mouseInterface;
         }
 
-        private void FireMainBattery(bool yBeam)
+        private void UpdateLaserChargeState()
         {
-            Vector2 shootDirection = ForwardDirection;
+            if (Projectile.owner != Main.myPlayer)
+                return;
 
-            if (yBeam)
-            {
-                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/OmicronBeam") { Volume = 0.9f }, Projectile.Center);
+            int laserType = ModContent.ProjectileType<YC_RightScorchingLaser>();
+            if (!IsProjectileActive(laserIndex, laserType))
+                return;
 
-                if (!Main.dedServ)
-                {
-                    for (int k = 0; k < 6; k++)
-                    {
-                        Particle pulse = new GlowSparkParticle(Muzzle, shootDirection * 28f, false, 8, 0.087f,
-                            HoldoutGold, new Vector2(2.3f, 0.9f), true);
-                        GeneralParticleHandler.SpawnParticle(pulse);
-                    }
-                }
+            Projectile laser = Main.projectile[laserIndex];
 
-                Owner.SetScreenshake(6.5f);
-                if (Main.myPlayer == Projectile.owner)
-                {
-                    // 重击不再单独生成一条激光：让常驻基底激光瞬间增粗，并从炮口撒出扇形分裂激光
-                    EmpowerMainLaser();
-
-                    // Spawn 1 pair of fanning split scorching lasers (much cleaner and sleeker)
-                    for (int sign = -1; sign <= 1; sign += 2)
-                    {
-                        float spread = MathHelper.ToRadians(9f) * sign;
-                        float fanDrift = MathHelper.ToRadians(0.085f) * sign;
-                        int split = Projectile.NewProjectile(
-                            Projectile.GetSource_FromThis(),
-                            Muzzle,
-                            shootDirection.RotatedBy(spread),
-                            ModContent.ProjectileType<YC_RightScorchingLaser>(),
-                            Projectile.damage,
-                            Projectile.knockBack,
-                            Projectile.owner,
-                            -(Projectile.whoAmI + 2f), // ai[0] <= -2: fanning split laser
-                            0.22f, // Thinner scale
-                            fanDrift);
-
-                        if (Main.projectile.IndexInRange(split))
-                        {
-                            YharimsCrystalHellBladeGlobalProjectile.Mark(Main.projectile[split], YCWeaponForm.Crystal);
-                            Main.projectile[split].CritChance = Projectile.CritChance;
-                        }
-                    }
-
-                    // Spray 6 high-speed golden plasma bolts to the sides as physical fanning projectiles
-                    for (int i = 0; i < 6; i++)
-                    {
-                        float spread = MathHelper.ToRadians(12f + i * 7.5f) * (i % 2 == 0 ? 1 : -1);
-                        Vector2 shotVel = shootDirection.RotatedBy(spread) * Main.rand.NextFloat(22f, 29f);
-                        int shot = Projectile.NewProjectile(
-                            Projectile.GetSource_FromThis(),
-                            Muzzle,
-                            shotVel,
-                            ModContent.ProjectileType<YC_DroneShot>(),
-                            (int)(Projectile.damage * 0.65f),
-                            Projectile.knockBack * 0.5f,
-                            Projectile.owner);
-
-                        if (Main.projectile.IndexInRange(shot))
-                        {
-                            YharimsCrystalHellBladeGlobalProjectile.Mark(Main.projectile[shot], YCWeaponForm.Crystal);
-                            Main.projectile[shot].CritChance = Projectile.CritChance;
-                        }
-                    }
-                }
-            }
+            float desiredState;
+            if (Charged && IsLeftHeld())
+                desiredState = LaserStateScattered;
+            else if (Charged)
+                desiredState = LaserStateConverged;
             else
+                desiredState = LaserStateNormal;
+
+            if (Math.Abs(laser.ai[1] - desiredState) > 0.01f)
             {
-                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ArcNovaDiffuserBigShot")
-                { Volume = 0.2f, Pitch = 0.9f }, Projectile.Center);
-
-                if (Main.myPlayer == Projectile.owner)
-                {
-                    float spreadFactor = Utils.GetLerpValue(0f, 55f, windup, true);
-                    for (int i = 0; i < 3; i++)
-                    {
-                        float spread = (0.04f * (i + 1)) * spreadFactor;
-                        float speed = 13f * (1f - i * 0.05f);
-                        Projectile.NewProjectile(Projectile.GetSource_FromThis(), Muzzle,
-                            (shootDirection * speed).RotatedBy(spread),
-                            ModContent.ProjectileType<YC_DroneShot>(), Projectile.damage, Projectile.knockBack, Projectile.owner);
-                        Projectile.NewProjectile(Projectile.GetSource_FromThis(), Muzzle,
-                            (shootDirection * speed).RotatedBy(-spread),
-                            ModContent.ProjectileType<YC_DroneShot>(), Projectile.damage, Projectile.knockBack, Projectile.owner);
-                    }
-                }
-
-                if (!Main.dedServ)
-                {
-                    Particle pulse = new GlowSparkParticle(Muzzle, shootDirection * 18f, false, 6, 0.057f,
-                        HoldoutGold, new Vector2(1.7f, 0.8f), true);
-                    GeneralParticleHandler.SpawnParticle(pulse);
-                }
+                laser.ai[1] = desiredState;
+                laser.netUpdate = true;
             }
-
-            if (Main.dedServ)
-                return;
-
-            for (int k = 0; k < 10; k++)
-            {
-                Vector2 shootVel = (shootDirection * 15f).RotatedByRandom(0.5f) * Main.rand.NextFloat(0.1f, 1.8f);
-                Dust dust = Dust.NewDustPerfect(Muzzle, Main.rand.NextBool(4) ? 267 : DustID.GoldFlame, shootVel);
-                dust.scale = Main.rand.NextFloat(1.15f, 1.45f);
-                dust.noGravity = true;
-                dust.color = Main.rand.NextBool() ? Color.Lerp(HoldoutGold, Color.White, 0.45f) : HoldoutOrange;
-            }
-        }
-
-        private void CommandDrones()
-        {
-            for (int i = 0; i < Main.maxProjectiles; i++)
-            {
-                Projectile other = Main.projectile[i];
-                if (other.active &&
-                    other.owner == Projectile.owner &&
-                    other.type == ModContent.ProjectileType<YC_RightDrone>() &&
-                    (int)other.ai[1] == Projectile.whoAmI)
-                {
-                    other.ai[2] = 1f;
-                    other.netUpdate = true;
-                }
-            }
-        }
-
-        private void PostFiringCooldown()
-        {
-            Owner.channel = true;
-            if (Main.dedServ || !Main.rand.NextBool())
-            {
-                shootingTimer = 0f;
-                postFireCooldown--;
-                return;
-            }
-
-            Vector2 smokeVel = new Vector2(0f, -8f) * Main.rand.NextFloat(0.1f, 1.1f);
-            GeneralParticleHandler.SpawnParticle(new HeavySmokeParticle(Muzzle, smokeVel, Color.Lerp(HoldoutOrange, HoldoutGold, 0.4f),
-                Main.rand.Next(30, 51), Main.rand.NextFloat(0.1f, 0.4f), 0.5f,
-                Main.rand.NextFloat(-0.2f, 0.2f), Main.rand.NextBool(), required: true));
-
-            Dust dust = Dust.NewDustPerfect(Muzzle, DustID.SteampunkSteam, smokeVel.RotatedByRandom(0.1f), 80,
-                default, Main.rand.NextFloat(0.2f, 0.8f));
-            dust.noGravity = false;
-            dust.color = HoldoutGold;
-
-            shootingTimer = 0f;
-            postFireCooldown--;
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -383,10 +142,20 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             Main.EntitySpriteDraw(bloom, drawPosition, null, orange * (0.28f + charge * 0.56f), Projectile.rotation, bloom.Size() * 0.5f, (0.12f + charge * 0.24f) * pulse, SpriteEffects.None);
             Main.EntitySpriteDraw(bloom, drawPosition, null, Color.White with { A = 0 } * (0.08f + charge * 0.28f), Projectile.rotation, bloom.Size() * 0.5f, (0.04f + charge * 0.08f) * pulse, SpriteEffects.None);
             Main.EntitySpriteDraw(ring, drawPosition, null, gold * charge * 0.58f, Main.GlobalTimeWrappedHourly * 1.7f, ring.Size() * 0.5f, (0.12f + charge * 0.22f) * pulse, SpriteEffects.None);
+
+            // When fully charged, add extra converged/scattered visual indicator
+            if (charge >= 1f)
+            {
+                bool scattered = IsLeftHeld();
+                Color stateColor = scattered ? new Color(180, 220, 255, 0) : new Color(255, 240, 150, 0);
+                float statePulse = 1f + (float)Math.Sin(HoldFrameCounter * 0.45f) * 0.15f;
+                Main.EntitySpriteDraw(ring, drawPosition, null, stateColor * 0.72f, -Main.GlobalTimeWrappedHourly * 2.4f, ring.Size() * 0.5f, 0.28f * statePulse, SpriteEffects.None);
+            }
+
             return false;
         }
 
-        // 只要右键持械存在，基底主激光就必须存在——不管有没有重击、是否在冷却
+        // Only maintain the laser while the right-click holdout is alive
         private void MaintainMainLaser()
         {
             if (Projectile.owner != Main.myPlayer)
@@ -404,20 +173,13 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
                 Projectile.damage,
                 Projectile.knockBack,
                 Projectile.owner,
-                Projectile.whoAmI); // ai[0] >= 0：附着模式，跟随本持械
+                Projectile.whoAmI); // ai[0] >= 0: attached mode
 
             if (Main.projectile.IndexInRange(laserIndex))
             {
                 YharimsCrystalHellBladeGlobalProjectile.Mark(Main.projectile[laserIndex], YCWeaponForm.Crystal);
                 Main.projectile[laserIndex].CritChance = Projectile.CritChance;
             }
-        }
-
-        private void EmpowerMainLaser()
-        {
-            MaintainMainLaser();
-            if (IsProjectileActive(laserIndex, ModContent.ProjectileType<YC_RightScorchingLaser>()))
-                YC_RightScorchingLaser.Empower(Main.projectile[laserIndex]);
         }
 
         private void MaintainEmpoweredShard()
@@ -512,8 +274,16 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
                 }
                 else
                 {
-                    // 2 degrees per frame turn rate limit
-                    float maxTurn = MathHelper.ToRadians(2f);
+                    // Turn rate: normal = 2 deg/frame, charged = 0.8 deg/frame, scattered (left held while charged) = 3.5 deg/frame
+                    float maxTurnDeg;
+                    if (Charged && IsLeftHeld())
+                        maxTurnDeg = 3.5f;
+                    else if (Charged)
+                        maxTurnDeg = 0.8f;
+                    else
+                        maxTurnDeg = 2f;
+
+                    float maxTurn = MathHelper.ToRadians(maxTurnDeg);
                     float currentAngle = Projectile.velocity.ToRotation();
                     float targetAngle = targetAim.ToRotation();
                     float newAngle = currentAngle.AngleTowards(targetAngle, maxTurn);
@@ -546,7 +316,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
 
             if (Projectile.soundDelay <= 0 && HoldFrameCounter > 1f)
             {
-                Projectile.soundDelay = 22; // SoundInterval
+                Projectile.soundDelay = 22;
                 SoundEngine.PlaySound(SoundID.Item15 with { Volume = 0.13f, Pitch = SoundPitch, MaxInstances = 4 }, Projectile.Center);
             }
         }

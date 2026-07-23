@@ -189,9 +189,9 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             {
                 string modeName = AttackMode switch
                 {
-                    CosmicDischargeAttackMode.Sword => Terraria.Localization.Language.GetTextValue("Mods.CalamityLegendsComeBack.Items.NewLegendCosmicDischarge.SwordName"),
-                    CosmicDischargeAttackMode.ChainKnife => Terraria.Localization.Language.GetTextValue("Mods.CalamityLegendsComeBack.Items.NewLegendCosmicDischarge.ChainKnifeName"),
-                    _ => Terraria.Localization.Language.GetTextValue("Mods.CalamityLegendsComeBack.Items.NewLegendCosmicDischarge.WhipName")
+                    CosmicDischargeAttackMode.Sword => Terraria.Localization.Language.GetTextValue("Mods.CalamityLegendsComeBack.Items.Weapons.NewLegendCosmicDischarge.SwordName"),
+                    CosmicDischargeAttackMode.ChainKnife => Terraria.Localization.Language.GetTextValue("Mods.CalamityLegendsComeBack.Items.Weapons.NewLegendCosmicDischarge.ChainKnifeName"),
+                    _ => Terraria.Localization.Language.GetTextValue("Mods.CalamityLegendsComeBack.Items.Weapons.NewLegendCosmicDischarge.WhipName")
                 };
                 Color textColor = CosmicDischargeCommon.GetModeColor(AttackMode);
                 CombatText.NewText(Player.getRect(), textColor, modeName, true, false);
@@ -298,7 +298,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             if (Player.whoAmI == Main.myPlayer)
             {
                 Player.Calamity().GeneralScreenShakePower = System.Math.Max(Player.Calamity().GeneralScreenShakePower, 15f);
-                string activeText = Terraria.Localization.Language.GetTextValue("Mods.CalamityLegendsComeBack.Items.NewLegendCosmicDischarge.UltimateActiveText");
+                string activeText = Terraria.Localization.Language.GetTextValue("Mods.CalamityLegendsComeBack.Items.Weapons.NewLegendCosmicDischarge.UltimateActiveText");
                 CombatText.NewText(Player.getRect(), CosmicDischargeCommon.DoGSpecialColor, activeText, true, true);
             }
         }

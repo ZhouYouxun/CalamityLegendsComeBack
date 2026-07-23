@@ -1,5 +1,6 @@
 using System;
 using CalamityLegendsComeBack.Accssory.TS;
+using CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.General;
 using CalamityLegendsComeBack.Weapons.Visuals;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -148,6 +149,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             // 飞剑命中附加基础电击，并触发饰品联动。
             AzureThunderAccessoryPlayer.ApplyAzureThunderAccessoryOnHit(Projectile, target);
             AzureThunderSounds.PlaySwordHit(target.Center);
+
+            // 命中点朝四周炸开一圈裂变电弧，不局限于头顶方向；大体型敌人裂得更开。
+            float burstRadius = MathHelper.Clamp(target.Size.Length() * 0.6f, 74f, 190f);
+            AzureThunderFissionBolt.Burst(target.Center, burstRadius, 9, 0.95f);
+
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 spawnPosition = target.Center - forward * 10f * 16f;
 

@@ -2,6 +2,7 @@ using System;
 using CalamityMod;
 using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
+using CalamityMod.Projectiles.Melee;
 using CalamityLegendsComeBack.Weapons.CosmicDischarge.General;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -44,12 +45,15 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
         private bool wasRightHeld;
         private bool releaseSoundPlayed;
+        private bool apexSoundPlayed;
+        private bool retractSoundPlayed;
         private bool impactEffectsPlayed;
         private bool spawnedSwordWave;
         private bool quickDrawBurstPlayed;
         private int spawnedBombBursts;
         private int hitStopTimer;
         private int impactFlashTimer;
+        private int legacyCosmicBurstCooldown;
         private float currentCollisionWidth = 30f;
         private bool currentlyRetracting;
         private float currentArmRotationOffset;
@@ -142,6 +146,8 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             Time++;
             if (impactFlashTimer > 0)
                 impactFlashTimer--;
+            if (legacyCosmicBurstCooldown > 0)
+                legacyCosmicBurstCooldown--;
 
             currentlyRetracting = false;
             Projectile.localNPCHitCooldown = Kind == CosmicDischargeAttackKind.QuickDraw ? 3 : 9;
@@ -203,6 +209,8 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             spawnedSwordWave = false;
             quickDrawBurstPlayed = false;
             releaseSoundPlayed = false;
+            apexSoundPlayed = false;
+            retractSoundPlayed = false;
             impactEffectsPlayed = false;
             Projectile.localNPCHitCooldown = 3;
             Projectile.netUpdate = true;
@@ -367,8 +375,10 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     => Time >= SwordSwingWindup + 2f && Time <= SwordSwingDuration - 7f,
                 CosmicDischargeAttackKind.SwordFinisher
                     => Time >= SwordFinisherSlamFrame + 1f && Time <= SwordFinisherSlamFrame + 16f,
-                CosmicDischargeAttackKind.ChainKnifeSingle or CosmicDischargeAttackKind.ChainKnifeScatter or CosmicDischargeAttackKind.ChainKnifeBiteAll
-                    => Time >= 15f && Time <= 50f,
+                CosmicDischargeAttackKind.ChainKnifeSingle or CosmicDischargeAttackKind.ChainKnifeScatter
+                    => Time >= 13f && Time <= 48f,
+                CosmicDischargeAttackKind.ChainKnifeBiteAll
+                    => Time >= 24f && Time <= 68f,
                 CosmicDischargeAttackKind.QuickDraw
                     => Time >= QuickDrawWindup + 2f && Time <= QuickDrawDuration - 4f,
                 _ => false
@@ -422,6 +432,26 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             bool near = CosmicDischargeCommon.TargetIntersectsTip(points, target.Hitbox, radius);
             if (near)
                 return true;
+
+            bool isChainArc = Kind == CosmicDischargeAttackKind.ChainKnifeSingle ||
+                              Kind == CosmicDischargeAttackKind.ChainKnifeScatter ||
+                              Kind == CosmicDischargeAttackKind.ChainKnifeBiteAll;
+            if (isChainArc)
+            {
+                Vector2 direction = Projectile.velocity.SafeNormalize(AimDirection);
+                float reach = Projectile.velocity.Length();
+                int chainCount = GetChainCount();
+                for (int i = 0; i < chainCount; i++)
+                {
+                    float lane = i - (chainCount - 1) * 0.5f;
+                    if (Math.Abs(lane) < 0.01f)
+                        continue;
+
+                    var extraPoints = GenerateChainConvergencePoints(direction, reach, lane);
+                    if (CosmicDischargeCommon.TargetIntersectsTip(extraPoints, target.Hitbox, radius))
+                        return true;
+                }
+            }
 
             // Also check mirror whip tip!
             bool isWhip = Kind == CosmicDischargeAttackKind.WhipOver || Kind == CosmicDischargeAttackKind.WhipUnder;
@@ -532,6 +562,8 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
             if (Main.myPlayer == Projectile.owner)
             {
+                SpawnLegacyCosmicBurst(target, heavy);
+
                 // 1. WHIP FORM SYNERGIES
                 bool isWhip = Kind == CosmicDischargeAttackKind.WhipOver ||
                               Kind == CosmicDischargeAttackKind.WhipUnder ||
@@ -659,6 +691,25 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             }
         }
 
+        private void SpawnLegacyCosmicBurst(NPC target, bool heavy)
+        {
+            if (legacyCosmicBurstCooldown > 0)
+                return;
+
+            legacyCosmicBurstCooldown = heavy ? 6 : 9;
+            float scale = heavy ? Main.rand.NextFloat(1.05f, 1.4f) : Main.rand.NextFloat(0.78f, 1.08f);
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                target.Center,
+                Vector2.Zero,
+                ModContent.ProjectileType<CosmicIceBurst>(),
+                (int)(Projectile.damage * (heavy ? 0.52f : 0.36f)),
+                10f,
+                Projectile.owner,
+                0f,
+                scale);
+        }
+
         private void ApplyHitStop(int frames)
         {
             hitStopTimer = Math.Max(hitStopTimer, frames);
@@ -734,9 +785,21 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                               Kind == CosmicDischargeAttackKind.ChainKnifeScatter ||
                               Kind == CosmicDischargeAttackKind.ChainKnifeBiteAll;
 
-            DrawDoGFireTrail(points);
-            DrawCurvedBladeGlow(points);
-            CosmicDischargeCommon.DrawCurvedChain(Main.spriteBatch, points, lightColor, Projectile.scale, Owner.gfxOffY);
+            if (isChainArc)
+            {
+                // Chain-blade form stays visually taut and readable. The moving heads carry
+                // the fan motion; the connector itself no longer inherits their curve.
+                CosmicDischargeCommon.DrawChain(Main.spriteBatch, points[0], points[^1], lightColor, Projectile.scale, true, Owner.gfxOffY);
+                DrawChainTipHalo(points[^1], 0.8f);
+                DrawConstellationOverlay(points, CosmicDischargeCommon.RiftTwilight, 0.52f);
+            }
+            else
+            {
+                DrawDoGFireTrail(points);
+                DrawCurvedBladeGlow(points);
+                CosmicDischargeCommon.DrawCurvedChain(Main.spriteBatch, points, lightColor, Projectile.scale, Owner.gfxOffY);
+                DrawConstellationOverlay(points, ModeAccentColor, 0.72f);
+            }
 
             if (isChainArc)
             {
@@ -750,9 +813,8 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                         continue;
 
                     var extraPoints = GenerateChainConvergencePoints(direction, reach, lane);
-                    DrawDoGFireTrail(extraPoints);
-                    DrawCurvedBladeGlow(extraPoints);
-                    CosmicDischargeCommon.DrawCurvedChain(Main.spriteBatch, extraPoints, chainColor, Projectile.scale * 0.92f, Owner.gfxOffY);
+                    CosmicDischargeCommon.DrawChain(Main.spriteBatch, extraPoints[0], extraPoints[^1], chainColor, Projectile.scale * 0.88f, true, Owner.gfxOffY);
+                    DrawChainTipHalo(extraPoints[^1], 0.56f);
                 }
             }
 
@@ -765,6 +827,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 DrawCurvedBladeGlow(mirrorPoints);
                 Color mirrorColor = Color.Lerp(lightColor, CosmicDischargeCommon.DoGSpecialColor, 0.35f);
                 CosmicDischargeCommon.DrawCurvedChain(Main.spriteBatch, mirrorPoints, mirrorColor, Projectile.scale, Owner.gfxOffY);
+                DrawConstellationOverlay(mirrorPoints, CosmicDischargeCommon.RiftLightBlue, 0.5f);
             }
 
             if (CanBecomeQuickDraw)
@@ -847,6 +910,50 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     SpriteEffects.None);
             }
 
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
+        }
+
+        private void DrawConstellationOverlay(System.Collections.Generic.IReadOnlyList<Vector2> points, Color accent, float intensity)
+        {
+            if (points == null || points.Count < 2)
+                return;
+
+            Texture2D pixel = TextureAssets.MagicPixel.Value;
+            Texture2D star = ModContent.Request<Texture2D>("CalamityMod/Projectiles/StarProj").Value;
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Vector2 drawOffset = -Main.screenPosition + Vector2.UnitY * Owner.gfxOffY;
+            float pulse = 0.82f + 0.18f * MathF.Sin(Main.GlobalTimeWrappedHourly * 5f + Projectile.identity * 0.7f);
+            int step = Math.Max(2, points.Count / 5);
+
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
+            Vector2 previousNode = points[0] + drawOffset;
+            for (int i = step; i < points.Count; i += step)
+            {
+                Vector2 node = points[Math.Min(i, points.Count - 1)] + drawOffset;
+                Vector2 segment = node - previousNode;
+                Color lineColor = Color.Lerp(accent, Color.White, 0.18f) * (0.18f * intensity);
+                if (segment.LengthSquared() > 1f)
+                    DrawLine(pixel, previousNode, segment, lineColor, 1.1f + intensity * 0.65f);
+
+                float nodeScale = (0.11f + 0.035f * ((i / step) % 2)) * pulse * intensity;
+                Main.EntitySpriteDraw(bloom, node, null, accent * (0.2f * intensity), 0f, bloom.Size() * 0.5f, nodeScale * 1.8f, SpriteEffects.None);
+                Main.EntitySpriteDraw(star, node, null, Color.White * (0.62f * intensity), Main.GlobalTimeWrappedHourly * 1.6f + i, star.Size() * 0.5f, nodeScale, SpriteEffects.None);
+                previousNode = node;
+            }
+
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
+        }
+
+        private void DrawChainTipHalo(Vector2 worldPosition, float intensity)
+        {
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D star = ModContent.Request<Texture2D>("CalamityMod/Projectiles/StarProj").Value;
+            Vector2 drawPosition = worldPosition - Main.screenPosition + Vector2.UnitY * Owner.gfxOffY;
+            float pulse = 0.9f + 0.1f * MathF.Sin(Main.GlobalTimeWrappedHourly * 7f + worldPosition.X * 0.01f);
+
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
+            Main.EntitySpriteDraw(bloom, drawPosition, null, CosmicDischargeCommon.RiftTwilight * (0.24f * intensity), 0f, bloom.Size() * 0.5f, 0.18f * pulse * intensity, SpriteEffects.None);
+            Main.EntitySpriteDraw(star, drawPosition, null, Color.White * (0.58f * intensity), Projectile.rotation, star.Size() * 0.5f, 0.13f * pulse * intensity, SpriteEffects.None);
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
         }
 
@@ -989,6 +1096,12 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         {
             value = MathHelper.Clamp(value, 0f, 1f);
             return value * value * value;
+        }
+
+        private static float SmootherStep(float value)
+        {
+            value = MathHelper.Clamp(value, 0f, 1f);
+            return value * value * value * (value * (value * 6f - 15f) + 10f);
         }
 
         private static float EaseOutExpo(float value)

@@ -82,6 +82,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         public float sizeMult = 1f;
         public float visualSizeMult = 1f;
 
+        // 命中爆点 bloom 的基础不透明度，比默认低 40%，避免压过裂变电弧。
+        private const float BloomOpacity = 0.6f;
+
         private static readonly Color LightningTeal = new(58, 255, 214);
         private static readonly Color LightningCyan = new(116, 248, 255);
         private static readonly Color LightningGreen = new(75, 255, 154);
@@ -236,11 +239,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
                 Particle pulse = new CustomPulse(pos, Vector2.Zero, LightningTeal, "CalamityMod/Particles/HighResFoggyCircleHardEdge", new Vector2(1f, 1f), 0f, 0f, 0.0815f * fxScale, 10);
                 GeneralParticleHandler.SpawnParticle(pulse);
+                // 命中 bloom 压到 6 成亮度：原来的白团会盖过裂变电弧，把亮度预算让给电弧本体。
                 for (int i = 0; i < 2; i++)
                 {
-                    Particle orb = new CustomPulse(pos, Vector2.Zero, LightningGreen, "CalamityMod/Particles/BloomCircle", new Vector2(1f, 1f), Main.rand.NextFloat(-10f, 10f), 1.38f * fxScale, 0.5f * fxScale, 14);
+                    Particle orb = new CustomPulse(pos, Vector2.Zero, LightningGreen, "CalamityMod/Particles/BloomCircle", new Vector2(1f, 1f), Main.rand.NextFloat(-10f, 10f), 1.38f * fxScale, 0.5f * fxScale, 14, true, BloomOpacity);
                     GeneralParticleHandler.SpawnParticle(orb);
-                    Particle whiteOrb = new CustomPulse(pos, Vector2.Zero, Color.White, "CalamityMod/Particles/BloomCircle", new Vector2(1f, 1f), Main.rand.NextFloat(-10f, 10f), 0.925f * fxScale, 0.2f * fxScale, 14);
+                    Particle whiteOrb = new CustomPulse(pos, Vector2.Zero, Color.White, "CalamityMod/Particles/BloomCircle", new Vector2(1f, 1f), Main.rand.NextFloat(-10f, 10f), 0.925f * fxScale, 0.2f * fxScale, 14, true, BloomOpacity);
                     GeneralParticleHandler.SpawnParticle(whiteOrb);
                 }
             }

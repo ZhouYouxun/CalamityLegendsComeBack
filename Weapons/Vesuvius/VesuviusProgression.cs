@@ -7,11 +7,15 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
 {
     internal static class VesuviusProgression
     {
+        // Four charge tiers now (was three). Each threshold is the frame at which the matching
+        // tier unlocks; tier 0 is the uncharged tap. World progression caps how high you can
+        // actually reach (GetMaxStage).
         private static readonly int[] StageFrames =
         {
-            60,
-            120,
-            180
+            50,
+            100,
+            150,
+            200
         };
 
         public const int ClickLockoutFrames = 30;
@@ -33,6 +37,9 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
         public static int GetMaxStage()
         {
             if (NPC.downedMoonlord)
+                return 4;
+
+            if (NPC.downedPlantBoss)
                 return 3;
 
             if (Main.hardMode)
@@ -92,14 +99,17 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
             return MathHelper.Clamp((chargeFrames - currentStart) / (float)(nextStart - currentStart), 0f, 1f);
         }
 
+        // Per-orb multiplier. Left click now fires a single Arc Nova style orb per release, so
+        // these are the whole payload's damage (tier 0 is the weak tap orb).
         public static int GetLeftDamage(int stage, int itemDamage)
         {
             return stage switch
             {
                 <= 0 => (int)(itemDamage * 0.34f),
-                1 => (int)(itemDamage * 0.48f),
-                2 => (int)(itemDamage * 2.25f),
-                _ => (int)(itemDamage * 3.4f)
+                1 => (int)(itemDamage * 1.10f),
+                2 => (int)(itemDamage * 2.05f),
+                3 => (int)(itemDamage * 3.10f),
+                _ => (int)(itemDamage * 4.20f)
             };
         }
 
@@ -116,7 +126,8 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                 <= 0 => new Color(255, 116, 40),
                 1 => new Color(255, 86, 36),
                 2 => new Color(255, 132, 43),
-                _ => new Color(255, 226, 126)
+                3 => new Color(255, 226, 126),
+                _ => new Color(255, 244, 190)
             };
         }
     }

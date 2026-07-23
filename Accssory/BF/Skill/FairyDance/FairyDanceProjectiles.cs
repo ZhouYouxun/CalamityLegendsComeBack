@@ -16,8 +16,12 @@ namespace CalamityLegendsComeBack.Accssory.BF.FairyDance
     internal sealed class FairyDanceWisp : ModProjectile
     {
         internal const int FairyCount = 3;
+        // 每只仙灵两次突进之间的节拍；三只仙灵按 1/3 周期错开，形成连续的“舞”。
+        internal const int AttackCadence = 24;
         private const float DashSpeed = 21f;
         private const float MaxDashDistance = 640f;
+        // 单次突进的最长帧数，略短于 AttackCadence，确保突进结束后仙灵能赶上下一拍。
+        private const int MaxDashFrames = 22;
 
         // Vanilla resources: Terraria/Images/NPC_583, NPC_584 and NPC_585.
         private static readonly string[] FairyTextures =
@@ -85,9 +89,6 @@ namespace CalamityLegendsComeBack.Accssory.BF.FairyDance
                 case 1:
                     UpdateDash(owner);
                     break;
-                case 2:
-                    UpdateReturn(owner);
-                    break;
                 default:
                     UpdateOrbit(owner);
                     break;
@@ -126,24 +127,12 @@ namespace CalamityLegendsComeBack.Accssory.BF.FairyDance
         private void UpdateDash(Player owner)
         {
             dashTimer++;
-            if (dashTimer >= 48 || Vector2.DistanceSquared(Projectile.Center, owner.Center) >= MaxDashDistance * MaxDashDistance)
+            if (dashTimer >= MaxDashFrames || Vector2.DistanceSquared(Projectile.Center, owner.Center) >= MaxDashDistance * MaxDashDistance)
             {
-                State = 2;
-                Projectile.damage = 0;
-                Projectile.netUpdate = true;
-            }
-        }
-
-        private void UpdateReturn(Player owner)
-        {
-            float angle = Main.GameUpdateCount * 0.025f + MathHelper.TwoPi * Variant / FairyCount;
-            Vector2 desiredPosition = owner.Center + new Vector2(72f, 0f).RotatedBy(angle);
-            MoveTowards(desiredPosition, 0.22f, 18f);
-            Projectile.damage = 0;
-
-            if (Vector2.DistanceSquared(Projectile.Center, desiredPosition) <= 24f * 24f)
-            {
+                // 突进结束直接回到环绕态：惯性会把它往玩家方向带一点，但不再强制先飞回玩家身边——
+                // 下一拍会从半途重新突进，配合三只仙灵错开的节拍形成连续攻击。
                 State = 0;
+                Projectile.damage = 0;
                 Projectile.netUpdate = true;
             }
         }
@@ -537,6 +526,12 @@ namespace CalamityLegendsComeBack.Accssory.BF.FairyDance
             float outlinePulse = 0.5f + 0.5f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 3.1f + Projectile.identity * 0.9f);
             float outlineOffset = dashing ? 3.5f : 2f + outlinePulse * 0.9f;
             Color outlineColor = (GetRainbowColor() with { A = 0 }) * (dashing ? 0.9f : 0.55f + outlinePulse * 0.15f);
+
+            // ===== 草蛉发光绘制：本体后方叠一层彩虹 BloomCircle 光晕（A=0 防黑底），突进时更亮更大 =====
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            float glowPulse = 0.85f + 0.15f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 4.2f + Projectile.identity);
+            Main.EntitySpriteDraw(bloom, drawPosition, null, (GetRainbowColor() with { A = 0 }) * ((dashing ? 0.85f : 0.6f) * glowPulse), 0f, bloom.Size() * 0.5f, (dashing ? 0.52f : 0.4f) * glowPulse, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(bloom, drawPosition, null, (Color.Lerp(GetRainbowColor(0.5f), Color.White, 0.4f) with { A = 0 }) * (0.4f * glowPulse), 0f, bloom.Size() * 0.5f, (dashing ? 0.28f : 0.2f) * glowPulse, SpriteEffects.None, 0);
 
             for (int i = 0; i < 6; i++)
             {

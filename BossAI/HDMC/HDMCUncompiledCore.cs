@@ -13,7 +13,7 @@ namespace CalamityLegendsComeBack.BossAI.HDMC
 {
     /// <summary>
     /// 未编译的矩阵核心：召唤超维矩阵主宰的 Boss 召唤物。
-    /// 图标沿用武器的程序化全息绘制。
+    /// 图标沿用武器的程序化全息绘制，但几何体简化为三棱柱。
     /// </summary>
     public sealed class HDMCUncompiledCore : ModItem
     {
@@ -59,7 +59,7 @@ namespace CalamityLegendsComeBack.BossAI.HDMC
         public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame,
             Color drawColor, Color itemColor, Vector2 origin, float scale)
         {
-            DrawTriangularPrism(position, scale * 0.9f, true);
+            DrawTriangularPrismInventory(position, scale * 0.9f);
             return false;
         }
 
@@ -68,22 +68,133 @@ namespace CalamityLegendsComeBack.BossAI.HDMC
         {
             Vector2 center = Item.Center - Main.screenPosition + Vector2.UnitY *
                 MathF.Sin(Main.GlobalTimeWrappedHourly * 2.1f) * 1.6f * scale;
-            DrawTriangularPrism(center, scale * 0.78f, false);
+            DrawTriangularPrismWorld(center, scale * 0.78f);
             return false;
         }
 
-        // The Matrix Core's 3D rotation and perspective projection, reduced to one triangular prism and nine edges.
-        private static void DrawTriangularPrism(Vector2 center, float scale, bool inventory)
+        // ── Inventory draw (uses Main.UIScaleMatrix, mirrors DrawInventoryIcon) ──────────────────
+        private static void DrawTriangularPrismInventory(Vector2 center, float scale)
         {
             float iconScale = MathHelper.Clamp(scale, 0.55f, 1.15f);
-            float opacity = inventory ? 1f : 0.76f;
-            Color lineColor = new Color(91, 224, 255) * opacity;
-            Vector2[] projected = ProjectPrism(center, 18f * iconScale, Main.GlobalTimeWrappedHourly);
+            float time      = Main.GlobalTimeWrappedHourly;
 
-            foreach ((int start, int end) in PrismEdges)
-                DrawProjectedEdge(projected[start], projected[end], lineColor, 1.2f * iconScale);
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D ring  = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
+
+            // Switch to Additive + UI matrix, same as HyperdimensionalMatrixVisuals.DrawInventoryIcon
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Additive, SamplerState.LinearClamp,
+                DepthStencilState.None, RasterizerState.CullNone, null, Main.UIScaleMatrix);
+
+            // Soft bloom glow
+            Color primary   = GetColor(0.55f, 0.82f);   // cyan-teal base (slightly different hue from weapon)
+            Color secondary = GetColor(0.38f, 0.52f);
+
+            Main.spriteBatch.Draw(bloom, center, null, primary   * 0.58f, time * 0.38f, bloom.Size() * 0.5f, 0.36f * iconScale, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(bloom, center, null, secondary * 0.30f, -time * 0.52f, bloom.Size() * 0.5f, 0.60f * iconScale, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(ring,  center, null, primary   * 0.76f, -time * 1.1f,  ring.Size()  * 0.5f, 0.45f * iconScale, SpriteEffects.None, 0f);
+
+            // Scan rings (ellipse dash arcs)
+            DrawInventoryScanRing(center, 22f * iconScale,  time * 1.4f,  primary   * 0.72f, 24, 1.2f * iconScale);
+            DrawInventoryScanRing(center, 14f * iconScale, -time * 1.9f,  secondary * 0.58f, 18, 0.9f * iconScale);
+
+            // Three-dimensional prism wireframe
+            Vector2[] projected = ProjectPrism(center, 17f * iconScale, time);
+            for (int i = 0; i < PrismEdges.Length; i++)
+            {
+                (int s, int e) = PrismEdges[i];
+                float pulse = 0.62f + 0.38f * MathF.Sin(time * 4.4f + i * 0.71f);
+                Color edgeColor = GetColor(i / (float)PrismEdges.Length, 0.88f * pulse);
+
+                DrawScreenLine(projected[s], projected[e], edgeColor * 0.22f, 4.5f * iconScale);
+                DrawScreenLine(projected[s], projected[e], edgeColor,         1.15f * iconScale);
+
+                // Flowing data node along every other edge
+                if ((i & 1) == 0)
+                {
+                    float flow = (time * 0.82f + i * 0.19f) % 1f;
+                    DrawScreenNode(Vector2.Lerp(projected[s], projected[e], flow), edgeColor, 2.8f * iconScale);
+                }
+            }
+
+            // Vertex nodes
+            for (int i = 0; i < projected.Length; i++)
+                DrawScreenNode(projected[i], GetColor(i / (float)projected.Length, 0.90f), (i < 3 ? 4f : 3f) * iconScale);
+
+            // Centre pixel
+            Texture2D pixel = TextureAssets.MagicPixel.Value;
+            Rectangle core = new(
+                (int)(center.X - 2f * iconScale),
+                (int)(center.Y - 2f * iconScale),
+                Math.Max(2, (int)(4f * iconScale)),
+                Math.Max(2, (int)(4f * iconScale)));
+            Main.spriteBatch.Draw(pixel, core, Color.White with { A = 0 } * 0.82f);
+
+            // Restore alpha-blend + UI matrix
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp,
+                DepthStencilState.None, RasterizerState.CullNone, null, Main.UIScaleMatrix);
         }
 
+        // ── World-drop draw (uses GameViewMatrix, mirrors DrawWorldIcon) ──────────────────────────
+        private static void DrawTriangularPrismWorld(Vector2 center, float scale)
+        {
+            float iconScale = MathHelper.Clamp(scale, 0.45f, 1.05f);
+            float time      = Main.GlobalTimeWrappedHourly;
+
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D ring  = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
+
+            // Switch to Additive + world-space matrix, same as HyperdimensionalMatrixVisuals.DrawWorldIcon
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Additive, SamplerState.LinearClamp,
+                DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
+
+            Color primary   = GetColor(0.55f, 0.72f);
+            Color secondary = GetColor(0.38f, 0.44f);
+
+            Main.spriteBatch.Draw(bloom, center, null, primary   * 0.44f, time * 0.38f, bloom.Size() * 0.5f, 0.26f * iconScale, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(bloom, center, null, secondary * 0.22f, -time * 0.52f, bloom.Size() * 0.5f, 0.50f * iconScale, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(ring,  center, null, primary   * 0.64f, -time * 1.05f, ring.Size()  * 0.5f, 0.35f * iconScale, SpriteEffects.None, 0f);
+
+            DrawInventoryScanRing(center, 18f * iconScale,  time * 1.3f,  primary   * 0.62f, 20, 1.0f * iconScale);
+            DrawInventoryScanRing(center, 12f * iconScale, -time * 1.8f,  secondary * 0.48f, 16, 0.8f * iconScale);
+
+            Vector2[] projected = ProjectPrism(center, 14f * iconScale, time);
+            for (int i = 0; i < PrismEdges.Length; i++)
+            {
+                (int s, int e) = PrismEdges[i];
+                float pulse = 0.62f + 0.38f * MathF.Sin(time * 4.4f + i * 0.71f);
+                Color edgeColor = GetColor(i / (float)PrismEdges.Length, 0.78f * pulse);
+
+                DrawScreenLine(projected[s], projected[e], edgeColor * 0.20f, 4f   * iconScale);
+                DrawScreenLine(projected[s], projected[e], edgeColor,         1.05f * iconScale);
+
+                if ((i & 1) == 0)
+                {
+                    float flow = (time * 0.78f + i * 0.19f) % 1f;
+                    DrawScreenNode(Vector2.Lerp(projected[s], projected[e], flow), edgeColor, 2.4f * iconScale);
+                }
+            }
+
+            for (int i = 0; i < projected.Length; i++)
+                DrawScreenNode(projected[i], GetColor(i / (float)projected.Length, 0.82f), (i < 3 ? 3.5f : 2.8f) * iconScale);
+
+            Texture2D pixel = TextureAssets.MagicPixel.Value;
+            Rectangle core = new(
+                (int)(center.X - 1.8f * iconScale),
+                (int)(center.Y - 1.8f * iconScale),
+                Math.Max(2, (int)(3.6f * iconScale)),
+                Math.Max(2, (int)(3.6f * iconScale)));
+            Main.spriteBatch.Draw(pixel, core, Color.White with { A = 0 } * 0.72f);
+
+            // Restore alpha-blend + world-space matrix
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp,
+                DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
+        }
+
+        // ── Held-item draw (queued into PlayerDrawSet, no SpriteBatch switch needed) ─────────────
         internal static void AddHeldDrawData(ref PlayerDrawSet drawInfo, Player player)
         {
             // The usual held-item pass only sees InvisibleProj, so queue the procedural prism in
@@ -122,6 +233,8 @@ namespace CalamityLegendsComeBack.BossAI.HDMC
                 0));
         }
 
+        // ── Geometry helpers ──────────────────────────────────────────────────────────────────────
+
         private static Vector2[] ProjectPrism(Vector2 center, float radius, float time)
         {
             Matrix rotation = Matrix.CreateFromYawPitchRoll(time * 0.94f, time * 0.67f, time * 0.43f);
@@ -145,14 +258,75 @@ namespace CalamityLegendsComeBack.BossAI.HDMC
             return projected;
         }
 
-        // DrawLineBetter is the Matrix Core's endpoint-bounded renderer; no line can extend beyond start and end.
-        private static void DrawProjectedEdge(Vector2 start, Vector2 end, Color color, float width)
+        /// <summary>
+        /// Cycling holo-colour, alpha=0 for additive blending (same convention as HyperdimensionalMatrixVisuals.GetDataColor).
+        /// </summary>
+        private static Color GetColor(float offset, float opacity = 1f)
         {
-            if (Vector2.DistanceSquared(start, end) <= 0.0001f)
+            float hue = (Main.GlobalTimeWrappedHourly * 0.18f + offset) % 1f;
+            Color color = Main.hslToRgb(hue, 0.88f, 0.62f) * opacity;
+            color.A = 0;
+            return color;
+        }
+
+        // Draws a line segment in screen space using CalamityMod's Line texture.
+        // Mirrors HyperdimensionalMatrixVisuals.DrawScreenLine exactly.
+        private static void DrawScreenLine(Vector2 start, Vector2 end, Color color, float width)
+        {
+            if (start == end)
                 return;
 
-            Main.spriteBatch.DrawLineBetter(start, end, color, width);
+            // Ensure additive-blended colours are visible when alpha channel is zero.
+            if (color.A == 0 && (color.R != 0 || color.G != 0 || color.B != 0))
+                color.A = 255;
+
+            Texture2D line = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Line").Value;
+            float rotation = (end - start).ToRotation();
+            Vector2 lineScale = new(Vector2.Distance(start, end) / line.Width, width);
+            Main.spriteBatch.Draw(line, start, null, color, rotation, line.Size() * Vector2.UnitY * 0.5f, lineScale, SpriteEffects.None, 0f);
         }
+
+        // Draws a cross-hair node in screen space.
+        // Mirrors HyperdimensionalMatrixVisuals.DrawScreenNode exactly.
+        private static void DrawScreenNode(Vector2 screenPosition, Color color, float size)
+        {
+            if (color.A == 0 && (color.R != 0 || color.G != 0 || color.B != 0))
+                color.A = 255;
+
+            int width = Math.Max(1, (int)size);
+            Rectangle horizontal = new(
+                (int)(screenPosition.X - width * 0.5f),
+                (int)(screenPosition.Y - 1f),
+                width,
+                2);
+            Rectangle vertical = new(
+                (int)(screenPosition.X - 1f),
+                (int)(screenPosition.Y - width * 0.5f),
+                2,
+                width);
+
+            Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, horizontal, color);
+            Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, vertical, color);
+        }
+
+        // Ellipse dash-arc scan ring.
+        // Mirrors HyperdimensionalMatrixVisuals.DrawInventoryScanRing exactly.
+        private static void DrawInventoryScanRing(Vector2 center, float radius, float rotation, Color color, int segments, float width)
+        {
+            for (int i = 0; i < segments; i++)
+            {
+                if ((i + (int)(Main.GameUpdateCount / 4)) % 5 == 0)
+                    continue;
+
+                float angleA = MathHelper.TwoPi * i / segments + rotation;
+                float angleB = MathHelper.TwoPi * (i + 0.68f) / segments + rotation;
+                Vector2 a = center + new Vector2((float)Math.Cos(angleA) * radius, (float)Math.Sin(angleA) * radius * 0.52f);
+                Vector2 b = center + new Vector2((float)Math.Cos(angleB) * radius, (float)Math.Sin(angleB) * radius * 0.52f);
+                DrawScreenLine(a, b, color, width);
+            }
+        }
+
+        // ── Item use logic ────────────────────────────────────────────────────────────────────────
 
         public override bool CanUseItem(Player player)
             => !Main.dayTime && !NPC.AnyNPCs(ModContent.NPCType<HDMCSovereign>());

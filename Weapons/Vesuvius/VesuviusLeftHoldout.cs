@@ -1,3 +1,4 @@
+using CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick;
 using CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.AStage0;
 using CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.DStage3;
 using CalamityLegendsComeBack.Weapons.Vesuvius.Passive;
@@ -216,39 +217,14 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
 
         private void FireReleasedPayload()
         {
-            if (releaseStage <= 1)
-            {
-                FireMeteorScatter();
-                return;
-            }
-
-            FireThermalCorePayload();
-        }
-
-        private void FireMeteorScatter()
-        {
-            int meteorCount = releaseStage <= 0 ? 2 : 3;
-            float spread = releaseStage <= 0 ? 12f : 9f;
-            float damageMultiplier = VesuviusProgression.GetLeftDamage(releaseStage, 100) / 100f;
-
-            for (int i = 0; i < meteorCount; i++)
-            {
-                float offset = meteorCount == 1 ? 0f : MathHelper.Lerp(-spread, spread, i / (float)(meteorCount - 1));
-                Vector2 velocity = Direction.RotatedBy(MathHelper.ToRadians(offset)) * Main.rand.NextFloat(16.5f, 19.5f);
-                SpawnMoltenAsteroid(GunTip, velocity, Main.rand.Next(6), releaseStage <= 0 ? 0.62f : 0.78f, true, damageMultiplier);
-            }
-        }
-
-        private void FireThermalCorePayload()
-        {
-            float speed = releaseStage >= 3 ? 50f : 40f;
+            float speed = 26f + releaseStage * 4f;
             Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
                 GunTip + Direction * 10f,
                 Direction * speed,
-                ModContent.ProjectileType<VesuviusThermalCore>(),
+                ModContent.ProjectileType<VesuviusArcOrb>(),
                 Math.Max(1, VesuviusProgression.GetLeftDamage(releaseStage, Projectile.damage)),
-                Projectile.knockBack * (releaseStage >= 3 ? 1.8f : 1.35f),
+                Projectile.knockBack * (1f + releaseStage * 0.2f),
                 Projectile.owner,
                 releaseStage);
 

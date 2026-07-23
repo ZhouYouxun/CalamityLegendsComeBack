@@ -43,6 +43,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
         private float holdOffsetFromArm = IdleHoldOffset;
         private float extraFrontArmRotation;
         private float extraBackArmRotation;
+        private readonly BalanceBlossomFlux damageBalance = new();
 
         public new string LocalizationCategory => "Projectiles.BlossomFlux";
         public override string Texture => "CalamityLegendsComeBack/Weapons/BlossomFlux/NewLegendBlossomFlux";
@@ -92,7 +93,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
                 return;
             }
 
-            Projectile.damage = Owner.GetWeaponDamage(Owner.HeldItem);
+            // 终结技（大招）伤害面板始终取「突击」战术的左键基础面板，无论当前选择的是哪种战术。
+            int assaultPanelBase = damageBalance.GetLeftClickBaseDamage(BlossomFluxChloroplastPresetType.Chlo_ABreak);
+            Projectile.damage = Math.Max(1, (int)Owner.GetTotalDamage(DamageClass.Ranged).ApplyTo(assaultPanelBase));
             Projectile.knockBack = Owner.HeldItem.knockBack;
 
             UpdateHeldProjectileVariables();
@@ -234,7 +237,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
             Vector2 forward = AimDirection;
             Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
             Vector2 backfieldCenter = Owner.Center - forward * BarrageSpawnBackDistance + Owner.velocity * 0.35f;
-            int shotDamage = Math.Max(1,(int)(Projectile.damage * new BalanceBlossomFlux().GetUltimateDamageMultiplier()));
+            int shotDamage = Math.Max(1,(int)(Projectile.damage * damageBalance.GetUltimateDamageMultiplier()));
             NPC lockedTarget = FindBarrageTarget(forward);
 
             for (int i = 0; i < BarrageVolleyCount; i++)

@@ -26,9 +26,9 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
         public override void AddRecipes()
         {
             CreateRecipe()
-                .AddIngredient(ItemID.SunStone)
-                .AddIngredient(ItemID.ChlorophyteBar, 50)
-                .AddIngredient(ItemID.LunarBar, 10)
+                .AddIngredient<CalamityMod.Items.Accessories.BloomStone>()
+                .AddIngredient<CalamityMod.Items.Placeables.Abyss.PlantyMush>(50)
+                .AddIngredient<CalamityMod.Items.Materials.PerennialBar>(10)
                 .AddTile(TileID.MythrilAnvil)
                 .Register();
         }

@@ -4,7 +4,6 @@ using CalamityMod.Graphics.Primitives;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Linq;
 using Terraria;
 using Terraria.Graphics.Shaders;
 using Terraria.ModLoader;
@@ -18,11 +17,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
     // 锚点每帧都重新读取武器当前位置和朝向，历史轨迹只存“相对武器锚点的偏移量”（相对运动而非绝对运动）。
     //
     // 相对旧的粒子版本：运动、生命周期、配色全部一字未改，只把“载体”从 DrawLineBetter 折线
-    // 换成了 NewSHPS 那套着色器图元拖尾（ImpFlameTrail + 外层本体色 / 内层高亮核心的双层小型绘制）。
+    // 换成了传统着色拖尾（CalamityMod:TrailStreak + SylvestaffStreak，参考 EndlessDevourJavOrbSmall），
+    // 配色仍用我们自己的 haloColor，宽度也保持本项目纤细口径。
     internal sealed class BFRightChargeHaloProj : ModProjectile, IPixelatedPrimitiveRenderer
     {
         private const int TrailPointCount = 10;
-        private const int CoreTrailPointCount = 6; // 内层核心只取靠头部的一小段，和 NewSHPS 的 Take(8)/14 同理
         private const float MinRotateSpeed = 0.08f;
         private const float MaxRotateSpeed = 0.5f;
         private const float ChargingFollowRate = 0.15f; // 蓄力中：转速比较灵敏地跟随蓄力进度
@@ -32,7 +31,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
         // 图元的宽度函数返回的是“半宽”，这里的取值对应旧版折线 1.4~5.5px 的观感（着色器拖尾边缘更软，略放宽一点）。
         private const float TrailHalfWidth = 3.6f;
-        private const float CoreHalfWidth = 2f;
 
         public GeneralDrawLayer LayerToRenderTo => GeneralDrawLayer.BeforeProjectiles;
         public new string LocalizationCategory => "Projectiles.BlossomFlux";
@@ -204,8 +202,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
         private float HaloWidthFunction(float completion, Vector2 _) => StreakWidth(completion, TrailHalfWidth);
 
-        private float HaloCoreWidthFunction(float completion, Vector2 _) => StreakWidth(completion, CoreHalfWidth);
-
         private static float StreakWidth(float completion, float maxBodyWidth)
         {
             const float curveRatio = 0.15f;
@@ -217,9 +213,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         }
 
         private Color HaloColorFunction(float completion, Vector2 _) => StreakColor(completion, haloColor);
-
-        // 核心层不像 NewSHPS 那样用纯白，而是把本体色往白提亮——配色仍然是我们自己的那套。
-        private Color HaloCoreColorFunction(float completion, Vector2 _) => StreakColor(completion, Color.Lerp(haloColor, Color.White, 0.7f));
 
         private Color StreakColor(float completion, Color baseColor)
         {
@@ -239,9 +232,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             if (trailPoints.Length < 4)
                 return;
 
-            // 外层：本体色拖尾
-            GameShaders.Misc["CalamityMod:ImpFlameTrail"].SetShaderTexture(
-                ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/ScarletDevilStreak"));
+            // 传统着色拖尾：参考 EndlessDevourJavOrbSmall 的 TrailStreak + SylvestaffStreak 单层描边流，
+            // 配色仍用我们自己的 haloColor，宽度也保持本项目的纤细口径（不照搬参考里明显偏粗的宽度）。
+            GameShaders.Misc["CalamityMod:TrailStreak"].SetShaderTexture(
+                ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/SylvestaffStreak"));
 
             PrimitiveRenderer.RenderTrail(
                 trailPoints,
@@ -251,27 +245,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                     (_, _) => Vector2.Zero,
                     true,
                     true,
-                    GameShaders.Misc["CalamityMod:ImpFlameTrail"]),
+                    GameShaders.Misc["CalamityMod:TrailStreak"]),
                 trailPoints.Length * 2);
-
-            // 内层：更短、更亮的核心拖尾
-            Vector2[] corePoints = trailPoints.Take(CoreTrailPointCount).ToArray();
-            if (corePoints.Length < 4)
-                return;
-
-            GameShaders.Misc["CalamityMod:ImpFlameTrail"].SetShaderTexture(
-                ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/SylvestaffStreak"));
-
-            PrimitiveRenderer.RenderTrail(
-                corePoints,
-                new PrimitiveSettings(
-                    HaloCoreWidthFunction,
-                    HaloCoreColorFunction,
-                    (_, _) => Vector2.Zero,
-                    true,
-                    true,
-                    GameShaders.Misc["CalamityMod:ImpFlameTrail"]),
-                corePoints.Length * 2);
         }
 
         // 先在XY平面取一个正圆上的点，绕X轴转 zRot 把这个圆“斜过来”一个角度，

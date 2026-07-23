@@ -1,4 +1,5 @@
 using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core;
+using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -174,6 +175,21 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                         Main.rand.NextFloat(0.6f, 1f));
                     trailDust.noGravity = true;
                 }
+
+                // 环绕护卫期慢慢往外撒星光。它们悬停时会互相连线，
+                // 在玩家周围织出一张缓慢流动的狮子座星网。
+                if (Main.rand.NextBool(26))
+                {
+                    LeonidStarlight.Spawn(
+                        Projectile.Center,
+                        angle.ToRotationVector2().RotatedBy(MathHelper.PiOver2) * Main.rand.NextFloat(1.4f, 2.8f),
+                        Color.Lerp(MeteorColor, LeonidVisualUtils.MoonViolet, 0.4f),
+                        LeonidStarlightShape.Mote,
+                        0.62f,
+                        hoverTime: 46,
+                        lifetime: 180,
+                        lanceSpeed: 16f);
+                }
                 return;
             }
 
@@ -217,8 +233,28 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                             // Play billiard clink sound
                             SoundEngine.PlaySound(SoundID.Item10 with { Volume = 0.7f, Pitch = 0.3f }, Projectile.Center);
 
+                            // 每一次撞球都在接触点溅开星光，反射次数越多溅得越亮 —— 动能循环看得见。
+                            LeonidStarlight.Spray(
+                                Projectile.Center,
+                                -moveDir,
+                                3 + BounceCount / 2,
+                                Color.Lerp(MeteorColor, LeonidVisualUtils.StarGold, BounceCount / 9f),
+                                LeonidStarlightShape.Mote,
+                                speed: 4.5f + BounceCount * 0.5f,
+                                spread: 1.1f,
+                                scale: 0.7f + BounceCount * 0.05f,
+                                hoverTime: 16,
+                                lifetime: 120,
+                                lanceSpeed: 15f);
+
                             if (BounceCount >= 7)
                             {
+                                // 第七次反射：星辉在原地炸成一圈完整的环，宣告它要回到玩家身边环绕。
+                                LeonidStarlight.Ring(Projectile.Center, 10, 26f, LeonidVisualUtils.GetReadyGold(),
+                                    LeonidStarlightShape.Shard, speed: 5.5f, scale: 0.85f, hoverTime: 24, lifetime: 170);
+                                LeonidStarlight.Spawn(Projectile.Center, Vector2.Zero, LeonidVisualUtils.StarGold,
+                                    LeonidStarlightShape.Halo, 1f, 14, 90, 12f, linksToSiblings: false);
+
                                 // Target nearest enemy and prepare to orbit after 4.5 frames (5 ticks)
                                 NPC target = FindClosestNPC(1000f);
                                 if (target != null)
@@ -305,6 +341,13 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                     Projectile.Center + Main.rand.NextVector2Circular(6f, 6f),
                     Projectile.velocity,
                     Main.rand.NextFloat(0.85f, 1.2f));
+            }
+
+            // 飞行途中偶尔掉一粒星屑（extraUpdates = 1，AI 每帧跑两次，所以分母放大一倍）。
+            if (Main.rand.NextBool(FromStealthRain ? 22 : 40))
+            {
+                LeonidStarlight.Shed(Projectile.Center, Projectile.velocity, MeteorColor,
+                    LeonidStarlightShape.Mote, FromStealthRain ? 0.72f : 0.58f);
             }
 
             Projectile.rotation += Projectile.velocity.X * 0.04f + 0.22f * System.Math.Sign(Projectile.velocity.X == 0f ? 1f : Projectile.velocity.X);
@@ -409,6 +452,33 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             LeonidVisualUtils.SpawnCelestialPulse(Projectile.Center, Projectile.oldVelocity, MeteorColor, FromStealthRain ? 1.35f : 1f, FromStealthRain ? 24 : 18);
             CLCBLightingBoltsSystem.Spawn_LeonidStarfieldMatrixBurst(Projectile.Center, FromStealthRain ? 1.8f : 1f);
 
+            // 炸开的流星把自己拆成一把星光碎片：先各自悬停，再挑最近的敌人扑上去。
+            LeonidStarlight.Burst(
+                Projectile.Center,
+                FromStealthRain ? 9 : 6,
+                MeteorColor,
+                LeonidStarlightShape.Shard,
+                speed: FromStealthRain ? 7.5f : 5.5f,
+                scale: FromStealthRain ? 1.05f : 0.8f,
+                hoverTime: 24,
+                lifetime: 150,
+                lanceSpeed: FromStealthRain ? 20f : 16f);
+
+            LeonidStarlight.Burst(
+                Projectile.Center,
+                FromStealthRain ? 6 : 4,
+                Color.Lerp(MeteorColor, LeonidVisualUtils.MoonWhite, 0.4f),
+                LeonidStarlightShape.Mote,
+                speed: 4f,
+                scale: 0.75f,
+                hoverTime: 32,
+                lifetime: 160);
+
+            if (FromStealthRain)
+            {
+                LeonidStarlight.Spawn(Projectile.Center, Vector2.Zero, LeonidVisualUtils.StarGold,
+                    LeonidStarlightShape.Halo, 0.9f, 12, 80, 12f, linksToSiblings: false);
+            }
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -473,11 +543,22 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             {
                 Vector2 off = (i * MathHelper.TwoPi / 8f).ToRotationVector2() * 2.6f;
                 Main.EntitySpriteDraw(texture, headPos + off, null,
-                    LeonidVisualUtils.NightSkyBlue with { A = 0 } * nsOpacity,
+                    LeonidVisualUtils.NightSkyBlue * nsOpacity,
                     Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0f);
             }
 
             LeonidVisualUtils.BeginAlphaBlendSpriteBatch();
+
+            // 「星光」拖尾：沿历史轨迹铺一串逐渐收缩、逐渐扭转的十字星芒。
+            // 贴图预乘 alpha，这里把 A 设成 0 就等价于加法混合，黑底不会露出来。
+            LeonidStarlight.DrawStarTrail(
+                Projectile.oldPos,
+                Projectile.Size,
+                Color.Lerp(MeteorColor, LeonidVisualUtils.MoonWhite, 0.45f),
+                Color.Lerp(MeteorColor, LeonidVisualUtils.DeepStratusBlue, 0.4f),
+                opacity * (FromStealthRain ? 0.62f : 0.46f),
+                0.052f * Projectile.scale,
+                Projectile.rotation);
 
             // Afterimage texture trail
             for (int i = 0; i < Projectile.oldPos.Length; i++)
@@ -500,6 +581,28 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
             Main.EntitySpriteDraw(texture, drawPosition, null, drawColor, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0f);
 
+            // 头部星芒：呼吸式明暗 + 反向自转，让流星尖端始终有一颗"星"在闪。
+            float twinkle = 0.72f + 0.28f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 5.4f + Projectile.whoAmI);
+            LeonidStarlight.DrawFlare(
+                Projectile.Center,
+                Color.Lerp(MeteorColor, LeonidVisualUtils.MoonWhite, 0.5f),
+                opacity * 0.7f * twinkle,
+                0.085f * Projectile.scale * (FromStealthRain ? 1.3f : 1f),
+                -Projectile.rotation * 0.35f);
+
+            if (IsOrbiting)
+            {
+                // 环绕护卫状态额外挂一圈小星，读起来像一枚正在自转的护卫星体。
+                LeonidStarlight.DrawOrbitingStars(
+                    Projectile.Center,
+                    LeonidVisualUtils.MoonViolet,
+                    opacity * 0.5f,
+                    0.03f,
+                    18f,
+                    3,
+                    2.4f);
+            }
+
             return false;
         }
 
@@ -511,6 +614,10 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitY);
             LeonidVisualUtils.SpawnBloomBurst(Projectile.Center, MeteorColor, 0.68f, 16);
             LeonidVisualUtils.SpawnCelestialPulse(Projectile.Center, direction, MeteorColor, 0.72f, 16);
+
+            // 发射瞬间沿出膛方向甩出一小把星光，它们会悬停片刻再各自锁定扑出去。
+            LeonidStarlight.Spray(Projectile.Center, -direction, 5, MeteorColor, LeonidStarlightShape.Mote,
+                speed: 5.5f, spread: 0.9f, scale: 0.85f, hoverTime: 20, lifetime: 130, lanceSpeed: 15f);
 
             for (int i = 0; i < 7; i++)
             {

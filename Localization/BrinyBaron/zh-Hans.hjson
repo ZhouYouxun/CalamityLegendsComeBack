@@ -72,7 +72,11 @@ Mods: {
 					Dash2_Lock: "[c/DDA0FF:暂未解锁，需击败血肉之墙]"
 					Dash3_Unlock: "[c/66FFAA:已解锁：快刀斩]"
 					Dash3_Lock: "[c/99CCFF:暂未解锁，需击败血肉之墙]"
-					BB_Passive: "[c/9AEF9E:被动【快刀斩】突进强化读取当前盾牌设备。状态：{0}；背包右键切换。]"
+					BB_Passive:
+						'''
+						[c/9AEF9E:被动【快刀斩】突进强化读取当前盾牌设备。状态：]{0}[c/9AEF9E:；背包右键切换。]
+						{1}
+						'''
 					PassiveStateOn: "[c/7BFFB7:开启]"
 					PassiveStateOff: "[c/F0D070:关闭]"
 					PassiveDevice_None: "[c/7F8FA6:当前未读取到盾冲设备。]"

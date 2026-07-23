@@ -1,0 +1,49 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		NPCs: {
+			LegendMerchant: {
+				DisplayName: 传奇商人
+				Bestiary: 一位游走于各个世界的商人，收集并贩卖失落的传奇兵器、BOSS的召唤信物，乃至德莱多恩的密码破译技术。
+
+				Name: {
+					Name1: 卡莱尔
+					Name2: 薇拉
+					Name3: 奥登
+					Name4: 洛恩
+				}
+
+				Chat: {
+					Normal1: 传奇武器、BOSS召唤物、破译机套件——只要你付得起，我这儿都有。
+					Normal2: 点下面的按钮切换货架，别嫌我货多。
+					Normal3: 那些传奇兵器？开局就卖，能不能驾驭就看你自己了。
+					Normal4: 召唤物得看你打到哪儿了，进度不到我可不敢卖给你。
+				}
+
+				ShopButton: {
+					LegendWeapons: 传奇武器
+					BossSummons: BOSS召唤物
+					Draedon: 破译机套件
+				}
+
+				SwitchShopButton: 切换货架
+
+				SwitchChat: {
+					LegendWeapons: 已切到【传奇武器】货架。
+					BossSummons: 已切到【BOSS召唤物】货架。
+					Draedon: 已切到【破译机套件】货架。
+				}
+
+				TownNPCMood: {
+					// Content: 我很满足。
+					// NoHome: 我讨厌没有家。
+					// FarFromHome: 我离家太远了。
+					// LoveSpace: 我非常喜欢有这么大的空间。
+					// DislikeCrowded: 我不喜欢这么拥挤。
+					// HateCrowded: 我讨厌这么拥挤。
+					// LikeNPC_Princess: 我喜欢 {NPCName}。
+					// Princess_LovesNPC: 我喜欢 {NPCName}。
+				}
+			}
+		}
+	}
+}

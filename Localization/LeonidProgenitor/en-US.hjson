@@ -16,12 +16,12 @@ Mods: {
 					UltimateSkill: "[c/FFE85A:Ultimate (Press {0}): Opens a gravity field that gathers a falling meteor storm. Requires full Ultimate Energy and Stealth.]"
 					Passives: "[c/BFAFFF:Kinetic Cycle: Reflected left-click comets accelerate, grow stronger, and return to orbit after their seventh reflection.]"
 					ConstellationStatus: "[c/FFE85A:Leo Starlight: {0} available | {1} spent | {2} earned | {3} to complete]"
-					ConstellationHint: "[c/B8A8FF:Press {0} while held, or press {0} on this weapon in your inventory, to open the Leo Matrix.]"
+					ConstellationHint: "[c/B8A8FF:Press {0} while held, or press {0} on this weapon in your inventory, to unfold the Leonid star chart.]"
 					LegendaryHint: "[c/BABABA:Hold Shift to read the legendary record]"
 					LegendaryText: "[c/66E6FF:Meteorfall no longer searches your inventory for metal. Each major foe overcome becomes a starlight in the Lion's sky.]"
 
 					Constellation: {
-						Title: LEO // LEONID MATRIX
+						Title: THE LEONID SKY
 						Subtitle: Regulus is the heart. Any principal star may be awakened from it.
 						Status: Available {0}    Spent {1}    Earned {2}    Full map {3}
 						HoverHint: Hover a principal star to read its celestial imprint.

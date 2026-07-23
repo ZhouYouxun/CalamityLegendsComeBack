@@ -1,0 +1,50 @@
+========================================
+  传奇商人 (LegendMerchant) 自制贴图说明
+========================================
+
+【现状】
+目前这个城镇NPC是「临时借用」灾厄模组盗贼(Bandit)的贴图组的。
+代码里通过下面这行指定：
+
+    public override string Texture => "CalamityMod/NPCs/TownNPCs/Bandit";
+
+[AutoloadHead] 特性会自动去同一路径找 Bandit_Head 作为小地图头像。
+所以现在不放任何贴图也能正常显示（长得就是盗贼）。
+
+
+【等你画好自己的贴图后，需要往这个文件夹里放这几个文件】
+
+1) LegendMerchant.png            —— 主贴图（帧动画大图，必需）
+   · 尺寸参考盗贼：40 × 1334 像素
+   · 这是一张「竖排」的帧动画：共 23 帧，每帧 40 × 58 像素，从上往下依次排列
+   · 帧顺序沿用原版「派对女孩(PartyGirl)」的逻辑（代码里 AnimationType = NPCID.PartyGirl）
+     —— 依次是：站立 / 行走循环 / 说话 / 眨眼 等，照着盗贼那张图的排布画即可
+   · 宽高可以自己定，但必须保证「总高度 = 单帧高度 × 23」，否则动画会错位
+
+2) LegendMerchant_Head.png       —— 小地图头像（必需）
+   · 尺寸参考盗贼：24 × 22 像素左右的小图
+   · 文件名必须是「主贴图名 + _Head」，即 LegendMerchant_Head.png
+
+3) LegendMerchant_Party.png      —— 派对装扮（可选，不需要可不放）
+   · 目前代码没有用到派对备用贴图；如果以后想要，再单独加绘制逻辑
+
+
+【放好文件后，还需要改一行代码】
+打开 TownNPC/LegendMerchant.cs，把：
+
+    public override string Texture => "CalamityMod/NPCs/TownNPCs/Bandit";
+
+改成指向本文件夹（注意路径大小写和中文要一致）：
+
+    public override string Texture => "CalamityLegendsComeBack/TownNPC/自制贴图放这里/LegendMerchant";
+
+改完后：
+  · 主贴图会自动读取 LegendMerchant.png
+  · 小地图头像会自动读取 LegendMerchant_Head.png
+就完成换皮了。
+
+
+【一句话总结要放的文件】
+  必需：LegendMerchant.png（40×1334，23帧竖排）
+  必需：LegendMerchant_Head.png（约 24×22）
+  可选：LegendMerchant_Party.png

@@ -47,6 +47,7 @@ Mods: {
 		Projectiles: {
 			Vesuvius: {
 				VesuviusLeftHoldout.DisplayName: Vesuvius
+				VesuviusArcOrb.DisplayName: Volcanic Arc Orb
 				VesuviusMoltenAsteroid.DisplayName: Molten Asteroid
 				VesuviusVolcanicAsh.DisplayName: Volcanic Ash
 				VesuviusVolcanicBomb.DisplayName: Volcanic Bomb

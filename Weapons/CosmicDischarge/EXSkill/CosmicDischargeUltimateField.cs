@@ -16,13 +16,17 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
     {
         private const int ChargeDuration = 60;
         private const float RiftBurstRadius = 25f * 16f;
+        private const float ShockRadius = 200f * 16f;
         private const float FieldRadius = 8f * 16f;
+        private const int ShockSlowDuration = 60;
+        private const float ShockSpeedMultiplier = 0.48f;
 
         public new string LocalizationCategory => "Projectiles.Melee";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         private ref float Time => ref Projectile.ai[0];
         private Player Owner => Main.player[Projectile.owner];
+        private int shockVisualTimer;
 
         public override void SetDefaults()
         {
@@ -48,6 +52,8 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             }
 
             Time++;
+            if (shockVisualTimer > 0)
+                shockVisualTimer--;
             Projectile.Center = Owner.Center;
             Projectile.Opacity = Utils.GetLerpValue(0f, 18f, Time, true) * Utils.GetLerpValue(0f, 25f, Projectile.timeLeft, true);
             Owner.AddBuff(ModContent.BuffType<CosmicDischargeUltimateGuardBuff>(), 4);
@@ -71,47 +77,81 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             if (Time == ChargeDuration + 1)
                 ApplyRiftBurst();
 
-            SlowEnemiesInField();
+            int fieldTime = (int)(Time - ChargeDuration);
+            if (IsShockPulseTime(fieldTime))
+                EmitShockwave();
+
             SpawnFieldDust();
         }
 
+        // Each shock lasts one second, then leaves a full two-second no-slow window before the next.
+        // Four pulses therefore land at roughly 0, 3, 6, and 9 seconds after the charge finishes.
+        private static bool IsShockPulseTime(int fieldTime) => fieldTime is 1 or 181 or 361 or 541;
+
         private void ApplyRiftBurst()
         {
-            foreach (NPC npc in Main.ActiveNPCs)
+            if (Main.netMode != NetmodeID.MultiplayerClient)
             {
-                if (!npc.active || npc.friendly || npc.dontTakeDamage || Vector2.DistanceSquared(npc.Center, Projectile.Center) > RiftBurstRadius * RiftBurstRadius)
-                    continue;
+                foreach (NPC npc in Main.ActiveNPCs)
+                {
+                    if (!npc.active || npc.friendly || npc.dontTakeDamage || Vector2.DistanceSquared(npc.Center, Projectile.Center) > RiftBurstRadius * RiftBurstRadius)
+                        continue;
 
-                CosmicDischargeCommon.ApplyDoGDebuffs(npc, 10 * 60);
+                    CosmicDischargeCommon.ApplyDoGDebuffs(npc, 10 * 60);
+                }
+
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    Projectile.Center,
+                    Vector2.Zero,
+                    ModContent.ProjectileType<CosmicDischargeDoGConvergenceExplosion>(),
+                    Projectile.damage,
+                    Projectile.knockBack,
+                    Projectile.owner,
+                    0f,
+                    RiftBurstRadius,
+                    1f);
             }
+
+            CosmicDischargeCommon.SpawnUltimateBurst(Projectile.GetSource_FromThis(), Owner, Projectile.Center, Projectile.damage, Projectile.knockBack);
 
             if (!Main.dedServ)
             {
                 SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DevourerRiftOpen") { Volume = 0.82f, Pitch = -0.05f }, Projectile.Center);
                 SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DevourerSpawn") { Volume = 0.46f, Pitch = 0.18f }, Projectile.Center);
-                CosmicDischargeCommon.SpawnUltimateBurst(Projectile.GetSource_FromThis(), Owner, Projectile.Center, Projectile.damage, Projectile.knockBack);
                 ApplyScreenShake(18f);
             }
         }
 
-        private void SlowEnemiesInField()
+        private void EmitShockwave()
         {
-            foreach (NPC npc in Main.ActiveNPCs)
+            shockVisualTimer = 30;
+            if (Main.netMode != NetmodeID.MultiplayerClient)
             {
-                if (!npc.active || npc.friendly || npc.dontTakeDamage)
-                    continue;
+                float radiusSquared = ShockRadius * ShockRadius;
+                foreach (NPC npc in Main.ActiveNPCs)
+                {
+                    if (!npc.active || npc.friendly || Vector2.DistanceSquared(npc.Center, Projectile.Center) > radiusSquared)
+                        continue;
 
-                npc.velocity *= 0.85f;
-                CosmicDischargeCommon.ApplyDoGDebuffs(npc, 90);
+                    npc.GetGlobalNPC<CosmicDischargeShockwaveSlowGlobalNPC>().ApplyShockwave(npc, ShockSlowDuration, ShockSpeedMultiplier);
+                }
+
+                for (int i = 0; i < Main.maxProjectiles; i++)
+                {
+                    Projectile proj = Main.projectile[i];
+                    if (!proj.active || proj.friendly || !proj.hostile || Vector2.DistanceSquared(proj.Center, Projectile.Center) > radiusSquared)
+                        continue;
+
+                    proj.GetGlobalProjectile<CosmicDischargeShockwaveSlowGlobalProjectile>().ApplyShockwave(proj, ShockSlowDuration, ShockSpeedMultiplier);
+                }
             }
 
-            for (int i = 0; i < Main.maxProjectiles; i++)
+            if (!Main.dedServ)
             {
-                Projectile proj = Main.projectile[i];
-                if (!proj.active || proj.friendly || !proj.hostile)
-                    continue;
-
-                proj.velocity *= 0.85f;
+                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DevourerAttack") { Volume = 0.48f, Pitch = -0.12f, MaxInstances = 2 }, Projectile.Center);
+                CosmicDischargeCommon.SpawnRiftBurst(Projectile.Center, RiftTier.Heavy, default, CosmicDischargeCommon.DoGSpecialColor);
+                ApplyScreenShake(7.5f);
             }
         }
 
@@ -137,6 +177,8 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
             Main.spriteBatch.SetBlendState(BlendState.Additive);
 
+            DrawConstellationField(chargeInterpolant, fieldOpacity);
+
             if (Time <= ChargeDuration)
             {
                 Texture2D star = ModContent.Request<Texture2D>("CalamityMod/Projectiles/StarProj").Value;
@@ -160,10 +202,54 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             Main.EntitySpriteDraw(portal, drawPosition, null, CosmicDischargeCommon.Transparent(CosmicDischargeCommon.RiftMagenta) * 0.34f * fieldOpacity, -portalRotation * 0.7f, portalOrigin, 0.42f * pulse, SpriteEffects.None);
 
             DrawDoGFireFieldRing(FieldRadius * pulse, fieldOpacity);
+            if (shockVisualTimer > 0)
+                DrawShockwaveRing();
 
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
 
             return false;
+        }
+
+        private void DrawConstellationField(float chargeProgress, float opacity)
+        {
+            const int nodeCount = 9;
+            Texture2D pixel = Terraria.GameContent.TextureAssets.MagicPixel.Value;
+            Texture2D star = ModContent.Request<Texture2D>("CalamityMod/Projectiles/StarProj").Value;
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Vector2[] nodes = new Vector2[nodeCount];
+            float radius = Time <= ChargeDuration
+                ? MathHelper.Lerp(34f, FieldRadius * 0.86f, chargeProgress)
+                : FieldRadius * 0.86f;
+            float rotation = Main.GlobalTimeWrappedHourly * (Time <= ChargeDuration ? 1.8f : 0.42f) + Projectile.identity * 0.21f;
+            float pulse = 0.88f + 0.12f * MathF.Sin(Main.GlobalTimeWrappedHourly * 4.5f);
+
+            for (int i = 0; i < nodeCount; i++)
+            {
+                float angle = MathHelper.TwoPi * i / nodeCount + rotation;
+                float unevenRadius = radius * (i % 3 == 0 ? 1f : 0.72f);
+                nodes[i] = Projectile.Center + new Vector2(MathF.Cos(angle), MathF.Sin(angle) * 0.7f) * unevenRadius;
+            }
+
+            for (int i = 0; i < nodeCount; i++)
+            {
+                Vector2 start = nodes[i] - Main.screenPosition;
+                Vector2 end = nodes[(i + (i % 2 == 0 ? 2 : 1)) % nodeCount] - Main.screenPosition;
+                Vector2 segment = end - start;
+                Color accent = Color.Lerp(CosmicDischargeCommon.RiftLightBlue, CosmicDischargeCommon.RiftMagenta, i / (float)(nodeCount - 1));
+                Main.EntitySpriteDraw(
+                    pixel,
+                    start,
+                    new Rectangle(0, 0, 1, 1),
+                    accent * (0.2f * opacity),
+                    segment.ToRotation(),
+                    new Vector2(0f, 0.5f),
+                    new Vector2(segment.Length(), 1.35f + chargeProgress),
+                    SpriteEffects.None);
+
+                float starScale = (0.1f + (i % 3 == 0 ? 0.055f : 0f)) * pulse * MathHelper.Lerp(0.5f, 1f, opacity);
+                Main.EntitySpriteDraw(bloom, start, null, accent * (0.18f * opacity), 0f, bloom.Size() * 0.5f, starScale * 2.2f, SpriteEffects.None);
+                Main.EntitySpriteDraw(star, start, null, Color.White * (0.68f * opacity), -rotation * 1.4f + i, star.Size() * 0.5f, starScale, SpriteEffects.None);
+            }
         }
 
         private void DrawDoGFireFieldRing(float radius, float opacity)
@@ -183,6 +269,28 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             GameShaders.Misc["CalamityMod:ImpFlameTrail"].SetShaderTexture(ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/ScarletDevilStreak"));
             PrimitiveRenderer.RenderTrail(ring, new PrimitiveSettings(OuterWidth, OuterColor, smoothen: true, pixelate: false, shader: GameShaders.Misc["CalamityMod:ImpFlameTrail"]), ring.Length + 8);
 
+            GameShaders.Misc["CalamityMod:ImpFlameTrail"].SetShaderTexture(ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/SylvestaffStreak"));
+            PrimitiveRenderer.RenderTrail(ring, new PrimitiveSettings(InnerWidth, InnerColor, smoothen: true, pixelate: false, shader: GameShaders.Misc["CalamityMod:ImpFlameTrail"]), ring.Length + 8);
+        }
+
+        private void DrawShockwaveRing()
+        {
+            float completion = 1f - shockVisualTimer / 30f;
+            float radius = MathHelper.Lerp(120f, ShockRadius, MathF.Sqrt(completion));
+            Vector2[] ring = new Vector2[56];
+            for (int i = 0; i < ring.Length; i++)
+            {
+                float angle = MathHelper.TwoPi * i / (ring.Length - 1);
+                ring[i] = Projectile.Center + angle.ToRotationVector2() * radius;
+            }
+
+            float OuterWidth(float progress, Vector2 _) => MathHelper.Lerp(38f, 12f, completion) * (1f - progress * 0.35f);
+            Color OuterColor(float progress, Vector2 _) => Color.Lerp(CosmicDischargeCommon.RiftLightBlue, Color.Transparent, progress) * (0.68f * (1f - completion));
+            float InnerWidth(float progress, Vector2 _) => MathHelper.Lerp(15f, 5f, completion) * (1f - progress * 0.45f);
+            Color InnerColor(float progress, Vector2 _) => Color.Lerp(CosmicDischargeCommon.RiftMagenta, Color.Transparent, progress) * (0.72f * (1f - completion));
+
+            GameShaders.Misc["CalamityMod:ImpFlameTrail"].SetShaderTexture(ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/ScarletDevilStreak"));
+            PrimitiveRenderer.RenderTrail(ring, new PrimitiveSettings(OuterWidth, OuterColor, smoothen: true, pixelate: false, shader: GameShaders.Misc["CalamityMod:ImpFlameTrail"]), ring.Length + 8);
             GameShaders.Misc["CalamityMod:ImpFlameTrail"].SetShaderTexture(ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/SylvestaffStreak"));
             PrimitiveRenderer.RenderTrail(ring, new PrimitiveSettings(InnerWidth, InnerColor, smoothen: true, pixelate: false, shader: GameShaders.Misc["CalamityMod:ImpFlameTrail"]), ring.Length + 8);
         }

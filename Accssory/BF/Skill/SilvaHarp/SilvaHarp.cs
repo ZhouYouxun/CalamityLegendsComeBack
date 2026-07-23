@@ -37,10 +37,10 @@ namespace CalamityLegendsComeBack.Accssory.BF.SilvaHarp
         {
             CreateRecipe()
                 .AddIngredient<FairyDance.BadSeed>()
-                .AddIngredient(ItemID.Feather, 12)
-                .AddIngredient(ItemID.ChlorophyteBar, 30)
+                .AddIngredient<CalamityMod.Items.Materials.EffulgentFeather>(12)
+                .AddIngredient<CalamityMod.Items.Placeables.Abyss.PlantyMush>(30)
                 .AddIngredient(ItemID.GoldBar, 12)
-                .AddIngredient(ItemID.SoulofLight, 3)
+                .AddIngredient<CalamityMod.Items.Materials.AscendantSpiritEssence>(3)
                 .AddTile<CosmicAnvil>()
                 .Register();
         }

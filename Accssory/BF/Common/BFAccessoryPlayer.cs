@@ -101,21 +101,30 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
             if (SeedOfSilvaEquipped && Player.whoAmI == Main.myPlayer)
                 EnsureSilvaSeeds();
 
-            if (!FairyDanceEquipped)
+            // 妖精舞：维持并驱动三只仙灵。虹灵舞不再继承这些仙灵，因此单独判断。
+            if (FairyDanceEquipped)
+            {
+                if (Player.whoAmI == Main.myPlayer)
+                {
+                    EnsureFairies();
+                    HandleFairyDashInput();
+                }
+            }
+            else
             {
                 fairyAttackTimer = -1;
-                blossomFluxHitCounter = 0;
-                return;
             }
 
-            if (Player.whoAmI == Main.myPlayer)
+            // 虹灵舞：只保留自己的七彩草蛉与大回复机制，不依赖妖精舞的仙灵是否装备。
+            if (RainbowSpiritDanceEquipped)
             {
-                EnsureFairies();
-                HandleFairyDashInput();
+                if (!largeHealHandledThisFrame && Player.statLife - lifeAtFrameStart >= 200)
+                    HandleLargeHeal();
             }
-
-            if (RainbowSpiritDanceEquipped && !largeHealHandledThisFrame && Player.statLife - lifeAtFrameStart >= 200)
-                HandleLargeHeal();
+            else
+            {
+                blossomFluxHitCounter = 0;
+            }
         }
 
         public override void UpdateLifeRegen()
@@ -279,14 +288,18 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
             }
 
             fairyAttackTimer++;
+            // 三只仙灵各自错开 1/3 周期的攻击节拍：一只在突进时，另两只处在不同的突进/复位阶段，
+            // 攻击时间明显错开；突进结束后不回到玩家身边，而是从半途直接再突进，形成连续的“舞”。
+            int cadence = FairyDanceWisp.AttackCadence;
             foreach (Projectile projectile in Main.ActiveProjectiles)
             {
                 if (projectile.owner != Player.whoAmI || projectile.ModProjectile is not FairyDanceWisp fairy)
                     continue;
 
                 int variant = Utils.Clamp((int)projectile.ai[0], 0, FairyDanceWisp.FairyCount - 1);
-                int launchOffset = variant * 2;
-                if (fairyAttackTimer >= launchOffset && (fairyAttackTimer - launchOffset) % 5 == 0)
+                int phaseOffset = variant * cadence / FairyDanceWisp.FairyCount;
+                int localTick = fairyAttackTimer - phaseOffset;
+                if (localTick >= 0 && localTick % cadence == 0)
                     fairy.TriggerDash(Main.MouseWorld, rightHeld ? 30 : 20);
             }
         }
@@ -331,13 +344,14 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
 
         private bool ConsumeFairy()
         {
+            // 虹灵舞不再有妖精舞的仙灵，大回复改为消耗自己的一只七彩草蛉。
+            int lacewingType = ModContent.ProjectileType<RainbowSpiritLacewing>();
             foreach (Projectile projectile in Main.ActiveProjectiles)
             {
-                if (projectile.owner != Player.whoAmI || projectile.ModProjectile is not FairyDanceWisp)
+                if (projectile.owner != Player.whoAmI || projectile.type != lacewingType)
                     continue;
 
                 projectile.Kill();
-                fairyRespawnTimer = 60;
                 return true;
             }
 
@@ -346,6 +360,8 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
 
         private void EnsureSilvaSeeds()
         {
+            // 所有花随当前战术转化为同一种：手持武器时取当前战术对应花并盛开，未手持武器时按默认战术显示为 4 颗种子。
+            int desiredType = SeedOfSilvaFlowerProjectile.GetFlowerTypeForPreset(CurrentPreset);
             bool[] existingSlots = new bool[SeedOfSilvaFlowerProjectile.FlowerCount];
 
             foreach (Projectile projectile in Main.ActiveProjectiles)
@@ -356,8 +372,9 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
                 if (projectile.ModProjectile is not SeedOfSilvaFlowerProjectile flower)
                     continue;
 
+                // 类型不符（战术切换后残留的旧花）或槽位重复/越界都直接清掉，下面会按当前战术重新生成。
                 int slot = flower.CurrentSlot;
-                if (slot < 0 || slot >= existingSlots.Length || existingSlots[slot])
+                if (projectile.type != desiredType || slot < 0 || slot >= existingSlots.Length || existingSlots[slot])
                 {
                     projectile.Kill();
                     continue;
@@ -375,10 +392,11 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
                     Player.GetSource_FromThis(),
                     Player.Center,
                     Vector2.Zero,
-                    SeedOfSilvaFlowerProjectile.GetFlowerType(i),
+                    desiredType,
                     0,
                     0f,
-                    Player.whoAmI);
+                    Player.whoAmI,
+                    i); // ai[0] = 环绕槽位
             }
         }
     }

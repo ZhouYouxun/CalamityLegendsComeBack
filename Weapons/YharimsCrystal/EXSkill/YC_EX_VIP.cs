@@ -119,29 +119,18 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
             float charge = MathHelper.Clamp(Timer / CrystalChargeTime, 0f, 1f);
             EmitCrystalChargeFX(owner, aim, charge);
 
-            if (Timer == CrystalChargeTime)
+            if (Timer == CrystalChargeTime && Projectile.owner == Main.myPlayer)
             {
-                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/Providence/ProvidenceHolyRay") { Volume = 0.66f, Pitch = -0.16f }, owner.Center);
-                owner.Calamity().GeneralScreenShakePower = Math.Max(owner.Calamity().GeneralScreenShakePower, 7f);
+                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/Providence/ProvidenceHolyRay") { Volume = 0.9f, Pitch = -0.12f }, owner.Center);
+                SoundEngine.PlaySound(SoundID.Item162 with { Volume = 0.72f, Pitch = 0.1f }, owner.Center);
+                owner.Calamity().GeneralScreenShakePower = Math.Max(owner.Calamity().GeneralScreenShakePower, 10f);
+
+                // Fire elliptical ring of C-class lasers (double size/thickness, single-target instant lock)
+                SpawnEllipticalLaserRing(owner, aim);
             }
 
-            if (Timer >= CrystalChargeTime && Timer <= CrystalChargeTime + CrystalStormTime && Projectile.owner == Main.myPlayer)
-            {
-                int interval = balance.GetRightLaserTier() >= YCRightLaserVisualTier.Providence ? 4 : 5;
-                if ((int)(Timer - CrystalChargeTime) % interval == 0)
-                {
-                    SpawnStormLaser(owner);
-                }
-
-                // Rain down auric fireballs (meteors)
-                int meteorInterval = 10;
-                if ((int)(Timer - CrystalChargeTime) % meteorInterval == 0)
-                {
-                    SpawnMeteor(owner);
-                }
-            }
-
-            if (Timer > CrystalChargeTime + CrystalStormTime + 24)
+            // Kill after a brief cleanup window
+            if (Timer > CrystalChargeTime + 24)
                 Projectile.Kill();
         }
 
@@ -243,32 +232,94 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
             }
         }
 
-        private void SpawnStormLaser(Player owner)
+        private void SpawnEllipticalLaserRing(Player owner, Vector2 aim)
         {
+            // Find lock-on target: nearest enemy to mouse/aim point within 1200px
             Vector2 focus = NewLegendYharimsCrystal.GetMouseWorld(owner);
-            NPC target = focus.ClosestNPCAt(1150f);
-            if (target != null)
-                focus = Vector2.Lerp(focus, target.Center, 0.72f);
-
-            float angle = Main.rand.NextFloat(MathHelper.TwoPi);
-            float distance = Main.rand.NextFloat(720f, 1220f);
-            Vector2 spawn = focus + angle.ToRotationVector2() * distance;
-            Vector2 direction = (focus - spawn).SafeNormalize(Vector2.UnitY).RotatedByRandom(0.16f);
-
-            int laser = Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(),
-                spawn,
-                direction,
-                ModContent.ProjectileType<YC_EXStormLaser>(),
-                Math.Max(1, (int)(Projectile.damage * 0.36f)),
-                Projectile.knockBack * 0.2f,
-                Projectile.owner,
-                (float)balance.GetRightLaserTier());
-
-            if (Main.projectile.IndexInRange(laser))
+            NPC lockTarget = null;
+            float lockDistSq = 1200f * 1200f;
+            for (int i = 0; i < Main.maxNPCs; i++)
             {
-                YharimsCrystalHellBladeGlobalProjectile.Mark(Main.projectile[laser], YCWeaponForm.Crystal);
-                Main.projectile[laser].CritChance = Projectile.CritChance;
+                NPC npc = Main.npc[i];
+                if (!npc.CanBeChasedBy(Projectile))
+                    continue;
+                float distSq = Vector2.DistanceSquared(focus, npc.Center);
+                if (distSq < lockDistSq)
+                {
+                    lockDistSq = distSq;
+                    lockTarget = npc;
+                }
+            }
+
+            if (lockTarget == null)
+                return;
+
+            Vector2 targetPos = lockTarget.Center;
+
+            // Elliptical layout: semiMajor along aim axis, semiMinor perpendicular
+            // Titanium-shard style: spawns from positions on an ellipse, all pointing inward at the target
+            int laserCount = 10;
+            float semiMajor = 420f;
+            float semiMinor = 200f;
+            Vector2 aimDir = aim.SafeNormalize(Vector2.UnitX * owner.direction);
+            Vector2 perpDir = aimDir.RotatedBy(MathHelper.PiOver2);
+
+            for (int i = 0; i < laserCount; i++)
+            {
+                float angle = MathHelper.TwoPi * i / laserCount;
+                float ex = (float)Math.Cos(angle) * semiMajor;
+                float ey = (float)Math.Sin(angle) * semiMinor;
+                Vector2 spawnOffset = aimDir * ex + perpDir * ey;
+                Vector2 spawnPos = targetPos + spawnOffset;
+
+                // Instant lock-on direction to target
+                Vector2 direction = (targetPos - spawnPos).SafeNormalize(Vector2.UnitY);
+
+                int laser = Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    spawnPos,
+                    direction,
+                    ModContent.ProjectileType<YC_EXStormLaser>(),
+                    Math.Max(1, (int)(Projectile.damage * 0.72f)),
+                    Projectile.knockBack * 0.25f,
+                    Projectile.owner,
+                    (float)balance.GetRightLaserTier());
+
+                if (Main.projectile.IndexInRange(laser))
+                {
+                    YharimsCrystalHellBladeGlobalProjectile.Mark(Main.projectile[laser], YCWeaponForm.Crystal);
+                    Main.projectile[laser].CritChance = Projectile.CritChance;
+                    Main.projectile[laser].scale *= 2.0f; // Double size / thickness
+                    Main.projectile[laser].penetrate = 1;  // Single target hit
+                }
+            }
+
+            if (!Main.dedServ)
+            {
+                for (int i = 0; i < 32; i++)
+                {
+                    Vector2 vel = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(4f, 18f);
+                    Dust d = Dust.NewDustPerfect(targetPos + Main.rand.NextVector2Circular(22f, 22f), DustID.GoldFlame, vel, 0,
+                        Main.rand.NextBool(3) ? Color.White : new Color(255, 210, 70), Main.rand.NextFloat(0.9f, 1.5f));
+                    d.noGravity = true;
+                }
+                GeneralParticleHandler.SpawnParticle(new StrongBloom(targetPos, Vector2.Zero, new Color(255, 220, 90), 1.2f, 18));
+                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(targetPos, Vector2.Zero, new Color(255, 218, 92), Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.12f, 2.6f, 22));
+
+                for (int i = 0; i < laserCount; i++)
+                {
+                    float angle = MathHelper.TwoPi * i / laserCount;
+                    Vector2 ex = aimDir * (float)Math.Cos(angle) * semiMajor;
+                    Vector2 ey = perpDir * (float)Math.Sin(angle) * semiMinor;
+                    Vector2 from = targetPos + ex + ey;
+                    GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                        from,
+                        (targetPos - from).SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(8f, 16f),
+                        false,
+                        Main.rand.Next(14, 22),
+                        Main.rand.NextFloat(0.4f, 0.7f),
+                        Main.rand.NextBool(3) ? Color.White : new Color(255, 210, 70)));
+                }
             }
         }
 
@@ -447,55 +498,54 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
                 {
                     float charge = MathHelper.Clamp(Timer / CrystalChargeTime, 0f, 1f);
 
-                    Texture2D droneTexture = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/YharimsCrystal/图片/默认战机2").Value;
+                    Texture2D prism = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/YharimsCrystal/YharimsCrystalPrism").Value;
                     Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-                    Texture2D pixel = Terraria.GameContent.TextureAssets.MagicPixel.Value;
+                    Texture2D ring = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
+                    int prismFrameHeight = prism.Height / 6;
+                    int prismFrame = (int)(Main.GameUpdateCount / 4) % 6;
+                    Rectangle prismSource = new Rectangle(0, prismFrame * prismFrameHeight, prism.Width, prismFrameHeight);
 
                     Main.spriteBatch.SetBlendState(BlendState.Additive);
 
+                    // 6 crystal prisms orbit and converge toward the player
                     for (int i = 0; i < 6; i++)
                     {
-                        float angle = Main.GlobalTimeWrappedHourly * 8f + i * MathHelper.TwoPi / 6f;
-                        float radius = MathHelper.Lerp(220f, 40f, charge);
+                        float angle = Main.GlobalTimeWrappedHourly * 6f + i * MathHelper.TwoPi / 6f;
+                        float radius = MathHelper.Lerp(240f, 36f, charge);
                         Vector2 orbitPos = owner.Center + angle.ToRotationVector2() * radius;
                         Vector2 drawPos = orbitPos - Main.screenPosition;
 
+                        // Connection line to player
                         Vector2 toPlayer = owner.Center - orbitPos;
-                        float lineRot = toPlayer.ToRotation();
+                        Texture2D pixel = Terraria.GameContent.TextureAssets.MagicPixel.Value;
                         Main.EntitySpriteDraw(
-                            pixel,
-                            drawPos,
-                            new Rectangle(0, 0, 1, 1),
-                            Color.Gold * 0.45f * charge,
-                            lineRot,
-                            new Vector2(0f, 0.5f),
-                            new Vector2(toPlayer.Length(), 2f),
-                            SpriteEffects.None,
-                            0);
+                            pixel, drawPos, new Rectangle(0, 0, 1, 1),
+                            new Color(255, 210, 80, 0) * 0.42f * charge,
+                            toPlayer.ToRotation(), new Vector2(0f, 0.5f),
+                            new Vector2(toPlayer.Length(), 1.5f), SpriteEffects.None);
 
-                        Main.EntitySpriteDraw(
-                            bloom,
-                            drawPos,
-                            null,
-                            Color.Orange * 0.5f * charge,
-                            0f,
-                            bloom.Size() * 0.5f,
-                            0.35f,
-                            SpriteEffects.None,
-                            0);
+                        // Crystal bloom
+                        Main.EntitySpriteDraw(bloom, drawPos, null,
+                            new Color(255, 140, 40, 0) * 0.5f * charge, 0f, bloom.Size() * 0.5f, 0.28f, SpriteEffects.None);
 
-                        float droneRot = lineRot + MathHelper.PiOver2;
+                        // Crystal prism sprite
+                        float prismRot = Main.GlobalTimeWrappedHourly * 3f + i * MathHelper.TwoPi / 6f;
                         Main.EntitySpriteDraw(
-                            droneTexture,
-                            drawPos,
-                            null,
-                            Color.Lerp(Color.Orange, Color.Gold, charge),
-                            droneRot,
-                            droneTexture.Size() * 0.5f,
-                            1.0f,
-                            SpriteEffects.None,
-                            0);
+                            prism, drawPos, prismSource,
+                            Color.Lerp(new Color(255, 120, 40), Color.Gold, charge),
+                            prismRot, new Vector2(prism.Width * 0.5f, prismFrameHeight * 0.5f),
+                            MathHelper.Lerp(1.2f, 0.6f, charge), SpriteEffects.None);
                     }
+
+                    // Central convergence glow
+                    Vector2 centerDraw = owner.Center - Main.screenPosition;
+                    float pulse = 0.88f + 0.12f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 18f);
+                    Main.EntitySpriteDraw(bloom, centerDraw, null,
+                        new Color(255, 200, 60, 0) * 0.5f * charge * pulse, 0f, bloom.Size() * 0.5f,
+                        (0.18f + charge * 0.52f) * pulse, SpriteEffects.None);
+                    Main.EntitySpriteDraw(ring, centerDraw, null,
+                        new Color(255, 220, 100, 0) * 0.55f * charge, Main.GlobalTimeWrappedHourly * 2.2f,
+                        ring.Size() * 0.5f, (0.16f + charge * 0.38f) * pulse, SpriteEffects.None);
 
                     Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
                 }

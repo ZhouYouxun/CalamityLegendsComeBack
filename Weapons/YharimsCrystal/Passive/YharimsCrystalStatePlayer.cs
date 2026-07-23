@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
+using CalamityLegendsComeBack.Weapons.YharimsCrystal;
 
 namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.Passive
 {
@@ -12,7 +13,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.Passive
 
     internal sealed class YharimsCrystalStatePlayer : ModPlayer
     {
-        public YCWeaponForm LastWeapon = YCWeaponForm.Crystal;
+        public YCWeaponForm LastWeapon = YCWeaponForm.Blade;
         public int BladeEmpowerTimer;
         public int CrystalEmpowerTimer;
 
@@ -36,6 +37,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.Passive
                 LeftClickCooldown--;
 
             EnsureAuricJudgementMatrix();
+            EnsureBackgroundPassive();
         }
 
         private void EnsureAuricJudgementMatrix()
@@ -55,6 +57,71 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.Passive
                 0,
                 0f,
                 Player.whoAmI);
+        }
+
+        private void EnsureBackgroundPassive()
+        {
+            // Only for the owning player, only while holding the crystal
+            if (Player.whoAmI != Main.myPlayer)
+                return;
+            if (Player.HeldItem == null || Player.HeldItem.IsAir)
+                return;
+            if (Player.HeldItem.type != ModContent.ItemType<NewLegendYharimsCrystal>())
+                return;
+
+            int bgBladeType = ModContent.ProjectileType<YC_BackgroundBlade>();
+            int bgCrystalType = ModContent.ProjectileType<YC_BackgroundCrystal>();
+
+            if (LastWeapon == YCWeaponForm.Crystal)
+            {
+                // Crystal form: spawn/maintain background blade
+                if (Player.ownedProjectileCounts[bgBladeType] <= 0)
+                {
+                    Projectile.NewProjectile(
+                        Player.GetSource_Misc("YharimsCrystalBackgroundBlade"),
+                        Player.Center,
+                        Vector2.Zero,
+                        bgBladeType,
+                        0,
+                        0f,
+                        Player.whoAmI);
+                }
+                // Kill background crystal if it's still alive
+                if (Player.ownedProjectileCounts[bgCrystalType] > 0)
+                {
+                    for (int i = 0; i < Main.maxProjectiles; i++)
+                    {
+                        Projectile p = Main.projectile[i];
+                        if (p.active && p.owner == Player.whoAmI && p.type == bgCrystalType)
+                            p.Kill();
+                    }
+                }
+            }
+            else
+            {
+                // Blade form: spawn/maintain background crystal
+                if (Player.ownedProjectileCounts[bgCrystalType] <= 0)
+                {
+                    Projectile.NewProjectile(
+                        Player.GetSource_Misc("YharimsCrystalBackgroundCrystal"),
+                        Player.Center,
+                        Vector2.Zero,
+                        bgCrystalType,
+                        0,
+                        0f,
+                        Player.whoAmI);
+                }
+                // Kill background blade if it's still alive
+                if (Player.ownedProjectileCounts[bgBladeType] > 0)
+                {
+                    for (int i = 0; i < Main.maxProjectiles; i++)
+                    {
+                        Projectile p = Main.projectile[i];
+                        if (p.active && p.owner == Player.whoAmI && p.type == bgBladeType)
+                            p.Kill();
+                    }
+                }
+            }
         }
 
         public void SetLastWeapon(YCWeaponForm form)

@@ -10,7 +10,6 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
     {
         private int delphiniumCooldown;
 
-        protected override int FlowerSlot => 2;
         protected override BlossomFluxChloroplastPresetType FlowerPreset => BlossomFluxChloroplastPresetType.Chlo_CDetec;
         protected override string FlowerTexturePath => "CalamityLegendsComeBack/Accssory/BF/Skill/SeedOfSilva/SeedPack/Delphinium";
 

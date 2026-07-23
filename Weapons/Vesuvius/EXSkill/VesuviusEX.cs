@@ -500,8 +500,18 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.EXSkill
 
             // Staff first, glowmask over it. These were reversed, so the opaque staff was painted
             // straight over its own glowmask and the weapon never actually lit up during the EX.
-            Main.EntitySpriteDraw(texture, drawPosition, null, lightColor, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None);
-            Main.EntitySpriteDraw(glow, drawPosition, null, new Color(255, 255, 255, 0) * (0.75f + pulse * 0.25f), Projectile.rotation, origin, Projectile.scale, SpriteEffects.None);
+            //
+            // The staff is raised straight overhead. Projectile.rotation bakes 45f * direction into
+            // itself for the arm/itemRotation, but the sprite must be mirrored with a real flip on
+            // the left side, not just rotated — otherwise leftward casts left the staff 90 degrees
+            // off (pointing sideways instead of up). Mirror exactly like BloodstoneJavPROJ: a
+            // direction-independent base (-PiOver4 = "points up", the value the right side already
+            // uses) plus a horizontal flip and +PiOver2 when facing left.
+            bool facingLeft = Projectile.spriteDirection == -1;
+            SpriteEffects effects = facingLeft ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+            float drawRotation = -MathHelper.PiOver4 + (facingLeft ? MathHelper.PiOver2 : 0f);
+            Main.EntitySpriteDraw(texture, drawPosition, null, lightColor, drawRotation, origin, Projectile.scale, effects);
+            Main.EntitySpriteDraw(glow, drawPosition, null, new Color(255, 255, 255, 0) * (0.75f + pulse * 0.25f), drawRotation, origin, Projectile.scale, effects);
             return false;
         }
     }

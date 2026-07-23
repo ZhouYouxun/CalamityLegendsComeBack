@@ -72,7 +72,11 @@ Mods: {
 					Dash2_Lock: "[c/DDA0FF:Locked: Defeat the Wall of Flesh to unlock it.]"
 					Dash3_Unlock: "[c/66FFAA:Unlocked: Quick Slash]"
 					Dash3_Lock: "[c/99CCFF:Locked: Defeat the Wall of Flesh to unlock it.]"
-					BB_Passive: "[c/9AEF9E:Dash reinforcement follows the current shield device. State: {0}; right-click in inventory to toggle.]"
+					BB_Passive:
+						'''
+						[c/9AEF9E:Dash reinforcement follows the current shield device. State: ]{0}[c/9AEF9E:; right-click in inventory to toggle.]
+						{1}
+						'''
 					PassiveStateOn: "[c/7BFFB7:On]"
 					PassiveStateOff: "[c/F0D070:Off]"
 					PassiveDevice_None: "[c/7F8FA6:No shield dash device is being read.]"

@@ -127,7 +127,12 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
 
         public override bool OnTileCollide(Vector2 oldVelocity)
         {
-            ApplyFlightRotation(oldVelocity);
+            // Do NOT recompute rotation here. MiracleMatterJav (the reference for a staff that
+            // sticks in tiles) never touches rotation once embedded — it keeps the rotation the
+            // last flight frame already set from the real velocity. Re-deriving it from the
+            // post-gravity oldVelocity snapped the frozen pose a step off the on-screen flight
+            // pose, which read as "the orientation jumps the moment it hits the block". Freeze
+            // whatever UpdateFlightRotation last set, so the stuck angle == the thrown angle.
             Projectile.ai[0] = TileStickState;
             Projectile.velocity = Vector2.Zero;
             Projectile.tileCollide = false;
@@ -940,7 +945,10 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
 
             intensity = MathHelper.Clamp(intensity, 0.3f, 1.6f);
 
-            if (Main.rand.NextFloat() < 0.72f * intensity)
+            // Mix rebalance: the thrown staff read too smoky. Fire/ember/heat-mist were pushed up
+            // and the rare HeavySmokeParticle pushed down, so the trail is now mostly molten with
+            // only an occasional smoke puff — livelier without the grey haze dominating.
+            if (Main.rand.NextFloat() < 0.86f * intensity)
             {
                 Dust flame = Dust.NewDustPerfect(
                     position + Main.rand.NextVector2Circular(7f, 7f),
@@ -952,7 +960,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
                 flame.noGravity = true;
             }
 
-            if (Main.rand.NextFloat() < 0.42f * intensity)
+            if (Main.rand.NextFloat() < 0.58f * intensity)
             {
                 Particle ember = new SparkParticle(
                     position + Main.rand.NextVector2Circular(8f, 8f),
@@ -964,7 +972,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
                 GeneralParticleHandler.SpawnParticle(ember);
             }
 
-            if (Main.rand.NextFloat() < 0.13f * intensity)
+            if (Main.rand.NextFloat() < 0.22f * intensity)
             {
                 Particle heatMist = new SmallSmokeParticle(
                     position,
@@ -977,7 +985,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
                 GeneralParticleHandler.SpawnParticle(heatMist);
             }
 
-            if (allowSmoke && Main.rand.NextFloat() < 0.055f * intensity)
+            if (allowSmoke && Main.rand.NextFloat() < 0.026f * intensity)
                 SpawnRareSmoke(position, velocity * 0.4f, intensity * 0.72f, false);
         }
 
@@ -989,7 +997,8 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
             Vector2 riseVelocity = -Vector2.UnitY.RotatedByRandom(0.38f) * Main.rand.NextFloat(1.1f, 3.4f);
             SpawnTravelMix(position, riseVelocity, intensity, false);
 
-            if (Main.rand.NextBool(7))
+            // More warm heat-mist, less heavy smoke — same rebalance as the travel mix.
+            if (Main.rand.NextBool(5))
             {
                 Particle heatMist = new MediumMistParticle(
                     position,
@@ -1002,7 +1011,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
                 GeneralParticleHandler.SpawnParticle(heatMist);
             }
 
-            if (Main.rand.NextBool(glowing ? 13 : 18))
+            if (Main.rand.NextBool(glowing ? 24 : 34))
                 SpawnRareSmoke(position, riseVelocity, intensity * 0.85f, glowing);
         }
 
@@ -1032,7 +1041,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
                 GeneralParticleHandler.SpawnParticle(heatMist);
             }
 
-            if (Main.rand.NextBool(14))
+            if (Main.rand.NextBool(24))
                 SpawnRareSmoke(position, drift, Main.rand.NextFloat(0.52f, 0.82f), false);
         }
 
@@ -1077,7 +1086,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
                 GeneralParticleHandler.SpawnParticle(heatMist);
             }
 
-            if (Main.rand.NextBool(26))
+            if (Main.rand.NextBool(40))
                 SpawnRareSmoke(position, riseVelocity * 0.7f, Main.rand.NextFloat(0.72f, 1.08f), true);
         }
 

@@ -16,7 +16,6 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
         private float daisyStoredHeal;
         private int daisyHitCooldown;
 
-        protected override int FlowerSlot => 1;
         protected override BlossomFluxChloroplastPresetType FlowerPreset => BlossomFluxChloroplastPresetType.Chlo_BRecov;
         protected override string FlowerTexturePath => "CalamityLegendsComeBack/Accssory/BF/Skill/SeedOfSilva/SeedPack/Daisy";
 

@@ -35,6 +35,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         // ai[0] == -1：自由独立激光
         // ai[0] <= -2：分裂激光，锚定持械索引 = -ai[0] - 2
         // 附着模式 ai[1]：重击增粗剩余帧数；分裂模式 ai[1]：宽度倍率，ai[2]：每帧扇形漂移弧度
+        // localAI[2]：充能状态（0=普通, 1=聚合, 2=散射）——仅附着模式使用
         private bool IsStandalone => Projectile.ai[0] < 0f;
         private int AnchorIndex => Projectile.ai[0] >= 0f ? (int)Projectile.ai[0] : (int)(-Projectile.ai[0]) - 2;
         private ref float EmpowerFramesLeft => ref Projectile.ai[1];
@@ -42,8 +43,13 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         private float FanDrift => Projectile.ai[2];
         private ref float Timer => ref Projectile.localAI[0];
         private ref float BeamLength => ref Projectile.localAI[1];
+        private ref float ChargeState => ref Projectile.localAI[2]; // 0=normal,1=converged,2=scattered
         private YCRightLaserVisualTier Tier => balance.GetRightLaserTier();
         private bool Empowered => !IsStandalone && EmpowerFramesLeft > 0f;
+        // Converged: beam is thicker (+60%), gold-white tinted, limited turn speed
+        private bool IsConverged => !IsStandalone && ChargeState >= 1f && ChargeState < 1.5f;
+        // Scattered: beam is thinner (80%), faster turn, paler coloring
+        private bool IsScattered => !IsStandalone && ChargeState >= 1.5f;
 
         private float EmpowerBoost
         {
@@ -134,11 +140,22 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             Projectile.Center = holdout.Muzzle;
             Projectile.velocity = holdout.ForwardDirection;
             Projectile.rotation = Projectile.velocity.ToRotation();
-            Projectile.scale = GetBeamScale() * EmpowerBoost;
+
+            // Sync charge state from holdout (Projectile.owner only)
+            if (Projectile.owner == Main.myPlayer)
+                ChargeState = holdout.ChargeRatio >= 1f
+                    ? (holdout.IsScatteredMode ? 2f : 1f)
+                    : 0f;
+
+            // Scale: converged = +60% thicker, scattered = 80% normal, else normal
+            float chargeScaleMult = IsConverged ? 1.6f : (IsScattered ? 0.8f : 1.0f);
+            Projectile.scale = GetBeamScale() * EmpowerBoost * chargeScaleMult;
 
             float empower = owner.GetModPlayer<YharimsCrystalStatePlayer>().CrystalEmpowered ? 1.35f : 1f;
             float sustain = Empowered ? 2.4f : 0.55f;
-            Projectile.damage = Math.Max(1, (int)(holdoutProjectile.damage * GetDamageMultiplier() * empower * sustain));
+            // Converged mode deals 1.4x damage, scattered deals 0.85x
+            float chargeDamageMult = IsConverged ? 1.4f : (IsScattered ? 0.85f : 1f);
+            Projectile.damage = Math.Max(1, (int)(holdoutProjectile.damage * GetDamageMultiplier() * empower * sustain * chargeDamageMult));
 
             UpdateBeamLength();
 
@@ -156,6 +173,9 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
                 EmitEmpoweredTipFX();
                 EmitEmpoweredSideSpray();
             }
+            // Converged: emit extra tip glow + beam sparkle
+            if (IsConverged && !empoweredNow)
+                EmitConvergedFX();
             if (Projectile.ai[0] > -2f)
                 EmitBeamStreamFX();
             CastBeamLight();
@@ -219,7 +239,25 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             }
 
             // PF 圣光射线风格的基底主激光：右键持械期间永远绘制
-            DrawProvidenceStyleBeam(Color.Lerp(LaserRed, LaserGold, 0.55f));
+            // 聚合态：金白色；散射态：橙色偏淡；普通：混合色
+            Color baseBeamColor = IsConverged
+                ? Color.Lerp(LaserGold, Color.White, 0.22f)
+                : (IsScattered
+                    ? Color.Lerp(LaserRed, LaserGold, 0.3f)
+                    : Color.Lerp(LaserRed, LaserGold, 0.55f));
+            DrawProvidenceStyleBeam(baseBeamColor);
+
+            // Converged: draw an extra outer glow ring at the beam tip
+            if (IsConverged)
+            {
+                Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+                Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+                Vector2 tipPos = Projectile.Center + direction * BeamLength - Main.screenPosition;
+                float pulse = 0.88f + 0.12f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 22f);
+                Main.EntitySpriteDraw(bloom, tipPos, null, new Color(255, 240, 160, 0) * 0.58f * pulse, 0f, bloom.Size() * 0.5f, Projectile.scale * 0.24f * pulse, SpriteEffects.None);
+                Main.EntitySpriteDraw(bloom, tipPos, null, Color.White with { A = 0 } * 0.32f * pulse, 0f, bloom.Size() * 0.5f, Projectile.scale * 0.12f, SpriteEffects.None);
+            }
+
             return false;
         }
 
@@ -458,7 +496,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
                 }
             }
 
-            // 额外弹幕：从激光上随机一点向两侧同时甩出金色光弹
+            // 额外弹幕：从激光上随机一点向两侧同时甩出金色光弹（使用 BackgroundCrystalBolt 替代旧 DroneShot）
             if (Projectile.owner == Main.myPlayer && Main.GameUpdateCount % 5 == 0)
             {
                 float along = Main.rand.NextFloat(BeamLength * 0.15f, BeamLength * 0.9f);
@@ -470,7 +508,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
                         Projectile.GetSource_FromThis(),
                         position,
                         velocity,
-                        ModContent.ProjectileType<YC_DroneShot>(),
+                        ModContent.ProjectileType<Passive.YC_BackgroundCrystalBolt>(),
                         Math.Max(1, (int)(Projectile.damage * 0.4f)),
                         Projectile.knockBack * 0.4f,
                         Projectile.owner);
@@ -654,6 +692,48 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             if (IsStandalone)
                 return fadeIn * Utils.GetLerpValue(0f, 14f, Projectile.timeLeft, true);
             return fadeIn;
+        }
+
+        /// <summary>Sparkle FX emitted when beam is in converged (charged, no left-hold) state.</summary>
+        private void EmitConvergedFX()
+        {
+            if (Main.dedServ || BeamLength <= 0f)
+                return;
+
+            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 tipPos = Projectile.Center + direction * BeamLength;
+
+            // Tip sparkle: GenericSparkle burst (white/gold)
+            if (Main.GameUpdateCount % 3 == 0)
+            {
+                GeneralParticleHandler.SpawnParticle(new GenericSparkle(
+                    tipPos + Main.rand.NextVector2Circular(10f, 10f),
+                    direction.RotatedByRandom(0.5f) * Main.rand.NextFloat(-2f, -0.5f),
+                    Color.White,
+                    LaserGold,
+                    Main.rand.NextFloat(0.3f, 0.55f),
+                    Main.rand.Next(10, 18),
+                    Main.rand.NextFloat(-0.1f, 0.1f),
+                    2.6f));
+            }
+
+            // Beam body: occasional drift spark along the beam
+            if (Main.rand.NextBool(4))
+            {
+                float along = Main.rand.NextFloat(BeamLength * 0.1f, BeamLength);
+                Vector2 pos = Projectile.Center + direction * along;
+                GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                    pos,
+                    direction.RotatedByRandom(0.35f) * Main.rand.NextFloat(-3f, -1f),
+                    "CalamityMod/Particles/Sparkle",
+                    false,
+                    Main.rand.Next(8, 14),
+                    Main.rand.NextFloat(0.28f, 0.52f) * Projectile.scale,
+                    Main.rand.NextBool(3) ? Color.White : LaserGold,
+                    new Vector2(0.24f, 1.0f),
+                    true, true,
+                    shrinkSpeed: 0.18f));
+            }
         }
 
         private float YharonWidthFunction(float completionRatio, Vector2 vertexPosition)

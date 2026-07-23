@@ -194,6 +194,10 @@ Mods: {
 				// YC_DroneZapBeam.DisplayName: Y C_ Drone Zap Beam
 				// YC_GoldBomb.DisplayName: Y C_ Gold Bomb
 				// YC_TrackingRocket.DisplayName: Y C_ Tracking Rocket
+				// YC_BackgroundBlade.DisplayName: Y C_ Background Blade
+				// YC_BackgroundBladeStrike.DisplayName: Y C_ Background Blade Strike
+				// YC_BackgroundCrystal.DisplayName: Y C_ Background Crystal
+				// YC_BackgroundCrystalBolt.DisplayName: Y C_ Background Crystal Bolt
 			}
 		}
 

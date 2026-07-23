@@ -11,7 +11,8 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
 {
     internal abstract class SeedOfSilvaFlowerProjectile : ModProjectile
     {
-        public const int FlowerCount = 5;
+        // 环绕槽位数量：当前战术下场上同时存在 4 朵同种花（不手持武器时为 4 颗种子）。
+        public const int FlowerCount = 4;
 
         private const float OrbitRadius = 222f;
         private const float OrbitSpeed = 0.018f;
@@ -27,12 +28,15 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
         };
 
         public BlossomFluxChloroplastPresetType CurrentPreset => FlowerPreset;
-        public int CurrentSlot => FlowerSlot;
+        public int CurrentSlot => OrbitSlot;
         public bool IsBlooming { get; private set; }
         protected float VisualBloomProgress { get; private set; }
         private float orbitAngle;
 
-        protected abstract int FlowerSlot { get; }
+        // 环绕槽位（0..FlowerCount-1）由生成时的 ai[0] 决定，不再是每个子类的固定值——
+        // 配合「所有花随当前战术转化为同一种花」的新设计，让同一种花沿不同槽位错开环绕。
+        private int OrbitSlot => (int)Projectile.ai[0];
+
         protected abstract BlossomFluxChloroplastPresetType FlowerPreset { get; }
         protected abstract string FlowerTexturePath { get; }
         protected virtual Color FlowerColor => GetFlowerColor(FlowerPreset);
@@ -76,8 +80,8 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
             orbitAngle += OrbitSpeed * GetOrbitSpeedMultiplier(owner, accessoryPlayer);
             if (orbitAngle >= MathHelper.TwoPi)
                 orbitAngle -= MathHelper.TwoPi;
-            float angle = orbitAngle + MathHelper.TwoPi * FlowerSlot / FlowerCount;
-            float pulseRadius = OrbitRadius + (float)System.Math.Sin(Main.GlobalTimeWrappedHourly * 1.1f + FlowerSlot) * 5f;
+            float angle = orbitAngle + MathHelper.TwoPi * OrbitSlot / FlowerCount;
+            float pulseRadius = OrbitRadius + (float)System.Math.Sin(Main.GlobalTimeWrappedHourly * 1.1f + OrbitSlot) * 5f;
             Projectile.Center = owner.Center + angle.ToRotationVector2() * pulseRadius + new Vector2(0f, owner.gfxOffY - 8f);
             Projectile.rotation = angle + MathHelper.PiOver2;
             Projectile.scale = MathHelper.Lerp(Projectile.scale, IsBlooming ? 1f : 0.92f, 0.16f);
@@ -176,45 +180,18 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
             }
         }
 
-        public static int GetFlowerType(int slot) => slot switch
+        // 当前战术 → 对应花的弹幕类型：所有花都转化为这一种（不手持武器时按复苏槽显示为种子）。
+        public static int GetFlowerTypeForPreset(BlossomFluxChloroplastPresetType preset) => preset switch
         {
-            1 => ModContent.ProjectileType<SeedOfSilvaDaisy>(),
-            2 => ModContent.ProjectileType<SeedOfSilvaDelphinium>(),
-            3 => ModContent.ProjectileType<SeedOfSilvaTorchflower>(),
-            4 => ModContent.ProjectileType<SeedOfSilvaMandrake>(),
+            BlossomFluxChloroplastPresetType.Chlo_BRecov => ModContent.ProjectileType<SeedOfSilvaDaisy>(),
+            BlossomFluxChloroplastPresetType.Chlo_CDetec => ModContent.ProjectileType<SeedOfSilvaDelphinium>(),
+            BlossomFluxChloroplastPresetType.Chlo_DBomb => ModContent.ProjectileType<SeedOfSilvaTorchflower>(),
+            BlossomFluxChloroplastPresetType.Chlo_EPlague => ModContent.ProjectileType<SeedOfSilvaMandrake>(),
             _ => ModContent.ProjectileType<SeedOfSilvaSunflower>()
         };
 
-        public static BlossomFluxChloroplastPresetType PresetFromSlot(int slot) => slot switch
-        {
-            1 => BlossomFluxChloroplastPresetType.Chlo_BRecov,
-            2 => BlossomFluxChloroplastPresetType.Chlo_CDetec,
-            3 => BlossomFluxChloroplastPresetType.Chlo_DBomb,
-            4 => BlossomFluxChloroplastPresetType.Chlo_EPlague,
-            _ => BlossomFluxChloroplastPresetType.Chlo_ABreak
-        };
-
-        private int GetDormantSeedTextureIndex()
-        {
-            Player owner = Main.player[Projectile.owner];
-            BFAccessoryPlayer accessoryPlayer = owner.GetModPlayer<BFAccessoryPlayer>();
-            if (!accessoryPlayer.HoldingBlossomFlux)
-                return FlowerSlot % SmallSeedTextures.Length;
-
-            int rank = 0;
-            for (int slot = 0; slot < FlowerCount; slot++)
-            {
-                if (PresetFromSlot(slot) == accessoryPlayer.CurrentPreset)
-                    continue;
-
-                if (slot == FlowerSlot)
-                    return Utils.Clamp(rank, 0, SmallSeedTextures.Length - 1);
-
-                rank++;
-            }
-
-            return FlowerSlot % SmallSeedTextures.Length;
-        }
+        // 四朵花都是同一种，休眠时按各自的环绕槽位显示不同的种子贴图（SmallSeed1..4）。
+        private int GetDormantSeedTextureIndex() => OrbitSlot % SmallSeedTextures.Length;
 
         private void DrawDormantMagicGlow(Vector2 center, float opacity)
         {

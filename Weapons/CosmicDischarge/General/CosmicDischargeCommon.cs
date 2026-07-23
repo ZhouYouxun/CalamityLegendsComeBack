@@ -262,6 +262,102 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     center,
                     Main.rand.NextVector2Unit() * Main.rand.NextFloat(25f, 35f) * scale,
                     Main.rand.NextFloat(30f, 50f) * scale);
+
+            // Galaxy / Ark-line supplement: readable star nodes linked by short-lived bloom lines.
+            // This is event-based instead of a constant particle spray.
+            if (tier >= RiftTier.Medium)
+                SpawnGalaxyConstellationBurst(center, direction, accentColor, tier);
+        }
+
+        private static void SpawnGalaxyConstellationBurst(Vector2 center, Vector2 direction, Color accent, RiftTier tier)
+        {
+            int starCount = tier switch
+            {
+                RiftTier.Medium => 3,
+                RiftTier.Heavy => 5,
+                RiftTier.Finisher => 7,
+                _ => 10
+            };
+            float radius = tier switch
+            {
+                RiftTier.Medium => 34f,
+                RiftTier.Heavy => 52f,
+                RiftTier.Finisher => 74f,
+                _ => 108f
+            };
+            float scale = tier switch
+            {
+                RiftTier.Medium => 0.42f,
+                RiftTier.Heavy => 0.56f,
+                RiftTier.Finisher => 0.72f,
+                _ => 0.92f
+            };
+
+            Vector2 forward = direction.LengthSquared() > 0.001f
+                ? direction.SafeNormalize(Vector2.UnitX)
+                : Main.rand.NextVector2Unit();
+            Vector2 normal = forward.RotatedBy(MathHelper.PiOver2);
+            float phase = Main.rand.NextFloat(MathHelper.TwoPi);
+            Vector2 previous = center;
+
+            for (int i = 0; i < starCount; i++)
+            {
+                float completion = (i + 1f) / starCount;
+                float angle = phase + completion * MathHelper.TwoPi * 1.35f;
+                float spiralRadius = radius * MathF.Sqrt(completion);
+                Vector2 offset = forward * MathF.Cos(angle) * spiralRadius + normal * MathF.Sin(angle) * spiralRadius * 0.58f;
+                Vector2 starPosition = center + offset;
+                Color starColor = Color.Lerp(accent, RiftColor(), i / (float)Math.Max(1, starCount - 1));
+
+                GeneralParticleHandler.SpawnParticle(new GenericSparkle(
+                    starPosition,
+                    offset.SafeNormalize(Vector2.Zero) * Main.rand.NextFloat(0.35f, 1.1f),
+                    Color.White,
+                    starColor,
+                    scale * Main.rand.NextFloat(0.8f, 1.18f),
+                    18 + i,
+                    Main.rand.NextFloat(-0.05f, 0.05f),
+                    2.4f));
+
+                if (i > 0)
+                    GeneralParticleHandler.SpawnParticle(new BloomLineVFX(
+                        previous,
+                        starPosition - previous,
+                        0.55f + scale * 0.35f,
+                        starColor * 0.58f,
+                        16 + i,
+                        true,
+                        true));
+
+                previous = starPosition;
+            }
+
+            if (tier >= RiftTier.Heavy)
+            {
+                GeneralParticleHandler.SpawnParticle(new ConstellationRingVFX(
+                    center,
+                    accent * 0.72f,
+                    forward.ToRotation(),
+                    scale * 0.74f,
+                    new Vector2(0.72f, 1f),
+                    spinSpeed: tier >= RiftTier.Finisher ? 7f : 5f,
+                    starAmount: Math.Min(starCount, 7),
+                    important: tier >= RiftTier.Finisher));
+            }
+
+            if (tier >= RiftTier.Finisher)
+            {
+                GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                    center,
+                    Vector2.Zero,
+                    Color.Lerp(accent, Color.White, 0.25f) * 0.62f,
+                    "CalamityMod/Particles/ShatteredExplosion",
+                    Vector2.One,
+                    phase,
+                    0.01f,
+                    tier == RiftTier.Ultimate ? 0.62f : 0.42f,
+                    28));
+            }
         }
 
         /// <summary>
@@ -360,6 +456,21 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     dust.noGravity = true;
                 }
             }
+
+            // A single point-like star keeps transparent trails galactic without reintroducing
+            // long random spark streaks.
+            if (Main.rand.NextBool(4))
+            {
+                GeneralParticleHandler.SpawnParticle(new GenericSparkle(
+                    position + Main.rand.NextVector2Circular(5f, 5f),
+                    backwardVelocity * 0.35f,
+                    Color.White,
+                    innerColor,
+                    Main.rand.NextFloat(0.22f, 0.38f) * scale,
+                    Main.rand.Next(12, 18),
+                    Main.rand.NextFloat(-0.035f, 0.035f),
+                    1.65f));
+            }
         }
 
         /// <summary>
@@ -452,21 +563,25 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         /// </summary>
         public static void SpawnUltimateBurst(IEntitySource source, Player player, Vector2 center, int damage, float knockBack)
         {
-            foreach (NPC npc in Main.ActiveNPCs)
+            if (Main.netMode != NetmodeID.MultiplayerClient)
             {
-                if (!npc.CanBeChasedBy() || Vector2.DistanceSquared(npc.Center, center) > 1800f * 1800f)
-                    continue;
+                foreach (NPC npc in Main.ActiveNPCs)
+                {
+                    if (!npc.CanBeChasedBy() || Vector2.DistanceSquared(npc.Center, center) > 1800f * 1800f)
+                        continue;
 
-                Vector2 direction = center.DirectionTo(npc.Center);
-                SpawnFriendlyLaser(source, center, direction, damage, knockBack, player.whoAmI, 0f, 0.5f, 6f);
-                SpawnFriendlyLaser(source, center, direction.RotatedBy(0.15f), (int)(damage * 0.6f), knockBack, player.whoAmI, 1.5f, 0.42f, 5f);
-                SpawnFriendlyLaser(source, center, direction.RotatedBy(-0.15f), (int)(damage * 0.6f), knockBack, player.whoAmI, -1.5f, 0.42f, 5f);
+                    Vector2 direction = center.DirectionTo(npc.Center);
+                    SpawnFriendlyLaser(source, center, direction, damage, knockBack, player.whoAmI, 0f, 0.5f, 6f);
+                    SpawnFriendlyLaser(source, center, direction.RotatedBy(0.15f), (int)(damage * 0.6f), knockBack, player.whoAmI, 1.5f, 0.42f, 5f);
+                    SpawnFriendlyLaser(source, center, direction.RotatedBy(-0.15f), (int)(damage * 0.6f), knockBack, player.whoAmI, -1.5f, 0.42f, 5f);
+                }
             }
 
             // DoG 原始爆炸：25 裂缝弹幕（这里减半，因为武器不该盖满整屏）。
             SpawnRiftCrackProjectiles(source, center, player.whoAmI, 12, 20f, 80f, 20f, 30f);
             SpawnRiftBurst(center, RiftTier.Ultimate, default, DoGSpecialColor);
-            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DoGLaserWallBigAttack") { Volume = 0.78f, MaxInstances = 2 }, center);
+            if (!Main.dedServ)
+                SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DoGLaserWallBigAttack") { Volume = 0.78f, MaxInstances = 2 }, center);
         }
 
         /// <summary>大招力场的持续氛围。每 20 帧一次，不逐帧喷。</summary>

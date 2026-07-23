@@ -37,26 +37,34 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             {
                 float t = Time / WhipArcWindup;
                 float prep = EaseOutCubic(t);
-                SetBlade(baseDirection.RotatedBy(-sign * MathHelper.Lerp(0.82f, 0.24f, prep)), MathHelper.Lerp(76f, 178f, prep), -0.18f * sign, 24f);
+                SetBlade(baseDirection.RotatedBy(-sign * MathHelper.Lerp(0.98f, 0.32f, prep)), MathHelper.Lerp(64f, 160f, prep), -0.2f * sign, 24f);
             }
             else if (Time <= snapEnd)
             {
                 float t = (Time - WhipArcWindup) / WhipArcSnap;
-                float snap = MathF.Sin(t * MathHelper.PiOver2);
+                float snap = SmootherStep(t);
                 float over = MathF.Sin(MathHelper.Pi * t);
-                SetBlade(baseDirection.RotatedBy(MathHelper.Lerp(-0.2f, 0.05f, snap) * sign), MathHelper.Lerp(178f, maxReach + 30f, snap), -0.08f * sign, 38f + over * 8f);
-                PlayReleaseOnce(SoundID.Item71, 0.86f, side < 0f ? -0.22f : 0.05f, 4.1f);
+                SetBlade(baseDirection.RotatedBy(-sign * MathHelper.Lerp(0.32f, 0f, snap)), MathHelper.Lerp(160f, maxReach, snap), -0.1f * sign * (1f - snap), 38f + over * 10f);
+                PlayReleaseOnce(new SoundStyle("CalamityMod/Sounds/Custom/LoudSwingWoosh") { MaxInstances = 3 }, 0.82f, side < 0f ? -0.18f : -0.04f, 4.6f);
 
-                if (!impactEffectsPlayed && t >= 0.7f)
+                if (!apexSoundPlayed && t >= 0.999f)
+                {
+                    apexSoundPlayed = true;
+                    SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/WulfrumHookGrapple") { Volume = 0.7f, Pitch = -0.18f, MaxInstances = 3 }, TipPosition);
+                    SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.42f, Pitch = -0.28f, MaxInstances = 3 }, TipPosition);
+                    ApplyScreenShake(4.8f);
+                }
+
+                if (!impactEffectsPlayed && t >= 0.999f)
                 {
                     // 整次挥鞭只画一道弧。这是鞭形唯一的"挥砍残像"。
                     CosmicDischargeCommon.SpawnSwingSmear(
-                        Vector2.Lerp(Owner.MountedCenter, TipPosition, 0.58f),
-                        Projectile.velocity.ToRotation() + MathHelper.PiOver2,
-                        MathHelper.Clamp(Projectile.velocity.Length() / 90f, 1.2f, 5.5f),
+                        Vector2.Lerp(Owner.MountedCenter, TipPosition, 0.72f),
+                        baseDirection.ToRotation() + MathHelper.PiOver2,
+                        MathHelper.Clamp(Projectile.velocity.Length() / 105f, 1.2f, 5.2f),
                         CosmicDischargeCommon.RiftLightBlue);
 
-                    EmitAirCrack(TipPosition, baseDirection, 0.8f);
+                    EmitAirCrack(TipPosition, baseDirection, 0.94f);
                     SpawnWhipRiftBombFan(baseDirection, ultActive || empActive ? 4 : 3, ultActive || empActive ? 0.48f : 0.36f);
                 }
             }
@@ -69,8 +77,16 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 float t = Utils.GetLerpValue(holdEnd, WhipArcDuration, Time, true);
                 currentlyRetracting = true;
                 Projectile.localNPCHitCooldown = (ultActive || empActive) ? 4 : 120;
-                float retract = MathF.Sin(t * MathHelper.PiOver2);
-                SetBlade(baseDirection.RotatedBy(sign * MathHelper.Lerp(0.08f, 0.28f, retract)), MathHelper.Lerp(maxReach, 64f, retract), 0.12f * sign, MathHelper.Lerp(30f, 18f, retract));
+                float retract = SmootherStep(t);
+                SetBlade(baseDirection, MathHelper.Lerp(maxReach, 18f, retract), 0f, MathHelper.Lerp(34f, 16f, retract));
+
+                if (!retractSoundPlayed)
+                {
+                    retractSoundPlayed = true;
+                    SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/WulfrumHookDisengage") { Volume = 0.68f, Pitch = -0.12f, MaxInstances = 3 }, Owner.Center);
+                    SoundEngine.PlaySound(SoundID.Item71 with { Volume = 0.38f, Pitch = -0.32f, MaxInstances = 3 }, Owner.Center);
+                    ApplyScreenShake(2.2f);
+                }
             }
 
             if (Time >= WhipArcDuration)
@@ -80,6 +96,12 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         }
         private void UpdateThrust(bool quickDraw)
         {
+            if (!quickDraw)
+            {
+                UpdateHeavyThrust();
+                return;
+            }
+
             int duration = quickDraw ? QuickDrawDuration : 64;
             int windup = quickDraw ? QuickDrawWindup : WhipThrustWindup;
             int snapFrames = quickDraw ? 7 : 11;
@@ -138,6 +160,71 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             if (Time >= duration)
                 Projectile.Kill();
         }
+
+        private void UpdateHeavyThrust()
+        {
+            const int snapFrames = 14;
+            const int holdFrames = 5;
+            int snapEnd = WhipThrustWindup + snapFrames;
+            int holdEnd = snapEnd + holdFrames;
+            float maxReach = ThrustReach + 58f;
+
+            if (Time <= WhipThrustWindup)
+                AimAngle = CosmicDischargeCommon.GetAimDirection(Owner, AimDirection).ToRotation();
+
+            Vector2 direction = AimDirection;
+            if (Time <= WhipThrustWindup)
+            {
+                float t = EaseOutCubic(Time / WhipThrustWindup);
+                SetBlade(direction.RotatedBy(-0.08f * Owner.direction * (1f - t)), MathHelper.Lerp(52f, 118f, t), -0.05f * Owner.direction, 28f);
+            }
+            else if (Time <= snapEnd)
+            {
+                float t = (Time - WhipThrustWindup) / snapFrames;
+                float extension = SmootherStep(t);
+                float over = MathF.Sin(MathHelper.Pi * t);
+                SetBlade(direction, MathHelper.Lerp(118f, maxReach, extension), 0f, 40f + over * 14f);
+
+                if (!releaseSoundPlayed)
+                    SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.46f, Pitch = -0.22f, MaxInstances = 3 }, Owner.Center);
+                PlayReleaseOnce(new SoundStyle("CalamityMod/Sounds/Custom/WulfrumHookShoot") { MaxInstances = 3 }, 0.82f, -0.24f, 5.8f);
+
+                if (!apexSoundPlayed && t >= 0.999f)
+                {
+                    apexSoundPlayed = true;
+                    SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/WulfrumHookGrapple") { Volume = 0.82f, Pitch = -0.24f, MaxInstances = 3 }, TipPosition);
+                    SoundEngine.PlaySound(SoundID.Item37 with { Volume = 0.48f, Pitch = -0.32f, MaxInstances = 3 }, TipPosition);
+                    ApplyScreenShake(6.4f);
+                }
+
+                if (!impactEffectsPlayed && t >= 0.999f)
+                    EmitAirCrack(TipPosition, direction, 1.18f);
+            }
+            else if (Time <= holdEnd)
+            {
+                SetBlade(direction, maxReach, 0f, 46f);
+            }
+            else
+            {
+                float t = Utils.GetLerpValue(holdEnd, WhipThrustDuration, Time, true);
+                currentlyRetracting = true;
+                Projectile.localNPCHitCooldown = 16;
+                float retract = SmootherStep(t);
+                SetBlade(direction, MathHelper.Lerp(maxReach, 18f, retract), 0f, MathHelper.Lerp(42f, 16f, retract));
+
+                if (!retractSoundPlayed)
+                {
+                    retractSoundPlayed = true;
+                    SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/WulfrumHookDisengage") { Volume = 0.8f, Pitch = -0.22f, MaxInstances = 3 }, Owner.Center);
+                    SoundEngine.PlaySound(SoundID.Item71 with { Volume = 0.46f, Pitch = -0.38f, MaxInstances = 3 }, Owner.Center);
+                    ApplyScreenShake(3.2f);
+                }
+            }
+
+            if (Time >= WhipThrustDuration)
+                Projectile.Kill();
+        }
+
         private void SpawnWhipRiftBombFan(Vector2 direction, int count, float damageFactor)
         {
             if (Main.myPlayer != Projectile.owner)
@@ -199,67 +286,38 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         {
             System.Collections.Generic.List<Vector2> points = new System.Collections.Generic.List<Vector2>();
             Vector2 startPos = Owner.MountedCenter;
-            points.Add(startPos);
+            Vector2 endPos = startPos + direction * reach;
+            float facingSide = Math.Sign(Owner.direction == 0 ? 1 : Owner.direction) * side;
 
-            int directionSign = Owner.direction * (int)side;
-
-            float t = Time / (float)WhipArcDuration;
-            float progress = 0f;
-            float retreatProgress = 0f;
-
-            float p = t * 1.5f;
-            if (p > 1.0f)
-            {
-                retreatProgress = (p - 1.0f) / 0.5f;
-                progress = MathHelper.Lerp(1f, 0f, retreatProgress);
-            }
+            float straightness;
+            if (Time <= WhipArcWindup)
+                straightness = MathHelper.Lerp(0.04f, 0.32f, SmootherStep(Time / WhipArcWindup));
+            else if (Time <= WhipArcWindup + WhipArcSnap)
+                straightness = MathHelper.Lerp(0.32f, 1f, SmootherStep((Time - WhipArcWindup) / WhipArcSnap));
             else
+                straightness = 1f;
+
+            float curveAmount = 1f - straightness;
+            float sizeFactor = MathHelper.Clamp(reach / WhipReach, 0.32f, 1.2f);
+            Vector2 normal = direction.RotatedBy(MathHelper.PiOver2) * facingSide;
+
+            Vector2 straightControlOne = startPos + direction * (reach / 3f);
+            Vector2 straightControlTwo = startPos + direction * (reach * 2f / 3f);
+            Vector2 curledControlOne = startPos - direction * (92f * sizeFactor) + normal * (166f * sizeFactor);
+            Vector2 curledControlTwo = endPos - direction * (reach * 0.42f) + normal * (118f * sizeFactor);
+            Vector2 controlOne = Vector2.Lerp(straightControlOne, curledControlOne, curveAmount);
+            Vector2 controlTwo = Vector2.Lerp(straightControlTwo, curledControlTwo, curveAmount);
+
+            const int segments = 18;
+            for (int i = 0; i <= segments; i++)
             {
-                progress = p;
-            }
-
-            var modPlayer = Owner.GetModPlayer<CosmicDischargePlayer>();
-            if (modPlayer.UltimateFieldActive || modPlayer.DevourerAscensionActive)
-            {
-                reach *= 1.25f;
-            }
-            int segments = 18;
-            float totalLength = reach;
-            float segLen = totalLength / segments;
-
-            float angleStep = (float)Math.PI * 8f * (1f - progress) * (float)(-directionSign) / segments;
-
-            Vector2 currentPos = startPos;
-            float baseAngle = direction.ToRotation();
-            float leftAngle = baseAngle - (float)Math.PI / 2f;
-            float rightAngle = baseAngle + (float)Math.PI / 2f;
-
-            for (int i = 0; i < segments; i++)
-            {
-                float ratio = (float)i / segments;
-                float currentStep = angleStep * ratio;
-
-                Vector2 extendVec = currentPos + baseAngle.ToRotationVector2() * segLen;
-                Vector2 leftVec = currentPos + leftAngle.ToRotationVector2() * (segLen * 1.5f);
-                Vector2 rightVec = currentPos + rightAngle.ToRotationVector2() * (segLen * 1.5f);
-
-                float invProgress = 1f - progress;
-                float lerpWeight = 1f - invProgress * invProgress;
-
-                Vector2 temp = Vector2.Lerp(leftVec, extendVec, lerpWeight * 0.9f + 0.1f);
-                Vector2 targetVec = Vector2.Lerp(rightVec, temp, lerpWeight * 0.7f + 0.3f);
-
-                Vector2 rawPoint = startPos + (targetVec - startPos);
-                
-                float rotFactor = retreatProgress * retreatProgress;
-                Vector2 finalPoint = rawPoint.RotatedBy(4.712389f * rotFactor * (float)directionSign, startPos);
-
-                points.Add(finalPoint);
-
-                baseAngle += currentStep;
-                leftAngle += currentStep;
-                rightAngle += currentStep;
-                currentPos = extendVec;
+                float t = i / (float)segments;
+                float inverse = 1f - t;
+                Vector2 point = inverse * inverse * inverse * startPos +
+                                3f * inverse * inverse * t * controlOne +
+                                3f * inverse * t * t * controlTwo +
+                                t * t * t * endPos;
+                points.Add(point);
             }
 
             return points;
@@ -268,19 +326,9 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         {
             System.Collections.Generic.List<Vector2> points = new System.Collections.Generic.List<Vector2>();
             Vector2 startPos = Owner.MountedCenter;
-            points.Add(startPos);
-            int segments = 18;
-            
-            float shake = MathF.Sin(Time * 0.8f) * 12f * (1f - Time / WhipThrustDuration);
-            Vector2 perp = direction.RotatedBy(MathHelper.PiOver2);
-
-            for (int i = 1; i <= segments; i++)
-            {
-                float ratio = (float)i / segments;
-                Vector2 linePos = startPos + direction * (reach * ratio);
-                float wave = MathF.Sin(ratio * MathHelper.TwoPi + Time * 0.6f) * shake;
-                points.Add(linePos + perp * wave);
-            }
+            const int segments = 18;
+            for (int i = 0; i <= segments; i++)
+                points.Add(startPos + direction * (reach * i / segments));
 
             return points;
         }

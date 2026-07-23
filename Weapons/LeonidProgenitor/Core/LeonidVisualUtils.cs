@@ -69,10 +69,13 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
             dust.fadeIn = Main.rand.NextFloat(0.08f, 0.26f);
         }
 
+        // 以下四个绘制助手只在 BeginAdditiveSpriteBatch 区间内调用。加法混合是
+        // (SourceAlpha, One)，A 归零会让整张图乘以 0 而彻底不显示——所以这里必须
+        // 保留 alpha，用 color * opacity 控制亮度（同 StrongBloom / AzureThunderArcParticle）。
+        // 只有默认 AlphaBlend 批次里才需要 A = 0 去掉黑底。
         public static void DrawBloom(Vector2 drawPosition, Color color, float scale, float rotation = 0f)
         {
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            color.A = 0;
             Main.EntitySpriteDraw(
                 bloom,
                 drawPosition - Main.screenPosition,
@@ -92,9 +95,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
             Texture2D sparkle = ModContent.Request<Texture2D>("CalamityMod/Particles/Sparkle").Value;
             Vector2 drawPosition = worldPosition - Main.screenPosition;
 
-            color.A = 0;
             Color white = MoonWhite * opacity;
-            white.A = 0;
 
             Main.EntitySpriteDraw(bloom, drawPosition, null, color * (0.42f * opacity), 0f, bloom.Size() * 0.5f, 0.16f * scale, SpriteEffects.None, 0f);
             Main.EntitySpriteDraw(ring, drawPosition, null, color * (0.52f * opacity), -rotation * 0.7f, ring.Size() * 0.5f, 0.115f * scale, SpriteEffects.None, 0f);
@@ -106,7 +107,6 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
             Texture2D blade = ModContent.Request<Texture2D>("CalamityMod/Particles/GlowBlade").Value;
             Vector2 drawPosition = worldPosition - Main.screenPosition;
             Vector2 origin = new(blade.Width * 0.5f, blade.Height);
-            color.A = 0;
 
             Main.EntitySpriteDraw(
                 blade,
@@ -123,7 +123,6 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
         public static void DrawSparkle(Vector2 worldPosition, Color color, float opacity, float scale, float rotation)
         {
             Texture2D sparkle = ModContent.Request<Texture2D>("CalamityMod/Particles/Sparkle").Value;
-            color.A = 0;
             Main.EntitySpriteDraw(
                 sparkle,
                 worldPosition - Main.screenPosition,
@@ -153,7 +152,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
             if (Main.dedServ)
                 return;
 
-            color.A = 0;
+            // StrongBloom 是 UseAdditiveBlend 粒子，同上：不能把 A 归零。
             GeneralParticleHandler.SpawnParticle(new StrongBloom(center, Vector2.Zero, color, scale, lifetime));
         }
 
@@ -163,7 +162,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
                 return;
 
             direction = direction.SafeNormalize(Vector2.UnitY);
-            color.A = 0;
+            // 这三种粒子同样是 UseAdditiveBlend，保留 alpha。
             GeneralParticleHandler.SpawnParticle(new BloomParticle(center, Vector2.Zero, color, 0.24f * scale, 0.36f * scale, 2, false));
             GeneralParticleHandler.SpawnParticle(new SparkParticle(center, direction * 0.01f, false, lifetime, 0.82f * scale, Color.Lerp(color, MoonWhite, 0.35f)));
             GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(center, direction * 0.55f, color, new Vector2(0.72f, 2.1f) * scale, direction.ToRotation(), 0.16f, 0.026f, lifetime));

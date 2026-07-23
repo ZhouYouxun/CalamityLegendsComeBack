@@ -6,6 +6,7 @@ using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core;
+using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects;
 
 namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 {
@@ -61,6 +62,20 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 dust.noGravity = true;
             }
 
+            // 大流星体积大、蓄力越满掉得越多：沿途持续剥落针状光矢。
+            // extraUpdates = 2，AI 每帧跑三次，所以分母按三倍算。
+            if (Main.rand.NextBool(24))
+            {
+                LeonidStarlight.Shed(
+                    Projectile.Center + Main.rand.NextVector2Circular(14f, 14f) * Projectile.scale,
+                    Projectile.velocity,
+                    trailColor,
+                    LeonidStarlightShape.Needle,
+                    0.85f + 0.5f * Progress,
+                    hoverTime: 24,
+                    lifetime: 130);
+            }
+
             Projectile.rotation += 0.16f * Math.Sign(Projectile.velocity.X == 0f ? 1f : Projectile.velocity.X);
         }
 
@@ -73,6 +88,18 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             LeonidVisualUtils.SpawnDustBurst(Projectile.Center, themeColor, 78, 12f, 1.8f);
             LeonidVisualUtils.SpawnBloomBurst(Projectile.Center, themeColor * 0.45f, 0.7f, 16);
             LeonidVisualUtils.SpawnCelestialPulse(Projectile.Center, Projectile.oldVelocity, themeColor, 1.65f, 28);
+
+            // 大流星解体：先是一圈同步张开的星辉环（读得出"阵型"），
+            // 再补一层零散碎片和两枚大耀斑，蓄力越满规模越大。
+            int ringCount = 8 + (int)(Progress * 6f);
+            LeonidStarlight.Ring(Projectile.Center, ringCount, 30f, themeColor, LeonidStarlightShape.Shard,
+                speed: 7.5f, scale: 1.1f, hoverTime: 28, lifetime: 180, lanceSpeed: 19f);
+
+            LeonidStarlight.Burst(Projectile.Center, 10, Color.Lerp(themeColor, LeonidVisualUtils.MoonWhite, 0.35f),
+                LeonidStarlightShape.Mote, speed: 9f, scale: 0.95f, hoverTime: 34, lifetime: 190, lanceSpeed: 21f, spawnRadius: 20f);
+
+            LeonidStarlight.Burst(Projectile.Center, 2, LeonidVisualUtils.StarGold, LeonidStarlightShape.Halo,
+                speed: 3.5f, scale: 1f + Progress * 0.6f, hoverTime: 16, lifetime: 100, lanceSpeed: 13f);
 
             // Release 7 reflective meteors
             if (Main.myPlayer == Projectile.owner)
@@ -120,7 +147,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             {
                 Vector2 off = (i * MathHelper.TwoPi / 8f).ToRotationVector2() * 2.8f * Projectile.scale;
                 Main.EntitySpriteDraw(texture, drawPosition + off, null,
-                    LeonidVisualUtils.NightSkyBlue with { A = 0 } * nsOp,
+                    LeonidVisualUtils.NightSkyBlue * nsOp,
                     Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0f);
             }
             LeonidVisualUtils.BeginAlphaBlendSpriteBatch();
@@ -133,6 +160,32 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             }
 
             Main.EntitySpriteDraw(texture, drawPosition, null, Color.Lerp(drawColor, Color.White, 0.08f), Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0f);
+
+            // 星光拖尾与头部星芒。蓄力越满，星芒越大越亮。
+            LeonidStarlight.DrawStarTrail(
+                Projectile.oldPos,
+                Projectile.Size,
+                Color.Lerp(drawColor, LeonidVisualUtils.MoonWhite, 0.45f),
+                Color.Lerp(drawColor, LeonidVisualUtils.DeepStratusBlue, 0.45f),
+                0.55f,
+                0.075f * Projectile.scale,
+                Projectile.rotation,
+                step: 1);
+
+            float twinkle = 0.7f + 0.3f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 4.6f + Projectile.whoAmI);
+            LeonidStarlight.DrawFlare(
+                Projectile.Center,
+                Color.Lerp(drawColor, LeonidVisualUtils.MoonWhite, 0.55f),
+                0.8f * twinkle,
+                (0.12f + 0.06f * Progress) * Projectile.scale,
+                -Projectile.rotation * 0.3f);
+
+            LeonidStarlight.DrawSunburst(
+                Projectile.Center,
+                LeonidVisualUtils.StarGold,
+                0.2f + 0.14f * Progress,
+                (0.035f + 0.02f * Progress) * Projectile.scale,
+                Main.GlobalTimeWrappedHourly * 0.5f);
 
             return false;
         }

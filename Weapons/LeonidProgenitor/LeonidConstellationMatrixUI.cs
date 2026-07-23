@@ -23,8 +23,6 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
     internal sealed class LeonidConstellationMatrixUI : ModSystem
     {
         private const float NodeRadius = 16f;
-        private static readonly Color Night = new(5, 10, 34, 232);
-        private static readonly Color Frame = new(102, 128, 255, 210);
         private static readonly Color Dormant = new(66, 78, 128, 210);
         private static readonly Color Available = new(152, 121, 255, 245);
         private static readonly Color Lit = new(255, 223, 113, 255);
@@ -142,10 +140,6 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
         private static void DrawPanel(SpriteBatch spriteBatch, Rectangle panel, LeonidConstellationPlayer progress)
         {
-            Texture2D pixel = TextureAssets.MagicPixel.Value;
-            spriteBatch.Draw(pixel, panel, Night);
-            DrawOutline(spriteBatch, panel, Frame, 2);
-
             string title = Language.GetTextValue("Mods.CalamityLegendsComeBack.Items.Weapons.LeonidProgenitor.Constellation.Title");
             string subtitle = Language.GetTextValue("Mods.CalamityLegendsComeBack.Items.Weapons.LeonidProgenitor.Constellation.Subtitle");
             string status = string.Format(
@@ -160,9 +154,9 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             DrawCenteredText(spriteBatch, status, new Vector2(panel.Center.X, panel.Bottom - 46f), Color.White, 0.72f);
 
             Vector2 constellationCenter = new(panel.X + 402f, panel.Y + 320f);
-            // The constellation itself uses Galaxia's additive star and line assets.
-            // Only the surrounding matrix frame and numeric node boxes are custom UI.
-            DrawGalaxiaConstellation(spriteBatch, constellationCenter, progress);
+            // Keep the constellation exposed like Galaxia's holdout: the night is suggested by light,
+            // rather than trapped inside a dark rectangular panel.
+            DrawGalaxiaConstellation(spriteBatch, panel, constellationCenter, progress);
 
             LeonidConstellationNode? hoveredNode = null;
             foreach (LeonidConstellationNode node in LeonidConstellation.Nodes)
@@ -174,16 +168,16 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 if (hovered)
                     hoveredNode = node;
 
-                DrawNode(spriteBatch, position, node, unlocked, affordable, hovered);
+                DrawNodeLabel(spriteBatch, position, node, unlocked, affordable, hovered);
             }
 
             string reset = Language.GetTextValue("Mods.CalamityLegendsComeBack.Items.Weapons.LeonidProgenitor.Constellation.Reset");
-            Vector2 resetSize = FontAssets.MouseText.Value.MeasureString(reset) * 0.72f;
-            resetArea = new Rectangle(panel.Right - (int)resetSize.X - 44, panel.Bottom - 76, (int)resetSize.X + 22, 26);
+            string resetDisplay = $"✦ {reset} ✦";
+            Vector2 resetSize = FontAssets.MouseText.Value.MeasureString(resetDisplay) * 0.72f;
+            resetArea = new Rectangle(panel.Right - (int)resetSize.X - 28, panel.Bottom - 76, (int)resetSize.X + 12, 26);
             bool resetHovered = resetArea.Contains(Main.mouseX, Main.mouseY);
-            spriteBatch.Draw(pixel, resetArea, resetHovered ? new Color(82, 48, 105, 240) : new Color(38, 29, 68, 225));
-            DrawOutline(spriteBatch, resetArea, resetHovered ? Available : Dormant, 1);
-            DrawCenteredText(spriteBatch, reset, resetArea.Center.ToVector2(), resetHovered ? Color.White : new Color(214, 198, 255), 0.72f);
+            float resetPulse = 0.78f + 0.22f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 3.4f);
+            DrawCenteredText(spriteBatch, resetDisplay, resetArea.Center.ToVector2(), resetHovered ? Color.White : new Color(214, 198, 255) * resetPulse, resetHovered ? 0.76f : 0.72f);
 
             if (hoveredNode.HasValue)
                 DrawNodeDetail(spriteBatch, panel, hoveredNode.Value, progress);
@@ -195,7 +189,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                     0.58f);
         }
 
-        private static void DrawGalaxiaConstellation(SpriteBatch spriteBatch, Vector2 center, LeonidConstellationPlayer progress)
+        private static void DrawGalaxiaConstellation(SpriteBatch spriteBatch, Rectangle panel, Vector2 center, LeonidConstellationPlayer progress)
         {
             // GenericSparkle and BloomLineVFX are world particles, so they cannot be handed directly to
             // an interface layer. This is their CustomDraw code using the original textures, origins,
@@ -203,6 +197,9 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             spriteBatch.End();
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone, null, Main.UIScaleMatrix);
 
+            DrawCelestialBackdrop(spriteBatch, panel, center);
+
+            int connectionIndex = 0;
             foreach (LeonidConstellationNode node in LeonidConstellation.Nodes)
             {
                 Vector2 start = center + node.Position;
@@ -210,49 +207,91 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 {
                     LeonidConstellationNode connected = LeonidConstellation.GetNode(connectedStar);
                     bool bright = progress.IsUnlocked(node.Star) && progress.IsUnlocked(connectedStar);
-                    DrawGalaxiaLine(spriteBatch, start, center + connected.Position, bright ? Lit : Dormant, bright ? 0.46f : 0.22f);
+                    Vector2 end = center + connected.Position;
+                    DrawGalaxiaLine(spriteBatch, start, end, bright ? Lit : Dormant, bright ? 0.46f : 0.22f);
+
+                    // Awakened paths carry one slow bead of starlight instead of gaining another border.
+                    if (bright)
+                    {
+                        float travel = (Main.GlobalTimeWrappedHourly * 0.16f + connectionIndex * 0.173f) % 1f;
+                        travel = travel * travel * (3f - 2f * travel);
+                        DrawGalaxiaSparkle(spriteBatch, Vector2.Lerp(start, end, travel), Color.White, Lit, 0.13f, 40 + connectionIndex);
+                    }
+
+                    connectionIndex++;
                 }
             }
 
+            Texture2D ringTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
             foreach (LeonidConstellationNode node in LeonidConstellation.Nodes)
             {
                 bool unlocked = progress.IsUnlocked(node.Star);
                 bool affordable = !unlocked && progress.AvailablePoints >= node.Cost;
+                Vector2 position = center + node.Position;
+                bool hovered = Vector2.DistanceSquared(new Vector2(Main.mouseX, Main.mouseY), position) <= (NodeRadius + 7f) * (NodeRadius + 7f);
                 Color starColor = unlocked ? Color.White : affordable ? new Color(224, 213, 255) : new Color(125, 142, 206);
                 Color bloomColor = unlocked ? Lit : affordable ? Available : Dormant;
-                float scale = node.Star == LeonidStar.Regulus ? 0.78f : unlocked ? 0.54f : affordable ? 0.44f : 0.34f;
-                DrawGalaxiaSparkle(spriteBatch, center + node.Position, starColor, bloomColor, scale, (int)node.Star);
+                float scale = node.Star == LeonidStar.Regulus ? 0.82f : unlocked ? 0.58f : affordable ? 0.48f : 0.36f;
+                DrawGalaxiaSparkle(spriteBatch, position, starColor, bloomColor, hovered ? scale * 1.16f : scale, (int)node.Star);
+
+                if (hovered)
+                {
+                    float pulse = 0.5f + 0.5f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 4.2f);
+                    spriteBatch.Draw(
+                        ringTexture,
+                        position,
+                        null,
+                        bloomColor * (0.48f + pulse * 0.22f),
+                        -Main.GlobalTimeWrappedHourly * 0.7f,
+                        ringTexture.Size() * 0.5f,
+                        0.19f + pulse * 0.025f,
+                        SpriteEffects.None,
+                        0f);
+                }
             }
 
             spriteBatch.End();
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, RasterizerState.CullNone, null, Main.UIScaleMatrix);
         }
 
-        private static void DrawNode(SpriteBatch spriteBatch, Vector2 position, LeonidConstellationNode node, bool unlocked, bool affordable, bool hovered)
+        private static void DrawCelestialBackdrop(SpriteBatch spriteBatch, Rectangle panel, Vector2 center)
         {
-            Texture2D pixel = TextureAssets.MagicPixel.Value;
+            Texture2D bloomTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D starTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/Sparkle").Value;
+            float breath = 0.5f + 0.5f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 0.72f);
+
+            // Three broad, transparent blooms read as a drifting nebula without becoming a new container.
+            spriteBatch.Draw(bloomTexture, center + new Vector2(-84f, -18f), null, new Color(48, 66, 180) * (0.09f + breath * 0.025f), 0f, bloomTexture.Size() * 0.5f, new Vector2(2.85f, 2.05f), SpriteEffects.None, 0f);
+            spriteBatch.Draw(bloomTexture, center + new Vector2(154f, 52f), null, new Color(142, 81, 210) * (0.065f + (1f - breath) * 0.02f), 0f, bloomTexture.Size() * 0.5f, new Vector2(2.15f, 1.55f), SpriteEffects.None, 0f);
+            spriteBatch.Draw(bloomTexture, center + new Vector2(-18f, 112f), null, Lit * (0.035f + breath * 0.012f), 0f, bloomTexture.Size() * 0.5f, new Vector2(1.5f, 0.95f), SpriteEffects.None, 0f);
+
+            // A deterministic field of tiny points gives the constellation depth while staying calm and clean.
+            for (int i = 0; i < 24; i++)
+            {
+                float x = panel.X + 42f + Hash01(i * 37 + 11) * (panel.Width - 84f);
+                float y = panel.Y + 82f + Hash01(i * 53 + 29) * (panel.Height - 172f);
+                float twinkle = 0.5f + 0.5f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * (0.9f + Hash01(i * 71 + 5) * 1.2f) + i * 1.71f);
+                float scale = 0.055f + Hash01(i * 97 + 17) * 0.07f;
+                Color color = Color.Lerp(new Color(110, 145, 255), new Color(224, 207, 255), Hash01(i * 43 + 3));
+                Vector2 position = new(x, y);
+
+                spriteBatch.Draw(bloomTexture, position, null, color * (0.10f + twinkle * 0.08f), 0f, bloomTexture.Size() * 0.5f, scale * 0.72f, SpriteEffects.None, 0f);
+                spriteBatch.Draw(starTexture, position, null, color * (0.18f + twinkle * 0.22f), i * 0.83f, starTexture.Size() * 0.5f, scale, SpriteEffects.None, 0f);
+            }
+        }
+
+        private static void DrawNodeLabel(SpriteBatch spriteBatch, Vector2 position, LeonidConstellationNode node, bool unlocked, bool affordable, bool hovered)
+        {
             float pulse = 0.5f + 0.5f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 3.2f + (int)node.Star * 0.8f);
-            Color color = unlocked ? Lit : affordable ? Available : Dormant;
-            float radius = NodeRadius + (unlocked ? 2f + pulse * 2f : hovered ? 2f : 0f);
-            Rectangle glow = Utils.CenteredRectangle(position, new Vector2(radius * 2f + 12f));
-            Rectangle core = Utils.CenteredRectangle(position, new Vector2(radius * 2f));
-
-            spriteBatch.Draw(pixel, glow, color * (unlocked ? 0.16f + pulse * 0.1f : 0.08f));
-            // The numerical matrix frame stays intact, while its transparent fill exposes the Galaxia star below.
-            spriteBatch.Draw(pixel, core, color * (unlocked ? 0.30f : 0.20f));
-            DrawOutline(spriteBatch, core, Color.White * (unlocked ? 0.92f : 0.4f), 1);
-
+            Color labelColor = unlocked ? Color.Lerp(Lit, Color.White, 0.28f + pulse * 0.24f) : affordable ? new Color(230, 218, 255) : new Color(154, 168, 218);
             string label = node.Star == LeonidStar.Regulus ? "★" : node.Cost.ToString();
-            DrawCenteredText(spriteBatch, label, position, unlocked ? Color.White : new Color(230, 223, 255), node.Star == LeonidStar.Regulus ? 0.9f : 0.62f);
+            float bob = hovered ? (float)Math.Sin(Main.GlobalTimeWrappedHourly * 4f) * 1.5f : 0f;
+
+            DrawCenteredText(spriteBatch, label, position + new Vector2(0f, 22f + bob), labelColor, hovered ? 0.67f : 0.58f);
         }
 
         private static void DrawNodeDetail(SpriteBatch spriteBatch, Rectangle panel, LeonidConstellationNode node, LeonidConstellationPlayer progress)
         {
-            Texture2D pixel = TextureAssets.MagicPixel.Value;
-            Rectangle detail = new(panel.X + 24, panel.Bottom - 174, 310, 98);
-            spriteBatch.Draw(pixel, detail, new Color(12, 18, 52, 235));
-            DrawOutline(spriteBatch, detail, progress.IsUnlocked(node.Star) ? Lit : Frame, 1);
-
             string root = "Mods.CalamityLegendsComeBack.Items.Weapons.LeonidProgenitor.Constellation.Nodes." + LeonidConstellation.LocalizationKey(node.Star);
             string name = Language.GetTextValue(root + ".Name");
             string description = Language.GetTextValue(root + ".Description");
@@ -262,9 +301,11 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                     ? Language.GetTextValue("Mods.CalamityLegendsComeBack.Items.Weapons.LeonidProgenitor.Constellation.Unlocked")
                     : string.Format(Language.GetTextValue("Mods.CalamityLegendsComeBack.Items.Weapons.LeonidProgenitor.Constellation.Cost"), node.Cost);
 
-            Utils.DrawBorderString(spriteBatch, name, detail.TopLeft() + new Vector2(12f, 9f), Lit, 0.74f);
-            Utils.DrawBorderString(spriteBatch, state, detail.TopRight() + new Vector2(-112f, 10f), Color.White, 0.55f);
-            Utils.DrawBorderString(spriteBatch, description, detail.TopLeft() + new Vector2(12f, 39f), new Color(219, 228, 255), 0.52f, 0f, 0f, -1);
+            Vector2 detailOrigin = new(panel.X + 30f, panel.Bottom - 158f);
+            Vector2 stateSize = FontAssets.MouseText.Value.MeasureString(state) * 0.55f;
+            Utils.DrawBorderString(spriteBatch, $"✦ {name}", detailOrigin, Lit, 0.74f);
+            Utils.DrawBorderString(spriteBatch, state, detailOrigin + new Vector2(304f - stateSize.X, 3f), Color.White, 0.55f);
+            Utils.DrawBorderString(spriteBatch, description, detailOrigin + new Vector2(0f, 35f), new Color(219, 228, 255), 0.52f, 0f, 0f, -1);
         }
 
         private static void HandleInteractions(Player player, LeonidConstellationPlayer progress, Rectangle panel)
@@ -349,13 +390,13 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             spriteBatch.Draw(capTexture, end, null, color, rotation, capOrigin, capScale, SpriteEffects.None, 0f);
         }
 
-        private static void DrawOutline(SpriteBatch spriteBatch, Rectangle area, Color color, int thickness)
+        private static float Hash01(int seed)
         {
-            Texture2D pixel = TextureAssets.MagicPixel.Value;
-            spriteBatch.Draw(pixel, new Rectangle(area.X, area.Y, area.Width, thickness), color);
-            spriteBatch.Draw(pixel, new Rectangle(area.X, area.Bottom - thickness, area.Width, thickness), color);
-            spriteBatch.Draw(pixel, new Rectangle(area.X, area.Y, thickness, area.Height), color);
-            spriteBatch.Draw(pixel, new Rectangle(area.Right - thickness, area.Y, thickness, area.Height), color);
+            uint value = (uint)seed;
+            value ^= value << 13;
+            value ^= value >> 17;
+            value ^= value << 5;
+            return (value & 0x00FFFFFF) / 16777215f;
         }
 
         private static void DrawCenteredText(SpriteBatch spriteBatch, string text, Vector2 center, Color color, float scale)

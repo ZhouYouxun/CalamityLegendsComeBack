@@ -30,8 +30,8 @@ namespace CalamityLegendsComeBack.Accssory.BF.General
         {
             CreateRecipe()
                 .AddIngredient<BFResonatingQuiver>()
-                .AddIngredient(ItemID.SharkFin, 10)
-                .AddIngredient(ItemID.SoulofNight, 10)
+                .AddIngredient<CalamityMod.Items.Materials.ReaperTooth>(10)
+                .AddIngredient<CalamityMod.Items.Materials.RuinousSoul>(10)
                 .AddTile(TileID.LunarCraftingStation)
                 .Register();
         }

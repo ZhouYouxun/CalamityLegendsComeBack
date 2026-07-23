@@ -424,14 +424,36 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
 
             if (!Main.dedServ)
             {
-                if (Main.rand.NextBool(3))
+                if (Main.rand.NextBool(2))
                 {
                     Dust d = Dust.NewDustPerfect(Projectile.Center + Main.rand.NextVector2Circular(20f, 20f), DustID.GoldFlame, Main.rand.NextVector2Circular(3.5f, 3.5f), 0, default, 1.2f);
                     d.noGravity = true;
                 }
 
+                // Energy absorbing effect into the impaled blade
+                Vector2 absorbSpawn = Projectile.Center + Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(30f, 65f);
+                Vector2 absorbVel = (Projectile.Center - absorbSpawn).SafeNormalize(Vector2.Zero) * Main.rand.NextFloat(2f, 5.5f);
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    absorbSpawn,
+                    absorbVel,
+                    false,
+                    Main.rand.Next(8, 14),
+                    Main.rand.NextFloat(0.22f, 0.42f),
+                    Main.rand.NextBool(3) ? Color.White : new Color(255, 214, 88)));
+
                 if ((int)Projectile.localAI[0] % ImpaleTickInterval == 0)
+                {
                     GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(npc.Center, Vector2.Zero, new Color(255, 214, 88), Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.05f, 0.9f, 14));
+                    GeneralParticleHandler.SpawnParticle(new GenericSparkle(
+                        npc.Center + Main.rand.NextVector2Circular(10f, 10f),
+                        Vector2.Zero,
+                        Color.White,
+                        new Color(255, 214, 88),
+                        Main.rand.NextFloat(0.45f, 0.75f),
+                        12,
+                        0f,
+                        2.4f));
+                }
             }
 
             // 10跳打满或滞留超时便引爆成燃烧碎片
@@ -455,12 +477,45 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                 return;
 
             Vector2 impactPoint = target?.Center ?? Projectile.Center;
+            GeneralParticleHandler.SpawnParticle(new StrongBloom(impactPoint, Vector2.Zero, new Color(255, 224, 90), 1.05f, 16));
             GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(impactPoint, Vector2.Zero, new Color(255, 214, 88), Vector2.One, Projectile.rotation, 0.14f, 2.6f, 22));
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(impactPoint, Vector2.Zero, new Color(255, 110, 36), Vector2.One, Projectile.rotation + MathHelper.PiOver2, 0.08f, 1.9f, 16));
+
             for (int i = 0; i < 34; i++)
             {
                 Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(4f, 17f);
                 Dust dust = Dust.NewDustPerfect(impactPoint, DustID.GoldFlame, velocity, 0, Main.rand.NextBool(3) ? Color.White : new Color(255, 210, 70), Main.rand.NextFloat(1f, 1.8f));
                 dust.noGravity = true;
+            }
+
+            for (int i = 0; i < 14; i++)
+            {
+                Vector2 sparkVel = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(5f, 16f);
+                GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                    impactPoint,
+                    sparkVel,
+                    "CalamityMod/Particles/Sparkle",
+                    false,
+                    Main.rand.Next(14, 24),
+                    Main.rand.NextFloat(0.6f, 1.1f),
+                    Main.rand.NextBool(3) ? Color.White : new Color(255, 214, 88),
+                    new Vector2(0.3f, 1.2f),
+                    true, true,
+                    shrinkSpeed: 0.12f));
+            }
+
+            for (int i = 0; i < 8; i++)
+            {
+                float angle = MathHelper.TwoPi * i / 8f;
+                GeneralParticleHandler.SpawnParticle(new GenericSparkle(
+                    impactPoint + angle.ToRotationVector2() * 16f,
+                    angle.ToRotationVector2() * Main.rand.NextFloat(2f, 6f),
+                    Color.White,
+                    new Color(255, 214, 88),
+                    Main.rand.NextFloat(0.5f, 0.85f),
+                    14,
+                    0f,
+                    2.5f));
             }
         }
 
@@ -476,12 +531,28 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
 
             if (!Main.dedServ)
             {
+                GeneralParticleHandler.SpawnParticle(new StrongBloom(Projectile.Center, Vector2.Zero, new Color(255, 214, 88), 1.15f, 18));
                 GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Vector2.Zero, new Color(255, 214, 88), Vector2.One, Projectile.rotation, 0.14f, 2.6f, 24));
                 for (int i = 0; i < 36; i++)
                 {
                     Vector2 vel = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(4f, 16f);
                     Dust d = Dust.NewDustPerfect(Projectile.Center, DustID.GoldFlame, vel, 0, Main.rand.NextBool(3) ? Color.White : new Color(255, 210, 70), Main.rand.NextFloat(1.0f, 1.8f));
                     d.noGravity = true;
+                }
+                for (int i = 0; i < 12; i++)
+                {
+                    Vector2 vel = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(6f, 18f);
+                    GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                        Projectile.Center,
+                        vel,
+                        "CalamityMod/Particles/Sparkle",
+                        false,
+                        Main.rand.Next(16, 26),
+                        Main.rand.NextFloat(0.6f, 1.1f),
+                        Main.rand.NextBool(3) ? Color.White : new Color(255, 214, 88),
+                        new Vector2(0.35f, 1.3f),
+                        true, true,
+                        shrinkSpeed: 0.12f));
                 }
             }
 
@@ -553,28 +624,46 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
             if (Vector2.Distance(owner.Center, Projectile.Center) >= 1400f)
                 return;
 
+            float speed = Projectile.velocity.Length();
+            float speedFactor = Utils.GetLerpValue(2f, 26f, speed, true);
             Vector2 travel = Projectile.velocity.SafeNormalize(Vector2.UnitX * Projectile.direction);
-            int count = postTrigger ? 2 : 1;
+
+            // 1. High quality trailing dots (PointParticle) along flight axis when moving fast
+            if (speed > 3f)
+            {
+                Vector2 pointPos = Projectile.Center - travel * Main.rand.NextFloat(8f, 50f * (1f + speedFactor));
+                GeneralParticleHandler.SpawnParticle(new PointParticle(
+                    pointPos,
+                    -travel * Main.rand.NextFloat(1f, 4f),
+                    false,
+                    Main.rand.Next(8, 15),
+                    Main.rand.NextFloat(0.6f, 1.1f) * (0.6f + speedFactor * 0.5f),
+                    Main.rand.NextBool(3) ? Color.White : new Color(255, 214, 88),
+                    true));
+            }
+
+            // 2. CustomSpark particles scaled by speed
+            int count = postTrigger ? (int)(2 + speedFactor * 3) : (int)(1 + speedFactor * 2);
             for (int i = 0; i < count; i++)
             {
-                Vector2 pos = Projectile.Center - travel * Main.rand.NextFloat(6f, 44f) + Main.rand.NextVector2Circular(12f, 12f);
-                Vector2 sparkVelocity = -travel * Main.rand.NextFloat(1f, postTrigger ? 7f : 3f) + Main.rand.NextVector2Circular(1.6f, 1.6f);
+                Vector2 pos = Projectile.Center - travel * Main.rand.NextFloat(6f, 44f * (1f + speedFactor)) + Main.rand.NextVector2Circular(12f, 12f);
+                Vector2 sparkVelocity = -travel * Main.rand.NextFloat(1f, 3f + speedFactor * 8f) + Main.rand.NextVector2Circular(1.6f, 1.6f);
 
                 GeneralParticleHandler.SpawnParticle(new CustomSpark(
                     pos,
                     sparkVelocity,
                     "CalamityMod/Particles/Sparkle",
                     false,
-                    postTrigger ? Main.rand.Next(10, 14) : Main.rand.Next(7, 15),
-                    postTrigger ? Main.rand.NextFloat(0.32f, 0.62f) : Main.rand.NextFloat(0.4f, 0.7f),
-                    (postTrigger ? new Color(255, 214, 88) : new Color(255, 111, 34)) * (postTrigger ? 0.4f : 0.45f),
-                    new Vector2(1f, 1f),
+                    postTrigger ? Main.rand.Next(10, 16) : Main.rand.Next(7, 15),
+                    postTrigger ? Main.rand.NextFloat(0.35f, 0.75f) * (0.8f + speedFactor * 0.4f) : Main.rand.NextFloat(0.4f, 0.7f),
+                    (postTrigger ? new Color(255, 214, 88) : new Color(255, 111, 34)) * (postTrigger ? 0.55f : 0.45f),
+                    new Vector2(1f, 1.1f + speedFactor * 0.8f),
                     true,
                     false,
                     Main.rand.NextFloat(-10, 10)));
             }
 
-            if (postTrigger && Main.rand.NextBool(3))
+            if (postTrigger && Main.rand.NextBool(2))
             {
                 GeneralParticleHandler.SpawnParticle(new CustomSpark(
                     Projectile.Center + Main.rand.NextVector2Circular(60f, 60f),
@@ -582,9 +671,9 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                     "CalamityMod/Particles/Sparkle",
                     false,
                     Main.rand.Next(24, 36),
-                    Main.rand.NextFloat(1.0f, 1.2f),
+                    Main.rand.NextFloat(1.0f, 1.3f),
                     new Color(255, 214, 88),
-                    new Vector2(0.4f, 1f)));
+                    new Vector2(0.4f, 1.2f)));
             }
         }
 
@@ -981,6 +1070,8 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
         private void DrawRightThrowMotionSmear(Vector2 drawPos)
         {
             Texture2D smoke = ModContent.Request<Texture2D>("CalamityMod/Particles/CircularSmearSmokey").Value;
+            Texture2D smear = ModContent.Request<Texture2D>("CalamityMod/Particles/VerticalSmearLarge").Value;
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             bool postTrigger = Projectile.ai[1] == RightThrowDashing;
             Color gold = new Color(255, 214, 88) with { A = 0 };
             Color orange = new Color(255, 111, 34) with { A = 0 };
@@ -1006,6 +1097,25 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                     travelAngle,
                     smoke.Size() * 0.5f,
                     new Vector2(1.1f + 1.9f * speedFactor, 0.6f) * Projectile.scale,
+                    SpriteEffects.None,
+                    0);
+
+                // High speed vertical smear trail
+                Main.EntitySpriteDraw(smear, drawPos - Projectile.velocity.SafeNormalize(Vector2.UnitX) * 22f * speedFactor, null,
+                    gold * 0.45f * speedFactor,
+                    travelAngle + MathHelper.PiOver2,
+                    smear.Size() * 0.5f,
+                    new Vector2(0.5f + 0.7f * speedFactor, 0.35f + 0.5f * speedFactor) * Projectile.scale,
+                    SpriteEffects.None,
+                    0);
+
+                // Bright leading edge tip bloom
+                Vector2 tipPos = drawPos + Projectile.velocity.SafeNormalize(Vector2.UnitX) * 36f * Projectile.scale;
+                Main.EntitySpriteDraw(bloom, tipPos, null,
+                    gold * 0.65f * speedFactor,
+                    0f,
+                    bloom.Size() * 0.5f,
+                    0.28f * speedFactor,
                     SpriteEffects.None,
                     0);
             }

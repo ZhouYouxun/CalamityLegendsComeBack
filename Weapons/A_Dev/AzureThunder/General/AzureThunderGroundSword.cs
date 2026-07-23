@@ -1,5 +1,6 @@
 using System;
 using CalamityLegendsComeBack.Accssory.TS;
+using CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.General;
 using CalamityLegendsComeBack.Weapons.Visuals;
 using CalamityMod;
 using Microsoft.Xna.Framework;
@@ -25,6 +26,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         private bool initialized;
         private Vector2 diveTarget;
         private int outlinePulse;
+
+        // 锻造雷的起点高度，沿用旧竖直雷 1000f * 0.58f 的观感。
+        private const float ForgingLightningHeight = 580f;
 
         // 饰品牵引地剑时使用椭圆轨道参数。
         private const float FollowEllipseRadiusX = 92f;
@@ -222,21 +226,17 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         private void SpawnForgingLightning()
         {
-            // 只由拥有者生成锻造雷，避免多人重复造视觉弹幕。
-            if (Main.myPlayer != Projectile.owner)
+            // 锻造雷只负责表现“天雷锻剑”，不造成任何伤害。
+            // 改用裂变电弧后它是纯本地粒子，不再走弹幕同步，所以每个客户端自己生成一次。
+            if (Main.dedServ)
                 return;
 
-            // 这道雷只负责表现“天雷锻剑”，不造成任何伤害。
-            AzureThunderPlayer.SpawnVerticalLightning(
-                Projectile.GetSource_FromThis(),
+            AzureThunderSounds.PlayLightningSpawn(Projectile.Center);
+            AzureThunderFissionBolt.Strike(
                 Projectile.Center,
-                null,
-                1,
-                0f,
-                Projectile.owner,
-                big: false,
-                spawnHeightMultiplier: 0.58f,
-                visualOnly: true);
+                ForgingLightningHeight,
+                Main.rand.NextFloat(-0.2f, 0.2f),
+                1.05f);
         }
 
         private void SpawnDeathChargeVisuals()

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core;
+using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects;
 using CalamityMod;
 using CalamityMod.Items.Weapons.Rogue;
 using Microsoft.Xna.Framework;
@@ -188,6 +189,17 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                     SoundEngine.PlaySound(SoundID.Item74 with { Volume = 1.0f, Pitch = -0.5f }, player.Center);
                     SoundEngine.PlaySound(SoundID.Item117 with { Volume = 0.85f, Pitch = -0.2f }, player.Center);
                     calamityPlayer.GeneralScreenShakePower = Math.Max(calamityPlayer.GeneralScreenShakePower, 12f);
+
+                    // 起手：星辉先从玩家身上炸开，再朝引力场展开的方向拉出一道星轨，
+                    // 把"从我这里发动 → 落到那边"这条动线连起来。
+                    Vector2 toField = (spawnPos - player.Center).SafeNormalize(Vector2.UnitY);
+                    LeonidStarlight.Ring(player.Center, 16, 40f, LeonidVisualUtils.GetReadyGold(),
+                        LeonidStarlightShape.Shard, speed: 8f, scale: 1.15f, hoverTime: 20, lifetime: 180, lanceSpeed: 22f);
+                    LeonidStarlight.Spray(player.Center, toField, 12, LeonidVisualUtils.StratusBlue,
+                        LeonidStarlightShape.Needle, speed: 13f, spread: 0.35f, scale: 1.2f,
+                        hoverTime: 26, lifetime: 190, lanceSpeed: 24f);
+                    LeonidStarlight.Spawn(player.Center, Vector2.Zero, LeonidVisualUtils.StarGold,
+                        LeonidStarlightShape.Halo, 1.8f, 14, 96, 11f, linksToSiblings: false);
 
                     CombatText.NewText(player.getRect(), LeonidVisualUtils.GetReadyGold(), "狮子座回响 / Leonid Echo!", true, true);
                 }

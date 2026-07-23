@@ -190,6 +190,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 BlossomFluxChloroplastPresetType.Chlo_BRecov => BFRecoveryRightBalance.GetStats().ChargeFrames,
                 BlossomFluxChloroplastPresetType.Chlo_CDetec => BFReconRightBalance.GetStats().ChargeFrames,
                 BlossomFluxChloroplastPresetType.Chlo_DBomb => BFBombardRightBalance.GetStats().ChargeFrames,
+                // 瘟疫右键蓄力时间翻倍（孢子球随蓄力进度长大，因此这里同时决定了 ready 与 max 帧数）。
+                BlossomFluxChloroplastPresetType.Chlo_EPlague => MaxChargeFrames * 2,
                 _ => MaxChargeFrames
             };
             return GetScaledRightChargeFrames(baseFrames);

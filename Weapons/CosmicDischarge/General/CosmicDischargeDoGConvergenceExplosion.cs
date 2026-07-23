@@ -19,6 +19,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
         private ref float Time => ref Projectile.ai[0];
         private ref float Radius => ref Projectile.ai[1];
+        private bool IsUltimateBurst => Projectile.ai[2] == 1f;
 
         public override void SetDefaults()
         {
@@ -36,13 +37,15 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
         public override bool ShouldUpdatePosition() => false;
 
-        public override bool? CanDamage() => Time <= 16f || Projectile.timeLeft % 6 == 0;
+        public override bool? CanDamage() => IsUltimateBurst ? Time <= 2f : Time <= 16f || Projectile.timeLeft % 6 == 0;
 
         public override void AI()
         {
             Time++;
             if (Radius <= 0f)
                 Radius = 145f;
+            if (IsUltimateBurst && Time == 1f)
+                Projectile.timeLeft = 54;
 
             Projectile.Resize((int)(Radius * 2f), (int)(Radius * 2f));
             // Fade in over 8 frames, fade out over last 30 frames of the 120-frame lifetime.

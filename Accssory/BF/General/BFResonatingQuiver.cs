@@ -30,9 +30,9 @@ namespace CalamityLegendsComeBack.Accssory.BF.General
         {
             CreateRecipe()
                 .AddIngredient<BFTunedQuiver>()
-                .AddIngredient(ItemID.RangerEmblem)
-                .AddIngredient(ItemID.ChlorophyteBar, 5)
-                .AddIngredient(ItemID.FragmentVortex, 5)
+                .AddIngredient<CalamityMod.Items.Accessories.DeadshotBrooch>()
+                .AddIngredient<CalamityMod.Items.Materials.LifeAlloy>(5)
+                .AddIngredient<CalamityMod.Items.Placeables.Ores.ExodiumCluster>(5)
                 .AddTile(TileID.LunarCraftingStation)
                 .Register();
         }

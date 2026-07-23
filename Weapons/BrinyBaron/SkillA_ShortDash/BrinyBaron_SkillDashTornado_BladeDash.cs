@@ -4,6 +4,7 @@ using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.TideValue;
 using CalamityMod;
 using CalamityMod.Enums;
+using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -208,7 +209,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
                 return;
             }
 
-            Projectile.Center += actualVelocity;
             SyncOwnerToProjectile(owner, DashBladeDistance);
             bladeRotation = lockedDirection.ToRotation() + MathHelper.PiOver4;
 
@@ -226,7 +226,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
 
             float speedFactor = MathHelper.Lerp(1f, 0.55f, stateTimer / (float)ReboundTimeMax);
             Projectile.velocity = lockedDirection * ReboundSpeed * DashSpeedMultiplier * speedFactor;
-            Projectile.Center += Projectile.velocity;
             SyncOwnerToProjectile(owner, ReboundBladeDistance);
             bladeRotation = lockedDirection.ToRotation() + MathHelper.PiOver4;
 
@@ -249,10 +248,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
 
         private void SyncOwnerToProjectile(Player owner, float bladeDistance)
         {
-            Vector2 mountedCenterOffset = owner.MountedCenter - owner.Center;
-            Vector2 desiredMountedCenter = Projectile.Center - lockedDirection * bladeDistance;
-            owner.Center = desiredMountedCenter - mountedCenterOffset;
             owner.velocity = Projectile.velocity;
+            Projectile.Center = owner.MountedCenter + lockedDirection * bladeDistance;
         }
 
         public override bool? CanHitNPC(NPC target)
@@ -278,7 +275,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             if (ReboundDashMode)
             {
                 SpawnCeruleanShieldExplosion(target.Center, GetReliableDashDirection());
-                StartRebound(target.Center);
+                StartRebound(owner, target.Center);
                 if (Main.myPlayer == Projectile.owner)
                 {
                     var dashCooldown = owner.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>();
@@ -419,7 +416,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             Projectile.netUpdate = true;
         }
 
-        private void StartRebound(Vector2 impactCenter)
+        private void StartRebound(Player owner, Vector2 impactCenter)
         {
             hasBounced = true;
             dashState = 2;
@@ -432,6 +429,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
 
             Projectile.friendly = false;
             Projectile.velocity = lockedDirection * ReboundSpeed * DashSpeedMultiplier;
+            SyncOwnerToProjectile(owner, ReboundBladeDistance);
             Projectile.netUpdate = true;
 
             SpawnBounceBurst(impactCenter, reliableDashDirection);
@@ -520,6 +518,35 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
 
         private void SpawnStartBurst()
         {
+            if (Main.dedServ)
+                return;
+
+            Vector2 forward = lockedDirection.SafeNormalize(Vector2.UnitX);
+
+            // 剑刃凝现：轻微水光散逸，像刀身从海水中被抽出
+            for (int i = 0; i < 6; i++)
+            {
+                Vector2 dustVel = forward.RotatedByRandom(0.7f) * Main.rand.NextFloat(1.2f, 3.5f);
+                Dust d = Dust.NewDustPerfect(
+                    Projectile.Center + Main.rand.NextVector2Circular(10f, 10f),
+                    Main.rand.NextBool(3) ? DustID.Frost : DustID.Water,
+                    dustVel, 120,
+                    new Color(100, 215, 255),
+                    Main.rand.NextFloat(0.55f, 0.82f));
+                d.noGravity = true;
+            }
+
+            // GlowOrbParticle 凝聚光点
+            for (int i = 0; i < 3; i++)
+            {
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    Projectile.Center + Main.rand.NextVector2Circular(12f, 12f),
+                    forward * Main.rand.NextFloat(0.4f, 1.2f) + Main.rand.NextVector2Circular(0.3f, 0.3f),
+                    false,
+                    Main.rand.Next(10, 18),
+                    Main.rand.NextFloat(0.05f, 0.10f),
+                    Color.Lerp(new Color(80, 190, 255), new Color(195, 245, 255), Main.rand.NextFloat())));
+            }
         }
 
         private void SpawnChargeReadyBurst()
@@ -537,6 +564,62 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
                 Volume = 0.65f,
                 Pitch = -0.15f
             }, Projectile.Center);
+
+            if (Main.dedServ)
+                return;
+
+            Vector2 forward = lockedDirection.SafeNormalize(Vector2.UnitX);
+            Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
+            Vector2 tip = Projectile.Center + forward * ReadyBladeDistance;
+
+            // 三层 DirectionalPulseRing 向前爆破（借鉴 Xyk 多层前冲脉冲技术，水蓝色调）
+            for (int i = 0; i < 3; i++)
+            {
+                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                    tip - forward * (4f + i * 3.5f),
+                    forward * (0.10f + i * 0.025f),
+                    Color.Lerp(new Color(55, 175, 255), Color.White, 0.18f + i * 0.09f),
+                    new Vector2(0.88f, 2.4f),
+                    forward.ToRotation(),
+                    0.25f + i * 0.04f,
+                    0.05f,
+                    16 - i * 2));
+            }
+
+            // 圆形冲击波（近圆 DirectionalPulseRing 模拟爆破环，Xyk BloomRing 思路）
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                tip, Vector2.Zero,
+                new Color(65, 195, 255) with { A = 0 },
+                new Vector2(1.05f, 1.05f),
+                0f, 0.22f, 0.04f, 24));
+
+            // GlowBlade 刀气火花（已有 FlightEffects 技术直接复用）
+            const string GlowBladeTexture = "CalamityLegendsComeBack/Texture/Shared/GlowBlade";
+            for (int i = 0; i < 4; i++)
+            {
+                float sideOff = Main.rand.NextFloatDirection() * 5f;
+                GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                    tip - forward * (5f + i * 2.5f) + right * sideOff,
+                    forward * 0.03f + right * sideOff * 0.008f,
+                    GlowBladeTexture,
+                    false, 7, 0.17f,
+                    new Color(145, 235, 255) * 0.92f,
+                    new Vector2(0.55f, 1.85f),
+                    glowCenter: true, shrinkSpeed: 0.95f, glowCenterScale: 0.88f, glowOpacity: 0.70f));
+            }
+
+            // 水/霜尘粒子喷溅（已有水系特效，保留）
+            for (int i = 0; i < 10; i++)
+            {
+                Vector2 dustVel = forward.RotatedByRandom(0.85f) * Main.rand.NextFloat(2.2f, 6.5f);
+                Dust d = Dust.NewDustPerfect(
+                    tip + Main.rand.NextVector2Circular(14f, 14f),
+                    Main.rand.NextBool(3) ? DustID.Frost : DustID.Water,
+                    dustVel, 100,
+                    new Color(120, 222, 255),
+                    Main.rand.NextFloat(0.72f, 1.02f));
+                d.noGravity = true;
+            }
         }
 
         private void SpawnCanceledChargeBurst()
@@ -545,14 +628,167 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
 
         private void SpawnPrepareTrail()
         {
+            if (Main.dedServ)
+                return;
+
+            Vector2 forward = lockedDirection.SafeNormalize(Vector2.UnitX);
+            float chargeProgress = Utils.GetLerpValue(0f, PrepareTime, stateTimer, true);
+
+            // 蓄力轨迹：GlowOrbParticle 随充能进度从剑身向后飘散，颜色由深蓝渐白
+            GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                Projectile.Center + Main.rand.NextVector2Circular(7f, 7f),
+                -forward * Main.rand.NextFloat(0.5f, 1.8f) + Main.rand.NextVector2Circular(0.5f, 0.5f),
+                false,
+                Main.rand.Next(12, 20),
+                MathHelper.Lerp(0.05f, 0.13f, chargeProgress),
+                Color.Lerp(new Color(80, 185, 255), new Color(200, 248, 255), chargeProgress)));
+
+            // 50% 概率伴随水尘
+            if (Main.rand.NextBool(2))
+            {
+                Vector2 dustVel = forward.RotatedByRandom(0.5f) * Main.rand.NextFloat(0.8f, 2.5f);
+                Dust d = Dust.NewDustPerfect(
+                    Projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
+                    DustID.Water, dustVel, 130,
+                    new Color(100, 210, 255),
+                    Main.rand.NextFloat(0.48f, 0.72f));
+                d.noGravity = true;
+            }
         }
 
         private void SpawnBounceBurst(Vector2 center, Vector2 dashDirection)
         {
+            // 注意：SpawnWaterPillarBurst 和 SpawnCeruleanShieldExplosion 已在 OnHitNPC 中单独调用，此处不重复
+            if (Main.dedServ)
+                return;
+
+            Vector2 forward = dashDirection.SafeNormalize(lockedDirection);
+
+            // 四方向 DirectionalPulseRing 爆开（击中反弹冲击感）
+            for (int i = 0; i < 4; i++)
+            {
+                float angle = MathHelper.TwoPi * i / 4f + forward.ToRotation() * 0.5f;
+                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                    center,
+                    Vector2.UnitX.RotatedBy(angle) * 0.05f,
+                    Color.Lerp(new Color(60, 185, 255), Color.White, 0.14f + i * 0.04f),
+                    new Vector2(0.75f, 1.95f),
+                    angle, 0.20f + i * 0.025f, 0.045f, 20));
+            }
+
+            // 大圆形冲击波（Xyk BloomRing 思路，水蓝近圆 DirectionalPulseRing）
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                center, Vector2.Zero,
+                new Color(55, 195, 255) with { A = 0 },
+                new Vector2(1.1f, 1.1f),
+                0f, 0.28f, 0.04f, 30));
+
+            // GlowBlade 刀气溅射（已有 FlightEffects 技术，保留）
+            const string GlowBladeTexture = "CalamityLegendsComeBack/Texture/Shared/GlowBlade";
+            for (int i = 0; i < 6; i++)
+            {
+                Vector2 sparkDir = forward.RotatedByRandom(MathHelper.Pi * 0.65f);
+                GeneralParticleHandler.SpawnParticle(new CustomSpark(
+                    center + Main.rand.NextVector2Circular(10f, 10f),
+                    sparkDir * Main.rand.NextFloat(0.06f, 0.20f),
+                    GlowBladeTexture,
+                    false, 9, 0.22f,
+                    new Color(160, 242, 255) * 0.9f,
+                    new Vector2(0.50f, 2.2f),
+                    glowCenter: true, shrinkSpeed: 0.88f, glowCenterScale: 0.90f, glowOpacity: 0.75f));
+            }
+
+            // WaterFoamParticle 水沫（已有被动冲刺特效中的技术，保留结合）
+            for (int i = 0; i < 5; i++)
+            {
+                Vector2 foamVel = forward.RotatedByRandom(1.0f) * Main.rand.NextFloat(1.5f, 4.5f);
+                GeneralParticleHandler.SpawnParticle(new WaterFoamParticle(
+                    center + Main.rand.NextVector2Circular(14f, 14f),
+                    foamVel,
+                    Main.rand.Next(18, 34),
+                    Main.rand.NextFloat(0.52f, 0.90f),
+                    Color.Lerp(new Color(140, 225, 255), Color.White, Main.rand.NextFloat(0.15f, 0.42f))));
+            }
+
+            // 水/霜尘爆炸（已有水系特效，保留）
+            for (int i = 0; i < 16; i++)
+            {
+                Vector2 dustVel = (i % 2 == 0
+                    ? forward.RotatedByRandom(MathHelper.Pi)
+                    : Vector2.UnitX.RotatedBy(MathHelper.TwoPi * i / 16f)) * Main.rand.NextFloat(3f, 8.5f);
+                Dust d = Dust.NewDustPerfect(
+                    center + Main.rand.NextVector2Circular(18f, 18f),
+                    Main.rand.NextBool(3) ? DustID.Frost : DustID.Water,
+                    dustVel, 100,
+                    new Color(110, 215, 255),
+                    Main.rand.NextFloat(0.78f, 1.22f));
+                d.noGravity = true;
+            }
+
+            // 泡泡 Gore（已有 FlightEffects SpawnOuterWake 技术，保留结合）
+            for (int i = 0; i < 4; i++)
+            {
+                Gore bubble = Gore.NewGorePerfect(
+                    Projectile.GetSource_FromAI(),
+                    center + Main.rand.NextVector2Circular(20f, 20f),
+                    forward.RotatedByRandom(0.8f) * Main.rand.NextFloat(1.8f, 4.5f) + Main.rand.NextVector2Circular(0.4f, 0.4f),
+                    Main.rand.NextBool(3) ? 412 : 411);
+                bubble.timeLeft = 8 + Main.rand.Next(7);
+                bubble.scale = Main.rand.NextFloat(0.55f, 0.95f);
+            }
         }
 
         private void SpawnEndBurst()
         {
+            if (Main.dedServ)
+                return;
+
+            Vector2 forward = lockedDirection.SafeNormalize(Vector2.UnitX);
+
+            // 五方向 DirectionalPulseRing 散开（水面破碎感）
+            for (int i = 0; i < 5; i++)
+            {
+                float angle = MathHelper.TwoPi * i / 5f + forward.ToRotation();
+                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                    Projectile.Center,
+                    Vector2.UnitX.RotatedBy(angle) * 0.04f,
+                    Color.Lerp(new Color(55, 175, 255), Color.White, 0.12f + i * 0.05f),
+                    new Vector2(0.65f, 1.65f),
+                    angle, 0.14f + i * 0.022f, 0.04f, 22));
+            }
+
+            // 结束圆形冲击波（Xyk BloomRing 思路，消散感）
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                Projectile.Center, Vector2.Zero,
+                new Color(55, 175, 255) with { A = 0 },
+                new Vector2(0.95f, 0.95f),
+                0f, 0.15f, 0.038f, 26));
+
+            // GlowOrbParticle 七方向均匀散射
+            for (int i = 0; i < 7; i++)
+            {
+                Vector2 orbDir = Vector2.UnitX.RotatedBy(MathHelper.TwoPi * i / 7f + forward.ToRotation() * 0.3f);
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    Projectile.Center + Main.rand.NextVector2Circular(10f, 10f),
+                    orbDir * Main.rand.NextFloat(1.2f, 3.8f),
+                    false,
+                    Main.rand.Next(16, 26),
+                    Main.rand.NextFloat(0.07f, 0.16f),
+                    Color.Lerp(new Color(75, 195, 255), new Color(195, 245, 255), Main.rand.NextFloat())));
+            }
+
+            // 水/霜尘喷射（已有水系特效，保留）
+            for (int i = 0; i < 14; i++)
+            {
+                Vector2 dustVel = forward.RotatedByRandom(MathHelper.Pi) * Main.rand.NextFloat(2.2f, 7f);
+                Dust d = Dust.NewDustPerfect(
+                    Projectile.Center + Main.rand.NextVector2Circular(16f, 16f),
+                    Main.rand.NextBool(4) ? DustID.Frost : DustID.Water,
+                    dustVel, 100,
+                    new Color(100, 210, 255),
+                    Main.rand.NextFloat(0.72f, 1.08f));
+                d.noGravity = true;
+            }
         }
 
         private void ApplyScreenShake(float power)

@@ -1,3 +1,5 @@
+using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core;
+using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects;
 using CalamityMod;
 using Microsoft.Xna.Framework;
 using Terraria;
@@ -51,6 +53,14 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             Projectile.velocity = Vector2.Zero;
             SpawnTimer++;
 
+            // 落点标记：潜伏流星雨一召出来就在目标点张开一圈星辉，
+            // 之后每落一颗流星补一粒，读得出"这块地已经被点名了"。
+            if (SpawnedComets == 0 && SpawnTimer == 1)
+            {
+                LeonidStarlight.Ring(Projectile.Center, 10, 64f, LeonidVisualUtils.GetReadyGold(),
+                    LeonidStarlightShape.Mote, speed: 2.2f, scale: 0.85f, hoverTime: 44, lifetime: 190, lanceSpeed: 18f);
+            }
+
             // 第一颗立即掉落，之后每 5 帧一颗
             if ((SpawnedComets == 0 || SpawnTimer >= SpawnInterval) && SpawnedComets < MaxComets)
             {
@@ -87,6 +97,29 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             }
         }
 
-        public override bool PreDraw(ref Color lightColor) => false;
+        public override bool PreDraw(ref Color lightColor)
+        {
+            // 落点准星：随着流星一颗颗落下逐渐收紧，最后一颗落地时刚好收到最小。
+            float progress = MaxComets <= 0 ? 0f : SpawnedComets / (float)MaxComets;
+            float fade = Utils.GetLerpValue(0f, 8f, Projectile.timeLeft, true);
+
+            LeonidStarlight.DrawReticle(
+                Projectile.Center,
+                Color.Lerp(LeonidVisualUtils.StratusBlue, LeonidVisualUtils.StarGold, progress),
+                0.5f * fade,
+                MathHelper.Lerp(0.5f, 0.2f, progress),
+                -Main.GlobalTimeWrappedHourly * 1.1f);
+
+            LeonidStarlight.DrawOrbitingStars(
+                Projectile.Center,
+                LeonidVisualUtils.GetReadyGold(),
+                0.42f * fade,
+                0.045f,
+                MathHelper.Lerp(74f, 30f, progress),
+                4,
+                2.2f);
+
+            return false;
+        }
     }
 }

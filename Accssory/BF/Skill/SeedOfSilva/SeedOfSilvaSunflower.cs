@@ -18,7 +18,6 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
 
         private int flashTimer;
 
-        protected override int FlowerSlot => 0;
         protected override BlossomFluxChloroplastPresetType FlowerPreset => BlossomFluxChloroplastPresetType.Chlo_ABreak;
         protected override string FlowerTexturePath => "CalamityLegendsComeBack/Accssory/BF/Skill/SeedOfSilva/SeedPack/Sunflower";
 

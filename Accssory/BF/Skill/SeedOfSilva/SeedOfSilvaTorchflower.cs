@@ -14,7 +14,6 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
 
         private int torchflowerCooldown;
 
-        protected override int FlowerSlot => 3;
         protected override BlossomFluxChloroplastPresetType FlowerPreset => BlossomFluxChloroplastPresetType.Chlo_DBomb;
         protected override string FlowerTexturePath => "CalamityLegendsComeBack/Accssory/BF/Skill/SeedOfSilva/SeedPack/Torchflower";
 

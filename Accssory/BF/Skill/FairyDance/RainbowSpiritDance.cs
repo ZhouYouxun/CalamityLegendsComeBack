@@ -24,9 +24,8 @@ namespace CalamityLegendsComeBack.Accssory.BF.FairyDance
             player.statDefense += 10;
             player.GetDamage(DamageClass.Ranged) += 0.10f;
 
-            BFAccessoryPlayer accessoryPlayer = player.GetModPlayer<BFAccessoryPlayer>();
-            accessoryPlayer.FairyDanceEquipped = true;
-            accessoryPlayer.RainbowSpiritDanceEquipped = true;
+            // 虹灵舞不再继承妖精舞的三只仙灵（FairyDanceEquipped），只保留自己的七彩草蛉。
+            player.GetModPlayer<BFAccessoryPlayer>().RainbowSpiritDanceEquipped = true;
         }
 
         public override bool CanAccessoryBeEquippedWith(Item equippedItem, Item incomingItem, Player player)

@@ -30,19 +30,21 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             System.Collections.Generic.List<Vector2> points = new();
             Vector2 startPos = Owner.MountedCenter;
             Vector2 normal = direction.RotatedBy(MathHelper.PiOver2);
-            float chainCount = Math.Max(1, GetChainCount() - 1);
-            float laneOffset = lane * 18f;
-            float curveSign = lane == 0f ? 0f : Math.Sign(lane);
-            float curveStrength = Math.Abs(lane) / chainCount;
-            int segments = 20;
+            int extendFrames = Kind == CosmicDischargeAttackKind.ChainKnifeBiteAll ? 52 : 26;
+            float flightProgress = Utils.GetLerpValue(6f, 6f + extendFrames, Time, true);
+
+            // Each head travels on its own arcing lane, but the physical chain is taut from
+            // the player's hand to that head at every instant. This separates trajectory
+            // language from connector shape, as Pulse Dragon / Spine of Thanatos do visually.
+            float fanEnvelope = MathF.Sin(flightProgress * MathHelper.Pi);
+            float laneSpacing = 30f + Math.Abs(lane) * 10f;
+            Vector2 endpoint = startPos + direction * reach + normal * lane * laneSpacing * fanEnvelope;
+            int segments = 12;
 
             for (int i = 0; i <= segments; i++)
             {
                 float t = i / (float)segments;
-                float convergence = 1f - t;
-                float side = laneOffset * convergence + curveSign * MathF.Sin(MathHelper.Pi * t) * MathHelper.Lerp(24f, 92f, curveStrength);
-                float wave = MathF.Sin(Time * 0.42f + t * MathHelper.TwoPi) * 6f * curveStrength * convergence;
-                points.Add(startPos + direction * (reach * t) + normal * (side + wave));
+                points.Add(Vector2.Lerp(startPos, endpoint, t));
             }
 
             return points;
