@@ -21,12 +21,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             { "Skeletron",                                  23,    17,     8,    1,      1 },
             { "Hardmode",                                   39,    40,    12,   12,      1 },
             { "Any Mechanical Boss",                        48,    42,    16,   16,      1 },//�ĳ�2����
-            { "Plantera",                                   36,    24,    14,   15,      1 },
+            { "Plantera",                                   36,    24,    14,   15,     30 },
             { "Golem",                                      42,    30,    15,   20,     51 },
             { "Plaguebringer Goliath",                      52,    44,    23,   30,     67 },
             { "Moon Lord",                                  79,    84,    52,   32,     76 },
-            { "Providence",                                104,   106,    65,   49,     98 },
-            { "Polterghast",                               141,   142,    95,   86,    103 },
+            { "Providence",                                104,   106,    65,   51,     98 },
+            { "Polterghast",                               147,   152,   102,   93,    103 },
             { "Devourer of Gods",                          172,   174,   121,   95,    136 },
             { "Yharon",                                    277,   256,   193,  105,    179 },
             { "Exo Mechs and Supreme Calamitas",           777,   777,   777,  400,    777 }
@@ -71,9 +71,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         // 大招伤害 = 当前左键基础伤害 × 本档倍率
         private static readonly float[] UltimateDamageMultipliers =
         {
-            2.50f, // Tier 0: 肉后（大招解锁起点，机械 Boss 之后）
-            3.20f, // Tier 1: 月后（月亮领主之后）
-            4.00f  // Tier 2: 神后（亵渎天神 Providence 之后）
+            1.75f, // Tier 0: 肉后（大招解锁起点，机械 Boss 之后）
+            2.25f, // Tier 1: 月后（月亮领主之后）
+            2.75f  // Tier 2: 神后（亵渎天神 Providence 之后）
         };
 
         internal float GetUltimateDamageMultiplier() =>
