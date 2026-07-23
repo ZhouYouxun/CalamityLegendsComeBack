@@ -91,13 +91,8 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
 
             if (Main.myPlayer != player.whoAmI) return;
 
-            if (!player.Calamity().mouseRight)
-                bp.BarrierThrowComboActive = false;
-
-            TryThrowBarrierCombo(player, bp);
-
             // ── 右键举盾（在挥剑中不允许起手） ──────────────────────────
-            if (!bp.BarrierThrowComboActive && CanStartShieldHoldout(player, bp))
+            if (CanStartShieldHoldout(player, bp))
             {
                 int shieldDamage = (int)player.GetTotalDamage(DamageClass.Melee)
                                          .ApplyTo(balance.GetShieldBashDamage());
@@ -129,32 +124,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
                    && !Main.mapFullscreen && !Main.blockMouse && !player.mouseInterface;
         }
 
-        private bool TryThrowBarrierCombo(Player player, AegisBladePlayer bp)
-        {
-            if (bp.BarrierThrowCooldown > 0 ||
-                !Main.mouseLeft || !player.Calamity().mouseRight || !Main.mouseRightRelease ||
-                Main.mapFullscreen || Main.blockMouse || player.mouseInterface)
-            {
-                return false;
-            }
 
-            Vector2 throwDirection = player.MountedCenter.DirectionTo(GetMouseWorld(player))
-                .SafeNormalize(Vector2.UnitX * player.direction);
-            Projectile.NewProjectile(
-                Item.GetSource_FromThis(),
-                player.MountedCenter,
-                throwDirection * 18f,
-                BladeThrownType,
-                balance.GetBladePlungeDamage(),
-                6f,
-                player.whoAmI);
-
-            bp.BarrierThrowComboActive = true;
-            bp.BarrierThrowCooldown = BalanceAegisBlade.BarrierThrowCooldown;
-            Main.mouseRightRelease = false;
-            SoundEngine.PlaySound(SoundID.Item74 with { Volume = 1f, Pitch = -0.35f }, player.Center);
-            return true;
-        }
 
         public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
         {

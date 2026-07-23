@@ -55,6 +55,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         private int harmonyBarrageShotsFired;
         private int finalLightningFired;
         private float fadeIn;
+        private Player.CompositeArmStretchAmount frontArmStretch = Player.CompositeArmStretchAmount.Full;
+        private Player.CompositeArmStretchAmount backArmStretch = Player.CompositeArmStretchAmount.Full;
 
         // 每段开始时锁定鼠标点和方向，保证后续弹幕围绕同一攻击意图展开。
         private Vector2 lockedMouseWorld;
@@ -124,11 +126,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             if (itemAnimationActive || IgnoreActiveAnimation)
             {
-                // 物品动画仍在时推进自定义 UseStyle，并强制玩家手臂跟随剑。
+                // 物品动画仍在时推进自定义 UseStyle，并强制玩家手臂动效。
                 Animation++;
                 UseStyle();
                 Owner.heldProj = Projectile.whoAmI;
-                Owner.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, Projectile.rotation + RotationOffset + ArmRotationOffset);
+                Owner.SetCompositeArmFront(true, frontArmStretch, Projectile.rotation + RotationOffset + ArmRotationOffset);
+                Owner.SetCompositeArmBack(true, backArmStretch, Projectile.rotation + RotationOffset + ArmRotationOffsetBack);
             }
             else
             {
@@ -137,7 +140,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 if (DrawUnconditionally)
                 {
                     Owner.heldProj = Projectile.whoAmI;
-                    Owner.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, Projectile.rotation + RotationOffset + ArmRotationOffset);
+                    Owner.SetCompositeArmFront(true, frontArmStretch, Projectile.rotation + RotationOffset + ArmRotationOffset);
+                    Owner.SetCompositeArmBack(true, backArmStretch, Projectile.rotation + RotationOffset + ArmRotationOffsetBack);
                 }
 
                 NumberOfAnimations = 0;
@@ -305,11 +309,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 postSwing = false;
                 CanHit = false;
                 fadeIn = MathHelper.Lerp(fadeIn, 0f, 0.35f);
-                Projectile.rotation = Projectile.rotation.AngleLerp(Owner.AngleTo(lockedMouseWorld) + MathHelper.PiOver4, 0.1f);
+                Projectile.rotation = Projectile.rotation.AngleLerp(Owner.AngleTo(lockedMouseWorld) + MathHelper.PiOver4, 0.12f);
                 RotationOffset = MathHelper.Lerp(
                     RotationOffset,
-                    MathHelper.ToRadians(120f * Projectile.ai[1] * Owner.direction * GetWindupAngleScale()),
-                    0.2f);
+                    MathHelper.ToRadians(165f * Projectile.ai[1] * Owner.direction * GetWindupAngleScale()),
+                    0.22f);
 
                 if (stageTimer >= stageDuration)
                     EndStage();
@@ -322,7 +326,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 FlipAsSword = Owner.direction < 0;
 
             postSwing = true;
-            Projectile.rotation = Projectile.rotation.AngleLerp(Owner.AngleTo(lockedMouseWorld) + MathHelper.PiOver4, 0.1f);
+            Projectile.rotation = Projectile.rotation.AngleLerp(Owner.AngleTo(lockedMouseWorld) + MathHelper.PiOver4, 0.12f);
 
             float swingTime = stageTimer - stageDuration / 3f;
             float swingTimeMax = stageDuration - stageDuration / 3f;
@@ -344,10 +348,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             RotationOffset = MathHelper.Lerp(
                 RotationOffset,
                 MathHelper.ToRadians(MathHelper.Lerp(
-                    150f * Projectile.ai[1] * Owner.direction,
-                    120f * -Projectile.ai[1] * Owner.direction,
+                    175f * Projectile.ai[1] * Owner.direction,
+                    155f * -Projectile.ai[1] * Owner.direction,
                     CalamityUtils.ExpInOutEasing(swingProgress, 1))),
-                0.2f);
+                0.25f);
 
             // 终极状态和普通状态使用完全不同的派生弹幕表。
             RunNormalStage();
@@ -502,9 +506,58 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         private void ApplyArmRotation()
         {
-            // 手臂固定为全伸展握剑角度。
-            ArmRotationOffset = MathHelper.ToRadians(-140f);
-            ArmRotationOffsetBack = MathHelper.ToRadians(-140f);
+            float dir = Projectile.ai[1] * Owner.direction;
+
+            if (gapTimer > 0 || !stageActive)
+            {
+                // 段间隙拉回自然收姿
+                ArmRotationOffset = MathHelper.ToRadians(-140f);
+                ArmRotationOffsetBack = MathHelper.ToRadians(-140f + 25f * dir);
+                frontArmStretch = Player.CompositeArmStretchAmount.ThreeQuarters;
+                backArmStretch = Player.CompositeArmStretchAmount.ThreeQuarters;
+                return;
+            }
+
+            if (!postSwing)
+            {
+                // 前摇/蓄力蓄势阶段：双臂后拉拉满张力
+                ArmRotationOffset = MathHelper.ToRadians(-140f - 25f * dir);
+                ArmRotationOffsetBack = MathHelper.ToRadians(-140f + 50f * dir);
+                frontArmStretch = Player.CompositeArmStretchAmount.ThreeQuarters;
+                backArmStretch = Player.CompositeArmStretchAmount.ThreeQuarters;
+            }
+            else
+            {
+                // 挥砍爆发阶段：前臂充分伸展挥击，后臂配合反向张开或同向重击
+                float swingTime = stageTimer - stageDuration / 3f;
+                float swingTimeMax = Math.Max(1f, stageDuration - stageDuration / 3f);
+                float swingProgress = MathHelper.Clamp(swingTime / swingTimeMax, 0f, 1f);
+
+                frontArmStretch = CanHit ? Player.CompositeArmStretchAmount.Full : Player.CompositeArmStretchAmount.ThreeQuarters;
+
+                if (currentStage == 3 || (HarmonyActive && currentStage == 2))
+                {
+                    // 终结下劈/重击：双臂前压展露出强烈的行云流水打击感
+                    float doubleArmBias = MathHelper.Lerp(-15f, 30f, swingProgress);
+                    ArmRotationOffset = MathHelper.ToRadians(-140f + doubleArmBias * dir);
+                    ArmRotationOffsetBack = MathHelper.ToRadians(-140f + (doubleArmBias - 20f) * dir);
+                    backArmStretch = CanHit ? Player.CompositeArmStretchAmount.Full : Player.CompositeArmStretchAmount.ThreeQuarters;
+                }
+                else if (currentStage == 0)
+                {
+                    // 光球挥舞：手臂大弧度扫过，后手撑开呈施法姿态
+                    ArmRotationOffset = MathHelper.ToRadians(-140f + MathHelper.Lerp(15f, -30f, swingProgress) * dir);
+                    ArmRotationOffsetBack = MathHelper.ToRadians(-140f + MathHelper.Lerp(-55f, 35f, swingProgress) * dir);
+                    backArmStretch = Player.CompositeArmStretchAmount.Full;
+                }
+                else
+                {
+                    // 普通连斩：前臂大幅下斩，后臂向后拉拽平衡反作用力
+                    ArmRotationOffset = MathHelper.ToRadians(-140f + MathHelper.Lerp(20f, -25f, swingProgress) * dir);
+                    ArmRotationOffsetBack = MathHelper.ToRadians(-140f + MathHelper.Lerp(-65f, 45f, swingProgress) * dir);
+                    backArmStretch = Player.CompositeArmStretchAmount.ThreeQuarters;
+                }
+            }
         }
 
         private void SpawnLightOrbs()
@@ -790,62 +843,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         public override bool PreDraw(ref Color lightColor)
         {
-            if (HarmonyActive)
-                return false;
-
-            // 非强制绘制且物品动画结束时不绘制 holdout。
-            if (!DrawUnconditionally && Owner.itemAnimation <= 0)
-                return false;
-
-            // 主体、幽灵和 smear 三层贴图共同组成挥砍表现。
-            Asset<Texture2D> texture = ModContent.Request<Texture2D>(Texture);
-            Asset<Texture2D> ghost = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/A_Dev/AzureThunder/AzureThunderGhost");
-            Asset<Texture2D> swoosh = ModContent.Request<Texture2D>("CalamityMod/Particles/VerticalSmearLarge");
-
-            float r = FlipAsSword ? MathHelper.ToRadians(90f) : 0f;
-            SpriteEffects effects = spriteEffects != SpriteEffects.None ? spriteEffects : (FlipAsSword ? SpriteEffects.FlipHorizontally : SpriteEffects.None);
-            Vector2 origin = FlipAsSword ? new Vector2(texture.Width() - SpriteOrigin.X, SpriteOrigin.Y) : SpriteOrigin;
-            Vector2 drawPosition = Projectile.Center - Main.screenPosition + new Vector2(0f, Owner.gfxOffY);
-            float drawScale = Projectile.scale * HoldoutDrawScale;
-
-            // smear 贴图是主挥砍弧光，fadeIn 只在命中窗口附近升高。
-            Main.EntitySpriteDraw(
-                swoosh.Value,
-                drawPosition,
-                null,
-                AzureThunderColors.Azure with { A = 0 } * fadeIn * 0.38f,
-                (FinalRotation + MathHelper.ToRadians(45f)) + MathHelper.ToRadians(Projectile.ai[1] == 1f ? -90f : 90f) * -Owner.direction,
-                swoosh.Size() * 0.5f,
-                Projectile.scale * (HarmonyActive ? 0.86f : 0.68f),
-                SpriteEffects.None);
-
-            for (int i = 0; i < 20; i++)
-            {
-                // 环形幽灵影作为剑身辉光，终极状态颜色更偏金。
-                Vector2 offset = (MathHelper.TwoPi * i / 20f).ToRotationVector2() * 4.5f * fadeIn;
-                Color auraColor = Color.Lerp(AzureThunderColors.Azure, AzureThunderColors.Yellow, HarmonyActive ? 0.65f : 0.22f) with { A = 0 };
-
-                Main.EntitySpriteDraw(
-                    ghost.Value,
-                    drawPosition + offset,
-                    ghost.Value.Frame(1, FrameCount, 0, Frame),
-                    auraColor * 0.13f * fadeIn,
-                    Projectile.rotation + RotationOffset + r,
-                    origin,
-                    drawScale,
-                    effects);
-            }
-
-            Main.EntitySpriteDraw(
-                texture.Value,
-                drawPosition,
-                texture.Value.Frame(1, FrameCount, 0, Frame),
-                lightColor,
-                Projectile.rotation + RotationOffset + r,
-                origin,
-                drawScale,
-                effects);
-
+            // 左键挥舞时完全隐藏剑刃与手持贴图（调成完全透明/手上无剑），保留夸张的手臂挥舞动作与所有派生弹幕特效。
             return false;
         }
     }

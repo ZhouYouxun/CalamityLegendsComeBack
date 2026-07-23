@@ -26,7 +26,6 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.Passive
         public override string Texture => "CalamityMod/Items/Weapons/Melee/Earth";
 
         private ref float Timer => ref Projectile.localAI[0];
-        private float bobAngle;
         private float bobPhase;
 
         public override void SetStaticDefaults()
@@ -73,12 +72,20 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.Passive
             Timer++;
             bobPhase += 0.04f;
 
-            // Position: float behind the player, slightly above center
-            float bobY = (float)Math.Sin(bobPhase) * 12f;
-            Vector2 offset = new Vector2(-owner.direction * 82f, -28f + bobY);
+            // Position: float close behind the player's back (Terraprisma style hover)
+            float bobY = (float)Math.Sin(bobPhase) * 6f;
+            Vector2 offset = new Vector2(-owner.direction * 34f, -14f + bobY);
             Projectile.Center = owner.MountedCenter + offset;
-            bobAngle = offset.ToRotation() + MathHelper.PiOver4;
-            Projectile.rotation = bobAngle + (float)Math.Sin(bobPhase * 0.7f) * 0.12f;
+
+            // Terraprisma standing upright angle (pointing UP, nearly parallel to player vertical axis)
+            float sway = (float)Math.Sin(bobPhase * 0.8f) * 0.05f;
+            if (owner.direction == -1)
+                Projectile.rotation = MathHelper.PiOver4 + 0.06f - sway;
+            else
+                Projectile.rotation = -MathHelper.PiOver4 - 0.06f + sway;
+
+            Projectile.direction = owner.direction;
+            Projectile.spriteDirection = owner.direction;
 
             Lighting.AddLight(Projectile.Center, BladeGold.ToVector3() * 0.35f);
 
@@ -150,27 +157,39 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.Passive
             Texture2D glow = ModContent.Request<Texture2D>("CalamityMod/Items/Weapons/Melee/EarthGlow").Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
 
+            Player owner = Main.player[Projectile.owner];
+            SpriteEffects effects = owner.direction == -1 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+            Vector2 origin = owner.direction == -1 ? new Vector2(texture.Width, texture.Height) : new Vector2(0f, texture.Height);
+
             Vector2 drawPos = Projectile.Center - Main.screenPosition;
-            Vector2 origin = new Vector2(0f, 186f);
-            float scale = 0.52f; // smaller than full size
+            float scale = 0.55f;
             float pulse = 0.88f + 0.12f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 10f);
-            float opacity = 0.58f;
+            float opacity = 0.75f;
 
             // Soft bloom behind the blade
-            Main.EntitySpriteDraw(bloom, drawPos, null, BladeGold with { A = 0 } * 0.28f * opacity, 0f, bloom.Size() * 0.5f, scale * 1.8f * pulse, SpriteEffects.None);
+            Main.EntitySpriteDraw(bloom, drawPos, null, BladeGold with { A = 0 } * 0.32f * opacity, 0f, bloom.Size() * 0.5f, scale * 1.8f * pulse, SpriteEffects.None);
+
+            // Terraprisma-style prismatic afterimage trail
+            for (int i = 1; i <= 3; i++)
+            {
+                float trailBobY = (float)Math.Sin(bobPhase - i * 0.25f) * 6f;
+                Vector2 trailPos = owner.MountedCenter + new Vector2(-owner.direction * 34f, -14f + trailBobY) - Main.screenPosition;
+                Color trailColor = Color.Lerp(BladeGold, BladeOrange, i / 3f) with { A = 0 } * (0.28f / i) * opacity;
+                Main.EntitySpriteDraw(texture, trailPos, null, trailColor, Projectile.rotation, origin, scale, effects);
+            }
 
             // Gold outline ring (offset passes)
             Color outlineColor = BladeGold with { A = 0 };
             for (int i = 0; i < 8; i++)
             {
                 Vector2 outlineOffset = (MathHelper.TwoPi * i / 8f).ToRotationVector2() * 2.4f;
-                Main.EntitySpriteDraw(texture, drawPos + outlineOffset, null, outlineColor * 0.32f * opacity, Projectile.rotation, origin, scale, SpriteEffects.None);
+                Main.EntitySpriteDraw(texture, drawPos + outlineOffset, null, outlineColor * 0.35f * opacity, Projectile.rotation, origin, scale, effects);
             }
 
-            // Main blade body (semi-transparent)
+            // Main blade body
             Color bodyColor = lightColor * opacity;
-            Main.EntitySpriteDraw(texture, drawPos, null, bodyColor, Projectile.rotation, origin, scale, SpriteEffects.None);
-            Main.EntitySpriteDraw(glow, drawPos, null, BladeGold * 0.65f * opacity, Projectile.rotation, origin, scale, SpriteEffects.None);
+            Main.EntitySpriteDraw(texture, drawPos, null, bodyColor, Projectile.rotation, origin, scale, effects);
+            Main.EntitySpriteDraw(glow, drawPos, null, BladeGold * 0.75f * opacity, Projectile.rotation, origin, scale, effects);
 
             return false;
         }

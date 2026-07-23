@@ -77,7 +77,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty
             }
         }
 
-        internal static void RegisterSequenceHit(NPC target, int owner, int sequenceId, ResponsibilityLanguage language, int baseWeaponDamage)
+        internal static void RegisterSequenceHit(NPC target, int owner, int sequenceId, int tokenType, int baseWeaponDamage)
         {
             if (!Main.player.IndexInRange(owner) || !target.active)
                 return;
@@ -90,24 +90,20 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty
                 global.connections[owner] = state;
             }
 
-            ResponsibilityHatMarker hat = FindHat(target, owner);
-            if (hat != null)
+            Player player = Main.player[owner];
+            CallofDutyPlayer phonePlayer = player.GetModPlayer<CallofDutyPlayer>();
+
+            if (state.LastConnectionSequence != sequenceId)
             {
-                if (state.LastResponseSequence != sequenceId)
-                {
-                    state.LastResponseSequence = sequenceId;
-                    hat.Respond(language, baseWeaponDamage);
-                }
-                return;
+                state.LastConnectionSequence = sequenceId;
+                state.Stacks = Math.Min(6, state.Stacks + 1);
+                state.Timer = 150;
             }
 
-            if (state.LastConnectionSequence == sequenceId)
-                return;
-
-            state.LastConnectionSequence = sequenceId;
-            ResponsibilityLanguageDefinition definition = ResponsibilityLanguageRegistry.Get((int)language);
-            state.Stacks = Math.Min(6, state.Stacks + (definition?.ConnectionValue ?? 1));
-            state.Timer = 150;
+            if (tokenType == 2 || state.Stacks >= 3)
+            {
+                phonePlayer.SetRedialTarget(target.whoAmI, 360);
+            }
 
             if (state.Stacks >= 6)
             {

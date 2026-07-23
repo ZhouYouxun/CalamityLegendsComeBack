@@ -501,8 +501,9 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
                     Texture2D prism = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/YharimsCrystal/YharimsCrystalPrism").Value;
                     Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
                     Texture2D ring = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
-                    int prismFrameHeight = prism.Height / 6;
-                    int prismFrame = (int)(Main.GameUpdateCount / 4) % 6;
+                    int prismFrameCount = prism.Height % 6 == 0 ? 6 : 1;
+                    int prismFrameHeight = prism.Height / prismFrameCount;
+                    int prismFrame = prismFrameCount > 1 ? (int)(Main.GameUpdateCount / 4) % prismFrameCount : 0;
                     Rectangle prismSource = new Rectangle(0, prismFrame * prismFrameHeight, prism.Width, prismFrameHeight);
 
                     Main.spriteBatch.SetBlendState(BlendState.Additive);

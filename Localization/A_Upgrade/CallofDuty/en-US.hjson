@@ -7,36 +7,24 @@ Mods: {
 					Tooltip: "[GFB]"
 					Compact:
 						'''
-						[c/8FDFFF:Left-click fires the current language {0}; hold right-click to pick one from the wheel]
-						[c/8FDFFF:Current language: {2}]
-						[c/FFD84C:A connected sequence builds a call; six calls forcibly put a Wulfrum hat on the target]
-						[c/FFD84C:Wulfrum hats grant 8% summon damage and answer calls with fire, marks, and static rings]
-						[c/6FA8FF:Held in your main inventory it supplies a Rover Drive-equivalent shield; a worn Rover Drive raises each layer from 20 to 40]
-						[c/C2FF43:Legendary skill ({1}): Everyone, get over here]
-						[c/C2FF43:Drops one Amplifier that falls to the ground and locks down, then calls sixteen more Wulfrum machines after half a second]
-						[c/C2FF43:The army and cooldown both last 60 seconds; defeating a real boss immediately readies the call]
+						[c/8FDFFF:Left-click [Dial]: 3-pulse sequence (Cursor lock -> Packet curve -> Confirm pulse)]
+						[c/8FDFFF:Right-click [Redial]: Pops a 3x4 LCD keypad over connected target to unleash keycap blasts (2.5s CD)]
+						[c/8FDFFF:Hold Left+Right [Speed Dial]: Charge for 0.5s to fire a main signal, tagging target as VIP]
+						[c/6FA8FF:Held in main inventory, grants a Rover Drive-equivalent shield; worn Rover Drive boosts shield layers]
+						[c/C2FF43:Legendary skill ({0}): Everyone, get over here]
+						[c/C2FF43:Drops an Amplifier that locks down, then calls 16 Wulfrum squad machines]
+						[c/C2FF43:The army and cooldown both last 60 seconds; defeating a real boss immediately resets cooldown]
 						'''
-
-					LanguageEffects: {
-						Alarm: three fast straight alarms, 15% more total damage, no homing
-						Query: three mid-speed queries that steer themselves onto the target
-						Static: four slow silences that pierce 3 enemies, 10% less total damage
-						Confirm: five close-range confirmations, doubled call value, 10% less total damage
-					}
-
-					DetailsHint: "[c/97ADB8:Hold Shift for communication, hat, and squad details]"
+					DetailsHint: "[c/97ADB8:Hold Shift for attack modes and squad details]"
 					Details:
 						'''
-						[c/FF654C:!?] Three fast alarms; [c/55B9FF:??] three tracking queries; [c/A3ADB4:...] four piercing silences; [c/66E867::)] five close confirmations
-						Hats increase summon damage by 8% and can fire a fusion array, mark a target, crash into a static ring, or arm the next array for eight shots
+						[c/8FDFFF:3-Pulse Dial:] 1st shot cursor locks on, 2nd packet curves, 3rd confirm key pincers & triggers Connect Pulse
+						[c/8FDFFF:Redial:] Requires connecting a target with Left-click; Right-click pops keycaps around the target
+						[c/8FDFFF:Speed Dial:] Reduces movement speed during 0.5s charge; tagging a target boosts tracking and adds a 4th keycap to Redial
 
 						[c/C2FF43:Everyone, get over here:] 1 Amplifier, 6 Rovers, 4 Gyrators, 4 Drones, and 2 Hovercraft
-						Every ally has a blue outline, independent health, your full defense, and can physically intercept safe hostile projectiles
-						The Amplifier free-falls on deployment and never moves once it lands; its 990-pixel field gives players 20 defense and phone machines 50% health, defense, and attack
-						Rovers charge, protect their front, and shamelessly reuse scrap volleys and fusion bolts
-						Gyrators spin up very seriously, then roll into something
-						Drone lasers hit reliably but lightly; Hovercraft fire missiles upward and let the missiles work out the rest
-						Left-click an enemy or the ground to command the squad; release right-click in the wheel center to recall; press the skill again to say “Never mind”
+						Every ally has a blue outline, independent health, your full defense, and physically intercepts safe hostile projectiles
+						The Amplifier field gives players 20 defense and squad machines 50% health, defense, and attack
 						'''
 					LegendaryText: “Everyone, get over here.”
 				}
@@ -77,6 +65,9 @@ Mods: {
 			ResponsibilityMissileExplosion.DisplayName: Wulfrum Missile Blast
 			ResponsibilityRoverScrap.DisplayName: Responsibility Scrap Round
 			ResponsibilityRoverFusionBolt.DisplayName: Responsibility Fusion Bolt
+			CallofDutyRedialKeyboard.DisplayName: Redial Keypad
+			CallofDutyRedialKeyCap.DisplayName: Redial Keycap
+			CallofDutyFastDialSignal.DisplayName: Speed Dial Signal
 		}
 	}
 }

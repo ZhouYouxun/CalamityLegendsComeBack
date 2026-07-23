@@ -83,8 +83,8 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
         // The right-click guard releases into a Stygian-style player dash. These numbers are
         // intentionally centralized so its travel, hitbox and damage stay in lockstep.
         public const int   ShieldDashDuration                 = 18;
-        public const float ShieldDashMinimumDistance          = 250f;
-        public const float ShieldDashMaximumDistance          = 650f;
+        public const float ShieldDashMinimumDistance          = 150f;
+        public const float ShieldDashMaximumDistance          = 390f;
         public const float ShieldDashMaxDamageMultiplier      = 3.25f;
         public const float PerfectParryDashDamageMultiplier   = 1.35f;
         public const float ShieldDashPiercingDamageMultiplier = 0.68f;

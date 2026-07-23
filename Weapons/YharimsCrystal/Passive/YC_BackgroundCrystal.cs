@@ -32,13 +32,13 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.Passive
         public override void SetStaticDefaults()
         {
             ProjectileID.Sets.DrawScreenCheckFluff[Type] = 2000;
-            Main.projFrames[Type] = 6;
+            Main.projFrames[Type] = 1;
         }
 
         public override void SetDefaults()
         {
-            Projectile.width = 14;
-            Projectile.height = 22;
+            Projectile.width = 30;
+            Projectile.height = 30;
             Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Magic;
             Projectile.penetrate = -1;
@@ -74,23 +74,15 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.Passive
             bobPhase += 0.038f;
             spinAngle += 0.05f;
 
-            // Animate frames
-            Projectile.frameCounter++;
-            if (Projectile.frameCounter >= 4)
-            {
-                Projectile.frameCounter = 0;
-                Projectile.frame = (Projectile.frame + 1) % Main.projFrames[Type];
-            }
-
-            // Position: float behind the player
-            float bobY = (float)Math.Sin(bobPhase) * 10f;
-            Vector2 offset = new Vector2(-owner.direction * 80f, -24f + bobY);
+            // Position: float behind the player close to back (Terraprisma style hover)
+            float bobY = (float)Math.Sin(bobPhase) * 6f;
+            Vector2 offset = new Vector2(-owner.direction * 34f, -14f + bobY);
             Projectile.Center = owner.MountedCenter + offset;
             Projectile.rotation = spinAngle;
             Projectile.direction = owner.direction;
             Projectile.spriteDirection = owner.direction;
 
-            Lighting.AddLight(Projectile.Center, CrystalGold.ToVector3() * 0.3f);
+            Lighting.AddLight(Projectile.Center, CrystalGold.ToVector3() * 0.35f);
 
             // Periodic emit sparkles
             if (!Main.dedServ && (int)Timer % 6 == 0)
@@ -172,20 +164,24 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.Passive
 
             SpriteEffects effects = Projectile.spriteDirection == -1 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
             int frameCount = Main.projFrames[Type] <= 0 ? 1 : Main.projFrames[Type];
-            int frame = Projectile.frame % frameCount;
+            if (texture.Height % frameCount != 0)
+                frameCount = 1;
+
+            int frame = frameCount == 1 ? 0 : Projectile.frame % frameCount;
             int frameHeight = texture.Height / frameCount;
             Rectangle sourceRect = new Rectangle(0, frameHeight * frame, texture.Width, frameHeight);
             Vector2 origin = new Vector2(texture.Width * 0.5f, frameHeight * 0.5f);
             Vector2 drawPos = Projectile.Center - Main.screenPosition;
-            float scale = 0.72f;
+            float scale = 0.75f;
             float pulse = 0.9f + 0.1f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 12f);
-            float opacity = 0.62f;
+            float opacity = 0.75f;
 
             // Soft bloom
-            Main.EntitySpriteDraw(bloom, drawPos, null, CrystalGold with { A = 0 } * 0.32f * opacity, 0f, bloom.Size() * 0.5f, scale * 1.4f * pulse, SpriteEffects.None);
+            Main.EntitySpriteDraw(bloom, drawPos, null, CrystalGold with { A = 0 } * 0.35f * opacity, 0f, bloom.Size() * 0.5f, scale * 1.5f * pulse, SpriteEffects.None);
 
-            // Crystal prism (semi-transparent)
+            // Crystal prism
             Main.EntitySpriteDraw(texture, drawPos, sourceRect, lightColor * opacity, Projectile.rotation, origin, scale, effects);
+            Main.EntitySpriteDraw(texture, drawPos, sourceRect, CrystalGold with { A = 0 } * 0.35f * opacity, Projectile.rotation, origin, scale * 1.05f, effects);
 
             return false;
         }

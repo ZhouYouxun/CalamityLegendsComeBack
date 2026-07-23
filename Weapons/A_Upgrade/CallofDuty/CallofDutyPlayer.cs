@@ -29,10 +29,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty
         public bool PhonePassiveActive { get; private set; }
         public bool RoverDriveBoosted { get; private set; }
 
-        public int SelectedLanguageIndex { get; private set; }
-        public bool WheelOpen { get; private set; }
-        public Vector2 WheelCenter { get; private set; }
-        public int WheelHoverIndex { get; private set; } = -1;
+        public int RedialTarget { get; private set; } = -1;
+        public int RedialTargetTimer { get; private set; }
+        public int RedialCooldownTimer { get; internal set; }
+
+        public int FastDialPriorityTarget { get; private set; } = -1;
+        public int FastDialPriorityTimer { get; private set; }
+
+        public int BothHoldTimer { get; internal set; }
 
         public int UltimateCharge { get; private set; }
         public bool ArmyActive { get; private set; }
@@ -56,19 +60,18 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty
         public override void Initialize()
         {
             UltimateCharge = UltimateCooldownFrames;
-            SelectedLanguageIndex = 0;
             CommandMode = ResponsibilityCommandMode.Return;
+            RedialTarget = -1;
+            FastDialPriorityTarget = -1;
         }
 
         public override void SaveData(TagCompound tag)
         {
-            tag["selectedLanguage"] = SelectedLanguageIndex;
             tag["ultimateCharge"] = UltimateCharge;
         }
 
         public override void LoadData(TagCompound tag)
         {
-            SelectedLanguageIndex = Math.Clamp(tag.GetInt("selectedLanguage"), 0, Math.Max(0, ResponsibilityLanguageRegistry.Count - 1));
             UltimateCharge = tag.ContainsKey("ultimateCharge")
                 ? Math.Clamp(tag.GetInt("ultimateCharge"), 0, UltimateCooldownFrames)
                 : UltimateCooldownFrames;
@@ -118,6 +121,32 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty
 
         public override void PostUpdate()
         {
+            // Redial cooldown & target timers
+            if (RedialCooldownTimer > 0)
+                RedialCooldownTimer--;
+
+            if (RedialTargetTimer > 0)
+            {
+                RedialTargetTimer--;
+                if (!Main.npc.IndexInRange(RedialTarget) || !Main.npc[RedialTarget].CanBeChasedBy() || Vector2.DistanceSquared(Player.Center, Main.npc[RedialTarget].Center) > 1400f * 1400f)
+                    ClearRedialTarget();
+            }
+            else if (RedialTarget >= 0)
+            {
+                ClearRedialTarget();
+            }
+
+            if (FastDialPriorityTimer > 0)
+            {
+                FastDialPriorityTimer--;
+                if (!Main.npc.IndexInRange(FastDialPriorityTarget) || !Main.npc[FastDialPriorityTarget].CanBeChasedBy())
+                    ClearFastDialTarget();
+            }
+            else if (FastDialPriorityTarget >= 0)
+            {
+                ClearFastDialTarget();
+            }
+
             // The sixty-second cooldown starts only after every recalled unit has finished
             // smoking out and disappeared. ArmyActive deliberately remains true during that
             // fade-out, so dismissing the army cannot overlap its cooldown with its duration.
@@ -242,8 +271,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty
 
         public override void UpdateDead()
         {
-            WheelOpen = false;
-            WheelHoverIndex = -1;
+            ClearRedialTarget();
+            ClearFastDialTarget();
             ClearPriorityTarget();
             boostedShieldDurability = 0f;
             boostedShieldRechargeProgress = 0f;
@@ -256,7 +285,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty
         public override void OnEnterWorld()
         {
             ArmyActive = false;
-            WheelOpen = false;
+            ClearRedialTarget();
+            ClearFastDialTarget();
             CommandMode = ResponsibilityCommandMode.Return;
         }
 
@@ -274,48 +304,28 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty
             return nextSequenceId;
         }
 
-        internal void OpenWheel(Vector2 center)
+        internal void SetRedialTarget(int target, int duration = 360)
         {
-            WheelOpen = true;
-            WheelCenter = center;
-            WheelHoverIndex = -1;
+            RedialTarget = target;
+            RedialTargetTimer = duration;
         }
 
-        internal int UpdateWheel(Vector2 mousePosition)
+        internal void ClearRedialTarget()
         {
-            Vector2 offset = mousePosition - WheelCenter;
-            if (offset.Length() < CallofDutyUISystem.CancelRadius || ResponsibilityLanguageRegistry.Count <= 0)
-                return WheelHoverIndex = -1;
-
-            float angle = offset.ToRotation();
-            if (angle < 0f)
-                angle += MathHelper.TwoPi;
-            float sector = MathHelper.TwoPi / ResponsibilityLanguageRegistry.Count;
-            return WheelHoverIndex = (int)((angle + sector * 0.5f) / sector) % ResponsibilityLanguageRegistry.Count;
+            RedialTarget = -1;
+            RedialTargetTimer = 0;
         }
 
-        internal bool CommitWheelSelection()
+        internal void SetFastDialTarget(int target, int duration = 720)
         {
-            bool changed = WheelHoverIndex >= 0 && WheelHoverIndex != SelectedLanguageIndex;
-            if (WheelHoverIndex >= 0)
-                SelectedLanguageIndex = WheelHoverIndex;
-            WheelOpen = false;
-            WheelHoverIndex = -1;
-
-            if (changed && Main.netMode == NetmodeID.MultiplayerClient)
-                CallofDutyPackets.SendLanguageSelection(SelectedLanguageIndex);
-            return changed;
+            FastDialPriorityTarget = target;
+            FastDialPriorityTimer = duration;
         }
 
-        internal void CloseWheel()
+        internal void ClearFastDialTarget()
         {
-            WheelOpen = false;
-            WheelHoverIndex = -1;
-        }
-
-        internal void ReceiveLanguageSelection(int index)
-        {
-            SelectedLanguageIndex = Math.Clamp(index, 0, Math.Max(0, ResponsibilityLanguageRegistry.Count - 1));
+            FastDialPriorityTarget = -1;
+            FastDialPriorityTimer = 0;
         }
 
         internal void SetPriorityTarget(int target, int duration)

@@ -175,6 +175,33 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
             // ── 埃癸斯被动：完美格挡后8秒无视五毒 ───────────────────────
             if (PerfectParryDefenseTimer > 0)
                 ApplyFivePoisonsImmunity();
+
+            // ── 庇护土墙战障强化：当在升起的土墙 160 像素范围内时获得增益 ─────
+            int wallType = ModContent.ProjectileType<Projectiles.AegisWallProjectile>();
+            bool nearWall = false;
+            foreach (Projectile proj in Main.ActiveProjectiles)
+            {
+                if (proj.active && proj.type == wallType && proj.ai[1] >= 1f)
+                {
+                    if (Vector2.DistanceSquared(Player.Center, proj.Center) <= 160f * 160f)
+                    {
+                        nearWall = true;
+                        break;
+                    }
+                }
+            }
+
+            if (nearWall)
+            {
+                Player.statDefense += 20;
+                Player.GetDamage(DamageClass.Generic) += 0.15f;
+                if (!Main.dedServ && Main.rand.NextBool(6))
+                {
+                    Dust d = Dust.NewDustPerfect(Player.Center + Main.rand.NextVector2Circular(Player.width * 0.5f, Player.height * 0.5f),
+                        DustID.GoldFlame, -Vector2.UnitY * Main.rand.NextFloat(0.5f, 1.5f), 0, GoldOutline, 0.85f);
+                    d.noGravity = true;
+                }
+            }
         }
 
         private void ApplyFivePoisonsImmunity()
@@ -284,43 +311,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
 
         public override void PreUpdateMovement()
         {
-            int wallType = ModContent.ProjectileType<Projectiles.AegisWallProjectile>();
-            int halfW = Projectiles.AegisWallProjectile.WallHalfWidth;
-            int halfH = Projectiles.AegisWallProjectile.WallHalfHeight;
-
-            foreach (Projectile proj in Main.ActiveProjectiles)
-            {
-                if (!proj.active || proj.type != wallType) continue;
-                // 只对已完全升起的土墙做碰撞
-                if (proj.ai[1] < 1f) continue;
-
-                float wallX     = proj.Center.X;
-                float wallTop   = proj.Center.Y - halfH;
-                float wallBot   = proj.Center.Y + halfH;
-                float wallLeft  = wallX - halfW;
-                float wallRight = wallX + halfW;
-
-                if (Player.position.Y + Player.height <= wallTop) continue;
-                if (Player.position.Y >= wallBot) continue;
-
-                float playerLeft  = Player.position.X;
-                float playerRight = Player.position.X + Player.width;
-                float nextLeft    = playerLeft  + Player.velocity.X;
-                float nextRight   = playerRight + Player.velocity.X;
-
-                if (playerRight <= wallLeft && nextRight > wallLeft)
-                    Player.velocity.X = wallLeft - playerRight;
-                else if (playerLeft >= wallRight && nextLeft < wallRight)
-                    Player.velocity.X = wallRight - playerLeft;
-                else if (playerRight > wallLeft && playerLeft < wallRight)
-                {
-                    float distL = Math.Abs(playerLeft - wallLeft);
-                    float distR = Math.Abs(playerRight - wallRight);
-                    if (distL < distR) Player.position.X = wallLeft - Player.width;
-                    else               Player.position.X = wallRight;
-                    Player.velocity.X = 0f;
-                }
-            }
+            // 掩体不再阻挡玩家，玩家可自由穿越
         }
 
         public bool CanActivateUltimate => AegisEnergy >= BalanceAegisBlade.EnergyMax && !UltimateActive;

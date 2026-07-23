@@ -85,31 +85,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty
 
         public static void SendLanguageSelection(int index)
         {
-            ModPacket packet = ModContent.GetInstance<global::CalamityLegendsComeBack.CalamityLegendsComeBack>().GetPacket();
-            packet.Write((byte)GamePacketType.CallofDutyLanguageSelection);
-            packet.Write((byte)Main.myPlayer);
-            packet.Write((byte)index);
-            packet.Send();
         }
 
         public static void HandleLanguageSelection(BinaryReader reader, int whoAmI)
         {
-            int claimedPlayer = reader.ReadByte();
-            int index = reader.ReadByte();
-            int playerIndex = Main.netMode == NetmodeID.Server ? whoAmI : claimedPlayer;
-            if (!Main.player.IndexInRange(playerIndex))
-                return;
-
-            Main.player[playerIndex].GetModPlayer<CallofDutyPlayer>().ReceiveLanguageSelection(index);
-
-            if (Main.netMode == NetmodeID.Server)
-            {
-                ModPacket relay = ModContent.GetInstance<global::CalamityLegendsComeBack.CalamityLegendsComeBack>().GetPacket();
-                relay.Write((byte)GamePacketType.CallofDutyLanguageSelection);
-                relay.Write((byte)playerIndex);
-                relay.Write((byte)index);
-                relay.Send(-1, whoAmI);
-            }
+            reader.ReadByte();
+            reader.ReadByte();
         }
 
         public static void SendState(Player player, int toClient = -1, int ignoreClient = -1)

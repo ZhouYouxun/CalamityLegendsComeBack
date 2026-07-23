@@ -14,7 +14,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty
         private int fireCooldown;
         private bool previousLeft;
         private bool previousRight;
-        private int previewIndex = -1;
 
         public override string Texture => "CalamityMod/Items/SummonItems/Invasion/MartianDistressRemote_Animated";
 
@@ -40,8 +39,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty
         {
             if (!Owner.active || Owner.dead || Owner.HeldItem?.type != ModContent.ItemType<CallofDuty>())
             {
-                if (Projectile.owner == Main.myPlayer)
-                    Owner.GetModPlayer<CallofDutyPlayer>().CloseWheel();
                 Projectile.Kill();
                 return;
             }
@@ -68,7 +65,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty
             Projectile.direction = Owner.direction;
             Projectile.spriteDirection = Owner.direction;
 
-            // 手机是竖向贴图，Projectile.rotation 比瞄准角多了 PiOver2，手臂要用瞄准角本身来算
             float armRotation = (aim.ToRotation() - MathHelper.PiOver2) * Owner.gravDir;
             if (Owner.gravDir == -1f)
                 armRotation += MathHelper.Pi;
@@ -87,82 +83,123 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty
             bool left = validInput && Main.mouseLeft;
             bool right = validInput && Main.mouseRight;
             CallofDutyPlayer phonePlayer = Owner.GetModPlayer<CallofDutyPlayer>();
-            Vector2 mouseScreen = new(Main.mouseX, Main.mouseY);
+            Vector2 muzzle = Projectile.Center + aim * 14f;
+            int damage = Owner.GetWeaponDamage(Owner.HeldItem);
 
-            if (right && !previousRight)
+            // 1. Both buttons held: Speed Dial Charge (左右键长按: 快捷拨号)
+            if (left && right)
             {
-                phonePlayer.OpenWheel(mouseScreen);
-                previewIndex = -1;
-                SoundEngine.PlaySound(SoundID.MenuOpen with { Volume = 0.45f, Pitch = 0.15f }, Owner.Center);
-            }
+                phonePlayer.BothHoldTimer++;
+                Owner.velocity *= 0.96f; // Slightly reduce movement speed during charge
 
-            if (right && phonePlayer.WheelOpen)
-            {
-                int hovered = phonePlayer.UpdateWheel(mouseScreen);
-                if (hovered >= 0 && hovered != previewIndex)
+                // LCD charging particles
+                if (Main.rand.NextBool(2))
                 {
-                    previewIndex = hovered;
-                    SoundEngine.PlaySound(SoundID.MenuTick with { Volume = 0.28f, Pitch = -0.1f + hovered * 0.08f }, Owner.Center);
+                    Dust d = Dust.NewDustPerfect(muzzle + Main.rand.NextVector2Circular(6f, 6f), DustID.Electric, aim * 2f, 100, new Color(132, 226, 255), 0.6f);
+                    d.noGravity = true;
+                }
+
+                if (phonePlayer.BothHoldTimer % 6 == 0)
+                {
+                    SoundEngine.PlaySound(SoundID.MenuTick with { Volume = 0.35f, Pitch = -0.2f + phonePlayer.BothHoldTimer * 0.02f }, muzzle);
+                }
+
+                // Completed 0.5s hold (30 frames)
+                if (phonePlayer.BothHoldTimer >= 30)
+                {
+                    phonePlayer.BothHoldTimer = 0;
+                    fireCooldown = 35;
+
+                    Projectile.NewProjectile(
+                        Projectile.GetSource_FromThis(),
+                        muzzle,
+                        aim * 12f,
+                        ModContent.ProjectileType<CallofDutyFastDialSignal>(),
+                        (int)(damage * 1.25f),
+                        Owner.HeldItem.knockBack * 1.5f,
+                        Owner.whoAmI);
+
+                    SoundEngine.PlaySound(SoundID.Item4 with { Volume = 0.55f, Pitch = 0.35f }, muzzle);
                 }
             }
-
-            if (!right && previousRight && phonePlayer.WheelOpen)
+            // 2. Right click: Redial (右键: 重拨)
+            else if (right && !left)
             {
-                bool wasInCancelZone = phonePlayer.WheelHoverIndex < 0;
-                bool changed = phonePlayer.CommitWheelSelection();
-                SoundEngine.PlaySound((changed ? SoundID.MenuOpen : SoundID.MenuClose) with { Volume = 0.5f, Pitch = changed ? 0.25f : -0.05f }, Owner.Center);
+                phonePlayer.BothHoldTimer = 0;
 
-                if (wasInCancelZone && phonePlayer.ArmyActive)
-                    SendCommand(ResponsibilityCommandMode.Return, Owner.Center, -1);
+                if (!previousRight && fireCooldown <= 0)
+                {
+                    int redialTarget = phonePlayer.RedialTarget;
+                    bool hasValidTarget = redialTarget >= 0 && Main.npc.IndexInRange(redialTarget) && Main.npc[redialTarget].CanBeChasedBy();
+                    bool canRedial = hasValidTarget && phonePlayer.RedialCooldownTimer <= 0;
+
+                    if (canRedial)
+                    {
+                        phonePlayer.RedialCooldownTimer = 150; // 2.5s CD
+                        fireCooldown = 20;
+
+                        bool isFastDialBoosted = phonePlayer.FastDialPriorityTarget == redialTarget;
+                        int redialDamage = (int)(damage * (isFastDialBoosted ? 1.85f : 1.5f));
+
+                        Projectile.NewProjectile(
+                            Projectile.GetSource_FromThis(),
+                            Main.npc[redialTarget].Center,
+                            Vector2.Zero,
+                            ModContent.ProjectileType<CallofDutyRedialKeyboard>(),
+                            redialDamage,
+                            Owner.HeldItem.knockBack,
+                            Owner.whoAmI,
+                            redialTarget,
+                            isFastDialBoosted ? 1f : 0f);
+
+                        SoundEngine.PlaySound(SoundID.Item93 with { Volume = 0.5f, Pitch = 0.2f }, muzzle);
+                    }
+                    else
+                    {
+                        // Invalid target or on cooldown - play error tone
+                        fireCooldown = 15;
+                        SoundEngine.PlaySound(SoundID.MenuClose with { Volume = 0.4f, Pitch = -0.35f }, muzzle);
+                    }
+                }
             }
-
-            if (left && !phonePlayer.WheelOpen && fireCooldown <= 0)
+            // 3. Left click: Dial sequence (左键: 拨号 1-2-3 脉冲)
+            else if (left && !right)
             {
-                FireSequence(aim);
-                float attackSpeed = Math.Max(0.1f, Owner.GetAttackSpeed(DamageClass.Summon));
-                fireCooldown = Math.Max(CallofDuty.MinimumSequenceInterval,
-                    (int)MathF.Round(CallofDuty.BaseSequenceInterval / attackSpeed));
+                phonePlayer.BothHoldTimer = 0;
+
+                if (fireCooldown <= 0)
+                {
+                    int sequenceId = phonePlayer.AllocateSequenceId();
+                    float attackSpeed = Math.Max(0.1f, Owner.GetAttackSpeed(DamageClass.Summon));
+                    fireCooldown = Math.Max(CallofDuty.MinimumSequenceInterval, (int)MathF.Round(CallofDuty.BaseSequenceInterval / attackSpeed));
+
+                    Projectile.NewProjectile(
+                        Projectile.GetSource_FromThis(),
+                        muzzle,
+                        aim,
+                        ModContent.ProjectileType<ResponsibilityCommunicationSequence>(),
+                        damage,
+                        Owner.HeldItem.knockBack,
+                        Owner.whoAmI,
+                        0,
+                        sequenceId);
+                }
+
+                // Army command on left click
+                if (!previousLeft && phonePlayer.ArmyActive)
+                {
+                    Vector2 mouseWorld = CallofDuty.GetMouseWorld(Owner);
+                    int target = FindTargetUnderMouse(mouseWorld);
+                    SendCommand(target >= 0 ? ResponsibilityCommandMode.Attack : ResponsibilityCommandMode.Move, mouseWorld, target);
+                }
             }
-
-            if (left && !previousLeft && phonePlayer.ArmyActive && !phonePlayer.WheelOpen)
+            else
             {
-                Vector2 mouseWorld = CallofDuty.GetMouseWorld(Owner);
-                int target = FindTargetUnderMouse(mouseWorld);
-                SendCommand(target >= 0 ? ResponsibilityCommandMode.Attack : ResponsibilityCommandMode.Move, mouseWorld, target);
+                phonePlayer.BothHoldTimer = 0;
             }
 
             previousLeft = left;
             previousRight = right;
-        }
-
-        private void FireSequence(Vector2 aim)
-        {
-            CallofDutyPlayer phonePlayer = Owner.GetModPlayer<CallofDutyPlayer>();
-            int sequenceId = phonePlayer.AllocateSequenceId();
-            int damage = Owner.GetWeaponDamage(Owner.HeldItem);
-            Vector2 muzzle = Projectile.Center + aim * 14f;
-
-            Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(),
-                muzzle,
-                aim,
-                ModContent.ProjectileType<ResponsibilityCommunicationSequence>(),
-                damage,
-                Owner.HeldItem.knockBack,
-                Owner.whoAmI,
-                phonePlayer.SelectedLanguageIndex,
-                sequenceId);
-
-            ResponsibilityLanguageDefinition definition = ResponsibilityLanguageRegistry.Get(phonePlayer.SelectedLanguageIndex);
-            if (definition != null)
-            {
-                for (int i = 0; i < 3; i++)
-                {
-                    Dust dust = Dust.NewDustPerfect(muzzle, DustID.Electric, aim.RotatedByRandom(0.45f) * Main.rand.NextFloat(0.8f, 2.4f), 90, definition.Color, 0.75f);
-                    dust.noGravity = true;
-                }
-            }
-            SoundEngine.PlaySound(SoundID.Item93 with { Volume = 0.38f, Pitch = 0.25f }, muzzle);
         }
 
         private static int FindTargetUnderMouse(Vector2 mouseWorld)
@@ -197,10 +234,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty
             int frame = (int)(Main.GameUpdateCount / 5 % 12);
             Rectangle source = new(0, frame * frameHeight, texture.Width, frameHeight);
             SpriteEffects effects = Owner.direction < 0 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
-            Color screenGlow = ResponsibilityLanguageRegistry.Get(Owner.GetModPlayer<CallofDutyPlayer>().SelectedLanguageIndex)?.Color ?? Color.White;
+            Color screenGlow = new Color(132, 226, 255);
 
             Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, source, lightColor, Projectile.rotation, source.Size() * 0.5f, Projectile.scale, effects);
-            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, source, screenGlow * 0.18f, Projectile.rotation, source.Size() * 0.5f, Projectile.scale * 1.05f, effects);
+            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, source, screenGlow * 0.22f, Projectile.rotation, source.Size() * 0.5f, Projectile.scale * 1.05f, effects);
             return false;
         }
     }

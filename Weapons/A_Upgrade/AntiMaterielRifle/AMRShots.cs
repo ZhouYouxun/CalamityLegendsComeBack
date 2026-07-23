@@ -45,7 +45,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             Projectile.ignoreWater = true;
             Projectile.tileCollide = true;
             Projectile.penetrate = 1;
-            Projectile.extraUpdates = 7;
+            Projectile.extraUpdates = 15;
             Projectile.timeLeft = 240;
             Projectile.scale = 1.55f;
             Projectile.light = 0.75f;
@@ -66,9 +66,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
             Lighting.AddLight(Projectile.Center, new Color(255, 196, 64).ToVector3() * 0.7f);
 
-            // Counted in sub-steps rather than real frames: extraUpdates 7 means
-            // one frame is eight steps, so a frame-based delay would keep the
-            // round invisible for over a thousand pixels of flight.
+            // Counted in sub-steps rather than real frames
             visualAgeSubSteps++;
             if (visualAgeSubSteps == HiddenSubSteps + 1)
                 SpawnBreakthroughReveal();
@@ -78,6 +76,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
 
             visualAgeFrames++;
             SpawnFlightWake();
+            SpawnFlightTrailSparks();
         }
 
         // ─────────────────────────────────────────────────────────────────
@@ -104,6 +103,90 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             // 单个 V 形激波楔，世界锚定、向后飘散。
             // 取代原本每帧重绘、粘在弹体上的两组 chevron。
             SpawnShockChevron(center, forward, 1f);
+
+            // 增加突破音障时的超感电磁闪光和散射火花！
+            if (Main.LocalPlayer.active && !Main.LocalPlayer.dead)
+            {
+                Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(Main.LocalPlayer.Calamity().GeneralScreenShakePower, 5f);
+            }
+            for (int i = 0; i < 8; i++)
+            {
+                Vector2 sparkVel = -forward.RotatedBy(Main.rand.NextFloat(-0.4f, 0.4f)) * Main.rand.NextFloat(3f, 8f);
+                GeneralParticleHandler.SpawnParticle(new AltSparkParticle(
+                    center,
+                    sparkVel,
+                    false,
+                    Main.rand.Next(15, 25),
+                    Main.rand.NextFloat(0.8f, 1.4f),
+                    Main.rand.NextBool() ? new Color(255, 220, 100) : new Color(255, 120, 40)
+                ));
+            }
+            for (int i = 0; i < 4; i++)
+            {
+                Vector2 boltVel = -forward.RotatedBy(Main.rand.NextFloat(-0.7f, 0.7f)) * Main.rand.NextFloat(2f, 5f);
+                GeneralParticleHandler.SpawnParticle(new BoltParticle(
+                    center,
+                    boltVel,
+                    false,
+                    Main.rand.Next(10, 18),
+                    Main.rand.NextFloat(0.4f, 0.8f),
+                    new Color(255, 200, 80),
+                    new Vector2(0.3f, 0.8f),
+                    true
+                ));
+            }
+            GeneralParticleHandler.SpawnParticle(new GenericBloom(
+                center, Vector2.Zero, new Color(255, 245, 210), 1.3f, 12, false));
+        }
+
+        // 新增的伴随子弹飞行轨迹生成的电磁微粒及折线电弧
+        private void SpawnFlightTrailSparks()
+        {
+            if (Main.dedServ)
+                return;
+
+            int steps = Projectile.extraUpdates + 1;
+            Vector2 oldCenter = Projectile.Center - Projectile.velocity * steps;
+            Vector2 currentCenter = Projectile.Center;
+            float distance = Vector2.Distance(oldCenter, currentCenter);
+            Vector2 direction = (currentCenter - oldCenter).SafeNormalize(Vector2.UnitX);
+
+            // 每隔 25 像素沿路径进行插值生成，防止在高速移动下由于帧更新产生视觉上的空隙
+            for (float d = 0f; d < distance; d += 25f)
+            {
+                Vector2 spawnPos = oldCenter + direction * d;
+
+                // 1. 高能电磁电弧
+                if (Main.rand.NextBool(3))
+                {
+                    Vector2 normal = new Vector2(-direction.Y, direction.X);
+                    Vector2 boltVel = normal * Main.rand.NextFloat(-3.5f, 3.5f) + Projectile.velocity * 0.03f;
+                    GeneralParticleHandler.SpawnParticle(new BoltParticle(
+                        spawnPos,
+                        boltVel,
+                        false,
+                        Main.rand.Next(8, 14),
+                        Main.rand.NextFloat(0.25f, 0.5f),
+                        new Color(255, 190, 60),
+                        new Vector2(0.3f, 0.7f),
+                        true
+                    ));
+                }
+
+                // 2. 散射电火花
+                if (Main.rand.NextBool(2))
+                {
+                    Vector2 sparkVel = Main.rand.NextVector2Circular(1.5f, 1.5f);
+                    GeneralParticleHandler.SpawnParticle(new AltSparkParticle(
+                        spawnPos,
+                        sparkVel,
+                        false,
+                        Main.rand.Next(6, 12),
+                        Main.rand.NextFloat(0.4f, 0.8f),
+                        Main.rand.NextBool() ? new Color(255, 210, 80) : new Color(255, 120, 30)
+                    ));
+                }
+            }
         }
 
         // ─────────────────────────────────────────────────────────────────
@@ -243,18 +326,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             }
         }
 
-        // ─────────────────────────────────────────────────────────────────
-        // 命中 = 穿透，不是爆炸。
-        //
-        // 对称环（TwoPi * i / count）说的是"它在这里炸了"；
-        // 前向锥说的才是"它穿过去了"。这是本武器"突破力"的全部来源，
-        // 与粒子数量无关。
-        //
-        // 三层，按视觉重量排序：
-        //   1. 穿孔痕 —— 世界锚定、垂直于弹道压扁、寿命最长，是"洞"
-        //   2. 出口锥 —— 全部朝前，±22° 紧锥，占绝大多数
-        //   3. 入口反溅 —— 朝后，数量只有出口的 1/4，且更暗更慢
-        // ─────────────────────────────────────────────────────────────────
         private void SpawnImpact(Vector2 center, bool critical)
         {
             if (Main.dedServ)
@@ -263,6 +334,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             float strength = critical ? 1.3f : 1f;
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             float rotation = forward.ToRotation();
+
+            // 增加命中的强烈屏幕振动
+            if (Main.LocalPlayer.active && !Main.LocalPlayer.dead)
+            {
+                Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(Main.LocalPlayer.Calamity().GeneralScreenShakePower, critical ? 7.5f : 4f);
+            }
 
             // ① 穿孔痕：Squish 的 X 分量极小 → 环被压成垂直于弹道的一道"缝"。
             //    寿命 34 帧，远长于其他层，所以打完之后洞还留在那里。
@@ -284,7 +361,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
                 float speed = MathHelper.Lerp(6.5f, 15.5f, axial) * strength;
                 Color color = axial > 0.66f ? new Color(255, 250, 216)
                             : axial > 0.33f ? new Color(255, 199, 74)
-                                            : new Color(150, 96, 20);
+                                             : new Color(150, 96, 20);
 
                 GeneralParticleHandler.SpawnParticle(new LineParticle(
                     center + forward * 6f,
@@ -293,6 +370,24 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
                     (int)(11 + axial * 7),
                     (0.30f + axial * 0.26f) * strength,
                     color));
+            }
+
+            // 增加穿透击中时的破甲溅射电弧
+            int voltCount = critical ? 6 : 3;
+            for (int i = 0; i < voltCount; i++)
+            {
+                float angle = MathHelper.ToRadians(Main.rand.NextFloat(-40f, 40f));
+                Vector2 voltVel = forward.RotatedBy(angle) * Main.rand.NextFloat(4f, 10f) * strength;
+                GeneralParticleHandler.SpawnParticle(new BoltParticle(
+                    center,
+                    voltVel,
+                    false,
+                    Main.rand.Next(10, 20),
+                    Main.rand.NextFloat(0.4f, 0.8f),
+                    new Color(255, 200, 80),
+                    new Vector2(0.3f, 0.8f),
+                    true
+                ));
             }
 
             // ③ 入口反溅：只有 3 支，朝后、慢、暗。存在感刚好够读出"这里是入口"。
@@ -308,7 +403,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             GeneralParticleHandler.SpawnParticle(new GenericBloom(
                 center, Vector2.Zero, new Color(255, 246, 214), 0.34f * strength, 9, false));
 
-            // ⑤ 烟：只在出口侧，2 支，不再是四方对称，也不再 required。
+            // ⑤ 烟：只在出口侧， 2 支，不再是四方对称，也不再 required。
             for (int sign = -1; sign <= 1; sign += 2)
             {
                 GeneralParticleHandler.SpawnParticle(new HeavySmokeParticle(
@@ -321,6 +416,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             // ⑥ 贯穿楔：与音爆点同一语汇，把"又穿过一个"读出来。
             SpawnShockChevron(center, forward, 0.85f * strength);
         }
+
 
         public override bool OnTileCollide(Vector2 oldVelocity)
         {
@@ -392,17 +488,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
                 return;
 
             MiscShaderData trailShader = GameShaders.Misc["CalamityMod:TrailStreak"];
-            trailShader.SetShaderTexture(
-                ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/BasicTrail"));
 
-            // 两条，不是三条。
-            //
-            // 原本压力带(172,96,13)/热带(255,244,190)/核心(255,255,244) 三条
-            // 同处橙-白色域，宽度 14 / 8.2 / 3.35 也没拉开数量级，叠在同一批
-            // 像素上只会读成一条脏橙色 —— 这是"不清爽"的头号来源。
-            //
-            // 现在：冷激波 18px 低 alpha  ×  热弹芯 2.6px 高 alpha
-            //       宽度比 ≈ 7:1，色相冷暖相反。两者才分得开。
+            // 渲染外层超感激波电场：使用狂野、多折线的 ScarletDevilStreak 纹理，增加等离子撕裂感
+            trailShader.SetShaderTexture(
+                ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/ScarletDevilStreak"));
             PrimitiveRenderer.RenderTrail(
                 trailPoints,
                 new PrimitiveSettings(
@@ -420,6 +509,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
 
             Vector2[] corePoints = new Vector2[corePointCount];
             Array.Copy(trailPoints, corePoints, corePointCount);
+            
+            // 渲染内层炽热弹芯：使用规整的 BasicTrail 纹理，表示高速高亮的轨道核心
+            trailShader.SetShaderTexture(
+                ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/BasicTrail"));
             PrimitiveRenderer.RenderTrail(
                 corePoints,
                 new PrimitiveSettings(

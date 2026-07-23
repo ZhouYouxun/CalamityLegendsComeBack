@@ -74,6 +74,56 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 return;
             }
 
+            // 阻挡普通敌对小怪（非Boss敌人），BOSS与玩家不受影响
+            Rectangle wallBox = new(
+                (int)(Projectile.Center.X - WallHalfWidth),
+                (int)(Projectile.Center.Y - WallHalfHeight),
+                WallHalfWidth * 2,
+                WallHalfHeight * 2);
+
+            // 玩家工具一击清理机制：当玩家使用镐子/斧头/锤子挥击触碰土墙时，土墙瞬间摧毁
+            Player owner = Main.player[Projectile.owner];
+            if (owner.active && !owner.dead && owner.itemAnimation > 0)
+            {
+                Item heldItem = owner.HeldItem;
+                if (heldItem != null && (heldItem.pick > 0 || heldItem.axe > 0 || heldItem.hammer > 0))
+                {
+                    Rectangle toolHitbox = new(
+                        (int)(owner.itemLocation.X - 24),
+                        (int)(owner.itemLocation.Y - 24),
+                        48 + heldItem.width,
+                        48 + heldItem.height);
+
+                    if (toolHitbox.Intersects(wallBox))
+                    {
+                        SoundEngine.PlaySound(SoundID.Dig with { Volume = 0.9f, Pitch = -0.2f }, Projectile.Center);
+                        EmitSolidifyBurst();
+                        Projectile.Kill();
+                        return;
+                    }
+                }
+            }
+
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (!npc.active || npc.friendly || npc.boss || npc.dontTakeDamage || npc.damage <= 0)
+                    continue;
+
+                if (npc.Hitbox.Intersects(wallBox))
+                {
+                    if (npc.Center.X < Projectile.Center.X)
+                    {
+                        npc.position.X = wallBox.Left - npc.width;
+                        if (npc.velocity.X > 0f) npc.velocity.X = 0f;
+                    }
+                    else
+                    {
+                        npc.position.X = wallBox.Right;
+                        if (npc.velocity.X < 0f) npc.velocity.X = 0f;
+                    }
+                }
+            }
+
             if (!Main.dedServ && Main.rand.NextBool(4))
                 EmitSolidDirt();
         }

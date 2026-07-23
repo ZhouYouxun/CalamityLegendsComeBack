@@ -204,6 +204,14 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 
             SoundEngine.PlaySound(SoundID.Item74 with { Volume = 1.05f, Pitch = -0.2f + DashPower * 0.22f }, Owner.Center);
             SpawnDashFlash(Owner.Center, dashDirection, 1f + DashPower * 0.35f);
+
+            // 在盾击冲刺起手瞬间于玩家起手点生成庇护土墙掩体
+            if (Main.myPlayer == Projectile.owner)
+            {
+                int wallType = ModContent.ProjectileType<AegisWallProjectile>();
+                Projectile.NewProjectile(Projectile.GetSource_FromThis(), Owner.MountedCenter, Vector2.Zero,
+                    wallType, 0, 0f, Projectile.owner);
+            }
         }
 
         // 猛击持续：跟随玩家，给予短暂伤害窗口后消亡。不强制移动，物理自然减速。
@@ -236,7 +244,10 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 EmitDashFlames(direction);
 
             if (DashTime >= DashDuration || Vector2.DistanceSquared(Projectile.Center, DashDestination) <= 1f)
+            {
+                Owner.velocity = direction * (dashSpeed * 0.45f);
                 Projectile.Kill();
+            }
         }
 
         public override bool TileCollideStyle(ref int width, ref int height, ref bool fallThrough, ref Vector2 hitboxCenterFrac)
@@ -447,7 +458,14 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 
                 float dashProgress = DashTime / DashDuration;
                 Vector2 drawPosition = Projectile.Center - Main.screenPosition;
+                Texture2D shieldTex = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/AegisBlade/庇护盾牌").Value;
+
                 Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
+
+                // 冲刺期间金色能量盾
+                Main.EntitySpriteDraw(shieldTex, drawPosition, null, ShieldLight with { A = 0 } * (1f - dashProgress * 0.5f),
+                    DashDirection.ToRotation(), shieldTex.Size() * 0.5f, 1.25f + DashPower * 0.35f, SpriteEffects.None);
+
                 Main.EntitySpriteDraw(bloom, drawPosition, null, ShieldFire with { A = 0 } * (1f - dashProgress) * 0.8f,
                     0f, bloom.Size() * 0.5f, 1.15f + DashPower * 0.45f, SpriteEffects.None);
                 Main.EntitySpriteDraw(ring, drawPosition, null, ShieldLight with { A = 0 } * (1f - dashProgress) * 0.45f,
@@ -462,8 +480,30 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             float pulse = 0.22f + 0.1f * MathF.Sin(Main.GlobalTimeWrappedHourly * 5f);
             float chargeGlow = MathHelper.Lerp(0.04f, 0.72f, chargeProgress);
             Vector2 shieldPosition = Owner.Center - Main.screenPosition + new Vector2(Owner.direction * Owner.width * 0.42f, -4f);
+            // 绘制精美、亮丽的金色能量特效盾（Golden Shield Overlay）
+            Texture2D shieldOverlayTex = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/AegisBlade/庇护盾牌").Value;
+            Vector2 shieldOrigin = shieldOverlayTex.Size() * 0.5f;
+            float shieldRot = DashDestination != Vector2.Zero ? DashDirection.ToRotation() : (Owner.MountedCenter.DirectionTo(AegisBlade.GetMouseWorld(Owner)).ToRotation());
+            float overlayPulse = 0.85f + 0.15f * MathF.Sin(Main.GlobalTimeWrappedHourly * 10f);
 
             Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
+
+            // 能量盾脉冲外晕
+            Main.EntitySpriteDraw(bloom, shieldPosition, null, ShieldGold with { A = 0 } * (0.65f * overlayPulse),
+                0f, bloom.Size() * 0.5f, 0.42f * overlayPulse, SpriteEffects.None);
+
+            // 4方向金色辉光描边
+            for (int i = 0; i < 4; i++)
+            {
+                Vector2 offset = (MathHelper.TwoPi * i / 4f).ToRotationVector2() * (2.8f * overlayPulse);
+                Main.EntitySpriteDraw(shieldOverlayTex, shieldPosition + offset, null, ShieldLight with { A = 0 } * 0.75f,
+                    shieldRot, shieldOrigin, 1.12f, SpriteEffects.None);
+            }
+
+            // 核心亮金特效盾
+            Main.EntitySpriteDraw(shieldOverlayTex, shieldPosition, null, ShieldGold with { A = 0 } * 0.95f,
+                shieldRot, shieldOrigin, 1.05f, SpriteEffects.None);
+
             Main.EntitySpriteDraw(bloom, shieldPosition, null, ShieldGold with { A = 0 } * (pulse + chargeGlow * 0.32f),
                 0f, bloom.Size() * 0.5f, 0.22f + chargeGlow * 0.28f, SpriteEffects.None);
 
@@ -550,6 +590,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             Vector2 direction = DashDestination != Vector2.Zero
                 ? DashDirection
                 : Owner.velocity.SafeNormalize(Vector2.UnitX * Owner.direction);
+            Owner.velocity = direction * (dashSpeed * 0.45f);
             SpawnDashFlash(Owner.Center, direction, 1.15f + DashPower * 0.35f);
         }
     }

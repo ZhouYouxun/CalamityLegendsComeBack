@@ -100,16 +100,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty
 
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
-            CallofDutyPlayer phonePlayer = Main.LocalPlayer.GetModPlayer<CallofDutyPlayer>();
-            ResponsibilityLanguageDefinition language = ResponsibilityLanguageRegistry.Get(phonePlayer.SelectedLanguageIndex);
             string key = KeybindSystem.LegendarySkill?.GetAssignedKeys().Count > 0
                 ? KeybindSystem.LegendarySkill.GetAssignedKeys()[0]
                 : "P";
 
-            // The second tooltip line explains whatever channel is currently selected, so the effect
-            // text is looked up per language instead of listing all four channels up front.
-            string effect = this.GetLocalizedValue("LanguageEffects." + (language?.Id ?? ResponsibilityLanguage.Alarm));
-            string compact = string.Format(this.GetLocalizedValue("Compact"), language?.Symbol ?? "!?", key, effect);
+            string compact = string.Format(this.GetLocalizedValue("Compact"), key);
             tooltips.FindAndReplace("[GFB]", compact);
 
             if (Main.keyState.PressingShift())

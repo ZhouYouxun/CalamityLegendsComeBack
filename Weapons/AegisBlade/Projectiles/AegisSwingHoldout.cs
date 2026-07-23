@@ -153,6 +153,10 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             endAngle   = startAngle + MathHelper.ToRadians(LoopSweepDegrees * swingDirection);
         }
 
+        private bool isThrown;
+        private Vector2 throwTargetPos;
+        private float throwDistProgress;
+
         private void DoSwing()
         {
             if (stateTimer == 0)
@@ -163,13 +167,27 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 
             if (releaseEnding)
             {
+                if (!isThrown)
+                {
+                    isThrown = true;
+                    throwTargetPos = AegisBlade.GetMouseWorld(Owner);
+                    throwDistProgress = 0f;
+                    SoundEngine.PlaySound(SoundID.Item120 with { Volume = 0.75f, Pitch = -0.1f }, Projectile.Center);
+                }
+
                 releaseTimer++;
-                spinSpeedFactor = MathHelper.Lerp(spinSpeedFactor, 0f, 0.4f);
-                visualOpacity = 1f - MathHelper.Clamp(releaseTimer / (float)ReleaseFadeFrames, 0f, 1f);
+                throwDistProgress = MathHelper.Clamp(throwDistProgress + 0.05f, 0f, 1f);
+                float easeDist = MathF.Sin(throwDistProgress * MathHelper.PiOver2);
+
+                Vector2 targetCenter = Owner.MountedCenter + Owner.MountedCenter.DirectionTo(throwTargetPos).SafeNormalize(Vector2.UnitX * Owner.direction) * (520f * easeDist);
+                Projectile.Center = Vector2.Lerp(Projectile.Center, targetCenter, 0.25f);
+                currentAngle += 0.42f * swingDirection;
+
+                visualOpacity = 1f - MathHelper.Clamp((releaseTimer - 20) / (float)ReleaseFadeFrames, 0f, 1f);
                 TrackBladeTrail(false);
                 stateTimer++;
 
-                if (releaseTimer >= ReleaseFadeFrames)
+                if (releaseTimer >= ReleaseFadeFrames + 20)
                     Projectile.Kill();
 
                 return;
@@ -184,7 +202,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             float progress = GetCurrentSwingProgress();
             currentAngle = EvaluateSwingAngle(progress);
 
-            // 每帧跟刀尖方向实时更新玩家朝向（仿 BB ApplyRightSpinHeldPose）
+            // 每帧跟刀尖方向实时更新玩家朝向
             Owner.direction = MathF.Cos(currentAngle) >= 0f ? 1 : -1;
 
             if (!releaseEnding && Main.myPlayer == Projectile.owner && stateTimer % TrackingSoulInterval == 0)
@@ -192,7 +210,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 
             if (!releaseEnding && !fireballSpawned && progress >= FireballSpawnProgress && Main.myPlayer == Projectile.owner)
             {
-                SpawnFireballs();
+                SpawnBigFireballs();
                 SpawnOrbitalStrikes();
                 fireballSpawned = true;
                 SoundEngine.PlaySound(SoundID.Item71 with { Volume = 0.82f, Pitch = Main.rand.NextFloat(-0.12f, 0.16f) }, Owner.Center);
@@ -201,14 +219,6 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             bool hitWindow = !releaseEnding && progress >= 0.23f && progress <= 0.87f;
             TrackBladeTrail(hitWindow);
             EmitSwingTrail(hitWindow);
-
-            if (releaseEnding)
-            {
-                stateTimer++;
-                if (visualOpacity <= 0.035f && spinSpeedFactor <= 0.01f)
-                    Projectile.Kill();
-                return;
-            }
 
             if (progress < 1f)
             {
@@ -240,26 +250,18 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             return startAngle + MathHelper.ToRadians(LoopSweepDegrees * swingDirection) * progress;
         }
 
-        private void SpawnFireballs()
+        private void SpawnBigFireballs()
         {
-            int fireballType = ModContent.ProjectileType<AegisFireball>();
-            int damage = Math.Max(1, (int)(Projectile.damage * 0.6f));
+            int fireballType = ModContent.ProjectileType<AegisBigFireball>();
+            int damage = Math.Max(1, (int)(Projectile.damage * 0.85f));
+            Vector2 aimDir = lockedMouseDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
 
-            int fireballCount = Main.rand.Next(8, 11);
-            for (int i = 0; i < fireballCount; i++)
+            // 向左右两侧75度角发射2个大火球
+            for (int i = -1; i <= 1; i += 2)
             {
-                Vector2 scatterDirection = Main.rand.NextFloat(MathHelper.TwoPi).ToRotationVector2();
-                Vector2 spawnPosition = Owner.MountedCenter + scatterDirection * Main.rand.NextFloat(22f, 84f) +
-                    Main.rand.NextVector2Circular(12f, 12f);
-                Vector2 velocity = scatterDirection.RotatedByRandom(MathHelper.ToRadians(16f)) * Main.rand.NextFloat(8f, 17f);
-                int fireballIndex = Projectile.NewProjectile(Projectile.GetSource_FromThis(), spawnPosition,
-                    velocity, fireballType, damage, 2f, Projectile.owner);
-
-                if (Main.projectile.IndexInRange(fireballIndex))
-                {
-                    Main.projectile[fireballIndex].scale = Main.rand.NextFloat(0.72f, 1.3f);
-                    Main.projectile[fireballIndex].netUpdate = true;
-                }
+                Vector2 shootVel = aimDir.RotatedBy(MathHelper.ToRadians(75f * i)) * 14f;
+                Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, shootVel,
+                    fireballType, damage, Projectile.knockBack * 0.5f, Projectile.owner);
             }
         }
 
@@ -268,13 +270,16 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             int laserType = ModContent.ProjectileType<AegisBorrowedLazharLaser>();
             int laserDamage = Math.Max(1, (int)(Projectile.damage * 0.42f));
             Vector2 mousePosition = AegisBlade.GetMouseWorld(Owner);
+            float discRadius = BladeReach * scale * SpinDiscRadiusScale * 2.2f;
 
             for (int i = 0; i < TrackingSoulBurstCount; i++)
             {
-                Vector2 spawnDirection = Main.rand.NextFloat(MathHelper.TwoPi).ToRotationVector2();
-                Vector2 spawnPosition = mousePosition + spawnDirection * Main.rand.NextFloat(10f * 16f, 15f * 16f);
+                // 从圆盘边缘发向鼠标/目标位置
+                Vector2 edgeOffset = Main.rand.NextFloat(MathHelper.TwoPi).ToRotationVector2() * discRadius;
+                Vector2 spawnPosition = Projectile.Center + edgeOffset;
                 Vector2 shootDirection = spawnPosition.DirectionTo(mousePosition)
                     .SafeNormalize(Vector2.UnitX * Owner.direction);
+
                 Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
                     spawnPosition,
@@ -509,6 +514,8 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             if (swipeDir == 0f) swipeDir = 1f;
             float drawOpacity = MathHelper.Clamp(visualOpacity, 0f, 1f);
 
+            DrawTetherChain(bloomTexture, ringTexture, drawOpacity);
+
             Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
             DrawAegisSpinDisc(swordTexture, swooshTexture, ringTexture, drawPosition, origin, swipeDir);
 
@@ -589,6 +596,40 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 
             Main.EntitySpriteDraw(swordTexture, drawPosition, null, lightColor * drawOpacity, drawRotation, origin, scale, SpriteEffects.None);
             return false;
+        }
+
+        private void DrawTetherChain(Texture2D bloomTexture, Texture2D ringTexture, float drawOpacity)
+        {
+            if (!isThrown && !releaseEnding) return;
+
+            Vector2 start = Owner.MountedCenter;
+            Vector2 end = Projectile.Center;
+            float dist = Vector2.Distance(start, end);
+            if (dist < 10f) return;
+
+            Vector2 dir = (end - start).SafeNormalize(Vector2.UnitX);
+            int segments = (int)(dist / 14f);
+
+            Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
+
+            for (int i = 0; i <= segments; i++)
+            {
+                float factor = i / (float)Math.Max(1, segments);
+                Vector2 pos = Vector2.Lerp(start, end, factor) - Main.screenPosition;
+                float pulse = 0.8f + 0.2f * MathF.Sin(Main.GlobalTimeWrappedHourly * 12f + i * 0.4f);
+                Color chainColor = Color.Lerp(BladeGold, BladeLight, factor) with { A = 0 } * (0.85f * drawOpacity * pulse);
+
+                Main.EntitySpriteDraw(bloomTexture, pos, null, chainColor,
+                    dir.ToRotation(), bloomTexture.Size() * 0.5f, new Vector2(0.38f, 0.16f), SpriteEffects.None);
+
+                if (i % 3 == 0)
+                {
+                    Main.EntitySpriteDraw(ringTexture, pos, null, BladeLight with { A = 0 } * (0.4f * drawOpacity),
+                        Main.GlobalTimeWrappedHourly * 4f + i, ringTexture.Size() * 0.5f, 0.12f, SpriteEffects.None);
+                }
+            }
+
+            Main.spriteBatch.ExitShaderRegion();
         }
 
         private void DrawForwardLightRim(Texture2D bloomTexture, float drawOpacity)
