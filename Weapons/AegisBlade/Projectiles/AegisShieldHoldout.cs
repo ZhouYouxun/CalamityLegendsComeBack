@@ -93,6 +93,12 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 return;
             }
 
+            if (BladePlayer.IsChargingBarrier)
+            {
+                Projectile.Kill();
+                return;
+            }
+
             Projectile.Center = Owner.MountedCenter;
             Projectile.timeLeft = 4;
 
@@ -213,14 +219,6 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 
             SoundEngine.PlaySound(SoundID.Item74 with { Volume = 1.05f, Pitch = -0.2f + DashPower * 0.22f }, Owner.Center);
             SpawnDashFlash(Owner.Center, dashDirection, 1f + DashPower * 0.35f);
-
-            // 在盾击冲刺起手瞬间于玩家起手点生成庇护土墙掩体
-            if (Main.myPlayer == Projectile.owner)
-            {
-                int wallType = ModContent.ProjectileType<AegisWallProjectile>();
-                Projectile.NewProjectile(Projectile.GetSource_FromThis(), Owner.MountedCenter, Vector2.Zero,
-                    wallType, 0, 0f, Projectile.owner);
-            }
         }
 
         // 猛击持续：跟随玩家，给予短暂伤害窗口后消亡。不强制移动，物理自然减速。

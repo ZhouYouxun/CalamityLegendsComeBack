@@ -16,13 +16,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
 {
     internal sealed class AMRRound : ModProjectile, ILocalizedModType
     {
-        private const int HiddenSubSteps = 10;
         private const float GoldenAngle = 2.39996323f;
 
         private bool hitAnyTarget;
         private bool configured;
         private int visualAgeFrames;
-        private int visualAgeSubSteps;
 
         public new string LocalizationCategory => "Projectiles.AntiMaterielRifle";
         public override string Texture => "CalamityMod/Projectiles/Ranged/AMRShot";
@@ -72,17 +70,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
                 CheckTileMarkerDetonation();
             }
 
-            // Counted in sub-steps rather than real frames
-            visualAgeSubSteps++;
-            if (visualAgeSubSteps == HiddenSubSteps + 1)
-                SpawnBreakthroughReveal();
-
             if (!CalamityUtils.FinalExtraUpdate(Projectile))
                 return;
 
             visualAgeFrames++;
-            SpawnFlightWake();
-            SpawnFlightTrailSparks();
+            SpawnFlightEffects();
         }
 
         private void CheckTileMarkerDetonation()
@@ -94,7 +86,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
                 {
                     if (Vector2.Distance(Projectile.Center, proj.Center) <= AMROnyxTileMarker.TriggerRadius)
                     {
-                        if (proj.ModProjectile is AMROnyxTileMarker tileMarker)
+                        if (proj.ModProjectile is AMROnyxTileMarker tileMarker && tileMarker.IsTileMarker)
                         {
                             int weaponDamage = Projectile.owner >= 0 ? Main.player[Projectile.owner].GetWeaponDamage(Main.player[Projectile.owner].HeldItem) : Projectile.damage;
                             tileMarker.Detonate((int)(weaponDamage * 2.0f)); // 200% 攻击力伤害
@@ -104,133 +96,18 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             }
         }
 
-        // ─────────────────────────────────────────────────────────────────
-        // 音爆点：出膛后固定位置的一次性事件。
-        // 世界锚定（velocity = Zero），所以它留在空气里当地标，
-        // 而不是跟着子弹跑变成装饰。
-        // ─────────────────────────────────────────────────────────────────
-        private void SpawnBreakthroughReveal()
-        {
-            if (Main.dedServ)
-                return;
-
-            Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-            Vector2 center = Projectile.Center - forward * 5f;
-            float rotation = forward.ToRotation();
-
-            // 冷（激波）在外、暖（弹芯余热）在内。冷暖对比才分得开层次，
-            // 三条同色橙环只会糊成一团。
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(center, Vector2.Zero,
-                new Color(118, 146, 178), new Vector2(0.30f, 1.34f), rotation, 0.05f, 0.74f, 16));
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(center, Vector2.Zero,
-                new Color(255, 236, 178), new Vector2(0.18f, 0.72f), rotation, 0.02f, 0.30f, 10));
-
-            // 单个 V 形激波楔，世界锚定、向后飘散。
-            // 取代原本每帧重绘、粘在弹体上的两组 chevron。
-            SpawnShockChevron(center, forward, 1f);
-
-            // 增加突破音障时的超感电磁闪光和散射火花！
-            if (Main.LocalPlayer.active && !Main.LocalPlayer.dead)
-            {
-                Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(Main.LocalPlayer.Calamity().GeneralScreenShakePower, 5f);
-            }
-            for (int i = 0; i < 8; i++)
-            {
-                Vector2 sparkVel = -forward.RotatedBy(Main.rand.NextFloat(-0.4f, 0.4f)) * Main.rand.NextFloat(3f, 8f);
-                GeneralParticleHandler.SpawnParticle(new AltSparkParticle(
-                    center,
-                    sparkVel,
-                    false,
-                    Main.rand.Next(15, 25),
-                    Main.rand.NextFloat(0.8f, 1.4f),
-                    Main.rand.NextBool() ? new Color(255, 220, 100) : new Color(255, 120, 40)
-                ));
-            }
-            for (int i = 0; i < 4; i++)
-            {
-                Vector2 boltVel = -forward.RotatedBy(Main.rand.NextFloat(-0.7f, 0.7f)) * Main.rand.NextFloat(2f, 5f);
-                GeneralParticleHandler.SpawnParticle(new BoltParticle(
-                    center,
-                    boltVel,
-                    false,
-                    Main.rand.Next(10, 18),
-                    Main.rand.NextFloat(0.4f, 0.8f),
-                    new Color(255, 200, 80),
-                    new Vector2(0.3f, 0.8f),
-                    true
-                ));
-            }
-            GeneralParticleHandler.SpawnParticle(new GenericBloom(
-                center, Vector2.Zero, new Color(255, 245, 210), 1.3f, 12, false));
-        }
-
-        // 新增的伴随子弹飞行轨迹生成的电磁微粒及折线电弧
-        private void SpawnFlightTrailSparks()
+        // 主弹飞行期只生成沿弹道、固定反向的圆润粒子，不再使用随机方向 Spark。
+        private void SpawnFlightEffects()
         {
             if (Main.dedServ)
                 return;
 
             int steps = Projectile.extraUpdates + 1;
             Vector2 oldCenter = Projectile.Center - Projectile.velocity * steps;
-            Vector2 currentCenter = Projectile.Center;
-            float distance = Vector2.Distance(oldCenter, currentCenter);
-            Vector2 direction = (currentCenter - oldCenter).SafeNormalize(Vector2.UnitX);
-
-            // 每隔 25 像素沿路径进行插值生成，防止在高速移动下由于帧更新产生视觉上的空隙
-            for (float d = 0f; d < distance; d += 25f)
-            {
-                Vector2 spawnPos = oldCenter + direction * d;
-
-                // 1. 高能电磁电弧
-                if (Main.rand.NextBool(3))
-                {
-                    Vector2 normal = new Vector2(-direction.Y, direction.X);
-                    Vector2 boltVel = normal * Main.rand.NextFloat(-3.5f, 3.5f) + Projectile.velocity * 0.03f;
-                    GeneralParticleHandler.SpawnParticle(new BoltParticle(
-                        spawnPos,
-                        boltVel,
-                        false,
-                        Main.rand.Next(8, 14),
-                        Main.rand.NextFloat(0.25f, 0.5f),
-                        new Color(255, 190, 60),
-                        new Vector2(0.3f, 0.7f),
-                        true
-                    ));
-                }
-
-                // 2. 散射电火花
-                if (Main.rand.NextBool(2))
-                {
-                    Vector2 sparkVel = Main.rand.NextVector2Circular(1.5f, 1.5f);
-                    GeneralParticleHandler.SpawnParticle(new AltSparkParticle(
-                        spawnPos,
-                        sparkVel,
-                        false,
-                        Main.rand.Next(6, 12),
-                        Main.rand.NextFloat(0.4f, 0.8f),
-                        Main.rand.NextBool() ? new Color(255, 210, 80) : new Color(255, 120, 30)
-                    ));
-                }
-            }
-        }
-
-        // ─────────────────────────────────────────────────────────────────
-        // 巡航期：不再每帧喷 6~11 个粒子。
-        // 路径已经由图元带完整表达，粒子再说一遍只会糊。
-        // 每 7 帧留一枚世界锚定的激波环当"航迹标记"，单发约 4 枚。
-        // ─────────────────────────────────────────────────────────────────
-        private void SpawnFlightWake()
-        {
-            if (Main.dedServ)
-                return;
-
-            if (visualAgeFrames % 7 != 0)
-                return;
-
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-            float frameTravel = Projectile.velocity.Length() * (Projectile.extraUpdates + 1f);
+            float frameTravel = Projectile.velocity.Length() * steps;
 
-            float cullingMargin = frameTravel + 180f;
+            float cullingMargin = frameTravel + 120f;
             Rectangle expandedView = new(
                 (int)(Main.screenPosition.X - cullingMargin),
                 (int)(Main.screenPosition.Y - cullingMargin),
@@ -239,27 +116,37 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             if (!expandedView.Contains(Projectile.Center.ToPoint()))
                 return;
 
-            // velocity = Zero：环停在生成处，子弹飞走，环留下。
-            // 这是"空气被撕开"而不是"子弹拖着东西"。
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
-                Projectile.Center - forward * Math.Min(frameTravel * 0.5f, 190f),
-                Vector2.Zero,
-                new Color(126, 152, 180),
-                new Vector2(0.11f, 0.86f),
-                forward.ToRotation(),
-                0.02f,
-                0.40f,
-                13));
-        }
-
-        // 一枚向后张开的 V 形激波楔。用于音爆点与每次贯穿。
-        private static void SpawnShockChevron(Vector2 origin, Vector2 forward, float strength)
-        {
-            for (int sign = -1; sign <= 1; sign += 2)
+            int orbCount = Math.Clamp((int)(frameTravel / 58f), 1, 4);
+            for (int i = 0; i < orbCount; i++)
             {
-                Vector2 velocity = -forward.RotatedBy(MathHelper.ToRadians(19f) * sign) * 7.5f * strength;
-                GeneralParticleHandler.SpawnParticle(new LineParticle(
-                    origin, velocity, false, 13, 0.52f * strength, new Color(186, 208, 232)));
+                float completion = (i + 1f) / (orbCount + 1f);
+                Vector2 spawnPosition = Vector2.Lerp(oldCenter, Projectile.Center, completion);
+                Color orbColor = i % 2 == 0 ? new Color(255, 211, 102) : new Color(146, 174, 205);
+                float scale = i % 2 == 0 ? 0.34f : 0.27f;
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    spawnPosition,
+                    -forward * 0.55f,
+                    false,
+                    11,
+                    scale,
+                    orbColor,
+                    true,
+                    false,
+                    true));
+            }
+
+            if (visualAgeFrames % 2 == 0)
+            {
+                Vector2 sparkPosition = Projectile.Center - forward * Math.Min(frameTravel * 0.42f, 150f);
+                GeneralParticleHandler.SpawnParticle(new CritSpark(
+                    sparkPosition,
+                    -forward * 1.35f,
+                    new Color(255, 250, 222),
+                    new Color(255, 184, 54),
+                    0.34f,
+                    10,
+                    0.08f,
+                    2.35f));
             }
         }
 
@@ -319,7 +206,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
                 SpawnMetalJet(target.Center);
             }
 
-            // Stage 7 亵渎神明/守卫者强化：普通 2 颗，暴击 6 颗强追踪小弹幕依次在附近出现发射
+            // Stage 7：按原作 AMR / Tyranny's End 规则，从目标左右两侧召来高速夹击弹。
             if (AMRBalance.CoreRuptureUnlocked && Projectile.owner == Main.myPlayer)
             {
                 SpawnSubBullets(target, hit.Crit);
@@ -348,52 +235,71 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
         private void SpawnMetalJetProjectiles(Vector2 impactCenter)
         {
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-            int count = IsAimedShot ? 10 : 6;
-            int shardDamage = (int)(Projectile.damage * 0.3f);
+            int count = 5; // 产生顺序扩散的 5 个弹幕
+            int shardDamage = (int)(Projectile.damage * 0.5f); // 50% 伤害
 
             for (int i = 0; i < count; i++)
             {
-                float spreadAngle = MathHelper.ToRadians(28f);
+                float spreadAngle = MathHelper.ToRadians(32f);
                 float angle = MathHelper.Lerp(-spreadAngle, spreadAngle, i / (float)(count - 1));
-                Vector2 shardVel = forward.RotatedBy(angle) * Main.rand.NextFloat(16f, 26f);
+                Vector2 shardVel = forward.RotatedBy(angle) * Main.rand.NextFloat(18f, 28f);
 
                 Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
-                    impactCenter + forward * 8f,
+                    impactCenter + forward * 10f,
                     shardVel,
                     ModContent.ProjectileType<AMRMetalJetShard>(),
                     Math.Max(1, shardDamage),
                     Projectile.knockBack * 0.3f,
-                    Projectile.owner);
+                    Projectile.owner,
+                    15f);
             }
         }
 
         private void SpawnSubBullets(NPC target, bool critical)
         {
-            int bulletCount = critical ? 6 : 2;
-            int subDamage = Math.Max(1, (int)(Projectile.damage * 0.15f));
-            Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-            Vector2 normal = new(-forward.Y, forward.X);
+            int bulletCount;
+            float damageRatio;
+            float knockbackRatio;
+            float speed;
+
+            if (IsAimedShot)
+            {
+                if (!critical)
+                    return;
+
+                bulletCount = 6;
+                damageRatio = 0.175f;
+                knockbackRatio = 1f;
+                speed = 12f;
+            }
+            else
+            {
+                bulletCount = critical ? 4 : 2;
+                damageRatio = 0.15f;
+                knockbackRatio = 0.1f;
+                speed = 10f;
+            }
+
+            int subDamage = Math.Max(1, (int)(Projectile.damage * damageRatio));
 
             for (int i = 0; i < bulletCount; i++)
             {
-                // 侧向拉开生成位置
-                float sideSign = (i % 2 == 0) ? -1f : 1f;
-                Vector2 spawnOffset = normal * (40f + i * 12f) * sideSign - forward * (20f + i * 15f);
-                Vector2 spawnPos = target.Center + spawnOffset;
-                Vector2 initVel = (target.Center - spawnPos).SafeNormalize(Vector2.UnitX) * 18f;
-
-                // 带有 i * 3 帧的递增延迟，使得 6 颗小弹在几十帧内依次连续现身并强追踪飞向敌人！
-                Projectile.NewProjectile(
+                bool fromRight = IsAimedShot ? i < bulletCount / 2 : i >= bulletCount / 2;
+                CalamityUtils.ProjectileBarrage(
                     Projectile.GetSource_FromThis(),
-                    spawnPos,
-                    initVel,
+                    Projectile.Center,
+                    target.Center,
+                    fromRight,
+                    500f,
+                    500f,
+                    0f,
+                    500f,
+                    speed,
                     ModContent.ProjectileType<AMRSubBullet>(),
                     subDamage,
-                    0.5f,
-                    Projectile.owner,
-                    target.whoAmI,
-                    i * 3); // ai[1] 为延迟帧数
+                    Projectile.knockBack * knockbackRatio,
+                    Projectile.owner);
             }
         }
 
@@ -403,6 +309,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             if (IsMarkerRound)
             {
                 marker.SetMarker(Projectile.owner, Math.Max(Projectile.damage, damageDone));
+                SpawnOnyxTargetMarker(target);
                 SoundEngine.PlaySound(SoundID.Item4 with { Volume = 0.35f, Pitch = -0.45f }, target.Center);
                 return;
             }
@@ -412,6 +319,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
 
             if (Projectile.owner != Main.myPlayer)
                 return;
+
+            RemoveOnyxTargetMarker(target.whoAmI);
 
             int detonation = Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
@@ -424,6 +333,42 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
                 target.whoAmI);
             if (Main.projectile.IndexInRange(detonation))
                 Main.projectile[detonation].CritChance = Projectile.CritChance;
+        }
+
+        private void SpawnOnyxTargetMarker(NPC target)
+        {
+            if (Projectile.owner != Main.myPlayer)
+                return;
+
+            RemoveOnyxTargetMarker(target.whoAmI);
+
+            Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 markerPosition = Projectile.Center - forward * 9f;
+            Vector2 targetOffset = markerPosition - target.Center;
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                markerPosition,
+                targetOffset,
+                ModContent.ProjectileType<AMROnyxTileMarker>(),
+                0,
+                0f,
+                Projectile.owner,
+                forward.ToRotation() + MathHelper.PiOver2,
+                target.whoAmI + 1f);
+        }
+
+        private void RemoveOnyxTargetMarker(int targetIndex)
+        {
+            int markerType = ModContent.ProjectileType<AMROnyxTileMarker>();
+            foreach (Projectile markerProjectile in Main.ActiveProjectiles)
+            {
+                if (markerProjectile.type == markerType && markerProjectile.owner == Projectile.owner &&
+                    markerProjectile.ModProjectile is AMROnyxTileMarker marker &&
+                    marker.IsAttachedTo(targetIndex))
+                {
+                    markerProjectile.Kill();
+                }
+            }
         }
 
         private void SpawnMetalJet(Vector2 impactCenter)
@@ -452,90 +397,94 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
 
             float strength = critical ? 1.3f : 1f;
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 normal = new(-forward.Y, forward.X);
             float rotation = forward.ToRotation();
 
-            // 增加命中的强烈屏幕振动
             if (Main.LocalPlayer.active && !Main.LocalPlayer.dead)
             {
-                Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(Main.LocalPlayer.Calamity().GeneralScreenShakePower, critical ? 7.5f : 4f);
+                Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(
+                    Main.LocalPlayer.Calamity().GeneralScreenShakePower,
+                    critical ? 7.5f : 4f);
             }
 
-            // ① 穿孔痕：Squish 的 X 分量极小 → 环被压成垂直于弹道的一道"缝"。
-            //    寿命 34 帧，远长于其他层，所以打完之后洞还留在那里。
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(center, Vector2.Zero,
-                new Color(28, 20, 10), new Vector2(0.16f, 1.0f), rotation,
-                0.06f, 0.92f * strength, 34));
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(center, Vector2.Zero,
-                new Color(255, 208, 96), new Vector2(0.12f, 0.74f), rotation,
-                0.03f, 0.52f * strength, 20));
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                center,
+                forward * 0.45f,
+                new Color(255, 215, 116),
+                new Vector2(0.24f, 0.82f),
+                rotation,
+                0.06f,
+                1.05f * strength,
+                21));
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                center + forward * 6f,
+                forward * 0.8f,
+                new Color(125, 151, 184),
+                new Vector2(0.38f, 1.18f),
+                rotation,
+                0.03f,
+                1.42f * strength,
+                25));
 
-            // ② 出口锥：紧 ±22°，全部朝前。速度差 2.4 倍拉出纵深。
-            int coneCount = critical ? 14 : 10;
-            for (int i = 0; i < coneCount; i++)
+            int orbCount = critical ? 22 : 15;
+            for (int i = 0; i < orbCount; i++)
             {
-                float spread = (i / (coneCount - 1f) - 0.5f) * 2f;              // -1 → 1
-                float angle = MathHelper.ToRadians(22f) * spread;
-                // 越靠锥心越快越亮，边缘慢而暗 —— 一个变量同时控三个属性。
-                float axial = 1f - MathF.Abs(spread);
-                float speed = MathHelper.Lerp(6.5f, 15.5f, axial) * strength;
-                Color color = axial > 0.66f ? new Color(255, 250, 216)
-                            : axial > 0.33f ? new Color(255, 199, 74)
-                                             : new Color(150, 96, 20);
-
-                GeneralParticleHandler.SpawnParticle(new LineParticle(
-                    center + forward * 6f,
+                float spread = i / (orbCount - 1f) - 0.5f;
+                float angle = MathHelper.ToRadians(70f) * spread + MathHelper.ToRadians(Main.rand.NextFloat(-2.5f, 2.5f));
+                float centerWeight = 1f - MathF.Abs(spread * 2f);
+                float speed = MathHelper.Lerp(4.5f, 15.5f, centerWeight) * Main.rand.NextFloat(0.88f, 1.12f) * strength;
+                Color color = Color.Lerp(new Color(167, 187, 210), new Color(255, 220, 119), centerWeight);
+                Vector2 spawnPosition = center + forward * 5f + normal * spread * 8f;
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    spawnPosition,
                     forward.RotatedBy(angle) * speed,
                     false,
-                    (int)(11 + axial * 7),
-                    (0.30f + axial * 0.26f) * strength,
-                    color));
-            }
-
-            // 增加穿透击中时的破甲溅射电弧
-            int voltCount = critical ? 6 : 3;
-            for (int i = 0; i < voltCount; i++)
-            {
-                float angle = MathHelper.ToRadians(Main.rand.NextFloat(-40f, 40f));
-                Vector2 voltVel = forward.RotatedBy(angle) * Main.rand.NextFloat(4f, 10f) * strength;
-                GeneralParticleHandler.SpawnParticle(new BoltParticle(
-                    center,
-                    voltVel,
+                    Main.rand.Next(14, 22),
+                    Main.rand.NextFloat(0.32f, 0.58f) * strength,
+                    color,
+                    true,
                     false,
-                    Main.rand.Next(10, 20),
-                    Main.rand.NextFloat(0.4f, 0.8f),
-                    new Color(255, 200, 80),
-                    new Vector2(0.3f, 0.8f),
-                    true
-                ));
+                    true));
             }
 
-            // ③ 入口反溅：只有 3 支，朝后、慢、暗。存在感刚好够读出"这里是入口"。
-            for (int i = -1; i <= 1; i++)
+            int sparkCount = critical ? 10 : 6;
+            for (int i = 0; i < sparkCount; i++)
             {
-                GeneralParticleHandler.SpawnParticle(new LineParticle(
-                    center,
-                    -forward.RotatedBy(MathHelper.ToRadians(26f) * i) * 3.6f,
-                    false, 9, 0.24f * strength, new Color(120, 74, 16)));
+                float spread = i / (sparkCount - 1f) - 0.5f;
+                Vector2 velocity = forward.RotatedBy(MathHelper.ToRadians(54f) * spread) *
+                    Main.rand.NextFloat(5.5f, 11f) * strength;
+                GeneralParticleHandler.SpawnParticle(new CritSpark(
+                    center + forward * 7f,
+                    velocity,
+                    new Color(255, 252, 228),
+                    new Color(255, 171, 46),
+                    Main.rand.NextFloat(0.35f, 0.55f) * strength,
+                    Main.rand.Next(12, 19),
+                    Main.rand.NextFloat(-0.18f, 0.18f),
+                    2.4f));
             }
 
-            // ④ 入口白闪：一帧的过曝核心，标记命中瞬间。
             GeneralParticleHandler.SpawnParticle(new GenericBloom(
-                center, Vector2.Zero, new Color(255, 246, 214), 0.34f * strength, 9, false));
+                center + forward * 4f,
+                forward * 0.3f,
+                new Color(255, 247, 220),
+                0.42f * strength,
+                10,
+                false));
 
-            // ⑤ 烟：只在出口侧， 2 支，不再是四方对称，也不再 required。
             for (int sign = -1; sign <= 1; sign += 2)
             {
                 GeneralParticleHandler.SpawnParticle(new HeavySmokeParticle(
-                    center + forward * 14f,
-                    forward.RotatedBy(MathHelper.ToRadians(30f) * sign) * 1.5f,
-                    new Color(46, 36, 26), 22, 0.42f * strength, 0.62f,
-                    sign * 0.035f, false));
+                    center + forward * 10f,
+                    forward.RotatedBy(MathHelper.ToRadians(24f) * sign) * 2.2f,
+                    new Color(48, 39, 29),
+                    22,
+                    0.42f * strength,
+                    0.62f,
+                    sign * 0.025f,
+                    false));
             }
-
-            // ⑥ 贯穿楔：与音爆点同一语汇，把"又穿过一个"读出来。
-            SpawnShockChevron(center, forward, 0.85f * strength);
         }
-
 
         public override bool OnTileCollide(Vector2 oldVelocity)
         {
@@ -550,14 +499,17 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             // 星流/终灾后：标记弹 (第一发) 撞击物块时，生成物块粘附标记
             if (AMRBalance.OnyxSequenceUnlocked && IsMarkerRound && Projectile.owner == Main.myPlayer)
             {
+                Vector2 forward = oldVelocity.SafeNormalize(Vector2.UnitX);
                 Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
-                    Projectile.Center,
+                    Projectile.Center - forward * 9f,
                     Vector2.Zero,
                     ModContent.ProjectileType<AMROnyxTileMarker>(),
                     0,
                     0f,
-                    Projectile.owner);
+                    Projectile.owner,
+                    forward.ToRotation() + MathHelper.PiOver2,
+                    0f);
                 SoundEngine.PlaySound(SoundID.Item4 with { Volume = 0.4f, Pitch = -0.3f }, Projectile.Center);
             }
 
@@ -585,14 +537,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             Vector2 origin = texture.Size() * 0.5f;
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 drawCenter = Projectile.Center - Main.screenPosition;
-
-            // 弹体只在音爆点之后可见（原逻辑保留）。
-            bool bodyVisible = visualAgeSubSteps > HiddenSubSteps;
-            if (!bodyVisible)
-                return false;
-
-            // 高频脉动被去掉了：一颗超音速弹丸不应该在"呼吸"。
-            // 恒定亮度 + 细弹芯 = 冷静、锐利，这是"清爽"的一部分。
 
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState,
@@ -629,16 +573,15 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
 
             MiscShaderData trailShader = GameShaders.Misc["CalamityMod:TrailStreak"];
 
-            // 渲染外层超感激波电场：使用狂野、多折线的 ScarletDevilStreak 纹理，增加等离子撕裂感
             trailShader.SetShaderTexture(
-                ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/ScarletDevilStreak"));
+                ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/BasicTrail"));
             PrimitiveRenderer.RenderTrail(
                 trailPoints,
                 new PrimitiveSettings(
                     ShockTrailWidth,
                     ShockTrailColor,
                     (_, _) => Vector2.Zero,
-                    smoothen: false,
+                    smoothen: true,
                     pixelate: false,
                     shader: trailShader),
                 trailPoints.Length * 2);
@@ -659,7 +602,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
                     PenetratorCoreWidth,
                     PenetratorCoreColor,
                     (_, _) => Vector2.Zero,
-                    smoothen: false,
+                    smoothen: true,
                     pixelate: false,
                     shader: trailShader),
                 corePoints.Length * 2);

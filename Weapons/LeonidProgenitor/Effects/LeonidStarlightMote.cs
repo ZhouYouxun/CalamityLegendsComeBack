@@ -21,8 +21,19 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects
         Needle  // ShineFlare 512² 纵向拉伸：细针状光矢，跟随速度方向
     }
 
-    // 「星光锁定」粒子——学自救赎「盲目正义」的 Lightmass：
-    // 慢速悬停 → 极速转向锁定 → 撞击后虚化收尾。
+    internal enum LeonidStarlightMotion
+    {
+        Homing,
+        RadialSpiral,
+        BurstArc,
+        SprayFan,
+        TrailScatter,
+        RainFall,
+        FreeDrift
+    }
+
+    // 狮子座星光粒子：每批仅一颗保留「星光锁定」，其余按释放动作走独立曲线。
+    // 追踪星仍然是慢速悬停 → 极速转向锁定 → 撞击后虚化收尾。
     // 这里换成狮子座的视觉语言（层云蓝／月光紫／月白／星金），并加了几段自己的节奏：
     //   ① 点亮 Kindle  ：从零膨胀出来的一瞬爆闪，不是凭空出现
     //   ② 悬停 Drift   ：阻尼减速 + 垂直正弦摆动 + 微弱上浮，像悬在夜空里的星
@@ -74,6 +85,9 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects
         private readonly int hoverTime;
         private readonly bool alignToVelocity;
         private readonly bool linksToSiblings;
+        private readonly LeonidStarlightMotion motion;
+        private readonly float motionPhase;
+        private readonly float curveDirection;
 
         private Phase phase = Phase.Kindle;
         private int phaseTimer;
@@ -96,7 +110,9 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects
             int lifetime = 150,
             float lanceSpeed = 17f,
             float homingRange = 760f,
-            bool linksToSiblings = true)
+            bool linksToSiblings = true,
+            LeonidStarlightMotion motion = LeonidStarlightMotion.FreeDrift,
+            float motionPhase = 0f)
         {
             Position = position;
             Velocity = velocity;
@@ -106,6 +122,9 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects
             this.lanceSpeed = lanceSpeed;
             this.homingRange = homingRange;
             this.linksToSiblings = linksToSiblings;
+            this.motion = motion;
+            this.motionPhase = motionPhase;
+            curveDirection = MathF.Sin(motionPhase + 0.37f) >= 0f ? 1f : -1f;
 
             coreColor = Color.Lerp(color, LeonidVisualUtils.MoonWhite, 0.35f);
             edgeColor = Color.Lerp(color, LeonidVisualUtils.NightSkyBlue, 0.3f);
@@ -233,11 +252,16 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects
         {
             // 阻尼减速造成"悬在夜空里"的静谧感，再叠一层垂直正弦摆动和微弱上浮，
             // 让它是"浮着"而不是单纯"停下来"。
-            Velocity *= driftDamping;
+            if (motion == LeonidStarlightMotion.Homing)
+            {
+                Velocity *= driftDamping;
 
-            Vector2 sway = Velocity.SafeNormalize(Vector2.UnitX).RotatedBy(MathHelper.PiOver2);
-            Velocity += sway * MathF.Sin(Time * 0.28f + wobblePhase) * wobbleStrength;
-            Velocity.Y -= 0.024f;
+                Vector2 sway = Velocity.SafeNormalize(Vector2.UnitX).RotatedBy(MathHelper.PiOver2);
+                Velocity += sway * MathF.Sin(Time * 0.28f + wobblePhase) * wobbleStrength;
+                Velocity.Y -= 0.024f;
+            }
+            else
+                UpdateIndependentMotion(false);
 
             ApplyGravityWell();
 
@@ -252,8 +276,13 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects
 
             if (phaseTimer >= hoverTime)
             {
-                target = FindTarget();
-                EnterPhase(target != null ? Phase.Lock : Phase.Wander);
+                if (motion == LeonidStarlightMotion.Homing)
+                {
+                    target = FindTarget();
+                    EnterPhase(target != null ? Phase.Lock : Phase.Wander);
+                }
+                else
+                    EnterPhase(Phase.Wander);
             }
         }
 
@@ -322,6 +351,20 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects
 
         private void UpdateWander()
         {
+            if (motion != LeonidStarlightMotion.Homing)
+            {
+                UpdateIndependentMotion(true);
+                ApplyGravityWell();
+
+                float independentFade = Utils.GetLerpValue(Lifetime, Lifetime - 40f, Time, true);
+                renderScale = baseScale * independentFade;
+
+                if (linksToSiblings && Time % 10 == 0)
+                    RefreshConstellationLink();
+                linkStrength *= 0.94f;
+                return;
+            }
+
             // 没有目标：不硬删，改为缓缓上浮、微微转向并淡出，收尾干净。
             Velocity *= 0.985f;
             Velocity.Y -= 0.03f;
@@ -342,6 +385,63 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects
                 target = FindTarget();
                 if (target != null)
                     EnterPhase(Phase.Lock);
+            }
+        }
+
+        // Every non-homing family has a readable main direction plus a smaller,
+        // phase-offset disturbance. This combines order and disorder without
+        // turning the particles into either straight lines or Brownian noise.
+        private void UpdateIndependentMotion(bool mature)
+        {
+            float wave = MathF.Sin(Time * 0.11f + motionPhase + wobblePhase * 0.35f);
+            float secondaryWave = MathF.Sin(Time * 0.037f + motionPhase * 1.7f);
+            Vector2 forward = Velocity.SafeNormalize(motionPhase.ToRotationVector2());
+            Vector2 sideways = forward.RotatedBy(MathHelper.PiOver2);
+
+            switch (motion)
+            {
+                case LeonidStarlightMotion.RadialSpiral:
+                    // The ring remains recognizable while gradually twisting and weaving.
+                    Velocity = Velocity.RotatedBy(0.0095f + wave * 0.0038f * curveDirection);
+                    Velocity *= mature ? 0.994f : 0.997f;
+                    Velocity += sideways * (0.012f * wave);
+                    break;
+
+                case LeonidStarlightMotion.BurstArc:
+                    // Explosion fragments keep moving outward, then peel into curved lanes.
+                    Velocity = Velocity.RotatedBy(curveDirection * 0.0065f + wave * 0.003f);
+                    Velocity *= mature ? 0.988f : 0.994f;
+                    Velocity += sideways * (0.018f * secondaryWave);
+                    Velocity.Y -= 0.008f;
+                    break;
+
+                case LeonidStarlightMotion.SprayFan:
+                    // The initial spray direction remains authoritative while its fan opens.
+                    Velocity = Velocity.RotatedBy(curveDirection * 0.0028f + wave * 0.0022f);
+                    Velocity *= mature ? 0.984f : 0.991f;
+                    Velocity += sideways * (0.014f * wave);
+                    break;
+
+                case LeonidStarlightMotion.TrailScatter:
+                    // Shed motes recede into a slow wake instead of turning back to enemies.
+                    Velocity = Velocity.RotatedBy(curveDirection * 0.0035f + wave * 0.0025f);
+                    Velocity *= mature ? 0.972f : 0.982f;
+                    Velocity += sideways * (0.012f * wave);
+                    Velocity.Y -= 0.012f;
+                    break;
+
+                case LeonidStarlightMotion.RainFall:
+                    // Vertical order, staggered serpentine lanes, and non-uniform fall speed.
+                    Velocity.X = Velocity.X * 0.992f + wave * 0.026f + curveDirection * 0.004f;
+                    Velocity.Y = MathF.Min(Velocity.Y + (mature ? 0.022f : 0.035f), lanceSpeed * 0.72f);
+                    break;
+
+                default: // FreeDrift
+                    Velocity = Velocity.RotatedBy(curveDirection * 0.0025f + wave * 0.0032f);
+                    Velocity *= mature ? 0.976f : 0.986f;
+                    Velocity += sideways * (0.013f * wave);
+                    Velocity.Y -= 0.018f + secondaryWave * 0.006f;
+                    break;
             }
         }
 

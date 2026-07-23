@@ -168,9 +168,27 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 
             if (!Main.dedServ)
             {
-                // Providence 三重爆闪 + 火焰体积 + 圣灰
+                // Providence 三重爆闪 + 火焰体积 + 圣灰 + 重火烟尘粒子
                 AegisVisuals.HolyDetonation(Projectile.Center, 2.4f);
                 AegisVisuals.CoronaRing(Projectile.Center, 16, 1.5f);
+
+                for (int i = 0; i < 20; i++)
+                {
+                    Vector2 particleVel = Main.rand.NextVector2Circular(12f, 12f);
+                    GeneralParticleHandler.SpawnParticle(new FlameParticle(
+                        Projectile.Center + Main.rand.NextVector2Circular(30f, 30f), 28,
+                        Main.rand.NextFloat(0.45f, 0.7f), Main.rand.NextFloat(1.2f, 2.2f),
+                        AegisVisuals.Core, AegisVisuals.Ember));
+
+                    GeneralParticleHandler.SpawnParticle(new HeavySmokeParticle(
+                        Projectile.Center, particleVel * 1.5f,
+                        AegisVisuals.Charred, 35, Main.rand.NextFloat(0.6f, 1.2f), 0.8f,
+                        Main.rand.NextFloat(-0.04f, 0.04f), true));
+
+                    GeneralParticleHandler.SpawnParticle(new SparkParticle(
+                        Projectile.Center, particleVel * 1.8f, false, 16,
+                        Main.rand.NextFloat(1.2f, 2.4f), AegisVisuals.Gold));
+                }
 
                 // 四向冲击光锥（BlastCone），指向即将飞出的四枚圣火
                 for (int i = 0; i < 4; i++)

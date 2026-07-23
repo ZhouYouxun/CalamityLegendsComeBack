@@ -18,10 +18,10 @@ Mods: {
 					Stage1: Eye of Cthulhu executed: hits permanently reduce target defense by 60% (non-stacking)
 					Stage2: Eater of Worlds or Brain of Cthulhu executed: impacts spew metal jet shards dealing 30% damage and applying true damage & defense reduction
 					Stage3: Wall of Flesh executed: press dash towards mouse for invulnerable slides; chain up to 4 slides within 2s, empowering next attack with 2x damage & heavier metal jets
-					Stage4: Any mechanical boss executed: fire interval reduced to 24 frames (0.4s)
+					Stage4: Any mechanical boss executed: .408 base power continues to grow; the fire interval remains fixed at 60 frames
 					Stage5: Plantera executed: calibrate repeatedly on one target for 1.45x damage increase
 					Stage6: Moon Lord executed: critical chance above 100% is converted into extra critical damage multiplier
-					Stage7: Providence executed: hits spawn 2 homing sub-bullets, crits spawn 6 (15% damage), flying sequentially towards target over consecutive frames
+					Stage7: Providence executed: regular shots call 2 flanking rounds, or 4 on crit; aimed shots call 6 stronger flanking rounds only on crit
 					Stage8: Devourer of Gods executed: God-Slayer Firearm! .408 rounds execute regular enemies; slides upgraded to Dimensional Strike
 					Stage9: Exo Mechs or Supreme Witch executed: Draedon Onyx Explosive Mag! Marker rounds stick to targets/tiles (tiles spawn a trigger zone), detonator rounds trigger 200% weapon damage Onyx explosions
 					LegendaryText:
@@ -42,8 +42,9 @@ Mods: {
 				AMROnyxDetonation.DisplayName: Onyx Detonation
 				AMRSlideExplosion.DisplayName: AMR Slide Explosion
 				AMRMetalJetShard.DisplayName: Metal Jet Shard
-				AMRSubBullet.DisplayName: AMR Homing Sub-Bullet
-				AMROnyxTileMarker.DisplayName: Onyx Tile Marker
+				AMRSubBullet.DisplayName: AMR Flanking Round
+				AMROnyxTileMarker.DisplayName: Onyx Embedded Round
+				AMRCooldownStatusBar.DisplayName: AMR Slide Cooldown Bar
 			}
 		}
 	}

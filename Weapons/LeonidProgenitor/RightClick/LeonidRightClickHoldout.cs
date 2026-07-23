@@ -149,7 +149,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                     d.noGravity = true;
                 }
 
-                // 蓄满：一圈金色星辉同步张开，之后各自去找目标。
+                // 蓄满：一圈金色星辉同步张开，仅一颗找目标，其余旋转外扩。
                 LeonidStarlight.Ring(Projectile.Center, 12, 34f, LeonidVisualUtils.GetReadyGold(),
                     LeonidStarlightShape.Shard, speed: 6.5f, scale: 1f, hoverTime: 26, lifetime: 170, lanceSpeed: 19f);
                 LeonidStarlight.Spawn(Projectile.Center, Vector2.Zero, LeonidVisualUtils.StarGold,

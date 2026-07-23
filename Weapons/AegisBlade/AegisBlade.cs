@@ -47,8 +47,9 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
         public override bool CanUseItem(Player player)
         {
             AegisBladePlayer bp = player.GetModPlayer<AegisBladePlayer>();
-            // 举盾中（含蓄力状态）不允许触发左键挥舞
-            if (bp.ShieldRaising || bp.ShieldRaised || bp.ShieldCharging || bp.ShieldFullyCharged)
+            bool holdingBoth = (player.Calamity().mouseLeft || Main.mouseLeft) && (player.Calamity().mouseRight || Main.mouseRight);
+            // 举盾中（含蓄力状态）或左右键双手蓄力掩体中不允许触发左键挥舞
+            if (bp.ShieldRaising || bp.ShieldRaised || bp.ShieldCharging || bp.ShieldFullyCharged || bp.IsChargingBarrier || holdingBoth)
                 return false;
             if (player.ownedProjectileCounts[SwingHoldoutType] > 0)
                 return false;
@@ -58,8 +59,10 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
         public override bool CanShoot(Player player)
         {
             AegisBladePlayer bp = player.GetModPlayer<AegisBladePlayer>();
+            bool holdingBoth = (player.Calamity().mouseLeft || Main.mouseLeft) && (player.Calamity().mouseRight || Main.mouseRight);
             return !bp.ShieldRaising && !bp.ShieldRaised &&
                    !bp.ShieldCharging && !bp.ShieldFullyCharged &&
+                   !bp.IsChargingBarrier && !holdingBoth &&
                    player.ownedProjectileCounts[SwingHoldoutType] == 0;
         }
 
@@ -91,7 +94,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
 
             if (Main.myPlayer != player.whoAmI) return;
 
-            // ── 右键举盾（在挥剑中不允许起手） ──────────────────────────
+            // ── 右键举盾（在挥剑或双手蓄力掩体中不允许起手） ──────────────────────────
             if (CanStartShieldHoldout(player, bp))
             {
                 int shieldDamage = (int)player.GetTotalDamage(DamageClass.Melee)
@@ -116,7 +119,10 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
 
         private bool CanStartShieldHoldout(Player player, AegisBladePlayer bp)
         {
+            bool holdingLeft = player.Calamity().mouseLeft || (Main.myPlayer == player.whoAmI && Main.mouseLeft);
             return player.Calamity().mouseRight
+                   && !holdingLeft
+                   && !bp.IsChargingBarrier
                    && !bp.IsSwinging
                    && player.ownedProjectileCounts[ShieldHoldoutType] == 0
                    && player.ownedProjectileCounts[SwingHoldoutType] == 0

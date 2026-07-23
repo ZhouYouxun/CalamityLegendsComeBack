@@ -452,7 +452,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             LeonidVisualUtils.SpawnCelestialPulse(Projectile.Center, Projectile.oldVelocity, MeteorColor, FromStealthRain ? 1.35f : 1f, FromStealthRain ? 24 : 18);
             CLCBLightingBoltsSystem.Spawn_LeonidStarfieldMatrixBurst(Projectile.Center, FromStealthRain ? 1.8f : 1f);
 
-            // 炸开的流星把自己拆成一把星光碎片：先各自悬停，再挑最近的敌人扑上去。
+            // 炸开的流星拆成一把星光碎片：仅一颗锁敌，其余沿各自的外扩弧线散开。
             LeonidStarlight.Burst(
                 Projectile.Center,
                 FromStealthRain ? 9 : 6,
@@ -615,7 +615,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             LeonidVisualUtils.SpawnBloomBurst(Projectile.Center, MeteorColor, 0.68f, 16);
             LeonidVisualUtils.SpawnCelestialPulse(Projectile.Center, direction, MeteorColor, 0.72f, 16);
 
-            // 发射瞬间沿出膛方向甩出一小把星光，它们会悬停片刻再各自锁定扑出去。
+            // 发射瞬间沿出膛反方向甩出一小把星光：仅一颗锁敌，其余缓慢向后扇形扩散。
             LeonidStarlight.Spray(Projectile.Center, -direction, 5, MeteorColor, LeonidStarlightShape.Mote,
                 speed: 5.5f, spread: 0.9f, scale: 0.85f, hoverTime: 20, lifetime: 130, lanceSpeed: 15f);
 

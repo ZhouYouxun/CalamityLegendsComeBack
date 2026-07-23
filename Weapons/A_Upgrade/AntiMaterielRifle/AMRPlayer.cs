@@ -178,6 +178,22 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             if (slideCooldown > 0)
                 slideCooldown--;
 
+            if (Main.myPlayer == Player.whoAmI && holdingWeapon && slideCooldown > 0)
+            {
+                int barType = ModContent.ProjectileType<AMRCooldownStatusBar>();
+                if (Player.ownedProjectileCounts[barType] == 0)
+                {
+                    Projectile.NewProjectile(
+                        Player.GetSource_FromThis(),
+                        Player.Center,
+                        Vector2.Zero,
+                        barType,
+                        0,
+                        0f,
+                        Player.whoAmI);
+                }
+            }
+
             if (slideChainWindow > 0)
             {
                 slideChainWindow--;

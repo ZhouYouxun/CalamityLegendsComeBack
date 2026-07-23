@@ -114,7 +114,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                     Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, 6f);
 
                     // 咆哮那一帧炸出双层星鬃：外圈金色大星环 + 内圈细密星屑，
-                    // 中心再压一枚耀斑做闪光核心。它们随后各自扑向最近的敌人。
+                    // 中心再压一枚耀斑做闪光核心。双环仅留一颗锁敌，其余旋转外扩。
                     Color maneGold = LeonidVisualUtils.GetReadyGold(Projectile.whoAmI * 0.3f);
                     LeonidStarlight.Ring(Projectile.Center, 14, 46f, maneGold, LeonidStarlightShape.Shard,
                         speed: 9f, scale: 1.15f, hoverTime: 22, lifetime: 175, lanceSpeed: 21f);

@@ -1,5 +1,6 @@
 using System;
 using CalamityMod;
+using CalamityMod.Particles;
 using CalamityMod.Sounds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -337,8 +338,70 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
 
         private void SpawnMuzzleBurst(Vector2 direction, bool rightShot)
         {
+            if (Main.dedServ)
+                return;
+
             Color mainColor = rightShot ? new Color(233, 102, 238) : new Color(255, 202, 81);
+            Color pressureColor = rightShot ? new Color(157, 174, 218) : new Color(136, 164, 194);
+            float strength = rightShot ? 1.28f : 1f;
             int count = rightShot ? 14 : 9;
+
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                GunTipPosition,
+                -direction * 0.35f,
+                pressureColor,
+                new Vector2(0.28f, 1.42f),
+                direction.ToRotation(),
+                0.05f,
+                1.02f * strength,
+                18));
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                GunTipPosition + direction * 3f,
+                -direction * 0.16f,
+                Color.Lerp(mainColor, Color.White, 0.58f),
+                new Vector2(0.17f, 0.78f),
+                direction.ToRotation(),
+                0.02f,
+                0.48f * strength,
+                12));
+
+            for (int i = -2; i <= 2; i++)
+            {
+                float angle = MathHelper.ToRadians(10f) * i;
+                Vector2 velocity = -direction.RotatedBy(angle) * (1.6f + Math.Abs(i) * 0.38f) * strength;
+                GeneralParticleHandler.SpawnParticle(new CritSpark(
+                    GunTipPosition,
+                    velocity,
+                    Color.White,
+                    mainColor,
+                    0.38f + Math.Abs(i) * 0.035f,
+                    13 + Math.Abs(i) * 2,
+                    i * 0.04f,
+                    2.55f));
+            }
+
+            for (int i = 0; i < 6; i++)
+            {
+                float spread = i / 5f - 0.5f;
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    GunTipPosition + direction * 4f,
+                    direction.RotatedBy(MathHelper.ToRadians(32f) * spread) * MathHelper.Lerp(2.8f, 6.4f, 1f - MathF.Abs(spread * 2f)),
+                    false,
+                    13,
+                    0.32f * strength,
+                    Color.Lerp(mainColor, Color.White, 0.34f),
+                    true,
+                    false,
+                    true));
+            }
+
+            GeneralParticleHandler.SpawnParticle(new GenericBloom(
+                GunTipPosition,
+                Vector2.Zero,
+                Color.Lerp(mainColor, Color.White, 0.65f),
+                0.78f * strength,
+                11,
+                false));
 
             for (int i = 0; i < count; i++)
             {

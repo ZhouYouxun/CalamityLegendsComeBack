@@ -18,10 +18,10 @@ Mods: {
 					Stage1: 克苏鲁之眼已处决：命中使目标防御力永久降低60%（不叠加）
 					Stage2: 世界吞噬者或克苏鲁之脑已处决：命中沿着弹道溅射出金属射流实体碎片，造成30%伤害并施加真伤与降防
 					Stage3: 血肉墙已处决：按下冲刺键向鼠标方向快速冲刺，期间无敌且安全穿越敌人弹幕；2秒内最多连续滑冲4次，强化下一发攻击（造成双倍伤害与更强射流）
-					Stage4: 任意机械首领已处决：循环机构重构，自动射击间隔缩短至24帧（0.4秒）
+					Stage4: 任意机械首领已处决：.408弹基础威力继续成长，射击间隔仍固定为60帧
 					Stage5: 世纪之花已处决：连续校准命中同一目标，获得1.45倍伤害提升
 					Stage6: 月亮领主已处决：超过100%的暴击率将转化为额外暴击伤害倍率
-					Stage7: 亵渎天神已处决：命中生成2颗强追踪小弹，暴击生成6颗（15%伤害），在几十帧内依次连续飞向目标
+					Stage7: 亵渎天神已处决：普通射击命中从目标两侧召来2颗夹击弹，暴击召来4颗；瞄准射击仅在暴击时召来6颗更强夹击弹
 					Stage8: 神明吞噬者已处决：弑神之铳！.408子弹可秒杀所有普通小怪；滑步冲刺强化为短程“维度猛击”
 					Stage9: 星流巨械或至尊女巫已处决：统御万械！配备嘉登科技玛瑙爆炸弹夹，标记弹粘附目标/物块（物块生成圆形判定区），引爆弹触发200%攻击力的玛瑙爆炸
 					LegendaryText:
@@ -42,8 +42,9 @@ Mods: {
 				AMROnyxDetonation.DisplayName: 黑玛瑙引爆
 				AMRSlideExplosion.DisplayName: 反器材滑步爆炸
 				AMRMetalJetShard.DisplayName: 金属射流碎片
-				AMRSubBullet.DisplayName: 反器材追踪子弹
-				AMROnyxTileMarker.DisplayName: 玛瑙物块标记
+				AMRSubBullet.DisplayName: 反器材夹击子弹
+				AMROnyxTileMarker.DisplayName: 玛瑙钉附弹
+				AMRCooldownStatusBar.DisplayName: 反器材滑步冷却条
 			}
 		}
 	}

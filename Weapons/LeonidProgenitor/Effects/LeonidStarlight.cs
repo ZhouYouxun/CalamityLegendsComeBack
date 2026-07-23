@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
@@ -24,6 +25,11 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects
         private static Vector2 gravityWellCenter;
         private static float gravityWellStrength;
         private static uint gravityWellFrame;
+        private static uint trackerReservationFrame;
+        private static readonly List<Vector2> TrackerReservationCenters = new();
+
+        private const float TrackerGroupRadius = 96f;
+        private const float SpawnKeepChance = 0.8f;
 
         // 换世界时把星光的静态状态归零。
         internal static void ResetStaticState()
@@ -31,6 +37,8 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects
             LeonidStarlightMote.ClearRegistry();
             gravityWellFrame = 0u;
             gravityWellStrength = 0f;
+            trackerReservationFrame = 0u;
+            TrackerReservationCenters.Clear();
         }
 
         private static Color DefaultColor(float phaseOffset) => LeonidVisualUtils.GetMeteorColor(phaseOffset);
@@ -38,9 +46,66 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects
         private static bool CanSpawn(int wanted) =>
             !Main.dedServ && GeneralParticleHandler.FreeSpacesAvailable() > wanted;
 
+        // Preserve an exact 80% average even for tiny groups. The occasional one-star
+        // difference also keeps repeated releases from looking mechanically identical.
+        private static int ReducedCount(int originalCount)
+        {
+            if (originalCount <= 0)
+                return 0;
+
+            float desiredCount = originalCount * SpawnKeepChance;
+            int reducedCount = (int)MathF.Floor(desiredCount);
+            if (Main.rand.NextFloat() < desiredCount - reducedCount)
+                reducedCount++;
+            return reducedCount;
+        }
+
+        // Calls made on the same frame and near the same origin belong to one visual
+        // release. Only the first batch in that release may assign a homing mote.
+        private static bool TryReserveTracker(Vector2 center)
+        {
+            if (trackerReservationFrame != Main.GameUpdateCount)
+            {
+                trackerReservationFrame = Main.GameUpdateCount;
+                TrackerReservationCenters.Clear();
+            }
+
+            float groupRadiusSquared = TrackerGroupRadius * TrackerGroupRadius;
+            foreach (Vector2 reservedCenter in TrackerReservationCenters)
+            {
+                if (Vector2.DistanceSquared(center, reservedCenter) <= groupRadiusSquared)
+                    return false;
+            }
+
+            TrackerReservationCenters.Add(center);
+            return true;
+        }
+
+        private static void SpawnCore(
+            Vector2 position,
+            Vector2 velocity,
+            Color color,
+            LeonidStarlightShape shape,
+            float scale,
+            int hoverTime,
+            int lifetime,
+            float lanceSpeed,
+            float homingRange,
+            bool linksToSiblings,
+            LeonidStarlightMotion motion,
+            float motionPhase)
+        {
+            if (!CanSpawn(1))
+                return;
+
+            GeneralParticleHandler.SpawnParticle(new LeonidStarlightMote(
+                position, velocity, color, shape, scale, hoverTime, lifetime, lanceSpeed, homingRange,
+                linksToSiblings, motion, motionPhase));
+        }
+
         // ── 生成 ───────────────────────────────────────────────────
 
-        // 单颗星光。所有批量接口最终都落到这里。
+        // 单颗星光：独立调用只做自由漂流；批量接口会在内部单独分配唯一的追踪星。
         public static void Spawn(
             Vector2 position,
             Vector2 velocity,
@@ -53,11 +118,11 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects
             float homingRange = 760f,
             bool linksToSiblings = true)
         {
-            if (!CanSpawn(1))
+            if (Main.dedServ || Main.rand.NextFloat() >= SpawnKeepChance)
                 return;
 
-            GeneralParticleHandler.SpawnParticle(new LeonidStarlightMote(
-                position, velocity, color, shape, scale, hoverTime, lifetime, lanceSpeed, homingRange, linksToSiblings));
+            SpawnCore(position, velocity, color, shape, scale, hoverTime, lifetime, lanceSpeed, homingRange,
+                linksToSiblings, LeonidStarlightMotion.FreeDrift, Main.rand.NextFloat(MathHelper.TwoPi));
         }
 
         // 四散爆开：流星炸开、狮首咆哮这类"从一点向外炸"的场合。
@@ -74,13 +139,16 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects
             float lanceSpeed = 17f,
             float spawnRadius = 6f)
         {
-            if (!CanSpawn(count))
+            count = ReducedCount(count);
+            if (count <= 0 || !CanSpawn(count))
                 return;
+
+            int trackerIndex = TryReserveTracker(center) ? Main.rand.Next(count) : -1;
 
             for (int i = 0; i < count; i++)
             {
                 Color tint = color ?? DefaultColor(i * 0.21f);
-                Spawn(
+                SpawnCore(
                     center + Main.rand.NextVector2Circular(spawnRadius, spawnRadius),
                     Main.rand.NextVector2Circular(speed, speed) * Main.rand.NextFloat(0.55f, 1f),
                     tint,
@@ -88,7 +156,11 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects
                     scale * Main.rand.NextFloat(0.75f, 1.25f),
                     hoverTime + Main.rand.Next(-6, 13),
                     lifetime + Main.rand.Next(-20, 21),
-                    lanceSpeed * Main.rand.NextFloat(0.85f, 1.2f));
+                    lanceSpeed * Main.rand.NextFloat(0.85f, 1.2f),
+                    760f,
+                    true,
+                    i == trackerIndex ? LeonidStarlightMotion.Homing : LeonidStarlightMotion.BurstArc,
+                    i * MathHelper.TwoPi / count + Main.rand.NextFloat(-0.18f, 0.18f));
             }
         }
 
@@ -106,8 +178,11 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects
             float lanceSpeed = 17f,
             float angleOffset = 0f)
         {
-            if (!CanSpawn(count))
+            count = ReducedCount(count);
+            if (count <= 0 || !CanSpawn(count))
                 return;
+
+            int trackerIndex = TryReserveTracker(center) ? Main.rand.Next(count) : -1;
 
             for (int i = 0; i < count; i++)
             {
@@ -115,7 +190,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects
                 Vector2 direction = angle.ToRotationVector2();
                 Color tint = color ?? DefaultColor(i * 0.29f);
 
-                Spawn(
+                SpawnCore(
                     center + direction * radius,
                     direction * speed,
                     tint,
@@ -123,7 +198,11 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects
                     scale,
                     hoverTime + Main.rand.Next(-4, 9),
                     lifetime,
-                    lanceSpeed);
+                    lanceSpeed,
+                    760f,
+                    true,
+                    i == trackerIndex ? LeonidStarlightMotion.Homing : LeonidStarlightMotion.RadialSpiral,
+                    angle);
             }
         }
 
@@ -141,16 +220,18 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects
             int lifetime = 140,
             float lanceSpeed = 17f)
         {
-            if (!CanSpawn(count))
+            count = ReducedCount(count);
+            if (count <= 0 || !CanSpawn(count))
                 return;
 
             direction = direction.SafeNormalize(Vector2.UnitY);
+            int trackerIndex = TryReserveTracker(center) ? Main.rand.Next(count) : -1;
             for (int i = 0; i < count; i++)
             {
                 Color tint = color ?? DefaultColor(i * 0.17f);
                 Vector2 velocity = direction.RotatedByRandom(spread) * speed * Main.rand.NextFloat(0.6f, 1.15f);
 
-                Spawn(
+                SpawnCore(
                     center + Main.rand.NextVector2Circular(5f, 5f),
                     velocity,
                     tint,
@@ -158,7 +239,11 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects
                     scale * Main.rand.NextFloat(0.8f, 1.2f),
                     hoverTime + Main.rand.Next(-5, 10),
                     lifetime,
-                    lanceSpeed);
+                    lanceSpeed,
+                    760f,
+                    true,
+                    i == trackerIndex ? LeonidStarlightMotion.Homing : LeonidStarlightMotion.SprayFan,
+                    i * MathHelper.TwoPi / count + Main.rand.NextFloat(-0.16f, 0.16f));
             }
         }
 
@@ -172,10 +257,13 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects
             int hoverTime = 20,
             int lifetime = 110)
         {
+            if (Main.dedServ || Main.rand.NextFloat() >= SpawnKeepChance)
+                return;
+
             Vector2 velocity = -travelVelocity.SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(0.5f, 2f)
                 + Main.rand.NextVector2Circular(1.1f, 1.1f);
 
-            Spawn(
+            SpawnCore(
                 position + Main.rand.NextVector2Circular(6f, 6f),
                 velocity,
                 color ?? DefaultColor(Main.rand.NextFloat(6f)),
@@ -183,7 +271,11 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects
                 scale,
                 hoverTime + Main.rand.Next(-4, 9),
                 lifetime,
-                14f);
+                14f,
+                760f,
+                true,
+                LeonidStarlightMotion.TrailScatter,
+                Main.rand.NextFloat(MathHelper.TwoPi));
         }
 
         // 从高空一条横带上洒下来的星雨，用于终结技。
@@ -198,8 +290,11 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects
             int hoverTime = 34,
             int lifetime = 190)
         {
-            if (!CanSpawn(count))
+            count = ReducedCount(count);
+            if (count <= 0 || !CanSpawn(count))
                 return;
+
+            int trackerIndex = TryReserveTracker(center) ? Main.rand.Next(count) : -1;
 
             for (int i = 0; i < count; i++)
             {
@@ -207,7 +302,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects
                     Main.rand.NextFloat(-halfWidth, halfWidth),
                     -height + Main.rand.NextFloat(-70f, 70f));
 
-                Spawn(
+                SpawnCore(
                     position,
                     new Vector2(Main.rand.NextFloat(-1.4f, 1.4f), Main.rand.NextFloat(3f, 7f)),
                     color ?? DefaultColor(i * 0.23f),
@@ -215,7 +310,11 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects
                     scale * Main.rand.NextFloat(0.7f, 1.3f),
                     hoverTime + Main.rand.Next(-8, 17),
                     lifetime,
-                    19f);
+                    19f,
+                    760f,
+                    true,
+                    i == trackerIndex ? LeonidStarlightMotion.Homing : LeonidStarlightMotion.RainFall,
+                    i * MathHelper.TwoPi / count + Main.rand.NextFloat(-0.22f, 0.22f));
             }
         }
 

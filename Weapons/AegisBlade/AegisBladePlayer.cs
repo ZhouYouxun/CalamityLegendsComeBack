@@ -37,6 +37,11 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
         public bool BarrierThrowComboActive = false;
         public int BarrierThrowCooldown = 0;
 
+        // ── 左右键双手蓄力速凝掩体 ─────────────────────────────────────────
+        public float BarrierChargeTimer = 0f;
+        public int BarrierCooldown = 0;
+        public bool IsChargingBarrier => BarrierChargeTimer > 0f;
+
         // ── 终结技状态 ────────────────────────────────────────────────────
         public bool UltimateActive = false;
         public int  UltimateTimer  = 0;
@@ -107,9 +112,81 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
             if (tenacityImmunityTimer  > 0) tenacityImmunityTimer--;
             if (tenacityCooldown       > 0) tenacityCooldown--;
             if (BarrierThrowCooldown   > 0) BarrierThrowCooldown--;
+            if (BarrierCooldown        > 0) BarrierCooldown--;
 
             UpdateEnergy();
             UpdateUltimate();
+            UpdateBarrierCharge();
+        }
+
+        private void UpdateBarrierCharge()
+        {
+            if (Player.HeldItem.type != ModContent.ItemType<AegisBlade>())
+            {
+                BarrierChargeTimer = 0f;
+                return;
+            }
+
+            bool holdingLeft = Player.Calamity().mouseLeft || (Main.myPlayer == Player.whoAmI && Main.mouseLeft);
+            bool holdingRight = Player.Calamity().mouseRight || (Main.myPlayer == Player.whoAmI && Main.mouseRight);
+            bool holdingBoth = holdingLeft && holdingRight &&
+                               !Main.mapFullscreen && !Main.blockMouse && !Player.mouseInterface;
+
+            if (holdingBoth && BarrierCooldown <= 0)
+            {
+                BarrierChargeTimer = Math.Min(BarrierChargeTimer + 1f, 60f);
+
+                // 蓄力期间抑制挥剑与举盾状态
+                ShieldRaising = false;
+                ShieldRaised = false;
+                ShieldCharging = false;
+                ShieldFullyCharged = false;
+                IsSwinging = false;
+
+                // 生成头顶 UI 状态条
+                int barType = ModContent.ProjectileType<Projectiles.AegisWallStatusBar>();
+                if (Main.myPlayer == Player.whoAmI && Player.ownedProjectileCounts[barType] == 0)
+                {
+                    Projectile.NewProjectile(Player.GetSource_ItemUse(Player.HeldItem), Player.Center, Vector2.Zero, barType, 0, 0f, Player.whoAmI);
+                }
+
+                // 蓄力粒子：在鼠标和玩家周围散发圣火粒子
+                if (!Main.dedServ && (int)BarrierChargeTimer % 3 == 0)
+                {
+                    Vector2 mouseWorld = AegisBlade.GetMouseWorld(Player);
+                    Dust d = Dust.NewDustPerfect(mouseWorld + Main.rand.NextVector2Circular(20f, 20f), Visuals.AegisVisuals.ProfanedFireDust, -Vector2.UnitY * Main.rand.NextFloat(0.8f, 2.5f), 0, Color.White, 1.15f);
+                    d.noGravity = true;
+                }
+
+                if (BarrierChargeTimer >= 60f)
+                {
+                    // 蓄力满 1 秒：在鼠标位置释放速凝掩体！
+                    Vector2 mousePos = AegisBlade.GetMouseWorld(Player);
+                    if (Main.myPlayer == Player.whoAmI)
+                    {
+                        int wallType = ModContent.ProjectileType<Projectiles.AegisWallProjectile>();
+                        Projectile.NewProjectile(Player.GetSource_ItemUse(Player.HeldItem), mousePos, Vector2.Zero, wallType, 0, 0f, Player.whoAmI);
+                    }
+
+                    SoundEngine.PlaySound(SoundID.Item37 with { Volume = 0.9f, Pitch = -0.2f }, mousePos);
+                    SoundEngine.PlaySound(SoundID.Item74 with { Volume = 0.85f, Pitch = 0.15f }, mousePos);
+
+                    if (!Main.dedServ)
+                    {
+                        Visuals.AegisVisuals.HolyDetonation(mousePos, 1.75f);
+                        Visuals.AegisVisuals.CoronaRing(mousePos, 14, 1.25f);
+                        Visuals.AegisVisuals.Screenshake(mousePos, 2.6f, 750f);
+                    }
+
+                    BarrierChargeTimer = 0f;
+                    BarrierCooldown = 35; // 冷却窗口，防止直接连续重复触发
+                }
+            }
+            else
+            {
+                if (BarrierChargeTimer < 60f)
+                    BarrierChargeTimer = 0f;
+            }
         }
 
         private void UpdateEnergy()

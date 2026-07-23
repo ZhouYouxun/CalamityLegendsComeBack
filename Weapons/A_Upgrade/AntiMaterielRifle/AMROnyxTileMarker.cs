@@ -1,5 +1,4 @@
 using System;
-using CalamityMod;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -14,48 +13,111 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
     internal sealed class AMROnyxTileMarker : ModProjectile, ILocalizedModType
     {
         public new string LocalizationCategory => "Projectiles.AntiMaterielRifle";
-        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+        public override string Texture =>
+            "CalamityLegendsComeBack/Weapons/SHPC/Effects/EAfterDog/Ascendant/AscendantSpirit_PROJ";
 
         public const float TriggerRadius = 85f;
 
+        private int TargetIndex => (int)Projectile.ai[1] - 1;
+        internal bool IsTileMarker => Projectile.ai[1] < 0.5f;
+
         public override void SetDefaults()
         {
-            Projectile.width = 16;
-            Projectile.height = 16;
+            Projectile.width = 10;
+            Projectile.height = 10;
             Projectile.friendly = false;
             Projectile.hostile = false;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
-            Projectile.timeLeft = 300; // 5 秒寿命
+            Projectile.timeLeft = 5 * 60;
+            Projectile.scale = 0.72f;
+            Projectile.netImportant = true;
         }
 
         public override bool ShouldUpdatePosition() => false;
+        public override bool? CanDamage() => false;
 
         public override void AI()
         {
-            // 嘉登科技玛瑙脉冲圈与微粒特效
-            if (!Main.dedServ)
+            Projectile.rotation = Projectile.ai[0];
+
+            if (!IsTileMarker)
             {
-                if (Projectile.timeLeft % 20 == 0)
+                if (!Main.npc.IndexInRange(TargetIndex) || !Main.npc[TargetIndex].active)
                 {
-                    GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
-                        Projectile.Center, Vector2.Zero, new Color(233, 102, 238),
-                        new Vector2(1f, 1f), 0f, 0.04f, 0.9f, 25));
+                    Projectile.Kill();
+                    return;
                 }
 
-                if (Main.rand.NextBool(3))
+                Projectile.Center = Main.npc[TargetIndex].Center + Projectile.velocity;
+            }
+
+            if (Main.dedServ)
+                return;
+
+            Vector2 forward = (Projectile.rotation - MathHelper.PiOver2).ToRotationVector2();
+            Vector2 normal = new(-forward.Y, forward.X);
+            int age = 5 * 60 - Projectile.timeLeft;
+
+            if (Projectile.localAI[0] == 0f)
+            {
+                Projectile.localAI[0] = 1f;
+                GeneralParticleHandler.SpawnParticle(new ImpactParticle(
+                    Projectile.Center + forward * 15f,
+                    0.12f,
+                    16,
+                    0.52f,
+                    new Color(106, 220, 255)));
+
+                for (int i = -2; i <= 2; i++)
                 {
-                    Dust d = Dust.NewDustPerfect(
-                        Projectile.Center + Main.rand.NextVector2Circular(TriggerRadius * 0.8f, TriggerRadius * 0.8f),
-                        DustID.PurpleTorch,
-                        Vector2.Zero,
-                        60,
-                        new Color(233, 102, 238),
-                        Main.rand.NextFloat(0.8f, 1.3f));
-                    d.noGravity = true;
+                    Vector2 velocity = -forward.RotatedBy(MathHelper.ToRadians(9f) * i) * (1.2f + MathF.Abs(i) * 0.28f);
+                    GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                        Projectile.Center + forward * 13f,
+                        velocity,
+                        false,
+                        15 + Math.Abs(i) * 2,
+                        0.28f + Math.Abs(i) * 0.035f,
+                        i == 0 ? Color.White : new Color(70, 185, 255),
+                        true,
+                        false,
+                        true));
                 }
             }
+
+            if (age % 9 == 0)
+            {
+                float wave = MathF.Sin(age * 0.42f);
+                Vector2 position = Projectile.Center - forward * 7f + normal * wave * 5f;
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    position,
+                    -forward * 0.24f - normal * wave * 0.08f,
+                    false,
+                    13,
+                    0.24f,
+                    new Color(89, 202, 255),
+                    true,
+                    false,
+                    true));
+            }
+
+            if (age % 30 == 0)
+            {
+                GeneralParticleHandler.SpawnParticle(new CritSpark(
+                    Projectile.Center - forward * 3f,
+                    -forward * 0.28f,
+                    Color.White,
+                    new Color(35, 151, 255),
+                    0.28f,
+                    12,
+                    0.08f,
+                    2.5f));
+            }
+
+            Lighting.AddLight(Projectile.Center, new Color(40, 150, 255).ToVector3() * 0.55f);
         }
+
+        internal bool IsAttachedTo(int targetIndex) => !IsTileMarker && TargetIndex == targetIndex;
 
         public void Detonate(int detonatorDamage)
         {
@@ -71,10 +133,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
                     detonatorDamage,
                     6f,
                     Projectile.owner,
-                    -1); // -1 表示物块爆炸
+                    -1);
 
                 if (Main.projectile.IndexInRange(detonation))
-                    Main.projectile[detonation].CritChance = 0; // 不能暴击
+                    Main.projectile[detonation].CritChance = 0;
             }
 
             Projectile.Kill();
@@ -82,30 +144,51 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
 
         public override bool PreDraw(ref Color lightColor)
         {
-            // 绘制嘉登科技全息提示圆圈与十字线条
+            Texture2D texture = TextureAssets.Projectile[Type].Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            float pulse = (float)Math.Sin(Main.GlobalTimeWrappedHourly * 6f) * 0.08f + 0.92f;
-            float opacity = Math.Min(1f, Projectile.timeLeft / 30f);
+            Vector2 drawPosition = Projectile.Center - Main.screenPosition;
+            Vector2 origin = texture.Size() * 0.5f;
+            float opacity = Math.Min(1f, Projectile.timeLeft / 24f);
+
+            Main.EntitySpriteDraw(
+                texture,
+                drawPosition,
+                null,
+                Color.Lerp(lightColor, new Color(150, 225, 255), 0.68f) * opacity,
+                Projectile.rotation,
+                origin,
+                Projectile.scale,
+                SpriteEffects.None,
+                0f);
 
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState,
                 DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
 
-            Vector2 drawPos = Projectile.Center - Main.screenPosition;
-            Color auraColor = new Color(225, 75, 230, 0) * opacity * 0.4f;
-
-            // 范围圆晕
-            Main.EntitySpriteDraw(bloom, drawPos, null, auraColor, 0f,
-                bloom.Size() * 0.5f, (TriggerRadius / (bloom.Width * 0.5f)) * pulse, SpriteEffects.None, 0f);
-
-            // 核心过曝点
-            Main.EntitySpriteDraw(bloom, drawPos, null, new Color(255, 230, 255, 0) * opacity, 0f,
-                bloom.Size() * 0.5f, 0.12f, SpriteEffects.None, 0f);
+            Main.EntitySpriteDraw(
+                texture,
+                drawPosition,
+                null,
+                new Color(35, 165, 255, 0) * (opacity * 0.48f),
+                Projectile.rotation,
+                origin,
+                Projectile.scale * 1.08f,
+                SpriteEffects.None,
+                0f);
+            Main.EntitySpriteDraw(
+                bloom,
+                drawPosition,
+                null,
+                new Color(75, 196, 255, 0) * (opacity * 0.72f),
+                0f,
+                bloom.Size() * 0.5f,
+                0.13f,
+                SpriteEffects.None,
+                0f);
 
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState,
                 DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
-
             return false;
         }
     }

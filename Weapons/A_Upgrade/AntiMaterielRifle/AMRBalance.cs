@@ -36,7 +36,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
 
         public const int InitialDamage = 168;
         public const int BaseFireInterval = 60;
-        public const int MechanicalFireInterval = 24;
         public const int ScopeChargeFrames = 90;
         public const int MinimumScopeChargeFrames = 12;
         public const int SlideFrames = 15;
@@ -75,7 +74,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
         }
 
         public static int CurrentDamage => BaseDamages[(int)Stage];
-        public static int FireInterval => Stage >= AMRProgressionStage.AnyMechanicalBoss ? MechanicalFireInterval : BaseFireInterval;
+        public static int FireInterval => BaseFireInterval;
         public static bool DeathMarkUnlocked => Stage >= AMRProgressionStage.EyeOfCthulhu;
         public static bool MetalJetUnlocked => Stage >= AMRProgressionStage.EvilBoss;
         public static bool SlideUnlocked => Stage >= AMRProgressionStage.WallOfFlesh;

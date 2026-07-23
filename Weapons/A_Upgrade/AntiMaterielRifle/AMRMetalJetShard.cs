@@ -25,39 +25,68 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
 
         public override void SetDefaults()
         {
-            Projectile.width = 10;
-            Projectile.height = 10;
+            Projectile.width = 12;
+            Projectile.height = 12;
             Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Ranged;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = true;
-            Projectile.penetrate = 2;
+            Projectile.penetrate = 1; // 只能造成一次伤害
             Projectile.extraUpdates = 3;
-            Projectile.timeLeft = 60;
-            Projectile.scale = 0.85f;
+            Projectile.timeLeft = 180;
+            Projectile.scale = 0.9f;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = -1;
         }
 
+        public override bool? CanDamage()
+        {
+            // 出现之后一段时间 (ai[0] 帧) 才能造成伤害，防止瞬间重叠伤害同一个目标
+            return Projectile.ai[0] <= 0 ? null : false;
+        }
+
         public override void AI()
         {
+            bool finalUpdate = CalamityUtils.FinalExtraUpdate(Projectile);
+            if (Projectile.ai[0] > 0f && finalUpdate)
+                Projectile.ai[0]--;
+
+            Projectile.velocity *= 0.91f;
+
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
 
-            if (!Main.dedServ && Main.rand.NextBool(2))
+            if (!Main.dedServ && finalUpdate)
             {
-                Dust d = Dust.NewDustPerfect(
+                Vector2 backward = -Projectile.velocity.SafeNormalize(Vector2.UnitX);
+                Color metalColor = Main.rand.NextBool()
+                    ? Color.Lerp(Color.Silver, Color.Gold, Main.rand.NextFloat(0.35f, 0.8f))
+                    : Color.Lerp(Color.Gold, Color.Orange, Main.rand.NextFloat(0.2f, 0.65f));
+
+                GeneralParticleHandler.SpawnParticle(new SparkParticle(
                     Projectile.Center,
-                    DustID.GoldFlame,
-                    Projectile.velocity * 0.2f,
-                    0,
-                    new Color(255, 205, 80),
-                    Main.rand.NextFloat(0.6f, 1.1f));
-                d.noGravity = true;
+                    backward.RotatedByRandom(0.16f) * Main.rand.NextFloat(1.2f, 2.8f),
+                    false,
+                    Main.rand.Next(18, 27),
+                    Main.rand.NextFloat(0.72f, 1.08f),
+                    metalColor));
+
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    Projectile.Center,
+                    backward * 0.4f,
+                    false,
+                    10,
+                    Main.rand.NextFloat(0.24f, 0.34f),
+                    metalColor,
+                    true,
+                    false,
+                    true));
             }
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
+            SpawnMetalImpact(target.Center);
+
             // Stage 0 真实伤害机制 (10% 基础，Boss 0.5%，受 DR 加成)
             if (target.active && target.lifeMax > 5)
             {
@@ -87,6 +116,42 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
                 target.AddBuff(ModContent.BuffType<MarkedforDeath>(), 5 * 60);
                 int defenseLoss = Math.Max(25, (int)(target.defense * 0.6f));
                 target.Calamity().miscDefenseLoss = Math.Max(target.Calamity().miscDefenseLoss, defenseLoss);
+            }
+        }
+
+        public override bool OnTileCollide(Vector2 oldVelocity)
+        {
+            SpawnMetalImpact(Projectile.Center);
+            Collision.HitTiles(Projectile.position, oldVelocity, Projectile.width, Projectile.height);
+            SoundEngine.PlaySound(SoundID.NPCHit4 with { Volume = 0.35f, Pitch = 0.18f }, Projectile.Center);
+            return true;
+        }
+
+        private void SpawnMetalImpact(Vector2 impactPoint)
+        {
+            if (Main.dedServ)
+                return;
+
+            Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            GeneralParticleHandler.SpawnParticle(new ImpactParticle(
+                impactPoint,
+                Main.rand.NextFloat(-0.18f, 0.18f),
+                20,
+                0.62f,
+                Color.Lerp(Color.Silver, Color.Gold, 0.55f)));
+
+            for (int i = 0; i < 6; i++)
+            {
+                float spread = i / 5f - 0.5f;
+                Vector2 velocity = forward.RotatedBy(MathHelper.ToRadians(62f) * spread) * Main.rand.NextFloat(4.5f, 10.5f);
+                Color color = Color.Lerp(Color.Silver, Color.Orange, Main.rand.NextFloat(0.25f, 0.75f));
+                GeneralParticleHandler.SpawnParticle(new SparkParticle(
+                    impactPoint,
+                    velocity,
+                    true,
+                    Main.rand.Next(22, 36),
+                    Main.rand.NextFloat(0.82f, 1.25f),
+                    color));
             }
         }
 

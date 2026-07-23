@@ -1,11 +1,7 @@
-using System;
 using CalamityMod;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Terraria;
-using Terraria.Audio;
-using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -16,103 +12,117 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
         public new string LocalizationCategory => "Projectiles.AntiMaterielRifle";
         public override string Texture => "CalamityMod/Projectiles/Ranged/AMRShot";
 
-        private int TargetIndex => (int)Projectile.ai[0];
-        private int DelayTimer => (int)Projectile.ai[1];
-
-        public override void SetStaticDefaults()
-        {
-            ProjectileID.Sets.TrailCacheLength[Type] = 12;
-            ProjectileID.Sets.TrailingMode[Type] = 2;
-        }
+        private bool initialized;
+        private int visualAge;
 
         public override void SetDefaults()
         {
-            Projectile.width = 8;
-            Projectile.height = 8;
+            Projectile.width = 4;
+            Projectile.height = 4;
+            Projectile.light = 0.5f;
+            Projectile.alpha = 255;
+            Projectile.extraUpdates = 10;
+            Projectile.scale = 1.18f;
+            Projectile.tileCollide = false;
             Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Ranged;
             Projectile.ignoreWater = true;
-            Projectile.tileCollide = false;
+            Projectile.aiStyle = ProjAIStyleID.Arrow;
+            AIType = ProjectileID.BulletHighVelocity;
             Projectile.penetrate = 1;
-            Projectile.extraUpdates = 3;
-            Projectile.timeLeft = 120;
-            Projectile.scale = 0.75f;
+            Projectile.timeLeft = 600;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = -1;
         }
 
-        public override bool? CanDamage() => DelayTimer <= 0 ? null : false;
-
         public override void AI()
         {
-            // 延迟出现逻辑（支持多发连续依次现身，形成明显弹道视觉）
-            if (Projectile.ai[1] > 0)
-            {
-                Projectile.ai[1]--;
-                return;
-            }
-
-            if (Projectile.timeLeft == 119 - (int)Projectile.ai[1])
-            {
-                SoundEngine.PlaySound(SoundID.Item11 with { Volume = 0.35f, Pitch = 0.3f }, Projectile.Center);
-            }
-
-            NPC target = null;
-            if (TargetIndex >= 0 && TargetIndex < Main.maxNPCs && Main.npc[TargetIndex].CanBeChasedBy(Projectile))
-            {
-                target = Main.npc[TargetIndex];
-            }
-            else
-            {
-                target = Projectile.Center.ClosestNPCAt(700f);
-            }
-
-            if (target != null && target.active)
-            {
-                Vector2 desiredVel = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY) * 24f;
-                Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVel, 0.18f);
-            }
+            if (Projectile.alpha > 0)
+                Projectile.alpha -= (int)(Projectile.velocity.Length() * 0.9f);
+            if (Projectile.alpha < 0)
+                Projectile.alpha = 0;
 
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
 
-            if (!Main.dedServ && Main.rand.NextBool(2))
+            if (!initialized)
             {
-                Dust d = Dust.NewDustPerfect(
+                initialized = true;
+                SpawnNitroReveal();
+            }
+
+            if (!CalamityUtils.FinalExtraUpdate(Projectile))
+                return;
+
+            visualAge++;
+            if (Main.dedServ || visualAge > 18)
+                return;
+
+            Vector2 backward = -Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            GeneralParticleHandler.SpawnParticle(new AltSparkParticle(
+                Projectile.Center,
+                backward * 0.8f,
+                false,
+                13,
+                0.72f,
+                Color.Gold * 0.18f));
+
+            if (visualAge % 2 == 0)
+            {
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
                     Projectile.Center,
-                    DustID.CopperCoin,
-                    -Projectile.velocity * 0.15f,
-                    0,
-                    new Color(255, 180, 80),
-                    Main.rand.NextFloat(0.5f, 0.9f));
-                d.noGravity = true;
+                    backward * 0.42f,
+                    false,
+                    10,
+                    0.25f,
+                    new Color(255, 201, 72),
+                    true,
+                    false,
+                    true));
             }
         }
 
-        public override bool PreDraw(ref Color lightColor)
+        private void SpawnNitroReveal()
         {
-            if (DelayTimer > 0)
-                return false;
+            if (Main.dedServ)
+                return;
 
-            Texture2D texture = TextureAssets.Projectile[Type].Value;
-            Vector2 origin = texture.Size() * 0.5f;
-            Vector2 drawPos = Projectile.Center - Main.screenPosition;
+            for (int i = 0; i < 12; i++)
+            {
+                Dust dust = Dust.NewDustPerfect(
+                    Projectile.Center,
+                    DustID.GemTopaz,
+                    Projectile.velocity.RotatedByRandom(MathHelper.ToRadians(24f)) * Main.rand.NextFloat(0.08f, 0.42f),
+                    0,
+                    new Color(255, 207, 91),
+                    Main.rand.NextFloat(0.58f, 0.98f));
+                dust.noGravity = true;
+            }
+        }
 
-            Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState,
-                DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
+        {
+            if (Main.dedServ)
+                return;
 
-            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Main.EntitySpriteDraw(bloom, drawPos, null, new Color(255, 160, 40, 0), 0f,
-                bloom.Size() * 0.5f, 0.15f * Projectile.scale, SpriteEffects.None, 0f);
+            for (int i = 0; i < 10; i++)
+            {
+                Dust dust = Dust.NewDustPerfect(
+                    Projectile.Center,
+                    DustID.GemTopaz,
+                    Projectile.velocity.RotatedByRandom(MathHelper.ToRadians(15f)) * Main.rand.NextFloat(0.08f, 0.65f),
+                    0,
+                    new Color(255, 215, 112),
+                    Main.rand.NextFloat(0.6f, 1.05f));
+                dust.noGravity = true;
+            }
+        }
 
-            Main.EntitySpriteDraw(texture, drawPos, null, new Color(255, 240, 180, 0),
-                Projectile.rotation, origin, new Vector2(0.9f, 1.3f) * Projectile.scale, SpriteEffects.None, 0f);
+        public override Color? GetAlpha(Color lightColor)
+        {
+            if (Projectile.alpha < 140)
+                return new Color(255, 255, 255, 100);
 
-            Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState,
-                DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
-
-            return false;
+            return Color.Transparent;
         }
     }
 }
