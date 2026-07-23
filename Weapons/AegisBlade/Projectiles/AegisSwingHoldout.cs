@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using CalamityLegendsComeBack.Weapons.AegisBlade.Visuals;
 using CalamityMod;
 using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
@@ -34,6 +35,15 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         private const float DiscBrightness = 0.67f;
         private const float LoopSweepDegrees = 1080f;   // 每次挥动 3 圈，线性匀速
 
+        // ── 视觉重做新增常量 ─────────────────────────────────────────────
+        // 旧版把「刀盘」画在半径约 47px 处，而真实伤害判定是 146px 的核心框推到 124px 外，
+        // 剑贴图本身也画到 161px 远 —— 于是玩家看到的是一把大剑外加一个对不上的小光盘。
+        // 现在圣火轮盘直接跟着剑刃的真实长度走，视觉半径 = 判定半径。
+        private const float WheelRadiusScale = 0.94f;
+        private const int BladeAfterimageCount = 11;      // 沿弧线拖在身后的剑残像
+        private const float BladeAfterimageStep = 0.145f; // 每一片残像回退的弧度
+        private const int WheelSmearCount = 3;            // 新月拖抹片数量
+
         private Player Owner => Main.player[Projectile.owner];
         private readonly Vector2[] bladeTipHistory = new Vector2[BladeTrailHistoryFrames];
         private int bladeTipHistoryLength;
@@ -58,9 +68,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         private int releaseTimer;
         private const int DiscFadeInFrames = 20;
 
-        private static readonly Color BladeGold = new(255, 205, 80);
-        private static readonly Color BladeLight = new(255, 242, 185);
-        private static readonly Color BladeFire = new(255, 145, 52);
+        private float BladeRadius => BladeReach * scale * WheelRadiusScale;
 
         public override void SetDefaults()
         {
@@ -124,6 +132,8 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 
             DoSwing();
 
+            AegisVisuals.Light(Owner.MountedCenter, 0.85f * visualOpacity);
+
             float armAngle = currentAngle - MathHelper.ToRadians(130f);
             Owner.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, armAngle);
             Owner.SetCompositeArmBack(true, Player.CompositeArmStretchAmount.Full, armAngle);
@@ -146,11 +156,26 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                     swingDirection = Owner.direction;
                 // 第一圈从瞄准方向直接起步，无初始偏移
                 currentAngle = lockedMouseDirection.ToRotation();
+                SpawnIgnitionBurst();
             }
             Owner.direction = swingDirection;
 
             startAngle = currentAngle;
             endAngle   = startAngle + MathHelper.ToRadians(LoopSweepDegrees * swingDirection);
+        }
+
+        /// <summary>起手点火：圣印从地上升起，火星向内汇聚，武器"被点燃"。</summary>
+        private void SpawnIgnitionBurst()
+        {
+            if (Main.dedServ)
+                return;
+
+            SoundEngine.PlaySound(SoundID.Item74 with { Volume = 0.7f, Pitch = 0.25f }, Owner.Center);
+            AegisVisuals.CoronaRing(Owner.MountedCenter, 14, 1.1f, lockedMouseDirection.ToRotation());
+            AegisVisuals.WarbannerConverge(Owner.MountedCenter, lockedMouseDirection, 1.6f, 10, 1.1f);
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(Owner.MountedCenter, Vector2.Zero,
+                AegisVisuals.Add(AegisVisuals.Gold, 0.8f), AegisVisuals.TexBloom, Vector2.One, 0f,
+                0.05f, 0.85f, 14));
         }
 
         private bool isThrown;
@@ -173,6 +198,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                     throwTargetPos = AegisBlade.GetMouseWorld(Owner);
                     throwDistProgress = 0f;
                     SoundEngine.PlaySound(SoundID.Item120 with { Volume = 0.75f, Pitch = -0.1f }, Projectile.Center);
+                    SpawnThrowLaunchBurst();
                 }
 
                 releaseTimer++;
@@ -185,6 +211,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 
                 visualOpacity = 1f - MathHelper.Clamp((releaseTimer - 20) / (float)ReleaseFadeFrames, 0f, 1f);
                 TrackBladeTrail(false);
+                EmitThrownFlames();
                 stateTimer++;
 
                 if (releaseTimer >= ReleaseFadeFrames + 20)
@@ -214,6 +241,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 SpawnOrbitalStrikes();
                 fireballSpawned = true;
                 SoundEngine.PlaySound(SoundID.Item71 with { Volume = 0.82f, Pitch = Main.rand.NextFloat(-0.12f, 0.16f) }, Owner.Center);
+                SpawnDetonationPulse();
             }
 
             bool hitWindow = !releaseEnding && progress >= 0.23f && progress <= 0.87f;
@@ -237,6 +265,34 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             }
 
             releaseEnding = true;
+        }
+
+        /// <summary>火球齐射的那一帧：整个轮盘对外炸出一圈日冕，配合震屏。</summary>
+        private void SpawnDetonationPulse()
+        {
+            if (Main.dedServ)
+                return;
+
+            AegisVisuals.CoronaRing(Owner.MountedCenter, 18, 1.35f, currentAngle);
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(Owner.MountedCenter, Vector2.Zero,
+                AegisVisuals.Add(AegisVisuals.Flame, 0.75f), AegisVisuals.TexSoftExplosion, Vector2.One,
+                Main.rand.NextFloat(MathHelper.TwoPi), 0.008f, 0.05f, 22));
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(Owner.MountedCenter, Vector2.Zero,
+                AegisVisuals.Add(AegisVisuals.Ember, 0.8f), AegisVisuals.TexShatteredExplosion, Vector2.One,
+                Main.rand.NextFloat(MathHelper.TwoPi), 0.006f, 0.036f, 18));
+            AegisVisuals.Screenshake(Owner.Center, 2.4f, 900f);
+        }
+
+        /// <summary>脱手甩出的瞬间：向瞄准方向劈出一道定向冲击。</summary>
+        private void SpawnThrowLaunchBurst()
+        {
+            if (Main.dedServ)
+                return;
+
+            Vector2 direction = Owner.MountedCenter.DirectionTo(throwTargetPos).SafeNormalize(Vector2.UnitX * Owner.direction);
+            AegisVisuals.DirectionalImpact(Owner.MountedCenter + direction * 30f, direction, 1.15f);
+            AegisVisuals.EmberJet(Owner.MountedCenter + direction * 24f, direction, 12, 1.2f, 0.28f);
+            AegisVisuals.Screenshake(Owner.Center, 1.8f, 700f);
         }
 
         private float GetCurrentSwingProgress()
@@ -404,15 +460,23 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 return;
 
             Vector2 direction = currentAngle.ToRotationVector2().SafeNormalize(Vector2.UnitX * Owner.direction);
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
-                target.Center, Vector2.Zero, BladeGold, new Vector2(1.05f, 0.62f),
-                direction.ToRotation(), 0.12f, 0.82f, 14));
-            for (int i = 0; i < 10; i++)
+
+            // 沿刀锋方向的定向冲击（外扁内亮），而不是一个圆环了事
+            AegisVisuals.DirectionalImpact(target.Center, direction, 1f);
+            AegisVisuals.EmberJet(target.Center, direction, 7, 0.95f, 0.62f);
+
+            // 正义旗式火光被"吸"进敌人身体：玩家越近，火越猛
+            float intensity = Utils.Remap(Vector2.Distance(Owner.Center, target.Center), 620f, 90f, 1.1f, 2.4f, true);
+            AegisVisuals.WarbannerConverge(target.Center,
+                Owner.Center.DirectionTo(target.Center).SafeNormalize(direction),
+                intensity, 4, 1f + target.Hitbox.Width / 380f);
+
+            for (int i = 0; i < 6; i++)
             {
-                Vector2 velocity = direction.RotatedByRandom(0.72f) * Main.rand.NextFloat(3f, 10f);
-                Dust dust = Dust.NewDustPerfect(target.Center + Main.rand.NextVector2Circular(12f, 12f),
-                    DustID.GoldFlame, velocity, 0, Main.rand.NextBool(3) ? BladeLight : BladeGold, Main.rand.NextFloat(0.8f, 1.35f));
-                dust.noGravity = true;
+                Dust ember = Dust.NewDustPerfect(target.Center + Main.rand.NextVector2Circular(14f, 14f),
+                    AegisVisuals.ProfanedFireDust, direction.RotatedByRandom(0.75f) * Main.rand.NextFloat(3f, 10f),
+                    0, Color.White, Main.rand.NextFloat(1f, 1.7f));
+                ember.noGravity = true;
             }
         }
 
@@ -434,34 +498,311 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             outlineBaseOpacity = MathHelper.Clamp(outlineBaseOpacity + 0.018f, 0f, 0.58f);
             float pulseDrop = MathHelper.Lerp(0.09f, 0.24f, outlinePulseOpacity * outlinePulseOpacity);
             outlinePulseOpacity = MathHelper.Max(0f, outlinePulseOpacity - pulseDrop);
-            // 刀光显示在剑身50%处（非剑尖）
-            Vector2 tipOffset = currentAngle.ToRotationVector2() * BladeReach * scale * 0.5f;
+            // 刀光轨迹取剑身 78% 处，让 primitive 光带正好压在刃口上
+            Vector2 tipOffset = currentAngle.ToRotationVector2() * BladeRadius * 0.78f;
             Array.Copy(bladeTipHistory, 0, bladeTipHistory, 1, bladeTipHistory.Length - 1);
             bladeTipHistory[0] = tipOffset;
             if (bladeTipHistoryLength < bladeTipHistory.Length)
                 bladeTipHistoryLength++;
         }
 
+        /// <summary>
+        /// 轮盘边缘的切向火星喷射。旧版是 7 条随机 LineParticle，现在改成
+        /// 「切向火星 + 圣火尘 + 逆向深灰圣灰」三层，火是被离心力甩出去的，不是凭空撒的。
+        /// </summary>
         private void EmitSwingTrail(bool hitWindow)
         {
             if (Main.dedServ || !hitWindow)
                 return;
 
-            float bladeRadius = BladeReach * scale * SpinSprayRadiusScale;
-            // 沿刀轨道均匀分布 3 个粒子（仿 BB SpawnRightSpinParticles）
+            float sprayRadius = BladeReach * scale * SpinSprayRadiusScale;
             float ringPhase = stateTimer * 0.38f * swingDirection;
-            for (int i = 0; i < 7; i++)
+
+            for (int i = 0; i < 5; i++)
             {
-                float angle = ringPhase + MathHelper.TwoPi * i / 7f + Main.rand.NextFloat(-0.22f, 0.22f);
+                float angle = ringPhase + MathHelper.TwoPi * i / 5f + Main.rand.NextFloat(-0.22f, 0.22f);
                 Vector2 orbitDir = angle.ToRotationVector2();
-                Vector2 pos = Owner.MountedCenter + orbitDir * Main.rand.NextFloat(bladeRadius * 0.42f, bladeRadius * 1.22f);
+                Vector2 pos = Owner.MountedCenter + orbitDir * Main.rand.NextFloat(sprayRadius * 0.5f, sprayRadius * 1.2f);
                 Vector2 tangent = orbitDir.RotatedBy(MathHelper.PiOver2 * swingDirection);
+
+                // 切向甩出的火星（离心）
                 GeneralParticleHandler.SpawnParticle(new LineParticle(
                     pos,
-                    tangent * Main.rand.NextFloat(1.2f, 4.2f) + orbitDir * Main.rand.NextFloat(-0.25f, 0.9f),
+                    tangent * Main.rand.NextFloat(1.4f, 4.6f) + orbitDir * Main.rand.NextFloat(0.1f, 1.2f),
                     false, Main.rand.Next(9, 19), Main.rand.NextFloat(0.28f, 0.72f) * SpinSpraySpriteScale,
-                    Main.rand.NextBool(3) ? BladeLight : BladeGold));
+                    AegisVisuals.Gradient(Main.rand.NextFloat(0.05f, 0.7f))));
+
+                if (Main.rand.NextBool(3))
+                {
+                    Dust ember = Dust.NewDustPerfect(pos, AegisVisuals.ProfanedFireDust,
+                        tangent * Main.rand.NextFloat(1.5f, 4.5f), 0, Color.White,
+                        Main.rand.NextFloat(0.9f, 1.6f));
+                    ember.noGravity = true;
+                }
             }
+
+            // 刀尖处最亮的一点：跟着刃口跑的白金火花
+            if (stateTimer % 2 == 0)
+            {
+                Vector2 tipPosition = Owner.MountedCenter + currentAngle.ToRotationVector2() * BladeRadius;
+                GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(tipPosition,
+                    currentAngle.ToRotationVector2().RotatedBy(MathHelper.PiOver2 * swingDirection) *
+                    Main.rand.NextFloat(2.5f, 6f),
+                    false, Main.rand.Next(7, 12), Main.rand.NextFloat(0.08f, 0.14f),
+                    AegisVisuals.Add(AegisVisuals.Core, 0.9f), new Vector2(2.4f, 0.5f), true, false, 1f));
+            }
+
+            // 逆着轮盘飘出的圣灰：Providence 全系"圣火必配深灰烟"的签名
+            if (Main.rand.NextBool(3))
+            {
+                Vector2 smokeDir = (ringPhase + Main.rand.NextFloat(MathHelper.TwoPi)).ToRotationVector2();
+                GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
+                    Owner.MountedCenter + smokeDir * sprayRadius * Main.rand.NextFloat(0.7f, 1.15f),
+                    smokeDir * Main.rand.NextFloat(0.6f, 2.1f),
+                    Color.Lerp(AegisVisuals.Charred, Color.DarkSlateGray, Main.rand.NextFloat(0.3f, 0.85f)),
+                    Color.Transparent, Main.rand.NextFloat(0.35f, 0.7f), Main.rand.Next(26, 44),
+                    Main.rand.NextFloat(-0.05f, 0.05f)));
+            }
+        }
+
+        /// <summary>甩出去之后剑本体还在自转，沿途持续掉火。</summary>
+        private void EmitThrownFlames()
+        {
+            if (Main.dedServ)
+                return;
+
+            AegisVisuals.FlightTrail(Projectile.Center, Projectile.Center - Owner.MountedCenter,
+                1.15f, releaseTimer, 3);
+
+            if (releaseTimer % 2 == 0)
+            {
+                Vector2 tangent = currentAngle.ToRotationVector2().RotatedBy(MathHelper.PiOver2 * swingDirection);
+                GeneralParticleHandler.SpawnParticle(new SparkParticle(
+                    Projectile.Center + currentAngle.ToRotationVector2() * 30f * scale * 0.5f,
+                    tangent * Main.rand.NextFloat(2f, 5f), false, Main.rand.Next(14, 24),
+                    Main.rand.NextFloat(0.5f, 0.95f), AegisVisuals.RandomFlameColor()));
+            }
+        }
+
+        // ────────────────────────────────────────────────────────────────
+        // 绘制
+        // ────────────────────────────────────────────────────────────────
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            if (Main.dedServ)
+                return false;
+
+            Texture2D swordTexture = ModContent.Request<Texture2D>(Texture).Value;
+            Vector2 origin       = new(0f, swordTexture.Height);
+            float drawRotation   = currentAngle + MathHelper.PiOver4;
+            Vector2 drawPosition = Owner.MountedCenter - Main.screenPosition + new Vector2(0f, Owner.gfxOffY);
+            float swipeDir       = Math.Sign(endAngle - startAngle);
+            if (swipeDir == 0f) swipeDir = 1f;
+            float drawOpacity = MathHelper.Clamp(visualOpacity, 0f, 1f);
+            Vector2 bladePosition = Projectile.Center - Main.screenPosition + new Vector2(0f, Owner.gfxOffY);
+
+            Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
+
+            // ① 脚下的亵渎符文圣印（整套视觉的地基，反向自转）
+            DrawRuneFloor(drawPosition, swipeDir, drawOpacity);
+
+            // ② 圣火轮盘：新月拖抹 + 火环 + 内外双环
+            DrawFlameWheel(drawPosition, swipeDir, drawOpacity);
+
+            // ③ 沿弧线拖在身后的剑残像（真正的运动模糊，取代 52 片糊成一坨的副本）
+            DrawBladeAfterimages(swordTexture, drawPosition, origin, drawOpacity);
+
+            // ④ 剑身火脊 + 刀尖星芒（一张竖向火焰贴图搞定，取代 45 次 bloom 循环）
+            DrawBladeSpine(drawPosition, drawOpacity);
+
+            // ⑤ 亵渎背光：本体下方的暗红/焦黑底光
+            AegisVisuals.ProfanedBackglow(swordTexture, isThrown ? bladePosition : drawPosition, null,
+                drawRotation, origin, new Vector2(scale), drawOpacity, 5f * scale, 6);
+
+            Main.spriteBatch.ExitShaderRegion();
+
+            // ⑥ 刀光 primitive（原版写好了却从没被调用过，这次真正接上）
+            DrawBladeTrail();
+
+            // ⑦ 圣火锁链（脱手飞行时把剑和玩家连起来）
+            DrawTetherChain(drawOpacity);
+
+            // ⑧ 本体
+            Main.EntitySpriteDraw(swordTexture, isThrown ? bladePosition : drawPosition, null,
+                lightColor * drawOpacity, drawRotation, origin, scale, SpriteEffects.None);
+            return false;
+        }
+
+        /// <summary>脚下的符文圣印。挥舞越久越亮，脱手后迅速熄灭。</summary>
+        private void DrawRuneFloor(Vector2 drawPosition, float swipeDir, float drawOpacity)
+        {
+            float sigilOpacity = discFadeIn * drawOpacity * MathHelper.Lerp(0.32f, 0.72f, discRingOpacity);
+            if (sigilOpacity <= 0.01f)
+                return;
+
+            float spin = Main.GlobalTimeWrappedHourly * -swipeDir * 0.85f;
+            // 略微压扁，读起来像"平铺在地面上"而不是竖在身前
+            AegisVisuals.DrawRuneSigil(drawPosition, BladeRadius * 1.12f, spin, sigilOpacity,
+                new Vector2(1f, 0.78f), 0.9f + discRingOpacity * 0.35f);
+        }
+
+        /// <summary>
+        /// 圣火轮盘。三片新月拖抹沿刃口铺开构成"盘面"，外圈是反向旋转的火环，
+        /// 内圈是收紧的余烬环 —— 亮金在外、余烬在内，盘心留空给玩家。
+        /// </summary>
+        private void DrawFlameWheel(Vector2 drawPosition, float swipeDir, float drawOpacity)
+        {
+            float wheelOpacity = MathHelper.Clamp(0.55f + discRingOpacity * 0.4f, 0.55f, 0.95f)
+                                 * discFadeIn * DiscBrightness * drawOpacity;
+            if (wheelOpacity <= 0.01f)
+                return;
+
+            Texture2D twirl = AegisVisuals.Tex(AegisVisuals.TexTwirl);
+            Texture2D crescent = AegisVisuals.Tex(AegisVisuals.TexCrescent);
+            Texture2D smearFire = AegisVisuals.Tex(AegisVisuals.TexSmearFire2);
+            Texture2D ringThick = AegisVisuals.Tex(AegisVisuals.TexRingThick);
+            Texture2D corona = AegisVisuals.Tex(AegisVisuals.TexCorona);
+
+            float radius = BladeRadius;
+            float spin = Main.GlobalTimeWrappedHourly * swipeDir * 4.4f;
+
+            // 底层：余烬色厚环，负责给整个轮盘一个暗底
+            Main.EntitySpriteDraw(ringThick, drawPosition, null,
+                AegisVisuals.Add(AegisVisuals.Ember, 0.44f * wheelOpacity),
+                -spin * 0.3f, ringThick.Size() * 0.5f,
+                new Vector2(AegisVisuals.RadiusScale(ringThick, radius * 1.04f)), SpriteEffects.None, 0);
+
+            // 日冕分段环：给轮盘边缘"齿"，避免边缘是一条死板的圆
+            Main.EntitySpriteDraw(corona, drawPosition, null,
+                AegisVisuals.Add(AegisVisuals.Flame, 0.28f * wheelOpacity),
+                spin * 0.22f, corona.Size() * 0.5f,
+                new Vector2(AegisVisuals.RadiusScale(corona, radius * 0.98f)), SpriteEffects.None, 0);
+
+            // 新月拖抹片：跟着刃口转，三片均分一圈，构成真正的"盘面"
+            for (int i = 0; i < WheelSmearCount; i++)
+            {
+                float smearAngle = currentAngle + MathHelper.TwoPi * i / WheelSmearCount;
+                float layerFade = 1f - i * 0.18f;
+
+                Main.EntitySpriteDraw(twirl, drawPosition, null,
+                    AegisVisuals.Add(AegisVisuals.Flame, 0.5f * wheelOpacity * layerFade),
+                    smearAngle + MathHelper.PiOver2 * swipeDir, twirl.Size() * 0.5f,
+                    new Vector2(AegisVisuals.RadiusScale(twirl, radius)), SpriteEffects.None, 0);
+
+                Main.EntitySpriteDraw(crescent, drawPosition, null,
+                    AegisVisuals.Add(AegisVisuals.Gold, 0.42f * wheelOpacity * layerFade),
+                    smearAngle + MathHelper.PiOver2 * swipeDir + 0.18f * swipeDir, crescent.Size() * 0.5f,
+                    new Vector2(AegisVisuals.RadiusScale(crescent, radius * 0.88f)), SpriteEffects.None, 0);
+            }
+
+            // Calamity 火焰圆抹：正反两片高速对转，让盘面"在烧"
+            Main.EntitySpriteDraw(smearFire, drawPosition, null,
+                AegisVisuals.Add(AegisVisuals.Gold, 0.4f * wheelOpacity),
+                spin, smearFire.Size() * 0.5f,
+                new Vector2(AegisVisuals.RadiusScale(smearFire, radius * 0.82f)), SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(smearFire, drawPosition, null,
+                AegisVisuals.Add(AegisVisuals.Core, 0.22f * wheelOpacity),
+                -spin * 1.5f, smearFire.Size() * 0.5f,
+                new Vector2(AegisVisuals.RadiusScale(smearFire, radius * 0.52f)), SpriteEffects.None, 0);
+        }
+
+        /// <summary>
+        /// 剑残像：沿旋转方向往回排列，透明度指数衰减。
+        /// 这是"一把剑转得很快"，而不是"一圈剑并排站着"。
+        /// </summary>
+        private void DrawBladeAfterimages(Texture2D swordTexture, Vector2 drawPosition, Vector2 origin, float drawOpacity)
+        {
+            float ghostStrength = MathHelper.Clamp(outlineBaseOpacity * 1.4f + discRingOpacity * 0.5f, 0f, 1f)
+                                  * discFadeIn * drawOpacity;
+            if (ghostStrength <= 0.01f || isThrown)
+                return;
+
+            for (int i = 0; i < BladeAfterimageCount; i++)
+            {
+                float back = (i + 1) * BladeAfterimageStep;
+                float ghostAngle = currentAngle - back * swingDirection;
+                float fade = MathF.Pow(1f - (i + 1f) / (BladeAfterimageCount + 1f), 1.7f);
+
+                Color ghostColor = AegisVisuals.Add(AegisVisuals.Gradient(0.15f + 0.7f * (i / (float)BladeAfterimageCount)),
+                    0.30f * fade * ghostStrength);
+
+                Main.EntitySpriteDraw(swordTexture, drawPosition, null, ghostColor,
+                    ghostAngle + MathHelper.PiOver4, origin, scale * (1f - i * 0.012f),
+                    SpriteEffects.None, 0);
+            }
+
+            // 挥舞高峰的一圈爆发描边：只在 outlinePulse 抬头时出现，平时完全不画
+            float outlineOpacity = MathHelper.Clamp(MathF.Pow(outlinePulseOpacity, 1.6f), 0f, 1f) * drawOpacity;
+            if (outlineOpacity > 0.01f)
+            {
+                for (int i = 0; i < 6; i++)
+                {
+                    Vector2 outlineOffset = (MathHelper.TwoPi * i / 6f).ToRotationVector2() *
+                                            MathHelper.Lerp(4.5f, 9f, outlinePulseOpacity) * scale;
+                    Main.EntitySpriteDraw(swordTexture, drawPosition + outlineOffset, null,
+                        AegisVisuals.Add(AegisVisuals.Core, 0.24f * outlineOpacity),
+                        currentAngle + MathHelper.PiOver4, origin, scale, SpriteEffects.None, 0);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 剑身火脊：一张竖向火焰喷流贴图沿刃口拉伸，外加刃口白芯与刀尖星芒。
+        /// 取代旧版沿刀身循环 45 次 BloomCircle 的做法（同样的观感，1/15 的开销，而且真的像火）。
+        /// </summary>
+        private void DrawBladeSpine(Vector2 drawPosition, float drawOpacity)
+        {
+            float spineOpacity = MathHelper.Clamp(outlineBaseOpacity + slashOpacity * 0.7f + discRingOpacity * 0.25f, 0f, 1f)
+                                 * drawOpacity;
+            if (spineOpacity <= 0.01f)
+                return;
+
+            Texture2D jet = AegisVisuals.Tex(AegisVisuals.TexJet);
+            Texture2D star = AegisVisuals.Tex(AegisVisuals.TexStarPinch);
+            Texture2D bloom = AegisVisuals.Tex(AegisVisuals.TexBloom);
+
+            Vector2 forward = currentAngle.ToRotationVector2();
+            Vector2 anchor = isThrown
+                ? Projectile.Center - Main.screenPosition + new Vector2(0f, Owner.gfxOffY)
+                : drawPosition;
+            Vector2 spineCenter = anchor + forward * BladeRadius * 0.52f;
+            float spineRotation = currentAngle + MathHelper.PiOver2; // muzzle_04 是竖向的
+
+            // 外焰
+            Main.EntitySpriteDraw(jet, spineCenter, null,
+                AegisVisuals.Add(AegisVisuals.Flame, 0.42f * spineOpacity),
+                spineRotation, jet.Size() * 0.5f,
+                new Vector2(AegisVisuals.RadiusScale(jet, BladeRadius * 0.30f),
+                            AegisVisuals.RadiusScale(jet, BladeRadius * 0.62f)),
+                SpriteEffects.None, 0);
+
+            // 主焰
+            Main.EntitySpriteDraw(jet, spineCenter, null,
+                AegisVisuals.Add(AegisVisuals.Gold, 0.5f * spineOpacity),
+                spineRotation, jet.Size() * 0.5f,
+                new Vector2(AegisVisuals.RadiusScale(jet, BladeRadius * 0.17f),
+                            AegisVisuals.RadiusScale(jet, BladeRadius * 0.58f)),
+                SpriteEffects.None, 0);
+
+            // 刃口白芯
+            Main.EntitySpriteDraw(jet, spineCenter, null,
+                AegisVisuals.Add(AegisVisuals.Core, 0.36f * spineOpacity),
+                spineRotation, jet.Size() * 0.5f,
+                new Vector2(AegisVisuals.RadiusScale(jet, BladeRadius * 0.075f),
+                            AegisVisuals.RadiusScale(jet, BladeRadius * 0.5f)),
+                SpriteEffects.None, 0);
+
+            // 刀尖星芒 + 柄部炉心
+            Vector2 tipPosition = anchor + forward * BladeRadius;
+            Main.EntitySpriteDraw(star, tipPosition, null,
+                AegisVisuals.Add(AegisVisuals.Core, 0.45f * spineOpacity),
+                currentAngle + Main.GlobalTimeWrappedHourly * 3f, star.Size() * 0.5f,
+                new Vector2(AegisVisuals.RadiusScale(star, BladeRadius * 0.26f)), SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(bloom, anchor, null,
+                AegisVisuals.Add(AegisVisuals.Ember, 0.5f * spineOpacity),
+                0f, bloom.Size() * 0.5f,
+                new Vector2(AegisVisuals.RadiusScale(bloom, BladeRadius * 0.24f)), SpriteEffects.None, 0);
         }
 
         private void DrawBladeTrail()
@@ -469,257 +810,104 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             if (bladeTipHistoryLength < 2 || slashOpacity <= 0.01f || visualOpacity <= 0.01f || Main.dedServ)
                 return;
 
-            Main.spriteBatch.EnterShaderRegion();
-            var slashShader = GameShaders.Misc["CalamityMod:ExobladeSlash"];
-            slashShader.SetShaderTexture(ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/GreyscaleGradients/VoronoiShapes"));
-            slashShader.UseColor(BladeGold);
-            slashShader.UseSecondaryColor(BladeFire);
-            slashShader.Shader.Parameters["fireColor"].SetValue(BladeLight.ToVector3());
-            slashShader.Shader.Parameters["flipped"].SetValue(Owner.direction == 1);
-            slashShader.Apply();
-
             List<Vector2> trailPoints = new(bladeTipHistoryLength);
             for (int i = 0; i < bladeTipHistoryLength; i++)
                 trailPoints.Add(bladeTipHistory[i]);
 
-            float WidthFunction(float completionRatio, Vector2 _)
-            {
-                return scale * 24f * Utils.GetLerpValue(1f, 0f, completionRatio, true) * slashOpacity * visualOpacity;
-            }
+            Vector2 Anchor(float _, Vector2 __) => Owner.MountedCenter;
 
-            Color ColorFunction(float completionRatio, Vector2 _)
-            {
-                return Color.White * Utils.GetLerpValue(0.95f, 0.25f, completionRatio, true) * slashOpacity * visualOpacity;
-            }
+            // ── 外焰：余烬色宽带，走 Exoblade 刀光着色器 ──
+            Main.spriteBatch.EnterShaderRegion();
+            var slashShader = GameShaders.Misc["CalamityMod:ExobladeSlash"];
+            slashShader.SetShaderTexture(ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/GreyscaleGradients/VoronoiShapes"));
+            slashShader.UseColor(AegisVisuals.Gold);
+            slashShader.UseSecondaryColor(AegisVisuals.Ember);
+            slashShader.Shader.Parameters["fireColor"].SetValue(AegisVisuals.Flame.ToVector3());
+            slashShader.Shader.Parameters["flipped"].SetValue(Owner.direction == 1);
+            slashShader.Apply();
+
+            float OuterWidth(float completionRatio, Vector2 _) =>
+                scale * 30f * Utils.GetLerpValue(1f, 0f, completionRatio, true) * slashOpacity * visualOpacity;
+            Color OuterColor(float completionRatio, Vector2 _) =>
+                Color.White * Utils.GetLerpValue(1f, 0.2f, completionRatio, true) * slashOpacity * visualOpacity;
 
             PrimitiveRenderer.RenderTrail(trailPoints,
-                new PrimitiveSettings(WidthFunction, ColorFunction, (_, _) => Owner.MountedCenter, shader: slashShader),
+                new PrimitiveSettings(OuterWidth, OuterColor, Anchor, shader: slashShader),
                 BladeTrailHistoryFrames);
             Main.spriteBatch.ExitShaderRegion();
-        }
 
-        public override bool PreDraw(ref Color lightColor)
-        {
-            if (Main.dedServ)
-                return false;
-
-            Texture2D swordTexture  = ModContent.Request<Texture2D>(Texture).Value;
-            Texture2D swooshTexture = ModContent.Request<Texture2D>("CalamityMod/Particles/VerticalSmearLarge").Value;
-            Texture2D bloomTexture  = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Texture2D ringTexture   = ModContent.Request<Texture2D>("CalamityMod/Particles/HollowCircleHardEdge").Value;
-            Vector2 origin       = new(0f, swordTexture.Height);
-            float drawRotation   = currentAngle + MathHelper.PiOver4;
-            Vector2 drawPosition = Owner.MountedCenter - Main.screenPosition + new Vector2(0f, Owner.gfxOffY);
-            float swipeDir       = Math.Sign(endAngle - startAngle);
-            if (swipeDir == 0f) swipeDir = 1f;
-            float drawOpacity = MathHelper.Clamp(visualOpacity, 0f, 1f);
-
-            DrawTetherChain(bloomTexture, ringTexture, drawOpacity);
-
+            // ── 内芯：不走着色器的白金细带，压在外焰中间，刀光才有"刃" ──
             Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
-            DrawAegisSpinDisc(swordTexture, swooshTexture, ringTexture, drawPosition, origin, swipeDir);
 
-            // ── 刀盘底层辉光环 ───────────────────────────────────────────
-            if (discRingOpacity > 0.01f)
-            {
-                // 外环辉光（固定尺寸，覆盖轨道半径）
-                Main.EntitySpriteDraw(ringTexture, drawPosition, null,
-                    BladeGold with { A = 0 } * discRingOpacity * 0.45f * DiscBrightness * drawOpacity,
-                    Main.GlobalTimeWrappedHourly * swipeDir * 0.85f,
-                    ringTexture.Size() * 0.5f, scale * 2.4f * SpinDiscRadiusScale, SpriteEffects.None, 0);
-                Main.EntitySpriteDraw(ringTexture, drawPosition, null,
-                    BladeLight with { A = 0 } * discRingOpacity * 0.28f * DiscBrightness * drawOpacity,
-                    Main.GlobalTimeWrappedHourly * swipeDir * -1.1f,
-                    ringTexture.Size() * 0.5f, scale * 1.8f * SpinDiscRadiusScale, SpriteEffects.None, 0);
+            float CoreWidth(float completionRatio, Vector2 _) =>
+                scale * 11f * Utils.GetLerpValue(0.92f, 0f, completionRatio, true) * slashOpacity * visualOpacity;
+            Color CoreColor(float completionRatio, Vector2 _) =>
+                AegisVisuals.TrailColor(completionRatio, 2, slashOpacity * visualOpacity * 0.9f);
 
-                // ── 20 个武器残影均匀布满一圈（仿 BB DrawMaxRightSpinWeaponAfterimages）──
-                float ghostOpacity = MathHelper.Clamp(0.52f + discRingOpacity * 0.28f, 0.52f, 0.8f) * discRingOpacity;
-                for (int i = 0; i < 20; i++)
-                {
-                    float ghostAngle = MathHelper.TwoPi * i / 20f + currentAngle;
-                    float pulse = 0.5f + 0.5f * MathF.Sin(Main.GlobalTimeWrappedHourly * 22f + i * 0.7f);
-                    Vector2 jitter = Main.rand.NextVector2Circular(2.4f, 2.4f);
-                    Color ghostColor = Color.Lerp(BladeGold, BladeLight, pulse) with { A = 0 };
-                    Main.EntitySpriteDraw(swordTexture, drawPosition + jitter, null,
-                        ghostColor * 0.16f * ghostOpacity * DiscBrightness * drawOpacity,
-                        ghostAngle + MathHelper.PiOver4,
-                        origin, scale * SpinDiscSpriteScale, SpriteEffects.None, 0);
-                }
-            }
-
-            // ── 挥舞扫弧残影 ─────────────────────────────────────────────
-            float outlineOpacity = MathHelper.Clamp(outlineBaseOpacity + MathF.Pow(outlinePulseOpacity, 1.8f), 0f, 1f);
-            if (outlineOpacity > 0.01f)
-            {
-                int outlineCopies = outlinePulseOpacity > 0.01f ? 16 : 8;
-                float outlineRadius = MathHelper.Lerp(4.5f, 8f, outlinePulseOpacity) * scale;
-                for (int i = 0; i < outlineCopies; i++)
-                {
-                    Vector2 outlineOffset = (MathHelper.TwoPi * i / outlineCopies).ToRotationVector2() * outlineRadius;
-                    Color outlineColor = Color.Lerp(BladeGold, BladeLight, 0.35f + 0.45f * outlinePulseOpacity) with { A = 0 };
-                    Main.EntitySpriteDraw(swordTexture, drawPosition + outlineOffset, null,
-                        outlineColor * outlineOpacity * 0.32f * drawOpacity,
-                        drawRotation, origin, scale, SpriteEffects.None, 0);
-                }
-            }
-
-            DrawForwardLightRim(bloomTexture, drawOpacity);
-
-            if (slashOpacity > 0.01f)
-            {
-                Color swooshGold = Color.Lerp(BladeGold, BladeLight, 0.28f);
-                Main.EntitySpriteDraw(swooshTexture, drawPosition, null,
-                    swooshGold * slashOpacity * 0.85f * drawOpacity,
-                    drawRotation + MathHelper.PiOver2 * swipeDir,
-                    swooshTexture.Size() * 0.5f, scale * 1.55f * SpinDiscSpriteScale, SpriteEffects.None, 0);
-
-                Main.EntitySpriteDraw(swooshTexture, drawPosition, null,
-                    BladeLight * slashOpacity * 0.38f * drawOpacity,
-                    drawRotation + MathHelper.PiOver2 * swipeDir + 0.16f * swipeDir,
-                    swooshTexture.Size() * 0.5f, scale * 1.18f * SpinDiscSpriteScale, SpriteEffects.None, 0);
-
-                Vector2 bladeMid = Owner.MountedCenter + currentAngle.ToRotationVector2() * BladeReach * scale * SpinDiscRadiusScale * 0.5f - Main.screenPosition;
-                Main.EntitySpriteDraw(bloomTexture, bladeMid, null,
-                    BladeLight with { A = 0 } * slashOpacity * 0.52f * drawOpacity,
-                    0f, bloomTexture.Size() * 0.5f, scale * 0.5f * SpinDiscSpriteScale, SpriteEffects.None, 0);
-            }
-
-            for (int i = 0; i < 20; i++)
-            {
-                Vector2 glowOffset = (MathHelper.TwoPi * i / 20f).ToRotationVector2() * 4f;
-                Main.EntitySpriteDraw(swordTexture, drawPosition + glowOffset, null,
-                    BladeGold with { A = 0 } * 0.18f * drawOpacity,
-                    drawRotation, origin, scale, SpriteEffects.None);
-            }
+            PrimitiveRenderer.RenderTrail(trailPoints,
+                new PrimitiveSettings(CoreWidth, CoreColor, Anchor),
+                BladeTrailHistoryFrames);
 
             Main.spriteBatch.ExitShaderRegion();
-
-            Main.EntitySpriteDraw(swordTexture, drawPosition, null, lightColor * drawOpacity, drawRotation, origin, scale, SpriteEffects.None);
-            return false;
         }
 
-        private void DrawTetherChain(Texture2D bloomTexture, Texture2D ringTexture, float drawOpacity)
+        /// <summary>
+        /// 圣火锁链：剑脱手飞出后，与玩家之间连着一条烧红的锁链。
+        /// 结构 = 深红底链（ThickEndedLine 段） + 圣金亮链 + 每三节一枚符文扣（magic_04，按口径 ×0.5） + 掉落火屑。
+        /// </summary>
+        private void DrawTetherChain(float drawOpacity)
         {
-            if (!isThrown && !releaseEnding) return;
+            if (!isThrown && !releaseEnding)
+                return;
 
             Vector2 start = Owner.MountedCenter;
             Vector2 end = Projectile.Center;
-            float dist = Vector2.Distance(start, end);
-            if (dist < 10f) return;
+            float distance = Vector2.Distance(start, end);
+            if (distance < 12f)
+                return;
 
-            Vector2 dir = (end - start).SafeNormalize(Vector2.UnitX);
-            int segments = (int)(dist / 14f);
+            Vector2 direction = (end - start).SafeNormalize(Vector2.UnitX);
+            float chainRotation = direction.ToRotation() + MathHelper.PiOver2;
+            int segments = Math.Max(2, (int)(distance / 18f));
+
+            Texture2D link = AegisVisuals.Tex(AegisVisuals.TexThickLine);
+            Texture2D runeLink = AegisVisuals.Tex(AegisVisuals.TexRuneSpike);
+            Texture2D bloom = AegisVisuals.Tex(AegisVisuals.TexBloom);
 
             Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
 
             for (int i = 0; i <= segments; i++)
             {
-                float factor = i / (float)Math.Max(1, segments);
-                Vector2 pos = Vector2.Lerp(start, end, factor) - Main.screenPosition;
-                float pulse = 0.8f + 0.2f * MathF.Sin(Main.GlobalTimeWrappedHourly * 12f + i * 0.4f);
-                Color chainColor = Color.Lerp(BladeGold, BladeLight, factor) with { A = 0 } * (0.85f * drawOpacity * pulse);
+                float factor = i / (float)segments;
+                // 锁链略微下垂，不是一根死板的直线
+                float sag = MathF.Sin(factor * MathHelper.Pi) * distance * 0.045f;
+                Vector2 position = Vector2.Lerp(start, end, factor) + Vector2.UnitY * sag - Main.screenPosition;
+                float pulse = 0.72f + 0.28f * MathF.Sin(Main.GlobalTimeWrappedHourly * 11f + i * 0.55f);
 
-                Main.EntitySpriteDraw(bloomTexture, pos, null, chainColor,
-                    dir.ToRotation(), bloomTexture.Size() * 0.5f, new Vector2(0.38f, 0.16f), SpriteEffects.None);
+                Main.EntitySpriteDraw(link, position, null,
+                    AegisVisuals.Add(AegisVisuals.Ember, 0.75f * drawOpacity * pulse),
+                    chainRotation, link.Size() * 0.5f, new Vector2(0.5f, 0.42f), SpriteEffects.None, 0);
+                Main.EntitySpriteDraw(link, position, null,
+                    AegisVisuals.Add(Color.Lerp(AegisVisuals.Gold, AegisVisuals.Core, factor), 0.65f * drawOpacity * pulse),
+                    chainRotation, link.Size() * 0.5f, new Vector2(0.26f, 0.34f), SpriteEffects.None, 0);
 
                 if (i % 3 == 0)
                 {
-                    Main.EntitySpriteDraw(ringTexture, pos, null, BladeLight with { A = 0 } * (0.4f * drawOpacity),
-                        Main.GlobalTimeWrappedHourly * 4f + i, ringTexture.Size() * 0.5f, 0.12f, SpriteEffects.None);
+                    // magic_04 原图 512²，按项目口径预期缩放后再 ×0.5
+                    float runeIntended = AegisVisuals.RadiusScale(runeLink, 11f);
+                    Main.EntitySpriteDraw(runeLink, position, null,
+                        AegisVisuals.Add(AegisVisuals.Gold, 0.5f * drawOpacity),
+                        Main.GlobalTimeWrappedHourly * 3.5f + i, runeLink.Size() * 0.5f,
+                        runeIntended * AegisVisuals.RuneCrossShrink, SpriteEffects.None, 0);
                 }
             }
 
+            // 两端的炉口
+            Main.EntitySpriteDraw(bloom, start - Main.screenPosition, null,
+                AegisVisuals.Add(AegisVisuals.Flame, 0.55f * drawOpacity),
+                0f, bloom.Size() * 0.5f, new Vector2(AegisVisuals.RadiusScale(bloom, 22f)), SpriteEffects.None, 0);
+
             Main.spriteBatch.ExitShaderRegion();
-        }
-
-        private void DrawForwardLightRim(Texture2D bloomTexture, float drawOpacity)
-        {
-            float rimOpacity = MathHelper.Clamp(outlineBaseOpacity + slashOpacity * 0.65f + discRingOpacity * 0.25f, 0f, 1f) * drawOpacity;
-            if (rimOpacity <= 0.01f)
-                return;
-
-            const int draws = 45;
-            Vector2 forward = currentAngle.ToRotationVector2().SafeNormalize(Vector2.UnitX * Owner.direction);
-            Vector2 drawBase = Owner.MountedCenter + forward * (BladeReach * 0.08f * scale) - Main.screenPosition + new Vector2(0f, Owner.gfxOffY);
-            float step = BladeReach * 0.92f / draws * scale;
-
-            for (int i = 0; i < draws; i++)
-            {
-                bool swordTip = i > draws * 0.73f;
-                float swordTipScale = swordTip ? Utils.Remap(i, (int)(draws * 0.73f), draws, 0.9f, 0.35f) : 1f;
-                float hiltT = Utils.GetLerpValue(0f, draws * 0.58f, i, true);
-                float bladeHiltMult = MathHelper.Lerp(1.48f, 1f, hiltT);
-                float colorT = i / (float)draws;
-                Color rimColor = Color.Lerp(BladeGold, BladeLight, 0.22f + 0.52f * colorT) with { A = 0 };
-                Vector2 drawOffset = forward * (i * step) + Main.rand.NextVector2Circular(1.5f, 1.5f);
-                Vector2 rimScale = new Vector2(
-                    0.54f * swordTipScale * MathF.Pow(bladeHiltMult, 0.6f),
-                    0.24f / bladeHiltMult) *
-                    (0.62f * swordTipScale) * scale;
-
-                Main.EntitySpriteDraw(
-                    bloomTexture,
-                    drawBase + drawOffset,
-                    null,
-                    rimColor * 0.34f * rimOpacity,
-                    currentAngle,
-                    bloomTexture.Size() * 0.5f,
-                    rimScale,
-                    SpriteEffects.None,
-                    0);
-            }
-        }
-
-        private void DrawAegisSpinDisc(Texture2D swordTexture, Texture2D swooshTexture, Texture2D ringTexture, Vector2 drawPosition, Vector2 origin, float swipeDir)
-        {
-            float discOpacity = MathHelper.Clamp(0.68f + discRingOpacity * 0.22f, 0.68f, 0.92f) * discFadeIn * DiscBrightness * visualOpacity;
-            float spin = Main.GlobalTimeWrappedHourly * swipeDir * 5.8f;
-
-            Main.EntitySpriteDraw(ringTexture, drawPosition, null,
-                BladeGold with { A = 0 } * discOpacity * 0.62f,
-                spin * 0.28f,
-                ringTexture.Size() * 0.5f,
-                scale * 2.9f * SpinDiscRadiusScale,
-                SpriteEffects.None,
-                0);
-
-            Main.EntitySpriteDraw(ringTexture, drawPosition, null,
-                BladeLight with { A = 0 } * discOpacity * 0.42f,
-                -spin * 0.34f,
-                ringTexture.Size() * 0.5f,
-                scale * 2.15f * SpinDiscRadiusScale,
-                SpriteEffects.None,
-                0);
-
-            for (int i = 0; i < 4; i++)
-            {
-                float rotation = spin + MathHelper.TwoPi * i / 4f;
-                Color smearColor = Color.Lerp(BladeGold, BladeLight, i % 2 == 0 ? 0.2f : 0.55f);
-                Main.EntitySpriteDraw(swooshTexture, drawPosition, null,
-                    smearColor * discOpacity * 0.72f,
-                    rotation,
-                    swooshTexture.Size() * 0.5f,
-                    scale * 1.9f * SpinDiscSpriteScale,
-                    SpriteEffects.None,
-                    0);
-            }
-
-            for (int i = 0; i < 32; i++)
-            {
-                float progress = i / 32f;
-                float ghostAngle = currentAngle + MathHelper.TwoPi * progress + spin * 0.18f;
-                float pulse = 0.5f + 0.5f * MathF.Sin(Main.GlobalTimeWrappedHourly * 24f + i * 0.72f);
-                Vector2 jitter = Main.rand.NextVector2Circular(2.8f, 2.8f);
-                Color ghostColor = Color.Lerp(BladeGold, BladeLight, pulse) with { A = 0 };
-
-                Main.EntitySpriteDraw(swordTexture, drawPosition + jitter, null,
-                    ghostColor * discOpacity * 0.24f,
-                    ghostAngle + MathHelper.PiOver4,
-                    origin,
-                    scale * SpinDiscSpriteScale,
-                    SpriteEffects.None,
-                    0);
-            }
         }
     }
 }

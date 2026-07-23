@@ -312,7 +312,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             Dash_Trigger dashPlayer = player.GetModPlayer<Dash_Trigger>();
 
             int growthStage = BB_Balance.GetGrowthStage();
-            string left = this.GetLocalizedValue("BB_Left_" + growthStage);
+            string left = this.GetLocalizedValue("BB_Left_" + Math.Min(growthStage, 4));
             if (growthStage >= 2)
             {
                 left = left.Trim() + "\n" + this.GetLocalizedValue("BB_Right_Spin_Unlocked").Trim();

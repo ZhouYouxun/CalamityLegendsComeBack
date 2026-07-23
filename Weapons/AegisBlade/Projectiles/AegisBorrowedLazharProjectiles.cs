@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using CalamityLegendsComeBack.Weapons.AegisBlade.Visuals;
 using CalamityMod;
 using CalamityMod.Enums;
 using CalamityMod.Graphics.Primitives;
@@ -14,6 +15,11 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 {
+    /// <summary>
+    /// 圣火光矢。左键轮盘每 4 帧从刃缘甩出，延迟后转为追踪。
+    /// 视觉：三层拖尾（余烬外焰 / 圣金主焰 / 白金内芯）+ 可见的火矢头部。
+    /// 旧版只有一条金色拖尾，头部用的是 InvisibleProj —— 也就是"箭头是空气"。
+    /// </summary>
     internal sealed class AegisBorrowedLazharLaser : ModProjectile, ILocalizedModType, IPixelatedPrimitiveRenderer
     {
         public new string LocalizationCategory => "Projectiles.AegisBlade";
@@ -24,6 +30,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         private const float HomingRange = 1200f;
         private const float HomingStrength = 0.14f;
         private const int HomingDelayUpdates = 60;
+        private const float HeadRadius = 8.5f;
         private int timer;
 
         public override void SetStaticDefaults()
@@ -63,19 +70,43 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             }
 
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
-            Lighting.AddLight(Projectile.Center, 0.65f, 0.52f, 0.15f);
+            AegisVisuals.Light(Projectile.Center, 0.72f);
 
-            if (!Main.dedServ && timer % 3 == 0)
+            if (Main.dedServ)
+                return;
+
+            if (timer % 3 == 0)
             {
                 GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
                     Projectile.Center,
                     -Projectile.velocity * 0.08f,
                     false,
                     7,
-                    Main.rand.NextFloat(0.18f, 0.32f),
-                    Color.Lerp(Color.Gold, Color.White, Main.rand.NextFloat(0.2f, 0.7f)),
+                    Main.rand.NextFloat(0.16f, 0.3f),
+                    AegisVisuals.RandomFlameColor(),
                     true,
                     true));
+            }
+
+            // 侧向掉落的火屑：让高速光矢有"擦出火星"的质感
+            if (timer % 6 == 0)
+            {
+                Vector2 side = Projectile.velocity.SafeNormalize(Vector2.UnitX).RotatedBy(MathHelper.PiOver2);
+                Dust ember = Dust.NewDustPerfect(Projectile.Center,
+                    AegisVisuals.ProfanedFireDust,
+                    side * Main.rand.NextFloatDirection() * Main.rand.NextFloat(0.4f, 1.4f) -
+                    Projectile.velocity * 0.05f,
+                    0, Color.White, Main.rand.NextFloat(0.7f, 1.15f));
+                ember.noGravity = true;
+            }
+
+            // 追踪启动的那一刻：光矢自己"点着"，给一个明确的状态切换信号
+            if (timer == HomingDelayUpdates)
+            {
+                GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero,
+                    AegisVisuals.Add(AegisVisuals.Core, 0.75f), AegisVisuals.TexBloom, Vector2.One,
+                    0f, 0.05f, 0.4f, 10));
+                AegisVisuals.CoronaRing(Projectile.Center, 6, 0.45f, Projectile.rotation);
             }
         }
 
@@ -106,22 +137,12 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             if (Main.dedServ)
                 return;
 
-            Vector2 contactPoint = Projectile.Center;
-            Vector2 reflectDir = -Projectile.velocity.SafeNormalize(Vector2.UnitY);
-            for (int i = 0; i < 5; i++)
-            {
-                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
-                    contactPoint,
-                    reflectDir.RotatedByRandom(0.45f) * Main.rand.NextFloat(3f, 10f),
-                    false,
-                    12,
-                    Main.rand.NextFloat(0.3f, 0.65f),
-                    Color.Lerp(Color.Gold, Color.White, Main.rand.NextFloat(0.2f, 0.8f)),
-                    true,
-                    true));
-            }
-
-            GeneralParticleHandler.SpawnParticle(new SquishyLightParticle(contactPoint, Vector2.Zero, 0.6f, Color.Gold, 15));
+            Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitY);
+            AegisVisuals.DirectionalImpact(Projectile.Center, forward, 0.6f);
+            AegisVisuals.EmberJet(Projectile.Center, -forward, 5, 0.7f, 0.5f);
+            AegisVisuals.WarbannerConverge(target.Center, forward, 1.25f, 2, 0.9f);
+            GeneralParticleHandler.SpawnParticle(new SquishyLightParticle(Projectile.Center, Vector2.Zero,
+                0.55f, AegisVisuals.Add(AegisVisuals.Gold, 1f), 15));
         }
 
         public override void OnKill(int timeLeft)
@@ -129,18 +150,52 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             if (Main.dedServ)
                 return;
 
-            for (int i = 0; i < 2; i++)
-            {
-                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
-                    Projectile.Center,
-                    Main.rand.NextVector2Circular(2f, 2f),
-                    false,
-                    6,
-                    0.25f,
-                    Color.Gold,
-                    true,
-                    true));
-            }
+            AegisVisuals.HolyDetonation(Projectile.Center, 0.4f, false);
+        }
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            if (Main.dedServ)
+                return false;
+
+            Texture2D fire = AegisVisuals.Tex(AegisVisuals.TexFireBody);
+            Texture2D orb = AegisVisuals.Tex(AegisVisuals.TexOrbSoft);
+            Texture2D star = AegisVisuals.Tex(AegisVisuals.TexStarThin);
+            Texture2D bloom = AegisVisuals.Tex(AegisVisuals.TexBloom);
+
+            Vector2 drawPosition = Projectile.Center - Main.screenPosition;
+            float opacity = Projectile.Opacity;
+            if (opacity <= 0.02f)
+                return false;
+
+            float flicker = 0.85f + 0.15f * MathF.Sin(Main.GlobalTimeWrappedHourly * 26f + Projectile.identity);
+            // 追踪启动后头部略微鼓起，表现"加速"
+            float homingBoost = timer >= HomingDelayUpdates ? 1.22f : 1f;
+            float radius = HeadRadius * homingBoost;
+
+            Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
+
+            Main.EntitySpriteDraw(bloom, drawPosition, null,
+                AegisVisuals.Add(AegisVisuals.Ember, 0.55f * opacity),
+                0f, bloom.Size() * 0.5f,
+                new Vector2(AegisVisuals.RadiusScale(bloom, radius * 2.1f)), SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(fire, drawPosition, null,
+                AegisVisuals.Add(AegisVisuals.Gold, 0.75f * opacity * flicker),
+                Projectile.rotation, fire.Size() * 0.5f,
+                new Vector2(AegisVisuals.RadiusScale(fire, radius), AegisVisuals.RadiusScale(fire, radius * 1.5f)),
+                SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(orb, drawPosition, null,
+                AegisVisuals.Add(AegisVisuals.Core, 0.85f * opacity * flicker),
+                0f, orb.Size() * 0.5f,
+                new Vector2(AegisVisuals.RadiusScale(orb, radius * 0.4f)), SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(star, drawPosition, null,
+                AegisVisuals.Add(AegisVisuals.Core, 0.42f * opacity),
+                Projectile.rotation, star.Size() * 0.5f,
+                new Vector2(AegisVisuals.RadiusScale(star, radius * 1.5f), AegisVisuals.RadiusScale(star, radius * 3.4f)),
+                SpriteEffects.None, 0);
+
+            Main.spriteBatch.ExitShaderRegion();
+            return false;
         }
 
         public void RenderPixelatedPrimitives(SpriteBatch spriteBatch, GeneralDrawLayer layer)
@@ -149,24 +204,32 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             if (points.Length < 2)
                 return;
 
-            GameShaders.Misc["CalamityMod:ImpFlameTrail"].SetShaderTexture(
-                ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/ScarletDevilStreak"));
+            var trailShader = GameShaders.Misc["CalamityMod:ImpFlameTrail"];
 
+            // ① 外焰：余烬红，最宽，压在最底下
+            trailShader.SetShaderTexture(
+                ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/ScarletDevilStreak"));
             PrimitiveRenderer.RenderTrail(
                 points,
-                new PrimitiveSettings(WidthFunction, ColorFunction, OffsetFunction, true, true, GameShaders.Misc["CalamityMod:ImpFlameTrail"]),
+                new PrimitiveSettings(OuterWidthFunction, OuterColorFunction, OffsetFunction, true, true, trailShader),
                 points.Length * 2);
 
+            // ② 主焰：圣金
+            PrimitiveRenderer.RenderTrail(
+                points,
+                new PrimitiveSettings(WidthFunction, ColorFunction, OffsetFunction, true, true, trailShader),
+                points.Length * 2);
+
+            // ③ 内芯：白金细带，只取前 12 个点，让"刃"集中在头部
             Vector2[] corePoints = points.Take(Math.Min(12, points.Length)).ToArray();
             if (corePoints.Length < 2)
                 return;
 
-            GameShaders.Misc["CalamityMod:ImpFlameTrail"].SetShaderTexture(
+            trailShader.SetShaderTexture(
                 ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/SylvestaffStreak"));
-
             PrimitiveRenderer.RenderTrail(
                 corePoints,
-                new PrimitiveSettings(CoreWidthFunction, CoreColorFunction, OffsetFunction, true, true, GameShaders.Misc["CalamityMod:ImpFlameTrail"]),
+                new PrimitiveSettings(CoreWidthFunction, CoreColorFunction, OffsetFunction, true, true, trailShader),
                 corePoints.Length * 2);
         }
 
@@ -202,25 +265,25 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             return Utils.Remap(completion, ratio, 1f, baseWidth, 0f);
         }
 
-        private Color ColorFunction(float completion, Vector2 _)
-        {
-            Color body = Color.Lerp(Color.Lerp(Color.White, Color.Gold, 0.3f), Color.OrangeRed, completion * 0.7f) * Projectile.Opacity;
-            Color fade = Color.Lerp(body, Color.Transparent, Utils.GetLerpValue(0.7f, 1f, completion, true));
-            fade.A = 0;
-            return Color.Lerp(body, fade, completion);
-        }
+        private Color ColorFunction(float completion, Vector2 _) =>
+            AegisVisuals.TrailColor(completion, 1, Projectile.Opacity);
 
-        private float CoreWidthFunction(float completion, Vector2 _) => WidthFunction(completion, _) * 0.46f;
+        private float OuterWidthFunction(float completion, Vector2 _) => WidthFunction(completion, _) * 1.55f;
 
-        private Color CoreColorFunction(float completion, Vector2 _)
-        {
-            Color body = Color.Lerp(Color.White, Color.Gold, completion * 0.4f) * Projectile.Opacity;
-            Color fade = Color.Lerp(body, Color.Transparent, Utils.GetLerpValue(0.75f, 1f, completion, true));
-            fade.A = 0;
-            return Color.Lerp(body, fade, completion);
-        }
+        private Color OuterColorFunction(float completion, Vector2 _) =>
+            AegisVisuals.TrailColor(completion, 0, Projectile.Opacity * 0.62f);
+
+        private float CoreWidthFunction(float completion, Vector2 _) => WidthFunction(completion, _) * 0.42f;
+
+        private Color CoreColorFunction(float completion, Vector2 _) =>
+            AegisVisuals.TrailColor(completion, 2, Projectile.Opacity);
     }
 
+    /// <summary>
+    /// 天火轨道打击。从目标正上方约 1000 像素垂直贯落。
+    /// 视觉参考 ProvidenceHolyRay：落点先亮起符文预警圈，光柱内部有滚动的能量流，
+    /// 落地后留下一小段焦痕余辉 —— 而不是旧版"一条纯金色棍子砸下来就没了"。
+    /// </summary>
     internal sealed class AegisBorrowedOrbitalStrike : ModProjectile, ILocalizedModType, IPixelatedPrimitiveRenderer
     {
         public new string LocalizationCategory => "Projectiles.AegisBlade";
@@ -229,11 +292,25 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 
         private const int MaxLifetime = 90;
         private const float BeamHeight = 1200f;
+        private const int AfterglowFrames = 26;   // 落地后纯视觉的余辉时长（无伤害）
         private int timer;
         private bool impacted;
+        private int afterglowTimer;
 
         private int TargetIndex => (int)Projectile.ai[0];
         private Vector2 Destination => new(Projectile.ai[1], Projectile.ai[2]);
+
+        /// <summary>0 → 1：越接近落点，预警圈越亮。</summary>
+        private float ApproachRatio
+        {
+            get
+            {
+                Vector2 destination = Destination;
+                if (destination == Vector2.Zero)
+                    return 0f;
+                return Utils.GetLerpValue(900f, 60f, Math.Abs(destination.Y - Projectile.Center.Y), true);
+            }
+        }
 
         public override void SetDefaults()
         {
@@ -253,6 +330,17 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         public override void AI()
         {
             timer++;
+
+            if (impacted)
+            {
+                afterglowTimer++;
+                Projectile.velocity = Vector2.Zero;
+                AegisVisuals.Light(Projectile.Center, 1.4f * (1f - afterglowTimer / (float)AfterglowFrames));
+                if (afterglowTimer >= AfterglowFrames)
+                    Projectile.Kill();
+                return;
+            }
+
             if (timer == 1)
             {
                 SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.48f, Pitch = 0.18f }, Projectile.Center);
@@ -267,19 +355,45 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 
             Projectile.velocity = Vector2.UnitY * Math.Max(34f, Projectile.velocity.Y);
             Projectile.rotation = MathHelper.PiOver2;
-            Lighting.AddLight(Projectile.Center, 0.72f, 0.54f, 0.16f);
+            AegisVisuals.Light(Projectile.Center, 0.95f);
 
-            if (!Main.dedServ && timer % 3 == 0)
+            if (!Main.dedServ)
             {
-                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
-                    Projectile.Center + Main.rand.NextVector2Circular(12f, 8f),
-                    Main.rand.NextVector2Circular(0.8f, 0.8f),
-                    false,
-                    10,
-                    Main.rand.NextFloat(0.22f, 0.38f),
-                    Color.Lerp(Color.Gold, Color.White, 0.28f),
-                    true,
-                    true));
+                if (timer % 3 == 0)
+                {
+                    GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                        Projectile.Center + Main.rand.NextVector2Circular(12f, 8f),
+                        Main.rand.NextVector2Circular(0.8f, 0.8f),
+                        false,
+                        10,
+                        Main.rand.NextFloat(0.2f, 0.36f),
+                        AegisVisuals.RandomFlameColor(),
+                        true,
+                        true));
+                }
+
+                // 光柱两侧被撕开的圣灰
+                if (Main.rand.NextBool(2))
+                {
+                    GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
+                        Projectile.Center + new Vector2(Main.rand.NextFloat(-24f, 24f), Main.rand.NextFloat(-60f, 20f)),
+                        new Vector2(Main.rand.NextFloat(-1.6f, 1.6f), Main.rand.NextFloat(-3.5f, -0.8f)),
+                        Color.Lerp(AegisVisuals.Charred, Color.DarkSlateGray, Main.rand.NextFloat(0.3f, 0.85f)),
+                        Color.Transparent, Main.rand.NextFloat(0.45f, 0.85f), Main.rand.Next(24, 40),
+                        Main.rand.NextFloat(-0.05f, 0.05f)));
+                }
+
+                // 落点预警：火星从四周被吸向落点，提前告诉玩家"这里要挨砸"
+                float approach = ApproachRatio;
+                if (approach > 0.15f && Main.rand.NextBool(2))
+                {
+                    Vector2 inward = Main.rand.NextFloat(MathHelper.TwoPi).ToRotationVector2();
+                    GeneralParticleHandler.SpawnParticle(new SparkParticle(
+                        destination + inward * Main.rand.NextFloat(60f, 130f),
+                        -inward * Main.rand.NextFloat(2.5f, 6f) * approach, false,
+                        Main.rand.Next(12, 20), Main.rand.NextFloat(0.5f, 1f),
+                        AegisVisuals.Gradient(Main.rand.NextFloat(0.15f, 0.75f))));
+                }
             }
 
             if (Projectile.Center.Y >= destination.Y)
@@ -289,8 +403,13 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             }
         }
 
+        public override bool? CanDamage() => impacted ? false : null;
+
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
         {
+            if (impacted)
+                return false;
+
             float collisionPoint = 0f;
             Vector2 startPoint = Projectile.Center - Vector2.UnitY * BeamHeight;
             Vector2 endPoint = Projectile.Center;
@@ -305,8 +424,8 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             impacted = true;
             Projectile.friendly = false;
             Projectile.velocity = Vector2.Zero;
+            Projectile.timeLeft = AfterglowFrames + 2;
             SpawnExplosionParticles();
-            Projectile.Kill();
         }
 
         private void SpawnExplosionParticles()
@@ -315,29 +434,27 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 return;
 
             SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.52f, Pitch = 0.12f }, Projectile.Center);
-            for (int i = 0; i < 12; i++)
+            SoundEngine.PlaySound(SoundID.DD2_BetsyFireballImpact with { Volume = 0.55f, Pitch = 0.5f }, Projectile.Center);
+
+            AegisVisuals.HolyDetonation(Projectile.Center, 2.1f);
+
+            // 贴地铺开的横向冲击：天火砸地是往两边扫，不是往天上炸
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                Projectile.Center, Vector2.Zero, AegisVisuals.Add(AegisVisuals.Gold, 0.95f),
+                new Vector2(2.3f, 0.5f), 0f, 0.05f, 1.05f, 20));
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                Projectile.Center, Vector2.Zero, AegisVisuals.Add(AegisVisuals.Ember, 0.8f),
+                new Vector2(3.1f, 0.34f), 0f, 0.04f, 1.45f, 26));
+
+            for (int i = -1; i <= 1; i += 2)
             {
-                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
-                    Projectile.Center + Main.rand.NextVector2Circular(24f, 12f),
-                    new Vector2(Main.rand.NextFloat(-4f, 4f), Main.rand.NextFloat(-6f, -1f)),
-                    false,
-                    18,
-                    Main.rand.NextFloat(0.6f, 1f),
-                    Color.Lerp(Color.Gold, Color.OrangeRed, Main.rand.NextFloat(0.1f, 0.5f)),
-                    true,
-                    true));
+                Vector2 sweep = new Vector2(i, -0.25f).SafeNormalize(Vector2.UnitX);
+                AegisVisuals.EmberJet(Projectile.Center, sweep, 8, 1.25f, 0.35f);
             }
 
-            GeneralParticleHandler.SpawnParticle(new SquishyLightParticle(Projectile.Center, Vector2.Zero, 1.15f, Color.Gold, 16));
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
-                Projectile.Center,
-                Vector2.Zero,
-                Color.Lerp(Color.Gold, Color.White, 0.18f),
-                new Vector2(1.2f, 0.55f),
-                0f,
-                0.18f,
-                0.04f,
-                18));
+            GeneralParticleHandler.SpawnParticle(new SquishyLightParticle(Projectile.Center, Vector2.Zero,
+                1.15f, AegisVisuals.Add(AegisVisuals.Core, 1f), 16));
+            AegisVisuals.Screenshake(Projectile.Center, 3.6f, 1200f);
         }
 
         public override void OnKill(int timeLeft)
@@ -346,8 +463,62 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 SpawnExplosionParticles();
         }
 
+        public override bool PreDraw(ref Color lightColor)
+        {
+            if (Main.dedServ)
+                return false;
+
+            Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
+
+            if (impacted)
+            {
+                // ── 落地余辉：焦痕 + 收缩的白芯 ──
+                float fade = 1f - afterglowTimer / (float)AfterglowFrames;
+                Vector2 drawPosition = Projectile.Center - Main.screenPosition;
+                AegisVisuals.DrawScorchDecal(drawPosition, Projectile.identity * 0.7f,
+                    82f * (0.55f + 0.45f * (1f - fade)), fade * 0.9f, new Vector2(1.25f, 0.6f));
+                AegisVisuals.DrawSolarCore(drawPosition, 30f * fade, fade,
+                    Main.GlobalTimeWrappedHourly * 4f, new Vector2(1.3f, 0.7f));
+            }
+            else
+            {
+                // ── 落点预警圈：符文圣印 + 收紧的地面光环 ──
+                Vector2 destination = Destination;
+                if (destination != Vector2.Zero)
+                {
+                    float approach = ApproachRatio;
+                    if (approach > 0.02f)
+                    {
+                        Vector2 markPosition = destination - Main.screenPosition;
+                        float markRadius = MathHelper.Lerp(120f, 62f, approach);
+                        AegisVisuals.DrawRuneSigil(markPosition, markRadius,
+                            Main.GlobalTimeWrappedHourly * (1.5f + approach * 6f),
+                            approach * 0.85f, new Vector2(1f, 0.42f), 0.85f + approach * 0.6f);
+
+                        Texture2D ring = AegisVisuals.Tex(AegisVisuals.TexRingThick);
+                        Main.EntitySpriteDraw(ring, markPosition, null,
+                            AegisVisuals.Add(AegisVisuals.Ember, 0.5f * approach),
+                            0f, ring.Size() * 0.5f,
+                            new Vector2(AegisVisuals.RadiusScale(ring, markRadius * 1.15f),
+                                        AegisVisuals.RadiusScale(ring, markRadius * 0.48f)),
+                            SpriteEffects.None, 0);
+                    }
+                }
+
+                // ── 光柱头部的日核 ──
+                AegisVisuals.DrawSolarCore(Projectile.Center - Main.screenPosition, 26f, 1f,
+                    Main.GlobalTimeWrappedHourly * 5f, new Vector2(0.8f, 1.25f));
+            }
+
+            Main.spriteBatch.ExitShaderRegion();
+            return false;
+        }
+
         public void RenderPixelatedPrimitives(SpriteBatch spriteBatch, GeneralDrawLayer layer)
         {
+            if (impacted)
+                return;
+
             Vector2[] beamPoints = new Vector2[12];
             for (int i = 0; i < beamPoints.Length; i++)
             {
@@ -355,18 +526,31 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 beamPoints[i] = Projectile.Center - new Vector2(0f, BeamHeight * (1f - ratio));
             }
 
-            GameShaders.Misc["CalamityMod:ImpFlameTrail"].SetShaderTexture(
+            var trailShader = GameShaders.Misc["CalamityMod:ImpFlameTrail"];
+
+            // ① 外焰：余烬色宽柱
+            trailShader.SetShaderTexture(
                 ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/ScarletDevilStreak"));
             PrimitiveRenderer.RenderTrail(
                 beamPoints,
-                new PrimitiveSettings(WidthFunction, ColorFunction, OffsetFunction, true, true, GameShaders.Misc["CalamityMod:ImpFlameTrail"]),
+                new PrimitiveSettings(OuterWidthFunction, OuterColorFunction, OffsetFunction, true, true, trailShader,
+                    textureCycleLength: 2.4f, textureScrollOffset: -Main.GlobalTimeWrappedHourly * 2.6f),
                 beamPoints.Length * 2);
 
-            GameShaders.Misc["CalamityMod:ImpFlameTrail"].SetShaderTexture(
+            // ② 主焰：圣金，纹理沿柱身向下滚动 = 能量在流
+            PrimitiveRenderer.RenderTrail(
+                beamPoints,
+                new PrimitiveSettings(WidthFunction, ColorFunction, OffsetFunction, true, true, trailShader,
+                    textureCycleLength: 3.6f, textureScrollOffset: -Main.GlobalTimeWrappedHourly * 4.2f),
+                beamPoints.Length * 2);
+
+            // ③ 内芯：白金细柱
+            trailShader.SetShaderTexture(
                 ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/SylvestaffStreak"));
             PrimitiveRenderer.RenderTrail(
                 beamPoints,
-                new PrimitiveSettings(CoreWidthFunction, CoreColorFunction, OffsetFunction, true, true, GameShaders.Misc["CalamityMod:ImpFlameTrail"]),
+                new PrimitiveSettings(CoreWidthFunction, CoreColorFunction, OffsetFunction, true, true, trailShader,
+                    textureCycleLength: 5f, textureScrollOffset: -Main.GlobalTimeWrappedHourly * 6f),
                 beamPoints.Length * 2);
         }
 
@@ -386,9 +570,15 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         private Color ColorFunction(float completion, Vector2 _)
         {
             float progress = Projectile.timeLeft / (float)MaxLifetime;
-            Color color = Color.Lerp(Color.Gold, Color.OrangeRed, completion * 0.5f) * progress;
-            color.A = 0;
-            return color;
+            return AegisVisuals.TrailColor(completion, 1, progress);
+        }
+
+        private float OuterWidthFunction(float completion, Vector2 _) => WidthFunction(completion, _) * 1.6f;
+
+        private Color OuterColorFunction(float completion, Vector2 _)
+        {
+            float progress = Projectile.timeLeft / (float)MaxLifetime;
+            return AegisVisuals.TrailColor(completion, 0, progress * 0.6f);
         }
 
         private float CoreWidthFunction(float completion, Vector2 _)
@@ -401,9 +591,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         private Color CoreColorFunction(float completion, Vector2 _)
         {
             float progress = Projectile.timeLeft / (float)MaxLifetime;
-            Color color = Color.Lerp(Color.White, Color.Gold, completion * 0.3f) * progress;
-            color.A = 0;
-            return color;
+            return AegisVisuals.TrailColor(completion, 2, progress);
         }
     }
 }

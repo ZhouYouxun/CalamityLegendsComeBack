@@ -1,17 +1,22 @@
 using System;
+using CalamityLegendsComeBack.Weapons.AegisBlade.Visuals;
 using CalamityMod;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.Audio;
-using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 {
     // A fast-growing compact dirt barricade. It damages during the rise, then becomes a player-only solid wall.
+    //
+    // 视觉重做说明：旧版用 TextureAssets.MagicPixel 画矩形描边 + 扫描线 + 侧边刻度，
+    // 是一套"科技矩阵"语言，和这把武器的亵渎圣火/圣岩主题完全不搭。
+    // 现在改为「亵渎圣岩壁垒」：分段堆叠的岩体贴图 + 段与段之间的炽金裂缝 +
+    // 顶部符文封印 + 底部炉光，玩法/碰撞/时长完全不变。
     public class AegisWallProjectile : ModProjectile
     {
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
@@ -19,14 +24,16 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         public static readonly int WallHalfWidth = BalanceAegisBlade.WallWidthTiles * 16 / 2;
         public static readonly int WallHalfHeight = BalanceAegisBlade.WallHeightTiles * 16 / 2;
 
+        private const int StoneSegments = 7;      // 岩体分几段堆叠
+
         private ref float Phase => ref Projectile.ai[1];
         private ref float RiseTimer => ref Projectile.localAI[0];
         private ref float SolidTimer => ref Projectile.localAI[1];
         private bool solidifyEffectFired;
 
-        private static readonly Color OuterGold = new(142, 96, 44);
-        private static readonly Color CoreGold = new(206, 154, 72);
-        private static readonly Color CoreWhite = new(238, 214, 142);
+        // 岩体配色：暗褐岩石 + 炽金裂缝，属于统一调色盘的"暗部/底层"延伸
+        private static readonly Color StoneDark = new(74, 48, 30);
+        private static readonly Color StoneLit = new(138, 96, 54);
 
         public override void SetDefaults()
         {
@@ -49,7 +56,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             if (Phase < 1f)
             {
                 RiseTimer++;
-                Lighting.AddLight(Projectile.Center, CoreGold.ToVector3() * 0.4f);
+                AegisVisuals.Light(Projectile.Center, 0.55f);
                 if (RiseTimer == 1f || RiseTimer % 5f == 0f)
                     SoundEngine.PlaySound(SoundID.Dig with { Volume = 0.46f, Pitch = -0.34f, MaxInstances = 4 }, Projectile.Center);
                 if (!Main.dedServ && Main.rand.NextBool(2))
@@ -67,7 +74,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             }
 
             SolidTimer++;
-            Lighting.AddLight(Projectile.Center, CoreGold.ToVector3() * 0.2f);
+            AegisVisuals.Light(Projectile.Center, 0.32f);
             if (SolidTimer >= GetSolidDuration())
             {
                 Projectile.Kill();
@@ -97,7 +104,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                     if (toolHitbox.Intersects(wallBox))
                     {
                         SoundEngine.PlaySound(SoundID.Dig with { Volume = 0.9f, Pitch = -0.2f }, Projectile.Center);
-                        EmitSolidifyBurst();
+                        EmitCollapseBurst();
                         Projectile.Kill();
                         return;
                     }
@@ -121,6 +128,15 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                         npc.position.X = wallBox.Right;
                         if (npc.velocity.X < 0f) npc.velocity.X = 0f;
                     }
+
+                    // 被挡住的瞬间在接触点擦出火星，让"撞墙"这件事有反馈
+                    if (!Main.dedServ && Main.rand.NextBool(3))
+                    {
+                        float contactX = npc.Center.X < Projectile.Center.X ? wallBox.Left : wallBox.Right;
+                        Vector2 contact = new(contactX, MathHelper.Clamp(npc.Center.Y, wallBox.Top, wallBox.Bottom));
+                        Vector2 push = new(npc.Center.X < Projectile.Center.X ? -1f : 1f, 0f);
+                        AegisVisuals.EmberJet(contact, push, 2, 0.5f, 0.9f);
+                    }
                 }
             }
 
@@ -138,33 +154,50 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             return BalanceAegisBlade.WallDuration;
         }
 
+        /// <summary>升起时从底部喷出的岩屑与圣火尘。</summary>
         private void EmitRisingDirt()
         {
             float bottomY = Projectile.Center.Y + WallHalfHeight;
             Vector2 position = new(Projectile.Center.X + Main.rand.NextFloat(-WallHalfWidth, WallHalfWidth), bottomY);
             Vector2 velocity = new(Main.rand.NextFloat(-1.8f, 1.8f), -Main.rand.NextFloat(2.5f, 7.5f));
-            Dust dust = Dust.NewDustPerfect(position, DustID.Dirt, velocity * 0.65f, 0, OuterGold, Main.rand.NextFloat(0.9f, 1.35f));
+
+            Dust dust = Dust.NewDustPerfect(position, DustID.Dirt, velocity * 0.65f, 0, StoneDark,
+                Main.rand.NextFloat(0.9f, 1.35f));
             dust.noGravity = Main.rand.NextBool(4);
+
+            GeneralParticleHandler.SpawnParticle(new StoneDebrisParticle(position, velocity * 0.75f,
+                Color.Lerp(StoneDark, StoneLit, Main.rand.NextFloat()), Main.rand.NextFloat(0.7f, 1.15f),
+                Main.rand.Next(26, 42), Main.rand.NextFloat(0.4f, 1.3f)));
+
             GeneralParticleHandler.SpawnParticle(new MediumMistParticle(position, velocity,
-                Color.Lerp(OuterGold, CoreGold, Main.rand.NextFloat()), Color.Transparent,
+                Color.Lerp(StoneDark, Color.DarkSlateGray, Main.rand.NextFloat(0.3f, 0.8f)), Color.Transparent,
                 Main.rand.NextFloat(0.36f, 0.68f), Main.rand.Next(18, 28), Main.rand.NextFloat(-0.05f, 0.05f)));
+
+            // 从裂缝里被挤出来的圣火
+            if (Main.rand.NextBool(2))
+            {
+                Dust ember = Dust.NewDustPerfect(position, AegisVisuals.ProfanedFireDust,
+                    velocity * 0.4f, 0, Color.White, Main.rand.NextFloat(0.8f, 1.4f));
+                ember.noGravity = true;
+            }
         }
 
+        /// <summary>已成形期间沿墙面渗出的余烬。</summary>
         private void EmitSolidDirt()
         {
             float height = Main.rand.NextFloat(-WallHalfHeight, WallHalfHeight);
             float side = Main.rand.NextBool() ? -WallHalfWidth : WallHalfWidth;
             Vector2 position = Projectile.Center + new Vector2(side, height);
+
             Dust dust = Dust.NewDustPerfect(position, DustID.Dirt,
                 new Vector2(Math.Sign(side) * Main.rand.NextFloat(0.3f, 1.2f), -Main.rand.NextFloat(0.1f, 0.9f)),
-                0, OuterGold, Main.rand.NextFloat(0.65f, 1.05f));
+                0, StoneDark, Main.rand.NextFloat(0.65f, 1.05f));
             dust.noGravity = Main.rand.NextBool(5);
-            GeneralParticleHandler.SpawnParticle(new MediumMistParticle(position,
-                new Vector2(Math.Sign(side) * Main.rand.NextFloat(0.4f, 1.5f), -Main.rand.NextFloat(0.2f, 1.8f)),
-                Color.Lerp(OuterGold, CoreWhite, Main.rand.NextFloat(0.15f, 0.65f)), Color.Transparent,
-                Main.rand.NextFloat(0.25f, 0.5f), Main.rand.Next(16, 26), Main.rand.NextFloat(-0.04f, 0.04f)));
+
+            AegisVisuals.EmberDrip(position, 3f, 6f, 0.7f);
         }
 
+        /// <summary>凝固：符文封印咬合，整堵墙的裂缝同时亮一次。</summary>
         private void EmitSolidifyBurst()
         {
             if (solidifyEffectFired || Main.dedServ)
@@ -172,16 +205,46 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 
             solidifyEffectFired = true;
             Vector2 top = Projectile.Center - Vector2.UnitY * WallHalfHeight;
-            GeneralParticleHandler.SpawnParticle(new DetailedExplosion(top, Vector2.Zero,
-                CoreWhite, new Vector2(0.8f, 1.15f), 0f, 0f, 0.55f, 18));
+
+            AegisVisuals.HolyDetonation(top, 0.85f, false);
+            AegisVisuals.CoronaRing(top, 10, 0.7f);
             GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Vector2.Zero,
-                CoreGold, new Vector2(1.35f, 0.65f), 0f, 0.08f, 1.35f, 20));
+                AegisVisuals.Add(AegisVisuals.Gold, 0.9f), new Vector2(0.5f, 1.9f), 0f, 0.06f, 0.9f, 20));
+
             for (int i = 0; i < 8; i++)
             {
                 Vector2 position = Projectile.Center + new Vector2(Main.rand.NextFloat(-WallHalfWidth, WallHalfWidth),
                     Main.rand.NextFloat(-WallHalfHeight, WallHalfHeight));
                 GeneralParticleHandler.SpawnParticle(new StrongBloom(position, Vector2.Zero,
-                    Main.rand.NextBool(3) ? CoreWhite : CoreGold, Main.rand.NextFloat(0.16f, 0.3f), Main.rand.Next(9, 15)));
+                    AegisVisuals.Add(Main.rand.NextBool(3) ? AegisVisuals.Core : AegisVisuals.Gold, 1f),
+                    Main.rand.NextFloat(0.16f, 0.3f), Main.rand.Next(9, 15)));
+            }
+
+            AegisVisuals.Screenshake(Projectile.Center, 1.6f, 600f);
+        }
+
+        /// <summary>被镐/斧/锤敲碎：岩体真的碎开成块，而不是简单闪一下。</summary>
+        private void EmitCollapseBurst()
+        {
+            if (Main.dedServ)
+                return;
+
+            AegisVisuals.HolyDetonation(Projectile.Center, 1.1f);
+
+            for (int i = 0; i < 18; i++)
+            {
+                Vector2 position = Projectile.Center + new Vector2(Main.rand.NextFloat(-WallHalfWidth, WallHalfWidth),
+                    Main.rand.NextFloat(-WallHalfHeight, WallHalfHeight));
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2f, 7f) -
+                                   Vector2.UnitY * 1.5f;
+
+                GeneralParticleHandler.SpawnParticle(new StoneDebrisParticle(position, velocity,
+                    Color.Lerp(StoneDark, StoneLit, Main.rand.NextFloat()), Main.rand.NextFloat(0.8f, 1.3f),
+                    Main.rand.Next(30, 50), Main.rand.NextFloat(0.5f, 1.6f)));
+
+                Dust dust = Dust.NewDustPerfect(position, DustID.Dirt, velocity * 0.8f, 0, StoneDark,
+                    Main.rand.NextFloat(0.9f, 1.4f));
+                dust.noGravity = false;
             }
         }
 
@@ -192,8 +255,6 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             if (Main.dedServ)
                 return false;
 
-            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Texture2D ring = ModContent.Request<Texture2D>("CalamityMod/Particles/HollowCircleHardEdge").Value;
             Vector2 center = Projectile.Center - Main.screenPosition;
             float solidDuration = GetSolidDuration();
             float fade = Phase < 1f
@@ -203,103 +264,129 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 ? MathHelper.Clamp(RiseTimer / BalanceAegisBlade.WallRiseTime, 0f, 1f)
                 : 1f;
 
-            Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
-            const int segmentCount = 14;
-            for (int i = 0; i < segmentCount; i++)
-            {
-                float completion = i / (float)(segmentCount - 1);
-                if (completion < 1f - riseProgress)
-                    continue;
+            if (fade <= 0.01f)
+                return false;
 
-                Vector2 segmentPosition = center + new Vector2(0f, MathHelper.Lerp(-WallHalfHeight, WallHalfHeight, completion));
-                float width = 0.13f + 0.025f * MathF.Sin(Main.GlobalTimeWrappedHourly * 4f + i * 0.8f);
-                float height = WallHalfHeight / (float)segmentCount / bloom.Height * 2.8f;
-                Color color = Color.Lerp(CoreWhite, OuterGold, completion) with { A = 0 };
-                Main.EntitySpriteDraw(bloom, segmentPosition, null, color * fade * 0.76f,
-                    0f, bloom.Size() * 0.5f, new Vector2(width, height), SpriteEffects.None);
-
-                if (i % 2 == 0)
-                {
-                    float sideOffset = WallHalfWidth * 0.72f;
-                    Main.EntitySpriteDraw(bloom, segmentPosition + Vector2.UnitX * sideOffset, null,
-                        CoreGold with { A = 0 } * fade * 0.24f, 0f, bloom.Size() * 0.5f,
-                        new Vector2(0.06f, height * 0.9f), SpriteEffects.None);
-                    Main.EntitySpriteDraw(bloom, segmentPosition - Vector2.UnitX * sideOffset, null,
-                        CoreGold with { A = 0 } * fade * 0.24f, 0f, bloom.Size() * 0.5f,
-                        new Vector2(0.06f, height * 0.9f), SpriteEffects.None);
-                }
-            }
-
-            DrawMatrixWallFrame(center, fade, riseProgress);
-
-            Vector2 basePosition = center + Vector2.UnitY * WallHalfHeight;
-            Vector2 topPosition = center - Vector2.UnitY * WallHalfHeight;
-            float ringPulse = 0.8f + 0.2f * MathF.Sin(Main.GlobalTimeWrappedHourly * 5f);
-            Main.EntitySpriteDraw(ring, basePosition, null, CoreGold with { A = 0 } * fade * 0.55f,
-                0f, ring.Size() * 0.5f, new Vector2(0.42f, 0.17f) * ringPulse, SpriteEffects.None);
-            if (riseProgress >= 0.7f)
-            {
-                Main.EntitySpriteDraw(bloom, topPosition, null, CoreWhite with { A = 0 } * fade * 0.65f,
-                    0f, bloom.Size() * 0.5f, 0.48f, SpriteEffects.None);
-            }
-            Main.spriteBatch.ExitShaderRegion();
+            DrawStoneBody(center, fade, riseProgress, lightColor);
+            DrawGlowingSeams(center, fade, riseProgress);
             return false;
         }
 
-        private static void DrawMatrixWallFrame(Vector2 center, float fade, float riseProgress)
+        /// <summary>岩体：自下而上分段堆叠的碎岩贴图，每段有固定的旋转/翻转，看起来是"垒"起来的。</summary>
+        private void DrawStoneBody(Vector2 center, float fade, float riseProgress, Color lightColor)
         {
-            float visibleHeight = WallHalfHeight * 2f * riseProgress;
-            if (visibleHeight <= 1f)
-                return;
+            Texture2D[] stones =
+            {
+                AegisVisuals.Tex(AegisVisuals.TexRockB),
+                AegisVisuals.Tex(AegisVisuals.TexRockA),
+                AegisVisuals.Tex(AegisVisuals.TexRockC),
+            };
 
-            float top = center.Y + WallHalfHeight - visibleHeight;
-            Rectangle core = new(
-                (int)(center.X - WallHalfWidth),
-                (int)top,
-                WallHalfWidth * 2,
-                Math.Max(1, (int)visibleHeight));
+            float segmentHeight = WallHalfHeight * 2f / StoneSegments;
+            int seed = Projectile.identity;
 
+            for (int i = 0; i < StoneSegments; i++)
+            {
+                // completion 0 = 顶端，1 = 底端。升起时从底往顶逐段出现。
+                float completion = i / (float)(StoneSegments - 1);
+                if (completion < 1f - riseProgress)
+                    continue;
+
+                Texture2D stone = stones[(i + seed) % stones.Length];
+                Vector2 position = center + new Vector2(
+                    ((i + seed) % 3 - 1) * 2.4f,                        // 每段轻微左右错位，避免笔直呆板
+                    MathHelper.Lerp(-WallHalfHeight, WallHalfHeight, completion));
+
+                float rotation = ((i * 37 + seed * 13) % 360) * MathHelper.TwoPi / 360f;
+                SpriteEffects flip = ((i + seed) % 2 == 0) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
+
+                // 顶亮底暗，让墙有上下光照层次
+                Color stoneColor = Color.Lerp(StoneLit, StoneDark, completion * 0.75f);
+                stoneColor = Color.Lerp(stoneColor, lightColor.MultiplyRGB(stoneColor), 0.45f);
+
+                Main.EntitySpriteDraw(stone, position, null, stoneColor * fade, rotation,
+                    stone.Size() * 0.5f,
+                    new Vector2(AegisVisuals.RadiusScale(stone, WallHalfWidth * 1.22f),
+                                AegisVisuals.RadiusScale(stone, segmentHeight * 0.78f)),
+                    flip, 0);
+            }
+        }
+
+        /// <summary>炽金裂缝、顶部符文封印与底部炉光 —— 这堵墙是被圣火烧结起来的。</summary>
+        private void DrawGlowingSeams(Vector2 center, float fade, float riseProgress)
+        {
+            Texture2D cracks = AegisVisuals.Tex(AegisVisuals.TexScorch);
+            Texture2D bloom = AegisVisuals.Tex(AegisVisuals.TexBloom);
             float time = Main.GlobalTimeWrappedHourly;
-            Color matrixGold = new(255, 214, 72, 150);
-            Color matrixWhite = new(255, 244, 170, 170);
+            float segmentHeight = WallHalfHeight * 2f / StoneSegments;
 
-            DrawBorder(core, matrixGold * (0.7f * fade), 2);
-            DrawBorder(Inflate(core, 5 + (int)(MathF.Sin(time * 4f) * 2f)), matrixGold * (0.28f * fade), 1);
-            DrawBorder(Inflate(core, 14 + (int)(MathF.Sin(time * 2.2f + 1.4f) * 5f)), matrixGold * (0.14f * fade), 1);
+            Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
 
-            int scanSpacing = 16;
-            int scanOffset = (int)(time * 80f) % scanSpacing;
-            for (int y = core.Y + scanOffset; y < core.Bottom; y += scanSpacing)
+            // ① 段与段之间的炽金接缝：脉动，像还没冷却的熔接口
+            for (int i = 0; i < StoneSegments - 1; i++)
             {
-                float local = Utils.GetLerpValue(core.Y, core.Bottom, y, true);
-                float pulse = 0.45f + 0.35f * MathF.Sin(time * 8f + local * MathHelper.TwoPi);
-                DrawRect(new Rectangle(core.X + 3, y, core.Width - 6, 1), matrixGold * (pulse * fade));
+                float completion = (i + 0.5f) / (StoneSegments - 1f);
+                if (completion < 1f - riseProgress)
+                    continue;
+
+                Vector2 seamPosition = center + new Vector2(0f,
+                    MathHelper.Lerp(-WallHalfHeight, WallHalfHeight, completion));
+                float pulse = 0.55f + 0.45f * MathF.Sin(time * 3.4f + i * 1.15f);
+
+                Main.EntitySpriteDraw(cracks, seamPosition, null,
+                    AegisVisuals.Add(AegisVisuals.Flame, 0.34f * fade * pulse),
+                    (i % 2 == 0 ? 1f : -1f) * 0.35f, cracks.Size() * 0.5f,
+                    new Vector2(AegisVisuals.RadiusScale(cracks, WallHalfWidth * 1.15f),
+                                AegisVisuals.RadiusScale(cracks, segmentHeight * 0.34f)),
+                    SpriteEffects.None, 0);
+
+                Main.EntitySpriteDraw(bloom, seamPosition, null,
+                    AegisVisuals.Add(AegisVisuals.Ember, 0.26f * fade * pulse),
+                    0f, bloom.Size() * 0.5f,
+                    new Vector2(AegisVisuals.RadiusScale(bloom, WallHalfWidth * 0.95f),
+                                AegisVisuals.RadiusScale(bloom, segmentHeight * 0.22f)),
+                    SpriteEffects.None, 0);
             }
 
-            for (int i = 0; i < 5; i++)
+            // ② 侧缘的余烬轮廓：让墙从背景里"切"出来
+            for (int side = -1; side <= 1; side += 2)
             {
-                float completion = i / 4f;
-                int y = (int)MathHelper.Lerp(core.Y + 4, core.Bottom - 4, completion);
-                int notchWidth = 7 + (i % 2) * 5;
-                DrawRect(new Rectangle(core.X - 8, y, notchWidth, 2), matrixWhite * (0.36f * fade));
-                DrawRect(new Rectangle(core.Right + 1, y, notchWidth, 2), matrixWhite * (0.36f * fade));
+                Vector2 edgePosition = center + new Vector2(side * WallHalfWidth * 0.92f,
+                    MathHelper.Lerp(WallHalfHeight, -WallHalfHeight, riseProgress * 0.5f));
+                Main.EntitySpriteDraw(bloom, edgePosition, null,
+                    AegisVisuals.Add(AegisVisuals.Ember, 0.22f * fade),
+                    0f, bloom.Size() * 0.5f,
+                    new Vector2(AegisVisuals.RadiusScale(bloom, 5f),
+                                AegisVisuals.RadiusScale(bloom, WallHalfHeight * riseProgress)),
+                    SpriteEffects.None, 0);
             }
-        }
 
-        private static Rectangle Inflate(Rectangle rectangle, int amount) =>
-            new(rectangle.X - amount, rectangle.Y - amount, rectangle.Width + amount * 2, rectangle.Height + amount * 2);
+            // ③ 底部炉光：墙是从这里被顶上来的
+            Vector2 basePosition = center + Vector2.UnitY * WallHalfHeight;
+            float basePulse = 0.75f + 0.25f * MathF.Sin(time * 5f);
+            Main.EntitySpriteDraw(bloom, basePosition, null,
+                AegisVisuals.Add(AegisVisuals.Flame, 0.5f * fade * basePulse),
+                0f, bloom.Size() * 0.5f,
+                new Vector2(AegisVisuals.RadiusScale(bloom, WallHalfWidth * 1.5f),
+                            AegisVisuals.RadiusScale(bloom, 14f)),
+                SpriteEffects.None, 0);
 
-        private static void DrawBorder(Rectangle rectangle, Color color, int thickness)
-        {
-            DrawRect(new Rectangle(rectangle.X, rectangle.Y, rectangle.Width, thickness), color);
-            DrawRect(new Rectangle(rectangle.X, rectangle.Bottom - thickness, rectangle.Width, thickness), color);
-            DrawRect(new Rectangle(rectangle.X, rectangle.Y, thickness, rectangle.Height), color);
-            DrawRect(new Rectangle(rectangle.Right - thickness, rectangle.Y, thickness, rectangle.Height), color);
-        }
+            // ④ 顶部符文封印：升到七成后才盖章，作为"这堵墙成形了"的标记
+            if (riseProgress >= 0.7f)
+            {
+                Vector2 topPosition = center - Vector2.UnitY * WallHalfHeight;
+                float sealStrength = Utils.GetLerpValue(0.7f, 1f, riseProgress, true) * fade;
+                AegisVisuals.DrawRuneSigil(topPosition, WallHalfWidth * 1.35f,
+                    time * 0.9f, sealStrength * 0.85f, new Vector2(1f, 0.5f), 1f);
+                Main.EntitySpriteDraw(bloom, topPosition, null,
+                    AegisVisuals.Add(AegisVisuals.Core, 0.45f * sealStrength),
+                    0f, bloom.Size() * 0.5f,
+                    new Vector2(AegisVisuals.RadiusScale(bloom, WallHalfWidth * 0.8f),
+                                AegisVisuals.RadiusScale(bloom, 10f)),
+                    SpriteEffects.None, 0);
+            }
 
-        private static void DrawRect(Rectangle rectangle, Color color)
-        {
-            Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, rectangle, color);
+            Main.spriteBatch.ExitShaderRegion();
         }
     }
 }

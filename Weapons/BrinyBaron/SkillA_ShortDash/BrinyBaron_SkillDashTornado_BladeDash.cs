@@ -384,23 +384,37 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
         {
             Vector2 adjustedVelocity = Collision.TileCollision(owner.position, desiredVelocity, owner.width, owner.height, false, false, (int)owner.gravDir);
 
-            if (adjustedVelocity.X != desiredVelocity.X || adjustedVelocity.Y != desiredVelocity.Y)
+            float desiredSpeed = desiredVelocity.Length();
+            if (desiredSpeed <= 0.01f)
+                return Vector2.Zero;
+
+            // 1. 碰到竖直墙壁（X轴运动受阻）：切断冲刺，弹幕直接消失，绝不穿墙或沿着墙上下滑行
+            bool hitWall = Math.Abs(desiredVelocity.X) > 0.01f && Math.Abs(adjustedVelocity.X) < 0.01f;
+            if (hitWall)
+            {
+                GrantTideFromTileContact(owner);
+                return Vector2.Zero;
+            }
+
+            // 2. 贴近/触碰地面或天花板（Y轴运动受阻）：
+            // 立即在地面上保持全速 DashSpeed 水平滑行
+            bool hitFloorOrCeiling = Math.Abs(desiredVelocity.Y) > 0.01f && Math.Abs(adjustedVelocity.Y) < 0.01f;
+            if (hitFloorOrCeiling)
             {
                 GrantTideFromTileContact(owner);
 
-                if (adjustedVelocity.LengthSquared() > 0.01f)
-                    return adjustedVelocity;
+                int horizDir = desiredVelocity.X != 0f ? Math.Sign(desiredVelocity.X) : owner.direction;
+                Vector2 groundSlide = new Vector2(horizDir * desiredSpeed, 0f);
+                Vector2 groundSlideAdjusted = Collision.TileCollision(owner.position, groundSlide, owner.width, owner.height, false, false, (int)owner.gravDir);
 
-                Vector2 horizontalSlide = new Vector2(desiredVelocity.X, 0f);
-                Vector2 verticalSlide = new Vector2(0f, desiredVelocity.Y);
+                // 如果地面前方无障碍，则保持全速滑行
+                if (Math.Abs(groundSlideAdjusted.X) > 0.01f)
+                {
+                    return groundSlideAdjusted;
+                }
 
-                Vector2 horizontalAdjusted = Collision.TileCollision(owner.position, horizontalSlide, owner.width, owner.height, false, false, (int)owner.gravDir);
-                if (horizontalAdjusted.LengthSquared() > 0.01f)
-                    return horizontalAdjusted;
-
-                Vector2 verticalAdjusted = Collision.TileCollision(owner.position, verticalSlide, owner.width, owner.height, false, false, (int)owner.gravDir);
-                if (verticalAdjusted.LengthSquared() > 0.01f)
-                    return verticalAdjusted;
+                // 如果滑行前方撞墙，直接停止并消散
+                return Vector2.Zero;
             }
 
             return adjustedVelocity;

@@ -40,8 +40,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
         public const int ScopeChargeFrames = 90;
         public const int MinimumScopeChargeFrames = 12;
         public const int SlideFrames = 15;
-        public const int SlideChainWindowFrames = 120;
-        public const int SlideCooldownFrames = 45;
+        public const int SlideChainWindowFrames = 120; // 2 seconds window between slides
+        public const int SlideCooldownFrames = 1800;   // 30 seconds cooldown after complete slide sequence
+        public const int MaxSlideChainCount = 4;       // Up to 4 chained slides
         public const float FlightSpeedScale = 0.67f;
 
         public static AMRProgressionStage Stage

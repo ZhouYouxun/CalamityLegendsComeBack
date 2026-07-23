@@ -14,16 +14,16 @@ Mods: {
 					ZoomDisabled: Disabled
 					LegendaryHint: Hold Shift to view all unlocked upgrades and legendary text
 					LatestUnlockPrefix: Latest Upgrade: {0}
-					Stage0: .408 proprietary round: extreme velocity with partial armor penetration
-					Stage1: Eye of Cthulhu executed: hits inflict Marked for Death and strip more defense
-					Stage2: Eater of Worlds or Brain of Cthulhu executed: impacts form a metal jet through the target
-					Stage3: Wall of Flesh executed: use Calamity's dash key or double-tap left/right for two chained slides that empower the next aimed shot
-					Stage4: Any mechanical boss executed: the rebuilt action shortens automatic fire interval to 24 frames
-					Stage5: Plantera executed: calibrate repeatedly on one target; the third hit deals greatly increased damage
-					Stage6: Moon Lord executed: critical chance above 100% becomes additional critical damage
-					Stage7: Providence executed: critical hits rupture the target's core for more critical damage
-					Stage8: Devourer of Gods executed: slides enter the dimensional seam and empower aimed rounds further
-					Stage9: Exo Mechs or Supreme Witch executed: onyx marker and detonator rounds load alternately
+					Stage0: .408 proprietary round: wider collision bounds. Hits deal 10% max HP true damage (0.5% for Bosses), scaled up by target DR
+					Stage1: Eye of Cthulhu executed: hits permanently reduce target defense by 60% (non-stacking)
+					Stage2: Eater of Worlds or Brain of Cthulhu executed: impacts spew metal jet shards dealing 30% damage and applying true damage & defense reduction
+					Stage3: Wall of Flesh executed: press dash towards mouse for invulnerable slides; chain up to 4 slides within 2s, empowering next attack with 2x damage & heavier metal jets
+					Stage4: Any mechanical boss executed: fire interval reduced to 24 frames (0.4s)
+					Stage5: Plantera executed: calibrate repeatedly on one target for 1.45x damage increase
+					Stage6: Moon Lord executed: critical chance above 100% is converted into extra critical damage multiplier
+					Stage7: Providence executed: hits spawn 2 homing sub-bullets, crits spawn 6 (15% damage), flying sequentially towards target over consecutive frames
+					Stage8: Devourer of Gods executed: God-Slayer Firearm! .408 rounds execute regular enemies; slides upgraded to Dimensional Strike
+					Stage9: Exo Mechs or Supreme Witch executed: Draedon Onyx Explosive Mag! Marker rounds stick to targets/tiles (tiles spawn a trigger zone), detonator rounds trigger 200% weapon damage Onyx explosions
 					LegendaryText:
 						'''
 						You and your cover make me laugh.
@@ -40,7 +40,10 @@ Mods: {
 				AMRAimScope.DisplayName: Anti-materiel Sight Lines
 				AMRRound.DisplayName: .408 Anti-materiel Round
 				AMROnyxDetonation.DisplayName: Onyx Detonation
-				AMRSlideExplosion.DisplayName: A M R Slide Explosion
+				AMRSlideExplosion.DisplayName: AMR Slide Explosion
+				AMRMetalJetShard.DisplayName: Metal Jet Shard
+				AMRSubBullet.DisplayName: AMR Homing Sub-Bullet
+				AMROnyxTileMarker.DisplayName: Onyx Tile Marker
 			}
 		}
 	}

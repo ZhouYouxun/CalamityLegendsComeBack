@@ -1,28 +1,36 @@
 using System;
+using CalamityLegendsComeBack.Weapons.AegisBlade.Visuals;
 using CalamityMod;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.Audio;
-using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 {
+    /// <summary>
+    /// 圣火炉心。左键轮盘向两侧甩出，减速悬停后炸开为四枚追踪圣火。
+    /// 视觉参考 Providence 的 HolyBomb：果冻状挤压呼吸 + 周期性"打嗝" + 三重爆闪消亡。
+    /// </summary>
     public class AegisBigFireball : ModProjectile
     {
-        public override string Texture => "CalamityMod/ExtraTextures/TinyGreyscaleCircle";
+        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         private const int MaxHoverTimer = 65;
+        private const int HiccupInterval = 22;   // 每隔多少帧抽搐一次（HolyBomb 是 120，这里寿命短所以更密）
+        private const float CoreRadius = 21f;
 
         private ref float Timer => ref Projectile.ai[0];
         private ref float HasErupted => ref Projectile.ai[1];
 
-        private static readonly Color CoreColor  = new(255, 245, 190);
-        private static readonly Color FlameColor = new(255, 180, 50);
-        private static readonly Color EmberColor = new(255, 110, 30);
+        /// <summary>0 → 1 的挤压动画进度，每次"打嗝"重置为 0。</summary>
+        private float squishAnimation = 1f;
+
+        /// <summary>爆裂前的收紧预警：最后 18 帧核心急剧收缩变亮。</summary>
+        private float ImminentEruption => Utils.GetLerpValue(18f, 2f, Projectile.timeLeft, true);
 
         public override void SetStaticDefaults()
         {
@@ -57,16 +65,97 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             }
 
             Projectile.rotation += 0.08f;
-            Lighting.AddLight(Projectile.Center, FlameColor.ToVector3() * 1.1f);
+            AegisVisuals.Light(Projectile.Center, 1.15f);
 
-            if (!Main.dedServ && Main.rand.NextBool(2))
+            // ── HolyBomb 式挤压呼吸：平时缓慢回弹，每隔 HiccupInterval 帧猛地抽搐一次 ──
+            squishAnimation = MathHelper.Clamp(squishAnimation + 0.06f, 0f, 1f);
+            if (Timer > 6f && Timer % HiccupInterval == 0f)
             {
-                Vector2 particleVel = Main.rand.NextVector2Circular(2.5f, 2.5f);
-                GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
-                    Projectile.Center + Main.rand.NextVector2Circular(16f, 16f), particleVel,
-                    Color.Lerp(FlameColor, CoreColor, Main.rand.NextFloat()), Color.Transparent,
-                    Main.rand.NextFloat(0.35f, 0.65f), Main.rand.Next(12, 20), Main.rand.NextFloat(-0.04f, 0.04f)));
+                squishAnimation = 0f;
+                SpawnHiccup();
             }
+
+            EmitCoreFlames();
+        }
+
+        /// <summary>周期性抽搐：炉心一颤，火屑从顶部炸出，配合挤压动画重置。</summary>
+        private void SpawnHiccup()
+        {
+            SoundEngine.PlaySound(SoundID.Item20 with { Volume = 0.4f, Pitch = 0.45f }, Projectile.Center);
+            if (Main.dedServ)
+                return;
+
+            for (int i = 0; i < 8; i++)
+            {
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    Projectile.Center + new Vector2(0f, -10f),
+                    new Vector2(Main.rand.NextFloat(-4.5f, 4.5f), Main.rand.NextFloat(-3.2f, 0.8f)),
+                    false, Main.rand.Next(18, 28), Main.rand.NextFloat(0.22f, 0.4f),
+                    AegisVisuals.RandomFlameColor(), true, false, true));
+            }
+
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero,
+                AegisVisuals.Add(AegisVisuals.Gold, 0.55f), AegisVisuals.TexBloom, Vector2.One,
+                0f, 0.12f, 0.55f, 10));
+        }
+
+        private void EmitCoreFlames()
+        {
+            if (Main.dedServ)
+                return;
+
+            // 环绕炉心公转的火屑：不是随机撒，而是沿轨道被甩出来
+            if ((int)Timer % 2 == 0)
+            {
+                float orbit = Timer * 0.35f + Projectile.identity;
+                Vector2 orbitDirection = orbit.ToRotationVector2();
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    Projectile.Center + orbitDirection * CoreRadius * 0.9f,
+                    orbitDirection.RotatedBy(MathHelper.PiOver2) * 1.4f + orbitDirection * 0.5f,
+                    false, Main.rand.Next(12, 20), Main.rand.NextFloat(0.16f, 0.3f),
+                    AegisVisuals.RandomFlameColor(), true, false, true));
+            }
+
+            // 深灰圣灰：Providence 圣火的固定搭配，让炉心不是纯发光球
+            if (Main.rand.NextBool(2))
+            {
+                GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
+                    Projectile.Center + Main.rand.NextVector2Circular(16f, 16f),
+                    Main.rand.NextVector2Circular(2.4f, 2.4f) - Vector2.UnitY * 0.6f,
+                    Color.Lerp(AegisVisuals.Charred, Color.DarkSlateGray, Main.rand.NextFloat(0.3f, 0.9f)),
+                    Color.Transparent, Main.rand.NextFloat(0.4f, 0.75f), Main.rand.Next(20, 34),
+                    Main.rand.NextFloat(-0.04f, 0.04f)));
+            }
+
+            if (Main.rand.NextBool(3))
+            {
+                Dust ember = Dust.NewDustPerfect(
+                    Projectile.Center + Main.rand.NextVector2Circular(18f, 18f),
+                    AegisVisuals.ProfanedFireDust, Main.rand.NextVector2Circular(2f, 2f),
+                    0, Color.White, Main.rand.NextFloat(1.1f, 1.9f));
+                ember.noGravity = true;
+            }
+
+            // 爆裂预警：最后 18 帧火星被反向"吸"回炉心
+            if (ImminentEruption > 0.05f && Main.rand.NextBool(2))
+            {
+                Vector2 inward = Main.rand.NextFloat(MathHelper.TwoPi).ToRotationVector2();
+                GeneralParticleHandler.SpawnParticle(new SparkParticle(
+                    Projectile.Center + inward * Main.rand.NextFloat(46f, 82f),
+                    -inward * Main.rand.NextFloat(3f, 7f) * ImminentEruption, false,
+                    Main.rand.Next(10, 18), Main.rand.NextFloat(0.5f, 1.1f),
+                    AegisVisuals.Gradient(Main.rand.NextFloat(0f, 0.5f))));
+            }
+        }
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            if (Main.dedServ)
+                return;
+
+            Vector2 direction = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY);
+            AegisVisuals.DirectionalImpact(target.Center, direction, 0.9f);
+            AegisVisuals.EmberJet(target.Center, direction, 5, 0.85f, 0.7f);
         }
 
         public override void OnKill(int timeLeft)
@@ -75,13 +164,24 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             HasErupted = 1f;
 
             SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.82f, Pitch = 0.1f }, Projectile.Center);
+            SoundEngine.PlaySound(SoundID.DD2_BetsyFireballImpact with { Volume = 0.7f, Pitch = 0.35f }, Projectile.Center);
 
             if (!Main.dedServ)
             {
-                GeneralParticleHandler.SpawnParticle(new DetailedExplosion(Projectile.Center, Vector2.Zero,
-                    CoreColor, new Vector2(1.2f, 1.2f), 0f, 0f, 0.6f, 16));
-                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Vector2.Zero,
-                    FlameColor, Vector2.One, 0f, 0.08f, 1.4f, 18));
+                // Providence 三重爆闪 + 火焰体积 + 圣灰
+                AegisVisuals.HolyDetonation(Projectile.Center, 2.4f);
+                AegisVisuals.CoronaRing(Projectile.Center, 16, 1.5f);
+
+                // 四向冲击光锥（BlastCone），指向即将飞出的四枚圣火
+                for (int i = 0; i < 4; i++)
+                {
+                    float angle = MathHelper.TwoPi * i / 4f;
+                    GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero,
+                        AegisVisuals.Add(AegisVisuals.Gold, 0.85f), AegisVisuals.TexBlastCone,
+                        new Vector2(Main.rand.NextFloat(3.2f, 4.6f), 1.3f), angle, 0.85f, 0f, 24));
+                }
+
+                AegisVisuals.Screenshake(Projectile.Center, 3.2f, 1100f);
             }
 
             if (Projectile.owner == Main.myPlayer)
@@ -104,39 +204,42 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         {
             if (Main.dedServ) return false;
 
-            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Texture2D ring  = ModContent.Request<Texture2D>("CalamityMod/Particles/HollowCircleHardEdge").Value;
+            Vector2 drawPosition = Projectile.Center - Main.screenPosition;
+            float growth = MathHelper.Clamp(Timer / 12f, 0.25f, 1f);
 
-            Vector2 drawPos = Projectile.Center - Main.screenPosition;
-            float pulse = 0.85f + 0.15f * MathF.Sin(Main.GlobalTimeWrappedHourly * 8f + Projectile.whoAmI);
-            float scaleProgress = MathHelper.Clamp(Timer / 15f, 0.2f, 1f);
+            // HolyBomb 的挤压：横向鼓、纵向瘪，然后回弹
+            float squish = CalamityUtils.SineBumpEasing(squishAnimation, 1) * 0.26f;
+            Vector2 squishVector = new(1f + squish, 1f - squish);
+
+            // 爆裂前收紧：核心变小变亮，外圈符文急速旋转
+            float eruption = ImminentEruption;
+            float radius = CoreRadius * growth * MathHelper.Lerp(1f, 0.74f, eruption);
+            float brightness = MathHelper.Lerp(1f, 1.5f, eruption);
+            float spin = Main.GlobalTimeWrappedHourly * (2.4f + eruption * 9f) + Projectile.identity;
 
             Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
 
-            // 绘制旧残影拖尾
-            for (int i = 0; i < Projectile.oldPos.Length; i++)
+            // ① 残影：余烬色，越旧越暗
+            Texture2D fire = AegisVisuals.Tex(AegisVisuals.TexFireBody);
+            for (int i = Projectile.oldPos.Length - 1; i >= 0; i--)
             {
                 if (Projectile.oldPos[i] == Vector2.Zero) continue;
-                Vector2 oldDrawPos = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
-                float trailFactor = 1f - i / (float)Projectile.oldPos.Length;
-                Color trailColor = Color.Lerp(EmberColor, FlameColor, trailFactor) * (trailFactor * 0.45f);
-                Main.EntitySpriteDraw(bloom, oldDrawPos, null, trailColor with { A = 0 },
-                    0f, bloom.Size() * 0.5f, (0.45f + trailFactor * 0.25f) * scaleProgress, SpriteEffects.None);
+                float completion = i / (float)Projectile.oldPos.Length;
+                Vector2 trailPosition = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
+                Main.EntitySpriteDraw(fire, trailPosition, null,
+                    AegisVisuals.Add(Color.Lerp(AegisVisuals.Flame, AegisVisuals.Ember, completion), 0.36f * (1f - completion)),
+                    -Projectile.rotation * 0.6f + completion * 2.2f, fire.Size() * 0.5f,
+                    new Vector2(AegisVisuals.RadiusScale(fire, radius * MathHelper.Lerp(0.85f, 0.3f, completion))),
+                    SpriteEffects.None, 0);
             }
 
-            // 核心外环与发光
-            float ringRotation = Main.GlobalTimeWrappedHourly * 3f + Projectile.whoAmI;
-            Main.EntitySpriteDraw(ring, drawPos, null, FlameColor with { A = 0 } * 0.6f * pulse,
-                ringRotation, ring.Size() * 0.5f, 0.38f * scaleProgress, SpriteEffects.None);
+            // ② 符文封印环：炉心不是一团火，而是一颗被封住的火
+            AegisVisuals.DrawRuneSigil(drawPosition, radius * 1.75f, spin, 0.5f * growth * brightness,
+                squishVector, 0.9f + eruption * 0.6f);
 
-            Main.EntitySpriteDraw(ring, drawPos, null, CoreColor with { A = 0 } * 0.45f * pulse,
-                -ringRotation * 1.5f, ring.Size() * 0.5f, 0.26f * scaleProgress, SpriteEffects.None);
-
-            Main.EntitySpriteDraw(bloom, drawPos, null, FlameColor with { A = 0 } * 0.8f,
-                0f, bloom.Size() * 0.5f, 0.65f * scaleProgress * pulse, SpriteEffects.None);
-
-            Main.EntitySpriteDraw(bloom, drawPos, null, CoreColor with { A = 0 } * 0.95f,
-                0f, bloom.Size() * 0.5f, 0.32f * scaleProgress, SpriteEffects.None);
+            // ③ 日核本体
+            AegisVisuals.DrawSolarCore(drawPosition, radius, brightness * growth,
+                Projectile.rotation, squishVector);
 
             Main.spriteBatch.ExitShaderRegion();
             return false;

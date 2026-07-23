@@ -38,8 +38,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
 
         public override void SetDefaults()
         {
-            Projectile.width = 8;
-            Projectile.height = 8;
+            Projectile.width = 14;
+            Projectile.height = 14;
             Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Ranged;
             Projectile.ignoreWater = true;
@@ -66,6 +66,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
             Lighting.AddLight(Projectile.Center, new Color(255, 196, 64).ToVector3() * 0.7f);
 
+            // 星流/终灾阶段：引爆弹 (第二发) 穿过物块上的玛瑙标记判定圆时，触发引爆
+            if (AMRBalance.OnyxSequenceUnlocked && !IsMarkerRound && Projectile.owner == Main.myPlayer)
+            {
+                CheckTileMarkerDetonation();
+            }
+
             // Counted in sub-steps rather than real frames
             visualAgeSubSteps++;
             if (visualAgeSubSteps == HiddenSubSteps + 1)
@@ -77,6 +83,25 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             visualAgeFrames++;
             SpawnFlightWake();
             SpawnFlightTrailSparks();
+        }
+
+        private void CheckTileMarkerDetonation()
+        {
+            int markerType = ModContent.ProjectileType<AMROnyxTileMarker>();
+            foreach (Projectile proj in Main.ActiveProjectiles)
+            {
+                if (proj.type == markerType && proj.owner == Projectile.owner)
+                {
+                    if (Vector2.Distance(Projectile.Center, proj.Center) <= AMROnyxTileMarker.TriggerRadius)
+                    {
+                        if (proj.ModProjectile is AMROnyxTileMarker tileMarker)
+                        {
+                            int weaponDamage = Projectile.owner >= 0 ? Main.player[Projectile.owner].GetWeaponDamage(Main.player[Projectile.owner].HeldItem) : Projectile.damage;
+                            tileMarker.Detonate((int)(weaponDamage * 2.0f)); // 200% 攻击力伤害
+                        }
+                    }
+                }
+            }
         }
 
         // ─────────────────────────────────────────────────────────────────
@@ -259,15 +284,57 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
         {
             hitAnyTarget = true;
 
+            // Stage 0 天赋：命中造成 10% 最大生命值真实伤害 (Boss 降低至 0.5%，受 DR 提升)
+            if (target.active && target.lifeMax > 5)
+            {
+                bool isBoss = target.boss || target.type == NPCID.TargetDummy || target.realLife >= 0;
+                float trueDamageRatio = isBoss ? 0.005f : 0.10f;
+                float trueDamage = target.lifeMax * trueDamageRatio;
+
+                // DR (Damage Reduction) 加成
+                float dr = target.Calamity().DR;
+                if (dr > 0f)
+                    trueDamage *= (1f + dr);
+
+                int finalTrueDamage = Math.Max(1, (int)trueDamage);
+                target.life -= finalTrueDamage;
+                CombatText.NewText(target.getRect(), new Color(255, 140, 40), finalTrueDamage, true);
+
+                if (target.life <= 0)
+                    target.checkDead();
+            }
+
+            // Stage 1 克眼强化：防御力永久降低 60%
             if (AMRBalance.DeathMarkUnlocked)
             {
                 target.AddBuff(ModContent.BuffType<MarkedforDeath>(), 5 * 60);
-                int defenseLoss = Math.Max(25, (int)(target.defense * (IsAimedShot ? 0.6f : 0.4f)));
+                int defenseLoss = Math.Max(25, (int)(target.defense * 0.6f));
                 target.Calamity().miscDefenseLoss = Math.Max(target.Calamity().miscDefenseLoss, defenseLoss);
             }
 
-            if (AMRBalance.MetalJetUnlocked)
+            // Stage 2 克脑/世吞强化：沿弹道向前方喷射金属射流实体碎片
+            if (AMRBalance.MetalJetUnlocked && Projectile.owner == Main.myPlayer)
+            {
+                SpawnMetalJetProjectiles(target.Center);
                 SpawnMetalJet(target.Center);
+            }
+
+            // Stage 7 亵渎神明/守卫者强化：普通 2 颗，暴击 6 颗强追踪小弹幕依次在附近出现发射
+            if (AMRBalance.CoreRuptureUnlocked && Projectile.owner == Main.myPlayer)
+            {
+                SpawnSubBullets(target, hit.Crit);
+            }
+
+            // Stage 8 神吞强化：弑神之铳秒杀普通小怪
+            if (AMRBalance.DimensionalSlideUnlocked && target.active)
+            {
+                bool isBossOrSpecial = target.boss || target.type == NPCID.TargetDummy || target.realLife >= 0;
+                if (!isBossOrSpecial && target.lifeMax < 1000000)
+                {
+                    target.life = 0;
+                    target.checkDead();
+                }
+            }
 
             if (Projectile.owner >= 0 && Projectile.owner < Main.maxPlayers)
                 Main.player[Projectile.owner].GetModPlayer<AMRPlayer>().RegisterCalibrationHit(target.whoAmI);
@@ -276,6 +343,58 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
                 ResolveOnyxSequence(target, damageDone);
 
             SpawnImpact(target.Center, hit.Crit);
+        }
+
+        private void SpawnMetalJetProjectiles(Vector2 impactCenter)
+        {
+            Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            int count = IsAimedShot ? 10 : 6;
+            int shardDamage = (int)(Projectile.damage * 0.3f);
+
+            for (int i = 0; i < count; i++)
+            {
+                float spreadAngle = MathHelper.ToRadians(28f);
+                float angle = MathHelper.Lerp(-spreadAngle, spreadAngle, i / (float)(count - 1));
+                Vector2 shardVel = forward.RotatedBy(angle) * Main.rand.NextFloat(16f, 26f);
+
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    impactCenter + forward * 8f,
+                    shardVel,
+                    ModContent.ProjectileType<AMRMetalJetShard>(),
+                    Math.Max(1, shardDamage),
+                    Projectile.knockBack * 0.3f,
+                    Projectile.owner);
+            }
+        }
+
+        private void SpawnSubBullets(NPC target, bool critical)
+        {
+            int bulletCount = critical ? 6 : 2;
+            int subDamage = Math.Max(1, (int)(Projectile.damage * 0.15f));
+            Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 normal = new(-forward.Y, forward.X);
+
+            for (int i = 0; i < bulletCount; i++)
+            {
+                // 侧向拉开生成位置
+                float sideSign = (i % 2 == 0) ? -1f : 1f;
+                Vector2 spawnOffset = normal * (40f + i * 12f) * sideSign - forward * (20f + i * 15f);
+                Vector2 spawnPos = target.Center + spawnOffset;
+                Vector2 initVel = (target.Center - spawnPos).SafeNormalize(Vector2.UnitX) * 18f;
+
+                // 带有 i * 3 帧的递增延迟，使得 6 颗小弹在几十帧内依次连续现身并强追踪飞向敌人！
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    spawnPos,
+                    initVel,
+                    ModContent.ProjectileType<AMRSubBullet>(),
+                    subDamage,
+                    0.5f,
+                    Projectile.owner,
+                    target.whoAmI,
+                    i * 3); // ai[1] 为延迟帧数
+            }
         }
 
         private void ResolveOnyxSequence(NPC target, int damageDone)
@@ -421,6 +540,27 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
         public override bool OnTileCollide(Vector2 oldVelocity)
         {
             Collision.HitTiles(Projectile.position, Projectile.velocity, Projectile.width, Projectile.height);
+
+            // 克脑/世吞后：撞击物块喷射金属碎片
+            if (AMRBalance.MetalJetUnlocked && Projectile.owner == Main.myPlayer)
+            {
+                SpawnMetalJetProjectiles(Projectile.Center);
+            }
+
+            // 星流/终灾后：标记弹 (第一发) 撞击物块时，生成物块粘附标记
+            if (AMRBalance.OnyxSequenceUnlocked && IsMarkerRound && Projectile.owner == Main.myPlayer)
+            {
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    Projectile.Center,
+                    Vector2.Zero,
+                    ModContent.ProjectileType<AMROnyxTileMarker>(),
+                    0,
+                    0f,
+                    Projectile.owner);
+                SoundEngine.PlaySound(SoundID.Item4 with { Volume = 0.4f, Pitch = -0.3f }, Projectile.Center);
+            }
+
             SpawnImpact(Projectile.Center, false);
             SoundEngine.PlaySound(SoundID.Dig with { Volume = 0.7f }, Projectile.Center);
             return true;

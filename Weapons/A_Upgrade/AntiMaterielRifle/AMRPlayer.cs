@@ -122,41 +122,54 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             return 0;
         }
 
-        private void TryStartSlide(int direction)
+        private void TryStartSlide(int rawDirection)
         {
             if (slideTimer > 0)
                 return;
 
             if (slideChainWindow > 0 && slidesRemaining > 0)
             {
-                StartSlide(direction);
+                StartSlide();
                 return;
             }
 
             if (slideCooldown > 0)
                 return;
 
-            slidesRemaining = 2;
-            slideChainWindow = AMRBalance.SlideChainWindowFrames;
-            slideCooldown = AMRBalance.SlideCooldownFrames;
-            StartSlide(direction);
+            slidesRemaining = AMRBalance.MaxSlideChainCount; // 4 slides per series
+            StartSlide();
         }
 
-        private void StartSlide(int direction)
+        private void StartSlide()
         {
-            direction = direction < 0 ? -1 : 1;
-            slideDirection = Vector2.UnitX * direction;
+            Vector2 mouseWorld = NewLegendAntiMaterielRifle.GetMouseWorld(Player);
+            Vector2 targetDir = (mouseWorld - Player.Center).SafeNormalize(Vector2.UnitX * Player.direction);
+            
+            slideDirection = targetDir;
             slideTimer = AMRBalance.SlideFrames;
             slideVisualAge = 0;
             slideSerial++;
             slidesRemaining--;
             slideEmpoweredShot = true;
             rotationRecoveryTimer = 12;
-            Player.ChangeDir(direction);
+
+            int faceDir = slideDirection.X >= 0 ? 1 : -1;
+            Player.ChangeDir(faceDir);
             Player.dashTime = 0;
             Player.dashDelay = AMRBalance.SlideCooldownFrames;
             Player.Calamity().dashTimeMod = 0;
-            Player.Calamity().GeneralScreenShakePower = 3f;
+            Player.Calamity().GeneralScreenShakePower = AMRBalance.DimensionalSlideUnlocked ? 5f : 3f;
+
+            // 每次冲刺开启 2 秒 (120 帧) 连冲可续接窗口
+            slideChainWindow = AMRBalance.SlideChainWindowFrames;
+
+            // 当 4 次冲刺用完时，正式触发 30 秒 (1800 帧) 冷却
+            if (slidesRemaining <= 0)
+            {
+                slideCooldown = AMRBalance.SlideCooldownFrames;
+                slideChainWindow = 0;
+            }
+
             SpawnSlideStartEffects();
         }
 
@@ -169,7 +182,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             {
                 slideChainWindow--;
                 if (slideChainWindow <= 0)
+                {
                     slidesRemaining = 0;
+                    slideCooldown = AMRBalance.SlideCooldownFrames; // 连冲超时没续接也触发30s CD
+                }
             }
 
             if (calibrationTimer > 0)
@@ -181,15 +197,20 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
 
             if (slideTimer > 0)
             {
-                float speed = AMRBalance.DimensionalSlideUnlocked ? 8.4f : 6.6f;
+                float speed = AMRBalance.DimensionalSlideUnlocked ? 18.5f : 14.2f;
                 Player.velocity = slideDirection * speed;
+
+                // 完全无敌帧与贯穿防伤
                 Player.immune = true;
-                Player.immuneTime = System.Math.Max(Player.immuneTime, 2);
+                Player.immuneNoBlink = true;
+                Player.immuneTime = Math.Max(Player.immuneTime, 4);
+
                 Player.fallStart = (int)(Player.position.Y / 16f);
                 Player.dashTime = 0;
                 Player.dashDelay = AMRBalance.SlideCooldownFrames;
                 Player.Calamity().dashTimeMod = 0;
-                Player.fullRotation = -0.22f * slideDirection.X * Player.gravDir;
+
+                Player.fullRotation = slideDirection.ToRotation() - (Player.direction == 1 ? 0f : MathHelper.Pi);
                 Player.fullRotationOrigin = Player.Size * 0.5f;
                 slideVisualAge++;
                 SpawnSlideTrailEffects();
@@ -271,6 +292,23 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
                 new Color(73, 48, 12), new Vector2(0.55f, 1.45f), forward.ToRotation(), 0.08f, 1.25f, 18));
             GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(center, -forward * 0.25f,
                 new Color(255, 195, 58), new Vector2(0.42f, 1.18f), forward.ToRotation(), 0.04f, 0.88f, 15));
+
+            // 神吞阶段：“维度猛击”附加暗紫/深红空间撕裂特效
+            if (AMRBalance.DimensionalSlideUnlocked)
+            {
+                SoundEngine.PlaySound(SoundID.Item109 with { Volume = 0.65f, Pitch = -0.2f }, center);
+                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(center, -forward * 0.8f,
+                    new Color(160, 40, 220), new Vector2(0.8f, 2.1f), forward.ToRotation(), 0.1f, 1.8f, 22));
+                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(center, -forward * 0.4f,
+                    new Color(60, 20, 90), new Vector2(0.4f, 1.4f), forward.ToRotation(), 0.05f, 1.2f, 16));
+
+                for (int i = 0; i < 8; i++)
+                {
+                    Vector2 voidVel = -forward.RotatedByRandom(0.4f) * Main.rand.NextFloat(4f, 12f);
+                    GeneralParticleHandler.SpawnParticle(new LineParticle(center, voidVel, false, 18, 0.6f,
+                        Main.rand.NextBool() ? new Color(210, 80, 255) : new Color(110, 30, 180)));
+                }
+            }
 
             const int vertexCount = 12;
             for (int i = 0; i < vertexCount; i++)

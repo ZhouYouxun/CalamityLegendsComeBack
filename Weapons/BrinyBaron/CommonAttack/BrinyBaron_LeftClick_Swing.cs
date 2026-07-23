@@ -34,13 +34,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         private const float RightSpinSwooshScaleMultiplier = 0.95f;
         private const float RightSpinVisualReachScale = 0.67f;
         private int CurrentGrowthStage => BB_Balance.GetGrowthStage();
-        private int ComboLength => CurrentGrowthStage switch
-        {
-            1 => 1,
-            2 => 3,
-            3 => 4,
-            _ => 4
-        };
+        private int ComboLength => BB_Balance.GetLeftClickComboSequence(CurrentGrowthStage).Length;
         private const int StandardGapFrames = 0;
         private const int RightSpinTransitionFrames = 14;
         private const int RightSpinShurikenInterval = 12;
@@ -1380,37 +1374,29 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
         private StageProfile GetStageProfile(int stage)
         {
-            int growthStage = CurrentGrowthStage;
-            if (growthStage == 1)
-            {
-                return new StageProfile(ComboKind.SeafoamBlade, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false);
-            }
-            if (growthStage == 2)
-            {
-                if (stage == 0)
-                    return new StageProfile(ComboKind.Stage2_ThreeSeafoam, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false);
-                if (stage == 1)
-                    return new StageProfile(ComboKind.Stage2_SixSeaSpirits, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false);
+            BBLeftClickComboType[] sequence = BB_Balance.GetLeftClickComboSequence(CurrentGrowthStage);
+            if (sequence == null || sequence.Length == 0)
                 return new StageProfile(ComboKind.FormalWave, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false);
-            }
-            if (growthStage == 3)
+
+            stage = Utils.Clamp(stage, 0, sequence.Length - 1);
+            BBLeftClickComboType comboType = sequence[stage];
+
+            ComboKind kind = comboType switch
             {
-                if (stage == 0)
-                    return new StageProfile(ComboKind.Stage3_FiveParallelSeafoam, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false);
-                if (stage == 1)
-                    return new StageProfile(ComboKind.Stage3_TenSeaSpirits, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false);
-                if (stage == 2)
-                    return new StageProfile(ComboKind.Stage3_FiveShurikens, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false);
-                return new StageProfile(ComboKind.Stage3_EnhancedWave, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false);
-            }
-            // Stage 4
-            if (stage == 0)
-                return new StageProfile(ComboKind.Stage3_FiveParallelSeafoam, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false);
-            if (stage == 1)
-                return new StageProfile(ComboKind.Stage4_TenSeaSpirits, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false);
-            if (stage == 2)
-                return new StageProfile(ComboKind.Stage3_FiveShurikens, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false);
-            return new StageProfile(ComboKind.Stage4_EnhancedWave, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false);
+                BBLeftClickComboType.SeafoamBlade => ComboKind.SeafoamBlade,
+                BBLeftClickComboType.FormalWave => ComboKind.FormalWave,
+                BBLeftClickComboType.FormalWaveFaster => ComboKind.FormalWaveFaster,
+                BBLeftClickComboType.EnhancedWave => ComboKind.EnhancedWave,
+                BBLeftClickComboType.ThreeSeafoams => ComboKind.Stage2_ThreeSeafoam,
+                BBLeftClickComboType.SixSeaSpirits => ComboKind.Stage2_SixSeaSpirits,
+                BBLeftClickComboType.TenSeaSpirits => ComboKind.Stage4_TenSeaSpirits,
+                BBLeftClickComboType.FiveShurikens => ComboKind.FiveShurikens,
+                BBLeftClickComboType.FiveParallelSeafoams => ComboKind.Stage3_FiveParallelSeafoam,
+                BBLeftClickComboType.Tornado => ComboKind.Tornado,
+                _ => ComboKind.FormalWave
+            };
+
+            return new StageProfile(kind, StandardGapFrames, 1f, 1f, 1f, 1f, 1f, 1f, false);
         }
 
         private enum ComboKind

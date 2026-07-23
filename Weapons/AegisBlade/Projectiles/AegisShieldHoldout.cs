@@ -1,4 +1,5 @@
 using System;
+using CalamityLegendsComeBack.Weapons.AegisBlade.Visuals;
 using CalamityMod;
 using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
@@ -47,9 +48,10 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         private bool fullChargeFired;
         private bool shieldRaisedFired;
 
-        private static readonly Color ShieldGold = new(255, 200, 60);
-        private static readonly Color ShieldLight = new(255, 238, 160);
-        private static readonly Color ShieldFire = new(255, 145, 55);
+        /// <summary>完美格挡瞬间的一次性白闪，仅用于绘制。</summary>
+        private float parryFlash;
+
+        private const string ShieldTexturePath = "CalamityLegendsComeBack/Weapons/AegisBlade/庇护盾牌";
 
         public override void SetStaticDefaults()
         {
@@ -80,6 +82,9 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 Projectile.Kill();
                 return;
             }
+
+            if (parryFlash > 0f)
+                parryFlash = MathHelper.Max(0f, parryFlash - 0.055f);
 
             Owner.heldProj = Projectile.whoAmI;
             if (IsDashing)
@@ -122,8 +127,12 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 OnFullCharge();
             }
 
+            AegisVisuals.Light(ShieldWorldPosition, 0.45f + ChargeRatio * 0.9f);
             EmitGuardFlames();
         }
+
+        private Vector2 ShieldWorldPosition =>
+            Owner.Center + new Vector2(Owner.direction * Owner.width * 0.42f, -4f);
 
         private bool IsRightHeld()
         {
@@ -240,6 +249,8 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 
             Owner.velocity = Vector2.Zero;
 
+            AegisVisuals.Light(Projectile.Center, 1.3f);
+
             if (!Main.dedServ)
                 EmitDashFlames(direction);
 
@@ -275,30 +286,47 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             Vector2 direction = DashDestination != Vector2.Zero
                 ? DashDirection
                 : Owner.velocity.SafeNormalize(Vector2.UnitX * Owner.direction);
-            GeneralParticleHandler.SpawnParticle(new DetailedExplosion(target.Center, Vector2.Zero,
-                ShieldFire, new Vector2(1.15f, 0.72f), direction.ToRotation(), 0f, 0.72f, 20));
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(target.Center, direction * 1.4f,
-                ShieldLight, new Vector2(1.2f, 2.6f), direction.ToRotation(), 0.08f, 0.08f, 18));
-            for (int i = 0; i < 4; i++)
-            {
-                GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
-                    target.Center + Main.rand.NextVector2Circular(16f, 16f),
-                    direction.RotatedByRandom(0.42f) * Main.rand.NextFloat(1.6f, 5f),
-                    Color.Lerp(ShieldFire, ShieldLight, Main.rand.NextFloat()), Color.Transparent,
-                    Main.rand.NextFloat(0.42f, 0.7f), Main.rand.Next(16, 24), Main.rand.NextFloat(-0.07f, 0.07f)));
-            }
+
+            // 盾撞：正前方压出一记扁平冲击，而不是一个圆环
+            AegisVisuals.DirectionalImpact(target.Center, direction, 1.35f);
+            AegisVisuals.EmberJet(target.Center, direction, 9, 1.25f, 0.4f);
+            AegisVisuals.HolyDetonation(target.Center, 1.1f, true, direction.ToRotation());
+            AegisVisuals.WarbannerConverge(target.Center, direction, 1.9f, 4,
+                1f + target.Hitbox.Width / 360f);
+            AegisVisuals.Screenshake(target.Center, 2.6f, 800f);
         }
 
         private void OnPerfectParry()
         {
             SoundEngine.PlaySound(SoundID.DD2_WitherBeastCrystalImpact with { Volume = 1f, Pitch = 0.25f }, Owner.Center);
+            SoundEngine.PlaySound(SoundID.Item100 with { Volume = 0.75f, Pitch = 0.55f }, Owner.Center);
             if (Main.dedServ)
                 return;
 
-            GeneralParticleHandler.SpawnParticle(new DetailedExplosion(Owner.Center, Vector2.Zero,
-                ShieldLight, Vector2.One, 0f, 0f, 0.65f, 18));
+            parryFlash = 1f;
+
+            // 完美格挡是这把武器最重要的一次成功反馈：给它整套里最强的一次爆闪
+            AegisVisuals.HolyDetonation(Owner.Center, 2.2f, false);
+            AegisVisuals.CoronaRing(Owner.Center, 22, 1.6f);
+            AegisVisuals.EmberJet(Owner.Center, new Vector2(Owner.direction, -0.35f), 14, 1.4f, 1.2f);
+
+            // 金红双环：内圈白金急速外扩，外圈余烬慢一拍跟上
             GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Owner.Center, Vector2.Zero,
-                ShieldGold, Vector2.One, 0f, 0.08f, 1.65f, 20));
+                AegisVisuals.Add(AegisVisuals.Core, 1f), Vector2.One, 0f, 0.05f, 1.6f, 16));
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Owner.Center, Vector2.Zero,
+                AegisVisuals.Add(AegisVisuals.Ember, 0.95f), Vector2.One, 0f, 0.06f, 2.4f, 26));
+
+            // 火花冠：12 点均分，读起来像"挡下来的力被弹开成一圈"
+            for (int i = 0; i < 12; i++)
+            {
+                float angle = MathHelper.TwoPi * i / 12f;
+                GeneralParticleHandler.SpawnParticle(new SparkleParticle(
+                    Owner.Center + angle.ToRotationVector2() * 42f, angle.ToRotationVector2() * 1.6f,
+                    AegisVisuals.Add(AegisVisuals.Core, 1f), AegisVisuals.Add(AegisVisuals.Flame, 1f),
+                    1.15f, 16, 0.04f, 1.9f));
+            }
+
+            AegisVisuals.Screenshake(Owner.Center, 4.2f, 1000f);
         }
 
         private void OnShieldRaised()
@@ -307,11 +335,12 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             if (Main.dedServ)
                 return;
 
-            Vector2 shieldPos = Owner.Center + new Vector2(Owner.direction * Owner.width * 0.42f, -4f);
-            GeneralParticleHandler.SpawnParticle(new DetailedExplosion(shieldPos, Vector2.Zero,
-                ShieldLight, Vector2.One, 0f, 0f, 0.44f, 15));
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(shieldPos, Vector2.Zero,
-                ShieldGold, Vector2.One, 0f, 0.06f, 1.1f, 16));
+            Vector2 shieldPosition = ShieldWorldPosition;
+            AegisVisuals.HolyDetonation(shieldPosition, 0.55f, false);
+            AegisVisuals.CoronaRing(shieldPosition, 9, 0.55f);
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(shieldPosition, Vector2.Zero,
+                AegisVisuals.Add(AegisVisuals.Gold, 0.9f), new Vector2(0.75f, 1.35f),
+                new Vector2(Owner.direction, 0f).ToRotation(), 0.05f, 0.9f, 16));
         }
 
         private void OnFullCharge()
@@ -320,56 +349,94 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             if (Main.dedServ)
                 return;
 
-            GeneralParticleHandler.SpawnParticle(new DetailedExplosion(Owner.Center, Vector2.Zero,
-                ShieldLight, Vector2.One, 0f, 0f, 0.78f, 22));
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Owner.Center, Vector2.Zero,
-                ShieldGold, new Vector2(1.35f, 1.35f), MathHelper.PiOver4, 0.1f, 1.9f, 24));
+            // 蓄满：符文环"咬合"，向前压出一记冲击光锥
+            AegisVisuals.HolyDetonation(Owner.Center, 1.3f, false);
+            AegisVisuals.CoronaRing(Owner.Center, 16, 1.1f);
+
+            Vector2 aim = Owner.MountedCenter.DirectionTo(AegisBlade.GetMouseWorld(Owner))
+                .SafeNormalize(Vector2.UnitX * Owner.direction);
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(ShieldWorldPosition, Vector2.Zero,
+                AegisVisuals.Add(AegisVisuals.Gold, 0.9f), AegisVisuals.TexBlastCone,
+                new Vector2(3.6f, 1.4f), aim.ToRotation(), 0.9f, 0f, 26));
+            AegisVisuals.Screenshake(Owner.Center, 2f, 700f);
         }
 
+        /// <summary>举盾期间的持续特效：分三档强度，越蓄力火越旺、越往前压。</summary>
         private void EmitGuardFlames()
         {
-            if (Main.dedServ || !Main.rand.NextBool(2))
+            if (Main.dedServ)
                 return;
 
-            Vector2 shieldPosition = Owner.Center + new Vector2(Owner.direction * Owner.width * 0.42f, -4f);
+            Vector2 shieldPosition = ShieldWorldPosition;
+            Vector2 outward = new Vector2(Owner.direction, 0f);
 
             if (BladePlayer.ShieldRaising)
             {
-                // 举盾动画阶段：随进度增强的金色粒子
+                // ① 举盾过渡（同时是完美格挡窗口）：火迅速在盾面点燃
                 float raiseRatio = MathHelper.Clamp(Charge / BalanceAegisBlade.ShieldRaiseFrames, 0f, 1f);
-                Vector2 outward = new Vector2(Owner.direction, -0.6f).RotatedByRandom(0.65f);
-                GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
-                    shieldPosition + Main.rand.NextVector2Circular(10f, 14f),
-                    outward * Main.rand.NextFloat(0.5f, 1.6f) * (0.5f + raiseRatio),
-                    Color.Lerp(ShieldGold, ShieldLight, Main.rand.NextFloat()), Color.Transparent,
-                    MathHelper.Lerp(0.16f, 0.28f, raiseRatio), Main.rand.Next(12, 20), Main.rand.NextFloat(-0.05f, 0.05f)));
-            }
-            else if (!ChargeUnlocked || Charge < ChargeStartTime)
-            {
-                // 举盾持续阶段：微弱稀疏粒子
-                if (!Main.rand.NextBool(3))
-                    return;
+                for (int i = 0; i < 2; i++)
+                {
+                    GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                        shieldPosition + Main.rand.NextVector2Circular(9f, 15f),
+                        outward.RotatedByRandom(0.7f) * Main.rand.NextFloat(0.6f, 2f) * (0.4f + raiseRatio),
+                        false, Main.rand.Next(11, 19), Main.rand.NextFloat(0.12f, 0.24f) * (0.5f + raiseRatio),
+                        AegisVisuals.RandomFlameColor(), true, false, true));
+                }
 
-                float holdRatio = MathHelper.Clamp(Charge / ChargeStartTime, 0f, 1f);
-                Vector2 outward = new Vector2(Owner.direction, 0f).RotatedByRandom(0.55f);
-                GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
-                    shieldPosition + Main.rand.NextVector2Circular(8f, 12f),
-                    outward * Main.rand.NextFloat(0.15f, 0.65f),
-                    Color.Lerp(ShieldGold, ShieldLight, Main.rand.NextFloat()), Color.Transparent,
-                    MathHelper.Lerp(0.12f, 0.22f, holdRatio), Main.rand.Next(10, 18), Main.rand.NextFloat(-0.05f, 0.05f)));
+                if (Main.rand.NextBool(2))
+                {
+                    Dust ember = Dust.NewDustPerfect(shieldPosition + Main.rand.NextVector2Circular(8f, 14f),
+                        AegisVisuals.ProfanedFireDust,
+                        outward.RotatedByRandom(0.6f) * Main.rand.NextFloat(0.5f, 1.8f),
+                        0, Color.White, Main.rand.NextFloat(0.8f, 1.35f));
+                    ember.noGravity = true;
+                }
+                return;
             }
-            else
+
+            if (!ChargeUnlocked || Charge < ChargeStartTime)
             {
-                // 蓄力阶段：火焰粒子
-                Vector2 outward = new Vector2(Owner.direction, 0f).RotatedByRandom(0.7f);
-                GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
-                    shieldPosition + Main.rand.NextVector2Circular(10f, 16f),
-                    outward * Main.rand.NextFloat(0.3f, 1.5f),
-                    Color.Lerp(ShieldGold, ShieldLight, ChargeRatio), Color.Transparent,
-                    MathHelper.Lerp(0.18f, 0.38f, ChargeRatio), Main.rand.Next(12, 20), Main.rand.NextFloat(-0.05f, 0.05f)));
+                // ② 举盾持续：只留下沿盾缘往下滴的余烬，克制、不抢戏
+                if (Main.rand.NextBool(3))
+                    AegisVisuals.EmberDrip(shieldPosition + new Vector2(0f, 8f), 8f, 10f, 0.85f);
+
+                if (Main.rand.NextBool(6))
+                {
+                    GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
+                        shieldPosition + Main.rand.NextVector2Circular(8f, 12f),
+                        outward * Main.rand.NextFloat(0.15f, 0.6f) - Vector2.UnitY * 0.3f,
+                        Color.Lerp(AegisVisuals.Charred, Color.DarkSlateGray, Main.rand.NextFloat(0.4f, 0.9f)),
+                        Color.Transparent, Main.rand.NextFloat(0.16f, 0.3f), Main.rand.Next(18, 30),
+                        Main.rand.NextFloat(-0.05f, 0.05f)));
+                }
+                return;
             }
+
+            // ③ 蓄力：火星被反向吸进盾面，蓄力越满吸得越猛
+            if (Main.rand.NextBool(2))
+            {
+                Vector2 inward = outward.RotatedByRandom(1.0f);
+                GeneralParticleHandler.SpawnParticle(new SparkParticle(
+                    shieldPosition + inward * Main.rand.NextFloat(38f, 80f),
+                    -inward * Main.rand.NextFloat(1.8f, 5f) * (0.5f + ChargeRatio), false,
+                    Main.rand.Next(12, 22), Main.rand.NextFloat(0.4f, 0.9f),
+                    AegisVisuals.Gradient(Main.rand.NextFloat(0.1f, 0.7f))));
+            }
+
+            if (Main.rand.NextBool(2))
+            {
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    shieldPosition + Main.rand.NextVector2Circular(10f, 16f),
+                    outward.RotatedByRandom(0.7f) * Main.rand.NextFloat(0.4f, 1.8f) * ChargeRatio,
+                    false, Main.rand.Next(12, 20), MathHelper.Lerp(0.14f, 0.3f, ChargeRatio),
+                    AegisVisuals.RandomFlameColor(), true, false, true));
+            }
+
+            if (Main.rand.NextBool(3))
+                AegisVisuals.EmberDrip(shieldPosition + new Vector2(0f, 8f), 9f, 11f, 1f + ChargeRatio * 0.5f);
         }
 
+        /// <summary>冲刺途中的尾流：后方火舌 + 侧向火星 + 每 3 帧一圈定向环。</summary>
         private void EmitDashFlames(Vector2 direction)
         {
             if (Main.dedServ)
@@ -381,43 +448,76 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 Vector2 trailVelocity = -direction.RotatedByRandom(0.34f) * Main.rand.NextFloat(2f, 5f);
                 GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
                     rear + Main.rand.NextVector2Circular(10f, 10f), trailVelocity,
-                    Color.Lerp(ShieldFire, ShieldLight, Main.rand.NextFloat(0.15f, 0.7f)), Color.Transparent,
-                    Main.rand.NextFloat(0.4f, 0.68f), Main.rand.Next(18, 28), Main.rand.NextFloat(-0.08f, 0.08f)));
-                GeneralParticleHandler.SpawnParticle(new LineParticle(
+                    Color.Lerp(AegisVisuals.Charred, Color.DarkSlateGray, Main.rand.NextFloat(0.25f, 0.8f)),
+                    Color.Transparent, Main.rand.NextFloat(0.4f, 0.68f), Main.rand.Next(18, 28),
+                    Main.rand.NextFloat(-0.08f, 0.08f)));
+
+                GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(
                     Projectile.Center + direction * Main.rand.NextFloat(-10f, 28f) + Main.rand.NextVector2Circular(12f, 12f),
-                    trailVelocity * Main.rand.NextFloat(0.7f, 1.3f), false, Main.rand.Next(10, 17),
-                    Main.rand.NextFloat(0.32f, 0.58f), Color.Lerp(ShieldGold, ShieldLight, Main.rand.NextFloat(0.2f, 0.8f))));
+                    trailVelocity * Main.rand.NextFloat(0.9f, 1.5f), false, Main.rand.Next(8, 14),
+                    Main.rand.NextFloat(0.08f, 0.14f),
+                    AegisVisuals.Add(AegisVisuals.Gradient(Main.rand.NextFloat(0f, 0.6f)), 0.9f),
+                    new Vector2(2.4f, 0.48f), true, false, 1f));
+            }
+
+            if ((int)DashTime % 2 == 0)
+            {
+                Dust ember = Dust.NewDustPerfect(rear, AegisVisuals.ProfanedFireDust,
+                    -direction.RotatedByRandom(0.5f) * Main.rand.NextFloat(1.5f, 5f),
+                    0, Color.White, Main.rand.NextFloat(1f, 1.7f));
+                ember.noGravity = true;
             }
 
             if ((int)DashTime % 3 == 0)
             {
                 GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
-                    Projectile.Center - direction * 18f, -direction * 0.8f, ShieldGold,
+                    Projectile.Center - direction * 18f, -direction * 0.8f,
+                    AegisVisuals.Add(AegisVisuals.Gold, 0.9f),
                     new Vector2(0.52f, 1.4f), direction.ToRotation(), 0.1f, 0.52f, 13));
             }
         }
 
+        /// <summary>起手/收尾的冲刺闪光。</summary>
         private void SpawnDashFlash(Vector2 position, Vector2 direction, float strength)
         {
             if (Main.dedServ)
                 return;
 
-            GeneralParticleHandler.SpawnParticle(new DetailedExplosion(position, Vector2.Zero,
-                ShieldLight, Vector2.One, direction.ToRotation(), 0f, 0.58f * strength, 18));
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(position, direction * 1.8f,
-                ShieldGold, new Vector2(0.9f, 2.2f) * strength, direction.ToRotation(), 0.09f, 0.08f, 18));
+            AegisVisuals.DirectionalImpact(position, direction, 1.1f * strength);
+            AegisVisuals.EmberJet(position, direction, 10, 1.15f * strength, 0.3f);
+
+            // 起步的新月拖抹：盾牌"劈"开空气的那一下
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(position, Vector2.Zero,
+                AegisVisuals.Add(AegisVisuals.Gold, 0.9f), AegisVisuals.TexSmearFire1,
+                new Vector2(1f, 1f), direction.ToRotation() + MathHelper.PiOver2,
+                0.1f, 0.85f * strength, 15));
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(position, Vector2.Zero,
+                AegisVisuals.Add(AegisVisuals.Ember, 0.8f), AegisVisuals.TexBlastCone,
+                new Vector2(3.2f, 1.4f), direction.ToRotation(), 0.85f, 0f, 20));
         }
 
-        private Color TrailColorFunction(float completionRatio, Vector2 vertexPosition)
-        {
-            float fade = Utils.GetLerpValue(1f, 0.12f, completionRatio, true) * Projectile.Opacity;
-            return Color.Lerp(ShieldLight, ShieldFire, completionRatio) * fade;
-        }
+        // ── 冲刺拖尾：三层（余烬外焰 / 圣金主焰 / 白金内芯） ─────────────
+        // 旧版的 OffsetFunction 会额外加上 Main.screenPosition，等于把世界坐标当屏幕坐标用，
+        // 拖尾实际被画到了屏幕外 —— 玩家从来没看见过这条拖尾。这里一并修正。
+        private Vector2 TrailOffsetFunction(float _, Vector2 __) => Projectile.Size * 0.5f;
 
-        private float TrailWidthFunction(float completionRatio, Vector2 vertexPosition)
-        {
-            return MathHelper.Lerp(22f, 5f, completionRatio) * (0.7f + DashPower * 0.45f);
-        }
+        private Color TrailColorFunction(float completionRatio, Vector2 vertexPosition) =>
+            AegisVisuals.TrailColor(completionRatio, 1, Projectile.Opacity);
+
+        private float TrailWidthFunction(float completionRatio, Vector2 vertexPosition) =>
+            MathHelper.Lerp(26f, 5f, completionRatio) * (0.7f + DashPower * 0.45f);
+
+        private Color TrailOuterColorFunction(float completionRatio, Vector2 vertexPosition) =>
+            AegisVisuals.TrailColor(completionRatio, 0, Projectile.Opacity * 0.65f);
+
+        private float TrailOuterWidthFunction(float completionRatio, Vector2 vertexPosition) =>
+            TrailWidthFunction(completionRatio, vertexPosition) * 1.55f;
+
+        private Color TrailCoreColorFunction(float completionRatio, Vector2 vertexPosition) =>
+            AegisVisuals.TrailColor(completionRatio, 2, Projectile.Opacity);
+
+        private float TrailCoreWidthFunction(float completionRatio, Vector2 vertexPosition) =>
+            TrailWidthFunction(completionRatio, vertexPosition) * 0.4f;
 
         // 头顶蓄力条（独立于大招能量条，大招显示在左上角CooldownHandler）
         private void DrawChargeBar()
@@ -428,14 +528,24 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             Texture2D barFG = ModContent.Request<Texture2D>("CalamityMod/UI/MiscTextures/GenericBarFront").Value;
 
             float progress = Math.Clamp(Charge / MaximumGuardCharge, 0f, 1f);
-            Color col = Color.Lerp(ShieldLight, ShieldGold, ChargeRatio);
+            Color col = Color.Lerp(AegisVisuals.Gold, AegisVisuals.Core, ChargeRatio);
             float pulseAlpha = 0.75f + 0.15f * MathF.Sin(Main.GlobalTimeWrappedHourly * 6f);
 
             // -70f：与大招能量条（左上角CooldownHandler）位置不同，此条显示在玩家头顶
             Vector2 barPos = Owner.Center - Main.screenPosition + new Vector2(-barBG.Width * 0.75f, -70f);
             Rectangle frame = new Rectangle(0, 0, (int)(progress * barFG.Width), barFG.Height);
 
-            Main.spriteBatch.Draw(barBG, barPos, col * 0.9f);
+            // 蓄满时在条后压一层圣火余晖，让"满了"这件事在余光里也看得见
+            if (ChargeRatio >= 1f)
+            {
+                Texture2D bloom = AegisVisuals.Tex(AegisVisuals.TexBloom);
+                Main.spriteBatch.Draw(bloom,
+                    barPos + new Vector2(barBG.Width * 0.5f, barBG.Height * 0.5f), null,
+                    AegisVisuals.Add(AegisVisuals.Gold, 0.4f * pulseAlpha), 0f, bloom.Size() * 0.5f,
+                    new Vector2(barBG.Width / 130f, barBG.Height / 42f), SpriteEffects.None, 0f);
+            }
+
+            Main.spriteBatch.Draw(barBG, barPos, Color.Lerp(AegisVisuals.Charred, col, 0.35f) * 0.9f);
             Main.spriteBatch.Draw(barFG, barPos, frame, col * pulseAlpha);
         }
 
@@ -444,145 +554,209 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             if (Main.dedServ)
                 return false;
 
-            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Texture2D ring = ModContent.Request<Texture2D>("CalamityMod/Particles/HollowCircleHardEdge").Value;
-
             if (IsDashing && DashTime > 0f)
             {
-                GameShaders.Misc["CalamityMod:TrailStreak"].SetShaderTexture(
-                    ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/ScarletDevilStreak"));
-                PrimitiveRenderer.RenderTrail(Projectile.oldPos,
-                    new PrimitiveSettings(TrailWidthFunction, TrailColorFunction,
-                        (_, _) => Projectile.Size * 0.5f + Main.screenPosition,
-                        shader: GameShaders.Misc["CalamityMod:TrailStreak"]), 12);
-
-                float dashProgress = DashTime / DashDuration;
-                Vector2 drawPosition = Projectile.Center - Main.screenPosition;
-                Texture2D shieldTex = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/AegisBlade/庇护盾牌").Value;
-
-                Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
-
-                // 冲刺期间金色能量盾
-                Main.EntitySpriteDraw(shieldTex, drawPosition, null, ShieldLight with { A = 0 } * (1f - dashProgress * 0.5f),
-                    DashDirection.ToRotation(), shieldTex.Size() * 0.5f, 1.25f + DashPower * 0.35f, SpriteEffects.None);
-
-                Main.EntitySpriteDraw(bloom, drawPosition, null, ShieldFire with { A = 0 } * (1f - dashProgress) * 0.8f,
-                    0f, bloom.Size() * 0.5f, 1.15f + DashPower * 0.45f, SpriteEffects.None);
-                Main.EntitySpriteDraw(ring, drawPosition, null, ShieldLight with { A = 0 } * (1f - dashProgress) * 0.45f,
-                    DashDirection.ToRotation(), ring.Size() * 0.5f,
-                    new Vector2(0.34f, 1.55f) * (1f + DashPower * 0.3f), SpriteEffects.None);
-                Main.spriteBatch.ExitShaderRegion();
+                DrawDash();
                 return false;
             }
 
-            // 盾牌举起全程均有随蓄力增强的包边光晕（缩小以适应小盾）
-            float chargeProgress = Charge / MaximumGuardCharge;
-            float pulse = 0.22f + 0.1f * MathF.Sin(Main.GlobalTimeWrappedHourly * 5f);
-            float chargeGlow = MathHelper.Lerp(0.04f, 0.72f, chargeProgress);
-            Vector2 shieldPosition = Owner.Center - Main.screenPosition + new Vector2(Owner.direction * Owner.width * 0.42f, -4f);
-            // 绘制精美、亮丽的金色能量特效盾（Golden Shield Overlay）
-            Texture2D shieldOverlayTex = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/AegisBlade/庇护盾牌").Value;
-            Vector2 shieldOrigin = shieldOverlayTex.Size() * 0.5f;
-            float shieldRot = DashDestination != Vector2.Zero ? DashDirection.ToRotation() : (Owner.MountedCenter.DirectionTo(AegisBlade.GetMouseWorld(Owner)).ToRotation());
-            float overlayPulse = 0.85f + 0.15f * MathF.Sin(Main.GlobalTimeWrappedHourly * 10f);
+            DrawGuard();
+            DrawChargeBar();
+            DrawDashTelegraph();
+            return false;
+        }
+
+        /// <summary>冲刺形态：三层火焰拖尾 + 烧红的盾面 + 前推的日核。</summary>
+        private void DrawDash()
+        {
+            var trailShader = GameShaders.Misc["CalamityMod:ImpFlameTrail"];
+
+            trailShader.SetShaderTexture(
+                ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/ScarletDevilStreak"));
+            PrimitiveRenderer.RenderTrail(Projectile.oldPos,
+                new PrimitiveSettings(TrailOuterWidthFunction, TrailOuterColorFunction, TrailOffsetFunction,
+                    shader: trailShader), 12);
+            PrimitiveRenderer.RenderTrail(Projectile.oldPos,
+                new PrimitiveSettings(TrailWidthFunction, TrailColorFunction, TrailOffsetFunction,
+                    shader: trailShader), 12);
+
+            trailShader.SetShaderTexture(
+                ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/SylvestaffStreak"));
+            PrimitiveRenderer.RenderTrail(Projectile.oldPos,
+                new PrimitiveSettings(TrailCoreWidthFunction, TrailCoreColorFunction, TrailOffsetFunction,
+                    shader: trailShader), 12);
+
+            float dashProgress = DashTime / DashDuration;
+            float fade = 1f - dashProgress * 0.55f;
+            Vector2 drawPosition = Projectile.Center - Main.screenPosition;
+            Texture2D shieldTex = ModContent.Request<Texture2D>(ShieldTexturePath).Value;
+            float shieldRotation = DashDirection.ToRotation();
 
             Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
 
-            // 能量盾脉冲外晕
-            Main.EntitySpriteDraw(bloom, shieldPosition, null, ShieldGold with { A = 0 } * (0.65f * overlayPulse),
-                0f, bloom.Size() * 0.5f, 0.42f * overlayPulse, SpriteEffects.None);
+            // 前方压出的日核：冲刺的"矛头"
+            AegisVisuals.DrawSolarCore(drawPosition + DashDirection * 18f,
+                26f * (1f + DashPower * 0.35f), fade,
+                Main.GlobalTimeWrappedHourly * 6f);
 
-            // 4方向金色辉光描边
-            for (int i = 0; i < 4; i++)
+            // 盾面本体：先暗红背光再亮金
+            AegisVisuals.ProfanedBackglow(shieldTex, drawPosition, null, shieldRotation,
+                shieldTex.Size() * 0.5f, new Vector2(1.35f + DashPower * 0.4f), fade, 4f, 6);
+            Main.EntitySpriteDraw(shieldTex, drawPosition, null,
+                AegisVisuals.Add(AegisVisuals.Core, 0.95f * fade),
+                shieldRotation, shieldTex.Size() * 0.5f, 1.3f + DashPower * 0.35f, SpriteEffects.None, 0);
+
+            // 侧向压扁的冲击环
+            Texture2D ring = AegisVisuals.Tex(AegisVisuals.TexRingThick);
+            Main.EntitySpriteDraw(ring, drawPosition, null,
+                AegisVisuals.Add(AegisVisuals.Ember, 0.55f * fade),
+                shieldRotation, ring.Size() * 0.5f,
+                new Vector2(AegisVisuals.RadiusScale(ring, 20f), AegisVisuals.RadiusScale(ring, 62f)) *
+                (1f + DashPower * 0.3f), SpriteEffects.None, 0);
+
+            Main.spriteBatch.ExitShaderRegion();
+        }
+
+        /// <summary>举盾形态：护罩壳 + 烧红的盾面 + 随蓄力收紧的符文环。</summary>
+        private void DrawGuard()
+        {
+            float chargeProgress = Charge / MaximumGuardCharge;
+            float chargeGlow = MathHelper.Lerp(0.12f, 1f, chargeProgress);
+            Vector2 shieldPosition = ShieldWorldPosition - Main.screenPosition;
+            Texture2D shieldTex = ModContent.Request<Texture2D>(ShieldTexturePath).Value;
+            Vector2 shieldOrigin = shieldTex.Size() * 0.5f;
+            float shieldRotation = Owner.MountedCenter.DirectionTo(AegisBlade.GetMouseWorld(Owner)).ToRotation();
+            Vector2 aimDirection = shieldRotation.ToRotationVector2();
+            float pulse = 0.86f + 0.14f * MathF.Sin(Main.GlobalTimeWrappedHourly * 9f);
+
+            Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
+
+            // ① 圣火护罩壳：从盾面往前撑开的一层裂纹光壳，蓄力越满越实
+            Texture2D barrier = AegisVisuals.Tex(AegisVisuals.TexBarrierShell);
+            float barrierOpacity = MathHelper.Lerp(0.16f, 0.5f, chargeProgress) * pulse;
+            Vector2 barrierCenter = shieldPosition + aimDirection * 16f;
+            Main.EntitySpriteDraw(barrier, barrierCenter, null,
+                AegisVisuals.Add(AegisVisuals.Ember, barrierOpacity),
+                shieldRotation + Main.GlobalTimeWrappedHourly * 0.35f, barrier.Size() * 0.5f,
+                new Vector2(AegisVisuals.RadiusScale(barrier, 30f), AegisVisuals.RadiusScale(barrier, 42f)),
+                SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(barrier, barrierCenter, null,
+                AegisVisuals.Add(AegisVisuals.Gold, barrierOpacity * 0.62f),
+                shieldRotation - Main.GlobalTimeWrappedHourly * 0.55f, barrier.Size() * 0.5f,
+                new Vector2(AegisVisuals.RadiusScale(barrier, 24f), AegisVisuals.RadiusScale(barrier, 34f)),
+                SpriteEffects.None, 0);
+
+            // ② 随蓄力收紧的符文环：环越小 = 蓄力越满，是世界内的蓄力读数
+            if (ChargeUnlocked && Charge >= BalanceAegisBlade.ShieldRaiseFrames)
             {
-                Vector2 offset = (MathHelper.TwoPi * i / 4f).ToRotationVector2() * (2.8f * overlayPulse);
-                Main.EntitySpriteDraw(shieldOverlayTex, shieldPosition + offset, null, ShieldLight with { A = 0 } * 0.75f,
-                    shieldRot, shieldOrigin, 1.12f, SpriteEffects.None);
+                float sigilRadius = MathHelper.Lerp(72f, 34f, ChargeRatio);
+                AegisVisuals.DrawRuneSigil(shieldPosition, sigilRadius,
+                    Main.GlobalTimeWrappedHourly * (1.2f + ChargeRatio * 5.5f),
+                    MathHelper.Lerp(0.25f, 0.9f, chargeProgress), Vector2.One,
+                    0.85f + ChargeRatio * 0.7f);
             }
 
-            // 核心亮金特效盾
-            Main.EntitySpriteDraw(shieldOverlayTex, shieldPosition, null, ShieldGold with { A = 0 } * 0.95f,
-                shieldRot, shieldOrigin, 1.05f, SpriteEffects.None);
+            // ③ 亵渎背光 + 盾面本体
+            AegisVisuals.ProfanedBackglow(shieldTex, shieldPosition, null, shieldRotation, shieldOrigin,
+                new Vector2(1.12f), 0.55f + chargeGlow * 0.45f, 3.2f, 6);
+            Main.EntitySpriteDraw(shieldTex, shieldPosition, null,
+                AegisVisuals.Add(AegisVisuals.Flame, 0.55f + chargeGlow * 0.35f),
+                shieldRotation, shieldOrigin, 1.16f, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(shieldTex, shieldPosition, null,
+                AegisVisuals.Add(AegisVisuals.Core, 0.4f + chargeGlow * 0.5f),
+                shieldRotation, shieldOrigin, 1.02f, SpriteEffects.None, 0);
 
-            Main.EntitySpriteDraw(bloom, shieldPosition, null, ShieldGold with { A = 0 } * (pulse + chargeGlow * 0.32f),
-                0f, bloom.Size() * 0.5f, 0.22f + chargeGlow * 0.28f, SpriteEffects.None);
+            // ④ 盾心炉光
+            Texture2D bloom = AegisVisuals.Tex(AegisVisuals.TexBloom);
+            Main.EntitySpriteDraw(bloom, shieldPosition, null,
+                AegisVisuals.Add(AegisVisuals.Gold, (0.28f + chargeGlow * 0.42f) * pulse),
+                0f, bloom.Size() * 0.5f,
+                new Vector2(AegisVisuals.RadiusScale(bloom, 16f + chargeGlow * 12f)), SpriteEffects.None, 0);
 
-            if (perfectParryFired || Charge >= FullChargeTime)
+            // ⑤ 完美格挡的一次性白闪
+            if (parryFlash > 0.01f)
             {
-                float ringPulse = 0.76f + 0.24f * MathF.Sin(Main.GlobalTimeWrappedHourly * 8f);
-                Main.EntitySpriteDraw(ring, shieldPosition, null, ShieldLight with { A = 0 } * ringPulse * 0.4f,
-                    Main.GlobalTimeWrappedHourly * 1.8f, ring.Size() * 0.5f, 0.24f + chargeGlow * 0.22f, SpriteEffects.None);
-            }
-
-            // 蓄力阶段：额外旋转光圈（较小）
-            if (BladePlayer.ShieldCharging || BladePlayer.ShieldFullyCharged)
-            {
-                Main.EntitySpriteDraw(ring, shieldPosition, null, ShieldGold with { A = 0 } * ChargeRatio * 0.28f,
-                    -Main.GlobalTimeWrappedHourly * 2.4f, ring.Size() * 0.5f,
-                    0.16f + ChargeRatio * 0.12f, SpriteEffects.None);
+                float flash = MathF.Pow(parryFlash, 0.6f);
+                Vector2 playerPosition = Owner.Center - Main.screenPosition;
+                Main.EntitySpriteDraw(bloom, playerPosition, null,
+                    AegisVisuals.Add(AegisVisuals.Core, 0.85f * flash),
+                    0f, bloom.Size() * 0.5f,
+                    new Vector2(AegisVisuals.RadiusScale(bloom, 40f + 130f * (1f - parryFlash))),
+                    SpriteEffects.None, 0);
+                AegisVisuals.DrawRuneSigil(playerPosition, 40f + 120f * (1f - parryFlash),
+                    Main.GlobalTimeWrappedHourly * 5f, flash * 0.9f, Vector2.One, 1.5f);
             }
 
             Main.spriteBatch.ExitShaderRegion();
+        }
 
-            DrawChargeBar();
+        /// <summary>冲刺落点预示。沿用 StygianShield 的 SpreadTelegraph 着色器，只是换成本武器配色。</summary>
+        private void DrawDashTelegraph()
+        {
+            if (Charge < MinimumDashCharge)
+                return;
 
-            // Telegraph arrow (SpreadTelegraph shader + V-lines, same visual as StygianShield)
-            if (Charge >= MinimumDashCharge)
+            Texture2D arrowTex = ModContent.Request<Texture2D>(Texture).Value;
+            Effect arrowEffect = Filters.Scene["CalamityMod:SpreadTelegraph"].GetShader().Shader;
+            arrowEffect.Parameters["centerOpacity"].SetValue(1f);
+            arrowEffect.Parameters["mainOpacity"].SetValue(1f);
+            arrowEffect.Parameters["edgeBlendLength"].SetValue(0.07f);
+            arrowEffect.Parameters["edgeBlendStrength"].SetValue(8f);
+
+            Vector2 mouseWorld = AegisBlade.GetMouseWorld(Owner);
+            Vector2 dashDir = Projectile.SafeDirectionTo(mouseWorld);
+            float dashDist = MathHelper.Lerp(BalanceAegisBlade.ShieldDashMinimumDistance, BalanceAegisBlade.ShieldDashMaximumDistance, DashPower);
+            Vector2 dashVec = dashDir * dashDist;
+            Vector2 destination = Projectile.Center + dashVec;
+
+            bool oob = destination.X < 660f || destination.Y < 660f ||
+                       destination.X > Main.maxTilesX * 16f - 680f || destination.Y > Main.maxTilesY * 16f - 680f;
+
+            // 可冲 = 圣金（与整把武器同色系）；不可冲 = 冷灰蓝，
+            // 在这套全暖色的视觉里，"冷掉了"比"变红"更能一眼读出"这一下发不出去"。
+            Color telegraphColor = oob ? new Color(96, 104, 128) : AegisVisuals.Gold;
+
+            arrowEffect.Parameters["centerOpacity"].SetValue(0.6f);
+            arrowEffect.Parameters["halfSpreadAngle"].SetValue(MathHelper.ToRadians(64f));
+            arrowEffect.Parameters["edgeColor"].SetValue(telegraphColor.ToVector3());
+            arrowEffect.Parameters["centerColor"].SetValue(
+                (oob ? telegraphColor : AegisVisuals.Core).ToVector3());
+
+            Main.spriteBatch.EnterShaderRegion(BlendState.Additive, arrowEffect);
+            Main.EntitySpriteDraw(arrowTex, destination - Main.screenPosition, null, Color.White,
+                dashDir.ToRotation() - MathHelper.Pi, arrowTex.Size() / 2f, 135f, SpriteEffects.None);
+            Main.spriteBatch.ExitShaderRegion();
+
+            for (int i = -1; i <= 1; i += 2)
             {
-                Texture2D arrowTex = ModContent.Request<Texture2D>(Texture).Value;
-                Effect arrowEffect = Filters.Scene["CalamityMod:SpreadTelegraph"].GetShader().Shader;
-                arrowEffect.Parameters["centerOpacity"].SetValue(1f);
-                arrowEffect.Parameters["mainOpacity"].SetValue(1f);
-                arrowEffect.Parameters["edgeBlendLength"].SetValue(0.07f);
-                arrowEffect.Parameters["edgeBlendStrength"].SetValue(8f);
-
-                Vector2 mouseWorld = AegisBlade.GetMouseWorld(Owner);
-                Vector2 dashDir = Projectile.SafeDirectionTo(mouseWorld);
-                float dashDist = MathHelper.Lerp(BalanceAegisBlade.ShieldDashMinimumDistance, BalanceAegisBlade.ShieldDashMaximumDistance, DashPower);
-                Vector2 dashVec = dashDir * dashDist;
-                Vector2 destination = Projectile.Center + dashVec;
-
-                bool oob = destination.X < 660f || destination.Y < 660f ||
-                           destination.X > Main.maxTilesX * 16f - 680f || destination.Y > Main.maxTilesY * 16f - 680f;
-                Color telegraphColor = oob ? Color.Red : Color.White;
-
-                arrowEffect.Parameters["centerOpacity"].SetValue(0.6f);
-                arrowEffect.Parameters["halfSpreadAngle"].SetValue(MathHelper.ToRadians(64f));
-                arrowEffect.Parameters["edgeColor"].SetValue(telegraphColor.ToVector3());
-                arrowEffect.Parameters["centerColor"].SetValue(telegraphColor.ToVector3());
-
-                Main.spriteBatch.EnterShaderRegion(BlendState.Additive, arrowEffect);
-                Main.EntitySpriteDraw(arrowTex, destination - Main.screenPosition, null, Color.White,
-                    dashDir.ToRotation() - MathHelper.Pi, arrowTex.Size() / 2f, 135f, SpriteEffects.None);
-                Main.spriteBatch.ExitShaderRegion();
-
-                for (int i = -1; i <= 1; i += 2)
-                {
-                    Vector2 sideOrigin = Projectile.Center + dashDir.RotatedBy(90f * i) * 60f;
-                    Vector2 convergence = Projectile.Center + dashVec * 0.1f;
-                    Vector2 sideLineStart = sideOrigin + dashVec * 0.1f;
-                    Vector2 sideLineEnd = sideOrigin + dashVec;
-                    Color lineColor = telegraphColor * 0.3f;
-                    Main.spriteBatch.DrawLineBetter(sideLineStart, convergence, lineColor, 2f);
-                    Main.spriteBatch.DrawLineBetter(sideLineStart, sideLineEnd, lineColor, 4f);
-                    Main.spriteBatch.DrawLineBetter(sideLineEnd, destination, lineColor, 2f);
-                }
+                Vector2 sideOrigin = Projectile.Center + dashDir.RotatedBy(90f * i) * 60f;
+                Vector2 convergence = Projectile.Center + dashVec * 0.1f;
+                Vector2 sideLineStart = sideOrigin + dashVec * 0.1f;
+                Vector2 sideLineEnd = sideOrigin + dashVec;
+                Color lineColor = telegraphColor * 0.3f;
+                Main.spriteBatch.DrawLineBetter(sideLineStart, convergence, lineColor, 2f);
+                Main.spriteBatch.DrawLineBetter(sideLineStart, sideLineEnd, lineColor, 4f);
+                Main.spriteBatch.DrawLineBetter(sideLineEnd, destination, lineColor, 2f);
             }
-
-            return false;
         }
 
         public override void OnKill(int timeLeft)
         {
             if (!IsDashing)
             {
-                // 放下盾牌：极小的消散粒子（质感"很低"）
+                // 放下盾牌：火在盾面上熄灭，只留几缕圣灰
                 if (!Main.dedServ && shieldRaisedFired)
                 {
-                    Vector2 shieldPos = Owner.Center + new Vector2(Owner.direction * Owner.width * 0.42f, -4f);
-                    GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
-                        shieldPos, new Vector2(Owner.direction * 0.6f, -0.4f),
-                        ShieldGold, Color.Transparent, 0.10f, 12, 0f));
+                    Vector2 shieldPos = ShieldWorldPosition;
+                    for (int i = 0; i < 3; i++)
+                    {
+                        GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
+                            shieldPos + Main.rand.NextVector2Circular(8f, 12f),
+                            new Vector2(Owner.direction * Main.rand.NextFloat(0.2f, 0.7f), -Main.rand.NextFloat(0.3f, 1.1f)),
+                            Color.Lerp(AegisVisuals.Charred, Color.DarkSlateGray, Main.rand.NextFloat(0.35f, 0.9f)),
+                            Color.Transparent, Main.rand.NextFloat(0.14f, 0.26f), Main.rand.Next(16, 26), 0f));
+                    }
+                    AegisVisuals.EmberDrip(shieldPos, 7f, 9f, 0.9f);
                 }
                 return;
             }
