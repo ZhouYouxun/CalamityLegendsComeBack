@@ -23,8 +23,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
         // 玛瑙配色：黑曜石本体压住整体明度，留出冷蓝紫内辉与暗金边框
         private static readonly Color OnyxSheen = new(74, 150, 214);
         private static readonly Color OnyxRim = new(44, 108, 170);
-        private static readonly Color OnyxViolet = new(52, 22, 104);
-        private static readonly Color OnyxDeepViolet = new(34, 12, 72);
+        private static readonly Color OnyxViolet = new(75, 35, 140);
+        private static readonly Color OnyxDeepViolet = new(45, 18, 90);
 
         private int TargetIndex => (int)Projectile.ai[1] - 1;
         internal bool IsTileMarker => Projectile.ai[1] < 0.5f;
@@ -96,8 +96,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
                 GeneralParticleHandler.SpawnParticle(new GenericBloom(
                     Projectile.Center + forward * 4f,
                     Vector2.Zero,
-                    Color.Black,
-                    attachedToTarget ? 0.62f : 0.44f,
+                    OnyxDeepViolet,
+                    attachedToTarget ? 0.52f : 0.35f,
                     22,
                     false,
                     false));
@@ -133,11 +133,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
                         GeneralParticleHandler.SpawnParticle(new CustomPulse(
                             Projectile.Center + forward * 5f,
                             Vector2.Zero,
-                            Color.Black,
+                            OnyxDeepViolet,
                             "CalamityMod/Particles/SmallBloom",
                             Vector2.One,
                             Main.rand.NextFloat(-10f, 10f),
-                            (0.9f + i * 0.35f),
+                            (0.75f + i * 0.25f),
                             0f,
                             34,
                             false));
@@ -157,19 +157,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
                             16,
                             0.06f,
                             2.2f));
-
-                        Particle blackShard = new CustomSpark(
-                            Projectile.Center + forward * 12f + normal * spread * 4f,
-                            velocity * 0.55f,
-                            Main.rand.NextBool() ? "CalamityMod/Particles/GlowSpark2" : "CalamityMod/Particles/GlowSpark",
-                            false,
-                            Main.rand.Next(14, 20),
-                            Main.rand.NextFloat(0.035f, 0.062f),
-                            Color.Black,
-                            new Vector2(0.6f, 1.35f),
-                            false);
-                        GeneralParticleHandler.SpawnParticle(blackShard);
-                        blackShard.DrawLayer = GeneralDrawLayer.AfterEverything;
                     }
                 }
             }
@@ -207,8 +194,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
                 GeneralParticleHandler.SpawnParticle(new GenericBloom(
                     Projectile.Center - forward * 2f,
                     -forward * 0.12f,
-                    Color.Black,
-                    attachedToTarget ? 0.34f : 0.22f,
+                    OnyxDeepViolet,
+                    attachedToTarget ? 0.28f : 0.18f,
                     16,
                     false,
                     false));
@@ -245,19 +232,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
                         true,
                         false,
                         true));
-
-                    Particle blackOrbit = new CustomSpark(
-                        Projectile.Center + forward * 4f - offset,
-                        -velocity * 0.6f,
-                        "CalamityMod/Particles/GlowSpark",
-                        false,
-                        12,
-                        Main.rand.NextFloat(0.014f, 0.026f),
-                        Color.Black,
-                        new Vector2(0.5f, 1.5f),
-                        false);
-                    GeneralParticleHandler.SpawnParticle(blackOrbit);
-                    blackOrbit.DrawLayer = GeneralDrawLayer.AfterEverything;
                 }
             }
 
@@ -285,18 +259,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
                     0.035f,
                     0.58f,
                     15));
-
-                GeneralParticleHandler.SpawnParticle(new CustomPulse(
-                    Projectile.Center + forward * 5f,
-                    Vector2.Zero,
-                    Color.Black,
-                    "CalamityMod/Particles/SmallBloom",
-                    Vector2.One,
-                    Main.rand.NextFloat(-10f, 10f),
-                    0.75f,
-                    0f,
-                    26,
-                    false));
             }
 
             Lighting.AddLight(Projectile.Center, OnyxRim.ToVector3() * (attachedToTarget ? 0.55f : 0.34f));
@@ -339,48 +301,41 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
             Vector2 normal = new(-forward.Y, forward.X);
             float pulse = 0.5f + 0.5f * MathF.Sin((5 * 60 - Projectile.timeLeft) * 0.19f);
 
+            // 背景发光：使用暗紫/暗蓝替掉实体黑色掩码遮罩
             Main.EntitySpriteDraw(
                 bloom,
                 drawPosition,
                 null,
-                Color.Black * (opacity * 0.85f),
+                OnyxDeepViolet * (opacity * 0.45f),
                 0f,
                 bloom.Size() * 0.5f,
-                0.2f + pulse * 0.02f,
-                SpriteEffects.None,
-                0f);
-            Main.EntitySpriteDraw(
-                bloom,
-                drawPosition + forward * 5f,
-                null,
-                Color.Black * (opacity * 0.7f),
-                0f,
-                bloom.Size() * 0.5f,
-                0.13f,
+                0.22f + pulse * 0.02f,
                 SpriteEffects.None,
                 0f);
 
+            // 钉附弹本体 (采用暗曜石紫与冷蓝混色渲染)
             Main.EntitySpriteDraw(
                 texture,
                 drawPosition,
                 null,
-                Color.Lerp(Color.Black, OnyxRim, 0.22f) * opacity,
+                Color.Lerp(OnyxDeepViolet, OnyxRim, 0.45f) * opacity,
                 Projectile.rotation,
                 origin,
-                Projectile.scale * 1.16f,
+                Projectile.scale * 1.12f,
                 SpriteEffects.None,
                 0f);
             Main.EntitySpriteDraw(
                 texture,
                 drawPosition,
                 null,
-                Color.Lerp(lightColor, OnyxSheen, 0.68f) * (opacity * 0.55f),
+                Color.Lerp(lightColor, OnyxSheen, 0.72f) * (opacity * 0.85f),
                 Projectile.rotation,
                 origin,
                 Projectile.scale,
                 SpriteEffects.None,
                 0f);
 
+            // 叠加 Additive 发光
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState,
                 DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
@@ -389,7 +344,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
                 texture,
                 drawPosition,
                 null,
-                new Color(26, 92, 152, 0) * (opacity * 0.3f),
+                new Color(26, 92, 152, 0) * (opacity * 0.45f),
                 Projectile.rotation,
                 origin,
                 Projectile.scale * 1.08f,
@@ -402,51 +357,32 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
                     texture,
                     drawPosition - forward * 3f,
                     null,
-                    new Color(76, 32, 154, 0) * (opacity * (0.2f + pulse * 0.12f)),
+                    new Color(76, 32, 154, 0) * (opacity * (0.25f + pulse * 0.15f)),
                     Projectile.rotation,
                     origin,
                     Projectile.scale * (1.22f + pulse * 0.1f),
                     SpriteEffects.None,
                     0f);
                 Main.EntitySpriteDraw(
-                    texture,
-                    drawPosition + normal * MathF.Sin((5 * 60 - Projectile.timeLeft) * 0.28f) * 2f,
-                    null,
-                    new Color(42, 116, 176, 0) * (opacity * 0.2f),
-                    Projectile.rotation,
-                    origin,
-                    Projectile.scale * 1.38f,
-                    SpriteEffects.None,
-                    0f);
-                Main.EntitySpriteDraw(
                     bloom,
-                    drawPosition + forward * 12f,
+                    drawPosition + forward * 10f,
                     null,
-                    new Color(118, 188, 238, 0) * (opacity * (0.4f + pulse * 0.2f)),
+                    new Color(118, 188, 238, 0) * (opacity * (0.45f + pulse * 0.2f)),
                     0f,
                     bloom.Size() * 0.5f,
-                    0.115f + pulse * 0.035f,
-                    SpriteEffects.None,
-                    0f);
-                Main.EntitySpriteDraw(
-                    bloom,
-                    drawPosition - forward * 7f,
-                    null,
-                    new Color(70, 38, 148, 0) * (opacity * 0.25f),
-                    0f,
-                    bloom.Size() * 0.5f,
-                    0.09f,
+                    0.12f + pulse * 0.035f,
                     SpriteEffects.None,
                     0f);
             }
+
             Main.EntitySpriteDraw(
                 bloom,
                 drawPosition,
                 null,
-                new Color(46, 120, 186, 0) * (opacity * 0.42f),
+                new Color(46, 120, 186, 0) * (opacity * 0.5f),
                 0f,
                 bloom.Size() * 0.5f,
-                0.13f,
+                0.14f,
                 SpriteEffects.None,
                 0f);
 
@@ -454,16 +390,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState,
                 DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
 
-            Main.EntitySpriteDraw(
-                bloom,
-                drawPosition,
-                null,
-                Color.Black * (opacity * 0.5f),
-                0f,
-                bloom.Size() * 0.5f,
-                0.075f,
-                SpriteEffects.None,
-                0f);
             return false;
         }
     }

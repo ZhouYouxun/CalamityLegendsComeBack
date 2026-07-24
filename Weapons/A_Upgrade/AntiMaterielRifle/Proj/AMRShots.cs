@@ -162,6 +162,35 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
                 modifiers.SourceDamage *= player.GetCalibrationMultiplier(target.whoAmI);
             }
 
+            // 困难模式边缘准星判定：主子弹命中准星造成 1.25 倍伤害并触发涡旋爆发
+            if (AMRBalance.BullseyeUnlocked)
+            {
+                int bullseyeType = ModContent.ProjectileType<AMRBullseye>();
+                foreach (Projectile proj in Main.ActiveProjectiles)
+                {
+                    if (proj.type == bullseyeType && proj.owner == Projectile.owner && (int)proj.ai[0] == target.whoAmI)
+                    {
+                        if (proj.ModProjectile is AMRBullseye bullseye && proj.Opacity > 0.2f)
+                        {
+                            int steps = Projectile.extraUpdates + 1;
+                            Vector2 oldCenter = Projectile.Center - Projectile.velocity * steps;
+                            Vector2 seg = Projectile.Center - oldCenter;
+                            float segLenSq = seg.LengthSquared();
+                            float t = segLenSq > 0.0001f ? MathHelper.Clamp(Vector2.Dot(bullseye.Projectile.Center - oldCenter, seg) / segLenSq, 0f, 1f) : 0f;
+                            Vector2 closestPoint = oldCenter + seg * t;
+                            float distToBullseye = Vector2.Distance(closestPoint, bullseye.Projectile.Center);
+
+                            if (distToBullseye <= 45f)
+                            {
+                                modifiers.SourceDamage *= 1.25f;
+                                bullseye.TriggerVortexImpactExplosion(target);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
             if (AMRBalance.CriticalOverflowUnlocked && Projectile.CritChance > 100)
                 modifiers.CritDamage += (Projectile.CritChance - 100) / 100f;
 
@@ -226,7 +255,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
                 SpawnSubBullets(target, hit.Crit);
             }
 
-            if (AMRBalance.DimensionalSlideUnlocked && target.active)
+            if (AMRBalance.Stage >= AMRProgressionStage.DevourerOfGods && target.active)
             {
                 bool isBossOrSpecial = target.boss || target.type == NPCID.TargetDummy || target.realLife >= 0;
                 if (!isBossOrSpecial && target.lifeMax < 1000000)

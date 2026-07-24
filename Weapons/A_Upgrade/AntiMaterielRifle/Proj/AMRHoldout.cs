@@ -33,7 +33,15 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
         private Player Owner => Main.player[Projectile.owner];
         private AMRPlayer AMRPlayer => Owner.GetModPlayer<AMRPlayer>();
         internal Vector2 AimDirection => Projectile.velocity.SafeNormalize(Vector2.UnitX * Owner.direction);
-        internal Vector2 GunTipPosition => Projectile.Center + AimDirection * BarrelLength;
+        internal Vector2 GunTipPosition
+        {
+            get
+            {
+                Vector2 aim = AimDirection;
+                Vector2 gunUp = aim.RotatedBy(-MathHelper.PiOver2 * Owner.direction);
+                return Projectile.Center + aim * BarrelLength + gunUp * 8f;
+            }
+        }
         internal float ScopeChargeCompletion => MathHelper.Clamp(chargeFrames / (float)AMRBalance.ScopeChargeFrames, 0f, 1f);
         internal bool RightAiming => rightAiming;
 
@@ -191,7 +199,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
 
         private void TryFireLeft()
         {
-            if (leftFireTimer > 0 || AMRPlayer.IsSliding)
+            if (leftFireTimer > 0)
                 return;
 
             if (!FireShot(rightShot: false, 0f))
@@ -210,12 +218,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
 
             Vector2 direction = AimDirection;
             float speed = rightShot ? AMRBalance.RightProjectileSpeed(charge) : AMRBalance.LeftProjectileSpeed;
-            float slideMultiplier = rightShot ? AMRPlayer.ConsumeSlideEmpowerment() : 1f;
+            float slideMultiplier = 1f;
             int damage = rightShot
                 ? (int)(ammoDamage * AMRBalance.RightDamageMultiplier(charge) * slideMultiplier)
                 : ammoDamage;
             float knockback = Math.Max(Owner.HeldItem.knockBack, ammoKnockback) * (rightShot ? 1.35f : 1f);
-            int projectileType = ModContent.ProjectileType<AMRRound>();
+            int projectileType = rightShot
+                ? ModContent.ProjectileType<AMRBeamRound>()
+                : ModContent.ProjectileType<AMRRound>();
 
             bool markerRound = AMRPlayer.ConsumeOnyxRoundType();
             Vector2 spawnPosition = GetSafeMuzzlePosition(direction);
@@ -227,8 +237,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
                 Math.Max(1, damage),
                 knockback,
                 Projectile.owner,
-                charge,
-                markerRound ? 1f : 0f);
+                rightShot ? 0f : charge,
+                rightShot ? charge : (markerRound ? 1f : 0f));
 
             if (!Main.projectile.IndexInRange(shotIndex))
                 return false;
@@ -337,8 +347,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
             if (Main.dedServ)
                 return;
 
-            Color mainColor = rightShot ? new Color(233, 102, 238) : new Color(255, 202, 81);
-            Color pressureColor = rightShot ? new Color(157, 174, 218) : new Color(136, 164, 194);
+            Color mainColor = rightShot ? new Color(255, 200, 40) : new Color(255, 202, 81);
+            Color pressureColor = rightShot ? new Color(30, 24, 18) : new Color(136, 164, 194);
             float strength = rightShot ? 1.28f : 1f;
             int count = rightShot ? 14 : 9;
 
@@ -434,7 +444,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
             if (rightAiming || muzzleFlashTimer > 0)
             {
                 Color glowColor = rightAiming
-                    ? Color.Lerp(new Color(86, 108, 168, 0), new Color(233, 102, 238, 0), ScopeChargeCompletion)
+                    ? Color.Lerp(new Color(255, 180, 30, 0), new Color(255, 220, 80, 0), ScopeChargeCompletion)
                     : new Color(255, 202, 81, 0);
                 float power = rightAiming ? 0.12f + ScopeChargeCompletion * 0.28f : muzzleFlashTimer / 20f;
                 for (int i = 0; i < 6; i++)
@@ -460,7 +470,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
                 return;
 
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Color color = rightAiming ? new Color(233, 102, 238, 0) : new Color(255, 202, 81, 0);
+            Color color = rightAiming ? new Color(255, 215, 60, 0) : new Color(255, 202, 81, 0);
 
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState,

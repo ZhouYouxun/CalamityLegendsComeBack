@@ -82,11 +82,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
         public static int FireInterval => BaseFireInterval;
         public static bool DeathMarkUnlocked => Stage >= AMRProgressionStage.EyeOfCthulhu;
         public static bool MetalJetUnlocked => Stage >= AMRProgressionStage.EvilBoss;
-        public static bool SlideUnlocked => Stage >= AMRProgressionStage.WallOfFlesh;
+        public static bool BullseyeUnlocked => Stage >= AMRProgressionStage.WallOfFlesh;
         public static bool CalibrationUnlocked => Stage >= AMRProgressionStage.Plantera;
         public static bool CriticalOverflowUnlocked => Stage >= AMRProgressionStage.MoonLord;
         public static bool CoreRuptureUnlocked => Stage >= AMRProgressionStage.Providence;
-        public static bool DimensionalSlideUnlocked => Stage >= AMRProgressionStage.DevourerOfGods;
         public static bool OnyxSequenceUnlocked => Stage >= AMRProgressionStage.Finale;
 
         // Stage 0 天赋：命中造成最大生命值真实伤害 (普通敌人 10%，Boss 0.5%，受 DR 提升)。

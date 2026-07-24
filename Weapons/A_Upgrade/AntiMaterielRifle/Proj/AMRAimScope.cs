@@ -56,8 +56,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
             if (holdout.ScopeChargeCompletion >= 1f && Main.rand.NextBool(2))
             {
                 Vector2 velocity = holdout.AimDirection.RotatedByRandom(0.45f) * Main.rand.NextFloat(1f, 4f);
-                Dust spark = Dust.NewDustPerfect(Projectile.Center, Terraria.ID.DustID.PurpleTorch, velocity,
-                    70, new Color(233, 102, 238), Main.rand.NextFloat(0.8f, 1.2f));
+                Dust spark = Dust.NewDustPerfect(Projectile.Center, Terraria.ID.DustID.GoldFlame, velocity,
+                    70, new Color(255, 215, 0), Main.rand.NextFloat(0.8f, 1.2f));
                 spark.noGravity = true;
             }
         }
@@ -84,8 +84,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
             float sightsResolution = MathHelper.Lerp(0.05f, 0.2f, Math.Min(charge * 1.5f, 1f));
             float halfAngle = (1f - charge) * MaxSightAngle * 0.5f;
             Texture2D texture = Terraria.GameContent.TextureAssets.Projectile[Type].Value;
-            Color sightsColor = Color.Lerp(new Color(86, 108, 168), new Color(255, 245, 213), charge);
-            sightsColor = Color.Lerp(sightsColor, new Color(233, 102, 238), 0.22f + charge * 0.22f);
+            Color sightsColor = Color.Lerp(new Color(180, 160, 100), new Color(255, 245, 213), charge);
+            sightsColor = Color.Lerp(sightsColor, new Color(255, 185, 30), 0.35f + charge * 0.35f);
 
             Effect spreadEffect = Filters.Scene["CalamityMod:SpreadTelegraph"].GetShader().Shader;
             spreadEffect.Parameters["centerOpacity"].SetValue(0.7f);
