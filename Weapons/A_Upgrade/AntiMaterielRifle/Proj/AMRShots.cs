@@ -1,6 +1,8 @@
 using System;
 using CalamityMod;
 using CalamityMod.Buffs.StatDebuffs;
+using CalamityMod.Dusts;
+using CalamityMod.Enums;
 using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
@@ -12,7 +14,7 @@ using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
+namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
 {
     internal sealed class AMRRound : ModProjectile, ILocalizedModType
     {
@@ -96,7 +98,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             }
         }
 
-        // 主弹飞行期只生成沿弹道、固定反向的圆润粒子，不再使用随机方向 Spark。
+        // 主弹飞行期生成沿弹道反向的粉尘/粒子
         private void SpawnFlightEffects()
         {
             if (Main.dedServ)
@@ -121,7 +123,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             {
                 float completion = (i + 1f) / (orbCount + 1f);
                 Vector2 spawnPosition = Vector2.Lerp(oldCenter, Projectile.Center, completion);
-                Color orbColor = i % 2 == 0 ? new Color(255, 211, 102) : new Color(146, 174, 205);
+                Color orbColor = i % 2 == 0 ? new Color(255, 211, 102) : new Color(30, 26, 22);
                 float scale = i % 2 == 0 ? 0.34f : 0.27f;
                 GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
                     spawnPosition,
@@ -165,25 +167,40 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
 
             if (AMRBalance.CoreRuptureUnlocked)
                 modifiers.CritDamage += IsAimedShot ? 0.75f : 0.5f;
+
+            if (!Main.dedServ)
+            {
+                // Rubico 风格：主弹幕命中时两侧飞溅高能量线状火花
+                Vector2 backward = -Projectile.velocity.SafeNormalize(Vector2.UnitX);
+                for (int i = 0; i < 3; i++)
+                {
+                    LineParticle sparkLeft = new LineParticle(
+                        Projectile.Center,
+                        backward.RotatedBy(Main.rand.NextFloat(0.18f, 0.44f)) * Main.rand.NextFloat(1.5f, 4f),
+                        false,
+                        10,
+                        1f,
+                        Main.rand.NextBool() ? new Color(25, 22, 18) : new Color(255, 195, 40));
+                    GeneralParticleHandler.SpawnParticle(sparkLeft);
+
+                    LineParticle sparkRight = new LineParticle(
+                        Projectile.Center,
+                        backward.RotatedBy(Main.rand.NextFloat(-0.18f, -0.44f)) * Main.rand.NextFloat(1.5f, 4f),
+                        false,
+                        10,
+                        1f,
+                        Main.rand.NextBool() ? new Color(218, 165, 32) : new Color(45, 38, 18));
+                    GeneralParticleHandler.SpawnParticle(sparkRight);
+                }
+            }
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             hitAnyTarget = true;
 
-            // Stage 0 天赋：命中造成 10% 最大生命值真实伤害 (Boss 降低至 0.5%，受 DR 提升)
-            if (target.active && target.lifeMax > 5)
+            if (AMRBalance.TryGetMaxLifeTrueDamage(target, out int finalTrueDamage))
             {
-                bool isBoss = target.boss || target.type == NPCID.TargetDummy || target.realLife >= 0;
-                float trueDamageRatio = isBoss ? 0.005f : 0.10f;
-                float trueDamage = target.lifeMax * trueDamageRatio;
-
-                // DR (Damage Reduction) 加成
-                float dr = target.Calamity().DR;
-                if (dr > 0f)
-                    trueDamage *= (1f + dr);
-
-                int finalTrueDamage = Math.Max(1, (int)trueDamage);
                 target.life -= finalTrueDamage;
                 CombatText.NewText(target.getRect(), new Color(255, 140, 40), finalTrueDamage, true);
 
@@ -191,7 +208,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
                     target.checkDead();
             }
 
-            // Stage 1 克眼强化：防御力永久降低 60%
             if (AMRBalance.DeathMarkUnlocked)
             {
                 target.AddBuff(ModContent.BuffType<MarkedforDeath>(), 5 * 60);
@@ -199,20 +215,17 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
                 target.Calamity().miscDefenseLoss = Math.Max(target.Calamity().miscDefenseLoss, defenseLoss);
             }
 
-            // Stage 2 克脑/世吞强化：沿弹道向前方喷射金属射流实体碎片
             if (AMRBalance.MetalJetUnlocked && Projectile.owner == Main.myPlayer)
             {
                 SpawnMetalJetProjectiles(target.Center);
                 SpawnMetalJet(target.Center);
             }
 
-            // Stage 7：按原作 AMR / Tyranny's End 规则，从目标左右两侧召来高速夹击弹。
             if (AMRBalance.CoreRuptureUnlocked && Projectile.owner == Main.myPlayer)
             {
                 SpawnSubBullets(target, hit.Crit);
             }
 
-            // Stage 8 神吞强化：弑神之铳秒杀普通小怪
             if (AMRBalance.DimensionalSlideUnlocked && target.active)
             {
                 bool isBossOrSpecial = target.boss || target.type == NPCID.TargetDummy || target.realLife >= 0;
@@ -235,14 +248,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
         private void SpawnMetalJetProjectiles(Vector2 impactCenter)
         {
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-            int count = 5; // 产生顺序扩散的 5 个弹幕
-            int shardDamage = (int)(Projectile.damage * 0.5f); // 50% 伤害
+            int count = 5;
+            int shardDamage = (int)(Projectile.damage * 0.5f);
 
             for (int i = 0; i < count; i++)
             {
-                float spreadAngle = MathHelper.ToRadians(32f);
-                float angle = MathHelper.Lerp(-spreadAngle, spreadAngle, i / (float)(count - 1));
-                Vector2 shardVel = forward.RotatedBy(angle) * Main.rand.NextFloat(18f, 28f);
+                float angle = MathHelper.ToRadians(Main.rand.NextFloat(-45f, 45f));
+                Vector2 shardVel = forward.RotatedBy(angle) * Main.rand.NextFloat(7f, 18f);
 
                 Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
@@ -433,7 +445,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
                 float angle = MathHelper.ToRadians(70f) * spread + MathHelper.ToRadians(Main.rand.NextFloat(-2.5f, 2.5f));
                 float centerWeight = 1f - MathF.Abs(spread * 2f);
                 float speed = MathHelper.Lerp(4.5f, 15.5f, centerWeight) * Main.rand.NextFloat(0.88f, 1.12f) * strength;
-                Color color = Color.Lerp(new Color(167, 187, 210), new Color(255, 220, 119), centerWeight);
+                Color color = Color.Lerp(new Color(30, 25, 20), new Color(255, 220, 119), centerWeight);
                 Vector2 spawnPosition = center + forward * 5f + normal * spread * 8f;
                 GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
                     spawnPosition,
@@ -464,6 +476,36 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
                     2.4f));
             }
 
+            Vector2 splatterDirection = -forward;
+            int gravitySparkCount = critical ? 16 : 10;
+            for (int i = 0; i < gravitySparkCount; i++)
+            {
+                int sparkLifetime = Main.rand.Next(22, 38);
+                float sparkScale = Main.rand.NextFloat(0.85f, 1.25f) * (critical ? 1.25f : 1f);
+                if (Main.rand.NextBool(10))
+                    sparkScale *= 2f;
+
+                Color sparkColor = Color.Lerp(new Color(25, 22, 18), Color.Gold, Main.rand.NextFloat(0.7f));
+
+                Vector2 sparkVelocity = splatterDirection.RotatedByRandom(0.75f) * Main.rand.NextFloat(11f, 24f) * strength;
+                sparkVelocity.Y -= Main.rand.NextFloat(4f, 8f);
+
+                GeneralParticleHandler.SpawnParticle(new SparkParticle(
+                    center,
+                    sparkVelocity,
+                    true,
+                    sparkLifetime,
+                    sparkScale,
+                    sparkColor));
+            }
+
+            GeneralParticleHandler.SpawnParticle(new ImpactParticle(
+                center,
+                Main.rand.NextFloat(-0.2f, 0.2f),
+                20,
+                critical ? 0.95f : 0.7f,
+                Color.Lerp(Color.Silver, Color.Gold, 0.55f)));
+
             GeneralParticleHandler.SpawnParticle(new GenericBloom(
                 center + forward * 4f,
                 forward * 0.3f,
@@ -477,7 +519,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
                 GeneralParticleHandler.SpawnParticle(new HeavySmokeParticle(
                     center + forward * 10f,
                     forward.RotatedBy(MathHelper.ToRadians(24f) * sign) * 2.2f,
-                    new Color(48, 39, 29),
+                    new Color(30, 25, 20),
                     22,
                     0.42f * strength,
                     0.62f,
@@ -490,13 +532,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
         {
             Collision.HitTiles(Projectile.position, Projectile.velocity, Projectile.width, Projectile.height);
 
-            // 克脑/世吞后：撞击物块喷射金属碎片
             if (AMRBalance.MetalJetUnlocked && Projectile.owner == Main.myPlayer)
             {
                 SpawnMetalJetProjectiles(Projectile.Center);
             }
 
-            // 星流/终灾后：标记弹 (第一发) 撞击物块时，生成物块粘附标记
             if (AMRBalance.OnyxSequenceUnlocked && IsMarkerRound && Projectile.owner == Main.myPlayer)
             {
                 Vector2 forward = oldVelocity.SafeNormalize(Vector2.UnitX);
@@ -545,10 +585,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Vector2 bloomOrigin = bloom.Size() * 0.5f;
 
-            // 三次绘制，不是六次：
-            //   ① 暖色外晕（表明"这里很烫"）
-            //   ② 过曝白心（表明"这里是弹头"）
-            //   ③ 沿弹道拉长的本体
             Main.EntitySpriteDraw(bloom, drawCenter, null, new Color(255, 168, 28, 0), 0f,
                 bloomOrigin, 0.19f, SpriteEffects.None, 0f);
             Main.EntitySpriteDraw(bloom, drawCenter + forward * 2f, null, new Color(255, 252, 232, 0), 0f,
@@ -593,7 +629,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             Vector2[] corePoints = new Vector2[corePointCount];
             Array.Copy(trailPoints, corePoints, corePointCount);
             
-            // 渲染内层炽热弹芯：使用规整的 BasicTrail 纹理，表示高速高亮的轨道核心
             trailShader.SetShaderTexture(
                 ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/BasicTrail"));
             PrimitiveRenderer.RenderTrail(
@@ -638,7 +673,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             return points;
         }
 
-        // 激波：宽、冷、淡。表达"空气被撕开的那一层"，不表达弹体本身。
         private float ShockTrailWidth(float completion, Vector2 _)
         {
             return TaperedTrailWidth(completion, 18f * Projectile.scale / 1.55f, 0.06f, 0.55f);
@@ -647,14 +681,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
         private Color ShockTrailColor(float completion, Vector2 _)
         {
             float tailFade = 1f - Utils.GetLerpValue(0.42f, 1f, completion, true);
-            // 冷灰蓝 → 更深的蓝。与弹芯的暖白构成冷暖对比，这是分层的关键。
-            Color shock = Color.Lerp(new Color(150, 176, 205), new Color(48, 63, 84), completion);
-            // A 不能设 0：TrailStreak 在 AlphaBlend 下渲染，像素输出=顶点色×opacity，
-            // A=0 会让整条拖尾透明（这正是主体拖尾此前"缺失"的原因）。让 A 随强度走。
+            Color shock = Color.Lerp(new Color(150, 176, 205), new Color(30, 26, 22), completion);
             return shock * (tailFade * 0.34f);
         }
 
-        // 弹芯：极细、极亮、极短。它是"子弹在哪"的唯一读数。
         private float PenetratorCoreWidth(float completion, Vector2 _)
         {
             return TaperedTrailWidth(completion, 2.6f * Projectile.scale / 1.55f, 0.05f, 0.85f);
@@ -664,7 +694,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
         {
             float tailFade = 1f - Utils.GetLerpValue(0.5f, 1f, completion, true);
             Color core = Color.Lerp(new Color(255, 255, 248), new Color(255, 186, 46), completion * 0.8f);
-            // 同 ShockTrailColor：primitive 拖尾在 AlphaBlend 下 A=0 即隐形，这里让弹芯拿满 A。
             return core * tailFade;
         }
 
@@ -679,7 +708,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             float tailCompletion = MathHelper.Clamp((completion - headFraction) / (1f - headFraction), 0f, 1f);
             return maximumWidth * MathF.Pow(1f - tailCompletion, tailPower);
         }
-
     }
 
     internal sealed class AMRMarkerGlobalNPC : GlobalNPC
@@ -756,10 +784,82 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
                 {
                     Dust dust = Dust.NewDustPerfect(Projectile.Center, DustID.PurpleTorch,
                         Main.rand.NextVector2Unit() * Main.rand.NextFloat(3f, 12f), 50,
-                        Main.rand.NextBool() ? new Color(233, 102, 238) : new Color(255, 202, 81),
+                        Main.rand.NextBool() ? new Color(104, 44, 176) : new Color(52, 128, 194),
                         Main.rand.NextFloat(0.9f, 1.7f));
                     dust.noGravity = true;
                 }
+
+                SpawnOnyxVoidBurst();
+            }
+        }
+
+        private void SpawnOnyxVoidBurst()
+        {
+            if (Main.dedServ)
+                return;
+
+            for (int i = 0; i < 3; i++)
+            {
+                GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                    Projectile.Center,
+                    Vector2.Zero,
+                    Color.Black,
+                    "CalamityMod/Particles/SmallBloom",
+                    Vector2.One,
+                    Main.rand.NextFloat(-10f, 10f),
+                    1.9f + i * 0.55f,
+                    0f,
+                    46,
+                    false));
+            }
+
+            GeneralParticleHandler.SpawnParticle(new GenericBloom(
+                Projectile.Center,
+                Vector2.Zero,
+                Color.Black,
+                1.1f,
+                26,
+                false,
+                false));
+
+            Particle violetRing = new CustomPulse(
+                Projectile.Center,
+                Vector2.Zero,
+                new Color(96, 40, 172),
+                "CalamityMod/Particles/BloomRing",
+                Vector2.One,
+                Main.rand.NextFloat(-10f, 10f),
+                0f,
+                2.35f,
+                20);
+            GeneralParticleHandler.SpawnParticle(violetRing);
+            violetRing.DrawLayer = GeneralDrawLayer.AfterEverything;
+
+            for (int i = 0; i < 24; i++)
+            {
+                float variance = Main.rand.NextFloat(-0.8f, 0.8f);
+                Dust voidDust = Dust.NewDustPerfect(Projectile.Center, ModContent.DustType<VoidDustInverted>());
+                voidDust.noGravity = true;
+                voidDust.velocity = new Vector2(14f, 14f).RotatedByRandom(MathHelper.TwoPi) *
+                    Main.rand.NextFloat(0.15f, 1f) * (1f - MathF.Abs(variance) * 0.4f);
+                voidDust.scale = Main.rand.NextFloat(1.2f, 2.1f);
+                voidDust.color = Main.rand.NextBool(3) ? new Color(52, 22, 104) : new Color(44, 108, 170);
+            }
+
+            for (int i = 0; i < 9; i++)
+            {
+                Particle blackShard = new CustomSpark(
+                    Projectile.Center,
+                    Main.rand.NextVector2CircularEdge(6.5f, 6.5f) * Main.rand.NextFloat(0.45f, 1f),
+                    Main.rand.NextBool() ? "CalamityMod/Particles/GlowSpark2" : "CalamityMod/Particles/GlowSpark",
+                    false,
+                    Main.rand.Next(16, 24),
+                    Main.rand.NextFloat(0.04f, 0.085f),
+                    Color.Black,
+                    new Vector2(0.55f, 1.45f),
+                    false);
+                GeneralParticleHandler.SpawnParticle(blackShard);
+                blackShard.DrawLayer = GeneralDrawLayer.AfterEverything;
             }
         }
 
@@ -774,18 +874,26 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             float completion = 1f - Projectile.timeLeft / 3f;
             float scale = MathHelper.Lerp(0.15f, 1.25f, completion);
 
+            Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition, null,
+                Color.Black * (0.92f - completion * 0.5f), 0f, bloom.Size() * 0.5f, scale * 1.15f,
+                SpriteEffects.None, 0f);
+
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState,
                 DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
             Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition, null,
-                new Color(233, 102, 238) * (1f - completion), 0f, bloom.Size() * 0.5f, scale,
+                new Color(104, 44, 176) * (1f - completion) * 0.85f, 0f, bloom.Size() * 0.5f, scale,
                 SpriteEffects.None, 0f);
             Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition, null,
-                new Color(255, 245, 213) * (0.8f - completion * 0.6f), 0f, bloom.Size() * 0.5f,
+                new Color(126, 186, 232) * (0.55f - completion * 0.4f), 0f, bloom.Size() * 0.5f,
                 scale * 0.45f, SpriteEffects.None, 0f);
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState,
                 DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+
+            Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition, null,
+                Color.Black * (0.7f - completion * 0.45f), 0f, bloom.Size() * 0.5f, scale * 0.5f,
+                SpriteEffects.None, 0f);
             return false;
         }
     }

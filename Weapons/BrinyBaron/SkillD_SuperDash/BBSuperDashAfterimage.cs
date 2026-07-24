@@ -14,8 +14,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
         private const int Lifetime = 25;
         private const float VelocityRetention = 0.9f;
 
-        // A renderer-only Player. Never mutate the real owner while drawing an afterimage.
-        private Player visualPlayer;
+        // A shared renderer-only Player proxy to eliminate high-frequency memory allocations.
+        private static Player visualPlayer;
 
         public new string LocalizationCategory => "Projectiles.BrinyBaron";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
@@ -139,10 +139,20 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             visualPlayer.shoeColor = owner.shoeColor;
             visualPlayer.hairDye = owner.hairDye;
 
-            for (int i = 0; i < visualPlayer.armor.Length; i++)
-                visualPlayer.armor[i] = owner.armor[i].Clone();
-            for (int i = 0; i < visualPlayer.dye.Length; i++)
-                visualPlayer.dye[i] = owner.dye[i].Clone();
+            for (int i = 0; i < visualPlayer.armor.Length && i < owner.armor.Length; i++)
+            {
+                visualPlayer.armor[i] ??= new Item();
+                visualPlayer.armor[i].netDefaults(owner.armor[i].netID);
+                visualPlayer.armor[i].type = owner.armor[i].type;
+                visualPlayer.armor[i].prefix = owner.armor[i].prefix;
+            }
+            for (int i = 0; i < visualPlayer.dye.Length && i < owner.dye.Length; i++)
+            {
+                visualPlayer.dye[i] ??= new Item();
+                visualPlayer.dye[i].netDefaults(owner.dye[i].netID);
+                visualPlayer.dye[i].type = owner.dye[i].type;
+                visualPlayer.dye[i].prefix = owner.dye[i].prefix;
+            }
 
             // The original renderer uses these visible slots to select the correct multi-frame
             // armor and vanity textures. Accessories are re-applied as visible equipment so

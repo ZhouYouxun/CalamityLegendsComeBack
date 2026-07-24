@@ -36,8 +36,10 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.AStage0
             Projectile.ignoreWater = true;
             Projectile.DamageType = DamageClass.Magic;
             Projectile.penetrate = 1;
-            Projectile.timeLeft = 180;
-            Projectile.extraUpdates = 2;
+            // 3 -> 5 updates per tick: keep the original world-space speed and lifetime,
+            // but give collision five samples per tick instead of three.
+            Projectile.timeLeft = 300;
+            Projectile.extraUpdates = 4;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = -1;
         }
@@ -47,6 +49,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.AStage0
             if (Projectile.localAI[0] == 0f)
             {
                 Projectile.scale = Projectile.ai[1] <= 0f ? 0.7f : Projectile.ai[1];
+                Projectile.velocity *= 0.6f;
                 Projectile.localAI[0] = 1f;
             }
 
@@ -64,8 +67,12 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.AStage0
             Color glow = Color.Lerp(new Color(255, 80, 20), new Color(255, 220, 80), Main.rand.NextFloat(0.25f, 0.65f));
             Lighting.AddLight(Projectile.Center, glow.ToVector3() * 0.28f * Projectile.scale);
 
-            SpawnAsteroidMoltenDust();
-            VesuviusProjectileVisuals.SpawnMoltenMeteorTrail(Projectile, NoLargeExplosion ? 0.82f : 1.08f, !NoLargeExplosion);
+            // The added sub-updates are for collision reliability, not for a denser trail.
+            if (Projectile.numUpdates == 0)
+            {
+                SpawnAsteroidMoltenDust();
+                VesuviusProjectileVisuals.SpawnMoltenMeteorTrail(Projectile, NoLargeExplosion ? 0.82f : 1.08f, !NoLargeExplosion);
+            }
         }
 
         private void SpawnAsteroidMoltenDust()

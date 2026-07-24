@@ -547,7 +547,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
 
         private static int GetShurikenGrowthTier()
         {
-            return BB_Balance.GetGrowthStage() - 1;
+            // The left-click combo has a fifth endgame stage, while the shuriken profile table
+            // currently defines four tiers (0-3). Reuse the highest shuriken profile for that
+            // final stage instead of indexing the table with tier 4 during combo step three.
+            int highestConfiguredTier = ShurikenPenetrates.Length - 1;
+            return Utils.Clamp(BB_Balance.GetGrowthStage() - 1, 0, highestConfiguredTier);
         }
 
         private readonly struct ShurikenProfile

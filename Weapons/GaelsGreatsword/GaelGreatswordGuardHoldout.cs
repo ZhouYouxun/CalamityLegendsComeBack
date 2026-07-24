@@ -27,9 +27,9 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
         private const float SwordVisualScale = 1.5f;
         private const float BladeReach = 132f;
 
-        private static readonly Color DarkPurple = new(58, 18, 112);
-        private static readonly Color BloodRed = new(175, 14, 40);
-        private static readonly Color PaleCore = new(225, 207, 245);
+        private static readonly Color DarkPurple = GaelGreatswordVisuals.CrimsonViolet;
+        private static readonly Color BloodRed = GaelGreatswordVisuals.BrimstoneRed;
+        private static readonly Color PaleCore = GaelGreatswordVisuals.WhiteHot;
 
         private Player Owner => Main.player[Projectile.owner];
         private int timer;
@@ -114,16 +114,19 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
             if (Main.dedServ)
                 return;
 
-            Lighting.AddLight(guardCenter, 0.28f, 0.04f, 0.34f);
+            Lighting.AddLight(guardCenter, 0.34f, 0.05f, 0.06f);
             if (timer % 4 != 0)
                 return;
 
+            // 举剑时剑身缓缓冒起硫火：烬火光珠 + 一缕流体火，格挡姿态也带着灾厄的余温。
             Vector2 bladeDirection = guardAngle.ToRotationVector2();
             Vector2 side = bladeDirection.RotatedBy(MathHelper.PiOver2);
             Vector2 position = Projectile.Center + bladeDirection * Main.rand.NextFloat(30f, BladeReach) * scale + side * Main.rand.NextFloat(-12f, 12f);
             Vector2 velocity = side * Main.rand.NextFloat(-1.2f, 1.2f) - bladeDirection * Main.rand.NextFloat(0.4f, 1.8f);
             GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(position, velocity, false,
-                Main.rand.Next(18, 26), Main.rand.NextFloat(0.14f, 0.22f), Main.rand.NextBool() ? BloodRed : DarkPurple));
+                Main.rand.Next(18, 26), Main.rand.NextFloat(0.14f, 0.22f), Main.rand.NextBool() ? BloodRed : DarkPurple, true, false));
+            if (Main.rand.NextBool(2))
+                GaelGreatswordVisuals.RegisterBrimstoneFire(position, -bladeDirection * 0.8f, 0.28f, 0.24f);
         }
 
         public override bool PreDraw(ref Color lightColor)

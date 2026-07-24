@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using CalamityMod;
+using CalamityMod.Dusts;
 using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
@@ -24,8 +25,8 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
     {
         public override string Texture => "CalamityMod/Projectiles/Magic/RedirectingVengefulSoul";
 
-        private static readonly Color SoulPurple = new(95, 36, 150);
-        private static readonly Color BloodRed = new(170, 12, 42);
+        private static readonly Color SoulPurple = GaelGreatswordVisuals.CrimsonViolet;
+        private static readonly Color BloodRed = GaelGreatswordVisuals.BrimstoneRed;
 
         public override void SetStaticDefaults()
         {
@@ -70,7 +71,7 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
             if (Main.rand.NextBool(4))
             {
                 Dust dust = Dust.NewDustPerfect(Projectile.Center + Main.rand.NextVector2Circular(9f, 12f),
-                    Main.rand.NextBool(3) ? DustID.Blood : DustID.Shadowflame,
+                    Main.rand.NextBool(3) ? DustID.Blood : (int)CalamityDusts.Brimstone,
                     -Projectile.velocity.SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(0.4f, 1.6f), 120,
                     Main.rand.NextBool() ? SoulPurple : BloodRed, Main.rand.NextFloat(0.85f, 1.25f));
                 dust.noGravity = true;

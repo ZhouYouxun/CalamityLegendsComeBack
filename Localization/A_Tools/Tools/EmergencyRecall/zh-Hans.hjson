@@ -1,0 +1,17 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				EmergencyRecall: {
+					DisplayName: 应急回城卷
+					Tooltip:
+						'''
+						放在背包中并标记为收藏时生效
+						在没有Boss存活期间受到致命伤害时，自动消耗背包中的回城道具并立即回城
+						消耗优先级：返回药水 > 回城药水 > 魔镜（魔镜不消耗）
+						'''
+				}
+			}
+		}
+	}
+}

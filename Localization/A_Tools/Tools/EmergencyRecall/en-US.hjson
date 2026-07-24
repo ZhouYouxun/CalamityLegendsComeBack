@@ -1,0 +1,17 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				EmergencyRecall: {
+					DisplayName: Emergency Recall
+					Tooltip:
+						'''
+						Triggers when placed in inventory and marked as favorited
+						When receiving fatal damage with no boss active, automatically uses a recall item to return home
+						Consumption Priority: Potion of Return > Recall Potion > Magic Mirror (Mirrors are not consumed)
+						'''
+				}
+			}
+		}
+	}
+}

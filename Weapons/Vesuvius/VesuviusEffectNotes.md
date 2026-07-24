@@ -1,5 +1,19 @@
 # Vesuvius effect notes
 
+## Left-click visual identity
+
+- Borrow Helium Flash's **cadence** only: inward charge, a clear ready beat, one forceful release,
+  then a short pressure vent. Do not copy its fireworks, steam-cannon density, or plasma-sun body.
+- The material order is **scoria shell first, molten fissures second, bloom last**. A bright circle
+  without an opaque rock silhouette does not read as Vesuvius.
+- Charging is compression: sparse ash and hot fissure slivers travel inward. Keep the continuously
+  visible muzzle stack to one pressure halo, one tight hotspot, and one flattened gasket ring.
+- Flight is one fast molten mass. Use a short heat wake plus ash; do not wrap it in a rotating ring.
+- High-tier impact is two beats: a white-hot penetration flash, then a low seismic front with rock
+  ejecta and rising ash. Reserve the widest effect for the earthquake ring, not for round fire bloom.
+- Higher stages increase brightness, debris weight, and rupture reach. They should not multiply the
+  number of unrelated particle families.
+
 ## Main references
 
 - `AsteroidMolten`

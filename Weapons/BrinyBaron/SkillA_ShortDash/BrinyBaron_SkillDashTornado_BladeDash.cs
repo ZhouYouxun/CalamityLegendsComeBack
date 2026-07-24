@@ -28,7 +28,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
         private const float DashSpeed = 18f * 0.67f;
         private const float ReboundSpeed = 9f;
         private const float DefaultReboundDashSpeedMultiplier = 0.6f;
-        private const float DashTurnRate = 0.01f; // 转向最大角度限
+        private const float DashTurnRate = 0.01f;
         private const float ReadyBladeDistance = 28f;
         private const float DashBladeDistance = 20f;
         private const float ReboundBladeDistance = 18f;
@@ -78,7 +78,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
         {
             InitializeDash(Main.player[Projectile.owner]);
         }
-        //speed
+
         public override void AI()
         {
             Player owner = Main.player[Projectile.owner];
@@ -143,7 +143,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             }, Projectile.Center);
 
             SpawnStartBurst();
-            SpawnChargeReadyBurst();
         }
 
         private void DoPreparePhase(Player owner)
@@ -270,28 +269,34 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
 
             Player owner = Main.player[Projectile.owner];
             if (Main.myPlayer == Projectile.owner)
+            {
                 owner.GetModPlayer<BBTideValuePlayer>().TryAddTideFromBlade();
 
-            if (ReboundDashMode)
-            {
-                SpawnCeruleanShieldExplosion(target.Center, GetReliableDashDirection());
-                StartRebound(owner, target.Center);
-                if (Main.myPlayer == Projectile.owner)
-                {
-                    var dashCooldown = owner.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>();
-                    if (owner.GetModPlayer<BBAccessoryPlayer>().ImpactRestarterEquipped)
-                        dashCooldown.ClearCooldown();
-                    else
-                        dashCooldown.ReduceCooldownTo(60);
-                }
-                Projectile.netUpdate = true;
-                return;
+                Vector2 spawnPos = target.Center - Vector2.UnitY * 380f + Main.rand.NextVector2Circular(20f, 10f);
+                Vector2 boltVelocity = (target.Center - spawnPos).SafeNormalize(Vector2.UnitY) * 14f;
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    spawnPos,
+                    boltVelocity,
+                    ModContent.ProjectileType<BBASD_Lighting>(),
+                    Math.Max(1, (int)(Projectile.damage * 0.75f)),
+                    Projectile.knockBack * 0.5f,
+                    Projectile.owner,
+                    0.75f);
             }
 
-            if (owner.GetModPlayer<BBAccessoryPlayer>().ImpactRestarterEquipped && Main.myPlayer == Projectile.owner)
-                owner.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>().ClearCooldown();
+            SpawnCeruleanShieldExplosion(target.Center, GetReliableDashDirection());
+            StartRebound(owner, target.Center);
 
-            // LostGarment mode: pass through enemies, keep dashing
+            if (Main.myPlayer == Projectile.owner)
+            {
+                var dashCooldown = owner.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>();
+                if (owner.GetModPlayer<BBAccessoryPlayer>().ImpactRestarterEquipped)
+                    dashCooldown.ClearCooldown();
+                else
+                    dashCooldown.ReduceCooldownTo(60);
+            }
+            Projectile.netUpdate = true;
         }
 
         public override bool OnTileCollide(Vector2 oldVelocity)
@@ -306,7 +311,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
 
             Player owner = Main.player[Projectile.owner];
             if (owner.active && !owner.dead && dashState != 0)
-                owner.velocity *= 0.85f;
+                owner.velocity *= 0.2f;
 
             SpawnEndBurst();
 
@@ -383,39 +388,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
         private Vector2 ResolveSlidingVelocity(Player owner, Vector2 desiredVelocity)
         {
             Vector2 adjustedVelocity = Collision.TileCollision(owner.position, desiredVelocity, owner.width, owner.height, false, false, (int)owner.gravDir);
-
-            float desiredSpeed = desiredVelocity.Length();
-            if (desiredSpeed <= 0.01f)
-                return Vector2.Zero;
-
-            // 1. 碰到竖直墙壁（X轴运动受阻）：切断冲刺，弹幕直接消失，绝不穿墙或沿着墙上下滑行
-            bool hitWall = Math.Abs(desiredVelocity.X) > 0.01f && Math.Abs(adjustedVelocity.X) < 0.01f;
-            if (hitWall)
-            {
+            if (adjustedVelocity != desiredVelocity)
                 GrantTideFromTileContact(owner);
-                return Vector2.Zero;
-            }
-
-            // 2. 贴近/触碰地面或天花板（Y轴运动受阻）：
-            // 立即在地面上保持全速 DashSpeed 水平滑行
-            bool hitFloorOrCeiling = Math.Abs(desiredVelocity.Y) > 0.01f && Math.Abs(adjustedVelocity.Y) < 0.01f;
-            if (hitFloorOrCeiling)
-            {
-                GrantTideFromTileContact(owner);
-
-                int horizDir = desiredVelocity.X != 0f ? Math.Sign(desiredVelocity.X) : owner.direction;
-                Vector2 groundSlide = new Vector2(horizDir * desiredSpeed, 0f);
-                Vector2 groundSlideAdjusted = Collision.TileCollision(owner.position, groundSlide, owner.width, owner.height, false, false, (int)owner.gravDir);
-
-                // 如果地面前方无障碍，则保持全速滑行
-                if (Math.Abs(groundSlideAdjusted.X) > 0.01f)
-                {
-                    return groundSlideAdjusted;
-                }
-
-                // 如果滑行前方撞墙，直接停止并消散
-                return Vector2.Zero;
-            }
 
             return adjustedVelocity;
         }
@@ -444,6 +418,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             Projectile.friendly = false;
             Projectile.velocity = lockedDirection * ReboundSpeed * DashSpeedMultiplier;
             SyncOwnerToProjectile(owner, ReboundBladeDistance);
+            owner.itemAnimation = 0;
             Projectile.netUpdate = true;
 
             SpawnBounceBurst(impactCenter, reliableDashDirection);
@@ -476,9 +451,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
                     ModContent.ProjectileType<BrinyBaron_DashWaterPillar>(),
                     pillarDamage,
                     0f,
-                Projectile.owner,
-                Main.rand.NextFloat(0.86f, 1.22f),
-                i == 2 ? 1f : 0f);
+                    Projectile.owner,
+                    Main.rand.NextFloat(0.86f, 1.22f),
+                    i == 2 ? 1f : 0f);
             }
         }
 
@@ -537,7 +512,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
 
             Vector2 forward = lockedDirection.SafeNormalize(Vector2.UnitX);
 
-            // 剑刃凝现：轻微水光散逸，像刀身从海水中被抽出
             for (int i = 0; i < 6; i++)
             {
                 Vector2 dustVel = forward.RotatedByRandom(0.7f) * Main.rand.NextFloat(1.2f, 3.5f);
@@ -550,7 +524,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
                 d.noGravity = true;
             }
 
-            // GlowOrbParticle 凝聚光点
             for (int i = 0; i < 3; i++)
             {
                 GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
@@ -565,11 +538,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
 
         private void SpawnChargeReadyBurst()
         {
-            ApplyScreenShake(7f);
+            ApplyScreenShake(3f);
 
             SoundEngine.PlaySound(SoundID.Item122 with
             {
-                Volume = 0.85f,
+                Volume = 0.68f,
                 Pitch = -0.22f
             }, Projectile.Center);
 
@@ -586,46 +559,29 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
             Vector2 tip = Projectile.Center + forward * ReadyBladeDistance;
 
-            // 三层 DirectionalPulseRing 向前爆破（借鉴 Xyk 多层前冲脉冲技术，水蓝色调）
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 5; i++)
             {
-                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
-                    tip - forward * (4f + i * 3.5f),
-                    forward * (0.10f + i * 0.025f),
-                    Color.Lerp(new Color(55, 175, 255), Color.White, 0.18f + i * 0.09f),
-                    new Vector2(0.88f, 2.4f),
-                    forward.ToRotation(),
-                    0.25f + i * 0.04f,
-                    0.05f,
-                    16 - i * 2));
+                float sideOffset = Main.rand.NextFloatDirection() * 12f;
+                GeneralParticleHandler.SpawnParticle(new WaterFoamParticle(
+                    tip - forward * Main.rand.NextFloat(2f, 13f) + right * sideOffset,
+                    forward * Main.rand.NextFloat(0.55f, 1.35f) + right * sideOffset * 0.055f,
+                    Main.rand.Next(16, 25),
+                    Main.rand.NextFloat(0.36f, 0.58f),
+                    Color.Lerp(new Color(85, 195, 255), Color.White, Main.rand.NextFloat(0.12f, 0.36f))));
             }
 
-            // 圆形冲击波（近圆 DirectionalPulseRing 模拟爆破环，Xyk BloomRing 思路）
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
-                tip, Vector2.Zero,
-                new Color(65, 195, 255) with { A = 0 },
-                new Vector2(1.05f, 1.05f),
-                0f, 0.22f, 0.04f, 24));
-
-            // GlowBlade 刀气火花（已有 FlightEffects 技术直接复用）
-            const string GlowBladeTexture = "CalamityLegendsComeBack/Texture/Shared/GlowBlade";
             for (int i = 0; i < 4; i++)
             {
-                float sideOff = Main.rand.NextFloatDirection() * 5f;
-                GeneralParticleHandler.SpawnParticle(new CustomSpark(
-                    tip - forward * (5f + i * 2.5f) + right * sideOff,
-                    forward * 0.03f + right * sideOff * 0.008f,
-                    GlowBladeTexture,
-                    false, 7, 0.17f,
-                    new Color(145, 235, 255) * 0.92f,
-                    new Vector2(0.55f, 1.85f),
-                    glowCenter: true, shrinkSpeed: 0.95f, glowCenterScale: 0.88f, glowOpacity: 0.70f));
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    tip - forward * Main.rand.NextFloat(2f, 11f) + Main.rand.NextVector2Circular(9f, 9f),
+                    forward * Main.rand.NextFloat(0.35f, 0.9f) + Main.rand.NextVector2Circular(0.3f, 0.3f),
+                    false, Main.rand.Next(10, 17), Main.rand.NextFloat(0.055f, 0.1f),
+                    Color.Lerp(new Color(95, 205, 255), Color.White, Main.rand.NextFloat(0.1f, 0.3f))));
             }
 
-            // 水/霜尘粒子喷溅（已有水系特效，保留）
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 6; i++)
             {
-                Vector2 dustVel = forward.RotatedByRandom(0.85f) * Main.rand.NextFloat(2.2f, 6.5f);
+                Vector2 dustVel = forward.RotatedByRandom(0.7f) * Main.rand.NextFloat(1.2f, 3.4f);
                 Dust d = Dust.NewDustPerfect(
                     tip + Main.rand.NextVector2Circular(14f, 14f),
                     Main.rand.NextBool(3) ? DustID.Frost : DustID.Water,
@@ -636,10 +592,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             }
         }
 
-        private void SpawnCanceledChargeBurst()
-        {
-        }
-
         private void SpawnPrepareTrail()
         {
             if (Main.dedServ)
@@ -648,7 +600,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             Vector2 forward = lockedDirection.SafeNormalize(Vector2.UnitX);
             float chargeProgress = Utils.GetLerpValue(0f, PrepareTime, stateTimer, true);
 
-            // 蓄力轨迹：GlowOrbParticle 随充能进度从剑身向后飘散，颜色由深蓝渐白
             GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
                 Projectile.Center + Main.rand.NextVector2Circular(7f, 7f),
                 -forward * Main.rand.NextFloat(0.5f, 1.8f) + Main.rand.NextVector2Circular(0.5f, 0.5f),
@@ -657,7 +608,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
                 MathHelper.Lerp(0.05f, 0.13f, chargeProgress),
                 Color.Lerp(new Color(80, 185, 255), new Color(200, 248, 255), chargeProgress)));
 
-            // 50% 概率伴随水尘
             if (Main.rand.NextBool(2))
             {
                 Vector2 dustVel = forward.RotatedByRandom(0.5f) * Main.rand.NextFloat(0.8f, 2.5f);
@@ -672,13 +622,24 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
 
         private void SpawnBounceBurst(Vector2 center, Vector2 dashDirection)
         {
-            // 注意：SpawnWaterPillarBurst 和 SpawnCeruleanShieldExplosion 已在 OnHitNPC 中单独调用，此处不重复
             if (Main.dedServ)
                 return;
 
             Vector2 forward = dashDirection.SafeNormalize(lockedDirection);
 
-            // 四方向 DirectionalPulseRing 爆开（击中反弹冲击感）
+            for (int i = 0; i < 6; i++)
+            {
+                Vector2 mistVelocity = forward.RotatedByRandom(MathHelper.TwoPi) * Main.rand.NextFloat(1.5f, 6.2f);
+                GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
+                    center + Main.rand.NextVector2Circular(16f, 16f),
+                    mistVelocity,
+                    Color.Lerp(new Color(60, 185, 255), Color.White, Main.rand.NextFloat(0.1f, 0.45f)) * 0.85f,
+                    new Color(40, 140, 220) * 0.4f,
+                    Main.rand.NextFloat(1.1f, 1.8f),
+                    Main.rand.NextFloat(-0.05f, 0.05f),
+                    Main.rand.Next(20, 32)));
+            }
+
             for (int i = 0; i < 4; i++)
             {
                 float angle = MathHelper.TwoPi * i / 4f + forward.ToRotation() * 0.5f;
@@ -690,46 +651,28 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
                     angle, 0.20f + i * 0.025f, 0.045f, 20));
             }
 
-            // 大圆形冲击波（Xyk BloomRing 思路，水蓝近圆 DirectionalPulseRing）
             GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
                 center, Vector2.Zero,
                 new Color(55, 195, 255) with { A = 0 },
                 new Vector2(1.1f, 1.1f),
                 0f, 0.28f, 0.04f, 30));
 
-            // GlowBlade 刀气溅射（已有 FlightEffects 技术，保留）
-            const string GlowBladeTexture = "CalamityLegendsComeBack/Texture/Shared/GlowBlade";
-            for (int i = 0; i < 6; i++)
+            for (int i = 0; i < 8; i++)
             {
-                Vector2 sparkDir = forward.RotatedByRandom(MathHelper.Pi * 0.65f);
-                GeneralParticleHandler.SpawnParticle(new CustomSpark(
-                    center + Main.rand.NextVector2Circular(10f, 10f),
-                    sparkDir * Main.rand.NextFloat(0.06f, 0.20f),
-                    GlowBladeTexture,
-                    false, 9, 0.22f,
-                    new Color(160, 242, 255) * 0.9f,
-                    new Vector2(0.50f, 2.2f),
-                    glowCenter: true, shrinkSpeed: 0.88f, glowCenterScale: 0.90f, glowOpacity: 0.75f));
-            }
-
-            // WaterFoamParticle 水沫（已有被动冲刺特效中的技术，保留结合）
-            for (int i = 0; i < 5; i++)
-            {
-                Vector2 foamVel = forward.RotatedByRandom(1.0f) * Main.rand.NextFloat(1.5f, 4.5f);
+                Vector2 foamVel = forward.RotatedByRandom(1.2f) * Main.rand.NextFloat(2f, 6.5f);
                 GeneralParticleHandler.SpawnParticle(new WaterFoamParticle(
-                    center + Main.rand.NextVector2Circular(14f, 14f),
+                    center + Main.rand.NextVector2Circular(16f, 16f),
                     foamVel,
                     Main.rand.Next(18, 34),
-                    Main.rand.NextFloat(0.52f, 0.90f),
+                    Main.rand.NextFloat(0.55f, 0.95f),
                     Color.Lerp(new Color(140, 225, 255), Color.White, Main.rand.NextFloat(0.15f, 0.42f))));
             }
 
-            // 水/霜尘爆炸（已有水系特效，保留）
-            for (int i = 0; i < 16; i++)
+            for (int i = 0; i < 18; i++)
             {
                 Vector2 dustVel = (i % 2 == 0
                     ? forward.RotatedByRandom(MathHelper.Pi)
-                    : Vector2.UnitX.RotatedBy(MathHelper.TwoPi * i / 16f)) * Main.rand.NextFloat(3f, 8.5f);
+                    : Vector2.UnitX.RotatedBy(MathHelper.TwoPi * i / 18f)) * Main.rand.NextFloat(3f, 9.5f);
                 Dust d = Dust.NewDustPerfect(
                     center + Main.rand.NextVector2Circular(18f, 18f),
                     Main.rand.NextBool(3) ? DustID.Frost : DustID.Water,
@@ -739,8 +682,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
                 d.noGravity = true;
             }
 
-            // 泡泡 Gore（已有 FlightEffects SpawnOuterWake 技术，保留结合）
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 5; i++)
             {
                 Gore bubble = Gore.NewGorePerfect(
                     Projectile.GetSource_FromAI(),
@@ -759,42 +701,32 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
 
             Vector2 forward = lockedDirection.SafeNormalize(Vector2.UnitX);
 
-            // 五方向 DirectionalPulseRing 散开（水面破碎感）
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 6; i++)
             {
-                float angle = MathHelper.TwoPi * i / 5f + forward.ToRotation();
-                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
-                    Projectile.Center,
-                    Vector2.UnitX.RotatedBy(angle) * 0.04f,
-                    Color.Lerp(new Color(55, 175, 255), Color.White, 0.12f + i * 0.05f),
-                    new Vector2(0.65f, 1.65f),
-                    angle, 0.14f + i * 0.022f, 0.04f, 22));
+                Vector2 foamVelocity = -forward * Main.rand.NextFloat(0.35f, 1.2f) + Main.rand.NextVector2Circular(1.15f, 1.15f);
+                GeneralParticleHandler.SpawnParticle(new WaterFoamParticle(
+                    Projectile.Center + Main.rand.NextVector2Circular(15f, 15f),
+                    foamVelocity,
+                    Main.rand.Next(18, 30),
+                    Main.rand.NextFloat(0.38f, 0.65f),
+                    Color.Lerp(new Color(90, 200, 255), Color.White, Main.rand.NextFloat(0.08f, 0.32f))));
             }
 
-            // 结束圆形冲击波（Xyk BloomRing 思路，消散感）
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
-                Projectile.Center, Vector2.Zero,
-                new Color(55, 175, 255) with { A = 0 },
-                new Vector2(0.95f, 0.95f),
-                0f, 0.15f, 0.038f, 26));
-
-            // GlowOrbParticle 七方向均匀散射
-            for (int i = 0; i < 7; i++)
+            for (int i = 0; i < 5; i++)
             {
-                Vector2 orbDir = Vector2.UnitX.RotatedBy(MathHelper.TwoPi * i / 7f + forward.ToRotation() * 0.3f);
+                Vector2 orbDir = -forward.RotatedByRandom(0.9f);
                 GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
                     Projectile.Center + Main.rand.NextVector2Circular(10f, 10f),
-                    orbDir * Main.rand.NextFloat(1.2f, 3.8f),
+                    orbDir * Main.rand.NextFloat(0.7f, 2.1f),
                     false,
                     Main.rand.Next(16, 26),
                     Main.rand.NextFloat(0.07f, 0.16f),
                     Color.Lerp(new Color(75, 195, 255), new Color(195, 245, 255), Main.rand.NextFloat())));
             }
 
-            // 水/霜尘喷射（已有水系特效，保留）
-            for (int i = 0; i < 14; i++)
+            for (int i = 0; i < 7; i++)
             {
-                Vector2 dustVel = forward.RotatedByRandom(MathHelper.Pi) * Main.rand.NextFloat(2.2f, 7f);
+                Vector2 dustVel = -forward.RotatedByRandom(1.1f) * Main.rand.NextFloat(1.2f, 3.6f);
                 Dust d = Dust.NewDustPerfect(
                     Projectile.Center + Main.rand.NextVector2Circular(16f, 16f),
                     Main.rand.NextBool(4) ? DustID.Frost : DustID.Water,

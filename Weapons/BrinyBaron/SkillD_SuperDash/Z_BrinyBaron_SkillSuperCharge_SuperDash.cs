@@ -345,7 +345,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             RotateHeldDirectionToward(desiredDirection, ChargeTurnRate);
             ApplyHeldBlade(owner, lockedDirection, ChargeHoldDistance, 1f + phaseTimer / (float)ChargeFrames * 0.12f, 0.35f + phaseTimer / (float)ChargeFrames * 0.75f);
 
-            owner.velocity *= 0.82f;
             owner.immune = true;
             owner.immuneTime = 2;
 

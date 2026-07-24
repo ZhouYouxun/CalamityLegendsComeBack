@@ -16,7 +16,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         private const int DropFrames = 18;
         private const int HoverFrames = 26;
         private const float HomingRange = 1200f;
-        private const float DashSpeed = 31f;
+        private const float DashSpeed = 46.5f;
         private static readonly int TrailLength = 12;
 
         private float LaunchCurve => Projectile.ai[0];
@@ -62,24 +62,18 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 else
                     Projectile.velocity *= 0.84f;
 
-                // The torpedo immediately faces the closest target while still physically drifting outward.
-                if (target != null)
-                {
-                    Vector2 aim = (target.Center - Projectile.Center).SafeNormalize(drop);
-                    SetVisualRotation(aim);
+                // Priority goes to hostile NPC if found; otherwise aim at owner's mouse position.
+                Vector2 targetPos = target != null ? target.Center : SeasSearing.GetMouseWorld(Main.player[Projectile.owner]);
+                Vector2 aim = (targetPos - Projectile.Center).SafeNormalize(drop);
+                SetVisualRotation(aim);
 
-                    if (Age >= DropFrames + HoverFrames)
-                    {
-                        Projectile.velocity = aim * DashSpeed;
-                        Projectile.localAI[1] = 1f;
-                        Projectile.netUpdate = true;
-                        SoundEngine.PlaySound(SoundID.Item62 with { Volume = 0.52f, Pitch = -0.32f }, Projectile.Center);
-                        SeasSearingVisualUtility.SpawnPressureRing(Projectile.Center, 1.65f, 11f, 10, SeasSearingPalette.BiohazardLime);
-                    }
-                }
-                else
+                if (Age >= DropFrames + HoverFrames)
                 {
-                    SetVisualRotation(Projectile.velocity.SafeNormalize(drop));
+                    Projectile.velocity = aim * DashSpeed;
+                    Projectile.localAI[1] = 1f;
+                    Projectile.netUpdate = true;
+                    SoundEngine.PlaySound(SoundID.Item62 with { Volume = 0.52f, Pitch = -0.32f }, Projectile.Center);
+                    SeasSearingVisualUtility.SpawnPressureRing(Projectile.Center, 1.65f, 11f, 10, SeasSearingPalette.BiohazardLime);
                 }
             }
             else

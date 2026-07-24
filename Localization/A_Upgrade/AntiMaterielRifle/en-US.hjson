@@ -5,31 +5,28 @@ Mods: {
 				NewLegendAntiMaterielRifle: {
 					DisplayName: Little Legend - Anti-materiel Rifle
 					Tooltip: "[GFB]"
-					LeftClick: Fires .408 heavy anti-materiel rounds
+					LeftClick: Fires highly destructive .408 anti-materiel rounds
 					RightClick: Right click to widen your view and enter immersive sniping mode
 					CurrentStage: Current record: {0}
 					InventoryToggle: Right click in your inventory to toggle the view change
 					ZoomState: Aiming zoom: {0}
 					ZoomEnabled: Enabled
 					ZoomDisabled: Disabled
-					LegendaryHint: Hold Shift to view all unlocked upgrades and legendary text
-					LatestUnlockPrefix: Latest Upgrade: {0}
-					Stage0: .408 proprietary round: wider collision bounds. Hits deal 10% max HP true damage (0.5% for Bosses), scaled up by target DR
-					Stage1: Eye of Cthulhu executed: hits permanently reduce target defense by 60% (non-stacking)
-					Stage2: Eater of Worlds or Brain of Cthulhu executed: impacts spew metal jet shards dealing 30% damage and applying true damage & defense reduction
-					Stage3: Wall of Flesh executed: press dash towards mouse for invulnerable slides; chain up to 4 slides within 2s, empowering next attack with 2x damage & heavier metal jets
-					Stage4: Any mechanical boss executed: .408 base power continues to grow; the fire interval remains fixed at 60 frames
-					Stage5: Plantera executed: calibrate repeatedly on one target for 1.45x damage increase
-					Stage6: Moon Lord executed: critical chance above 100% is converted into extra critical damage multiplier
-					Stage7: Providence executed: regular shots call 2 flanking rounds, or 4 on crit; aimed shots call 6 stronger flanking rounds only on crit
-					Stage8: Devourer of Gods executed: God-Slayer Firearm! .408 rounds execute regular enemies; slides upgraded to Dimensional Strike
-					Stage9: Exo Mechs or Supreme Witch executed: Draedon Onyx Explosive Mag! Marker rounds stick to targets/tiles (tiles spawn a trigger zone), detonator rounds trigger 200% weapon damage Onyx explosions
-					LegendaryText:
+					Stage0: ""
+					Stage1: Hits inflict Death Mark and ignore 60% of enemy defense
+					Stage2: Spawns extra metal jet shards on hit to damage enemies
+					Stage3: Grants quick slide sprint ability with temporary invulnerability
+					Stage4: ""
+					Stage5: ""
+					Stage6: Critical chance above 100% is converted into extra critical damage multiplier
+					Stage7: Summons additional flanking rounds on regular and aimed hits
+					Stage8: God-Slayer Firearm! .408 rounds execute regular enemies; slide upgraded to Dimensional Strike
+					Stage9:
 						'''
-						You and your cover make me laugh.
-						There is no waiting—only the bullet through your chest.
-						Atrocity without remainder.
+						Draedon Onyx Explosive Mag! Marker rounds stick to targets or tiles
+						Detonator rounds trigger 200% weapon damage Onyx explosions
 						'''
+					LegendaryText: Atrocity without remainder.
 				}
 			}
 		}

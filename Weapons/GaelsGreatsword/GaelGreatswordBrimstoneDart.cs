@@ -24,7 +24,7 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
     {
         public override string Texture => "CalamityMod/Projectiles/Boss/BrimstoneBarrage";
 
-        private static readonly Color BloodRed = new(185, 14, 38);
+        private static readonly Color BloodRed = GaelGreatswordVisuals.BrimstoneHot;
 
         public override void SetStaticDefaults()
         {

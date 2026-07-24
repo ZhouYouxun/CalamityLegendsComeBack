@@ -47,7 +47,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
         public override bool CanUseItem(Player player)
         {
             AegisBladePlayer bp = player.GetModPlayer<AegisBladePlayer>();
-            bool holdingBoth = (player.Calamity().mouseLeft || Main.mouseLeft) && (player.Calamity().mouseRight || Main.mouseRight);
+            bool holdingBoth = (player.controlUseItem || Main.mouseLeft) && (player.Calamity().mouseRight || Main.mouseRight);
             // 举盾中（含蓄力状态）或左右键双手蓄力掩体中不允许触发左键挥舞
             if (bp.ShieldRaising || bp.ShieldRaised || bp.ShieldCharging || bp.ShieldFullyCharged || bp.IsChargingBarrier || holdingBoth)
                 return false;
@@ -59,7 +59,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
         public override bool CanShoot(Player player)
         {
             AegisBladePlayer bp = player.GetModPlayer<AegisBladePlayer>();
-            bool holdingBoth = (player.Calamity().mouseLeft || Main.mouseLeft) && (player.Calamity().mouseRight || Main.mouseRight);
+            bool holdingBoth = (player.controlUseItem || Main.mouseLeft) && (player.Calamity().mouseRight || Main.mouseRight);
             return !bp.ShieldRaising && !bp.ShieldRaised &&
                    !bp.ShieldCharging && !bp.ShieldFullyCharged &&
                    !bp.IsChargingBarrier && !holdingBoth &&
@@ -119,7 +119,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
 
         private bool CanStartShieldHoldout(Player player, AegisBladePlayer bp)
         {
-            bool holdingLeft = player.Calamity().mouseLeft || (Main.myPlayer == player.whoAmI && Main.mouseLeft);
+            bool holdingLeft = player.controlUseItem || (Main.myPlayer == player.whoAmI && Main.mouseLeft);
             return player.Calamity().mouseRight
                    && !holdingLeft
                    && !bp.IsChargingBarrier

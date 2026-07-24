@@ -10,7 +10,7 @@ using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
+namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
 {
     internal sealed class AMRMetalJetShard : ModProjectile, ILocalizedModType
     {
@@ -31,9 +31,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             Projectile.DamageType = DamageClass.Ranged;
             Projectile.ignoreWater = true;
             Projectile.tileCollide = true;
-            Projectile.penetrate = 1; // 只能造成一次伤害
+            Projectile.penetrate = 1;
             Projectile.extraUpdates = 3;
-            Projectile.timeLeft = 180;
+            Projectile.timeLeft = 126;
             Projectile.scale = 0.9f;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = -1;
@@ -41,7 +41,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
 
         public override bool? CanDamage()
         {
-            // 出现之后一段时间 (ai[0] 帧) 才能造成伤害，防止瞬间重叠伤害同一个目标
             return Projectile.ai[0] <= 0 ? null : false;
         }
 
@@ -51,7 +50,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             if (Projectile.ai[0] > 0f && finalUpdate)
                 Projectile.ai[0]--;
 
-            Projectile.velocity *= 0.91f;
+            Projectile.velocity *= 0.98f;
 
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
 
@@ -59,8 +58,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             {
                 Vector2 backward = -Projectile.velocity.SafeNormalize(Vector2.UnitX);
                 Color metalColor = Main.rand.NextBool()
-                    ? Color.Lerp(Color.Silver, Color.Gold, Main.rand.NextFloat(0.35f, 0.8f))
-                    : Color.Lerp(Color.Gold, Color.Orange, Main.rand.NextFloat(0.2f, 0.65f));
+                    ? Color.Lerp(new Color(25, 22, 18), Color.Gold, Main.rand.NextFloat(0.35f, 0.85f))
+                    : Color.Lerp(Color.Gold, new Color(180, 80, 20), Main.rand.NextFloat(0.2f, 0.65f));
 
                 GeneralParticleHandler.SpawnParticle(new SparkParticle(
                     Projectile.Center,
@@ -87,21 +86,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
         {
             SpawnMetalImpact(target.Center);
 
-            // Stage 0 真实伤害机制 (10% 基础，Boss 0.5%，受 DR 加成)
-            if (target.active && target.lifeMax > 5)
+            if (AMRBalance.TryGetMaxLifeTrueDamage(target, out int finalTrueDamage))
             {
-                bool isBoss = target.boss || target.type == NPCID.TargetDummy || target.realLife >= 0;
-                float trueDamageRatio = isBoss ? 0.005f : 0.10f;
-                float trueDamage = target.lifeMax * trueDamageRatio;
-
-                // DR (Damage Reduction) 提升真实伤害
-                float dr = target.Calamity().DR;
-                if (dr > 0f)
-                    trueDamage *= (1f + dr);
-
-                int finalTrueDamage = Math.Max(1, (int)trueDamage);
-
-                // 造成独立真实伤害
                 hit.HideCombatText = false;
                 target.life -= finalTrueDamage;
                 CombatText.NewText(target.getRect(), new Color(255, 140, 40), finalTrueDamage, true);
@@ -110,7 +96,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
                     target.checkDead();
             }
 
-            // Stage 1 克眼强化：防御力永久降低 60%
             if (AMRBalance.DeathMarkUnlocked)
             {
                 target.AddBuff(ModContent.BuffType<MarkedforDeath>(), 5 * 60);
@@ -133,25 +118,35 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
                 return;
 
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 splatterDirection = -forward;
+
             GeneralParticleHandler.SpawnParticle(new ImpactParticle(
                 impactPoint,
                 Main.rand.NextFloat(-0.18f, 0.18f),
                 20,
-                0.62f,
-                Color.Lerp(Color.Silver, Color.Gold, 0.55f)));
+                0.68f,
+                Color.Lerp(new Color(25, 22, 18), Color.Gold, 0.65f)));
 
-            for (int i = 0; i < 6; i++)
+            for (int i = 0; i < 8; i++)
             {
-                float spread = i / 5f - 0.5f;
-                Vector2 velocity = forward.RotatedBy(MathHelper.ToRadians(62f) * spread) * Main.rand.NextFloat(4.5f, 10.5f);
-                Color color = Color.Lerp(Color.Silver, Color.Orange, Main.rand.NextFloat(0.25f, 0.75f));
+                int sparkLifetime = Main.rand.Next(20, 35);
+                float sparkScale = Main.rand.NextFloat(0.85f, 1.25f);
+                if (Main.rand.NextBool(10))
+                    sparkScale *= 2f;
+
+                Color sparkColor = Color.Lerp(new Color(25, 22, 18), Color.Gold, Main.rand.NextFloat(0.7f));
+                sparkColor = Color.Lerp(sparkColor, new Color(180, 80, 20), Main.rand.NextFloat());
+
+                Vector2 sparkVelocity = splatterDirection.RotatedByRandom(0.8f) * Main.rand.NextFloat(10f, 22f);
+                sparkVelocity.Y -= Main.rand.NextFloat(3.5f, 7.5f);
+
                 GeneralParticleHandler.SpawnParticle(new SparkParticle(
                     impactPoint,
-                    velocity,
+                    sparkVelocity,
                     true,
-                    Main.rand.Next(22, 36),
-                    Main.rand.NextFloat(0.82f, 1.25f),
-                    color));
+                    sparkLifetime,
+                    sparkScale,
+                    sparkColor));
             }
         }
 

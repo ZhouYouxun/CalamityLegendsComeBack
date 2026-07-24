@@ -209,8 +209,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                    !player.mouseInterface &&
                    !player.noItems &&
                    !player.CCed &&
-                   player.ownedProjectileCounts[ModContent.ProjectileType<VesuviusRightJavelinHoldout>()] <= 0 &&
-                   !HasActiveFlyingRightJavelin(player);
+                   player.ownedProjectileCounts[ModContent.ProjectileType<VesuviusRightJavelinHoldout>()] <= 0;
         }
 
         private void StartRightClickHoldout(Player player)
@@ -236,22 +235,6 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
 
             if (Main.projectile.IndexInRange(projIndex))
                 Main.projectile[projIndex].CritChance = player.GetWeaponCrit(Item);
-        }
-
-        private static bool HasActiveFlyingRightJavelin(Player player)
-        {
-            int javelinType = ModContent.ProjectileType<VesuviusFaultJavelin>();
-            for (int i = 0; i < Main.maxProjectiles; i++)
-            {
-                Projectile projectile = Main.projectile[i];
-                if (projectile.active &&
-                    projectile.owner == player.whoAmI &&
-                    projectile.type == javelinType &&
-                    projectile.ai[0] == 0f)
-                    return true;
-            }
-
-            return false;
         }
 
         private static void KillOwnedVesuviusAttacks(Player player)

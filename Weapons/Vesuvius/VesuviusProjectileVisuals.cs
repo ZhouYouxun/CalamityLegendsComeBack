@@ -83,7 +83,8 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
             if (Main.dedServ)
                 return;
 
-            SpawnMoltenBloom(center + Main.rand.NextVector2Circular(8f, 8f), Main.rand.NextFloat(38f, 68f) * strength, 0.85f);
+            SpawnMoltenBloom(center + Main.rand.NextVector2Circular(5f, 5f), Main.rand.NextFloat(32f, 52f) * strength, 0.72f);
+            GeneralParticleHandler.SpawnParticle(new ImpactParticle(center, 0.08f, 12, 0.3f * strength, HotWhite));
 
             GeneralParticleHandler.SpawnParticle(new CustomPulse(
                 center,
@@ -93,8 +94,8 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                 Vector2.One,
                 Main.rand.NextFloat(-8f, 8f),
                 0.02f,
-                0.16f * strength,
-                18,
+                0.13f * strength,
+                16,
                 true));
             GeneralParticleHandler.SpawnParticle(new CustomPulse(
                 center,
@@ -104,27 +105,27 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                 Vector2.One,
                 Main.rand.NextFloat(MathHelper.TwoPi),
                 0.02f,
-                0.14f * strength,
-                16));
+                0.1f * strength,
+                14));
 
-            int sparkCount = Count(18f * strength);
+            int sparkCount = Count(11f * strength);
             for (int i = 0; i < sparkCount; i++)
             {
-                Vector2 burstVelocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(3.5f, ravagerWeight ? 12f : 8f) * strength;
-                Dust flame = Dust.NewDustPerfect(center, Main.rand.NextBool(4) ? DustID.InfernoFork : DustID.CopperCoin, burstVelocity, 0, new Color(255, Main.DiscoG, 0), Main.rand.NextFloat(1f, 1.9f));
-                flame.noGravity = true;
+                Vector2 burstVelocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(3f, ravagerWeight ? 9f : 6.5f) * strength - Vector2.UnitY * Main.rand.NextFloat(0f, 1.6f);
+                Dust flame = Dust.NewDustPerfect(center, Main.rand.NextBool(4) ? DustID.InfernoFork : DustID.Obsidian, burstVelocity, 50, Color.Lerp(Color.DarkGray, LavaGold, 0.38f), Main.rand.NextFloat(0.85f, 1.45f));
+                flame.noGravity = i % 2 == 0;
 
                 if (i % 3 == 0)
-                    GeneralParticleHandler.SpawnParticle(new LineParticle(center, burstVelocity * 0.72f, false, Main.rand.Next(18, 30), Main.rand.NextFloat(0.5f, 1.05f), Main.rand.NextBool(4) ? HotWhite : LavaGold));
+                    GeneralParticleHandler.SpawnParticle(new PointParticle(center, burstVelocity * 0.62f, true, Main.rand.Next(14, 22), Main.rand.NextFloat(0.36f, 0.62f), Main.rand.NextBool(4) ? HotWhite : LavaGold, true));
             }
 
-            int smokeCount = Count((ravagerWeight ? 9f : 5f) * strength);
+            int smokeCount = Count((ravagerWeight ? 6f : 4f) * strength);
             for (int i = 0; i < smokeCount; i++)
-                SpawnScoriaSmoke(center + Main.rand.NextVector2Circular(22f, 18f) * strength, Main.rand.NextVector2Circular(3.2f, 2.2f) - Vector2.UnitY * Main.rand.NextFloat(1.2f, 4.6f), Main.rand.NextFloat(0.8f, 1.5f) * strength, ravagerWeight);
+                SpawnScoriaSmoke(center + Main.rand.NextVector2Circular(18f, 12f) * strength, Main.rand.NextVector2Circular(2.4f, 1.4f) - Vector2.UnitY * Main.rand.NextFloat(1f, 3.4f), Main.rand.NextFloat(0.65f, 1.15f) * strength, ravagerWeight);
 
-            int ashCount = Count(7f * strength);
+            int ashCount = Count(4f * strength);
             for (int i = 0; i < ashCount; i++)
-                SpawnAshSquare(center + Main.rand.NextVector2Circular(20f, 20f), Main.rand.NextVector2Circular(2.6f, 2.6f) - Vector2.UnitY * Main.rand.NextFloat(0.5f, 2.8f), Main.rand.NextFloat(0.8f, 1.45f), Color.Lerp(AshGray, LavaOrange, 0.18f));
+                SpawnAshSquare(center + Main.rand.NextVector2Circular(16f, 12f), Main.rand.NextVector2Circular(1.8f, 1.4f) - Vector2.UnitY * Main.rand.NextFloat(0.4f, 2f), Main.rand.NextFloat(0.62f, 1.05f), Color.Lerp(AshGray, LavaOrange, 0.14f));
         }
 
         internal static void SpawnVolcanicAshCloud(Projectile projectile, float intensity)

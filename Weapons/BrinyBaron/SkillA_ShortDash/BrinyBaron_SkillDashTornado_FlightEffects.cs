@@ -2,12 +2,12 @@ using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
+using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
 {
     internal static class BrinyBaron_SkillDashTornado_FlightEffects
     {
-        private const string GlowBladeTexture = "CalamityLegendsComeBack/Texture/Shared/GlowBlade";
         private const float FrontAnchorDistance = 16f * 3f;
 
         public static Vector2 GetFrontAnchor(Projectile projectile, Vector2 fallbackDirection)
@@ -24,39 +24,17 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             Vector2 forward = projectile.velocity.SafeNormalize(fallbackDirection);
             Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
             Vector2 tip = GetFrontAnchor(projectile, fallbackDirection);
-            float pulseRotation = forward.ToRotation();
             float sideWave = (float)System.Math.Sin(Main.GlobalTimeWrappedHourly * 18f + projectile.identity * 0.27f);
 
             for (int i = 0; i < 3; i++)
             {
-                Particle pulse = new DirectionalPulseRing(
-                    tip - forward * (6f + i * 4f),
-                    projectile.velocity * (0.08f + i * 0.02f),
-                    Color.Lerp(new Color(55, 175, 255), Color.White, 0.18f),
-                    new Vector2(0.85f, 2.55f),
-                    pulseRotation,
-                    0.28f + i * 0.02f,
-                    0.05f,
-                    18 - i * 2);
-                GeneralParticleHandler.SpawnParticle(pulse);
-            }
-
-            for (int i = 0; i < 3; i++)
-            {
-                Particle customLine = new CustomSpark(
-                    tip - forward * (8f + i * 2.5f) + right * sideWave * (1.5f + i * 0.35f),
-                    projectile.velocity * (0.03f + i * 0.01f),
-                    GlowBladeTexture,
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    tip - forward * Main.rand.NextFloat(4f, 13f) + right * sideWave * Main.rand.NextFloat(1f, 3f),
+                    projectile.velocity * 0.025f + Main.rand.NextVector2Circular(0.5f, 0.5f),
                     false,
-                    4,
-                    0.17f,
-                    new Color(145, 235, 255) * 0.95f,
-                    new Vector2(0.58f, 2f),
-                    glowCenter: true,
-                    shrinkSpeed: 0.95f,
-                    glowCenterScale: 0.9f,
-                    glowOpacity: 0.7f);
-                GeneralParticleHandler.SpawnParticle(customLine);
+                    Main.rand.Next(12, 19),
+                    Main.rand.NextFloat(0.05f, 0.095f),
+                    Color.Lerp(new Color(95, 205, 255), Color.White, Main.rand.NextFloat(0.1f, 0.3f))));
             }
 
             SpawnOuterWake(projectile, tip, forward, right, 0f, 0.85f, 5.6f, 15f, true, true);
@@ -85,40 +63,18 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
                 GeneralParticleHandler.SpawnParticle(pulse);
             }
 
-            for (int i = 0; i < 2; i++)
+            // Spawn BlossomFlux-style orbiting ocean swirl visual projectile anchored in world space
+            if (stateTimer % 5 == 0 && Main.myPlayer == projectile.owner)
             {
-                Particle customLine = new CustomSpark(
-                    tip - forward * i * 5f + right * (sideWave * 1.9f + (i == 0 ? 0f : Main.rand.NextFloatDirection() * 2.4f)),
-                    projectile.velocity * (0.03f + i * 0.01f),
-                    GlowBladeTexture,
-                    false,
-                    2 + i,
-                    0.16f + i * 0.035f,
-                    new Color(160, 242, 255) * (0.96f - i * 0.12f),
-                    new Vector2(0.56f, 2.15f + i * 0.45f),
-                    glowCenter: true,
-                    shrinkSpeed: 1.2f,
-                    glowCenterScale: 0.92f,
-                    glowOpacity: 0.72f);
-                GeneralParticleHandler.SpawnParticle(customLine);
+                Projectile.NewProjectile(
+                    projectile.GetSource_FromThis(),
+                    projectile.Center,
+                    Vector2.Zero,
+                    ModContent.ProjectileType<BrinyBaron_DashOceanSwirl>(),
+                    0,
+                    0f,
+                    projectile.owner);
             }
-
-
-        
-            Particle centerFlare = new CustomSpark(
-                projectile.Center, // 从弹幕中心释放，作为冲刺本体的核心闪耀
-                projectile.velocity * 0.02f, // 轻微跟随本体前推，避免静止贴图发死
-                "CalamityLegendsComeBack/Texture/KsTexture/window_04", // 新增 flare 贴图路径
-                false, // 不受重力影响
-                10, // 存活 X 帧
-                0.26f, // 保留现有 CustomSpark 的基础大小
-                new Color(160, 242, 255) * 1.96f, // 保留现有颜色和强度
-                new Vector2(0.56f, 2.15f), // 保留现有纵向拉伸比例
-                glowCenter: true, // 保留中心高亮
-                shrinkSpeed: 1.2f, // 保留快速收缩速度
-                glowCenterScale: 0.92f, // 保留中心发光范围
-                glowOpacity: 0.72f); // 保留中心发光透明度
-            GeneralParticleHandler.SpawnParticle(centerFlare);
 
             SpawnOuterWake(projectile, tip, forward, right, oceanPhase, wakeDrift * 1.18f, wakeSpread * 1.14f, 11.5f, stateTimer % 2 == 0, stateTimer % 2 == 0);
         }
@@ -142,21 +98,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
                     12);
                 GeneralParticleHandler.SpawnParticle(pulse);
             }
-
-            Particle customLine = new CustomSpark(
-                tip - forward * 9f + right * (float)System.Math.Sin(oceanPhase) * 1.8f,
-                projectile.velocity * 0.04f,
-                GlowBladeTexture,
-                false,
-                10,
-                0.12f,
-                new Color(120, 220, 255) * 0.7f,
-                new Vector2(0.45f, 1.4f),
-                glowCenter: true,
-                glowCenterScale: 0.9f,
-                glowOpacity: 0.6f,
-                shrinkSpeed: 0.7f);
-            GeneralParticleHandler.SpawnParticle(customLine);
 
             SpawnOuterWake(projectile, tip, forward, right, oceanPhase * 0.8f, 0.5f, 2.8f, 10f, stateTimer % 2 == 0, stateTimer % 4 == 0);
         }

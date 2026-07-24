@@ -127,7 +127,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
                 return;
             }
 
-            bool holdingLeft = Player.Calamity().mouseLeft || (Main.myPlayer == Player.whoAmI && Main.mouseLeft);
+            bool holdingLeft = Player.controlUseItem || (Main.myPlayer == Player.whoAmI && Main.mouseLeft);
             bool holdingRight = Player.Calamity().mouseRight || (Main.myPlayer == Player.whoAmI && Main.mouseRight);
             bool holdingBoth = holdingLeft && holdingRight &&
                                !Main.mapFullscreen && !Main.blockMouse && !Player.mouseInterface;

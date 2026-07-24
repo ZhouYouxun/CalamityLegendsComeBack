@@ -286,7 +286,8 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         {
             System.Collections.Generic.List<Vector2> points = new System.Collections.Generic.List<Vector2>();
             Vector2 startPos = Owner.MountedCenter;
-            Vector2 endPos = startPos + direction * reach;
+            float extendedReach = reach + currentCollisionWidth * 0.5f;
+            Vector2 endPos = startPos + direction * extendedReach;
             float facingSide = Math.Sign(Owner.direction == 0 ? 1 : Owner.direction) * side;
 
             float straightness;
@@ -298,13 +299,13 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 straightness = 1f;
 
             float curveAmount = 1f - straightness;
-            float sizeFactor = MathHelper.Clamp(reach / WhipReach, 0.32f, 1.2f);
+            float sizeFactor = MathHelper.Clamp(extendedReach / WhipReach, 0.32f, 1.2f);
             Vector2 normal = direction.RotatedBy(MathHelper.PiOver2) * facingSide;
 
-            Vector2 straightControlOne = startPos + direction * (reach / 3f);
-            Vector2 straightControlTwo = startPos + direction * (reach * 2f / 3f);
+            Vector2 straightControlOne = startPos + direction * (extendedReach / 3f);
+            Vector2 straightControlTwo = startPos + direction * (extendedReach * 2f / 3f);
             Vector2 curledControlOne = startPos - direction * (92f * sizeFactor) + normal * (166f * sizeFactor);
-            Vector2 curledControlTwo = endPos - direction * (reach * 0.42f) + normal * (118f * sizeFactor);
+            Vector2 curledControlTwo = endPos - direction * (extendedReach * 0.42f) + normal * (118f * sizeFactor);
             Vector2 controlOne = Vector2.Lerp(straightControlOne, curledControlOne, curveAmount);
             Vector2 controlTwo = Vector2.Lerp(straightControlTwo, curledControlTwo, curveAmount);
 
@@ -326,9 +327,10 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         {
             System.Collections.Generic.List<Vector2> points = new System.Collections.Generic.List<Vector2>();
             Vector2 startPos = Owner.MountedCenter;
+            float extendedReach = reach + currentCollisionWidth * 0.5f;
             const int segments = 18;
             for (int i = 0; i <= segments; i++)
-                points.Add(startPos + direction * (reach * i / segments));
+                points.Add(startPos + direction * (extendedReach * i / segments));
 
             return points;
         }

@@ -169,6 +169,32 @@ namespace CalamityLegendsComeBack.TownNPC
 
             // —— 第2商店：BOSS召唤物，随进度逐步解锁 ——
             new NPCShop(Type, SummonShopName)
+                // 原版前期
+                .Add(ItemID.SlimeCrown)                                                // 史莱姆王冠（史莱姆王）
+                .Add(ItemID.SuspiciousLookingEye)                                      // 可疑眼球（克苏鲁之眼）
+                .Add(ItemID.WormFood)                                                  // 蠕虫诱饵（世界吞噬者）
+                .Add(ItemID.BloodySpine)                                               // 血腥脊椎（克苏鲁之脑）
+                .Add(ItemID.Abeemination)                                              // 憎恶之蜂（蜂王）
+                .Add(ItemID.DeerThing)                                                 // 鹿华（独眼巨鹿）
+                .Add(ItemID.GuideVoodooDoll)                                           // 向导巫毒娃娃（肉山）
+                .Add(ItemID.ClothierVoodooDoll, Condition.DownedSkeletron)             // 裁缝巫毒娃娃（骷髅王）
+                // 原版困难模式
+                .Add(ItemID.QueenSlimeCrystal, Condition.Hardmode)                    // 明胶水晶（史莱姆皇后）
+                .Add(ItemID.MechanicalEye, Condition.Hardmode)                        // 机械魔眼（双子魔眼）
+                .Add(ItemID.MechanicalWorm, Condition.Hardmode)                       // 机械蠕虫（毁灭者）
+                .Add(ItemID.MechanicalSkull, Condition.Hardmode)                      // 机械骷髅头（机械骷髅王）
+                // 原版世纪之花后
+                .Add(ItemID.LihzahrdPowerCell, Condition.DownedPlantera)              // 丛林蜥蜴电池（石巨人）
+                .Add(ItemID.TruffleWorm, Condition.DownedPlantera)                    // 松露虫（猪龙鱼公爵）
+                .Add(ItemID.EmpressButterfly, Condition.DownedPlantera)               // 七彩草蛉（光之女皇）
+                // 原版石巨人后
+                .Add(ItemID.CelestialSigil, Condition.DownedGolem)                    // 天界符（月亮领主）
+                // 灾厄补充召唤物
+                .Add<Portabulb>(Condition.DownedMechBossAny)                          // 便携花苞（世纪之花）
+                .Add<EidolonTablet>(Condition.DownedPlantera)                        // 幻灵石碑（拜月教邪教徒）
+                .Add<BloodwormItem>(CalamityConditions.DownedPolterghast)            // 血虫（旧日公爵）
+                .Add<AuricQuantumCoolingCell>(CalamityConditions.DownedYharon)       // 极光量子冷却单元（装入解密器后联络德雷顿、挑战外星装甲混战）
+                .Add<CeremonialUrn>(CalamityConditions.DownedExoMechs)               // 仪式瓮（至尊灾厄魔女）
                 // 前期
                 .Add<DesertMedallion>()                                              // 沙漠灾虫（开局）
                 .Add<DecapoditaSprout>(CalamityConditions.DownedDesertScourge)       // 蟹钳菇

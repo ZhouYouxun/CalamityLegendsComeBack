@@ -387,8 +387,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
 
         private static bool IsLeftHeld(Player player)
         {
-            return player.channel &&
-                   (Main.myPlayer != player.whoAmI || Main.mouseLeft) &&
+            // On the owning client, mouse input is stable across auto-use rollovers while
+            // Player.channel can momentarily clear. Keep the remote-player fallback on the
+            // synchronized channel state.
+            bool leftInputHeld = Main.myPlayer == player.whoAmI ? Main.mouseLeft : player.channel;
+            return leftInputHeld &&
                    !Main.mapFullscreen &&
                    !Main.blockMouse;
         }

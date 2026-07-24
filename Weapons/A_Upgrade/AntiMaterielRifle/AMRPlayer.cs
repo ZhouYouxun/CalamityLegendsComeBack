@@ -1,3 +1,4 @@
+
 using System;
 using CalamityMod;
 using CalamityMod.Particles;
@@ -7,6 +8,7 @@ using Terraria.Audio;
 using Terraria.GameInput;
 using Terraria.ID;
 using Terraria.ModLoader;
+using CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj;
 
 namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
 {

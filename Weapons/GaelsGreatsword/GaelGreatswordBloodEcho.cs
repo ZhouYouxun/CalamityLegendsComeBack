@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using CalamityMod;
+using CalamityMod.Dusts;
 using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
@@ -26,9 +27,9 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
 
         private const int Lifetime = 30;
 
-        private static readonly Color SoulPurple = new(86, 28, 140);
-        private static readonly Color BloodRed = new(176, 14, 42);
-        private static readonly Color PaleCore = new(230, 214, 245);
+        private static readonly Color SoulPurple = GaelGreatswordVisuals.CrimsonViolet;
+        private static readonly Color BloodRed = GaelGreatswordVisuals.BrimstoneRed;
+        private static readonly Color PaleCore = GaelGreatswordVisuals.WhiteHot;
 
         private float Power => MathHelper.Clamp(Projectile.ai[0], 0f, 1f);
 
@@ -63,7 +64,7 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
             {
                 float radius = GetRadius(progress);
                 Vector2 position = Projectile.Center + Main.rand.NextVector2CircularEdge(radius, radius);
-                Dust dust = Dust.NewDustPerfect(position, Main.rand.NextBool(3) ? DustID.Blood : DustID.Shadowflame,
+                Dust dust = Dust.NewDustPerfect(position, Main.rand.NextBool(3) ? DustID.Blood : (int)CalamityDusts.Brimstone,
                     position.DirectionFrom(Projectile.Center) * Main.rand.NextFloat(0.8f, 2.4f), 100,
                     Main.rand.NextBool() ? BloodRed : SoulPurple, Main.rand.NextFloat(0.9f, 1.3f));
                 dust.noGravity = true;
@@ -97,7 +98,7 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
             {
                 Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.2f, 4.2f);
                 Dust dust = Dust.NewDustPerfect(Projectile.Center + Main.rand.NextVector2Circular(70f, 70f),
-                    Main.rand.NextBool() ? DustID.Blood : DustID.Shadowflame, velocity, 100,
+                    Main.rand.NextBool() ? DustID.Blood : (int)CalamityDusts.Brimstone, velocity, 100,
                     Main.rand.NextBool() ? BloodRed : SoulPurple, Main.rand.NextFloat(0.8f, 1.2f));
                 dust.noGravity = true;
             }
@@ -142,7 +143,7 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
             for (int i = 0; i < count; i++)
             {
                 Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.6f, 5.4f + Power * 2f);
-                Dust dust = Dust.NewDustPerfect(Projectile.Center, Main.rand.NextBool(3) ? DustID.Blood : DustID.Shadowflame,
+                Dust dust = Dust.NewDustPerfect(Projectile.Center, Main.rand.NextBool(3) ? DustID.Blood : (int)CalamityDusts.Brimstone,
                     velocity, 95, Main.rand.NextBool() ? BloodRed : SoulPurple, Main.rand.NextFloat(1f, 1.55f));
                 dust.noGravity = true;
             }

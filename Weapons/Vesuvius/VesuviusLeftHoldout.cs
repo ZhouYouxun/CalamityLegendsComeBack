@@ -161,7 +161,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                     : HeliumFireSound with { Volume = 0.82f + releaseStage * 0.05f, Pitch = -0.18f + releaseStage * 0.035f },
                 GunTip);
             SoundEngine.PlaySound(SoundID.Item89 with { Volume = 0.65f, Pitch = -0.24f + releaseStage * 0.04f }, GunTip);
-            ApplyScreenShake(4f + releaseStage * 1.6f);
+            ApplyScreenShake(2.5f + releaseStage * 0.75f);
             SpawnReleaseCoreFlash(releaseStage);
 
             if (Main.myPlayer == Projectile.owner)
@@ -261,106 +261,75 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
             if (FullyCharged && (chargeFrames - FullChargeFrameTarget) % HeliumChargeLoopFrames == 0)
                 chargeLoopSlot = SoundEngine.PlaySound(HeliumChargeLoopSound with { Volume = 0.48f, Pitch = -0.08f }, Projectile.Center);
 
-            SpawnHeliumStyleChargeFX(stageColor, chargePower);
+            SpawnVolcanicPressureChargeFX(stageColor, chargePower);
             ApplyChargingShake(chargePower);
 
-            if (chargeFrames % Math.Max(1, 4 - currentStage) == 0)
+            int ashInterval = currentStage >= 3 ? 4 : 6;
+            if (chargeFrames % ashInterval == 0)
             {
-                VesuviusProjectileVisuals.SpawnMoltenBloom(
-                    GunTip + Main.rand.NextVector2Circular(6f + currentStage * 1.5f, 6f + currentStage * 1.5f),
-                    Projectile.scale * (18f + currentStage * 4f + chargePower * 10f),
-                    0.52f);
+                Vector2 radial = Main.rand.NextVector2CircularEdge(1f, 1f);
+                float radius = 30f + chargePower * (26f + currentStage * 3f);
+                Vector2 spawnPosition = GunTip + radial * radius;
+                Vector2 inwardVelocity = -radial * Main.rand.NextFloat(1.8f, 3.1f + chargePower * 1.8f);
+                GeneralParticleHandler.SpawnParticle(new SquareAshParticle(
+                    spawnPosition,
+                    inwardVelocity + Owner.velocity * 0.15f,
+                    Main.rand.Next(20, 29),
+                    Main.rand.NextFloat(0.42f, 0.72f),
+                    Color.Lerp(VesuviusProjectileVisuals.AshGray, stageColor, 0.18f + chargePower * 0.16f)));
             }
 
-            if (chargeFrames % 3 == 0)
+            if (chargeFrames % (currentStage >= 3 ? 5 : 7) == 0)
             {
                 Particle smoke = new HeavySmokeParticle(
-                    GunTip + Main.rand.NextVector2Circular(12f, 12f),
-                    -Vector2.UnitY.RotatedBy(Main.rand.NextFloat(-0.55f, 0.55f)) * Main.rand.NextFloat(1.2f, 3.4f),
-                    Color.Lerp(new Color(74, 54, 42), stageColor, 0.42f),
-                    Main.rand.Next(22, 38),
-                    Main.rand.NextFloat(0.35f, 0.78f),
-                    0.72f,
+                    GunTip + Main.rand.NextVector2Circular(7f, 5f),
+                    -Vector2.UnitY.RotatedBy(Main.rand.NextFloat(-0.32f, 0.32f)) * Main.rand.NextFloat(0.65f, 1.65f),
+                    Color.Lerp(VesuviusProjectileVisuals.ScoriaSmoke, stageColor, 0.18f),
+                    Main.rand.Next(24, 36),
+                    Main.rand.NextFloat(0.26f, 0.52f),
+                    0.62f,
                     Main.rand.NextFloat(-0.03f, 0.03f),
-                    currentStage >= 4,
-                    required: true);
+                    false);
                 GeneralParticleHandler.SpawnParticle(smoke);
             }
 
-            if (chargeFrames % 5 == 0)
-            {
-                Particle ash = new SquareAshParticle(
-                    GunTip + Main.rand.NextVector2Circular(34f + currentStage * 8f, 24f + currentStage * 5f),
-                    Main.rand.NextVector2Circular(1.7f, 1.7f) - Vector2.UnitY * Main.rand.NextFloat(0.4f, 1.6f),
-                    Main.rand.Next(28, 46),
-                    Main.rand.NextFloat(0.55f, 1.1f),
-                    Color.Lerp(new Color(116, 88, 66), stageColor, 0.48f));
-                GeneralParticleHandler.SpawnParticle(ash);
-            }
-
-            Lighting.AddLight(GunTip, stageColor.ToVector3() * (0.42f + currentStage * 0.11f + chargePower * 0.55f));
+            Lighting.AddLight(GunTip, stageColor.ToVector3() * (0.3f + currentStage * 0.08f + chargePower * 0.38f));
         }
 
-        private void SpawnHeliumStyleChargeFX(Color stageColor, float chargePower)
+        private void SpawnVolcanicPressureChargeFX(Color stageColor, float chargePower)
         {
-            if (chargeFrames < 10)
+            if (chargeFrames < HeliumChargeStartFrames)
                 return;
 
-            float pullRadius = 18f + chargePower * (72f + currentStage * 12f);
-            int streakRate = Math.Max(1, 5 - currentStage);
-            if (chargeFrames % streakRate == 0 && !released && !FullyCharged)
+            int fissureInterval = currentStage >= 3 ? 3 : 5;
+            if (chargeFrames % fissureInterval == 0 && !released)
             {
-                Vector2 inwardVelocity = Main.rand.NextVector2CircularEdge(2.5f, 2.5f) * Main.rand.NextFloat(0.3f * chargeFrames, 0.3f * chargeFrames + pullRadius);
-                Particle streak = new ManaDrainStreak(
-                    Owner,
-                    Main.rand.NextFloat(0.055f + chargePower * 0.035f, 0.085f + chargePower * 0.045f),
+                Vector2 radial = Main.rand.NextVector2CircularEdge(1f, 1f);
+                float radius = 22f + chargePower * (38f + currentStage * 4f);
+                Vector2 spawnPosition = GunTip + radial * radius;
+                Vector2 inwardVelocity = -radial * Main.rand.NextFloat(2.4f, 4.2f + chargePower * 2f);
+                Color fissureColor = Color.Lerp(VesuviusProjectileVisuals.LavaOrange, VesuviusProjectileVisuals.HotWhite, 0.18f + chargePower * 0.5f);
+                GeneralParticleHandler.SpawnParticle(new PointParticle(
+                    spawnPosition,
                     inwardVelocity,
-                    0f,
-                    Color.Lerp(Color.Red, stageColor, 0.65f),
-                    Color.Lerp(Color.Orange, Color.White, chargePower * 0.45f),
-                    7 + currentStage,
-                    GunTip);
-                GeneralParticleHandler.SpawnParticle(streak);
+                    false,
+                    Main.rand.Next(12, 19),
+                    Main.rand.NextFloat(0.36f, 0.62f),
+                    fissureColor,
+                    true));
             }
 
-            if (FullyCharged && Main.rand.NextBool(2))
-            {
-                Vector2 dustVelocity = Vector2.One.RotatedByRandom(100f) * Main.rand.NextFloat(3f, 5.4f + currentStage);
-                Dust dust = Dust.NewDustPerfect(GunTip + dustVelocity, DustID.FireworksRGB, dustVelocity * 0.15f, 0, default, Main.rand.NextFloat(0.35f, 0.7f));
-                dust.noGravity = true;
-                dust.color = Color.Lerp(Color.White, Main.rand.NextBool(4) ? Color.Orange : stageColor, 0.7f);
-            }
-
-            if (chargeFrames % Math.Max(2, 6 - currentStage) == 0)
-            {
-                Vector2 dustVelocity = Vector2.One.RotatedByRandom(100f) * Main.rand.NextFloat(2.2f, 4.8f + currentStage);
-                Dust dust = Dust.NewDustPerfect(GunTip + dustVelocity, DustID.FireworksRGB, dustVelocity * 0.22f, 0, default, Main.rand.NextFloat(0.42f, 0.86f));
-                dust.noGravity = true;
-                dust.color = Color.Lerp(Color.White, Main.rand.NextBool(4) ? Color.Orange : stageColor, 0.68f);
-            }
-
-            if (chargeFrames % Math.Max(4, 10 - currentStage) == 0)
+            if (FullyCharged && chargeFrames % 12 == 0)
             {
                 GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
-                    GunTip - Direction * (8f + chargePower * 16f),
-                    -Direction * 0.45f,
-                    Color.Lerp(stageColor, Color.White, chargePower * 0.22f),
-                    new Vector2(0.72f, 1.35f + chargePower * 1.25f),
-                    Direction.ToRotation() - MathHelper.PiOver2,
-                    0.12f,
-                    0.02f,
-                    12));
-            }
-
-            if (chargeFrames % 8 == 0)
-            {
-                GeneralParticleHandler.SpawnParticle(new GenericBloom(
-                    GunTip + Main.rand.NextVector2Circular(2.5f + chargePower * 5f, 2.5f + chargePower * 5f),
+                    GunTip,
                     Vector2.Zero,
-                    Color.Lerp(stageColor, Color.White, chargePower * 0.35f),
-                    0.38f + chargePower * 0.55f,
-                    12 + currentStage * 2,
-                    true));
+                    Color.Lerp(stageColor, VesuviusProjectileVisuals.HotWhite, 0.35f),
+                    new Vector2(1f, 0.42f),
+                    Direction.ToRotation(),
+                    0.5f,
+                    0.12f,
+                    15));
             }
         }
 
@@ -370,26 +339,26 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                 return;
 
             Color burstColor = VesuviusProgression.GetStageColor(stage);
-            GeneralParticleHandler.SpawnParticle(new PulseRing(GunTip, Vector2.Zero, burstColor, 0.08f, 1.2f + stage * 0.19f, 22));
-            GeneralParticleHandler.SpawnParticle(new CustomPulse(GunTip, Vector2.Zero, burstColor * 0.8f, "CalamityMod/Particles/ShatteredExplosion", Vector2.One, Main.rand.NextFloat(-0.4f, 0.4f), 0.1f, 0.225f + stage * 0.04f, 18));
+            GeneralParticleHandler.SpawnParticle(new ImpactParticle(GunTip, 0.08f, 12, 0.3f + stage * 0.04f, Color.Lerp(burstColor, Color.White, 0.36f)));
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(GunTip, Vector2.Zero, burstColor, new Vector2(1f, 0.44f), Direction.ToRotation(), 0.14f, 0.82f + stage * 0.11f, 18));
             SoundEngine.PlaySound(
                 stage >= VesuviusProgression.GetMaxStage()
                     ? HeliumReadySound with { Volume = 0.95f, Pitch = -0.08f + stage * 0.025f }
                     : SoundID.Item74 with { Volume = 0.55f, Pitch = -0.35f + stage * 0.08f },
                 GunTip);
-            ApplyScreenShake(2.5f + stage * 0.9f);
+            ApplyScreenShake(1.6f + stage * 0.48f);
 
-            for (int i = 0; i < 16 + stage * 4; i++)
+            for (int i = 0; i < 8 + stage * 2; i++)
             {
-                Dust dust = Dust.NewDustPerfect(GunTip, Main.rand.NextBool(3) ? DustID.Torch : DustID.Smoke, Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(3f, 9f), 80, burstColor, Main.rand.NextFloat(0.8f, 1.45f));
-                dust.noGravity = true;
+                Vector2 debrisVelocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.5f, 6.5f);
+                Dust dust = Dust.NewDustPerfect(GunTip, Main.rand.NextBool(3) ? DustID.Obsidian : DustID.Stone, debrisVelocity, 100, Color.Lerp(Color.DarkGray, burstColor, 0.22f), Main.rand.NextFloat(0.72f, 1.22f));
+                dust.noGravity = i % 3 == 0;
             }
 
-            for (int i = 0; i < 6 + stage; i++)
+            for (int i = 0; i < 3 + stage; i++)
             {
-                Vector2 sparkVelocity = Direction.RotatedByRandom(0.55f) * Main.rand.NextFloat(5f, 14f);
-                Particle spark = new LineParticle(GunTip, sparkVelocity, false, 24, Main.rand.NextFloat(0.28f, 0.72f), Main.rand.NextBool() ? Color.OrangeRed : burstColor);
-                GeneralParticleHandler.SpawnParticle(spark);
+                Vector2 fissureVelocity = Direction.RotatedByRandom(0.38f) * Main.rand.NextFloat(4f, 8f);
+                GeneralParticleHandler.SpawnParticle(new PointParticle(GunTip, fissureVelocity, true, Main.rand.Next(14, 21), Main.rand.NextFloat(0.4f, 0.68f), Main.rand.NextBool(4) ? Color.White : burstColor, true));
             }
         }
 
@@ -405,45 +374,36 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                 GunTip,
                 Vector2.Zero,
                 Color.Lerp(color, Color.White, 0.2f),
-                1.1f + stagePower * 0.9f,
-                22 + stage * 5));
-            GeneralParticleHandler.SpawnParticle(new CustomPulse(GunTip, Vector2.Zero, Color.OrangeRed, "CalamityMod/Particles/ShatteredExplosion", Vector2.One, Main.rand.NextFloat(-10f, 10f), 0f, 0.05f + stage * 0.008f, 14));
-            GeneralParticleHandler.SpawnParticle(new CustomPulse(GunTip, Vector2.Zero, color, "CalamityMod/Particles/ShatteredExplosion", Vector2.One, Main.rand.NextFloat(-10f, 10f), 0f, 0.08f + stage * 0.012f, 14));
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(GunTip, Direction * 0.8f, color, new Vector2(0.8f, 1.75f + stage * 0.25f), Direction.ToRotation() - MathHelper.PiOver2, 0.12f, 0.02f, 18));
+                0.72f + stagePower * 0.38f,
+                15 + stage * 2));
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(GunTip, Direction * 0.2f, VesuviusProjectileVisuals.HotWhite, "CalamityMod/Particles/SoftRoundExplosion", new Vector2(1.35f, 0.72f), Direction.ToRotation(), 0.03f, 0.12f + stage * 0.012f, 12));
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(GunTip, Direction * 0.45f, color, "CalamityMod/Particles/FlameExplosion", new Vector2(1.6f, 0.7f), Direction.ToRotation(), 0.04f, 0.17f + stage * 0.018f, 16));
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(GunTip, Direction * 0.65f, color, new Vector2(1f, 0.45f), Direction.ToRotation(), 0.12f, 1.05f + stage * 0.1f, 16));
+            GeneralParticleHandler.SpawnParticle(new ImpactParticle(GunTip, 0.11f, 11, 0.32f + stagePower * 0.16f, VesuviusProjectileVisuals.HotWhite));
 
-            int dustCount = stage <= 0 ? 12 : 17 + stage * 4;
+            int dustCount = stage <= 0 ? 6 : 7 + stage * 2;
             for (int i = 0; i < dustCount; i++)
             {
-                Dust dust = Dust.NewDustPerfect(GunTip, DustID.FireworksRGB);
-                dust.velocity = Direction.RotatedByRandom(0.42f + stage * 0.025f) * Main.rand.NextFloat(5f, 24f + stage * 3f);
-                dust.scale = Main.rand.NextFloat(0.55f, 1f);
-                dust.noGravity = true;
-                dust.color = Color.Lerp(Color.White, Main.rand.NextBool(4) ? Color.Orange : color, 0.7f);
+                Vector2 debrisVelocity = Direction.RotatedByRandom(0.38f) * Main.rand.NextFloat(4f, 12f + stage);
+                Dust dust = Dust.NewDustPerfect(GunTip, Main.rand.NextBool(3) ? DustID.Obsidian : DustID.InfernoFork, debrisVelocity, 60, Color.Lerp(color, Color.White, Main.rand.NextFloat(0.08f, 0.35f)), Main.rand.NextFloat(0.7f, 1.18f));
+                dust.noGravity = i % 2 == 0;
             }
 
-            Particle muzzleSpark = new GlowSparkParticle(
+            Particle muzzleCore = new PointParticle(
                 GunTip,
-                Direction * (16f + stage * 2f),
+                Direction * (10f + stage * 1.6f),
                 false,
-                6,
-                0.052f + stage * 0.006f,
+                12,
+                0.72f + stage * 0.06f,
                 color,
-                new Vector2(1.8f, 0.8f),
                 true);
-            GeneralParticleHandler.SpawnParticle(muzzleSpark);
+            GeneralParticleHandler.SpawnParticle(muzzleCore);
 
-            int lineCount = stage <= 0 ? 10 : 18 + stage * 3;
-            for (int i = 0; i <= lineCount; i++)
+            int fissureCount = stage <= 0 ? 3 : 4 + stage * 2;
+            for (int i = 0; i < fissureCount; i++)
             {
-                Vector2 sparkVelocity = Direction * (7.5f + stage);
-
-                float hotScale = Main.rand.NextFloat(0.3f, 0.8f);
-                Vector2 hotVelocity = sparkVelocity.RotatedByRandom(0.45f) * Main.rand.NextFloat(0.5f, 0.7f);
-                GeneralParticleHandler.SpawnParticle(new LineParticle(GunTip, hotVelocity, false, 34, hotScale, Main.rand.NextBool() ? Color.Red : Color.DarkRed));
-
-                float brightScale = Main.rand.NextFloat(0.4f, 1f);
-                Vector2 brightVelocity = sparkVelocity.RotatedByRandom(0.2f) * Main.rand.NextFloat(0.9f, 1.6f);
-                GeneralParticleHandler.SpawnParticle(new LineParticle(GunTip, brightVelocity, false, 36, brightScale, Main.rand.NextBool() ? Color.DarkOrange : color));
+                Vector2 fissureVelocity = Direction.RotatedByRandom(0.24f) * Main.rand.NextFloat(5f, 12f + stage * 1.5f);
+                GeneralParticleHandler.SpawnParticle(new PointParticle(GunTip + Main.rand.NextVector2Circular(3f, 3f), fissureVelocity, true, Main.rand.Next(14, 22), Main.rand.NextFloat(0.42f, 0.74f), Main.rand.NextBool(4) ? VesuviusProjectileVisuals.HotWhite : color, true));
             }
         }
 
@@ -466,8 +426,8 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                 return;
 
             Color heatColor = VesuviusProgression.GetStageColor(stage);
-            int burstCount = Math.Min(12, (finalBurst ? 7 : 4) + stage * 2);
-            float speed = finalBurst ? 14f : 10f;
+            int burstCount = 1 + (finalBurst ? 1 : 0) + (stage >= 3 ? 1 : 0);
+            float speed = finalBurst ? 10f : 7.5f;
 
             for (int b = 0; b < burstCount; b++)
             {
@@ -486,30 +446,26 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
 
         private void SpawnSteamJet(Vector2 jetVelocity, Color heatColor, bool finalBurst)
         {
-            Color smokeColor = Color.Lerp(Color.SlateGray, heatColor, Main.rand.NextFloat(0.12f, finalBurst ? 0.48f : 0.34f));
-            Vector2 spawnPosition = GunTip + jetVelocity.SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(18f, finalBurst ? 34f : 24f);
-            Vector2 smokeVelocity = jetVelocity * Main.rand.NextFloat(0.18f, finalBurst ? 0.72f : 0.52f);
+            Color smokeColor = Color.Lerp(VesuviusProjectileVisuals.ScoriaSmoke, heatColor, Main.rand.NextFloat(0.08f, finalBurst ? 0.3f : 0.2f));
+            Vector2 spawnPosition = GunTip + jetVelocity.SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(12f, finalBurst ? 24f : 18f);
+            Vector2 smokeVelocity = jetVelocity * Main.rand.NextFloat(0.14f, finalBurst ? 0.46f : 0.34f);
 
             Particle smoke = new HeavySmokeParticle(
                 spawnPosition,
                 smokeVelocity,
                 smokeColor,
-                Main.rand.Next(15, finalBurst ? 38 : 31),
-                Main.rand.NextFloat(0.12f, finalBurst ? 0.54f : 0.42f),
-                0.5f,
-                Main.rand.NextFloat(-0.2f, 0.2f),
-                Main.rand.NextBool(),
-                required: true);
+                Main.rand.Next(20, finalBurst ? 35 : 30),
+                Main.rand.NextFloat(0.18f, finalBurst ? 0.42f : 0.34f),
+                0.58f,
+                Main.rand.NextFloat(-0.11f, 0.11f),
+                false);
             GeneralParticleHandler.SpawnParticle(smoke);
 
-            Dust steamDust = Dust.NewDustPerfect(
-                spawnPosition,
-                DustID.SteampunkSteam,
-                jetVelocity.RotatedByRandom(0.2f) * Main.rand.NextFloat(0.03f, finalBurst ? 0.32f : 0.22f),
-                180,
-                smokeColor,
-                Main.rand.NextFloat(0.3f, 1.1f));
-            steamDust.noGravity = false;
+            if (Main.rand.NextBool(2))
+            {
+                Vector2 emberVelocity = jetVelocity.RotatedByRandom(0.18f) * Main.rand.NextFloat(0.12f, finalBurst ? 0.38f : 0.28f);
+                GeneralParticleHandler.SpawnParticle(new PointParticle(spawnPosition, emberVelocity, true, Main.rand.Next(13, 20), Main.rand.NextFloat(0.3f, 0.52f), Color.Lerp(heatColor, Color.White, 0.16f), true));
+            }
         }
 
         private void ApplyAftershotCooldown()
@@ -528,32 +484,26 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
             if (Main.dedServ)
                 return;
 
-            if (releaseTimer % 2 == 0)
+            if (releaseTimer % 3 == 0)
             {
                 Color color = VesuviusProgression.GetStageColor(releaseStage);
-                VesuviusProjectileVisuals.SpawnMoltenBloom(
-                    GunTip + Main.rand.NextVector2Circular(12f, 12f),
-                    Projectile.scale * Main.rand.NextFloat(24f, 46f),
-                    0.58f);
-
                 Particle smoke = new TimedSmokeParticle(
-                    GunTip + Main.rand.NextVector2Circular(14f, 14f),
-                    -Direction * Main.rand.NextFloat(1f, 2.4f) - Vector2.UnitY * Main.rand.NextFloat(1.5f, 3.5f),
-                    Color.Lerp(Color.Gray, color, 0.2f),
+                    GunTip + Main.rand.NextVector2Circular(8f, 7f),
+                    -Direction * Main.rand.NextFloat(0.5f, 1.4f) - Vector2.UnitY * Main.rand.NextFloat(0.8f, 2f),
+                    Color.Lerp(VesuviusProjectileVisuals.ScoriaSmoke, color, 0.12f),
                     Color.Transparent,
-                    Main.rand.NextFloat(0.65f, 1.15f),
-                    0.78f,
-                    Main.rand.Next(24, 42),
+                    Main.rand.NextFloat(0.42f, 0.78f),
+                    0.68f,
+                    Main.rand.Next(24, 37),
                     Main.rand.NextFloat(-0.05f, 0.05f));
                 GeneralParticleHandler.SpawnParticle(smoke);
             }
 
-            if (releaseTimer % 3 == 0 && releaseStage > 0)
+            if (releaseTimer % 4 == 0 && releaseStage > 0)
             {
                 Color color = VesuviusProgression.GetStageColor(releaseStage);
-                Vector2 velocity = Direction.RotatedByRandom(0.28f) * Main.rand.NextFloat(6f, 13f + releaseStage);
-                Particle line = new LineParticle(GunTip + Main.rand.NextVector2Circular(5f, 5f), velocity, false, 18, Main.rand.NextFloat(0.24f, 0.58f), Main.rand.NextBool() ? Color.OrangeRed : color);
-                GeneralParticleHandler.SpawnParticle(line);
+                Vector2 velocity = Direction.RotatedByRandom(0.2f) * Main.rand.NextFloat(4f, 8f + releaseStage);
+                GeneralParticleHandler.SpawnParticle(new PointParticle(GunTip + Main.rand.NextVector2Circular(4f, 4f), velocity, true, 16, Main.rand.NextFloat(0.3f, 0.5f), Main.rand.NextBool(4) ? VesuviusProjectileVisuals.HotWhite : color, true));
             }
         }
 
@@ -613,8 +563,8 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
             Texture2D glow = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/Vesuvius/NewVesuviusGlow").Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Texture2D bloomRing = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
-            Texture2D volatileCore = ModContent.Request<Texture2D>("CalamityMod/Projectiles/Magic/VolatileStarcore").Value;
-            Texture2D smokeyHalo = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/SuperTexturePack/fx_SmokeyHalo1").Value;
+            Texture2D moltenCore = ModContent.Request<Texture2D>("CalamityMod/Projectiles/Magic/AsteroidMolten3").Value;
+            Texture2D moltenCoreGlow = ModContent.Request<Texture2D>("CalamityMod/Projectiles/Magic/AsteroidMoltenGlow3").Value;
 
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
             Vector2 origin = texture.Size() * 0.5f;
@@ -625,85 +575,79 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
             Color stageColor = VesuviusProgression.GetStageColor(stageForDraw);
             float pulse = 0.5f + 0.5f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * (7f + stageForDraw));
             float chargeIntensity = MathHelper.Clamp(ChargeCompletion, 0f, 1f);
-            float fullChargeBonus = stageForDraw >= VesuviusProgression.GetMaxStage() && !released ? 1.55f + pulse * 0.35f : 1f;
-            int coreFrame = ((released ? releaseTimer : chargeFrames) / (stageForDraw >= 4 ? 1 : 2)) % 6;
-            Rectangle coreSource = volatileCore.Frame(1, 6, 0, coreFrame);
+            float fullChargeBonus = stageForDraw >= VesuviusProgression.GetMaxStage() && !released ? 1.06f + pulse * 0.05f : 1f;
 
             if (!released && !FullyCharged)
-            {
-                float rumble = MathHelper.Clamp(chargeFrames, 0f, FullChargeFrameTarget);
-                drawPosition += Main.rand.NextVector2Circular(rumble / 25f, rumble / 25f);
-            }
+                drawPosition += Main.rand.NextVector2Circular(0.15f + chargeIntensity * 2.65f, 0.15f + chargeIntensity * 2.65f);
 
             Vector2 tipScreen = GunTip - Main.screenPosition;
             Main.spriteBatch.SetBlendState(BlendState.Additive);
-            float coreScale = (0.32f + stageForDraw * 0.075f + chargeIntensity * 0.36f) * fullChargeBonus;
-            float rotationTime = Main.GlobalTimeWrappedHourly;
-            Color additiveStageColor = new Color(stageColor.R, stageColor.G, stageColor.B, 0);
+            float coreScale = (0.17f + stageForDraw * 0.025f + chargeIntensity * 0.2f) * fullChargeBonus;
 
-            // Four layers, in the same spirit as HeliumFlash's charge-up: a slow smoky halo, a
-            // wide coloured bloom, a tight white hotspot, and a rotating ring that tightens as
-            // the charge fills. The previous eleven-texture stack (noise x3, flame eye, plasma
-            // core, smear, light flash, ...) all landed on the same point and averaged out into
-            // one muddy blob where no single element could be read.
-            Main.EntitySpriteDraw(
-                smokeyHalo,
-                tipScreen,
-                null,
-                additiveStageColor * (0.16f + chargeIntensity * 0.2f),
-                -Projectile.rotation + rotationTime * 0.85f,
-                smokeyHalo.Size() * 0.5f,
-                coreScale * (0.52f + pulse * 0.08f),
-                SpriteEffects.None);
-
+            // Calamity's Helium Flash cadence is kept, but the visual material is volcanic:
+            // one restrained pressure halo, one white-hot center, and a flattened gasket ring.
+            // The opaque molten rock below prevents the charge from reading as a miniature sun.
             Main.EntitySpriteDraw(
                 bloom,
                 tipScreen,
                 null,
-                additiveStageColor * (0.34f + pulse * 0.16f) * (0.35f + chargeIntensity) * fullChargeBonus,
+                stageColor * (0.16f + chargeIntensity * 0.28f),
                 Projectile.rotation,
                 bloom.Size() * 0.5f,
-                (0.42f + stageForDraw * 0.08f + pulse * 0.08f) * (0.75f + chargeIntensity) * fullChargeBonus,
+                (0.2f + stageForDraw * 0.025f + chargeIntensity * 0.24f) * fullChargeBonus,
                 SpriteEffects.None);
 
             Main.EntitySpriteDraw(
                 bloom,
                 tipScreen,
                 null,
-                VesuviusProjectileVisuals.AdditiveColor(Color.White) * chargeIntensity * 0.58f,
+                Color.White * chargeIntensity * 0.48f,
                 -Projectile.rotation,
                 bloom.Size() * 0.5f,
-                (0.19f + pulse * 0.04f) * (0.8f + chargeIntensity) * fullChargeBonus,
+                (0.08f + chargeIntensity * 0.11f) * fullChargeBonus,
                 SpriteEffects.None);
 
             Main.EntitySpriteDraw(
                 bloomRing,
                 tipScreen,
                 null,
-                additiveStageColor * (0.18f + chargeIntensity * 0.42f) * fullChargeBonus,
-                Projectile.rotation + rotationTime * 2.2f,
+                Color.Lerp(stageColor, VesuviusProjectileVisuals.HotWhite, 0.18f) * (0.12f + chargeIntensity * 0.3f),
+                Projectile.rotation,
                 bloomRing.Size() * 0.5f,
-                (0.16f + chargeIntensity * 0.32f) * fullChargeBonus,
+                new Vector2(0.24f + chargeIntensity * 0.24f, 0.1f + chargeIntensity * 0.08f) * fullChargeBonus,
                 SpriteEffects.None);
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
 
             Main.EntitySpriteDraw(texture, drawPosition, null, lightColor, staffRotation, origin, Projectile.scale, effects);
-            Main.EntitySpriteDraw(glow, drawPosition, null, new Color(255, 255, 255, 0) * (0.72f + pulse * 0.28f), staffRotation, origin, Projectile.scale, effects);
 
-            // The charge core is drawn opaque over the staff, exactly as HeliumFlash draws its
-            // starcore. Additive with A=0 dissolved the animated core into the bloom behind it.
             if (chargeIntensity > 0.03f)
             {
                 Main.EntitySpriteDraw(
-                    volatileCore,
+                    moltenCore,
                     tipScreen,
-                    coreSource,
+                    null,
                     Color.White,
-                    0f,
-                    coreSource.Size() * 0.5f,
-                    Projectile.scale * MathHelper.Lerp(0.2f, 0.58f, chargeIntensity) * fullChargeBonus,
+                    Main.GlobalTimeWrappedHourly * (0.8f + stageForDraw * 0.12f),
+                    moltenCore.Size() * 0.5f,
+                    coreScale,
                     SpriteEffects.None);
             }
+
+            Main.spriteBatch.SetBlendState(BlendState.Additive);
+            Main.EntitySpriteDraw(glow, drawPosition, null, Color.White * (0.5f + pulse * 0.18f), staffRotation, origin, Projectile.scale, effects);
+            if (chargeIntensity > 0.03f)
+            {
+                Main.EntitySpriteDraw(
+                    moltenCoreGlow,
+                    tipScreen,
+                    null,
+                    Color.White * (0.5f + chargeIntensity * 0.42f),
+                    Main.GlobalTimeWrappedHourly * (0.8f + stageForDraw * 0.12f),
+                    moltenCoreGlow.Size() * 0.5f,
+                    coreScale,
+                    SpriteEffects.None);
+            }
+            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
 
             return false;
         }

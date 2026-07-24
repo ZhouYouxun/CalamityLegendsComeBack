@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using CalamityMod;
+using CalamityMod.Dusts;
 using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
@@ -27,8 +28,8 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
         private const int Duration = 210;
         private const float CapeRadius = 150f;
 
-        private static readonly Color SoulPurple = new(80, 30, 130);
-        private static readonly Color BloodRed = new(165, 8, 36);
+        private static readonly Color SoulPurple = GaelGreatswordVisuals.CrimsonViolet;
+        private static readonly Color BloodRed = GaelGreatswordVisuals.BrimstoneRed;
 
         private Player Owner => Main.player[Projectile.owner];
         private int timer;
@@ -87,15 +88,31 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
 
             if (!Main.dedServ)
             {
-                GeneralParticleHandler.SpawnParticle(new StrongBloom(Projectile.Center, Vector2.Zero, new Color(238, 214, 250) * 0.8f, 1.6f, 18));
+                // 灼白核心 + 双冲击环（硫红外扩 + 烬金内爆）。
+                GeneralParticleHandler.SpawnParticle(new StrongBloom(Projectile.Center, Vector2.Zero, GaelGreatswordVisuals.WhiteHot * 0.85f, 1.6f, 18));
+                GeneralParticleHandler.SpawnParticle(new BloomParticle(Projectile.Center, Vector2.Zero, BloodRed * 0.5f, 0.1f, 1.7f, 22, false));
                 GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Vector2.Zero,
                     BloodRed, new Vector2(1f, 1f), 0f, 0.3f, 1.4f, 26));
+                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Vector2.Zero,
+                    GaelGreatswordVisuals.EmberGold, new Vector2(1f, 1f), 0f, 0.2f, 0.95f, 20));
+
+                // 熔火崩解 + 黑烟环：一圈硫火元球与重烟同时炸开，再喷一大口流体火。
+                for (int i = 0; i < 12; i++)
+                {
+                    Vector2 dir = (MathHelper.TwoPi * i / 12f).ToRotationVector2();
+                    GaelGreatswordVisuals.SpawnBrimstoneMetaball(Projectile.Center + dir * 30f, dir * Main.rand.NextFloat(4f, 9f),
+                        Main.rand.NextFloat(26f, 42f), 0.85f);
+                    GaelGreatswordVisuals.RegisterBrimstoneFire(Projectile.Center + dir * 40f, dir * 3f, 1f, 0.35f);
+                    GeneralParticleHandler.SpawnParticle(new HeavySmokeParticle(Projectile.Center + dir * 24f, dir * Main.rand.NextFloat(2f, 5f),
+                        Color.Lerp(GaelGreatswordVisuals.VoidSmoke, BloodRed, 0.3f), Main.rand.Next(32, 48),
+                        Main.rand.NextFloat(0.6f, 1f), 0.6f, Main.rand.NextFloat(-0.05f, 0.05f), true));
+                }
 
                 for (int i = 0; i < 24; i++)
                 {
                     Vector2 velocity = (MathHelper.TwoPi * i / 24f).ToRotationVector2().RotatedByRandom(0.16f) * Main.rand.NextFloat(4f, 12f);
                     GeneralParticleHandler.SpawnParticle(new CritSpark(Projectile.Center + Main.rand.NextVector2Circular(30f, 30f),
-                        velocity, Color.White, Main.rand.NextBool() ? BloodRed : SoulPurple,
+                        velocity, Color.White, Main.rand.NextBool() ? BloodRed : GaelGreatswordVisuals.EmberGold,
                         Main.rand.NextFloat(0.45f, 0.95f), Main.rand.Next(12, 20)));
                 }
             }
@@ -197,8 +214,19 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
             if (Main.rand.NextBool(3))
             {
                 Dust dust = Dust.NewDustPerfect(Projectile.Center + Main.rand.NextVector2Circular(CapeRadius, CapeRadius),
-                    DustID.Shadowflame, Main.rand.NextVector2Circular(2f, 2f), 120, SoulPurple, Main.rand.NextFloat(1f, 1.55f));
+                    (int)CalamityDusts.Brimstone, Main.rand.NextVector2Circular(2f, 2f), 120, SoulPurple, Main.rand.NextFloat(1f, 1.55f));
                 dust.noGravity = true;
+            }
+
+            // 硫火火旋：斗篷边缘每隔几帧甩出一枚绕转的熔火元球并烧进流体场，
+            // 整套大招转成一圈流动的硫火结界，与至尊灾厄战场同源。
+            if (timer % 3 == 0)
+            {
+                float ringAngle = spinRotation * 1.4f + timer * 0.2f;
+                Vector2 ringPos = Projectile.Center + ringAngle.ToRotationVector2() * Main.rand.NextFloat(CapeRadius * 0.6f, CapeRadius);
+                Vector2 tangent = ringAngle.ToRotationVector2().RotatedBy(MathHelper.PiOver2) * 3f;
+                GaelGreatswordVisuals.SpawnBrimstoneMetaball(ringPos, tangent, Main.rand.NextFloat(18f, 30f), 0.82f);
+                GaelGreatswordVisuals.RegisterBrimstoneFire(ringPos, tangent, 0.5f, 0.3f);
             }
         }
 

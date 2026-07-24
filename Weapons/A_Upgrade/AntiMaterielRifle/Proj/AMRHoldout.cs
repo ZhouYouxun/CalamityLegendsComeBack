@@ -10,7 +10,7 @@ using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
+namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
 {
     internal sealed class AMRHoldout : ModProjectile, ILocalizedModType
     {
@@ -154,14 +154,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
 
             float charge = ScopeChargeCompletion;
 
-            // 逐渐无法移动
             float moveMult = MathHelper.Clamp(1f - charge, 0f, 1f);
             Owner.moveSpeed *= moveMult;
             Owner.maxRunSpeed *= moveMult;
             Owner.accRunSpeed *= moveMult;
             Owner.velocity.X *= MathHelper.Lerp(1f, 0.4f, charge);
 
-            // 逐渐防御力降低到自身的一半
             float defMult = MathHelper.Clamp(1f - 0.5f * charge, 0.5f, 1f);
             Owner.statDefense *= defMult;
 
@@ -264,8 +262,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             if (Main.netMode == NetmodeID.Server)
                 return;
 
-            // Calamity registers its spent casings as ModGore and throws them out
-            // of the breech this way (see OmniGunHoldout / M1GarandHoldout).
             Vector2 breech = Projectile.Center + direction * (HoldoutDistance + 6f);
             Vector2 ejectVelocity = (-direction * 1.7f + new Vector2(0f, -3.1f)).RotatedByRandom(0.22f) *
                 Main.rand.NextFloat(0.85f, 1.2f) * (rightShot ? 1.25f : 1f);

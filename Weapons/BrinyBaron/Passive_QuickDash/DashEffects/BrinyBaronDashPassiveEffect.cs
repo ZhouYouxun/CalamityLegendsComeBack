@@ -16,7 +16,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash.DashEffec
         DeepDiver,
         AsgardsValor,
         ElysianAegis,
-        AsgardianAegis
+        AsgardianAegis,
+        ShieldOfCthulhu,
+        ShieldOfTheHighRuler
     }
 
     internal interface IBrinyBaronDashPassiveEffect
@@ -162,7 +164,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash.DashEffec
             new DeepDiverPassiveDashEffect(),
             new AsgardsValorPassiveDashEffect(),
             new ElysianAegisPassiveDashEffect(),
-            new AsgardianAegisPassiveDashEffect()
+            new AsgardianAegisPassiveDashEffect(),
+            new ShieldOfCthulhuPassiveDashEffect(),
+            new ShieldOfTheHighRulerPassiveDashEffect()
         };
 
         public static BrinyBaronQuickDashDevice FromDashID(string dashID)
@@ -193,6 +197,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash.DashEffec
                 BrinyBaronQuickDashDevice.AsgardsValor => "PassiveDevice_AsgardsValor",
                 BrinyBaronQuickDashDevice.ElysianAegis => "PassiveDevice_ElysianAegis",
                 BrinyBaronQuickDashDevice.AsgardianAegis => "PassiveDevice_AsgardianAegis",
+                BrinyBaronQuickDashDevice.ShieldOfCthulhu => "PassiveDevice_ShieldOfCthulhu",
+                BrinyBaronQuickDashDevice.ShieldOfTheHighRuler => "PassiveDevice_ShieldOfTheHighRuler",
                 _ => "PassiveDevice_None",
             };
         }

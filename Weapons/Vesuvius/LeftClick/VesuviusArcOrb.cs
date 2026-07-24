@@ -143,10 +143,28 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick
             }
 
             if (Main.rand.NextBool(Tier >= 3 ? 3 : 5))
-                VesuviusProjectileVisuals.SpawnMoltenBloom(
+            {
+                Particle ash = new SquareAshParticle(
+                    Projectile.Center + Main.rand.NextVector2Circular(5f, 5f),
+                    backward * Main.rand.NextFloat(0.8f, 2.2f) + Main.rand.NextVector2Circular(0.35f, 0.35f),
+                    Main.rand.Next(18, 28),
+                    Main.rand.NextFloat(0.35f, 0.62f) * Projectile.scale,
+                    Color.Lerp(VesuviusProjectileVisuals.AshGray, VesuviusProjectileVisuals.LavaOrange, 0.18f));
+                GeneralParticleHandler.SpawnParticle(ash);
+            }
+
+            if (Tier >= 2 && Main.rand.NextBool(5))
+            {
+                Particle fissure = new PointParticle(
                     Projectile.Center + Main.rand.NextVector2Circular(4f, 4f),
-                    Main.rand.NextFloat(14f, 24f + Tier * 5f),
-                    0.5f);
+                    backward.RotatedByRandom(0.24f) * Main.rand.NextFloat(1.4f, 3.4f),
+                    false,
+                    Main.rand.Next(12, 18),
+                    Main.rand.NextFloat(0.32f, 0.52f) * Projectile.scale,
+                    Main.rand.NextBool(4) ? VesuviusProjectileVisuals.HotWhite : VesuviusProjectileVisuals.LavaGold,
+                    true);
+                GeneralParticleHandler.SpawnParticle(fissure);
+            }
         }
 
         private NPC FindTarget(float range)
@@ -206,10 +224,12 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick
         public override bool PreDraw(ref Color lightColor)
         {
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Texture2D bloomRing = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
+            Texture2D body = ModContent.Request<Texture2D>("CalamityMod/Projectiles/Magic/AsteroidMolten3").Value;
+            Texture2D bodyGlow = ModContent.Request<Texture2D>("CalamityMod/Projectiles/Magic/AsteroidMoltenGlow3").Value;
             Vector2 drawPos = Projectile.Center - Main.screenPosition;
             float pulse = 0.5f + 0.5f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * (9f + Tier));
-            float scale = Projectile.scale * (0.9f + pulse * 0.1f);
+            float bodyScale = Projectile.scale * (0.62f + pulse * 0.025f);
+            float bloomScale = Projectile.scale * (0.44f + pulse * 0.035f);
 
             Main.spriteBatch.SetBlendState(BlendState.Additive);
 
@@ -222,22 +242,32 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick
                 Vector2 oldCenter = Projectile.oldPos[i] + Projectile.Size * 0.5f;
                 float t = (Projectile.oldPos.Length - i) / (float)Projectile.oldPos.Length;
                 Main.EntitySpriteDraw(bloom, oldCenter - Main.screenPosition, null,
-                    VesuviusProjectileVisuals.AdditiveColor(VesuviusProjectileVisuals.LavaOrange) * (t * t * 0.4f),
-                    0f, bloom.Size() * 0.5f, scale * 0.5f * t, SpriteEffects.None);
+                    VesuviusProjectileVisuals.LavaOrange * (t * t * 0.22f),
+                    0f, bloom.Size() * 0.5f, bloomScale * 0.42f * t, SpriteEffects.None);
             }
 
             // The Arc Nova muzzle orb, orange: wide halo, gold body, tight white hotspot, and a
             // slow rotating ring — same layered-bloom recipe, volcano colours.
-            Main.EntitySpriteDraw(bloom, drawPos, null, VesuviusProjectileVisuals.AdditiveColor(VesuviusProjectileVisuals.LavaOrange) * 0.6f,
-                0f, bloom.Size() * 0.5f, scale * 0.95f, SpriteEffects.None);
-            Main.EntitySpriteDraw(bloom, drawPos, null, VesuviusProjectileVisuals.AdditiveColor(VesuviusProjectileVisuals.LavaGold) * 0.66f,
-                0f, bloom.Size() * 0.5f, scale * 0.6f, SpriteEffects.None);
-            Main.EntitySpriteDraw(bloomRing, drawPos, null, VesuviusProjectileVisuals.AdditiveColor(VesuviusProjectileVisuals.LavaGold) * (0.32f + pulse * 0.16f),
-                Projectile.rotation, bloomRing.Size() * 0.5f, scale * 0.5f, SpriteEffects.None);
-            Main.EntitySpriteDraw(bloom, drawPos, null, VesuviusProjectileVisuals.AdditiveColor(VesuviusProjectileVisuals.HotWhite) * 0.9f,
-                0f, bloom.Size() * 0.5f, scale * 0.32f, SpriteEffects.None);
+            Main.EntitySpriteDraw(bloom, drawPos, null, VesuviusProjectileVisuals.LavaOrange * 0.42f,
+                0f, bloom.Size() * 0.5f, bloomScale, SpriteEffects.None);
+            Main.EntitySpriteDraw(bloom, drawPos, null, VesuviusProjectileVisuals.HotWhite * 0.68f,
+                0f, bloom.Size() * 0.5f, bloomScale * 0.32f, SpriteEffects.None);
 
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
+
+            for (int i = Projectile.oldPos.Length - 1; i >= 2; i -= 2)
+            {
+                if (Projectile.oldPos[i] == Vector2.Zero)
+                    continue;
+
+                Vector2 oldCenter = Projectile.oldPos[i] + Projectile.Size * 0.5f;
+                float opacity = (Projectile.oldPos.Length - i) / (float)Projectile.oldPos.Length * 0.18f;
+                Main.EntitySpriteDraw(body, oldCenter - Main.screenPosition, null, Color.Lerp(lightColor, Color.White, 0.28f) * opacity,
+                    Projectile.rotation - i * 0.12f, body.Size() * 0.5f, bodyScale * 0.88f, SpriteEffects.None);
+            }
+
+            Main.EntitySpriteDraw(body, drawPos, null, Color.Lerp(lightColor, Color.White, 0.52f), Projectile.rotation, body.Size() * 0.5f, bodyScale, SpriteEffects.None);
+            Main.EntitySpriteDraw(bodyGlow, drawPos, null, Color.White * (0.72f + pulse * 0.16f), Projectile.rotation, bodyGlow.Size() * 0.5f, bodyScale, SpriteEffects.None);
             return false;
         }
     }

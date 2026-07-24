@@ -15,8 +15,31 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash
         public bool IsUsingSlashDash;
         public bool DashEnabled = true;
 
-        public BrinyBaronQuickDashDevice EquippedDashDevice =>
-            BrinyBaronDashPassiveEffectRegistry.FromDashID(Player.Calamity().DashID);
+        public BrinyBaronQuickDashDevice EquippedDashDevice => GetActiveDashDevice();
+
+        private BrinyBaronQuickDashDevice GetActiveDashDevice()
+        {
+            BrinyBaronQuickDashDevice device = BrinyBaronDashPassiveEffectRegistry.FromDashID(GetActiveDashIDString());
+            if (device != BrinyBaronQuickDashDevice.None)
+                return device;
+
+            if (Player.dashType == 1 || Player.dash == 1)
+            {
+                int highRulerType = ModContent.ItemType<CalamityMod.Items.Accessories.ShieldoftheHighRuler>();
+                if (highRulerType > 0)
+                {
+                    for (int i = 0; i < Player.armor.Length; i++)
+                    {
+                        if (Player.armor[i].type == highRulerType)
+                            return BrinyBaronQuickDashDevice.ShieldOfTheHighRuler;
+                    }
+                }
+
+                return BrinyBaronQuickDashDevice.ShieldOfCthulhu;
+            }
+
+            return BrinyBaronQuickDashDevice.None;
+        }
 
         public string EquippedDashDeviceLocalizationKey =>
             BrinyBaronDashPassiveEffectRegistry.GetLocalizationKey(EquippedDashDevice);
@@ -35,7 +58,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash
 
         public override void PostUpdate()
         {
-            BrinyBaronQuickDashDevice activeDevice = BrinyBaronDashPassiveEffectRegistry.FromDashID(GetActiveDashID());
+            BrinyBaronQuickDashDevice activeDevice = GetActiveDashDevice();
             bool active = CanApplyPassive(activeDevice) && IsDashingWithTrackedAccessory(activeDevice);
 
             if (!active)
@@ -86,7 +109,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash
                 activeDevice != BrinyBaronQuickDashDevice.None;
         }
 
-        private string GetActiveDashID()
+        private string GetActiveDashIDString()
         {
             string lastUsedDash = Player.Calamity().LastUsedDashID;
             return !string.IsNullOrEmpty(lastUsedDash) ? lastUsedDash : Player.Calamity().DashID;

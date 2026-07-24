@@ -31,9 +31,10 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
         private const float BladeReach = 158f;
         private const float ImpactRadius = 136f;
 
-        private static readonly Color DarkPurple = new(60, 20, 100);
-        private static readonly Color BloodRed = new(175, 10, 30);
-        private static readonly Color PaleCore = new(226, 205, 245);
+        // 硫火红-虚空黑，与至尊灾厄同源。
+        private static readonly Color BrimBody = GaelGreatswordVisuals.BrimstoneRed;
+        private static readonly Color BloodRed = GaelGreatswordVisuals.BrimstoneHot;
+        private static readonly Color PaleCore = GaelGreatswordVisuals.WhiteHot;
 
         private Player Owner => Main.player[Projectile.owner];
         private int timer;
@@ -191,14 +192,15 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
             if (Main.dedServ)
                 return;
 
+            // 剑自天顶显形：一圈硫火尘向外炸开，中心凝起一枚熔火团块与硫红辉光。
             for (int i = 0; i < 18; i++)
             {
                 Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2f, 7f);
-                Dust dust = Dust.NewDustPerfect(startPoint + Main.rand.NextVector2Circular(22f, 28f),
-                    Main.rand.NextBool() ? DustID.Shadowflame : DustID.Blood, velocity, 90,
-                    Main.rand.NextBool() ? DarkPurple : BloodRed, Main.rand.NextFloat(1f, 1.55f));
-                dust.noGravity = true;
+                GaelGreatswordVisuals.SpawnBrimstoneDust(startPoint + Main.rand.NextVector2Circular(22f, 28f),
+                    velocity, Main.rand.NextFloat(1f, 1.55f));
             }
+            GaelGreatswordVisuals.SpawnBrimstoneMetaball(startPoint, Vector2.Zero, 26f, 0.85f);
+            GeneralParticleHandler.SpawnParticle(new BloomParticle(startPoint, Vector2.Zero, BrimBody * 0.5f, 0.05f, 0.5f, 16, false));
         }
 
         private void EmitDescentEffects(float descentProgress)
@@ -206,24 +208,28 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
             if (Main.dedServ)
                 return;
 
-            // 坠落拖尾：剑身两侧的血紫流线随下坠速度拉长，剑尖曳出火花。
+            // 坠落如一颗硫火陨星：剑身两侧甩出硫火尘，尾迹烧进流体火焰场，剑尖曳出烬火。
             Vector2 bladeDirection = currentAngle.ToRotationVector2();
             for (int i = 0; i < 2; i++)
             {
                 Vector2 position = Owner.MountedCenter + bladeDirection * Main.rand.NextFloat(30f, BladeReach * 0.9f) * scale +
                     Main.rand.NextVector2Circular(14f, 6f);
-                Vector2 velocity = -Vector2.UnitY * Main.rand.NextFloat(3f, 7f) * (0.4f + descentProgress);
-                GeneralParticleHandler.SpawnParticle(new LineParticle(position, velocity, false,
-                    Main.rand.Next(10, 17), Main.rand.NextFloat(0.4f, 0.75f),
-                    Main.rand.NextBool(3) ? BloodRed : DarkPurple));
+                Vector2 velocity = -Vector2.UnitY * Main.rand.NextFloat(2f, 5f) * (0.4f + descentProgress) + Main.rand.NextVector2Circular(1.5f, 0.5f);
+                GaelGreatswordVisuals.SpawnBrimstoneDust(position, velocity, Main.rand.NextFloat(1f, 1.5f) * scale);
             }
+
+            Vector2 trailPos = Owner.MountedCenter + bladeDirection * BladeReach * scale * Main.rand.NextFloat(0.5f, 0.95f);
+            GaelGreatswordVisuals.RegisterBrimstoneFire(trailPos, -Vector2.UnitY * (2f + descentProgress * 4f), 0.35f + descentProgress * 0.35f, 0.3f);
+            if (Main.rand.NextBool(2))
+                GaelGreatswordVisuals.SpawnBrimstoneMetaball(trailPos, -Vector2.UnitY * Main.rand.NextFloat(1f, 3f),
+                    Main.rand.NextFloat(12f, 20f) * scale, 0.75f);
 
             if (Main.rand.NextBool(2))
             {
                 Vector2 tipPosition = Owner.MountedCenter + bladeDirection * BladeReach * scale * Main.rand.NextFloat(0.85f, 1f);
                 GeneralParticleHandler.SpawnParticle(new CritSpark(tipPosition,
                     -Vector2.UnitY * Main.rand.NextFloat(2f, 5f) + Main.rand.NextVector2Circular(1.5f, 1.5f),
-                    Color.White, Main.rand.NextBool() ? BloodRed : DarkPurple,
+                    Color.White, Main.rand.NextBool() ? GaelGreatswordVisuals.EmberGold : BloodRed,
                     Main.rand.NextFloat(0.35f, 0.7f), Main.rand.Next(8, 14)));
             }
         }
@@ -233,35 +239,61 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
             if (Main.dedServ)
                 return;
 
+            // 硫火尘埃冲击环。
             for (int i = 0; i < 38; i++)
             {
                 Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.5f, 10f);
-                Dust dust = Dust.NewDustPerfect(targetPoint + Main.rand.NextVector2Circular(28f, 24f),
-                    Main.rand.NextBool() ? DustID.Shadowflame : DustID.Blood, velocity, 90,
-                    Main.rand.NextBool() ? DarkPurple : BloodRed, Main.rand.NextFloat(1f, 1.9f));
-                dust.noGravity = true;
+                GaelGreatswordVisuals.SpawnBrimstoneDust(targetPoint + Main.rand.NextVector2Circular(28f, 24f),
+                    velocity, Main.rand.NextFloat(1f, 1.9f));
             }
 
+            // 熔火坑：沿地面铺开一排硫火元球，像剑砸出的熔岩坑口。
+            for (int i = 0; i < 7; i++)
+            {
+                float side = MathHelper.Lerp(-1f, 1f, i / 6f);
+                Vector2 blobPos = targetPoint + new Vector2(side * Main.rand.NextFloat(20f, 74f), Main.rand.NextFloat(-6f, 10f));
+                GaelGreatswordVisuals.SpawnBrimstoneMetaball(blobPos,
+                    new Vector2(side * Main.rand.NextFloat(1f, 4f), -Main.rand.NextFloat(0.5f, 2.5f)),
+                    Main.rand.NextFloat(22f, 40f), 0.85f);
+            }
+
+            // 黑烟柱：落点腾起几股硫火黑烟，撑起坠击的体量。
+            for (int i = 0; i < 5; i++)
+            {
+                GeneralParticleHandler.SpawnParticle(new HeavySmokeParticle(
+                    targetPoint + Main.rand.NextVector2Circular(40f, 14f),
+                    new Vector2(Main.rand.NextFloat(-1.5f, 1.5f), -Main.rand.NextFloat(2f, 5f)),
+                    Color.Lerp(GaelGreatswordVisuals.VoidSmoke, BloodRed, Main.rand.NextFloat(0.2f, 0.5f)),
+                    Main.rand.Next(34, 52), Main.rand.NextFloat(0.7f, 1.15f), 0.6f, Main.rand.NextFloat(-0.04f, 0.04f), true));
+            }
+
+            // 双冲击环：竖向喷发的硫红柱环 + 贴地摊开的灼白宽环。
             GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(targetPoint, -Vector2.UnitY * 4f,
                 BloodRed, new Vector2(1.2f, 2.6f), -MathHelper.PiOver2, 0.22f, 0.04f, 28));
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(targetPoint, Vector2.Zero,
+                GaelGreatswordVisuals.EmberGold, new Vector2(2.2f, 0.7f), 0f, 0.16f, 0.05f, 24));
 
-            // 落点冲击补强：白炽核心强光 + 沿地面两侧喷溅的火花与闪星。
+            // 落点冲击补强：白炽核心强光 + 硫红辉光 + 沿地面两侧喷溅的火花与闪星，末尾喷一大口流体火。
             GeneralParticleHandler.SpawnParticle(new StrongBloom(targetPoint, Vector2.Zero, PaleCore * 0.75f, 1.1f, 16));
+            GeneralParticleHandler.SpawnParticle(new BloomParticle(targetPoint, Vector2.Zero, BloodRed * 0.5f, 0.06f, 1.1f, 20, false));
             for (int i = 0; i < 14; i++)
             {
                 float side = Main.rand.NextBool() ? 1f : -1f;
                 Vector2 velocity = new Vector2(side * Main.rand.NextFloat(2f, 9f), -Main.rand.NextFloat(2f, 7.5f));
                 GeneralParticleHandler.SpawnParticle(new CritSpark(targetPoint + new Vector2(side * Main.rand.NextFloat(0f, 46f), Main.rand.NextFloat(-10f, 6f)),
-                    velocity, Color.White, Main.rand.NextBool() ? BloodRed : DarkPurple,
+                    velocity, Color.White, Main.rand.NextBool() ? BloodRed : GaelGreatswordVisuals.EmberGold,
                     Main.rand.NextFloat(0.45f, 0.9f), Main.rand.Next(11, 19)));
             }
 
             for (int i = 0; i < 4; i++)
             {
                 GeneralParticleHandler.SpawnParticle(new GenericSparkle(targetPoint + Main.rand.NextVector2Circular(52f, 22f),
-                    -Vector2.UnitY * Main.rand.NextFloat(1f, 3.5f), Color.White, BloodRed,
+                    -Vector2.UnitY * Main.rand.NextFloat(1f, 3.5f), Color.White, GaelGreatswordVisuals.EmberGold,
                     Main.rand.NextFloat(0.5f, 0.85f), Main.rand.Next(12, 18), Main.rand.NextFloat(-0.12f, 0.12f), 2.4f));
             }
+            for (int i = 0; i < 6; i++)
+                GaelGreatswordVisuals.RegisterBrimstoneFire(targetPoint + new Vector2(Main.rand.NextFloat(-60f, 60f), Main.rand.NextFloat(-8f, 8f)),
+                    new Vector2(Main.rand.NextFloat(-2f, 2f), -Main.rand.NextFloat(1f, 4f)), 0.9f, 0.35f);
 
             if (Main.myPlayer != Projectile.owner)
                 return;

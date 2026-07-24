@@ -54,6 +54,7 @@ Mods: {
 			AegisBlade: {
 				// AegisBorrowedLazharLaser.DisplayName: Aegis Borrowed Lazhar Laser
 				// AegisBorrowedOrbitalStrike.DisplayName: Aegis Borrowed Orbital Strike
+				// AegisWallStatusBar.DisplayName: Aegis Wall Status Bar
 			}
 
 			AegisWallProjectile.DisplayName: 庇护土墙

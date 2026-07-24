@@ -7,7 +7,7 @@ using Terraria.DataStructures;
 using Terraria.Graphics.Effects;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
+namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
 {
     internal sealed class AMRAimScope : ModProjectile, ILocalizedModType
     {

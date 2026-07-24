@@ -227,23 +227,20 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.DStage3
                 burstAngle = Main.rand.NextFloat(MathHelper.TwoPi);
                 SoundEngine.PlaySound(SoundID.Item74 with { Volume = 0.9f, Pitch = -0.3f }, Projectile.Center);
 
-                for (int i = 0; i < 4; i++)
-                {
-                    GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero, VesuviusProjectileVisuals.LavaOrange, "CalamityMod/Particles/BloomCircle", Vector2.One, Main.rand.NextFloat(-10f, 10f), 2.2f, 0.9f, 22, true));
-                    GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero, Color.White, "CalamityMod/Particles/BloomCircle", Vector2.One, Main.rand.NextFloat(-10f, 10f), 1.1f, 0.4f, 22, true));
-                }
-                GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero, VesuviusProjectileVisuals.LavaGold * 0.6f, "CalamityMod/Particles/BloomRing", Vector2.One, Main.rand.NextFloat(-5f, 5f), 4f, 0f, 16));
+                GeneralParticleHandler.SpawnParticle(new ImpactParticle(Projectile.Center, 0.1f, 12, Cataclysmic ? 0.5f : 0.38f, VesuviusProjectileVisuals.HotWhite));
+                GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero, VesuviusProjectileVisuals.HotWhite, "CalamityMod/Particles/SoftRoundExplosion", Vector2.One, 0f, 0.06f, Cataclysmic ? 0.25f : 0.19f, 13));
+                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Vector2.Zero, Color.Lerp(VesuviusProjectileVisuals.RavagerSmoke, VesuviusProjectileVisuals.LavaOrange, 0.42f), new Vector2(1f, 0.38f), ImpactDirection.ToRotation(), 0.18f, Cataclysmic ? 1.5f : 1.08f, 18));
 
                 for (int i = 0; i < 6; i++)
                 {
                     Vector2 vel = (MathHelper.TwoPi / 6f * i + burstAngle).ToRotationVector2() * 6f;
-                    Dust spark = Dust.NewDustPerfect(Projectile.Center, DustID.Torch, vel, 0, default, 1.4f);
+                    Dust spark = Dust.NewDustPerfect(Projectile.Center, i % 2 == 0 ? DustID.Stone : DustID.InfernoFork, vel, 80, Color.Lerp(Color.DarkGray, VesuviusProjectileVisuals.LavaGold, 0.35f), 1.15f);
                     spark.noGravity = true;
                 }
             }
 
             if (currentFrame == 4)
-                GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero, VesuviusProjectileVisuals.LavaOrange * 0.5f, "CalamityMod/Particles/BloomRing", Vector2.One, Main.rand.NextFloat(-5f, 5f), 3.2f, 0f, 14));
+                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Vector2.Zero, VesuviusProjectileVisuals.LavaOrange, new Vector2(1f, 0.28f), ImpactDirection.ToRotation(), 0.14f, Cataclysmic ? 2.05f : 1.45f, 16));
 
             if (currentFrame == 10)
                 TriggerCoreRupture();
@@ -260,55 +257,83 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.DStage3
             SoundEngine.PlaySound(SoundID.Item14 with { Volume = 1f, Pitch = -0.45f }, Projectile.Center);
             SoundEngine.PlaySound(SoundID.Item62 with { Volume = 0.7f, Pitch = -0.2f }, Projectile.Center);
 
-            int pulseCount = Cataclysmic ? 7 : 5;
-            for (int i = 0; i < pulseCount; i++)
-            {
-                Color c = Color.Lerp(VesuviusProjectileVisuals.LavaOrange, VesuviusProjectileVisuals.HotWhite, Utils.GetLerpValue(0, pulseCount, i, true));
-                GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero, c, "CalamityMod/Particles/SoftRoundExplosion", Vector2.One, Main.rand.NextFloat(-5f, 5f), 0f, ExplosionRadius * 0.00065f + 0.065f + 0.04f * i, 26 - i));
-            }
+            float eruptionScale = Cataclysmic ? 1f : 0.74f;
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                Projectile.Center,
+                Vector2.Zero,
+                VesuviusProjectileVisuals.HotWhite,
+                "CalamityMod/Particles/SoftRoundExplosion",
+                Vector2.One,
+                burstAngle,
+                0.05f,
+                0.26f * eruptionScale,
+                18));
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                Projectile.Center,
+                Vector2.Zero,
+                VesuviusProjectileVisuals.LavaOrange,
+                "CalamityMod/Particles/FlameExplosion",
+                Vector2.One,
+                -burstAngle,
+                0.06f,
+                0.4f * eruptionScale,
+                22));
+            GeneralParticleHandler.SpawnParticle(new ImpactParticle(Projectile.Center, 0.08f, 14, 0.52f * eruptionScale, VesuviusProjectileVisuals.HotWhite));
 
-            for (int i = 0; i < 3; i++)
-                GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero, Color.Lerp(VesuviusProjectileVisuals.LavaOrange, Color.OrangeRed, i / 3f), "CalamityMod/Particles/FlameExplosion", Vector2.One, Main.rand.NextFloat(-5f, 5f), 0f, 0.09f + 0.05f * i * 3, 26 - i * 2));
+            // The two flattened rings are the earthquake read: a dark pressure front followed
+            // by a smaller molten fault ring. They stay low instead of becoming a solar halo.
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                Projectile.Center,
+                Vector2.Zero,
+                Color.Lerp(VesuviusProjectileVisuals.RavagerSmoke, VesuviusProjectileVisuals.LavaOrange, 0.38f),
+                new Vector2(1f, 0.34f),
+                ImpactDirection.ToRotation(),
+                0.22f,
+                (Cataclysmic ? 3.25f : 2.25f),
+                28));
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                Projectile.Center,
+                Vector2.Zero,
+                VesuviusProjectileVisuals.LavaGold,
+                new Vector2(1f, 0.22f),
+                ImpactDirection.ToRotation(),
+                0.14f,
+                (Cataclysmic ? 2.45f : 1.72f),
+                20));
 
-            for (int i = 0; i < 2; i++)
+            int ejectaCount = Cataclysmic ? 8 : 6;
+            for (int i = 0; i < ejectaCount; i++)
             {
-                GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero, VesuviusProjectileVisuals.LavaGold, "CalamityMod/Particles/BloomCircle", Vector2.One, Main.rand.NextFloat(-10f, 10f), 1f, 4.5f, 30, true));
-                GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero, Color.White, "CalamityMod/Particles/BloomCircle", Vector2.One, Main.rand.NextFloat(-10f, 10f), 0.5f, 1.8f, 30, true));
-            }
-
-            // Radiating spark spokes
-            for (int i = 0; i < 8; i++)
-            {
-                Vector2 vel = (MathHelper.TwoPi / 8f * i + burstAngle).ToRotationVector2() * 9f;
-                GeneralParticleHandler.SpawnParticle(new GlowSparkParticle(Projectile.Center, vel, false, 10, 0.2f, VesuviusProjectileVisuals.LavaGold, new Vector2(1.6f, 0.8f), true, true, 2));
+                Vector2 velocity = (MathHelper.TwoPi / ejectaCount * i + burstAngle).ToRotationVector2() * Main.rand.NextFloat(5f, 8f);
+                GeneralParticleHandler.SpawnParticle(new PointParticle(Projectile.Center, velocity - Vector2.UnitY * Main.rand.NextFloat(0.4f, 2f), true, Main.rand.Next(15, 23), Main.rand.NextFloat(0.46f, 0.72f), i % 3 == 0 ? VesuviusProjectileVisuals.HotWhite : VesuviusProjectileVisuals.LavaGold, true));
             }
 
             // Rock shrapnel — a different material mixed into the fire for visual variety
-            for (int i = 0; i < (Cataclysmic ? 30 : 20); i++)
+            for (int i = 0; i < (Cataclysmic ? 18 : 12); i++)
             {
-                Vector2 vel = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(4f, 11f);
+                Vector2 vel = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(3.5f, 9f) - Vector2.UnitY * Main.rand.NextFloat(0f, 2.5f);
                 Dust stone = Dust.NewDustPerfect(Projectile.Center, Main.rand.NextBool(2) ? DustID.Stone : DustID.Obsidian, vel, 100, Color.Lerp(Color.DarkGray, VesuviusProjectileVisuals.LavaOrange, 0.2f), Main.rand.NextFloat(1f, 1.9f));
                 stone.noGravity = i % 2 == 0;
             }
 
-            // Fire dust burst
-            for (int i = 0; i < (Cataclysmic ? 48 : 32); i++)
+            // A small amount of hot dust lights the rock ejecta; it does not form a second blast.
+            for (int i = 0; i < (Cataclysmic ? 18 : 12); i++)
             {
-                Vector2 vel = Main.rand.NextVector2Circular(9f, 9f);
-                Dust fire = Dust.NewDustPerfect(Projectile.Center, DustID.InfernoFork, vel, 40, default, Main.rand.NextFloat(1f, 1.9f));
+                Vector2 vel = Main.rand.NextVector2Circular(7f, 5f) - Vector2.UnitY * Main.rand.NextFloat(0f, 2f);
+                Dust fire = Dust.NewDustPerfect(Projectile.Center, DustID.InfernoFork, vel, 40, default, Main.rand.NextFloat(0.85f, 1.45f));
                 fire.noGravity = true;
                 fire.color = Color.Lerp(Color.White, Main.rand.NextBool(3) ? VesuviusProjectileVisuals.LavaGold : VesuviusProjectileVisuals.LavaOrange, 0.7f);
             }
 
-            // Heavy smoke plume
-            for (int i = 0; i < (Cataclysmic ? 16 : 10); i++)
+            // The smoke rises; it does not occupy the whole circular hitbox.
+            for (int i = 0; i < (Cataclysmic ? 8 : 5); i++)
             {
-                Vector2 vel = Main.rand.NextVector2Circular(4f, 4f) * Main.rand.NextFloat(0.6f, 1.6f);
-                Particle smoke = new HeavySmokeParticle(Projectile.Center + vel * 3f, vel, VesuviusProjectileVisuals.RavagerSmoke, Main.rand.Next(28, 42), Main.rand.NextFloat(1.2f, 2f), 0.55f, Main.rand.NextFloat(-0.05f, 0.05f), true, required: true);
+                Vector2 vel = Main.rand.NextVector2Circular(2.5f, 1.2f) - Vector2.UnitY * Main.rand.NextFloat(1.2f, 3.8f);
+                Particle smoke = new HeavySmokeParticle(Projectile.Center + Main.rand.NextVector2Circular(22f, 12f), vel, VesuviusProjectileVisuals.RavagerSmoke, Main.rand.Next(30, 46), Main.rand.NextFloat(0.8f, 1.35f) * eruptionScale, 0.58f, Main.rand.NextFloat(-0.05f, 0.05f), false, required: true);
                 GeneralParticleHandler.SpawnParticle(smoke);
             }
 
-            VesuviusProjectileVisuals.SpawnMoltenBloom(Projectile.Center, Cataclysmic ? 116f : 82f, DirectHit ? 0.95f : 0.68f);
+            VesuviusProjectileVisuals.SpawnMoltenBloom(Projectile.Center, Cataclysmic ? 70f : 48f, DirectHit ? 0.78f : 0.55f);
 
             if (Cataclysmic)
                 SpawnCrustFractures();
@@ -320,13 +345,13 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick.DStage3
             for (int branch = -1; branch <= 1; branch++)
             {
                 Vector2 branchDirection = forward.RotatedBy(branch * 0.34f);
-                for (int step = 1; step <= 9; step++)
+                for (int step = 1; step <= 6; step++)
                 {
-                    Vector2 position = Projectile.Center + branchDirection * (step * 28f) + branchDirection.RotatedBy(MathHelper.PiOver2) * (float)Math.Sin(step * 1.7f + branch) * 10f;
+                    Vector2 position = Projectile.Center + branchDirection * (step * 25f) + branchDirection.RotatedBy(MathHelper.PiOver2) * (float)Math.Sin(step * 1.7f + branch) * 8f;
                     Color color = step % 3 == 0 ? VesuviusProjectileVisuals.HotWhite : VesuviusProjectileVisuals.LavaGold;
-                    GeneralParticleHandler.SpawnParticle(new LineParticle(position, branchDirection * Main.rand.NextFloat(2.5f, 5.5f), false, 18 + step, 0.38f + (9 - step) * 0.025f, color));
+                    GeneralParticleHandler.SpawnParticle(new LineParticle(position, branchDirection * 0.2f, false, 12 + step, 0.28f + (6 - step) * 0.018f, color));
 
-                    Dust rock = Dust.NewDustPerfect(position, step % 2 == 0 ? DustID.Obsidian : DustID.Stone, -Vector2.UnitY.RotatedByRandom(0.45f) * Main.rand.NextFloat(2f, 7f), 100, Color.Lerp(Color.DarkGray, color, 0.22f), Main.rand.NextFloat(0.9f, 1.6f));
+                    Dust rock = Dust.NewDustPerfect(position, step % 2 == 0 ? DustID.Obsidian : DustID.Stone, -Vector2.UnitY.RotatedByRandom(0.38f) * Main.rand.NextFloat(1.6f, 5.2f), 100, Color.Lerp(Color.DarkGray, color, 0.18f), Main.rand.NextFloat(0.8f, 1.35f));
                     rock.noGravity = step % 3 == 0;
                 }
             }

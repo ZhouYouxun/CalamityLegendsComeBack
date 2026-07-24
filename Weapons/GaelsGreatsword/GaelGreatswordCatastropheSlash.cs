@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using CalamityMod;
+using CalamityMod.Dusts;
 using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
@@ -24,8 +25,8 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
     {
         public override string Texture => "CalamityMod/Projectiles/Boss/SupremeCatastropheSlash";
 
-        private static readonly Color BloodRed = new(190, 18, 38);
-        private static readonly Color SoulPurple = new(95, 28, 150);
+        private static readonly Color BloodRed = GaelGreatswordVisuals.BrimstoneRed;
+        private static readonly Color SoulPurple = GaelGreatswordVisuals.CrimsonViolet;
 
         public override void SetStaticDefaults()
         {
@@ -65,7 +66,7 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
             {
                 Vector2 side = Projectile.rotation.ToRotationVector2().RotatedBy(MathHelper.PiOver2);
                 Dust dust = Dust.NewDustPerfect(Projectile.Center + side * Main.rand.NextFloat(-52f, 52f),
-                    Main.rand.NextBool(3) ? DustID.Blood : DustID.Shadowflame,
+                    Main.rand.NextBool(3) ? DustID.Blood : (int)CalamityDusts.Brimstone,
                     side * Main.rand.NextFloat(-1.8f, 1.8f), 100,
                     Main.rand.NextBool() ? BloodRed : SoulPurple, Main.rand.NextFloat(1f, 1.45f));
                 dust.noGravity = true;
@@ -80,6 +81,17 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
                 torch.noGravity = true;
                 torch.scale = Main.rand.NextFloat(0.5f, 0.7f);
                 torch.color = BloodRed;
+            }
+
+            // 熔火刃身：沿刀刃投喂流体火焰并甩出硫火元球，斩击本体像一柄流动的熔岩刀。
+            if (!Main.dedServ && Projectile.ai[1] >= 3f)
+            {
+                Vector2 forward = Projectile.rotation.ToRotationVector2();
+                Vector2 firePoint = Projectile.Center + forward * Main.rand.NextFloat(-70f, 96f) * Projectile.scale;
+                GaelGreatswordVisuals.RegisterBrimstoneFire(firePoint, -Projectile.velocity * 0.15f, 0.5f, 0.32f);
+                if (Main.rand.NextBool(2))
+                    GaelGreatswordVisuals.SpawnBrimstoneMetaball(firePoint, -Projectile.velocity * 0.1f,
+                        Main.rand.NextFloat(16f, 26f) * Projectile.scale, 0.8f);
             }
 
             // 刃缘速度线：沿斩击前后两端拉出血色流线，读出刀刃的走向。

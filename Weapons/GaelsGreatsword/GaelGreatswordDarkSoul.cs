@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using CalamityMod;
+using CalamityMod.Dusts;
 using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
@@ -24,8 +25,9 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
     {
         public override string Texture => "CalamityMod/Projectiles/Melee/GaelSkull";
 
-        private static readonly Color SoulPurple = new(85, 30, 135);
-        private static readonly Color BloodRed = new(150, 8, 32);
+        // 血怨紫（暗部点缀）+ 硫火红（主色），与至尊灾厄同源。
+        private static readonly Color SoulPurple = GaelGreatswordVisuals.CrimsonViolet;
+        private static readonly Color BloodRed = GaelGreatswordVisuals.BrimstoneRed;
 
         public override void SetStaticDefaults()
         {
@@ -89,7 +91,7 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
             if (Main.rand.NextBool(3))
             {
                 Dust dust = Dust.NewDustPerfect(Projectile.Center + Main.rand.NextVector2Circular(8f, 8f),
-                    Main.rand.NextBool(4) ? DustID.Blood : DustID.Shadowflame,
+                    Main.rand.NextBool(4) ? DustID.Blood : (int)CalamityDusts.Brimstone,
                     -Projectile.velocity.SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(0.3f, 1.8f), 120,
                     Main.rand.NextBool(4) ? BloodRed : SoulPurple, Main.rand.NextFloat(0.8f, 1.25f));
                 dust.noGravity = true;
@@ -149,7 +151,7 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
 
             for (int i = 0; i < 8; i++)
             {
-                Dust dust = Dust.NewDustPerfect(Projectile.Center, Main.rand.NextBool() ? DustID.Blood : DustID.Shadowflame,
+                Dust dust = Dust.NewDustPerfect(Projectile.Center, Main.rand.NextBool() ? DustID.Blood : (int)CalamityDusts.Brimstone,
                     Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.4f, 4.2f), 100,
                     Main.rand.NextBool() ? BloodRed : SoulPurple, Main.rand.NextFloat(0.9f, 1.35f));
                 dust.noGravity = true;

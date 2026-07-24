@@ -24,7 +24,7 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
     {
         public override string Texture => "CalamityMod/Projectiles/Ranged/CondemnationArrow";
 
-        private static readonly Color BloodRed = new(180, 18, 40);
+        private static readonly Color BloodRed = GaelGreatswordVisuals.BrimstoneRed;
 
         public override void SetStaticDefaults()
         {
@@ -69,18 +69,18 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
                 Vector2 tail = Projectile.Center - Projectile.velocity.SafeNormalize(Vector2.UnitY) * 20f;
                 GeneralParticleHandler.SpawnParticle(new GenericSparkle(tail + Main.rand.NextVector2Circular(5f, 5f),
                     -Projectile.velocity * Main.rand.NextFloat(0.04f, 0.12f), Color.White,
-                    Main.rand.NextBool() ? BloodRed : new Color(150, 40, 170),
+                    Main.rand.NextBool() ? GaelGreatswordVisuals.EmberGold : GaelGreatswordVisuals.CrimsonViolet,
                     Main.rand.NextFloat(0.35f, 0.6f), Main.rand.Next(9, 15), Main.rand.NextFloat(-0.08f, 0.08f), 2f));
             }
         }
 
         public override Color? GetAlpha(Color lightColor)
         {
-            // 灾厄原版 CondemnationArrow 的红↔紫脉动染色：每支箭以自身 identity
-            // 为相位错开闪烁，箭体像烧着裁决之火一样明灭。
-            Color bloodGlow = new(226, 40, 40, 0);
-            Color violetGlow = new(205, 0, 194, 0);
-            Color fadeColor = Color.Lerp(bloodGlow, violetGlow,
+            // 硫红↔烬金脉动染色：每支箭以自身 identity 为相位错开闪烁，
+            // 箭体像烧着裁决硫火一样明灭。
+            Color bloodGlow = GaelGreatswordVisuals.BrimstoneHot with { A = 0 };
+            Color emberGlow = GaelGreatswordVisuals.EmberGold with { A = 0 };
+            Color fadeColor = Color.Lerp(bloodGlow, emberGlow,
                 MathF.Cos(Projectile.identity * 1.41f + Main.GlobalTimeWrappedHourly * 8f) * 0.5f + 0.5f);
             return Color.Lerp(lightColor, fadeColor, 0.5f);
         }
