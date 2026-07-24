@@ -54,7 +54,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             Projectile.friendly = true;
             Projectile.hostile = false;
             Projectile.DamageType = DamageClass.Melee;
-            Projectile.penetrate = 20;
+            Projectile.penetrate = -1;
             Projectile.light = 0.45f;
             Projectile.scale = 0.9f;
             Projectile.ignoreWater = true;
@@ -62,7 +62,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             Projectile.extraUpdates = 3;
             Projectile.timeLeft = 90 * Projectile.extraUpdates;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = 18;
+            Projectile.localNPCHitCooldown = -1;
         }
 
         public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
@@ -104,7 +104,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             // Stage 4/5 (SpawnStage == 3) summons a tornado on hit with 5 frames cooldown
             if (SpawnStage == 3 && tornadoCooldown <= 0)
             {
-                tornadoCooldown = 5;
+                tornadoCooldown = 9;
                 
                 Player owner = Main.player[Projectile.owner];
                 if (owner.ownedProjectileCounts[ModContent.ProjectileType<CalamityMod.Projectiles.Melee.BrinySpout>()] == 0)
@@ -121,7 +121,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
                 // Spawn water explosions
                 int explosionType = ModContent.ProjectileType<BrinyBaron_TornadoWaterExplosion>();
-                int explosionDamage = Math.Max(1, (int)(Projectile.damage * 0.46f));
+                int explosionDamage = Math.Max(1, (int)(Projectile.damage * 0.5f));
                 float explosionKnockback = Projectile.knockBack * 0.55f;
 
                 for (int i = 0; i < 5; i++)

@@ -35,7 +35,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
         private const float ShurikenFreeFlightDamping = 0.998f;
         private const float ShurikenNoTargetDamping = 0.994f;
         private const float ShurikenWanderingTurnStrength = 0.0045f;
-        private const float StickySlashDamageFactor = 0.42f;
+        private const float StickySlashDamageFactor = 0.33f;
         private const float StickySlashBaseScale = 0.9f;
         private const float StickySlashScalePerTier = 0.08f;
         private static readonly bool StickySlashProjectilesEnabled = false;
@@ -67,7 +67,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
             Projectile.tileCollide = true;
             Projectile.ignoreWater = true;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = 20;
+            Projectile.localNPCHitCooldown = 25;
             Projectile.DamageType = DamageClass.Melee;
         }
 
@@ -368,7 +368,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
 
             BBShuriken_Initial_Effects.SpawnStickyAmbient(Projectile, target, SizeScale, shurikenProfile.GrowthTier);
 
-            if (sliceEffectTimer >= 8)
+            if (sliceEffectTimer >= 12)
             {
                 sliceEffectTimer = 0;
                 slicesPerformed++;
@@ -383,7 +383,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
                         Projectile.Center,
                         dir * 20f,
                         ModContent.ProjectileType<BrinyBaron_SeafoamBlade>(),
-                        Math.Max(1, (int)(Projectile.damage * 0.4f)),
+                        Math.Max(1, (int)(Projectile.damage * 0.25f)),
                         Projectile.knockBack * 0.3f,
                         Projectile.owner,
                         1f);
