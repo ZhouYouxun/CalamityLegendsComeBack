@@ -44,6 +44,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         private ref float Timer => ref Projectile.localAI[0];
         private ref float BeamLength => ref Projectile.localAI[1];
         private ref float ChargeState => ref Projectile.localAI[2]; // 0=normal,1=converged,2=scattered
+        private float leftFocusProgress = 0f;
         private YCRightLaserVisualTier Tier => balance.GetRightLaserTier();
         private bool Empowered => !IsStandalone && EmpowerFramesLeft > 0f;
         // Converged: beam is thicker (+60%), gold-white tinted, limited turn speed
@@ -141,14 +142,22 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             Projectile.velocity = holdout.ForwardDirection;
             Projectile.rotation = Projectile.velocity.ToRotation();
 
+            // Smooth non-linear focusing transition when left-click is held/released during right-click holdout
+            bool leftHeld = holdout.IsLeftHeld();
+            float targetFocus = leftHeld ? 1f : 0f;
+            leftFocusProgress = MathHelper.Lerp(leftFocusProgress, targetFocus, 0.12f);
+            float easedFocus = CalamityUtils.SineInOutEasing(leftFocusProgress, 1);
+
             // Sync charge state from holdout (Projectile.owner only)
             if (Projectile.owner == Main.myPlayer)
-                ChargeState = holdout.ChargeRatio >= 1f
-                    ? (holdout.IsScatteredMode ? 2f : 1f)
-                    : 0f;
+                ChargeState = holdout.ChargeRatio >= 1f ? (leftHeld ? 2f : 1f) : 0f;
 
-            // Scale: converged = +60% thicker, scattered = 80% normal, else normal
-            float chargeScaleMult = IsConverged ? 1.6f : (IsScattered ? 0.8f : 1.0f);
+            // Base scale from charge ratio (converged = 1.6f, normal = 1.0f)
+            float baseScaleMult = IsConverged ? 1.6f : 1.0f;
+            // Focused scale when holding left click: smoothly shrinks down non-linearly
+            float focusedScaleMult = 0.55f;
+            float chargeScaleMult = MathHelper.Lerp(baseScaleMult, focusedScaleMult, easedFocus);
+
             Projectile.scale = GetBeamScale() * EmpowerBoost * chargeScaleMult;
 
             float empower = owner.GetModPlayer<YharimsCrystalStatePlayer>().CrystalEmpowered ? 1.35f : 1f;

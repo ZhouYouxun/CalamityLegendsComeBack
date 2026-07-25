@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using CalamityLegendsComeBack.Weapons.YharimsCrystal.Passive;
+using CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral.Drone;
 using CalamityMod;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
@@ -213,23 +214,23 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
 
         private void FireLightRound(Vector2 direction, Vector2 origin)
         {
-            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/MagnaCannonShot")
-            { Volume = 0.16f, Pitch = 1.15f, PitchVariance = 0.28f, MaxInstances = 5 }, Projectile.Center);
+            SoundEngine.PlaySound(SoundID.Item105 with { Volume = 0.32f, Pitch = 0.15f, PitchVariance = 0.2f }, Projectile.Center);
 
             if (Main.myPlayer != Projectile.owner)
                 return;
 
-            float stagger = MathHelper.ToRadians((SlotIndex - 2.5f) * 0.7f);
-            int shot = Projectile.NewProjectile(Projectile.GetSource_FromThis(), origin,
-                direction.RotatedBy(stagger) * 16f,
-                ModContent.ProjectileType<YC_DroneShot>(),
-                (int)(Projectile.damage * 0.7f),
+            float stagger = MathHelper.ToRadians((SlotIndex - 2.5f) * 1.5f);
+            Vector2 launchVel = direction.RotatedBy(stagger) * 13f;
+            int comet = Projectile.NewProjectile(Projectile.GetSource_FromThis(), origin,
+                launchVel,
+                ModContent.ProjectileType<YC_GalacticaComet>(),
+                (int)(Projectile.damage * 0.85f),
                 Projectile.knockBack * 0.65f,
                 Projectile.owner);
-            if (Main.projectile.IndexInRange(shot))
+            if (Main.projectile.IndexInRange(comet))
             {
-                YharimsCrystalHellBladeGlobalProjectile.Mark(Main.projectile[shot], YCWeaponForm.Crystal);
-                Main.projectile[shot].CritChance = Projectile.CritChance;
+                YharimsCrystalHellBladeGlobalProjectile.Mark(Main.projectile[comet], YCWeaponForm.Crystal);
+                Main.projectile[comet].CritChance = Projectile.CritChance;
             }
         }
 

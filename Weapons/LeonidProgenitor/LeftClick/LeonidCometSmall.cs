@@ -39,6 +39,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
         public bool IsOrbiting;
         private int orbitTransitionTimer = -1;
         private int bounceCooldown;
+        private bool hitNPC;
 
         public override void SetStaticDefaults()
         {
@@ -60,93 +61,74 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             Projectile.alpha = 255;
         }
 
-        public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
-        {
-            InitialCenter = Projectile.Center;
-            MeteorColor = LeonidVisualUtils.GetMeteorColor(Projectile.whoAmI * 0.13f);
-            Projectile.DamageType = Owner.HeldItem.DamageType;
-            playerOffset = Projectile.Center - Owner.Center;
-
-            initialized = true;
-        }
-
         public override void AI()
         {
             if (!initialized)
-                OnSpawn(Projectile.GetSource_FromThis());
+            {
+                InitialCenter = Projectile.Center;
+                MeteorColor = FromStealthRain
+                    ? Color.Lerp(LeonidVisualUtils.StratusBlue, LeonidVisualUtils.MoonWhite, 0.35f)
+                    : LeonidVisualUtils.GetCelestialColor((float)Projectile.whoAmI % 1f);
+                Projectile.DamageType = Owner.HeldItem.DamageType;
+                initialized = true;
+            }
 
-            // Handle launch delay
+            // Reveal alpha gradually
+            if (Projectile.alpha > 0)
+            {
+                Projectile.alpha -= 35;
+                if (Projectile.alpha < 0)
+                    Projectile.alpha = 0;
+            }
+
+            Lighting.AddLight(Projectile.Center, MeteorColor.ToVector3() * 0.6f);
+
+            // Launch delay AI logic for small comets
             if (Projectile.localAI[1] > 0f)
             {
                 Projectile.localAI[1]--;
-                Projectile.velocity = Vector2.Zero;
 
-                if ((SpawnFlags & GravityFieldFlag) != 0)
+                if (playerOffset == Vector2.Zero)
+                    playerOffset = Projectile.Center - Owner.Center;
+
+                Projectile.Center = Owner.Center + playerOffset;
+
+                if (Projectile.localAI[1] <= 0f)
                 {
-                    // Gravity field meteor: stay stationary at spawn position
-                    Projectile.Center = InitialCenter;
-
-                    if (Projectile.localAI[1] <= 0f)
-                    {
-                        Projectile.velocity = new Vector2(Main.rand.NextFloat(-2f, 2f), 16f);
-                        Projectile.netUpdate = true;
-                        SoundEngine.PlaySound(SoundID.Item8 with { Volume = 0.5f, Pitch = 0.2f }, Projectile.Center);
-                    }
+                    SpawnNormalLaunchVFX();
+                    SoundEngine.PlaySound(SoundID.Item61 with { Volume = 0.55f, Pitch = 0.1f }, Projectile.Center);
                 }
-                else
-                {
-                    // Player-held meteor: follow player relative offset
-                    Vector2 currentOffset = playerOffset;
-                    currentOffset.Y += (float)Math.Sin(Main.GlobalTimeWrappedHourly * 6f) * 4f;
-                    Projectile.Center = Owner.Center + currentOffset;
-
-                    if (Projectile.localAI[1] <= 0f)
-                    {
-                        Vector2 targetVelocity = (Main.MouseWorld - Projectile.Center).SafeNormalize(Vector2.UnitY) * 14f;
-                        Projectile.velocity = targetVelocity;
-                        SpawnNormalLaunchVFX();
-                        Projectile.netUpdate = true;
-                        SoundEngine.PlaySound(SoundID.Item8 with { Volume = 0.5f, Pitch = 0.2f }, Projectile.Center);
-                    }
-                }
-
-                Projectile.friendly = false;
                 return;
             }
 
-            Projectile.friendly = true;
-            Projectile.alpha -= 32;
-            if (Projectile.alpha < 0)
-                Projectile.alpha = 0;
-
-            Lighting.AddLight(Projectile.Center, MeteorColor.ToVector3() * (FromStealthRain ? 0.75f : 0.5f));
-
+            // Decrement bounce cooldown
             if (bounceCooldown > 0)
                 bounceCooldown--;
 
-            // Handle Orbiting Shield state
+            // Orbit state AI logic
             if (IsOrbiting)
             {
-                int myOrbitIndex = 0;
                 int totalOrbiting = 0;
+                int myOrbitIndex = 0;
                 int oldestProj = -1;
-                int minTimeLeft = 999999;
+                int maxTimeLeft = -1;
 
                 for (int i = 0; i < Main.maxProjectiles; i++)
                 {
                     Projectile p = Main.projectile[i];
-                    if (p.active && p.type == Type && p.owner == Projectile.owner && p.ModProjectile is LeonidCometSmall lcs && lcs.IsOrbiting)
+                    if (p.active && p.type == Type && p.owner == Projectile.owner && p.ModProjectile is LeonidCometSmall small)
                     {
-                        if (p.whoAmI == Projectile.whoAmI)
+                        if (small.IsOrbiting)
                         {
-                            myOrbitIndex = totalOrbiting;
-                        }
-                        totalOrbiting++;
+                            if (i == Projectile.whoAmI)
+                                myOrbitIndex = totalOrbiting;
+                            totalOrbiting++;
 
-                        if (p.timeLeft < minTimeLeft)
-                        {
-                            minTimeLeft = p.timeLeft;
-                            oldestProj = i;
+                            if (p.timeLeft > maxTimeLeft)
+                            {
+                                maxTimeLeft = p.timeLeft;
+                                oldestProj = i;
+                            }
                         }
                     }
                 }
@@ -176,8 +158,6 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                     trailDust.noGravity = true;
                 }
 
-                // 环绕护卫期慢慢往外撒星光。它们悬停时会互相连线，
-                // 在玩家周围织出一张缓慢流动的狮子座星网。
                 if (Main.rand.NextBool(26))
                 {
                     LeonidStarlight.Spawn(
@@ -200,7 +180,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 if (orbitTransitionTimer == 0)
                 {
                     IsOrbiting = true;
-                    Projectile.timeLeft = 360; // 6 seconds
+                    Projectile.timeLeft = 360;
                     Projectile.netUpdate = true;
                     return;
                 }
@@ -217,23 +197,19 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                     {
                         if (reflective.TimesBounced < 7 && Vector2.Distance(Projectile.Center, p.Center) < 32f)
                         {
-                            // Trigger bounce!
                             BounceCount++;
                             reflective.TimesBounced++;
                             bounceCooldown = 12;
 
-                            // Push reflective meteor a short distance
                             Vector2 moveDir = Projectile.velocity.SafeNormalize(Vector2.UnitX);
                             p.velocity = moveDir * 5f;
-                            reflective.decelerateTimer = 15; // stay pushed before decelerating
+                            reflective.decelerateTimer = 15;
 
                             bool hasRasalas = Owner.GetModPlayer<LeonidConstellationPlayer>().IsUnlocked(LeonidStar.Rasalas);
                             float speed = Projectile.velocity.Length() * (hasRasalas ? 1.12f : 1.05f);
 
-                            // Play billiard clink sound
                             SoundEngine.PlaySound(SoundID.Item10 with { Volume = 0.7f, Pitch = 0.3f }, Projectile.Center);
 
-                            // 每一次撞球都在接触点溅开星光，反射次数越多溅得越亮 —— 动能循环看得见。
                             LeonidStarlight.Spray(
                                 Projectile.Center,
                                 -moveDir,
@@ -249,27 +225,21 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
                             if (BounceCount >= 7)
                             {
-                                // 第七次反射：星辉在原地炸成一圈完整的环，宣告它要回到玩家身边环绕。
                                 LeonidStarlight.Ring(Projectile.Center, 10, 26f, LeonidVisualUtils.GetReadyGold(),
                                     LeonidStarlightShape.Shard, speed: 5.5f, scale: 0.85f, hoverTime: 24, lifetime: 170);
                                 LeonidStarlight.Spawn(Projectile.Center, Vector2.Zero, LeonidVisualUtils.StarGold,
                                     LeonidStarlightShape.Halo, 1f, 14, 90, 12f, linksToSiblings: false);
 
-                                // Target nearest enemy and prepare to orbit after 4.5 frames (5 ticks)
                                 NPC target = FindClosestNPC(1000f);
                                 if (target != null)
-                                {
                                     Projectile.velocity = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY) * speed;
-                                }
                                 else
-                                {
                                     Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitY) * speed;
-                                }
+
                                 orbitTransitionTimer = 5;
                             }
                             else
                             {
-                                // Redirect towards another reflective meteor, or nearest enemy if none
                                 Projectile.velocity = FindNextBounceDirection(p.whoAmI) * speed;
                             }
 
@@ -297,7 +267,6 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             {
                 if (FromStealthRain && BounceCount < 7)
                 {
-                    // Prioritize targeting reflective meteors
                     Projectile targetProj = FindClosestReflectiveMeteor(600f);
                     if (targetProj != null)
                     {
@@ -316,7 +285,6 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 }
                 else if (BounceCount > 0 && BounceCount < 7)
                 {
-                    // Homing to closest reflective meteor to facilitate billiard chains
                     Projectile targetProj = FindClosestReflectiveMeteor(800f);
                     if (targetProj != null)
                     {
@@ -343,7 +311,6 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                     Main.rand.NextFloat(0.85f, 1.2f));
             }
 
-            // 飞行途中偶尔掉一粒星屑（extraUpdates = 1，AI 每帧跑两次，所以分母放大一倍）。
             if (Main.rand.NextBool(FromStealthRain ? 22 : 40))
             {
                 LeonidStarlight.Shed(Projectile.Center, Projectile.velocity, MeteorColor,
@@ -416,7 +383,6 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
-            // Apply Kinetic Cycle and bounce bonus damage
             bool hasRasalas = Owner.GetModPlayer<LeonidConstellationPlayer>().IsUnlocked(LeonidStar.Rasalas);
             float multiplier = 1f + BounceCount * (hasRasalas ? 0.06f : 0.04f) + (BounceCount / 3) * 0.15f;
             if (IsOrbiting)
@@ -424,16 +390,34 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 multiplier *= 0.5f;
             }
             modifiers.SourceDamage *= multiplier;
-
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
+            hitNPC = true;
+
             if (BounceCount >= 7)
             {
-                // Regain 3 ultimate energy
                 int energy = Owner.GetModPlayer<LeonidConstellationPlayer>().IsUnlocked(LeonidStar.Chertan) ? 4 : 3;
                 Owner.GetModPlayer<LeonidProgenitorPlayer>().AddUltimateEnergy(energy);
+            }
+
+            // 无论普通还是潜伏，左键弹幕命中敌人时，在目标处释放 1 发 LeonidAstralEnergy
+            if (Projectile.owner == Main.myPlayer)
+            {
+                Vector2 spawnPos = target.Center;
+                Vector2 randVel = Main.rand.NextVector2Circular(6f, 6f);
+                if (randVel == Vector2.Zero) randVel = -Vector2.UnitY * 6f;
+
+                Projectile.NewProjectile(
+                    Projectile.GetSource_OnHit(target),
+                    spawnPos,
+                    randVel,
+                    ModContent.ProjectileType<LeonidAstralEnergy>(),
+                    (int)(Projectile.damage * 0.5f),
+                    0f,
+                    Projectile.owner
+                );
             }
         }
 
@@ -452,7 +436,28 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             LeonidVisualUtils.SpawnCelestialPulse(Projectile.Center, Projectile.oldVelocity, MeteorColor, FromStealthRain ? 1.35f : 1f, FromStealthRain ? 24 : 18);
             CLCBLightingBoltsSystem.Spawn_LeonidStarfieldMatrixBurst(Projectile.Center, FromStealthRain ? 1.8f : 1f);
 
-            // 炸开的流星拆成一把星光碎片：仅一颗锁敌，其余沿各自的外扩弧线散开。
+            // 潜伏攻击模式下，若弹幕销毁且未命中敌人，在 OnKill 时向四周每隔 120 度发射 3 发 LeonidAstralEnergy
+            if (FromStealthRain && !hitNPC && Projectile.owner == Main.myPlayer)
+            {
+                float baseAngle = Main.rand.NextFloat(MathHelper.TwoPi);
+                float speed = 10f;
+                for (int i = 0; i < 3; i++)
+                {
+                    float angle = baseAngle + i * (MathHelper.TwoPi / 3f);
+                    Vector2 vel = angle.ToRotationVector2() * speed;
+
+                    Projectile.NewProjectile(
+                        Projectile.GetSource_FromThis(),
+                        Projectile.Center,
+                        vel,
+                        ModContent.ProjectileType<LeonidAstralEnergy>(),
+                        (int)(Projectile.damage * 0.5f),
+                        0f,
+                        Projectile.owner
+                    );
+                }
+            }
+
             LeonidStarlight.Burst(
                 Projectile.Center,
                 FromStealthRain ? 9 : 6,
@@ -487,8 +492,6 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             Texture2D glow = ModContent.Request<Texture2D>("CalamityMod/Items/Weapons/Rogue/LeonidProgenitorGlow").Value;
             Texture2D bloomTex = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
 
-            // Normal left-click comets are held briefly before launch. Let the last few frames
-            // visibly gather starlight at their spawn point instead of appearing from nothing.
             float launchCharge = !FromStealthRain && (SpawnFlags & GravityFieldFlag) == 0 && Projectile.localAI[1] > 0f
                 ? 1f - Utils.GetLerpValue(0f, 10f, Projectile.localAI[1], true)
                 : 0f;
@@ -507,7 +510,6 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitY);
             Color trailColor = Color.Lerp(MeteorColor, LeonidVisualUtils.StratusBlue, 0.32f);
 
-            // Stratus-style halo trail: soft meteor body, star sparks, and a narrow comet streak.
             LeonidVisualUtils.BeginAdditiveSpriteBatch();
 
             for (int i = 1; i < Projectile.oldPos.Length; i++)
@@ -530,14 +532,12 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                     LeonidVisualUtils.DrawGlowBlade(trailWorld - direction * 5f, direction, trailColor, 0.12f * t * opacity, 0.045f + t * 0.045f, 0.014f + t * 0.01f);
             }
 
-            // Soft concentric halos keep the meteor's silhouette round, while the sparkle reads closer to Vega/Crescent Moon.
             Vector2 headPos = Projectile.Center - Main.screenPosition;
             LeonidVisualUtils.DrawGlowBlade(Projectile.Center - direction * 6f, direction, trailColor, 0.38f * opacity, 0.1f * Projectile.scale, 0.026f * Projectile.scale);
             LeonidVisualUtils.DrawCelestialHead(Projectile.Center, MeteorColor, opacity, Projectile.scale * (FromStealthRain ? 1.18f : 1f), Projectile.rotation);
             Main.EntitySpriteDraw(glow, headPos, null, Color.White * opacity,
                 Projectile.rotation, glow.Size() * 0.5f, Projectile.scale, SpriteEffects.None, 0f);
 
-            // Additive night-sky glow ring
             float nsOpacity = (1f - Projectile.alpha / 255f) * 0.44f;
             for (int i = 0; i < 8; i++)
             {
@@ -549,8 +549,6 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
             LeonidVisualUtils.BeginAlphaBlendSpriteBatch();
 
-            // 「星光」拖尾：沿历史轨迹铺一串逐渐收缩、逐渐扭转的十字星芒。
-            // 贴图预乘 alpha，这里把 A 设成 0 就等价于加法混合，黑底不会露出来。
             LeonidStarlight.DrawStarTrail(
                 Projectile.oldPos,
                 Projectile.Size,
@@ -560,7 +558,6 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 0.052f * Projectile.scale,
                 Projectile.rotation);
 
-            // Afterimage texture trail
             for (int i = 0; i < Projectile.oldPos.Length; i++)
             {
                 Vector2 oldDrawPos = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
@@ -571,7 +568,6 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
             Color drawColor = Color.Lerp(MeteorColor, LeonidVisualUtils.MoonWhite, 0.12f) * opacity;
 
-            // Night-sky blue outline
             Color outlineColor = LeonidVisualUtils.NightSkyBlue * opacity;
             for (int i = 0; i < 8; i++)
             {
@@ -581,7 +577,6 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
             Main.EntitySpriteDraw(texture, drawPosition, null, drawColor, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0f);
 
-            // 头部星芒：呼吸式明暗 + 反向自转，让流星尖端始终有一颗"星"在闪。
             float twinkle = 0.72f + 0.28f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 5.4f + Projectile.whoAmI);
             LeonidStarlight.DrawFlare(
                 Projectile.Center,
@@ -592,7 +587,6 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
             if (IsOrbiting)
             {
-                // 环绕护卫状态额外挂一圈小星，读起来像一枚正在自转的护卫星体。
                 LeonidStarlight.DrawOrbitingStars(
                     Projectile.Center,
                     LeonidVisualUtils.MoonViolet,
@@ -615,7 +609,6 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             LeonidVisualUtils.SpawnBloomBurst(Projectile.Center, MeteorColor, 0.68f, 16);
             LeonidVisualUtils.SpawnCelestialPulse(Projectile.Center, direction, MeteorColor, 0.72f, 16);
 
-            // 发射瞬间沿出膛反方向甩出一小把星光：仅一颗锁敌，其余缓慢向后扇形扩散。
             LeonidStarlight.Spray(Projectile.Center, -direction, 5, MeteorColor, LeonidStarlightShape.Mote,
                 speed: 5.5f, spread: 0.9f, scale: 0.85f, hoverTime: 20, lifetime: 130, lanceSpeed: 15f);
 

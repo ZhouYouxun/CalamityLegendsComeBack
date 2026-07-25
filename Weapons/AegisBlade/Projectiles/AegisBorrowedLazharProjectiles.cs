@@ -16,9 +16,9 @@ using Terraria.ModLoader;
 namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 {
     /// <summary>
-    /// 圣火光矢。左键轮盘每 4 帧从刃缘甩出，延迟后转为追踪。
-    /// 视觉：三层拖尾（余烬外焰 / 圣金主焰 / 白金内芯）+ 可见的火矢头部。
-    /// 旧版只有一条金色拖尾，头部用的是 InvisibleProj —— 也就是"箭头是空气"。
+    /// 圣火光矢。挥舞庇护之刃时爆发散射（模仿 Entropic Claymore）。
+    /// 前 35 帧保持游动波浪扩散，35 帧后激活强力拐弯追踪（CalamityUtils.HomeInOnSelectedNPC）。
+    /// 视觉：增大体量缩放，强化 GlowOrb / Spark 粒子与多层高亮渲染和粗强拖尾。
     /// </summary>
     internal sealed class AegisBorrowedLazharLaser : ModProjectile, ILocalizedModType, IPixelatedPrimitiveRenderer
     {
@@ -26,88 +26,138 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         public GeneralDrawLayer LayerToRenderTo => GeneralDrawLayer.BeforeProjectiles;
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
-        private const float MinimumHomingSpeed = 30f * 0.67f;
-        private const float HomingRange = 1200f;
-        private const float HomingStrength = 0.14f;
-        private const int HomingDelayUpdates = 60;
-        private const float HeadRadius = 8.5f;
+        private const float HomingRange = 850f;
+        private const int HomingDelayUpdates = 35;
+        private const float HeadBaseRadius = 12.5f;
+
         private int timer;
+        private int spinDir = 100;
+        private int waveOften = 40;
+        private float sizeVariance = 1f;
+        private NPC target;
 
         public override void SetStaticDefaults()
         {
-            ProjectileID.Sets.TrailCacheLength[Type] = 20;
+            ProjectileID.Sets.TrailCacheLength[Type] = 24;
             ProjectileID.Sets.TrailingMode[Type] = 2;
+            ProjectileID.Sets.CultistIsResistantTo[Type] = true;
         }
 
         public override void SetDefaults()
         {
-            Projectile.width = 8;
-            Projectile.height = 8;
+            Projectile.width = 18;
+            Projectile.height = 18;
             Projectile.friendly = true;
             Projectile.hostile = false;
             Projectile.DamageType = DamageClass.Melee;
-            Projectile.timeLeft = 150;
-            Projectile.penetrate = 1;
-            Projectile.extraUpdates = 3;
-            Projectile.tileCollide = true;
+            Projectile.timeLeft = 360;
+            Projectile.penetrate = 4;
+            Projectile.extraUpdates = 1;
+            Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.alpha = 255;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = -1;
+            Projectile.localNPCHitCooldown = 12;
+            Projectile.ArmorPenetration = 15;
         }
 
         public override void AI()
         {
-            timer++;
-            Projectile.alpha = Math.Max(0, Projectile.alpha - 35);
-
-            float currentSpeed = Math.Max(Projectile.velocity.Length(), MinimumHomingSpeed);
-            NPC target = timer >= HomingDelayUpdates ? FindClosestTarget(HomingRange) : null;
-            if (target != null)
+            Player owner = Main.player[Projectile.owner];
+            if (spinDir == 100)
             {
-                Vector2 desiredDirection = Projectile.SafeDirectionTo(target.Center, Projectile.velocity.SafeNormalize(Vector2.UnitX));
-                Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredDirection * currentSpeed, HomingStrength);
+                spinDir = Main.rand.NextBool() ? 1 : -1;
+                waveOften = Main.rand.Next(12, 36);
+                Projectile.scale = Main.rand.NextFloat(1.1f, 1.6f);
             }
 
+            if (Projectile.numHits > 0)
+                Projectile.extraUpdates = 2;
+            else
+                Projectile.extraUpdates = 1;
+
+            sizeVariance = Utils.GetLerpValue(-5, 60, Projectile.timeLeft, true);
+            Projectile.alpha = Math.Max(0, Projectile.alpha - 45);
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
-            AegisVisuals.Light(Projectile.Center, 0.72f);
 
-            if (Main.dedServ)
-                return;
+            AegisVisuals.Light(Projectile.Center, 0.85f * Projectile.scale);
 
-            if (timer % 3 == 0)
+            // 模仿 EntropicFlechette 阶段划分：35 帧前扩散游走，35 帧后启动强力追踪/巡航
+            if (timer < HomingDelayUpdates)
             {
-                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
-                    Projectile.Center,
-                    -Projectile.velocity * 0.08f,
-                    false,
-                    7,
-                    Main.rand.NextFloat(0.16f, 0.3f),
-                    AegisVisuals.RandomFlameColor(),
-                    true,
-                    true));
+                // S型/弧形轻微扭动，形成自然散射感
+                Projectile.velocity = Projectile.velocity.RotatedBy(Main.rand.NextFloat(0.012f, 0.038f) * spinDir);
+                if (timer % waveOften == 0)
+                    spinDir *= -1;
+            }
+            else
+            {
+                if (timer == HomingDelayUpdates && !Main.dedServ)
+                {
+                    GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero,
+                        AegisVisuals.Add(AegisVisuals.Core, 0.85f), AegisVisuals.TexBloom, Vector2.One,
+                        0f, 0.05f, 0.5f, 12));
+                    AegisVisuals.CoronaRing(Projectile.Center, 8, 0.6f, Projectile.rotation);
+                }
+
+                if (Projectile.numHits < 1)
+                {
+                    target = Projectile.Center.ClosestNPCAt(HomingRange);
+                    if (target == null)
+                    {
+                        Vector2 moveToMouse = (owner.Calamity().mouseWorld - Projectile.Center).SafeNormalize(Vector2.UnitX);
+                        if (Projectile.velocity.Length() < 16f)
+                            Projectile.velocity += moveToMouse * 0.2f;
+                        else
+                            Projectile.velocity *= 0.96f;
+
+                        if (timer % waveOften == 0)
+                            spinDir *= -1;
+
+                        Projectile.velocity = Projectile.velocity.RotatedBy(Main.rand.NextFloat(0.02f, 0.05f) * spinDir);
+                    }
+                    else
+                    {
+                        // 使用 CalamityUtils 强力强转向追踪 (速度 15，平滑系数 0.98)
+                        CalamityUtils.HomeInOnSelectedNPC(Projectile, target, true, 0.55f, 15f, 0.98f);
+                    }
+                }
+                else
+                {
+                    if (timer % waveOften == 0)
+                        spinDir *= -1;
+
+                    Projectile.velocity = Projectile.velocity.RotatedBy(Main.rand.NextFloat(0.03f, 0.07f) * spinDir * Utils.GetLerpValue(60, 180, timer, true));
+                }
             }
 
-            // 侧向掉落的火屑：让高速光矢有"擦出火星"的质感
-            if (timer % 6 == 0)
+            if (!Main.dedServ)
             {
-                Vector2 side = Projectile.velocity.SafeNormalize(Vector2.UnitX).RotatedBy(MathHelper.PiOver2);
-                Dust ember = Dust.NewDustPerfect(Projectile.Center,
-                    AegisVisuals.ProfanedFireDust,
-                    side * Main.rand.NextFloatDirection() * Main.rand.NextFloat(0.4f, 1.4f) -
-                    Projectile.velocity * 0.05f,
-                    0, Color.White, Main.rand.NextFloat(0.7f, 1.15f));
-                ember.noGravity = true;
+                if (timer % 2 == 0)
+                {
+                    GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                        Projectile.Center,
+                        -Projectile.velocity * 0.12f + Main.rand.NextVector2Circular(0.5f, 0.5f),
+                        false,
+                        8,
+                        Main.rand.NextFloat(0.2f, 0.38f) * Projectile.scale,
+                        AegisVisuals.RandomFlameColor(),
+                        true,
+                        true));
+                }
+
+                if (timer % 5 == 0)
+                {
+                    Vector2 side = Projectile.velocity.SafeNormalize(Vector2.UnitX).RotatedBy(MathHelper.PiOver2);
+                    Dust ember = Dust.NewDustPerfect(Projectile.Center,
+                        AegisVisuals.ProfanedFireDust,
+                        side * Main.rand.NextFloatDirection() * Main.rand.NextFloat(0.5f, 1.8f) - Projectile.velocity * 0.08f,
+                        0, Color.White, Main.rand.NextFloat(0.8f, 1.35f));
+                    ember.noGravity = true;
+                }
             }
 
-            // 追踪启动的那一刻：光矢自己"点着"，给一个明确的状态切换信号
-            if (timer == HomingDelayUpdates)
-            {
-                GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero,
-                    AegisVisuals.Add(AegisVisuals.Core, 0.75f), AegisVisuals.TexBloom, Vector2.One,
-                    0f, 0.05f, 0.4f, 10));
-                AegisVisuals.CoronaRing(Projectile.Center, 6, 0.45f, Projectile.rotation);
-            }
+            timer++;
         }
 
         private NPC FindClosestTarget(float range)
@@ -138,11 +188,11 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 return;
 
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitY);
-            AegisVisuals.DirectionalImpact(Projectile.Center, forward, 0.6f);
-            AegisVisuals.EmberJet(Projectile.Center, -forward, 5, 0.7f, 0.5f);
-            AegisVisuals.WarbannerConverge(target.Center, forward, 1.25f, 2, 0.9f);
+            AegisVisuals.DirectionalImpact(Projectile.Center, forward, 0.75f);
+            AegisVisuals.EmberJet(Projectile.Center, -forward, 7, 0.85f, 0.55f);
+            AegisVisuals.WarbannerConverge(target.Center, forward, 1.4f, 3, 1.0f);
             GeneralParticleHandler.SpawnParticle(new SquishyLightParticle(Projectile.Center, Vector2.Zero,
-                0.55f, AegisVisuals.Add(AegisVisuals.Gold, 1f), 15));
+                0.7f, AegisVisuals.Add(AegisVisuals.Gold, 1f), 16));
         }
 
         public override void OnKill(int timeLeft)
@@ -150,7 +200,13 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             if (Main.dedServ)
                 return;
 
-            AegisVisuals.HolyDetonation(Projectile.Center, 0.4f, false);
+            AegisVisuals.HolyDetonation(Projectile.Center, 0.55f, false);
+            for (int i = 0; i < 6; i++)
+            {
+                Vector2 vel = Main.rand.NextVector2Circular(4f, 4f);
+                Dust dust = Dust.NewDustPerfect(Projectile.Center, AegisVisuals.ProfanedFireDust, vel, 0, Color.White, Main.rand.NextFloat(0.9f, 1.4f));
+                dust.noGravity = true;
+            }
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -169,29 +225,28 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 return false;
 
             float flicker = 0.85f + 0.15f * MathF.Sin(Main.GlobalTimeWrappedHourly * 26f + Projectile.identity);
-            // 追踪启动后头部略微鼓起，表现"加速"
-            float homingBoost = timer >= HomingDelayUpdates ? 1.22f : 1f;
-            float radius = HeadRadius * homingBoost;
+            float homingBoost = timer >= HomingDelayUpdates ? 1.25f : 1f;
+            float radius = HeadBaseRadius * Projectile.scale * sizeVariance * homingBoost;
 
             Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
 
             Main.EntitySpriteDraw(bloom, drawPosition, null,
-                AegisVisuals.Add(AegisVisuals.Ember, 0.55f * opacity),
+                AegisVisuals.Add(AegisVisuals.Ember, 0.65f * opacity),
                 0f, bloom.Size() * 0.5f,
-                new Vector2(AegisVisuals.RadiusScale(bloom, radius * 2.1f)), SpriteEffects.None, 0);
+                new Vector2(AegisVisuals.RadiusScale(bloom, radius * 2.3f)), SpriteEffects.None, 0);
             Main.EntitySpriteDraw(fire, drawPosition, null,
-                AegisVisuals.Add(AegisVisuals.Gold, 0.75f * opacity * flicker),
+                AegisVisuals.Add(AegisVisuals.Gold, 0.85f * opacity * flicker),
                 Projectile.rotation, fire.Size() * 0.5f,
-                new Vector2(AegisVisuals.RadiusScale(fire, radius), AegisVisuals.RadiusScale(fire, radius * 1.5f)),
+                new Vector2(AegisVisuals.RadiusScale(fire, radius * 1.2f), AegisVisuals.RadiusScale(fire, radius * 1.8f)),
                 SpriteEffects.None, 0);
             Main.EntitySpriteDraw(orb, drawPosition, null,
-                AegisVisuals.Add(AegisVisuals.Core, 0.85f * opacity * flicker),
+                AegisVisuals.Add(AegisVisuals.Core, 0.95f * opacity * flicker),
                 0f, orb.Size() * 0.5f,
-                new Vector2(AegisVisuals.RadiusScale(orb, radius * 0.4f)), SpriteEffects.None, 0);
+                new Vector2(AegisVisuals.RadiusScale(orb, radius * 0.5f)), SpriteEffects.None, 0);
             Main.EntitySpriteDraw(star, drawPosition, null,
-                AegisVisuals.Add(AegisVisuals.Core, 0.42f * opacity),
+                AegisVisuals.Add(AegisVisuals.Core, 0.55f * opacity),
                 Projectile.rotation, star.Size() * 0.5f,
-                new Vector2(AegisVisuals.RadiusScale(star, radius * 1.5f), AegisVisuals.RadiusScale(star, radius * 3.4f)),
+                new Vector2(AegisVisuals.RadiusScale(star, radius * 1.8f), AegisVisuals.RadiusScale(star, radius * 4.0f)),
                 SpriteEffects.None, 0);
 
             Main.spriteBatch.ExitShaderRegion();
@@ -206,7 +261,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 
             var trailShader = GameShaders.Misc["CalamityMod:ImpFlameTrail"];
 
-            // ① 外焰：余烬红，最宽，压在最底下
+            // ① 外焰：余烬红
             trailShader.SetShaderTexture(
                 ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/ScarletDevilStreak"));
             PrimitiveRenderer.RenderTrail(
@@ -220,8 +275,8 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 new PrimitiveSettings(WidthFunction, ColorFunction, OffsetFunction, true, true, trailShader),
                 points.Length * 2);
 
-            // ③ 内芯：白金细带，只取前 12 个点，让"刃"集中在头部
-            Vector2[] corePoints = points.Take(Math.Min(12, points.Length)).ToArray();
+            // ③ 内芯：白金细带
+            Vector2[] corePoints = points.Take(Math.Min(14, points.Length)).ToArray();
             if (corePoints.Length < 2)
                 return;
 
@@ -251,14 +306,14 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 
         private Vector2 OffsetFunction(float completion, Vector2 _)
         {
-            float waviness = (float)Math.Sin(completion * MathHelper.Pi * 1.5f + Main.GlobalTimeWrappedHourly * 16f) * 0.8f;
+            float waviness = (float)Math.Sin(completion * MathHelper.Pi * 1.5f + Main.GlobalTimeWrappedHourly * 18f) * 1.1f;
             return Projectile.velocity.SafeNormalize(Vector2.UnitX).RotatedBy(MathHelper.PiOver2) * waviness;
         }
 
         private float WidthFunction(float completion, Vector2 _)
         {
             const float ratio = 0.15f;
-            float baseWidth = Projectile.scale * 14f;
+            float baseWidth = Projectile.scale * 20f * sizeVariance;
             if (completion < ratio)
                 return MathF.Sin(completion / ratio * MathHelper.PiOver2) * baseWidth + 0.1f;
 
@@ -268,12 +323,12 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         private Color ColorFunction(float completion, Vector2 _) =>
             AegisVisuals.TrailColor(completion, 1, Projectile.Opacity);
 
-        private float OuterWidthFunction(float completion, Vector2 _) => WidthFunction(completion, _) * 1.55f;
+        private float OuterWidthFunction(float completion, Vector2 _) => WidthFunction(completion, _) * 1.6f;
 
         private Color OuterColorFunction(float completion, Vector2 _) =>
-            AegisVisuals.TrailColor(completion, 0, Projectile.Opacity * 0.62f);
+            AegisVisuals.TrailColor(completion, 0, Projectile.Opacity * 0.65f);
 
-        private float CoreWidthFunction(float completion, Vector2 _) => WidthFunction(completion, _) * 0.42f;
+        private float CoreWidthFunction(float completion, Vector2 _) => WidthFunction(completion, _) * 0.45f;
 
         private Color CoreColorFunction(float completion, Vector2 _) =>
             AegisVisuals.TrailColor(completion, 2, Projectile.Opacity);

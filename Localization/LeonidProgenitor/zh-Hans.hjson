@@ -7,12 +7,12 @@ Mods: {
 					Tooltip: "[GFB]"
 					LeftClick:
 						'''
-						[c/74D8FF:左键：在身边生成两颗小流星，短暂停留后飞向鼠标。]
+						[c/74D8FF:左键：在身边生成两颗小流星，短暂停留后飞向鼠标，命中时释放追击的星辉能量束。]
 						[c/99CCFF:小流星会撞击反射陨星，增伤、加速并改变轨道。]
 						[c/9AD8FF:点亮狮子座主星，永久改变你的流星雨。]
 						'''
-					StealthLeftClick: "[c/B7A4FF:潜伏左键：在鼠标斜上方召来一阵流星雨。]"
-					RightClick: "[c/8DEBFF:右键：长按蓄力一颗大流星；潜伏右键放出狮首与反射陨星。]"
+					StealthLeftClick: "[c/B7A4FF:潜伏左键：在鼠标斜上方召来一阵流星雨；消散时向周围散射3发星辉能量束。]"
+					RightClick: "[c/8DEBFF:右键：长按蓄力大流星；潜伏右键放出狮首。命中敌人时触发盗贼大地之潮冲击波。]"
 					UltimateSkill: "[c/FFE85A:终结技（按 {0}）：展开引力场，召来从天空落下的流星暴。需要满终结能量和潜伏值。]"
 					Passives: "[c/BFAFFF:动能循环：左键流星反射后会加速、增伤；第七次反射后会回到身边环绕。]"
 					ConstellationStatus: "[c/FFE85A:狮子座星辉：可用 {0} | 已消耗 {1} | 已获得 {2} | 全图需 {3}]"
@@ -91,6 +91,7 @@ Mods: {
 				LeonidUltimateUI.DisplayName: 终结能量
 				LeonidRightClickHoldout.DisplayName: 流星蓄力
 				LeonidStealthRainSpawner.DisplayName: 潜伏流星雨
+				LeonidAstralEnergy.DisplayName: 星辉能量束
 			}
 		}
 

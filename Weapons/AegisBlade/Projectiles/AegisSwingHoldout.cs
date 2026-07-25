@@ -27,9 +27,9 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         private const float SpinSprayRadiusScale = 0.8f;    // 线性粒子喷射覆盖半径（独立于刀盘）
         private const float SpinSpraySpriteScale = 0.3f;    // 线性粒子本体大小（独立于刀盘）
         private const int BladeTrailHistoryFrames = 16;
-        private const int TrackingSoulInterval = 4;
-        private const int TrackingSoulBurstCount = 2;
-        private const float TrackingSoulSpeed = 30f * 0.67f;
+        private const int TrackingSoulInterval = 24;
+        private const int TrackingSoulBurstCount = 5;
+        private const float TrackingSoulSpeed = 12f;
         private const float SpinAcceleration = 0.075f;
         private const int ReleaseFadeFrames = 10;
         private const float DiscBrightness = 0.67f;
@@ -324,26 +324,31 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         private void SpawnTrackingSouls()
         {
             int laserType = ModContent.ProjectileType<AegisBorrowedLazharLaser>();
-            int laserDamage = Math.Max(1, (int)(Projectile.damage * 0.42f));
-            Vector2 mousePosition = AegisBlade.GetMouseWorld(Owner);
-            float discRadius = BladeReach * scale * SpinDiscRadiusScale * 2.2f;
+            int laserDamage = Math.Max(1, (int)(Projectile.damage * 0.55f));
+            Vector2 baseDir = lockedMouseDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
+            Vector2 spawnPosition = Owner.MountedCenter + baseDir * 28f;
+
+            SoundEngine.PlaySound(SoundID.Item73 with { Volume = 0.65f, Pitch = Main.rand.NextFloat(-0.1f, 0.2f) }, spawnPosition);
 
             for (int i = 0; i < TrackingSoulBurstCount; i++)
             {
-                // 从圆盘边缘发向鼠标/目标位置
-                Vector2 edgeOffset = Main.rand.NextFloat(MathHelper.TwoPi).ToRotationVector2() * discRadius;
-                Vector2 spawnPosition = Projectile.Center + edgeOffset;
-                Vector2 shootDirection = spawnPosition.DirectionTo(mousePosition)
-                    .SafeNormalize(Vector2.UnitX * Owner.direction);
+                // 模仿 Entropic Claymore：从挥刀方向爆发散射，速度与角度随机微调
+                Vector2 shootVel = baseDir.RotatedByRandom(0.48f) * Main.rand.NextFloat(0.75f, 1.25f) * TrackingSoulSpeed;
 
                 Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
                     spawnPosition,
-                    shootDirection * TrackingSoulSpeed,
+                    shootVel,
                     laserType,
                     laserDamage,
                     Projectile.knockBack * 0.35f,
                     Projectile.owner);
+            }
+
+            if (!Main.dedServ)
+            {
+                AegisVisuals.CoronaRing(spawnPosition, 10, 0.65f, baseDir.ToRotation());
+                AegisVisuals.EmberJet(spawnPosition, baseDir, 8, 1.0f, 0.35f);
             }
         }
 

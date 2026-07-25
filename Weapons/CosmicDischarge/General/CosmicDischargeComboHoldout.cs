@@ -530,8 +530,21 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
                 case CosmicDischargeAttackKind.ChainKnifeSingle:
                 case CosmicDischargeAttackKind.ChainKnifeScatter:
-                case CosmicDischargeAttackKind.ChainKnifeBiteAll:
                     modifiers.FinalDamage *= tip ? 2.2f : 1.1f;
+                    modifiers.Knockback *= tip ? 1.5f : 1.0f;
+                    break;
+
+                case CosmicDischargeAttackKind.ChainKnifeBiteAll:
+                    if (tip)
+                    {
+                        modifiers.SetCrit(); // 尖端必定暴击
+                        modifiers.FinalDamage *= 2.2f;
+                    }
+                    else
+                    {
+                        modifiers.DisableCrit(); // 链身无法暴击且伤害衰减
+                        modifiers.FinalDamage *= 0.5f;
+                    }
                     modifiers.Knockback *= tip ? 1.5f : 1.0f;
                     break;
 
@@ -565,95 +578,6 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 SpawnLegacyCosmicBurst(target, heavy);
 
                 // 1. WHIP FORM SYNERGIES
-                bool isWhip = Kind == CosmicDischargeAttackKind.WhipOver ||
-                              Kind == CosmicDischargeAttackKind.WhipUnder ||
-                              Kind == CosmicDischargeAttackKind.WhipThrust;
-                if (isWhip)
-                {
-                    target.AddBuff(ModContent.BuffType<CosmicDischargeDoGMarkDebuff>(), 300);
-
-                    // Under Devourer Ascension, trigger double hits (mirror whip strike)
-                    if (empActive)
-                    {
-                        int doubleDamage = (int)(damageDone * 0.85f);
-                        NPC.HitInfo mirrorHit = target.CalculateHitInfo(doubleDamage, hit.HitDirection, false, hit.Knockback * 0.8f);
-                        target.StrikeNPC(mirrorHit);
-
-                        // 镜像鞭的追击只补一记核心白光，不再叠一整套粒子。
-                        if (!Main.dedServ)
-                            GeneralParticleHandler.SpawnParticle(new StrongBloom(
-                                target.Center,
-                                Vector2.Zero,
-                                Color.White * 0.5f,
-                                1.1f,
-                                15));
-                    }
-                }
-
-                // 2. SWORD FORM SYNERGIES (DOG MARK DETONATION)
-                bool isSword = Kind == CosmicDischargeAttackKind.SwordSwingOne ||
-                               Kind == CosmicDischargeAttackKind.SwordSwingTwo ||
-                               Kind == CosmicDischargeAttackKind.SwordFinisher;
-
-                int markType = ModContent.BuffType<CosmicDischargeDoGMarkDebuff>();
-                if (isSword && target.HasBuff(markType))
-                {
-                    target.DelBuff(target.FindBuffIndex(markType));
-
-                    int boltCount = empActive ? 10 : 6;
-                    SpawnRiftExplosion(target.Center, empActive ? 150f : 118f, empActive ? 0.68f : 0.46f);
-                    for (int i = 0; i < boltCount; i++)
-                    {
-                        Vector2 velocity = (MathHelper.TwoPi * i / (float)boltCount).ToRotationVector2() * (empActive ? 13.5f : 11f);
-                        Projectile.NewProjectile(
-                            Projectile.GetSource_FromThis(),
-                            target.Center,
-                            velocity,
-                            ModContent.ProjectileType<CosmicDischargeDoGEnergyBolt>(),
-                            (int)(Projectile.damage * (empActive ? 0.58f : 0.42f)),
-                            Projectile.knockBack * 0.5f,
-                            Projectile.owner);
-                    }
-
-                    // 印记引爆 —— 走统一预算，不再手搓 20 个火花。
-                    SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DevourerRiftOpen") { Volume = 0.55f, Pitch = -0.05f, MaxInstances = 4 }, target.Center);
-                    CosmicDischargeCommon.SpawnRiftBurst(
-                        target.Center,
-                        empActive ? RiftTier.Finisher : RiftTier.Heavy,
-                        default,
-                        CosmicDischargeCommon.RiftMagenta);
-                }
-
-                // 3. CHAIN ARC FORM SYNERGIES
-                bool isChainArc = Kind == CosmicDischargeAttackKind.ChainKnifeSingle ||
-                                  Kind == CosmicDischargeAttackKind.ChainKnifeScatter ||
-                                  Kind == CosmicDischargeAttackKind.ChainKnifeBiteAll;
-                if (isChainArc)
-                {
-                    bool hadMark = target.HasBuff(markType);
-                    target.AddBuff(ModContent.BuffType<CosmicDischargeDoGMarkDebuff>(), 240);
-                    if (hadMark)
-                    {
-                        target.DelBuff(target.FindBuffIndex(markType));
-                        int shardCount = empActive ? 5 : 3;
-                        for (int i = 0; i < shardCount; i++)
-                        {
-                            Vector2 shardVel = Main.rand.NextVector2Circular(4f, 4f) + (MathHelper.TwoPi * i / shardCount).ToRotationVector2() * Main.rand.NextFloat(7f, 11f);
-                            Projectile.NewProjectile(
-                                Projectile.GetSource_FromThis(),
-                                target.Center,
-                                shardVel,
-                                ModContent.ProjectileType<CosmicDischargeDoGEnergyBolt>(),
-                                (int)(Projectile.damage * 0.48f),
-                                0f,
-                                Projectile.owner);
-                        }
-                        SpawnRiftExplosion(target.Center, 110f, 0.42f);
-                        SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DevourerRiftOpen") { Volume = 0.45f, Pitch = 0.12f, MaxInstances = 4 }, target.Center);
-                    }
-                }
-
-                // 4. GENERAL SWORD STRIKES & SPIN ATTACKS
                 if (Kind == CosmicDischargeAttackKind.SwordSwingOne)
                 {
                     Vector2 slashDir = Projectile.velocity.SafeNormalize(AimDirection);

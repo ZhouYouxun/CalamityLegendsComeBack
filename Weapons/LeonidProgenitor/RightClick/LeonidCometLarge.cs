@@ -5,6 +5,7 @@ using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
+using CalamityMod;
 using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core;
 using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects;
 
@@ -77,6 +78,30 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             }
 
             Projectile.rotation += 0.16f * Math.Sign(Projectile.velocity.X == 0f ? 1f : Projectile.velocity.X);
+        }
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            if (Projectile.owner == Main.myPlayer)
+            {
+                int shockwaveIndex = Projectile.NewProjectile(
+                    Projectile.GetSource_OnHit(target),
+                    target.Center,
+                    Vector2.Zero,
+                    ModContent.ProjectileType<CalamityMod.Projectiles.Melee.EarthenTidesShockwave>(),
+                    (int)(Projectile.damage * 0.75f),
+                    0f,
+                    Projectile.owner,
+                    1.5f
+                );
+
+                if (Main.projectile.IndexInRange(shockwaveIndex))
+                {
+                    Main.projectile[shockwaveIndex].DamageType = ModContent.GetInstance<RogueDamageClass>();
+                    Main.projectile[shockwaveIndex].friendly = true;
+                    Main.projectile[shockwaveIndex].hostile = false;
+                }
+            }
         }
 
         public override void OnKill(int timeLeft)

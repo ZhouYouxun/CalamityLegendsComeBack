@@ -26,8 +26,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
 
         public override void SetDefaults()
         {
-            Projectile.width = 32;
-            Projectile.height = 32;
+            Projectile.width = 64;
+            Projectile.height = 64;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.penetrate = -1;
@@ -236,16 +236,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
             float opacity = Projectile.Opacity;
             float scale = Projectile.scale;
 
-            // 完全使用晨光灵源 (DaawnlightSpiritOrigin) 官方高精贴图绘制
-            Texture2D bullseyeTexture = ModContent.Request<Texture2D>("CalamityMod/Projectiles/Typeless/SpiritOriginRegularBullseye").Value;
-            Rectangle frame = bullseyeTexture.Frame();
-            if (target.IsABoss())
-            {
-                bullseyeTexture = ModContent.Request<Texture2D>("CalamityMod/Projectiles/Typeless/SpiritOriginBossBullseye").Value;
-                frame = bullseyeTexture.Frame(1, 4, 0, (int)(Main.GlobalTimeWrappedHourly * 7f) % 4);
-                drawPosition.Y -= 17;
-                drawPosition.X -= 1;
-            }
+            // 完全使用晨光灵源 (DaawnlightSpiritOrigin) 官方 Boss 准星高精多帧贴图绘制
+            Texture2D bullseyeTexture = ModContent.Request<Texture2D>("CalamityMod/Projectiles/Typeless/SpiritOriginBossBullseye").Value;
+            Rectangle frame = bullseyeTexture.Frame(1, 4, 0, (int)(Main.GlobalTimeWrappedHourly * 7f) % 4);
+            drawPosition.Y -= 17;
+            drawPosition.X -= 1;
 
             Vector2 origin = frame.Size() * 0.5f;
 

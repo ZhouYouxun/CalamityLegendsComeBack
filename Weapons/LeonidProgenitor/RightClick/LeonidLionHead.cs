@@ -174,6 +174,30 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             }
         }
 
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            if (Projectile.owner == Main.myPlayer)
+            {
+                int shockwaveIndex = Projectile.NewProjectile(
+                    Projectile.GetSource_OnHit(target),
+                    target.Center,
+                    Vector2.Zero,
+                    ModContent.ProjectileType<CalamityMod.Projectiles.Melee.EarthenTidesShockwave>(),
+                    (int)(Projectile.damage * 0.75f),
+                    0f,
+                    Projectile.owner,
+                    1.5f
+                );
+
+                if (shockwaveIndex.WithinBounds(Main.maxProjectiles))
+                {
+                    Main.projectile[shockwaveIndex].DamageType = ModContent.GetInstance<RogueDamageClass>();
+                    Main.projectile[shockwaveIndex].friendly = true;
+                    Main.projectile[shockwaveIndex].hostile = false;
+                }
+            }
+        }
+
         public override void OnKill(int timeLeft)
         {
             Color themeColor = LeonidVisualUtils.GetReadyGold(Projectile.whoAmI * 0.3f);
@@ -214,8 +238,6 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
             if (!IsBiting)
             {
-                // 落点准星：狮首扑出去之前，先在目标点画一个收缩的星环做预告，
-                // 越靠近落点收得越紧 —— 和星光粒子的"拉弓帧"是同一套语言。
                 float approach = 1f - MathHelper.Clamp(Vector2.Distance(Projectile.Center, TargetPosition) / 420f, 0f, 1f);
                 LeonidStarlight.DrawReticle(
                     TargetPosition,
@@ -235,7 +257,6 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             }
             else
             {
-                // 咬合瞬间：一枚随体积一起涨大的放射耀斑，配合已有的白光冲击。
                 float bite = Projectile.scale / 2.6f;
                 LeonidStarlight.DrawSunburst(Projectile.Center, starGold, 0.5f * (1f - bite * 0.5f), 0.07f * Projectile.scale, Main.GlobalTimeWrappedHourly * 0.9f);
                 LeonidStarlight.DrawFlare(Projectile.Center, LeonidVisualUtils.MoonWhite, 0.7f, 0.2f * Projectile.scale, -Main.GlobalTimeWrappedHourly * 2f);

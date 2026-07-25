@@ -315,18 +315,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
                 {
                     SpawnWaterPillarBurst(target.Center, GetReliableDashDirection());
                     SpawnPostHardmodeTyphoon(owner, target);
-
-                    Vector2 spawnPos = target.Center - Vector2.UnitY * 380f + Main.rand.NextVector2Circular(20f, 10f);
-                    Vector2 boltVelocity = (target.Center - spawnPos).SafeNormalize(Vector2.UnitY) * 14f;
-                    Projectile.NewProjectile(
-                        Projectile.GetSource_FromThis(),
-                        spawnPos,
-                        boltVelocity,
-                        ModContent.ProjectileType<BBASD_Lighting>(),
-                        Math.Max(1, (int)(Projectile.damage * 0.75f)),
-                        Projectile.knockBack * 0.5f,
-                        Projectile.owner,
-                        0.75f);
                 }
             }
 

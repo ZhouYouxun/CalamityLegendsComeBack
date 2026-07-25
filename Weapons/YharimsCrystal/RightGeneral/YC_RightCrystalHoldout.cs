@@ -21,6 +21,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         private readonly BalanceYharimsCrystal balance = new();
         private int shardIndex = -1;
         private int laserIndex = -1;
+        private readonly int[] droneIndices = new int[] { -1, -1, -1, -1, -1, -1 };
 
         // Charge state: 0 = charging, 1 = charged/converged, 2 = charged + left-held (scattered)
         // Stored in laser ai[1]: 0f=normal, 1f=converged, 2f=scattered
@@ -62,6 +63,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             EmitChargeFX();
             MaintainEmpoweredShard();
             MaintainMainLaser();
+            MaintainDrones();
 
             // Update laser state based on charge and left-hold
             UpdateLaserChargeState();
@@ -71,6 +73,11 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         {
             KillProjectile(shardIndex);
             KillProjectile(laserIndex);
+            for (int i = 0; i < droneIndices.Length; i++)
+            {
+                KillProjectile(droneIndices[i]);
+                droneIndices[i] = -1;
+            }
 
             // Right-click holdout ended: briefly block left-click holdout to prevent autoReuse immediately re-spawning it
             if (Projectile.owner == Main.myPlayer)
@@ -90,7 +97,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
                 !Owner.mouseInterface;
         }
 
-        private bool IsLeftHeld()
+        public bool IsLeftHeld()
         {
             return Main.mouseLeft &&
                 !Main.mapFullscreen &&
@@ -212,6 +219,36 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             {
                 YharimsCrystalHellBladeGlobalProjectile.Mark(Main.projectile[shardIndex], YCWeaponForm.Crystal);
                 Main.projectile[shardIndex].CritChance = Projectile.CritChance;
+            }
+        }
+
+        private void MaintainDrones()
+        {
+            if (Projectile.owner != Main.myPlayer)
+                return;
+
+            int droneType = ModContent.ProjectileType<YC_RightDrone>();
+            for (int slot = 0; slot < 6; slot++)
+            {
+                if (IsProjectileActive(droneIndices[slot], droneType))
+                    continue;
+
+                droneIndices[slot] = Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    Owner.Center,
+                    Vector2.Zero,
+                    droneType,
+                    Projectile.damage,
+                    Projectile.knockBack,
+                    Projectile.owner,
+                    slot,
+                    Projectile.whoAmI);
+
+                if (Main.projectile.IndexInRange(droneIndices[slot]))
+                {
+                    YharimsCrystalHellBladeGlobalProjectile.Mark(Main.projectile[droneIndices[slot]], YCWeaponForm.Crystal);
+                    Main.projectile[droneIndices[slot]].CritChance = Projectile.CritChance;
+                }
             }
         }
 

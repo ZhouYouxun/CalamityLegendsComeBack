@@ -39,7 +39,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
             {
                 Vector2 aim = AimDirection;
                 Vector2 gunUp = aim.RotatedBy(-MathHelper.PiOver2 * Owner.direction);
-                return Projectile.Center + aim * BarrelLength + gunUp * 8f;
+                return Projectile.Center + aim * BarrelLength + gunUp * 4f;
             }
         }
         internal float ScopeChargeCompletion => MathHelper.Clamp(chargeFrames / (float)AMRBalance.ScopeChargeFrames, 0f, 1f);

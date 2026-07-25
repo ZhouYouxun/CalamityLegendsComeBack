@@ -27,6 +27,10 @@ Mods: {
 				MK14GrenadeProjectile.DisplayName: MK14 枪挂榴弹
 				MK14DragonBreathPellet.DisplayName: 龙息霰弹
 			}
+
+			// BFRecoveryShieldVisual.DisplayName: B F Recovery Shield Visual
+			// BrinyBaron_VortexEyeDash.DisplayName: Briny Baron_ Vortex Eye Dash
+			// BrinyBaron_VortexEyePortalPreview.DisplayName: Briny Baron_ Vortex Eye Portal Preview
 		}
 
 		MK14EBR: {

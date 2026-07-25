@@ -7,12 +7,12 @@ Mods: {
 					Tooltip: "[GFB]"
 					LeftClick:
 						'''
-						[c/74D8FF:Left Click: Spawns two small comets near you that launch toward the cursor after a brief delay.]
+						[c/74D8FF:Left Click: Spawns two small comets near you that launch toward the cursor, releasing homing Astral Energy Beams on hit.]
 						[c/99CCFF:Comets bounce on reflective meteors, gain damage, and redirect through the battlefield.]
 						[c/9AD8FF:Light the Leo constellation to permanently reshape the meteor rain.]
 						'''
-					StealthLeftClick: "[c/B7A4FF:Stealth Left: Summons a diagonal rain of comets above the cursor.]"
-					RightClick: "[c/8DEBFF:Right Click: Hold to charge a large meteor; Stealth Right sends a roaring Lion Head and reflective meteors.]"
+					StealthLeftClick: "[c/B7A4FF:Stealth Left: Summons a rain of comets above cursor; dissipating comets burst into 3 Astral Energy Beams.]"
+					RightClick: "[c/8DEBFF:Right Click: Hold to charge a large meteor; Stealth Right sends a roaring Lion Head. Hits trigger Rogue Earthen Tides shockwaves.]"
 					UltimateSkill: "[c/FFE85A:Ultimate (Press {0}): Opens a gravity field that gathers a falling meteor storm. Requires full Ultimate Energy and Stealth.]"
 					Passives: "[c/BFAFFF:Kinetic Cycle: Reflected left-click comets accelerate, grow stronger, and return to orbit after their seventh reflection.]"
 					ConstellationStatus: "[c/FFE85A:Leo Starlight: {0} available | {1} spent | {2} earned | {3} to complete]"
@@ -91,6 +91,7 @@ Mods: {
 				LeonidUltimateUI.DisplayName: Ultimate Energy Bar
 				LeonidRightClickHoldout.DisplayName: Leonid Right Click Holdout
 				LeonidStealthRainSpawner.DisplayName: Leonid Stealth Rain Spawner
+				LeonidAstralEnergy.DisplayName: Astral Energy Beam
 			}
 		}
 

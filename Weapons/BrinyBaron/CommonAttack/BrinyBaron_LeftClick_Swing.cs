@@ -1278,15 +1278,19 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             if (tornadoOpacity <= 0.01f || Main.dedServ)
                 return;
 
-            // 1. 动态地形高度检测（精确匹配 StormRuler 规范）：在地面与天花板之间自动适配扩展
+            // 1. 动态地形高度检测
             Point centerPoint = Owner.Center.ToTileCoordinates();
             Collision.ExpandVertically(centerPoint.X, centerPoint.Y, out int topTileY, out int bottomTileY, 15, 15);
             topTileY++;
             bottomTileY--;
 
-            float topY = topTileY * 16f;
-            float bottomY = bottomTileY * 16f;
-            float tornadoHeight = Math.Max(32f, bottomY - topY);
+            float rawTopY = topTileY * 16f;
+            float rawBottomY = bottomTileY * 16f;
+            float tornadoHeight = Math.Max(260f, rawBottomY - rawTopY);
+
+            // 龙卷风最下端完全卡在弹幕中心（Owner.Center.Y），最上端延伸至上方
+            float bottomY = Owner.Center.Y;
+            float topY = Owner.Center.Y - tornadoHeight;
 
             // 使用灾厄原版 StormRuler 龙卷风专属贴图 TornadoProj
             Texture2D tornadoTex = ModContent.Request<Texture2D>("CalamityMod/Projectiles/TornadoProj").Value;
@@ -1299,8 +1303,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             // 螺旋整体旋转基准向量
             Vector2 spinningpoint = Vector2.UnitY.RotatedBy(aiTracker * 0.1f * rightSpinOrbitDirection);
 
-            // 宽度比系数：放大版 StormRuler (0.42f)
-            const float vectorMult = 0.42f;
+            // 宽度提升 200%（提升至原 3 倍宽度，变胖但不变高）：vectorMult 提升至 1.26f
+            const float vectorMult = 1.26f;
 
             // 海洋深青蓝色
             Color cloudColor = new Color(60, 200, 255);
@@ -1383,21 +1387,42 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
             if (CanHit || postSwing)
             {
-                Vector2 swooshDrawPosition = rightSpinActive ? Owner.Center - Main.screenPosition + new Vector2(0f, Owner.gfxOffY) : drawPosition;
                 float baseSwooshScale = GetSwooshScale();
+                Vector2 swooshDrawPosition;
+                Vector2 swooshScaleVector;
+                float swooshRotation;
+                float swooshAlpha;
 
-                // 右键椭圆旋转时，将 VFX 刀盘特效贴图压缩为 2.15:1 压扁水平椭圆，完美契合椭圆轨迹！
-                Vector2 swooshScaleVector = rightSpinActive
-                    ? new Vector2(baseSwooshScale * 1.6f, baseSwooshScale * 0.72f)
-                    : new Vector2(baseSwooshScale);
+                if (rightSpinActive)
+                {
+                    // 1. 椭圆形大小缩小 50%
+                    float compressedBaseScale = baseSwooshScale * 0.5f;
+                    swooshScaleVector = new Vector2(compressedBaseScale * 1.6f, compressedBaseScale * 0.72f);
 
-                float swooshRotation = rightSpinActive ? 0f : GetSwooshRotation();
+                    // 2. 位置根据刀片处于上半圈 (sin < 0) 或下半圈 (sin > 0) 动态向上/向下偏移
+                    float sinVal = MathF.Sin(rightSpinAngle);
+                    float rsEllipseB = (BaseHitboxOutset + BaseHitboxSize.X * 0.38f) * (1f + RightSpinChargeRatio * 0.7f) * 0.5f;
+                    Vector2 swooshCenterOffset = new Vector2(0f, sinVal * rsEllipseB * 0.85f);
+                    swooshDrawPosition = Owner.Center + swooshCenterOffset - Main.screenPosition + new Vector2(0f, Owner.gfxOffY);
+
+                    // 3. 晃到上面/下面时闪现一下：基于 sinVal 峰值的脉冲透明度
+                    float flashPulse = MathF.Pow(MathF.Abs(sinVal), 1.6f);
+                    swooshAlpha = fadeIn * 0.85f * flashPulse;
+                    swooshRotation = 0f;
+                }
+                else
+                {
+                    swooshDrawPosition = drawPosition;
+                    swooshScaleVector = new Vector2(baseSwooshScale);
+                    swooshRotation = GetSwooshRotation();
+                    swooshAlpha = fadeIn * 0.42f;
+                }
 
                 Main.EntitySpriteDraw(
                     swoosh.Value,
                     swooshDrawPosition,
                     null,
-                    Color.DeepSkyBlue with { A = 0 } * fadeIn * (rightSpinActive ? 0.68f : 0.42f),
+                    Color.DeepSkyBlue with { A = 0 } * swooshAlpha,
                     swooshRotation,
                     swoosh.Size() * 0.5f,
                     swooshScaleVector,
