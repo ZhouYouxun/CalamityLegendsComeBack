@@ -23,7 +23,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = -1;
+            Projectile.localNPCHitCooldown = BB_Balance.GetLeftProjectileHitCooldown(BBLeftProjectile.SeafoamExplosion);
         }
 
         public override void AI()

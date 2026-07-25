@@ -253,6 +253,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 return;
 
             int flashCount = stats.FlashCount + Owner.GetModPlayer<BFAccessoryPlayer>().RecoveryExtraFlashes;
+            float totalBurstShield = flashCount * stats.HealAmount;
+            Owner.GetModPlayer<BFRecoveryShieldPlayer>().StartNewShieldBurst(totalBurstShield);
+
             Vector2 upward = -Vector2.UnitY * Owner.gravDir;
             Vector2 side = skyDirection.RotatedBy(MathHelper.PiOver2).SafeNormalize(Vector2.UnitX);
 

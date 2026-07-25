@@ -1,5 +1,6 @@
 ﻿using System;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack;
+using CalamityLegendsComeBack.Weapons.BrinyBaron.TideValue;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -12,23 +13,24 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 {
     internal class BBSD_Final_INV : ModProjectile, ILocalizedModType
     {
-        // ===== 终结刻印：挂在目标身上，定时追砍 =====
-        private const int Lifetime = 120;
-        private const int SlashInterval = 8;
-        private const float SlashScale = 1.55f;
-        private const float OrbitRadius = 42f;
+        // The mark gives the target a brief warning before the real execution lands.
+        private const int Lifetime = 36;
+        private const int ImpactDelay = 24;
+        private const float SlashLength = 560f;
+        private const float SlashWidth = 190f;
 
         private int TargetNpcIndex => (int)Projectile.ai[0];
         private float BaseRotation => Projectile.ai[1];
         private NPC LockedTarget => BBSuperDashTargeting.IsTargetValid(TargetNpcIndex) ? Main.npc[TargetNpcIndex] : null;
+        private bool executionLanded;
 
         public new string LocalizationCategory => "Projectiles.BrinyBaron";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         public override void SetDefaults()
         {
-            Projectile.width = 140;
-            Projectile.height = 140;
+            Projectile.width = 460;
+            Projectile.height = 460;
             Projectile.friendly = false;
             Projectile.hostile = false;
             Projectile.tileCollide = false;
@@ -37,9 +39,25 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             Projectile.timeLeft = Lifetime;
             Projectile.DamageType = DamageClass.Melee;
             Projectile.netImportant = true;
+            Projectile.usesLocalNPCImmunity = true;
+            Projectile.localNPCHitCooldown = -1;
         }
 
         public override bool ShouldUpdatePosition() => false;
+
+        public override bool? CanDamage() => executionLanded ? null : false;
+
+        public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
+        {
+            if (!executionLanded)
+                return false;
+
+            Vector2 direction = BaseRotation.ToRotationVector2();
+            Vector2 start = Projectile.Center - direction * SlashLength * 0.5f;
+            Vector2 end = Projectile.Center + direction * SlashLength * 0.5f;
+            float collisionPoint = 0f;
+            return Collision.CheckAABBvLineCollision(targetHitbox.TopLeft(), targetHitbox.Size(), start, end, SlashWidth, ref collisionPoint);
+        }
 
         public override void AI()
         {
@@ -52,44 +70,47 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 
             Projectile.Center = target.Center;
             Projectile.velocity = target.velocity;
-            Projectile.rotation = BaseRotation + (Lifetime - Projectile.timeLeft) * 0.23f;
+            Projectile.rotation = BaseRotation;
 
             SpawnOrbitEffects(target);
 
             int elapsed = Lifetime - Projectile.timeLeft + 1;
-            if (Main.myPlayer == Projectile.owner && elapsed % SlashInterval == 0)
-                ReleaseFinalSlash(target, elapsed / SlashInterval);
+            if (elapsed == ImpactDelay)
+                ReleaseExecutionSlash(target);
+
+            if (elapsed > ImpactDelay + 3)
+                Projectile.Kill();
         }
 
-        private void ReleaseFinalSlash(NPC target, int sequenceIndex)
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            float wave = (sequenceIndex - 1) * 0.72f;
-            float slashRotation = BaseRotation + wave;
-            Vector2 slashDirection = slashRotation.ToRotationVector2();
+            if (!executionLanded || target.whoAmI != TargetNpcIndex || !Main.player.IndexInRange(Projectile.owner))
+                return;
 
-            Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(),
-                target.Center,
-                slashDirection * 8f,
-                ModContent.ProjectileType<BBSwing_Slash>(),
-                Projectile.damage,
-                Projectile.knockBack,
-                Projectile.owner,
-                SlashScale,
-                Main.rand.NextFloat(-0.08f, 0.08f));
+            Main.player[Projectile.owner].GetModPlayer<BBTideValuePlayer>().ResetTide();
+        }
 
-            SoundEngine.PlaySound(SoundID.Item71 with
+        private void ReleaseExecutionSlash(NPC target)
+        {
+            executionLanded = true;
+            Projectile.friendly = true;
+            Vector2 direction = BaseRotation.ToRotationVector2();
+            Vector2 perpendicular = direction.RotatedBy(MathHelper.PiOver2);
+
+            for (int i = 0; i < 52; i++)
             {
-                Volume = 0.58f,
-                Pitch = 0.08f + Main.rand.NextFloat(-0.06f, 0.08f)
-            }, target.Center);
+                float along = Main.rand.NextFloat(-SlashLength * 0.5f, SlashLength * 0.5f);
+                float across = Main.rand.NextFloat(-SlashWidth * 0.5f, SlashWidth * 0.5f);
+                Vector2 position = target.Center + direction * along + perpendicular * across;
+                Vector2 velocity = perpendicular * Main.rand.NextFloat(-4f, 4f) + direction * Main.rand.NextFloat(-2f, 2f);
+                Dust water = Dust.NewDustPerfect(position, DustID.Water, velocity, 80, new Color(90, 215, 255), Main.rand.NextFloat(1.2f, 2.1f));
+                water.noGravity = true;
+                Dust bubble = Dust.NewDustPerfect(position, DustID.Water, velocity * 0.45f, 80, Color.White, Main.rand.NextFloat(0.9f, 1.55f));
+                bubble.noGravity = true;
+            }
 
-            SoundEngine.PlaySound(SoundID.Item105 with
-            {
-                Volume = 0.38f,
-                Pitch = 0.18f + Main.rand.NextFloat(-0.04f, 0.08f)
-            }, target.Center);
-
+            SoundEngine.PlaySound(SoundID.Item84 with { Volume = 1.25f, Pitch = -0.32f }, target.Center);
+            SoundEngine.PlaySound(SoundID.Splash with { Volume = 1.05f, Pitch = -0.18f }, target.Center);
         }
 
         private void SpawnOrbitEffects(NPC target)
@@ -99,9 +120,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 
             float progress = 1f - Projectile.timeLeft / (float)Lifetime;
 
-            if (Projectile.timeLeft % 4 == 0)
+            if (!executionLanded && Projectile.timeLeft % 3 == 0)
             {
-                Vector2 orbit = (Projectile.rotation + progress * MathHelper.TwoPi * 2f).ToRotationVector2() * OrbitRadius;
+                Vector2 orbit = (Projectile.rotation + progress * MathHelper.TwoPi * 2f).ToRotationVector2() * (38f + progress * 26f);
                 GeneralParticleHandler.SpawnParticle(new LineParticle(
                     target.Center + orbit,
                     orbit.SafeNormalize(Vector2.UnitX).RotatedBy(MathHelper.PiOver2) * 1.2f,

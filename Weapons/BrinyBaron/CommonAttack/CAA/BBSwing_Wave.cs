@@ -1,3 +1,4 @@
+using CalamityLegendsComeBack.Accssory.BB;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.TideValue;
 using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
@@ -54,7 +55,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             Projectile.friendly = true;
             Projectile.hostile = false;
             Projectile.DamageType = DamageClass.Melee;
-            Projectile.penetrate = 20;
+            Projectile.penetrate = -1;
             Projectile.light = 0.45f;
             Projectile.scale = 0.9f;
             Projectile.ignoreWater = true;
@@ -62,7 +63,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             Projectile.extraUpdates = 3;
             Projectile.timeLeft = 90 * Projectile.extraUpdates;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = 18;
+            Projectile.localNPCHitCooldown = BB_Balance.GetLeftProjectileHitCooldown(BBLeftProjectile.SwordWave);
         }
 
         public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
@@ -230,10 +231,24 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         private void ApplyStageStats()
         {
             Vector2 center = Projectile.Center;
-            int size = (int)(BaseSize * StageScale * WaveSizeFactor);
+            float sizeMult = 1f;
+            if (Main.player.IndexInRange(Projectile.owner))
+            {
+                Player owner = Main.player[Projectile.owner];
+                var bbAcc = owner.GetModPlayer<BBAccessoryPlayer>();
+                var tidePlayer = owner.GetModPlayer<BBTideValuePlayer>();
+
+                if ((bbAcc.BottledBlackPearlEquipped || bbAcc.BottledAircraftCarrierEquipped) && tidePlayer.TideFull)
+                {
+                    sizeMult = 1.5f;
+                    Projectile.damage = (int)(Projectile.damage * 1.25f);
+                }
+            }
+
+            int size = (int)(BaseSize * StageScale * WaveSizeFactor * sizeMult);
             Projectile.width = size;
             Projectile.height = size;
-            Projectile.scale = (0.96f + SpawnStage * 0.08f) * WaveSizeFactor;
+            Projectile.scale = (0.96f + SpawnStage * 0.08f) * WaveSizeFactor * sizeMult;
             Projectile.Center = center;
         }
 

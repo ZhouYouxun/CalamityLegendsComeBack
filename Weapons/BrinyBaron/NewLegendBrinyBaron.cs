@@ -55,8 +55,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             if (player.altFunctionUse == 2)
             {
                 BBRightClickMode rightClickMode = player.GetModPlayer<BBAccessoryPlayer>().RightClickMode;
-                bool usesDashBody = rightClickMode == BBRightClickMode.DefaultShuriken || rightClickMode == BBRightClickMode.LostGarment;
-                bool usesAccessoryCooldown = usesDashBody || rightClickMode == BBRightClickMode.VortexPortal;
+                bool usesDashBody = rightClickMode == BBRightClickMode.DefaultShuriken;
+                bool usesAccessoryCooldown = usesDashBody || rightClickMode == BBRightClickMode.VortexEye;
 
                 if (usesDashBody && HasActiveRightClickDash(player))
                     return false;
@@ -73,18 +73,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
                 if (usesAccessoryCooldown && !player.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>().CanUseDash)
                     return false;
 
-                bool bubbleShield = rightClickMode == BBRightClickMode.CeruleanShield;
-                if (bubbleShield && player.ownedProjectileCounts[ModContent.ProjectileType<BrinyBaron_BubbleShield>()] <= 0 &&
-                    !player.GetModPlayer<BrinyBaronBubbleShieldPlayer>().CanSpawnBubble)
-                    return false;
-
-                Item.useTime = bubbleShield ? 10 : 18;
-                Item.useAnimation = bubbleShield ? 10 : 18;
+                Item.useTime = 18;
+                Item.useAnimation = 18;
                 Item.shoot = rightClickMode switch
                 {
-                    BBRightClickMode.CeruleanShield => ModContent.ProjectileType<BrinyBaron_BubbleShield>(),
-                    BBRightClickMode.LostGarment or BBRightClickMode.DefaultShuriken => ModContent.ProjectileType<BrinyBaron_SkillDashTornado_BladeDash>(),
-                    BBRightClickMode.VortexPortal => ModContent.ProjectileType<BrinyBaron_SkillSlashDash_SlashDash>(),
+                    BBRightClickMode.VortexEye => ModContent.ProjectileType<BrinyBaron_VortexEyeDash>(),
+                    _ => ModContent.ProjectileType<BrinyBaron_SkillDashTornado_BladeDash>()
                 };
                 Item.channel = false;
                 Item.noUseGraphic = true;
@@ -121,20 +115,21 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
                 int rightClickDamage = GetCurrentRightClickDamage(player);
                 BBRightClickMode rightClickMode = player.GetModPlayer<BBAccessoryPlayer>().RightClickMode;
 
-                if (rightClickMode == BBRightClickMode.VortexPortal)
+                if (rightClickMode == BBRightClickMode.VortexEye)
                 {
-                    ExecuteVortexPortal(player, source, shootVelocity, rightClickDamage, knockback);
+                    Projectile.NewProjectile(
+                        source,
+                        player.MountedCenter,
+                        CardinalizeDirection(shootVelocity, player.direction),
+                        ModContent.ProjectileType<BrinyBaron_VortexEyeDash>(),
+                        rightClickDamage,
+                        knockback,
+                        player.whoAmI);
                     player.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>().StartCooldown(360);
                     return false;
                 }
 
-                if (rightClickMode == BBRightClickMode.CeruleanShield)
-                {
-                    ToggleBubbleShield(player, source);
-                    return false;
-                }
-
-                if (rightClickMode == BBRightClickMode.LostGarment || rightClickMode == BBRightClickMode.DefaultShuriken)
+                if (rightClickMode == BBRightClickMode.DefaultShuriken)
                 {
                     Projectile.NewProjectile(
                         source,
@@ -144,9 +139,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
                         rightClickDamage,
                         knockback,
                         player.whoAmI,
-                        rightClickMode == BBRightClickMode.DefaultShuriken ? 2f : 0f);
+                        2f);
 
-                    player.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>().StartCooldown();
+                    player.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>().StartCooldown(
+                        player.GetModPlayer<BBAccessoryPlayer>().AbyssalBastionEquipped ? 120 : BrinyBaronRightClickDashCooldownPlayer.DashCooldown);
                     return false;
                 }
 
@@ -163,8 +159,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
                 return player.ownedProjectileCounts[ModContent.ProjectileType<BrinyBaron_LeftClick_Swing>()] <= 0 && !HasActiveRightClickDash(player);
 
             BBRightClickMode rightClickMode = player.GetModPlayer<BBAccessoryPlayer>().RightClickMode;
-            bool usesDashBody = rightClickMode == BBRightClickMode.DefaultShuriken || rightClickMode == BBRightClickMode.LostGarment;
-            bool usesAccessoryCooldown = usesDashBody || rightClickMode == BBRightClickMode.VortexPortal;
+            bool usesDashBody = rightClickMode == BBRightClickMode.DefaultShuriken;
+            bool usesAccessoryCooldown = usesDashBody || rightClickMode == BBRightClickMode.VortexEye;
             return (!usesDashBody || !HasActiveRightClickDash(player)) &&
                    (!usesAccessoryCooldown || player.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>().CanUseDash);
         }
@@ -181,14 +177,28 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             if (Main.myPlayer == player.whoAmI)
                 player.Calamity().rightClickListener = true;
 
+            if (Main.myPlayer == player.whoAmI &&
+                player.GetModPlayer<BBAccessoryPlayer>().RightClickMode == BBRightClickMode.VortexEye &&
+                player.ownedProjectileCounts[ModContent.ProjectileType<BrinyBaron_VortexEyePortalPreview>()] == 0)
+            {
+                Projectile.NewProjectile(
+                    player.GetSource_ItemUse(Item),
+                    Main.MouseWorld,
+                    Vector2.Zero,
+                    ModContent.ProjectileType<BrinyBaron_VortexEyePortalPreview>(),
+                    0,
+                    0f,
+                    player.whoAmI);
+            }
+
             if (player.Calamity().cooldowns.TryGetValue(BBTideValueCooldown.ID, out var cooldown))
             {
-                cooldown.duration = BBTideValuePlayer.TideChargeMax;
-                cooldown.timeLeft = Math.Max(1, tidePlayer.TideChargeValue);
+                cooldown.duration = Math.Max(1, tidePlayer.CurrentTideMax);
+                cooldown.timeLeft = Math.Max(1, tidePlayer.TideValue);
             }
             else
             {
-                player.AddCooldown(BBTideValueCooldown.ID, BBTideValuePlayer.TideChargeMax).timeLeft = Math.Max(1, tidePlayer.TideChargeValue);
+                player.AddCooldown(BBTideValueCooldown.ID, Math.Max(1, tidePlayer.CurrentTideMax)).timeLeft = Math.Max(1, tidePlayer.TideValue);
             }
 
             int superDashVisualValue = Math.Max(1, (int)(superDashCooldown.CooldownDuration * superDashCooldown.CooldownCompletion));
@@ -240,15 +250,17 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
 
             superDashCooldown.StartCooldown();
             tidePlayer.ResetTideCharge();
-            tidePlayer.TideValue = 0;
         }
 
         public override void AddRecipes()
         {
         }
 
-        private void ExecuteVortexPortal(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 direction, int damage, float knockback)
+        private void ExecuteVortexEyeDash(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 direction, int damage, float knockback)
         {
+            direction = Math.Abs(direction.X) >= Math.Abs(direction.Y)
+                ? new Vector2(Math.Sign(direction.X == 0f ? player.direction : direction.X), 0f)
+                : new Vector2(0f, Math.Sign(direction.Y == 0f ? -1f : direction.Y));
             Vector2 destination = Main.MouseWorld;
             Vector2 topLeft = destination - player.Size * 0.5f;
             if (Collision.SolidCollision(topLeft, player.width, player.height))
@@ -269,27 +281,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
                 player.whoAmI,
                 0f,
                 player.direction);
-        }
-
-        private static void ToggleBubbleShield(Player player, IEntitySource source)
-        {
-            int bubbleType = ModContent.ProjectileType<BrinyBaron_BubbleShield>();
-            foreach (Projectile projectile in Main.projectile)
-            {
-                if (projectile.active && projectile.owner == player.whoAmI && projectile.type == bubbleType)
-                {
-                    projectile.Kill();
-                    return;
-                }
-            }
-
-            BrinyBaronBubbleShieldPlayer bubblePlayer = player.GetModPlayer<BrinyBaronBubbleShieldPlayer>();
-            if (!bubblePlayer.CanSpawnBubble || Main.myPlayer != player.whoAmI)
-                return;
-
-            Projectile.NewProjectile(source, player.Center, Vector2.Zero, bubbleType, 0, 0f, player.whoAmI);
-            bubblePlayer.StartCooldown();
-            SoundEngine.PlaySound(SoundID.Item54 with { Volume = 0.65f, Pitch = 0.25f }, player.Center);
         }
 
         public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
@@ -321,9 +312,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             BBRightClickMode rightClickMode = player.GetModPlayer<BBAccessoryPlayer>().RightClickMode;
             string rightDesc = rightClickMode switch
             {
-                BBRightClickMode.LostGarment => this.GetLocalizedValue("BB_Right_LostGarment"),
-                BBRightClickMode.CeruleanShield => this.GetLocalizedValue("BB_Right_CeruleanShield"),
-                BBRightClickMode.VortexPortal => this.GetLocalizedValue("BB_Right_VortexPortal"),
+                BBRightClickMode.VortexEye => this.GetLocalizedValue("BB_Right_VortexEye"),
                 _ => this.GetLocalizedValue("BB_Right_DefaultShuriken"),
             };
 
@@ -396,6 +385,23 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
                    !Main.blockMouse;
         }
 
+        private static Vector2 CardinalizeDirection(Vector2 direction, int fallbackDirection)
+        {
+            return Math.Abs(direction.X) >= Math.Abs(direction.Y)
+                ? new Vector2(Math.Sign(direction.X == 0f ? fallbackDirection : direction.X), 0f)
+                : new Vector2(0f, Math.Sign(direction.Y == 0f ? -1f : direction.Y));
+        }
+
+        public override float UseTimeMultiplier(Player player)
+        {
+            var acc = player.GetModPlayer<BBAccessoryPlayer>();
+            if (acc.OceanHormoneEquipped && player.Calamity().adrenalineModeActive)
+            {
+                return Math.Max(1, Item.useTime - 6) / (float)Item.useTime;
+            }
+            return base.UseTimeMultiplier(player);
+        }
+
         private static bool HasActiveRightClickDash(Player player)
         {
             return FindOwnedProjectile(player, ModContent.ProjectileType<BrinyBaron_SkillDashTornado_BladeDash>()) != null;
@@ -424,5 +430,4 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             return null;
         }
     }
-
 }

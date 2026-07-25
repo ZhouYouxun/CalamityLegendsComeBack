@@ -3,11 +3,11 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Accssory.BB.General
+namespace CalamityLegendsComeBack.Accssory.BB.Skill
 {
-    public class OffshoreWindTurbine : ModItem
+    public class OceanHormone : ModItem
     {
-        public override string Texture => "CalamityLegendsComeBack/Accssory/BB/General/OffshoreWindTurbine/OffshoreWindTurbine";
+        public override string Texture => "CalamityLegendsComeBack/Accssory/BB/Skill/OceanHormone/OceanHormone";
 
         public override void SetDefaults()
         {
@@ -20,16 +20,17 @@ namespace CalamityLegendsComeBack.Accssory.BB.General
 
         public override void UpdateAccessory(Player player, bool hideVisual)
         {
-            player.GetModPlayer<BBAccessoryPlayer>().OffshoreWindTurbineEquipped = true;
+            player.GetModPlayer<BBAccessoryPlayer>().OceanHormoneEquipped = true;
         }
 
         public override void AddRecipes()
         {
             CreateRecipe()
-                .AddIngredient<MysteriousCircuitry>(4)
-                .AddIngredient<DubiousPlating>(8)
-                .AddRecipeGroup("AnyMythrilBar", 10)
-                .AddTile(TileID.MythrilAnvil)
+                .AddIngredient(ItemID.Bottle, 1)
+                .AddIngredient(ItemID.BattlePotion, 6)
+                .AddIngredient(ItemID.Stinger, 6)
+                .AddIngredient<DepthCells>(6)
+                .AddTile(TileID.Anvils)
                 .Register();
         }
     }

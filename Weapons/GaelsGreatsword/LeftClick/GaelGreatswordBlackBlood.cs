@@ -23,7 +23,7 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
     public class GaelGreatswordBlackBlood : ModBuff, ILocalizedModType
     {
         public new string LocalizationCategory => "Buffs";
-        public override string Texture => "CalamityLegendsComeBack/Weapons/GaelsGreatsword/GaelGreatswordBlackBlood";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/GaelsGreatsword/LeftClick/GaelGreatswordBlackBlood";
 
         public override void SetStaticDefaults()
         {

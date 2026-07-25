@@ -79,15 +79,11 @@ Mods: {
 						'''
 					PassiveStateOn: "[c/7BFFB7:开启]"
 					PassiveStateOff: "[c/F0D070:关闭]"
-					PassiveDevice_None: "[c/7F8FA6:当前未读取到盾冲设备。]"
-					PassiveDevice_OrnateShield: "[c/99CCFF:当前佩戴华丽护盾；盾冲期间每 7 帧会沿速度左右两侧各释放一枚潮刃。]"
-					PassiveDevice_DeepDiver: "[c/99CCFF:当前佩戴深渊潜游者；盾冲期间每 7 帧会沿速度左右两侧各释放一枚潮刃。]"
-					PassiveDevice_AsgardsValor: "[c/99CCFF:当前佩戴阿斯加德英勇；盾冲期间每 7 帧会沿速度左右两侧各释放一枚潮刃。]"
-					PassiveDevice_ElysianAegis: "[c/99CCFF:当前佩戴极乐之庇护；盾冲期间每 7 帧会沿速度左右两侧各释放一枚潮刃。]"
-					PassiveDevice_AsgardianAegis: "[c/99CCFF:当前佩戴阿斯加德之庇护；盾冲期间每 7 帧会沿速度左右两侧各释放一枚潮刃。]"
-					Dash4_Unlock: "[c/66FFAA:已解锁：大招【潮狱处刑】]"
-					Dash4_Lock: "[c/FFB347:大招【潮狱处刑】当前大招未解锁。]"
-					BB_Final: "[c/9FD8A2:大招【潮狱处刑】满潮且大招就绪时，按传奇技能键标记猎物；左键确认处刑。]"
+					PassiveDevice_None: "[c/7F8FA6:当前未检测到冲刺能力。]"
+					PassiveDevice_Any: "[c/99CCFF:已检测到冲刺能力；冲刺触发快刀连斩，冲刺期间每 7 帧会沿速度左右两侧各释放一枚潮刃。]"
+					Dash4_Unlock: "[c/66FFAA:已解锁：终结技【激流送葬】]"
+					Dash4_Lock: "[c/FFB347:终结技【激流送葬】当前未解锁。]"
+					BB_Final: "[c/9FD8A2:终结技【激流送葬】满潮且大招就绪时，按传奇技能键标记猎物；最后一击留下刻印，随后降下潮汐巨斩。]"
 					UltimateOutOfRange: 超出范围
 					LegendaryHint: "[c/6C8EFF:按住Shift键以读取记录]"
 					LegendaryText:
@@ -265,7 +261,7 @@ Mods: {
 				BrinyBaron_SkillDashTornado_BladeDash.DisplayName: 刃岚突进
 				BrinyBaron_SkillSpinRush_SpinBlade.DisplayName: 回旋裂斩
 				BrinyBaron_SkillSlashDash_SlashDash.DisplayName: 盾潮连斩
-				Z_BrinyBaron_SkillSuperCharge_SuperDash.DisplayName: 潮狱处刑
+				Z_BrinyBaron_SkillSuperCharge_SuperDash.DisplayName: 激流送葬
 				BBSD_Star.DisplayName: 终潮星刃
 				BBSD_Final_INV.DisplayName: 终潮刻印
 				SurgeChainWaterBurst.DisplayName: 电涌水爆
@@ -282,7 +278,7 @@ Mods: {
 
 		Cooldowns: {
 			BrinyBaron_Tide: 潮汐
-			BrinyBaron_SuperDash: 潮狱处刑
+			BrinyBaron_SuperDash: 激流送葬
 		}
 	}
 }

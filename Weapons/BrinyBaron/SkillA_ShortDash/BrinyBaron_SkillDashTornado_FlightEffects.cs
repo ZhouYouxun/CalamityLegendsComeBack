@@ -37,6 +37,17 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
                     Color.Lerp(new Color(95, 205, 255), Color.White, Main.rand.NextFloat(0.1f, 0.3f))));
             }
 
+            // Lucrecia-style burst at dash start
+            for (int i = 0; i < 4; i++)
+            {
+                Vector2 sparkVel = forward.RotatedByRandom(0.4f) * Main.rand.NextFloat(8f, 16f);
+                Particle sparkle = new CritSpark(tip, sparkVel, Color.Lerp(Color.DeepSkyBlue, Color.Cyan, Main.rand.NextFloat()), Color.White * 0.5f, Main.rand.NextFloat(1f, 1.6f) * projectile.scale, 14, 0.2f, 1.3f);
+                GeneralParticleHandler.SpawnParticle(sparkle);
+            }
+
+            Particle startSmear = new CircularSmearVFX(projectile.Center, Color.DeepSkyBlue * 0.5f, forward.ToRotation(), projectile.scale * 1.5f);
+            GeneralParticleHandler.SpawnParticle(startSmear);
+
             SpawnOuterWake(projectile, tip, forward, right, 0f, 0.85f, 5.6f, 15f, true, true);
         }
 
@@ -61,6 +72,22 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
                     0.03f,
                     10);
                 GeneralParticleHandler.SpawnParticle(pulse);
+            }
+
+            // Exoblade-style linear energy streaks trailing from dash path
+            if (stateTimer % 2 == 0)
+            {
+                Vector2 leakSpeed = -forward.RotatedByRandom(0.35f) * Main.rand.NextFloat(5f, 13f);
+                Particle energyLeak = new SquishyLightParticle(
+                    tip - forward * Main.rand.NextFloat(6f, 22f) + Main.rand.NextVector2Circular(16f, 16f),
+                    leakSpeed,
+                    Main.rand.NextFloat(0.32f, 0.62f),
+                    Color.Lerp(Color.DeepSkyBlue, Color.Cyan, Main.rand.NextFloat()),
+                    24,
+                    3.2f,
+                    4.2f,
+                    hueShift: 0.01f);
+                GeneralParticleHandler.SpawnParticle(energyLeak);
             }
 
             // Spawn BlossomFlux-style orbiting ocean swirl visual projectile anchored in world space

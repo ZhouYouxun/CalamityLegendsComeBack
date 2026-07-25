@@ -7,9 +7,7 @@ namespace CalamityLegendsComeBack.Accssory.BB.ChangeRight
     {
         public static bool IsChangeRightAccessoryItem(int itemType)
         {
-            return itemType == ModContent.ItemType<CeruleanShield>() ||
-                   itemType == ModContent.ItemType<LostGarment>() ||
-                   itemType == ModContent.ItemType<VortexPortal>();
+            return itemType == ModContent.ItemType<VortexEye.VortexEye>();
         }
 
         public static bool CanEquipWith(Item equippedItem, Item incomingItem)

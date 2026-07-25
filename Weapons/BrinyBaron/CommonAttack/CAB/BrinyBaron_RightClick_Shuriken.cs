@@ -67,7 +67,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
             Projectile.tileCollide = true;
             Projectile.ignoreWater = true;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = 20;
+            Projectile.localNPCHitCooldown = BB_Balance.GetLeftProjectileHitCooldown(BBLeftProjectile.Shuriken);
             Projectile.DamageType = DamageClass.Melee;
         }
 
@@ -527,10 +527,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
         private ShurikenProfile CreateShurikenProfile()
         {
             int tier = GetShurikenGrowthTier();
-            bool boatEnhanced = Main.player.IndexInRange(Projectile.owner) &&
-                                Main.player[Projectile.owner].GetModPlayer<global::CalamityLegendsComeBack.Accssory.BB.BBAccessoryPlayer>().ShurikenBoatEnhanced;
-            int sliceCount = ShurikenStickySliceCounts[tier] + (boatEnhanced ? 2 : 0);
-            float finalSpeed = boatEnhanced ? TideHomingFinalSpeed * 1.25f : TideHomingFinalSpeed;
+            int sliceCount = ShurikenStickySliceCounts[tier];
+            float finalSpeed = TideHomingFinalSpeed;
             return new ShurikenProfile(
                 tier,
                 ShurikenPenetrates[tier],

@@ -49,7 +49,8 @@ Mods: {
 					PresetRight1:
 						'''
 						[c/FFB347:Right Click - Recovery: hold to gather a wide recovery flash.]
-						[c/FFB347:Release to heal yourself without granting a leaf barrier.]
+						[c/FFB347:Releases recovery light orbs that heal and grant an infinite-duration Recovery Matrix Shield.]
+						[c/FFB347:The shield absorbs net damage after player defense. Re-casting refreshes shield durability without stacking.]
 						'''
 					PresetRight2:
 						'''

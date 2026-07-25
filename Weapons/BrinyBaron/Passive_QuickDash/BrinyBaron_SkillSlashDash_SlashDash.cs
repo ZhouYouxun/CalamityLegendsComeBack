@@ -1,7 +1,7 @@
 ﻿using System;
 using CalamityLegendsComeBack.Accssory.BB;
-using CalamityLegendsComeBack.Accssory.BB.SurgeChainReactor;
 using CalamityLegendsComeBack.Weapons.BrinyBaron;
+using CalamityLegendsComeBack.Weapons.BrinyBaron.TideValue;
 using CalamityMod.Particles;
 using CalamityMod.Projectiles.BaseProjectiles;
 using Microsoft.Xna.Framework;
@@ -307,26 +307,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash
 
                 Lighting.AddLight(Projectile.Center, 0.05f, 0.24f, 0.34f);
 
-                if (Main.myPlayer == Projectile.owner &&
-                    player.GetModPlayer<BBAccessoryPlayer>().SurgeChainReactorEquipped &&
-                    timer % 8 == 0)
-                {
-                    for (int i = 0; i < 4; i++)
-                    {
-                        float angle = Main.rand.NextFloat(MathHelper.TwoPi);
-                        float speed = Main.rand.NextFloat(10f, 16f);
-                        Projectile.NewProjectile(
-                            Projectile.GetSource_FromThis(),
-                            player.MountedCenter + Main.rand.NextVector2Circular(32f, 32f),
-                            angle.ToRotationVector2() * speed,
-                            ModContent.ProjectileType<global::CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.BrinyBaron_SeaSpirit>(),
-                            Math.Max(1, (int)(Projectile.damage * 0.4f)),
-                            Projectile.knockBack * 0.3f,
-                            Projectile.owner,
-                            5f,
-                            1f);
-                    }
-                }
             }
 
             //base.AdditionalAI();
@@ -356,14 +336,15 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash
             if (!Main.player.IndexInRange(Projectile.owner))
                 return;
 
-            if (Main.player[Projectile.owner].GetModPlayer<BBAccessoryPlayer>().SurgeChainReactorEquipped)
-                modifiers.SourceDamage *= 20f;
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             Player player = Main.player[Projectile.owner];
             target.AddBuff(BuffID.Frostburn, 180);
+
+            if (Main.myPlayer == Projectile.owner)
+                player.GetModPlayer<BBTideValuePlayer>().AddTide(2);
 
             if (!hitTriggered)
             {

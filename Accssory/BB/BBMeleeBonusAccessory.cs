@@ -2,7 +2,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Accssory.BB.General
+namespace CalamityLegendsComeBack.Accssory.BB
 {
     public abstract class BBMeleeBonusAccessory : ModItem
     {
@@ -10,9 +10,6 @@ namespace CalamityLegendsComeBack.Accssory.BB.General
 
         protected abstract float MeleeBonus { get; }
         protected virtual int TideCapBonus => 0;
-        protected virtual float FullTideDamageBonus => 0f;
-        protected virtual bool ShurikenBoatEnhanced => false;
-        protected virtual bool WaveInfinitePenetration => false;
         protected virtual bool BottledBlackPearlEquipped => false;
         protected virtual int Rarity => ItemRarityID.Yellow;
 
@@ -31,12 +28,6 @@ namespace CalamityLegendsComeBack.Accssory.BB.General
             acc.GeneralMeleeDamageBonus += MeleeBonus;
             if (TideCapBonus > acc.BottleTideCapBonus)
                 acc.BottleTideCapBonus = TideCapBonus;
-            if (FullTideDamageBonus > acc.BottleFullTideDamageBonus)
-                acc.BottleFullTideDamageBonus = FullTideDamageBonus;
-            if (ShurikenBoatEnhanced)
-                acc.ShurikenBoatEnhanced = true;
-            if (WaveInfinitePenetration)
-                acc.WaveInfinitePenetration = true;
             if (BottledBlackPearlEquipped)
                 acc.BottledBlackPearlEquipped = true;
         }

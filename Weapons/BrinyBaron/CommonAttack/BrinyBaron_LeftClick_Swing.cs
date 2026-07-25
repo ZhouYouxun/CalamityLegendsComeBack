@@ -1083,8 +1083,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             else
                 modifiers.SourceDamage *= 1.35f * damageMult;
 
-            if (Owner.GetModPlayer<global::CalamityLegendsComeBack.Accssory.BB.BBAccessoryPlayer>().SurgeChainReactorEquipped)
-                modifiers.SourceDamage *= 0.5f;
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
@@ -1179,10 +1177,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 return;
             }
 
-            if (CanHit)
+            if (CanHit || rightSpinActive)
             {
                 slashOpacity = MathHelper.Lerp(slashOpacity, 1f, 0.4f);
-                Vector2 currentTip = SlashAngle.ToRotationVector2() * BladeLength * BladeTrailOutwardMultiplier * Projectile.scale;
+                Vector2 currentTip = (rightSpinActive ? rightSpinDirectionVector : SlashAngle.ToRotationVector2()) * BladeLength * BladeTrailOutwardMultiplier * Projectile.scale;
                 Array.Copy(bladeTipHistory, 0, bladeTipHistory, 1, bladeTipHistory.Length - 1);
                 bladeTipHistory[0] = currentTip;
                 if (bladeTipHistoryLength < bladeTipHistory.Length)
@@ -1198,7 +1196,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
         private bool CanUseBladeShaderTrail()
         {
-            return CurrentGrowthStage >= 2 && !rightSpinActive;
+            return CurrentGrowthStage >= 2;
         }
 
         private void ClearBladeShaderTrail()
@@ -1275,17 +1273,24 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             );
         }
 
-        /// <summary>
-        /// 仿 StormRuler 螺旋算法绘制龙卷风，以玩家为中心。
-        /// 只在 RightSpinChargeRatio ≥ 1f 时淡入，退出旋转时淡出。
-        /// </summary>
         private void DrawRightSpinTornado()
         {
             if (tornadoOpacity <= 0.01f || Main.dedServ)
                 return;
 
-            Texture2D cloudTex = TextureAssets.Cloud[0].Value;
-            Rectangle drawRect = cloudTex.Frame();
+            // 1. 动态地形高度检测（精确匹配 StormRuler 规范）：在地面与天花板之间自动适配扩展
+            Point centerPoint = Owner.Center.ToTileCoordinates();
+            Collision.ExpandVertically(centerPoint.X, centerPoint.Y, out int topTileY, out int bottomTileY, 15, 15);
+            topTileY++;
+            bottomTileY--;
+
+            float topY = topTileY * 16f;
+            float bottomY = bottomTileY * 16f;
+            float tornadoHeight = Math.Max(32f, bottomY - topY);
+
+            // 使用灾厄原版 StormRuler 龙卷风专属贴图 TornadoProj
+            Texture2D tornadoTex = ModContent.Request<Texture2D>("CalamityMod/Projectiles/TornadoProj").Value;
+            Rectangle drawRect = tornadoTex.Frame();
             Vector2 texOrigin = drawRect.Size() * 0.5f;
 
             float aiTracker = tornadoAiTracker;
@@ -1294,21 +1299,15 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             // 螺旋整体旋转基准向量
             Vector2 spinningpoint = Vector2.UnitY.RotatedBy(aiTracker * 0.1f * rightSpinOrbitDirection);
 
-            // 龙卷风垂直范围：从玩家脚下往上延伸（底部为玩家脚下，龙卷风向上生长）
-            float bottomY = Owner.Center.Y + 48f;    // 底部：略低于玩家中心
-            float topY    = Owner.Center.Y - 380f;   // 顶部：玩家上方 380 像素
-            float tornadoHeight = bottomY - topY;
+            // 宽度比系数：放大版 StormRuler (0.42f)
+            const float vectorMult = 0.42f;
 
-            // 宽度比系数：使龙卷风顶部宽度接近椭圆长轴宽度
-            // 最大 X 偏移 = vectorMult × colorChangeVector.Y_top × 100 = 0.65 × 2 × 100 = 130px 
-            const float vectorMult = 0.65f;
-
-            // 青蓝/深海蓝色，A=0 适配加法叠加混合模式
+            // 海洋深青蓝色
             Color cloudColor = new Color(60, 200, 255);
 
             SpriteBatch sb = Main.spriteBatch;
             sb.End();
-            sb.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearClamp,
+            sb.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp,
                      DepthStencilState.None, RasterizerState.CullNone, null,
                      Main.GameViewMatrix.TransformationMatrix);
 
@@ -1331,9 +1330,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 Vector2 colorChangeVector = new Vector2(heightFactor * vectorMult, heightFactor);
                 spinArea *= colorChangeVector * 100f;
 
-                // 保留 spinArea.Y=0（垂直坐标由循环变量 j 严格控制）
+                // 严格匹配 StormRuler 规范：归零 X 和 Y 偏移，使云朵在垂直线上形成完美的漏斗锥体
                 spinArea.Y = 0f;
-                // 不置零 spinArea.X —— 保留 S 形螺旋摘动，视觉更立体（按报告建议）
+                spinArea.X = 0f;
                 spinArea += new Vector2(Owner.Center.X, j) - Main.screenPosition;
 
                 // 双向渐变透明度：底部与顶部各自淡入淡出
@@ -1342,14 +1341,14 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     newCloudColor = Color.Lerp(Color.Transparent, cloudColor, colorChanger * 2f);
                 else
                     newCloudColor = Color.Lerp(Color.Transparent, cloudColor, 2f - colorChanger * 2f);
-                newCloudColor.A = (byte)(newCloudColor.A * 0.5f);
+                newCloudColor.A = (byte)(newCloudColor.A * 0.75f);
                 newCloudColor *= tornadoOpacity;
 
-                // 尺寸：底部细小，顶部宽大（开口向上的漏斗形）
-                float tornadoScale = 1f + colorChanger * 0.85f;
+                // 尺寸：放大版的 StormRuler 漏斗形 (0.85 -> 1.85) × 1.75f
+                float tornadoScale = (0.85f + colorChanger) * 1.75f;
 
                 sb.Draw(
-                    cloudTex,
+                    tornadoTex,
                     spinArea,
                     drawRect,
                     newCloudColor,
@@ -1385,14 +1384,23 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             if (CanHit || postSwing)
             {
                 Vector2 swooshDrawPosition = rightSpinActive ? Owner.Center - Main.screenPosition + new Vector2(0f, Owner.gfxOffY) : drawPosition;
+                float baseSwooshScale = GetSwooshScale();
+
+                // 右键椭圆旋转时，将 VFX 刀盘特效贴图压缩为 2.15:1 压扁水平椭圆，完美契合椭圆轨迹！
+                Vector2 swooshScaleVector = rightSpinActive
+                    ? new Vector2(baseSwooshScale * 1.6f, baseSwooshScale * 0.72f)
+                    : new Vector2(baseSwooshScale);
+
+                float swooshRotation = rightSpinActive ? 0f : GetSwooshRotation();
+
                 Main.EntitySpriteDraw(
                     swoosh.Value,
                     swooshDrawPosition,
                     null,
-                    Color.DeepSkyBlue with { A = 0 } * fadeIn * 0.42f,
-                    GetSwooshRotation(),
+                    Color.DeepSkyBlue with { A = 0 } * fadeIn * (rightSpinActive ? 0.68f : 0.42f),
+                    swooshRotation,
                     swoosh.Size() * 0.5f,
-                    GetSwooshScale(),
+                    swooshScaleVector,
                     SpriteEffects.None);
             }
 

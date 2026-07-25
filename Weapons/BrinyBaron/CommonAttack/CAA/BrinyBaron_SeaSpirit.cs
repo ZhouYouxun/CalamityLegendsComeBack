@@ -35,6 +35,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             Projectile.penetrate = 1;
             Projectile.timeLeft = 240;
             Projectile.ignoreWater = true;
+            Projectile.usesLocalNPCImmunity = true;
+            Projectile.localNPCHitCooldown = BB_Balance.GetLeftProjectileHitCooldown(BBLeftProjectile.SeaSpirit);
         }
 
         public override bool? CanDamage()

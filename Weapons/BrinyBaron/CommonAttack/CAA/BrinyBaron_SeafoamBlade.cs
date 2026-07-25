@@ -32,7 +32,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false; // Sword beams usually pass through tiles
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = 15;
+            Projectile.localNPCHitCooldown = BB_Balance.GetLeftProjectileHitCooldown(BBLeftProjectile.SeafoamBlade);
         }
 
         public override void AI()

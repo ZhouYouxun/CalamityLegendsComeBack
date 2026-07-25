@@ -1,5 +1,4 @@
 using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken;
-using CalamityMod.CalPlayer.Dashes;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using System;
@@ -9,53 +8,21 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash.DashEffects
 {
-    internal enum BrinyBaronQuickDashDevice
-    {
-        None,
-        OrnateShield,
-        DeepDiver,
-        AsgardsValor,
-        ElysianAegis,
-        AsgardianAegis,
-        ShieldOfCthulhu,
-        ShieldOfTheHighRuler
-    }
-
-    internal interface IBrinyBaronDashPassiveEffect
-    {
-        BrinyBaronQuickDashDevice Device { get; }
-        void OnDashStarted(Player player);
-        void UpdateWhileDashing(Player player, int dashTimer);
-    }
-
-    internal abstract class BrinyBaronDashPassiveEffect : IBrinyBaronDashPassiveEffect
+    internal static class BrinyBaronDashPassiveEffect
     {
         private const int SideShurikenInterval = 7;
 
-        public abstract BrinyBaronQuickDashDevice Device { get; }
-
-        public void OnDashStarted(Player player)
+        public static void ApplyDashStarted(Player player)
         {
             SpawnSlashDash(player);
-            OnSpecialDashStarted(player);
         }
 
-        public void UpdateWhileDashing(Player player, int dashTimer)
+        public static void ApplyDashUpdate(Player player, int dashTimer)
         {
             SpawnDashSpray(player);
 
             if (dashTimer % SideShurikenInterval == 0)
                 SpawnSideShurikenPair(player);
-
-            OnSpecialDashUpdate(player, dashTimer);
-        }
-
-        protected virtual void OnSpecialDashStarted(Player player)
-        {
-        }
-
-        protected virtual void OnSpecialDashUpdate(Player player, int dashTimer)
-        {
         }
 
         private static void SpawnSlashDash(Player player)
@@ -153,75 +120,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash.DashEffec
                     Main.rand.NextFloat(0.62f, 0.98f),
                     Color.Lerp(new Color(145, 225, 255), Color.White, Main.rand.NextFloat(0.18f, 0.48f))));
             }
-        }
-    }
-
-    internal static class BrinyBaronDashPassiveEffectRegistry
-    {
-        private static readonly BrinyBaronDashPassiveEffect[] Effects =
-        {
-            new OrnateShieldPassiveDashEffect(),
-            new DeepDiverPassiveDashEffect(),
-            new AsgardsValorPassiveDashEffect(),
-            new ElysianAegisPassiveDashEffect(),
-            new AsgardianAegisPassiveDashEffect(),
-            new ShieldOfCthulhuPassiveDashEffect(),
-            new ShieldOfTheHighRulerPassiveDashEffect()
-        };
-
-        public static BrinyBaronQuickDashDevice FromDashID(string dashID)
-        {
-            if (string.IsNullOrEmpty(dashID))
-                return BrinyBaronQuickDashDevice.None;
-
-            if (dashID == OrnateShieldDash.ID)
-                return BrinyBaronQuickDashDevice.OrnateShield;
-            if (dashID == DeepDiverDash.ID)
-                return BrinyBaronQuickDashDevice.DeepDiver;
-            if (dashID == AsgardsValorDash.ID)
-                return BrinyBaronQuickDashDevice.AsgardsValor;
-            if (dashID == ElysianAegisDash.ID)
-                return BrinyBaronQuickDashDevice.ElysianAegis;
-            if (dashID == AsgardianAegisDash.ID)
-                return BrinyBaronQuickDashDevice.AsgardianAegis;
-
-            return BrinyBaronQuickDashDevice.None;
-        }
-
-        public static string GetLocalizationKey(BrinyBaronQuickDashDevice device)
-        {
-            return device switch
-            {
-                BrinyBaronQuickDashDevice.OrnateShield => "PassiveDevice_OrnateShield",
-                BrinyBaronQuickDashDevice.DeepDiver => "PassiveDevice_DeepDiver",
-                BrinyBaronQuickDashDevice.AsgardsValor => "PassiveDevice_AsgardsValor",
-                BrinyBaronQuickDashDevice.ElysianAegis => "PassiveDevice_ElysianAegis",
-                BrinyBaronQuickDashDevice.AsgardianAegis => "PassiveDevice_AsgardianAegis",
-                BrinyBaronQuickDashDevice.ShieldOfCthulhu => "PassiveDevice_ShieldOfCthulhu",
-                BrinyBaronQuickDashDevice.ShieldOfTheHighRuler => "PassiveDevice_ShieldOfTheHighRuler",
-                _ => "PassiveDevice_None",
-            };
-        }
-
-        public static void ApplyDashStarted(Player player, BrinyBaronQuickDashDevice device)
-        {
-            GetEffect(device)?.OnDashStarted(player);
-        }
-
-        public static void ApplyDashUpdate(Player player, BrinyBaronQuickDashDevice device, int dashTimer)
-        {
-            GetEffect(device)?.UpdateWhileDashing(player, dashTimer);
-        }
-
-        private static BrinyBaronDashPassiveEffect GetEffect(BrinyBaronQuickDashDevice device)
-        {
-            foreach (BrinyBaronDashPassiveEffect effect in Effects)
-            {
-                if (effect.Device == device)
-                    return effect;
-            }
-
-            return null;
         }
     }
 }

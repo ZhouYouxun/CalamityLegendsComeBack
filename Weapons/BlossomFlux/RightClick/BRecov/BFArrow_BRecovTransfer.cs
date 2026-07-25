@@ -449,6 +449,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
 
             target.HealEffect(maxHealAmount, true);
 
+            target.GetModPlayer<BFRecoveryShieldPlayer>().AddShieldHitPoints(maxHealAmount);
+
             if (!FromChargedRelease)
                 target.GetModPlayer<BFRecoveryEcologyPlayer>().AddRecoveryLeaf(BFRecoveryLeftBalance.GetStats().LeafTimePerFlash);
 

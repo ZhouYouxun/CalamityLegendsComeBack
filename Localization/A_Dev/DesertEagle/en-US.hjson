@@ -12,6 +12,31 @@ Mods: {
 						'''
 				}
 			}
+
+			VortexEye: {
+				DisplayName: Vortex Eye
+				Tooltip: ""
+			}
+
+			AbyssalBastion: {
+				DisplayName: Abyssal Bastion
+				Tooltip: ""
+			}
+
+			BaronHelix: {
+				DisplayName: Baron Helix
+				Tooltip: ""
+			}
+
+			OceanHormone: {
+				DisplayName: Ocean Hormone
+				Tooltip: ""
+			}
+
+			TideWiseHat: {
+				DisplayName: Tide Wise Hat
+				Tooltip: ""
+			}
 		}
 
 		Projectiles: {

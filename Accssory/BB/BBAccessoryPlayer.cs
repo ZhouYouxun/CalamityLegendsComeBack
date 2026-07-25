@@ -1,5 +1,7 @@
-using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack;
+using CalamityLegendsComeBack.Accssory.BB.Skill.BaronHelix;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.TideValue;
+using CalamityMod;
+using CalamityMod.World;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
@@ -10,147 +12,175 @@ namespace CalamityLegendsComeBack.Accssory.BB
     public enum BBRightClickMode
     {
         DefaultShuriken,
-        VortexPortal,
-        LostGarment,
-        CeruleanShield
+        VortexEye
     }
 
     public class BBAccessoryPlayer : ModPlayer
     {
-        public const int OffshoreWindTurbineTideBonus = 4;
-        public const int ImpactRestarterShortDashCooldown = 0;
-        public const int ImpactRestarterSpinDashCooldown = 60;
-        public const int HighTideDefenseBonus = 20;
-        public const float HighTideDamageReduction = 0.20f;
-        public const float SurgeChainReactorDamageFactor = 0.55f;
-
-        public bool OffshoreWindTurbineEquipped;
-        public bool ImpactRestarterEquipped;
-        public bool HighTideOverloadBarrierEquipped;
-        public bool SurgeChainReactorEquipped;
-        public bool DrinkingFountainEquipped;
-        public bool AdrenalineInjectorEquipped;
-        public bool BBPassiveChannelerEquipped;
-        public float GeneralMeleeDamageBonus;
-
-        public int BottleTideCapBonus;
-        public float BottleFullTideDamageBonus;
-        public bool ShurikenBoatEnhanced;
-        public bool WaveInfinitePenetration;
+        public bool BottledBoatEquipped;
         public bool BottledBlackPearlEquipped;
+        public bool BottledAircraftCarrierEquipped;
+        public bool OceanHormoneEquipped;
+        public bool TideWiseHatEquipped;
+        public bool AbyssalBastionEquipped;
+        public bool BaronHelixEquipped;
+        public bool VortexEyeEquipped;
 
-        private int adrenalineTimer;
-        private int adrenalineStacks;
-
+        public float GeneralMeleeDamageBonus;
+        public int BottleTideCapBonus;
+        public int BubbleShieldHealth;
+        public bool HasBubbleShield => BubbleShieldHealth > 0;
         public BBRightClickMode RightClickMode { get; private set; }
-        public float AdrenalineDamageBonus => adrenalineStacks * 0.018f;
-        public float AdrenalineAttackSpeedBonus => adrenalineStacks * 0.014f;
-        public int AdrenalineStacks => adrenalineStacks;
-        public float AdrenalineStackCompletion => adrenalineStacks / 18f;
-        public float AdrenalineTimerCompletion => adrenalineTimer / 210f;
+        public int BonusTideMax => BottleTideCapBonus;
 
-        public int BonusTideMax => (OffshoreWindTurbineEquipped ? OffshoreWindTurbineTideBonus : 0) + BottleTideCapBonus;
+        private int autoTideTimer;
 
         public override void ResetEffects()
         {
-            OffshoreWindTurbineEquipped = false;
-            ImpactRestarterEquipped = false;
-            HighTideOverloadBarrierEquipped = false;
-            SurgeChainReactorEquipped = false;
-            DrinkingFountainEquipped = false;
-            AdrenalineInjectorEquipped = false;
-            BBPassiveChannelerEquipped = false;
+            BottledBoatEquipped = false;
+            BottledBlackPearlEquipped = false;
+            BottledAircraftCarrierEquipped = false;
+            OceanHormoneEquipped = false;
+            TideWiseHatEquipped = false;
+            AbyssalBastionEquipped = false;
+            BaronHelixEquipped = false;
+            VortexEyeEquipped = false;
             GeneralMeleeDamageBonus = 0f;
             BottleTideCapBonus = 0;
-            BottleFullTideDamageBonus = 0f;
-            ShurikenBoatEnhanced = false;
-            WaveInfinitePenetration = false;
-            BottledBlackPearlEquipped = false;
             RightClickMode = BBRightClickMode.DefaultShuriken;
         }
 
         public override void PostUpdate()
         {
-            if (adrenalineTimer > 0)
-                adrenalineTimer--;
-            else if (adrenalineStacks > 0)
-                adrenalineStacks--;
+            if (BottledAircraftCarrierEquipped)
+            {
+                autoTideTimer++;
+                if (autoTideTimer >= 360)
+                {
+                    autoTideTimer = 0;
+                    Player.GetModPlayer<BBTideValuePlayer>().AddTide(2);
+                }
+            }
+            else if (BottledBlackPearlEquipped)
+            {
+                autoTideTimer++;
+                if (autoTideTimer >= 720)
+                {
+                    autoTideTimer = 0;
+                    Player.GetModPlayer<BBTideValuePlayer>().AddTide();
+                }
+            }
+            else
+            {
+                autoTideTimer = 0;
+            }
         }
 
         public override void ModifyHurt(ref Player.HurtModifiers modifiers)
         {
-            if (!AdrenalineInjectorEquipped || adrenalineStacks <= 0)
-                return;
-
-            modifiers.FinalDamage *= 1f + adrenalineStacks * 0.05f;
+            if (AbyssalBastionEquipped && HasBubbleShield)
+                modifiers.FinalDamage *= 0.75f;
         }
 
         public override void OnHurt(Player.HurtInfo info)
         {
-            if (AdrenalineInjectorEquipped && adrenalineStacks > 0)
-            {
-                adrenalineStacks = 0;
-                adrenalineTimer = 0;
-            }
+            if (!AbyssalBastionEquipped || !HasBubbleShield)
+                return;
+
+            BubbleShieldHealth = Utils.Clamp(BubbleShieldHealth - info.Damage, 0, 100);
         }
 
         public override void PostUpdateEquips()
         {
-            Player.GetDamage(DamageClass.Melee) += GeneralMeleeDamageBonus + AdrenalineDamageBonus;
-            Player.GetAttackSpeed(DamageClass.Melee) += AdrenalineAttackSpeedBonus;
+            Player.GetDamage(DamageClass.Melee) += GeneralMeleeDamageBonus;
+            BBTideValuePlayer tidePlayer = Player.GetModPlayer<BBTideValuePlayer>();
+            int currentTide = tidePlayer.TideValue;
 
-            if (HighTideOverloadBarrierEquipped && Player.GetModPlayer<BBTideValuePlayer>().TideFull)
+            if (BottledBoatEquipped || BottledBlackPearlEquipped || BottledAircraftCarrierEquipped)
             {
-                Player.statDefense += HighTideDefenseBonus;
-                Player.endurance += HighTideDamageReduction;
+                Player.GetDamage(DamageClass.Melee) += currentTide * 0.01f;
+                Player.GetAttackSpeed(DamageClass.Melee) += currentTide * 0.01f;
+            }
 
-                if (Main.dedServ || Main.rand.NextBool(4))
-                    return;
+            if (tidePlayer.TideFull)
+            {
+                if (BottledBlackPearlEquipped || BottledAircraftCarrierEquipped)
+                {
+                    Player.statDefense += 10;
+                    Player.endurance += 0.10f;
+                }
 
-                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(0.6f, 1.8f);
-                Dust water = Dust.NewDustPerfect(
-                    Player.Center + Main.rand.NextVector2Circular(Player.width * 0.65f, Player.height * 0.65f),
-                    DustID.Water,
-                    velocity,
-                    120,
-                    new Color(75, 175, 255),
-                    Main.rand.NextFloat(0.7f, 1.05f));
-                water.noGravity = true;
+                if (BottledAircraftCarrierEquipped)
+                    Player.GetCritChance(DamageClass.Melee) += 30;
+            }
+
+            if (OceanHormoneEquipped)
+            {
+                Player.GetCritChance(DamageClass.Generic) -= 10;
+                Player.AddBuff(BuffID.Rabies, 2);
+                Player.GetAttackSpeed(DamageClass.Melee) += 0.20f;
+                Player.Calamity().laudanum = true;
+            }
+
+            if (TideWiseHatEquipped)
+            {
+                Player.statManaMax2 += 50;
+                Player.GetDamage(DamageClass.Melee) += 0.15f;
+                Player.GetCritChance(DamageClass.Melee) += currentTide;
+            }
+
+            if (AbyssalBastionEquipped)
+            {
+                Player.statDefense += 6;
+                Player.endurance += 0.06f;
+                Player.noKnockback = true;
+
+                if (HasBubbleShield)
+                {
+                    Player.statDefense += 25;
+                    Player.endurance += 0.25f;
+                }
+            }
+
+            if (BaronHelixEquipped)
+            {
+                Player.GetDamage(DamageClass.Melee) += 0.10f;
+                Player.GetAttackSpeed(DamageClass.Melee) += 0.10f;
+            }
+        }
+
+        public void SetRightClickMode(BBRightClickMode mode) => RightClickMode = mode;
+
+        public void RegisterBrinyBaronBladeHit(NPC target, NPC.HitInfo hit)
+        {
+            if (TideWiseHatEquipped && hit.Crit && Main.myPlayer == Player.whoAmI && Main.rand.NextBool(100))
+                Player.GetModPlayer<BBTideValuePlayer>().AddTide();
+        }
+
+        public void GrantBubbleShield()
+        {
+            if (AbyssalBastionEquipped)
+                BubbleShieldHealth = 100;
+        }
+
+        public void TrySpawnBaronHelixBubble()
+        {
+            if (!BaronHelixEquipped || Main.myPlayer != Player.whoAmI)
                 return;
-            }
 
-            if (BottledBlackPearlEquipped && Player.GetModPlayer<BBTideValuePlayer>().TideFull)
-            {
-                Player.statDefense += 10;
-                Player.endurance += 0.10f;
-            }
-        }
-
-        public void SetRightClickMode(BBRightClickMode mode)
-        {
-            RightClickMode = mode;
-        }
-
-        public void RegisterBrinyBaronBladeHit(NPC target)
-        {
-            if (AdrenalineInjectorEquipped)
-            {
-                adrenalineStacks = Utils.Clamp(adrenalineStacks + 1, 0, 18);
-                adrenalineTimer = 210;
-            }
-
-            if (DrinkingFountainEquipped && Main.myPlayer == Player.whoAmI)
-            {
-                Vector2 velocity = (Player.Center - target.Center).SafeNormalize(Vector2.UnitY) * 7.5f;
-                Projectile.NewProjectile(
-                    Player.GetSource_FromThis(),
-                    target.Center,
-                    velocity,
-                    ModContent.ProjectileType<BBDrinkingFountainOrb>(),
-                    36,
-                    0f,
-                    Player.whoAmI);
-            }
+            bool healPlayer = Player.statLife < Player.statLifeMax2;
+            int damage = DownedBossSystem.downedDoG ? 300 : NPC.downedMoonlord ? 140 : 60;
+            Vector2 spawnOffset = Main.rand.NextVector2Circular(110f, 70f);
+            Vector2 velocity = spawnOffset.SafeNormalize(Vector2.UnitY) * -2f;
+            Projectile.NewProjectile(
+                Player.GetSource_FromThis(),
+                Player.Center + spawnOffset,
+                velocity,
+                ModContent.ProjectileType<BaronHelixBubble>(),
+                damage,
+                1f,
+                Player.whoAmI,
+                healPlayer ? 1f : 0f);
         }
     }
 }

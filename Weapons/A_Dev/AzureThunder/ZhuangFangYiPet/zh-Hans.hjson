@@ -12,6 +12,7 @@ Mods: {
 			// BFPlagueBoom.DisplayName: B F Plague Boom
 			// BFPlagueSporeBomb.DisplayName: B F Plague Spore Bomb
 			// BrinyBaron_BubbleShield.DisplayName: Briny Baron_ Bubble Shield
+			// BrinyBaron.BaronHelixBubble.DisplayName: Baron Helix Bubble
 		}
 	}
 }

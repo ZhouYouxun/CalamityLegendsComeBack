@@ -14,7 +14,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.TideValue
     internal class BBTideValueCooldown : CooldownHandler
     {
         private float AdjustedCompletion =>
-            instance.player.GetModPlayer<BBTideValuePlayer>().TideChargeValue / (float)BBTideValuePlayer.TideChargeMax;
+            instance.player.GetModPlayer<BBTideValuePlayer>().TideValue /
+            (float)Math.Max(1, instance.player.GetModPlayer<BBTideValuePlayer>().CurrentTideMax);
         private int DisplayValue => instance.player.GetModPlayer<BBTideValuePlayer>().TideDisplayValue;
         private Color TextColor => Color.AliceBlue;
         private Color TextBorderColor => Color.Black;

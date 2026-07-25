@@ -58,7 +58,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
             Projectile.localNPCHitCooldown = 30;
         }
 
-        public override bool? CanDamage() => Projectile.damage > 0 ? null : false;
+        public override bool? CanDamage() => IsBlooming && Projectile.damage > 0 ? null : false;
 
         public override void AI()
         {
@@ -73,7 +73,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
             BFAccessoryPlayer accessoryPlayer = owner.GetModPlayer<BFAccessoryPlayer>();
             IsBlooming = accessoryPlayer.HoldingBlossomFlux && accessoryPlayer.CurrentPreset == FlowerPreset;
             VisualBloomProgress = MathHelper.Clamp(VisualBloomProgress + (IsBlooming ? BlossomTransitionStep : -BlossomTransitionStep), 0f, 1f);
-            Projectile.damage = GetSeedContactDamage(owner, accessoryPlayer.HoldingBlossomFlux);
+            Projectile.damage = GetSeedContactDamage(owner, IsBlooming);
 
             if (orbitAngle == 0f)
                 orbitAngle = (Main.GameUpdateCount * OrbitSpeed) % MathHelper.TwoPi;
@@ -237,12 +237,12 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
         }
 
-        private static int GetSeedContactDamage(Player owner, bool holdingBlossomFlux)
+        private static int GetSeedContactDamage(Player owner, bool isBlooming)
         {
-            if (holdingBlossomFlux)
+            if (isBlooming)
                 return System.Math.Max(1, (int)(owner.GetWeaponDamage(owner.HeldItem) * 0.16f));
 
-            return System.Math.Max(1, (int)owner.GetTotalDamage(DamageClass.Ranged).ApplyTo(18f));
+            return 0;
         }
 
         protected static Color GetFlowerColor(BlossomFluxChloroplastPresetType preset) => preset switch

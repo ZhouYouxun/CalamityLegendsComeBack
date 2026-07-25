@@ -1,7 +1,9 @@
 using System;
 using System.IO;
+using CalamityLegendsComeBack.Accssory.BB;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken;
+using CalamityLegendsComeBack.Weapons.BrinyBaron.TideValue;
 using CalamityMod;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -59,6 +61,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
         private const float GoldenAngle = 2.39996323f;
 
         private Player Owner => Main.player[Projectile.owner];
+        private int TideSnapshot => Math.Max(1, (int)Projectile.ai[0]);
         private Vector2 DefaultDirection => Vector2.UnitX * (Owner.direction == 0 ? 1 : Owner.direction);
         private Vector2 BladeDirection => (Projectile.rotation - MathHelper.PiOver4).ToRotationVector2();
         private Vector2 WeaponTip => Projectile.Center + BladeDirection * (50f * Projectile.scale);
@@ -76,6 +79,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
         private bool focusDashMode;
         private bool finalMarkSpawned;
         private float executionGlowIntensity;
+        private float tideWiseManaDamageBonus;
         private Vector2 lockedDirection = Vector2.UnitX;
         private Vector2 focusPoint;
         private Vector2 strikeStart;
@@ -117,6 +121,20 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                 ? null
                 : false;
 
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
+        {
+            // The travelling final stab is only the mark application. Its actual
+            // execution damage is dealt by the delayed, tide-scaled falling slash.
+            if (phase == SuperDashPhase.FinalExecutionStrike)
+            {
+                modifiers.SourceDamage *= 0.12f;
+                return;
+            }
+
+            if (tideWiseManaDamageBonus > 0f)
+                modifiers.SourceDamage *= 1f + tideWiseManaDamageBonus;
+        }
+
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
         {
             if (phase != SuperDashPhase.Striking &&
@@ -150,6 +168,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             writer.Write(focusDashMode);
             writer.Write(finalMarkSpawned);
             writer.Write(executionGlowIntensity);
+            writer.Write(tideWiseManaDamageBonus);
             writer.WriteVector2(lockedDirection);
             writer.WriteVector2(focusPoint);
             writer.WriteVector2(strikeStart);
@@ -173,6 +192,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             focusDashMode = reader.ReadBoolean();
             finalMarkSpawned = reader.ReadBoolean();
             executionGlowIntensity = reader.ReadSingle();
+            tideWiseManaDamageBonus = reader.ReadSingle();
             lockedDirection = reader.ReadVector2();
             focusPoint = reader.ReadVector2();
             strikeStart = reader.ReadVector2();
@@ -282,6 +302,13 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             focusDashMode = false;
             finalMarkSpawned = false;
             executionGlowIntensity = 0f;
+            tideWiseManaDamageBonus = 0f;
+            if (owner.GetModPlayer<BBAccessoryPlayer>().TideWiseHatEquipped)
+            {
+                int manaSpent = owner.statMana;
+                owner.statMana = 0;
+                tideWiseManaDamageBonus = manaSpent * 0.001f;
+            }
             lockedDirection = (Main.MouseWorld - owner.MountedCenter).SafeNormalize(DefaultDirection);
             focusPoint = Main.MouseWorld;
             strikeStart = owner.Center;
@@ -767,11 +794,18 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                 target.Center,
                 Vector2.Zero,
                 ModContent.ProjectileType<BBSD_Final_INV>(),
-                Math.Max(1, (int)(Projectile.damage * 0.28f)),
+                CalculateDelayedExecutionDamage(),
                 Projectile.knockBack * 0.2f,
                 Projectile.owner,
                 target.whoAmI,
                 lockedDirection.ToRotation());
+        }
+
+        private int CalculateDelayedExecutionDamage()
+        {
+            float tideMultiplier = 1f + TideSnapshot * BBTideValuePlayer.TideDamageBonusPerStack + BBTideValuePlayer.FullTideDamageBonus;
+            float manaMultiplier = 1f + tideWiseManaDamageBonus * 10f;
+            return Math.Max(1, (int)(Projectile.damage * tideMultiplier * manaMultiplier));
         }
 
         private void AdvanceAfterStrike(Player owner, NPC target)
