@@ -20,7 +20,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             Projectile.height = 28;
             Projectile.friendly = true;
             Projectile.penetrate = 2;
-            Projectile.timeLeft = 115;
+            Projectile.timeLeft = 120;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.extraUpdates = 1;

@@ -43,11 +43,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
         // Local NPC immunity in ticks. -1 means this projectile can hit each NPC once only.
         public static readonly int[] TrueMeleeSwingHitCooldown = { 16, 16, 16, 16, 16 };
         public static readonly int[] SeafoamBladeHitCooldown = { 15, 15, 15, 15, 15 };
-        public static readonly int[] SwordWaveHitCooldown = { 18, 18, 18, 18, 18 };
+        public static readonly int[] SwordWaveHitCooldown = { -1, -1, -1, -1, -1 };
         public static readonly int[] SeaSpiritHitCooldown = { 15, 15, 15, 15, 15 };
-        public static readonly int[] ShurikenHitCooldown = { 20, 20, 20, 20, 20 };
+        public static readonly int[] ShurikenHitCooldown = { 25, 25, 25, 25, 25 };
         public static readonly int[] HomingLightOrbHitCooldown = { 16, 16, 16, 16, 16 };
-        public static readonly int[] WaterStreamHitCooldown = { 10, 10, 10, 10, 10 };
+        public static readonly int[] WaterStreamHitCooldown = { 12, 12, 12, 12, 12 };
         public static readonly int[] TornadoBoltHitCooldown = { 12, 12, 12, 12, 12 };
         public static readonly int[] TornadoWaterExplosionHitCooldown = { -1, -1, -1, -1, -1 };
         public static readonly int[] SeafoamExplosionHitCooldown = { -1, -1, -1, -1, -1 };

@@ -175,7 +175,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash
                         player.MountedCenter,
                         fireDirection,
                         Type,
-                        Projectile.damage,
+                        (int)(Projectile.damage * 0.75),
                         Projectile.knockBack,
                         Projectile.owner,
                         1f,
