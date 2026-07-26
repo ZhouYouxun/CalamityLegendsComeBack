@@ -545,7 +545,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     Owner.MountedCenter + shootDirection * 40f,
                     velocity,
                     ModContent.ProjectileType<BrinyBaron_SeaSpirit>(),
-                    Math.Max(1, (int)(Projectile.damage * 0.4f)),
+                    Math.Max(1, (int)(Projectile.damage * 0.35f)),
                     Projectile.knockBack * 0.45f,
                     Projectile.owner,
                     3f); // ai[0] = 3f: Stage 3 Sea Spirit
@@ -609,7 +609,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         private void SpawnFiveShurikens()
         {
             Vector2 shootDirection = lockedAimDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 3; i++)
             {
                 float spread = MathHelper.ToRadians((i - 2) * 10f);
                 float speedMultiplier = 1f - Math.Abs(i - 2) * 0.15f;
@@ -636,7 +636,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 Owner.MountedCenter + shootDirection * 44f,
                 shootDirection * 13.2f,
                 ModContent.ProjectileType<BBSwing_Wave>(),
-                Math.Max(1, (int)(Projectile.damage * 2.25f)),
+                Math.Max(1, (int)(Projectile.damage * 2f)),
                 Projectile.knockBack,
                 Projectile.owner,
                 2.35f,

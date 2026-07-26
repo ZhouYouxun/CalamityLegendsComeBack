@@ -51,14 +51,14 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
         private bool enemyReboundUnlocked;
         private int dashShotTimer;
         private readonly System.Collections.Generic.List<Vector2> dashDirectionHistory = new();
-        private static readonly float[] ShortDashSpeedMultipliers = { 2.4f, 3.0f, 3.4f, 3.8f, 4.0f };
-        private static readonly float[] ShortDashContactDamageMultipliers = { 3f, 3.25f, 3.5f, 3.75f, 4f };
+        private static readonly float[] ShortDashSpeedMultipliers = { 4.4f, 5.0f, 5.4f, 5.8f, 6.0f };
+        private static readonly float[] ShortDashContactDamageMultipliers = { 3f, 3.5f, 4.25f, 4.75f, 5.25f };
         private static readonly bool[] ShortDashEnemyReboundUnlocks = { false, true, true, true, true };
         private bool ReboundDashMode => Projectile.ai[0] == 2f;
         private float DashSpeedMultiplier => ReboundDashMode ? DefaultReboundDashSpeedMultiplier : 1f;
         private bool AbyssalBastionEquipped => Main.player.IndexInRange(Projectile.owner) && Main.player[Projectile.owner].GetModPlayer<BBAccessoryPlayer>().AbyssalBastionEquipped;
         private float AbyssalDashMultiplier => AbyssalBastionEquipped ? 1.25f : 1f;
-        private int DashTimeLimit => AbyssalBastionEquipped ? 42 : DashTimeMax;
+        private int DashTimeLimit => AbyssalBastionEquipped ? 30 : DashTimeMax;
 
         public override void SetStaticDefaults()
         {
