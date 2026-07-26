@@ -44,6 +44,8 @@ Mods: {
 		}
 
 		Projectiles: {
+			AegisSparkExplosion.DisplayName: Aegis Spark Explosion
+			AegisBigFireball.DisplayName: Aegis Big Fireball
 			AegisSwingHoldout.DisplayName: Aegis Blade Swing
 			AegisShieldHoldout.DisplayName: Aegis Shield
 			AegisFireball.DisplayName: Aegis Fireball

@@ -1,0 +1,32 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				Melee: {
+					UmbralNadir: {
+						DisplayName: Umbral Nadir
+						Tooltip:
+							'''
+							[c/8CFF96:Left Click: an elegant three-hit void combo - a rising slash, a falling slash, then a piercing dash.]
+							[c/8CFF96:Every strike tears open an Abyssal Maw that lashes out void tentacles; the dash also detonates a collapsing black sun for terrifying damage.]
+							[c/6FE0C0:Right Click: a three-shot void javelin volley - three per round, five frames apart, each with a little random spread, and a brief pause between rounds.]
+							[c/6FE0C0:The javelins embed into foes and keep triggering chain-reaction void bursts, flinging out Meld Void Cores and spreading frostblight.]
+							[c/5FBF8A:Abyssal Maws gaze, devour and spew tentacles; Meld Void Cores home in and split along chains - an ever-spreading lattice of black and green.]
+							[c/4E9C74:Right Click takes priority over Left Click - hold both and the volley wins, interrupting the combo.]
+							'''
+					}
+				}
+			}
+		}
+
+		Projectiles: {
+			Nadir: {
+				UmbralNadirHoldout.DisplayName: Umbral Slash
+				UmbralNadirVoidEssence.DisplayName: Meld Void Core
+				UmbralNadirAbyssRift.DisplayName: Abyssal Maw
+				UmbralNadirThrowController.DisplayName: Umbral Volley
+				UmbralNadirJavelin.DisplayName: Umbral Void Javelin
+			}
+		}
+	}
+}

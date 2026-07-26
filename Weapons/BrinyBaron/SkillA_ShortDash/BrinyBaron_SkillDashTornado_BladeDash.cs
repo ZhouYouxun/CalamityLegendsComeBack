@@ -26,10 +26,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
         public override string Texture => "CalamityLegendsComeBack/Weapons/BrinyBaron/NewLegendBrinyBaron";
 
         private const int PrepareTime = 8;
-        private const int DashTimeMax = 45;
+        private const int DashTimeMax = 32;
         private const int ReboundTimeMax = 12;
         private const int DashHistoryLength = 8;
-        private const float DashSpeed = 18f * 0.67f;
+        private const float DashSpeed = 9.6f;
         private const float ReboundSpeed = 9f;
         private const float DefaultReboundDashSpeedMultiplier = 0.6f;
         private const float DashTurnRate = 0.01f;
@@ -51,14 +51,14 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
         private bool enemyReboundUnlocked;
         private int dashShotTimer;
         private readonly System.Collections.Generic.List<Vector2> dashDirectionHistory = new();
-        private static readonly float[] ShortDashSpeedMultipliers = { 4.5f, 5.75f, 6.5f, 7.25f, 7.5f };
+        private static readonly float[] ShortDashSpeedMultipliers = { 2.4f, 3.0f, 3.4f, 3.8f, 4.0f };
         private static readonly float[] ShortDashContactDamageMultipliers = { 3f, 3.25f, 3.5f, 3.75f, 4f };
         private static readonly bool[] ShortDashEnemyReboundUnlocks = { false, true, true, true, true };
         private bool ReboundDashMode => Projectile.ai[0] == 2f;
         private float DashSpeedMultiplier => ReboundDashMode ? DefaultReboundDashSpeedMultiplier : 1f;
         private bool AbyssalBastionEquipped => Main.player.IndexInRange(Projectile.owner) && Main.player[Projectile.owner].GetModPlayer<BBAccessoryPlayer>().AbyssalBastionEquipped;
         private float AbyssalDashMultiplier => AbyssalBastionEquipped ? 1.25f : 1f;
-        private int DashTimeLimit => AbyssalBastionEquipped ? 60 : DashTimeMax;
+        private int DashTimeLimit => AbyssalBastionEquipped ? 42 : DashTimeMax;
 
         public override void SetStaticDefaults()
         {
@@ -241,6 +241,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
                 stateTimer = 0;
                 Projectile.friendly = false;
                 Projectile.velocity *= 0.15f;
+                if (owner.velocity.Y > owner.maxFallSpeed)
+                    owner.velocity.Y = owner.maxFallSpeed;
                 Projectile.netUpdate = true;
             }
         }
@@ -278,9 +280,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
 
             if (dashState == 1)
             {
-                owner.maxFallSpeed = 1000f;
-                owner.gravity = 0f;
-                owner.Calamity().LungingDown = true;
+                if (lockedDirection.Y > 0f)
+                    owner.controlDown = true;
+
+                float speedY = Math.Abs(Projectile.velocity.Y);
+                if (speedY > owner.maxFallSpeed)
+                    owner.maxFallSpeed = speedY;
             }
         }
 
@@ -344,7 +349,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
 
             Player owner = Main.player[Projectile.owner];
             if (owner.active && !owner.dead && dashState != 0)
+            {
                 owner.velocity *= 0.2f;
+                if (owner.velocity.Y > owner.maxFallSpeed)
+                    owner.velocity.Y = owner.maxFallSpeed;
+            }
 
             SpawnEndBurst();
 
@@ -420,7 +429,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
 
         private Vector2 ResolveSlidingVelocity(Player owner, Vector2 desiredVelocity)
         {
-            Vector2 adjustedVelocity = Collision.TileCollision(owner.position, desiredVelocity, owner.width, owner.height, true, true, (int)owner.gravDir);
+            bool passThroughPlatforms = desiredVelocity.Y > 0f || (dashState == 1 && lockedDirection.Y > 0f);
+            Vector2 adjustedVelocity = Collision.TileCollision(owner.position, desiredVelocity, owner.width, owner.height, passThroughPlatforms, false, (int)owner.gravDir);
             if (adjustedVelocity != desiredVelocity)
                 GrantTideFromTileContact(owner);
 
@@ -442,6 +452,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             hasBounced = true;
             dashState = 2;
             stateTimer = 0;
+
+            if (owner.velocity.Y > owner.maxFallSpeed)
+                owner.velocity.Y = owner.maxFallSpeed;
 
             Vector2 reliableDashDirection = GetReliableDashDirection();
             float offsetAngle = MathHelper.ToRadians(Main.rand.NextFloat(-12f, 12f));

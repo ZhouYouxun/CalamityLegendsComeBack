@@ -286,7 +286,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         {
             System.Collections.Generic.List<Vector2> points = new System.Collections.Generic.List<Vector2>();
             Vector2 startPos = Owner.MountedCenter;
-            float extendedReach = reach + currentCollisionWidth * 0.5f;
+            float extendedReach = reach;
             Vector2 endPos = startPos + direction * extendedReach;
             float facingSide = Math.Sign(Owner.direction == 0 ? 1 : Owner.direction) * side;
 
@@ -327,7 +327,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         {
             System.Collections.Generic.List<Vector2> points = new System.Collections.Generic.List<Vector2>();
             Vector2 startPos = Owner.MountedCenter;
-            float extendedReach = reach + currentCollisionWidth * 0.5f;
+            float extendedReach = reach;
             const int segments = 18;
             for (int i = 0; i <= segments; i++)
                 points.Add(startPos + direction * (extendedReach * i / segments));

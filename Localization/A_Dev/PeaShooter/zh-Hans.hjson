@@ -29,6 +29,29 @@ Mods: {
 				PeaShooterLightning.DisplayName: 豌豆微型闪电
 				PeaShooterFirePatch.DisplayName: 豌豆火区
 			}
+
+			// BFPa5BreakthroughDashHitbox.DisplayName: B F Pa5 Breakthrough Dash Hitbox
+			// PFMarkStatusArc.DisplayName: P F Mark Status Arc
+			// PristineFuryHookSoul.DisplayName: Pristine Fury Hook Soul
+
+			PristineFury: {
+				// PFSkeletronWhiteBurst.DisplayName: P F Skeletron White Burst
+				// PFPolterghast_StarBolt.DisplayName: P F Polterghast_ Star Bolt
+				// PFEmpress_ScatterBolt.DisplayName: P F Empress_ Scatter Bolt
+			}
+
+			// BBSD_Star.DisplayName: B B S D_ Star
+			// BrinyBaron_SkillDashTornado_BladeDash.DisplayName: Briny Baron_ Skill Dash Tornado_ Blade Dash
+			// BrinyBaron_RightClick_Shuriken.DisplayName: Briny Baron_ Right Click_ Shuriken
+			// BrinyBaron_SeaSpirit.DisplayName: Briny Baron_ Sea Spirit
+			// BrinyBaron_SeafoamExplosion.DisplayName: Briny Baron_ Seafoam Explosion
+			// BrinyBaron_SeafoamBlade.DisplayName: Briny Baron_ Seafoam Blade
+			// BFRecoveryShieldVisual.DisplayName: B F Recovery Shield Visual
+			// BFRightChargeHaloProj.DisplayName: B F Right Charge Halo Proj
+			// AzureThunderHarmonyBar.DisplayName: Azure Thunder Harmony Bar
+			// AzureThunderGroundSwordMatrix.DisplayName: Azure Thunder Ground Sword Matrix
+			// SHPCLeftClickHoldout.DisplayName: S H P C Left Click Holdout
+			// SHPCMagazineStatusPanel.DisplayName: S H P C Magazine Status Panel
 		}
 
 		PeaShooter: {

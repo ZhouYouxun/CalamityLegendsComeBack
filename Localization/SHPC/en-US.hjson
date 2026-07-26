@@ -323,6 +323,10 @@ Mods: {
 
 		Projectiles: {
 			SHPC: {
+				SHPCNecroplasmBeam.DisplayName: S H P C Necroplasm Beam
+				SHPCNecroplasmFrame.DisplayName: S H P C Necroplasm Frame
+				YharonSoulFragment_Flame.DisplayName: Yharon Soul Fragment Flame
+
 				EnergyCore_Spark.DisplayName: Energy Core Spark
 				PearlShardLargePearl.DisplayName: Pearl Shard
 				PearlShardSmallPearl.DisplayName: Pearl Shard
@@ -360,7 +364,6 @@ Mods: {
 				ExoPrism_Light.DisplayName: Exo Prism Radiance
 				NightmareFuel_ARC.DisplayName: Nightmare Fuel Arc
 				NightmareFuel_Scythe.DisplayName: Nightmare Fuel Scythe
-				YharonSoulFragment_Flame.DisplayName: Yharon Soul Fragment Flame
 				NewLegendSHPB.DisplayName: SHPC Energy Orb
 				NewLegendSHPE.DisplayName: SHPC Explosion
 				SHPCRight_HoulOut.DisplayName: SHPC Holdout
@@ -445,5 +448,12 @@ Mods: {
 		}
 
 		Conditions.HoldingSHPC: While holding SHPC
+	}
+
+	Buffs: {
+		SHPCRight_DeBuff: {
+			DisplayName: SHPC Heat Accumulation
+			Description: At level IV~V heat, life regeneration is reduced and life is continuously drained.
+		}
 	}
 }

@@ -335,9 +335,8 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
     }
 
     /// <summary>
-    /// 天火轨道打击。从目标正上方约 1000 像素垂直贯落。
-    /// 视觉参考 ProvidenceHolyRay：落点先亮起符文预警圈，光柱内部有滚动的能量流，
-    /// 落地后留下一小段焦痕余辉 —— 而不是旧版"一条纯金色棍子砸下来就没了"。
+    /// 净化激光炮式的短促天降光柱。完完全全模仿 HolyLaser.cs 的视觉效果与粒子生成，
+    /// 从高空直接打穿敌人焦点，不转动也不跟随移动，呈固定方向直线轰击。
     /// </summary>
     internal sealed class AegisBorrowedOrbitalStrike : ModProjectile, ILocalizedModType, IPixelatedPrimitiveRenderer
     {
@@ -345,26 +344,17 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         public GeneralDrawLayer LayerToRenderTo => GeneralDrawLayer.BeforeProjectiles;
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
-        private const int MaxLifetime = 90;
-        private const float BeamHeight = 1200f;
-        private const int AfterglowFrames = 26;   // 落地后纯视觉的余辉时长（无伤害）
+        private const int LaserLifetime = 24;
+        private const float BeamLength = 2600f;
+        private const float MaxScale = 1.35f;
         private int timer;
-        private bool impacted;
-        private int afterglowTimer;
 
         private int TargetIndex => (int)Projectile.ai[0];
         private Vector2 Destination => new(Projectile.ai[1], Projectile.ai[2]);
 
-        /// <summary>0 → 1：越接近落点，预警圈越亮。</summary>
-        private float ApproachRatio
+        public override void SetStaticDefaults()
         {
-            get
-            {
-                Vector2 destination = Destination;
-                if (destination == Vector2.Zero)
-                    return 0f;
-                return Utils.GetLerpValue(900f, 60f, Math.Abs(destination.Y - Projectile.Center.Y), true);
-            }
+            ProjectileID.Sets.DrawScreenCheckFluff[Type] = 10000;
         }
 
         public override void SetDefaults()
@@ -374,7 +364,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             Projectile.friendly = true;
             Projectile.hostile = false;
             Projectile.DamageType = DamageClass.Melee;
-            Projectile.timeLeft = MaxLifetime;
+            Projectile.timeLeft = LaserLifetime;
             Projectile.penetrate = -1;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
@@ -384,138 +374,96 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 
         public override void AI()
         {
-            timer++;
-
-            if (impacted)
-            {
-                afterglowTimer++;
-                Projectile.velocity = Vector2.Zero;
-                AegisVisuals.Light(Projectile.Center, 1.4f * (1f - afterglowTimer / (float)AfterglowFrames));
-                if (afterglowTimer >= AfterglowFrames)
-                    Projectile.Kill();
-                return;
-            }
-
-            if (timer == 1)
-            {
-                SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.48f, Pitch = 0.18f }, Projectile.Center);
-                Player owner = Main.player[Projectile.owner];
-                if (owner.active && Projectile.owner == Main.myPlayer)
-                    owner.Calamity().GeneralScreenShakePower = Math.Max(owner.Calamity().GeneralScreenShakePower, 3f);
-            }
+            ProjectileID.Sets.DrawScreenCheckFluff[Type] = 10000;
 
             Vector2 destination = Destination;
             if (destination == Vector2.Zero)
-                destination = Projectile.Center + Vector2.UnitY * 800f;
+                destination = Projectile.Center + Vector2.UnitY * 1000f;
 
-            Projectile.velocity = Vector2.UnitY * Math.Max(34f, Projectile.velocity.Y);
-            Projectile.rotation = MathHelper.PiOver2;
-            AegisVisuals.Light(Projectile.Center, 0.95f);
+            // 方向保持固定，从天空起点穿过敌人焦点
+            Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitY);
+            Projectile.rotation = Projectile.velocity.ToRotation() - MathHelper.PiOver2;
+
+            if (timer == 0)
+            {
+                TriggerIntersectionImpact(destination);
+            }
+
+            timer++;
+
+            // 完美复刻 BaseLaserbeamProjectile 经典正弦粗细展开与收隐
+            float progress = (float)timer / LaserLifetime;
+            Projectile.scale = MathHelper.Clamp((float)Math.Sin(progress * MathHelper.Pi) * 4f * MaxScale, 0f, MaxScale);
+
+            AegisVisuals.Light(destination, 2.2f * Projectile.scale);
 
             if (!Main.dedServ)
             {
-                if (timer % 3 == 0)
-                {
-                    GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
-                        Projectile.Center + Main.rand.NextVector2Circular(12f, 8f),
-                        Main.rand.NextVector2Circular(0.8f, 0.8f),
-                        false,
-                        10,
-                        Main.rand.NextFloat(0.2f, 0.36f),
-                        AegisVisuals.RandomFlameColor(),
-                        true,
-                        true));
-                }
+                Color color1 = Color.Goldenrod;
+                Color color2 = Color.Orange;
 
-                // 光柱两侧被撕开的圣灰
-                if (Main.rand.NextBool(2))
+                // 完全匹配 HolyLaser.cs 的粒子生成逻辑
+                for (int i = 0; i < 4; i++)
                 {
-                    GeneralParticleHandler.SpawnParticle(new MediumMistParticle(
-                        Projectile.Center + new Vector2(Main.rand.NextFloat(-24f, 24f), Main.rand.NextFloat(-60f, 20f)),
-                        new Vector2(Main.rand.NextFloat(-1.6f, 1.6f), Main.rand.NextFloat(-3.5f, -0.8f)),
-                        Color.Lerp(AegisVisuals.Charred, Color.DarkSlateGray, Main.rand.NextFloat(0.3f, 0.85f)),
-                        Color.Transparent, Main.rand.NextFloat(0.45f, 0.85f), Main.rand.Next(24, 40),
-                        Main.rand.NextFloat(-0.05f, 0.05f)));
-                }
+                    Vector2 effectsPosition = Vector2.Lerp(Projectile.Center, Projectile.Center + Projectile.velocity * BeamLength, Main.rand.NextFloat());
+                    Vector2 randomLineEffectPosition = effectsPosition + Main.rand.NextVector2Circular(8f, 8f);
 
-                // 落点预警：火星从四周被吸向落点，提前告诉玩家"这里要挨砸"
-                float approach = ApproachRatio;
-                if (approach > 0.15f && Main.rand.NextBool(2))
-                {
-                    Vector2 inward = Main.rand.NextFloat(MathHelper.TwoPi).ToRotationVector2();
-                    GeneralParticleHandler.SpawnParticle(new SparkParticle(
-                        destination + inward * Main.rand.NextFloat(60f, 130f),
-                        -inward * Main.rand.NextFloat(2.5f, 6f) * approach, false,
-                        Main.rand.Next(12, 20), Main.rand.NextFloat(0.5f, 1f),
-                        AegisVisuals.Gradient(Main.rand.NextFloat(0.15f, 0.75f))));
+                    if (i % 2 == 0)
+                    {
+                        Dust laserDust = Dust.NewDustPerfect(randomLineEffectPosition, DustID.FireworksRGB, Projectile.velocity * Main.rand.NextFloat(5f, 40f), Scale: Main.rand.NextFloat(0.8f, 1.15f));
+                        laserDust.noGravity = true;
+                        laserDust.color = Main.rand.NextBool(3) ? color2 : color1;
+
+                        Dust laserDust2 = Dust.NewDustPerfect(randomLineEffectPosition, ModContent.DustType<CalamityMod.Dusts.LightDust>(), Projectile.velocity * Main.rand.NextFloat(5f, 40f), Scale: Main.rand.NextFloat(0.8f, 1.15f) * 1.5f);
+                        laserDust2.noGravity = true;
+                        laserDust2.color = Main.rand.NextBool(3) ? color2 : color1;
+                        laserDust2.noLightEmittence = true;
+                    }
+                    else
+                    {
+                        Particle spark = new CustomSpark(randomLineEffectPosition, Projectile.velocity * Main.rand.NextFloat(1f, 10f), "CalamityMod/Particles/ProvidenceMarkParticle", false, 17, Main.rand.NextFloat(1.15f, 1.3f), Color.Lerp(color1, color2, Main.rand.NextFloat()), new Vector2(1.3f, 0.5f), true, false, 0, false, false, Main.rand.NextFloat(0.3f, 0.4f));
+                        GeneralParticleHandler.SpawnParticle(spark);
+                    }
                 }
             }
-
-            if (Projectile.Center.Y >= destination.Y)
-            {
-                Projectile.Center = destination;
-                Impact();
-            }
         }
 
-        public override bool? CanDamage() => impacted ? false : null;
-
-        public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
-        {
-            if (impacted)
-                return false;
-
-            float collisionPoint = 0f;
-            Vector2 startPoint = Projectile.Center - Vector2.UnitY * BeamHeight;
-            Vector2 endPoint = Projectile.Center;
-            return Collision.CheckAABBvLineCollision(targetHitbox.TopLeft(), targetHitbox.Size(), startPoint, endPoint, 28f * Projectile.scale, ref collisionPoint);
-        }
-
-        private void Impact()
-        {
-            if (impacted)
-                return;
-
-            impacted = true;
-            Projectile.friendly = false;
-            Projectile.velocity = Vector2.Zero;
-            Projectile.timeLeft = AfterglowFrames + 2;
-            SpawnExplosionParticles();
-        }
-
-        private void SpawnExplosionParticles()
+        private void TriggerIntersectionImpact(Vector2 destination)
         {
             if (Main.dedServ)
                 return;
 
-            SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.52f, Pitch = 0.12f }, Projectile.Center);
-            SoundEngine.PlaySound(SoundID.DD2_BetsyFireballImpact with { Volume = 0.55f, Pitch = 0.5f }, Projectile.Center);
+            SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.55f, Pitch = 0.15f }, destination);
+            SoundEngine.PlaySound(SoundID.DD2_BetsyFireballImpact with { Volume = 0.6f, Pitch = 0.45f }, destination);
 
-            AegisVisuals.HolyDetonation(Projectile.Center, 2.1f);
-
-            // 贴地铺开的横向冲击：天火砸地是往两边扫，不是往天上炸
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/Providence/ProvidenceHolyRay") { Volume = 0.9f, Pitch = 0.15f }, destination);
+            AegisVisuals.HolyDetonation(destination, 2.8f);
             GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
-                Projectile.Center, Vector2.Zero, AegisVisuals.Add(AegisVisuals.Gold, 0.95f),
-                new Vector2(2.3f, 0.5f), 0f, 0.05f, 1.05f, 20));
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
-                Projectile.Center, Vector2.Zero, AegisVisuals.Add(AegisVisuals.Ember, 0.8f),
-                new Vector2(3.1f, 0.34f), 0f, 0.04f, 1.45f, 26));
+                destination, Vector2.Zero, AegisVisuals.Add(AegisVisuals.Gold, 1f),
+                new Vector2(3.3f, 0.75f), Projectile.rotation, 0.04f, 1.45f, 22));
 
-            for (int i = -1; i <= 1; i += 2)
-            {
-                Vector2 sweep = new Vector2(i, -0.25f).SafeNormalize(Vector2.UnitX);
-                AegisVisuals.EmberJet(Projectile.Center, sweep, 8, 1.25f, 0.35f);
-            }
-
-            GeneralParticleHandler.SpawnParticle(new SquishyLightParticle(Projectile.Center, Vector2.Zero,
-                1.15f, AegisVisuals.Add(AegisVisuals.Core, 1f), 16));
-            AegisVisuals.Screenshake(Projectile.Center, 3.6f, 1200f);
+            GeneralParticleHandler.SpawnParticle(new SquishyLightParticle(destination, Vector2.Zero,
+                1.6f, AegisVisuals.Add(AegisVisuals.Core, 1f), 18));
+            AegisVisuals.Screenshake(destination, 6.5f, 1400f);
         }
 
-        public override void OnKill(int timeLeft)
+        public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
         {
-            if (!impacted)
-                SpawnExplosionParticles();
+            float _ = 0f;
+            Vector2 beamEnd = Projectile.Center + Projectile.velocity.SafeNormalize(Vector2.UnitY) * BeamLength;
+            return Collision.CheckAABBvLineCollision(targetHitbox.TopLeft(), targetHitbox.Size(), Projectile.Center, beamEnd, 50f * Projectile.scale, ref _);
+        }
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            if (Main.dedServ)
+                return;
+
+            Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitY);
+            AegisVisuals.DirectionalImpact(target.Center, forward, 0.85f);
+            AegisVisuals.EmberJet(target.Center, -forward, 8, 1.0f, 0.5f);
+            GeneralParticleHandler.SpawnParticle(new SquishyLightParticle(target.Center, Vector2.Zero,
+                0.8f, AegisVisuals.Add(AegisVisuals.Gold, 1f), 16));
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -523,130 +471,50 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             if (Main.dedServ)
                 return false;
 
+            if (Projectile.scale <= 0.01f)
+                return false;
+
+            Texture2D bloom = AegisVisuals.Tex(AegisVisuals.TexBloom);
+            Texture2D startTex = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Lasers/ProvidenceHolyRayStart", ReLogic.Content.AssetRequestMode.ImmediateLoad).Value;
+            Texture2D midTex = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Lasers/ProvidenceHolyRayMid", ReLogic.Content.AssetRequestMode.ImmediateLoad).Value;
+            Texture2D endTex = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Lasers/ProvidenceHolyRayEnd", ReLogic.Content.AssetRequestMode.ImmediateLoad).Value;
+            Vector2 beamDirection = Projectile.velocity.SafeNormalize(Vector2.UnitY);
+            Vector2 drawHeadPos = Projectile.Center - Main.screenPosition;
+            Vector2 drawScale = new(Projectile.scale * 1.35f);
+            Color laserColor = Color.White with { A = 0 };
+
+            // 完全模仿 HolyLaser / BaseLaserbeamProjectile 的三段式经典激光渲染
+            Rectangle startFrame = startTex.Frame();
+            Rectangle middleFrame = midTex.Frame();
+            Rectangle endFrame = endTex.Frame();
+            Main.EntitySpriteDraw(startTex, drawHeadPos, startFrame, laserColor, Projectile.rotation, startTex.Size() * 0.5f, drawScale, SpriteEffects.None, 0);
+            float remaining = BeamLength - (startFrame.Height * 0.5f + endFrame.Height) * drawScale.Y;
+            Vector2 segmentPos = Projectile.Center + beamDirection * startFrame.Height * 0.5f * drawScale.Y;
+            float segmentStep = middleFrame.Height * drawScale.Y;
+            for (float drawn = 0f; drawn + 1f < remaining;)
+            {
+                Main.EntitySpriteDraw(midTex, segmentPos - Main.screenPosition, middleFrame, laserColor, Projectile.rotation, midTex.Width * 0.5f * Vector2.UnitX, drawScale, SpriteEffects.None, 0);
+                drawn += segmentStep;
+                segmentPos += beamDirection * segmentStep;
+            }
+            Main.EntitySpriteDraw(endTex, segmentPos - Main.screenPosition, endFrame, laserColor, Projectile.rotation, endTex.Frame(1, 1, 0, 0).Top(), drawScale, SpriteEffects.None, 0);
+
             Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
-
-            if (impacted)
+            Vector2 destination = Destination;
+            if (destination != Vector2.Zero)
             {
-                // ── 落地余辉：焦痕 + 收缩的白芯 ──
-                float fade = 1f - afterglowTimer / (float)AfterglowFrames;
-                Vector2 drawPosition = Projectile.Center - Main.screenPosition;
-                AegisVisuals.DrawScorchDecal(drawPosition, Projectile.identity * 0.7f,
-                    82f * (0.55f + 0.45f * (1f - fade)), fade * 0.9f, new Vector2(1.25f, 0.6f));
-                AegisVisuals.DrawSolarCore(drawPosition, 30f * fade, fade,
-                    Main.GlobalTimeWrappedHourly * 4f, new Vector2(1.3f, 0.7f));
+                Vector2 destDrawPos = destination - Main.screenPosition;
+                AegisVisuals.DrawRuneSigil(destDrawPos, 94f, Main.GlobalTimeWrappedHourly * 9f, Projectile.scale, new Vector2(1f, 0.5f), 1.3f);
+                Main.EntitySpriteDraw(bloom, destDrawPos, null, AegisVisuals.Add(AegisVisuals.Core, Projectile.scale), 0f, bloom.Size() * 0.5f, AegisVisuals.RadiusScale(bloom, 86f * Projectile.scale), SpriteEffects.None, 0);
             }
-            else
-            {
-                // ── 落点预警圈：符文圣印 + 收紧的地面光环 ──
-                Vector2 destination = Destination;
-                if (destination != Vector2.Zero)
-                {
-                    float approach = ApproachRatio;
-                    if (approach > 0.02f)
-                    {
-                        Vector2 markPosition = destination - Main.screenPosition;
-                        float markRadius = MathHelper.Lerp(120f, 62f, approach);
-                        AegisVisuals.DrawRuneSigil(markPosition, markRadius,
-                            Main.GlobalTimeWrappedHourly * (1.5f + approach * 6f),
-                            approach * 0.85f, new Vector2(1f, 0.42f), 0.85f + approach * 0.6f);
-
-                        Texture2D ring = AegisVisuals.Tex(AegisVisuals.TexRingThick);
-                        Main.EntitySpriteDraw(ring, markPosition, null,
-                            AegisVisuals.Add(AegisVisuals.Ember, 0.5f * approach),
-                            0f, ring.Size() * 0.5f,
-                            new Vector2(AegisVisuals.RadiusScale(ring, markRadius * 1.15f),
-                                        AegisVisuals.RadiusScale(ring, markRadius * 0.48f)),
-                            SpriteEffects.None, 0);
-                    }
-                }
-
-                // ── 光柱头部的日核 ──
-                AegisVisuals.DrawSolarCore(Projectile.Center - Main.screenPosition, 26f, 1f,
-                    Main.GlobalTimeWrappedHourly * 5f, new Vector2(0.8f, 1.25f));
-            }
-
+            Main.EntitySpriteDraw(bloom, drawHeadPos, null, AegisVisuals.Add(AegisVisuals.Core, Projectile.scale), 0f, bloom.Size() * 0.5f, AegisVisuals.RadiusScale(bloom, 54f * Projectile.scale), SpriteEffects.None, 0);
             Main.spriteBatch.ExitShaderRegion();
             return false;
         }
 
         public void RenderPixelatedPrimitives(SpriteBatch spriteBatch, GeneralDrawLayer layer)
         {
-            if (impacted)
-                return;
-
-            Vector2[] beamPoints = new Vector2[12];
-            for (int i = 0; i < beamPoints.Length; i++)
-            {
-                float ratio = i / (float)(beamPoints.Length - 1);
-                beamPoints[i] = Projectile.Center - new Vector2(0f, BeamHeight * (1f - ratio));
-            }
-
-            var trailShader = GameShaders.Misc["CalamityMod:ImpFlameTrail"];
-
-            // ① 外焰：余烬色宽柱
-            trailShader.SetShaderTexture(
-                ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/ScarletDevilStreak"));
-            PrimitiveRenderer.RenderTrail(
-                beamPoints,
-                new PrimitiveSettings(OuterWidthFunction, OuterColorFunction, OffsetFunction, true, true, trailShader,
-                    textureCycleLength: 2.4f, textureScrollOffset: -Main.GlobalTimeWrappedHourly * 2.6f),
-                beamPoints.Length * 2);
-
-            // ② 主焰：圣金，纹理沿柱身向下滚动 = 能量在流
-            PrimitiveRenderer.RenderTrail(
-                beamPoints,
-                new PrimitiveSettings(WidthFunction, ColorFunction, OffsetFunction, true, true, trailShader,
-                    textureCycleLength: 3.6f, textureScrollOffset: -Main.GlobalTimeWrappedHourly * 4.2f),
-                beamPoints.Length * 2);
-
-            // ③ 内芯：白金细柱
-            trailShader.SetShaderTexture(
-                ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/SylvestaffStreak"));
-            PrimitiveRenderer.RenderTrail(
-                beamPoints,
-                new PrimitiveSettings(CoreWidthFunction, CoreColorFunction, OffsetFunction, true, true, trailShader,
-                    textureCycleLength: 5f, textureScrollOffset: -Main.GlobalTimeWrappedHourly * 6f),
-                beamPoints.Length * 2);
-        }
-
-        private Vector2 OffsetFunction(float completion, Vector2 _)
-        {
-            float shimmer = (float)Math.Sin(completion * MathHelper.TwoPi + Main.GlobalTimeWrappedHourly * 20f) * 1.5f;
-            return Vector2.UnitX * shimmer;
-        }
-
-        private float WidthFunction(float completion, Vector2 _)
-        {
-            float progress = Projectile.timeLeft / (float)MaxLifetime;
-            float taper = (float)Math.Sin(completion * MathHelper.Pi);
-            return 26f * progress * (0.8f + taper * 0.2f) * Projectile.scale;
-        }
-
-        private Color ColorFunction(float completion, Vector2 _)
-        {
-            float progress = Projectile.timeLeft / (float)MaxLifetime;
-            return AegisVisuals.TrailColor(completion, 1, progress);
-        }
-
-        private float OuterWidthFunction(float completion, Vector2 _) => WidthFunction(completion, _) * 1.6f;
-
-        private Color OuterColorFunction(float completion, Vector2 _)
-        {
-            float progress = Projectile.timeLeft / (float)MaxLifetime;
-            return AegisVisuals.TrailColor(completion, 0, progress * 0.6f);
-        }
-
-        private float CoreWidthFunction(float completion, Vector2 _)
-        {
-            float progress = Projectile.timeLeft / (float)MaxLifetime;
-            float taper = (float)Math.Sin(completion * MathHelper.Pi);
-            return 11f * progress * (0.9f + taper * 0.1f) * Projectile.scale;
-        }
-
-        private Color CoreColorFunction(float completion, Vector2 _)
-        {
-            float progress = Projectile.timeLeft / (float)MaxLifetime;
-            return AegisVisuals.TrailColor(completion, 2, progress);
+            // PreDraw renders the complete HolyLaser-style beam.
         }
     }
 }

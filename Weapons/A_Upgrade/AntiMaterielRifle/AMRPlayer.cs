@@ -21,6 +21,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
         private bool nextOnyxRoundIsMarker = true;
 
         internal bool IsHoldingWeapon => holdingWeapon;
+        internal bool IsAttackLocked => attackLockoutTimer > 0;
+
+        // 共享左右键射击锁：不能靠取消蓄力后立刻点左键绕过各自的射速限制。
+        private int attackLockoutTimer;
 
         public override void Initialize()
         {
@@ -48,6 +52,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
 
         public override void PostUpdate()
         {
+            if (attackLockoutTimer > 0)
+                attackLockoutTimer--;
+
             if (calibrationTimer > 0)
             {
                 calibrationTimer--;
@@ -143,6 +150,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             calibrationTarget = -1;
             calibrationStacks = 0;
             calibrationTimer = 0;
+        }
+
+        internal void SetAttackLockout(int frames)
+        {
+            if (frames > attackLockoutTimer)
+                attackLockoutTimer = frames;
         }
 
         internal bool ConsumeOnyxRoundType()

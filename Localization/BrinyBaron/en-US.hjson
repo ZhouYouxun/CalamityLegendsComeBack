@@ -249,6 +249,11 @@ Mods: {
 		}
 
 		Projectiles: {
+			BBSD_VirtualPROJ.DisplayName: BBSD Virtual Proj
+			BrinyBaron_VortexEyePortalPreview.DisplayName: Briny Baron Vortex Eye Portal Preview
+			BrinyBaron_VortexEyeDash.DisplayName: Briny Baron Vortex Eye Dash
+			BrinyBaron_DashOceanSwirl.DisplayName: Briny Baron Dash Ocean Swirl
+
 			BrinyBaron: {
 				BBSwing_Wave.DisplayName: Tidal Wave Slash
 				BrinyBaron_HomingLightOrb.DisplayName: Tidal Homing Light Orb

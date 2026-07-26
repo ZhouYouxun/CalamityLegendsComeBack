@@ -123,9 +123,6 @@ Mods: {
 						[c/66E6FF:Guard this land, still remembered by its people, until the last light leaves the boughs.]
 						'''
 				}
-
-				AegisBlade: {
-				}
 			}
 
 			BFSpareQuiver: {
@@ -359,60 +356,6 @@ Mods: {
 			BFReconContractingWaveFX.DisplayName: B F Recon Contracting Wave F X
 			BFRecoveryHeartConvergeFX.DisplayName: B F Recovery Heart Converge F X
 			BFChargeGlowSparkFX.DisplayName: B F Charge Glow Spark F X
-			TacticalComputerNEWReticle.DisplayName: Tactical Computer N E W Reticle
-			AzureThunderGroundSwordMatrix.DisplayName: Azure Thunder Ground Sword Matrix
-			AzureThunderHarmonyBar.DisplayName: Azure Thunder Harmony Bar
-			DesertEagleHoldout.DisplayName: Desert Eagle Holdout
-			BFLeftPlagueFlame.DisplayName: B F Left Plague Flame
-			BFArrow_ABreak.DisplayName: B F Arrow_ A Break
-			BFArrow_BRecov.DisplayName: B F Arrow_ B Recov
-			BFArrow_BRecovTransfer.DisplayName: B F Arrow_ B Recov Transfer
-			BFArrow_CDetec.DisplayName: B F Arrow_ C Detec
-			BFArrow_CDetecReticle.DisplayName: B F Arrow_ C Detec Reticle
-			BFArrow_DBomb.DisplayName: B F Arrow_ D Bomb
-			BFArrow_EPlague.DisplayName: B F Arrow_ E Plague
-			BFArrow_EPlagueGas.DisplayName: B F Arrow_ E Plague Gas
-			FuckYou.DisplayName: Fuck You
-			BrinyBaron_LeftClick_Swing.DisplayName: Briny Baron_ Left Click_ Swing
-			BrinyBaron_SeafoamBlade.DisplayName: Briny Baron_ Seafoam Blade
-			BrinyBaron_SeafoamExplosion.DisplayName: Briny Baron_ Seafoam Explosion
-			BrinyBaron_SeaSpirit.DisplayName: Briny Baron_ Sea Spirit
-			BrinyBaron_RightClick_Shuriken.DisplayName: Briny Baron_ Right Click_ Shuriken
-			BrinyBaron_SkillSlashDash_SlashDash.DisplayName: Briny Baron_ Skill Slash Dash_ Slash Dash
-			BrinyBaron.BBASD_Lighting.DisplayName: B B A S D_ Lighting
-			BrinyBaron_SkillDashTornado_BladeDash.DisplayName: Briny Baron_ Skill Dash Tornado_ Blade Dash
-			BBSD_Star.DisplayName: B B S D_ Star
-			BBSD_VirtualPROJ.DisplayName: B B S D_ Virtual P R O J
-			Z_BrinyBaron_SkillSuperCharge_SuperDash.DisplayName: Z_ Briny Baron_ Skill Super Charge_ Super Dash
-			Copper_ChainLightning.DisplayName: Copper_ Chain Lightning
-			Demonite_Wisp.DisplayName: Demonite_ Wisp
-			Perennial_HealingOrb.DisplayName: Perennial_ Healing Orb
-			Scoria_LavaGlob.DisplayName: Scoria_ Lava Glob
-			Mythril_OrbitFlame.DisplayName: Mythril_ Orbit Flame
-			Orichalcum_PetalBolt.DisplayName: Orichalcum_ Petal Bolt
-			Lunar_Strike.DisplayName: Lunar_ Strike
-			Shroomite_TrailMushroom.DisplayName: Shroomite_ Trail Mushroom
-			Astral_Blast.DisplayName: Astral_ Blast
-			PostLunar_Shard.DisplayName: Post Lunar_ Shard
-			Shared_LingeringField.DisplayName: Shared_ Lingering Field
-			Shared_Shockwave.DisplayName: Shared_ Shockwave
-			Shared_SplitMeteor.DisplayName: Shared_ Split Meteor
-			PFMarkStatusArc.DisplayName: P F Mark Status Arc
-
-			SHPC: {
-				LazharBeacon.DisplayName: Lazhar Beacon
-				LazharLaser.DisplayName: Lazhar Laser
-				LazharOrbitalStrike.DisplayName: Lazhar Orbital Strike
-			}
-
-			PristineFuryHookSoul.DisplayName: Pristine Fury Hook Soul
-
-			PristineFury: {
-				PFBrimstoneElemental_StarBolt.DisplayName: P F Brimstone Elemental_ Star Bolt
-				PFEmpress_ScatterBolt.DisplayName: P F Empress_ Scatter Bolt
-				PFSkeletronWhiteBurst.DisplayName: P F Skeletron White Burst
-				PFPolterghast_StarBolt.DisplayName: P F Polterghast_ Star Bolt
-			}
 		}
 
 		Cooldowns: {
@@ -436,31 +379,6 @@ Mods: {
 			BFPlagueDeathBuff: {
 				DisplayName: Deathblight
 				Description: Takes 10% more damage and loses 140 life per second, plus 40 for each Plague disease.
-			}
-
-			CosmicDischargeChainKnifeBuff: {
-				DisplayName: Chain Blade Mode
-				Description: Movement speed and armor penetration increased.
-			}
-
-			CosmicDischargeSwordBuff: {
-				DisplayName: Sword Mode
-				Description: Critical strike chance and damage increased.
-			}
-
-			CosmicDischargeWhipBuff: {
-				DisplayName: Whip Mode
-				Description: Attack speed and knockback increased.
-			}
-
-			YharonSoulFragment_Buff: {
-				DisplayName: Dragonfire
-				Description: Burning in dragon soulfire.
-			}
-
-			SHPCRight_DeBuff: {
-				DisplayName: SHPC Heat Mode
-				Description: At heat levels IV–V, life regeneration is suppressed and life slowly drains.
 			}
 		}
 	}

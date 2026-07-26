@@ -527,13 +527,9 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
                 if (i % 3 == 0)
                     LeonidVisualUtils.DrawSparkle(trailWorld, LeonidVisualUtils.MoonWhite, 0.18f * t * opacity, 0.18f + t * 0.12f, Projectile.rotation + i);
-
-                if (i <= 6)
-                    LeonidVisualUtils.DrawGlowBlade(trailWorld - direction * 5f, direction, trailColor, 0.12f * t * opacity, 0.045f + t * 0.045f, 0.014f + t * 0.01f);
             }
 
             Vector2 headPos = Projectile.Center - Main.screenPosition;
-            LeonidVisualUtils.DrawGlowBlade(Projectile.Center - direction * 6f, direction, trailColor, 0.38f * opacity, 0.1f * Projectile.scale, 0.026f * Projectile.scale);
             LeonidVisualUtils.DrawCelestialHead(Projectile.Center, MeteorColor, opacity, Projectile.scale * (FromStealthRain ? 1.18f : 1f), Projectile.rotation);
             Main.EntitySpriteDraw(glow, headPos, null, Color.White * opacity,
                 Projectile.rotation, glow.Size() * 0.5f, Projectile.scale, SpriteEffects.None, 0f);

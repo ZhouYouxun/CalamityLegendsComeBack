@@ -1,0 +1,32 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				Melee: {
+					UmbralNadir: {
+						DisplayName: 冥蚀天底
+						Tooltip:
+							'''
+							[c/8CFF96:左键：优雅的三段虚空连招 —— 上挑斩、劈落斩、冲刺贯穿。]
+							[c/8CFF96:每一段命中都会撕开一道"深渊之口"，探出深渊触须；冲刺段更引爆黑日坍缩，造成恐怖伤害。]
+							[c/6FE0C0:右键：三连虚空投矛 —— 每轮三发、发间隔五帧、每发略带随机散布，轮与轮之间稍作停顿。]
+							[c/6FE0C0:投矛会扎入敌人体内，持续引发连锁虚空爆裂，甩出冥融虚空核并蔓延霜蚀。]
+							[c/5FBF8A:深渊之口会凝视吞噬、不断吐出触须；冥融虚空核则会追踪、连锁分裂，织成不断蔓延的黑绿罗网。]
+							[c/4E9C74:右键优先级高于左键：同时摁住时以右键为准，左键让位于三连投掷。]
+							'''
+					}
+				}
+			}
+		}
+
+		Projectiles: {
+			Nadir: {
+				UmbralNadirHoldout.DisplayName: 冥蚀连斩
+				UmbralNadirVoidEssence.DisplayName: 冥融虚空核
+				UmbralNadirAbyssRift.DisplayName: 深渊之口
+				UmbralNadirThrowController.DisplayName: 冥蚀投掷
+				UmbralNadirJavelin.DisplayName: 冥蚀虚空投矛
+			}
+		}
+	}
+}

@@ -46,15 +46,17 @@ Mods: {
 		}
 
 		Projectiles: {
+			AegisSparkExplosion.DisplayName: 庇护火花爆炸
+			AegisBigFireball.DisplayName: 庇护大火球
 			AegisSwingHoldout.DisplayName: 庇护之刃挥舞
 			AegisShieldHoldout.DisplayName: 庇护盾牌
 			AegisFireball.DisplayName: 庇护火球
 			AegisBladeThrown.DisplayName: 投掷庇护之刃
 
 			AegisBlade: {
-				// AegisBorrowedLazharLaser.DisplayName: Aegis Borrowed Lazhar Laser
-				// AegisBorrowedOrbitalStrike.DisplayName: Aegis Borrowed Orbital Strike
-				// AegisWallStatusBar.DisplayName: Aegis Wall Status Bar
+				AegisBorrowedLazharLaser.DisplayName: 庇护所借用雷萨激光
+				AegisBorrowedOrbitalStrike.DisplayName: 庇护所借用轨道打击
+				AegisWallStatusBar.DisplayName: 庇护之墙状态条
 			}
 
 			AegisWallProjectile.DisplayName: 庇护土墙

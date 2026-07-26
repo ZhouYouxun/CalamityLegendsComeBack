@@ -73,9 +73,11 @@ Mods: {
 		}
 
 		Projectiles: {
+			DesertEagleHoldout.DisplayName: 沙漠之鹰持握体
+
 			A_Dev: {
-				// DesertEagleHeavyRound.DisplayName: Desert Eagle Heavy Round
-				// DesertEagleLifeRound.DisplayName: Desert Eagle Life Round
+				DesertEagleHeavyRound.DisplayName: 沙漠之鹰重弹
+				DesertEagleLifeRound.DisplayName: 沙漠之鹰生命弹
 			}
 		}
 	}

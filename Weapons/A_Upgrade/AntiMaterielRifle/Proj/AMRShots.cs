@@ -782,7 +782,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
     internal sealed class AMROnyxDetonation : ModProjectile, ILocalizedModType
     {
         public new string LocalizationCategory => "Projectiles.AntiMaterielRifle";
-        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+        public override string Texture => "Terraria/Images/Projectile_661";
 
         public override void SetDefaults()
         {

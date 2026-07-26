@@ -6,13 +6,6 @@ Mods: {
 					DisplayName: Shader 测试器
 					Tooltip: 右键打开 Shader 选择矩阵。左键运行当前选择；离手或死亡会自动关闭全屏效果。
 				}
-
-				Magic: {
-					Lazhar: {
-						// DisplayName: Lazhar
-						// Tooltip: ""
-					}
-				}
 			}
 		}
 
@@ -21,14 +14,6 @@ Mods: {
 				ShaderTestProjectile.DisplayName: Shader 测试弹幕
 				ShaderTestPanel.DisplayName: Shader 选择矩阵
 			}
-
-			// ElephantHunterBigGameRound.DisplayName: Elephant Hunter Big Game Round
-			// ElephantHunterSiegeRound.DisplayName: Elephant Hunter Siege Round
-			// LightningEagleArcRound.DisplayName: Lightning Eagle Arc Round
-			// MagnumLifeRound.DisplayName: Magnum Life Round
-			// MagnumSilverRound.DisplayName: Magnum Silver Round
-			// LazharHoldout.DisplayName: Lazhar Holdout
-			// BFPa5BreakthroughDashHitbox.DisplayName: B F Pa5 Breakthrough Dash Hitbox
 		}
 	}
 }

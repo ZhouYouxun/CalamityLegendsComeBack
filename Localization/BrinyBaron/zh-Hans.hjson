@@ -248,6 +248,11 @@ Mods: {
 		}
 
 		Projectiles: {
+			BBSD_VirtualPROJ.DisplayName: 海王虚幻弹幕
+			BrinyBaron_VortexEyePortalPreview.DisplayName: 漩涡之眼传送预览
+			BrinyBaron_VortexEyeDash.DisplayName: 漩涡之眼冲刺
+			BrinyBaron_DashOceanSwirl.DisplayName: 海澜涡流
+
 			BrinyBaron: {
 				BBSwing_Wave.DisplayName: 潮锋波斩
 				BrinyBaron_HomingLightOrb.DisplayName: 潮汐追踪光球

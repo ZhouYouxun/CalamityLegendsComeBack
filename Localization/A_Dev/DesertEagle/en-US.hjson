@@ -40,6 +40,8 @@ Mods: {
 		}
 
 		Projectiles: {
+			DesertEagleHoldout.DisplayName: Desert Eagle Holdout
+
 			A_Dev: {
 				DesertEagleHeavyRound.DisplayName: Desert Eagle Heavy Round
 				DesertEagleLifeRound.DisplayName: Desert Eagle Life Round

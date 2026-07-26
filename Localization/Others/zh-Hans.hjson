@@ -104,22 +104,22 @@ Mods: {
 				}
 
 				Destroyer2041Summoner: {
-					// DisplayName: Destroyer2041 Summoner
+					DisplayName: 毁灭者2041召唤物
 					// Tooltip: ""
 				}
 
 				Prime2041Summoner: {
-					// DisplayName: Prime2041 Summoner
+					DisplayName: 机械毁灭者2041召唤物
 					// Tooltip: ""
 				}
 
 				Twins2041Summoner: {
-					// DisplayName: Twins2041 Summoner
+					DisplayName: 双子魔眼2041召唤物
 					// Tooltip: ""
 				}
 
 				QuickStartBox: {
-					// DisplayName: Quick Start Box
+					DisplayName: 快速启动包
 					// Tooltip: ""
 				}
 			}

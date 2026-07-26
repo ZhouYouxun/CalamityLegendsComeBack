@@ -43,7 +43,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
             Projectile.penetrate = -1;
-            Projectile.timeLeft = 1200; // 20 seconds
+            Projectile.timeLeft = 300; // 5 seconds (max airborne stay time)
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = 45;
             Projectile.alpha = 255;
@@ -180,10 +180,10 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
         {
             CLCBLightingBoltsSystem.Spawn_LeonidStarfieldMatrixBurst(Projectile.Center, 1f);
 
-            // 陨星耗尽（撞满七次或超时）时把积攒的星光一次性放掉。
+            // 陨星耗尽（撞满七次或超时）时把积攒的星光一次性放掉（追踪星特效数量减半至3颗）。
             LeonidStarlight.Burst(
                 Projectile.Center,
-                7,
+                3,
                 Color.Lerp(LeonidVisualUtils.StratusBlue, LeonidVisualUtils.MoonViolet, 0.4f),
                 LeonidStarlightShape.Shard,
                 speed: 5f,
@@ -256,7 +256,6 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                     LeonidVisualUtils.DrawSparkle(trailWorld, LeonidVisualUtils.MoonWhite, 0.18f * t * opacity, 0.18f + t * 0.12f, Projectile.rotation + i);
             }
 
-            LeonidVisualUtils.DrawGlowBlade(Projectile.Center - direction * 5f, direction, drawColor, 0.24f * opacity, 0.075f * Projectile.scale, 0.02f * Projectile.scale);
             Main.EntitySpriteDraw(bloom, drawPosition, null, drawColor * 0.25f, 0f, bloom.Size() * 0.5f, Projectile.scale * 0.35f, SpriteEffects.None, 0f);
             LeonidVisualUtils.DrawCelestialHead(Projectile.Center, starryColor, opacity, Projectile.scale * 0.9f, Projectile.rotation);
             LeonidVisualUtils.DrawSparkle(Projectile.Center, LeonidVisualUtils.MoonWhite, 0.28f * opacity, 0.28f * Projectile.scale, Projectile.rotation);

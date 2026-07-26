@@ -19,6 +19,16 @@ Mods: {
 				DisplayName: Marked Magnum Deathmark
 				Description: Projectiles hitting this target have a 25% chance to duplicate into three
 			}
+
+			SHPCRight_DeBuff: {
+				Description: Mods.CalamityLegendsComeBack.Buffs.SHPCRight_DeBuff.Description
+				DisplayName: S H P C Right_ De Buff
+			}
+
+			YharonSoulFragment_Buff: {
+				Description: Mods.CalamityLegendsComeBack.Buffs.YharonSoulFragment_Buff.Description
+				DisplayName: Yharon Soul Fragment_ Buff
+			}
 		}
 	}
 }

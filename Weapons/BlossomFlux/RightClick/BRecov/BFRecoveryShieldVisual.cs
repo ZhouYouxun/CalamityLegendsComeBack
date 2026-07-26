@@ -114,14 +114,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             float hit = modPlayer.ShieldHitFlashTimer / 18f;
             float charge = modPlayer.ShieldChargeRatio;
 
-            // Position Matrix Head Bar floating directly above player's head
-            Vector2 barCenter = owner.Center + new Vector2(0f, -48f) - Main.screenPosition;
+            // Position Matrix Head HUD Bar floating directly above player head
+            Vector2 sc = owner.Center + new Vector2(0f, -48f) - Main.screenPosition;
             if (hit > 0f)
-                barCenter += Main.rand.NextVector2Circular(1.5f * hit, 1.5f * hit);
+                sc += Main.rand.NextVector2Circular(1.5f * hit, 1.5f * hit);
 
-            const float barWidth = 56f;
-            const float barHeight = 7f;
-            const float halfW = barWidth * 0.5f;
+            const float halfW = 28f;
+            const float halfH = 6f;
 
             Color emerald = new Color(60, 240, 130);
             Color mint = new Color(170, 255, 205);
@@ -137,49 +136,48 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             Color brightMain = mainCol * 1.8f;
             Color hitCol = (Color.White with { A = 0 }) * hit;
 
+            Vector2 tl = sc + new Vector2(-halfW, -halfH);
+            Vector2 tr = sc + new Vector2(halfW, -halfH);
+            Vector2 bl = sc + new Vector2(-halfW, halfH);
+            Vector2 br = sc + new Vector2(halfW, halfH);
+
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, GetAdditive(), SamplerState.LinearClamp,
                 DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
 
-            // 1. Matrix Head Bar Dark Background Frame
+            // 1. Dark Background Frame
             Texture2D pixel = TextureAssets.MagicPixel.Value;
-            Rectangle bgRect = new((int)(barCenter.X - halfW), (int)(barCenter.Y - barHeight * 0.5f), (int)barWidth, (int)barHeight);
+            Rectangle bgRect = new((int)(sc.X - halfW), (int)(sc.Y - halfH), (int)(halfW * 2f), (int)(halfH * 2f));
             Main.spriteBatch.Draw(pixel, bgRect, darkBg * 0.6f);
 
-            // 2. Matrix Frame Borders (Top/Bottom thin lines)
-            DrawLineSegment(
-                new Vector2(barCenter.X - halfW, barCenter.Y - barHeight * 0.5f - 1f),
-                new Vector2(barCenter.X + halfW, barCenter.Y - barHeight * 0.5f - 1f),
-                accentCol * 0.45f, 1.2f);
-            DrawLineSegment(
-                new Vector2(barCenter.X - halfW, barCenter.Y + barHeight * 0.5f + 1f),
-                new Vector2(barCenter.X + halfW, barCenter.Y + barHeight * 0.5f + 1f),
-                accentCol * 0.45f, 1.2f);
+            // 2. Animated Dashed Edge Borders (Top, Right, Bottom, Left)
+            float edgeW = 1.4f + hit * 1.6f;
+            DrawDashedEdge(tl, tr, mainCol, edgeW, time * 0.55f);
+            DrawDashedEdge(tr, br, accentCol, edgeW, time * 0.55f + 0.5f);
+            DrawDashedEdge(br, bl, mainCol, edgeW, time * 0.55f + 1.0f);
+            DrawDashedEdge(bl, tl, accentCol, edgeW, time * 0.55f + 1.5f);
 
-            // 3. Matrix Side Brackets [ ]
-            float bSize = 5.5f;
-            float bW = 2.2f + hit * 1.8f;
-            Vector2 leftEnd = new(barCenter.X - halfW - 2f, barCenter.Y);
-            Vector2 rightEnd = new(barCenter.X + halfW + 2f, barCenter.Y);
+            // 3. Corner L-Brackets
+            float bSize = 6f + hit * 2f;
+            float bW = 2.2f + hit * 1.6f;
+            DrawCornerBracket(tl, 1f, 1f, brightMain, bSize, bW);
+            DrawCornerBracket(tr, -1f, 1f, brightMain, bSize, bW);
+            DrawCornerBracket(bl, 1f, -1f, brightMain, bSize, bW);
+            DrawCornerBracket(br, -1f, -1f, brightMain, bSize, bW);
 
-            // Left bracket <
-            DrawLineSegment(leftEnd + new Vector2(bSize * 0.6f, -bSize * 0.7f), leftEnd, brightMain, bW);
-            DrawLineSegment(leftEnd, leftEnd + new Vector2(bSize * 0.6f, bSize * 0.7f), brightMain, bW);
+            // 4. Corner Cross-Nodes & Mid-Nodes
+            float nSize = 4.5f + hit * 2.5f;
+            DrawNode(tl, brightMain, nSize);
+            DrawNode(tr, brightMain, nSize);
+            DrawNode(bl, brightMain, nSize);
+            DrawNode(br, brightMain, nSize);
 
-            // Right bracket >
-            DrawLineSegment(rightEnd - new Vector2(bSize * 0.6f, bSize * 0.7f), rightEnd, brightMain, bW);
-            DrawLineSegment(rightEnd, rightEnd - new Vector2(bSize * 0.6f, -bSize * 0.7f), brightMain, bW);
-
-            // Corner Nodes
-            DrawNode(leftEnd, brightMain, 4.5f);
-            DrawNode(rightEnd, brightMain, 4.5f);
-
-            // 4. Matrix Segmented Durability Fill Meter
-            float currentFillW = (barWidth - 4f) * charge;
-            if (currentFillW > 0f)
+            // 5. Internal Matrix Segmented Meter
+            float fillWidth = (halfW * 2f - 4f) * charge;
+            if (fillWidth > 0f)
             {
                 const int totalSegments = 8;
-                float fillPerSeg = (barWidth - 4f) / totalSegments;
+                float segWidth = (halfW * 2f - 4f) / totalSegments;
                 float activeSegmentsF = totalSegments * charge;
 
                 for (int i = 0; i < totalSegments; i++)
@@ -188,28 +186,28 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                         break;
 
                     float segFrac = Math.Min(1f, activeSegmentsF - i);
-                    float segX = barCenter.X - halfW + 2f + i * fillPerSeg;
-                    float segW = (fillPerSeg - 1.5f) * segFrac;
+                    float segX = sc.X - halfW + 2f + i * segWidth;
+                    float segW = (segWidth - 1.5f) * segFrac;
 
                     Color segCol = Color.Lerp(mainCol, accentCol, i / (float)totalSegments) * pulse;
                     if (hit > 0f)
                         segCol = Color.Lerp(segCol, hitCol, hit);
 
-                    Rectangle segRect = new((int)segX, (int)(barCenter.Y - barHeight * 0.5f + 1.5f), (int)Math.Max(1f, segW), (int)(barHeight - 3f));
+                    Rectangle segRect = new((int)segX, (int)(sc.Y - halfH + 2f), (int)Math.Max(1f, segW), (int)(halfH * 2f - 4f));
                     Main.spriteBatch.Draw(pixel, segRect, segCol);
                 }
 
-                // Moving data dot traversing along filled bar
-                float scanT = (time * 2.2f) % 1f;
-                float scanX = barCenter.X - halfW + 2f + currentFillW * scanT;
-                DrawNode(new Vector2(scanX, barCenter.Y), brightMain * 1.6f, 3.8f);
+                // Moving Matrix Data Dot traversing along top dashed edge
+                float flowT = (time * 1.8f) % 1f;
+                float flowX = sc.X - halfW + (halfW * 2f) * flowT;
+                DrawNode(new Vector2(flowX, sc.Y - halfH), brightMain * 1.6f, 4f);
             }
 
-            // 5. Damage Hit Flash Bloom
+            // 6. Damage Hit Flash Bloom
             if (hit > 0f)
             {
                 Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-                Main.spriteBatch.Draw(bloom, barCenter, null,
+                Main.spriteBatch.Draw(bloom, sc, null,
                     hitCol, 0f, bloom.Size() * 0.5f,
                     0.22f + hit * 0.25f, SpriteEffects.None, 0f);
             }
@@ -221,16 +219,47 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             return false;
         }
 
+        private static void DrawDashedEdge(Vector2 a, Vector2 b, Color color, float width, float animOffset)
+        {
+            float totalLen = Vector2.Distance(a, b);
+            if (totalLen < 1f) return;
+
+            Vector2 dir = (b - a) / totalLen;
+            const float segLen = 8f;
+            const float gapLen = 4f;
+            const float cycle = segLen + gapLen;
+            float phase = (animOffset * 26f) % cycle;
+
+            for (float pos = -phase; pos < totalLen; pos += cycle)
+            {
+                float s = Math.Max(0f, pos);
+                float e = Math.Min(totalLen, pos + segLen);
+                if (e <= s) continue;
+                DrawLineSegment(a + dir * s, a + dir * e, color, width);
+            }
+        }
+
         private static void DrawLineSegment(Vector2 start, Vector2 end, Color color, float width)
         {
             if (start == end) return;
             if (color.A == 0 && (color.R | color.G | color.B) != 0)
                 color.A = 255;
-            Texture2D lineTex = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Line").Value;
+
+            float dist = Vector2.Distance(start, end);
+            if (dist <= 0.01f) return;
+
+            Texture2D pixel = TextureAssets.MagicPixel.Value;
             float rotation = (end - start).ToRotation();
-            Vector2 scale = new(Vector2.Distance(start, end) / lineTex.Width, width);
-            Main.spriteBatch.Draw(lineTex, start, null, color, rotation,
-                lineTex.Size() * Vector2.UnitY * 0.5f, scale, SpriteEffects.None, 0f);
+            Vector2 scale = new(dist, width);
+            Vector2 origin = new(0f, 0.5f);
+
+            Main.spriteBatch.Draw(pixel, start, null, color, rotation, origin, scale, SpriteEffects.None, 0f);
+        }
+
+        private static void DrawCornerBracket(Vector2 corner, float dx, float dy, Color color, float size, float width)
+        {
+            DrawLineSegment(corner, corner + new Vector2(dx * size, 0f), color, width);
+            DrawLineSegment(corner, corner + new Vector2(0f, dy * size), color, width);
         }
 
         private static void DrawNode(Vector2 pos, Color color, float size)

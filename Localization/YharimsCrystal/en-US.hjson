@@ -198,9 +198,17 @@ Mods: {
 				YC_BackgroundBladeStrike.DisplayName: Y C_ Background Blade Strike
 				YC_BackgroundCrystal.DisplayName: Y C_ Background Crystal
 				YC_BackgroundCrystalBolt.DisplayName: Y C_ Background Crystal Bolt
+				YC_GalacticaComet.DisplayName: Y C_ Galactica Comet
 			}
 		}
 
 		Cooldowns.YC_EX: Laser Storm Cooldown
+	}
+
+	Buffs: {
+		YharonSoulFragment_Buff: {
+			DisplayName: Yharon Soul Fragment
+			Description: Burning with dragon soul flames.
+		}
 	}
 }

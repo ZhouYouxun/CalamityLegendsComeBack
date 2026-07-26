@@ -45,6 +45,8 @@ Mods: {
 		}
 
 		Projectiles: {
+			VesuviusEmberProj.DisplayName: 维苏维阿斯余烬
+
 			Vesuvius: {
 				VesuviusLeftHoldout.DisplayName: 维苏维阿斯
 				VesuviusArcOrb.DisplayName: 火山弧光球
@@ -68,16 +70,16 @@ Mods: {
 				VesuviusLandingQuake.DisplayName: 地震落地
 				VesuviusEXWeapon.DisplayName: 火山喷发
 				VesuviusVolcanicGasCloud.DisplayName: 火山气云
-				// VesuviusThermalCore.DisplayName: Vesuvius Thermal Core
-				// VesuviusThermalCoreBlast.DisplayName: Vesuvius Thermal Core Blast
-				// VesuviusRightGravityFlame.DisplayName: Vesuvius Right Gravity Flame
-				// VesuviusRightJavelinVent.DisplayName: Vesuvius Right Javelin Vent
-				// VesuviusRightMeteorExplosion.DisplayName: Vesuvius Right Meteor Explosion
-				// VesuviusRightReturningMeteor.DisplayName: Vesuvius Right Returning Meteor
-				// VesuviusRightRisingSpark.DisplayName: Vesuvius Right Rising Spark
+				VesuviusThermalCore.DisplayName: 维苏维阿斯热核
+				VesuviusThermalCoreBlast.DisplayName: 维苏维阿斯热核破裂
+				VesuviusRightGravityFlame.DisplayName: 地心重力焰
+				VesuviusRightJavelinVent.DisplayName: 断层法杖排气
+				VesuviusRightMeteorExplosion.DisplayName: 回归流星爆裂
+				VesuviusRightReturningMeteor.DisplayName: 回归熔融流星
+				VesuviusRightRisingSpark.DisplayName: 断层升腾火星
 			}
 
-			// PurifiedGel_BallExplosion.DisplayName: Purified Gel_ Ball Explosion
+			PurifiedGel_BallExplosion.DisplayName: 净化凝胶球爆裂
 		}
 
 		Cooldowns.Vesuvius_EX: 火山喷发

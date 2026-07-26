@@ -45,6 +45,8 @@ Mods: {
 		}
 
 		Projectiles: {
+			VesuviusEmberProj.DisplayName: Vesuvius Ember Proj
+
 			Vesuvius: {
 				VesuviusLeftHoldout.DisplayName: Vesuvius
 				VesuviusArcOrb.DisplayName: Volcanic Arc Orb

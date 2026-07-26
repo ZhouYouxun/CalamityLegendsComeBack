@@ -123,6 +123,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
                 bool validRightHold = Owner.Calamity().mouseRight &&
                     !suppressedRightUntilRelease &&
                     !interactionActive &&
+                    !AMRPlayer.IsAttackLocked &&
                     NewLegendAntiMaterielRifle.CanUseWorldInput(Owner);
 
                 if (validRightHold)
@@ -134,6 +135,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
             bool leftHeld = Main.mouseLeft &&
                 !rawRightHeld &&
                 !rightAiming &&
+                !AMRPlayer.IsAttackLocked &&
                 NewLegendAntiMaterielRifle.CanUseWorldInput(Owner);
 
             if (leftHeld)
@@ -210,6 +212,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
 
         private bool FireShot(bool rightShot, float charge)
         {
+            if (AMRPlayer.IsAttackLocked)
+                return false;
+
             if (!Owner.PickAmmo(Owner.HeldItem, out _, out _, out int ammoDamage, out float ammoKnockback, out _, false))
             {
                 SoundEngine.PlaySound(SoundID.MenuTick with { Volume = 0.35f, Pitch = -0.4f }, Owner.Center);
@@ -264,6 +269,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
                 MaxInstances = 4
             };
             SoundEngine.PlaySound(fireSound, GunTipPosition);
+            AMRPlayer.SetAttackLockout(AMRBalance.FireInterval);
             return true;
         }
 

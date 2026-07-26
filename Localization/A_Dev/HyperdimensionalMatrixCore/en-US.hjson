@@ -45,12 +45,6 @@ Mods: {
 				DisplayName: Matrix Protection Field
 				Description: Fortifies body · reduces damage · regenerates life · boosts speed · reduces aggro; the core recompiles the battlefield
 			}
-
-			YharonSoulFragment_Buff: {
-			}
-
-			SHPCRight_DeBuff: {
-			}
 		}
 
 		Projectiles: {

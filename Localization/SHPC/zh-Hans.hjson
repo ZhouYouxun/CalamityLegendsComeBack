@@ -322,6 +322,10 @@ Mods: {
 
 		Projectiles: {
 			SHPC: {
+				SHPCNecroplasmBeam.DisplayName: SHPC死灵质光束
+				SHPCNecroplasmFrame.DisplayName: SHPC死灵质框架
+				YharonSoulFragment_Flame.DisplayName: 丛龙灵火弹
+
 				EnergyCore_Spark.DisplayName: 能源核心火花
 				PearlShardLargePearl.DisplayName: 珍珠碎片
 				PearlShardSmallPearl.DisplayName: 珍珠碎片
@@ -359,7 +363,6 @@ Mods: {
 				ExoPrism_Light.DisplayName: 外天棱镜辉光
 				NightmareFuel_ARC.DisplayName: 梦魇燃料弧光
 				NightmareFuel_Scythe.DisplayName: 梦魇燃料镰刃
-				YharonSoulFragment_Flame.DisplayName: 丛龙灵魂碎焰
 				NewLegendSHPB.DisplayName: SHPC能量球
 				NewLegendSHPE.DisplayName: SHPC爆轰
 				SHPCRight_HoulOut.DisplayName: SHPC悬持炮
@@ -421,11 +424,11 @@ Mods: {
 				PlagueCell_Fog.DisplayName: 瘟疫细胞毒雾
 				PlagueCell_Nuke.DisplayName: 瘟疫细胞核爆
 				SHPC_ChargeSpiralInv.DisplayName: SHPC蓄能螺旋视觉体
-				// StellarVortexShard.DisplayName: Stellar Vortex Shard
-				// AshesofAnn_CataclysmFist.DisplayName: Ashesof Ann_ Cataclysm Fist
-				// AshesofAnn_CatastropheSlash.DisplayName: Ashesof Ann_ Catastrophe Slash
-				// AshesofAnn_VerdictHunter.DisplayName: Ashesof Ann_ Verdict Hunter
-				// AshesofAnn_VerdictPiercer.DisplayName: Ashesof Ann_ Verdict Piercer
+				StellarVortexShard.DisplayName: 恒星漩涡碎片
+				AshesofAnn_CataclysmFist.DisplayName: 安之灰烬·灾变重拳
+				AshesofAnn_CatastropheSlash.DisplayName: 安之灰烬·灾厄斩击
+				AshesofAnn_VerdictHunter.DisplayName: 安之灰烬·裁决追踪者
+				AshesofAnn_VerdictPiercer.DisplayName: 安之灰烬·裁决贯穿者
 			}
 
 			SHPCRight_HeatUI.DisplayName: SHPC右键热量界面
@@ -444,5 +447,12 @@ Mods: {
 		}
 
 		Conditions.HoldingSHPC: 手持SHPC时
+	}
+
+	Buffs: {
+		SHPCRight_DeBuff: {
+			DisplayName: SHPC热量积聚
+			Description: 处于IV~V级热量时，生命恢复受阻并持续耗损自身。
+		}
 	}
 }

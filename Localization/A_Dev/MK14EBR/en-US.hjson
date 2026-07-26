@@ -27,10 +27,6 @@ Mods: {
 				MK14GrenadeProjectile.DisplayName: MK14 Underbarrel Grenade
 				MK14DragonBreathPellet.DisplayName: Dragon's Breath Pellet
 			}
-
-			BFRecoveryShieldVisual.DisplayName: B F Recovery Shield Visual
-			BrinyBaron_VortexEyeDash.DisplayName: Briny Baron_ Vortex Eye Dash
-			BrinyBaron_VortexEyePortalPreview.DisplayName: Briny Baron_ Vortex Eye Portal Preview
 		}
 
 		MK14EBR: {

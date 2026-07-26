@@ -39,20 +39,21 @@ Mods: {
 			ResponsibilityArmyGyrator.DisplayName: 责任分队·钨钢回旋仪
 			ResponsibilityArmyDrone.DisplayName: 责任分队·钨钢无人机
 			ResponsibilityArmyHovercraft.DisplayName: 责任分队·钨钢气垫船
-			// Destroyer2041Body.DisplayName: Destroyer2041 Body
-			// Destroyer2041Head.DisplayName: Destroyer2041 Head
-			// Destroyer2041Tail.DisplayName: Destroyer2041 Tail
-			// Prime2041.DisplayName: Prime2041
-			// Prime2041Cannon.DisplayName: Prime2041 Cannon
-			// Prime2041Laser.DisplayName: Prime2041 Laser
-			// Prime2041Saw.DisplayName: Prime2041 Saw
-			// Prime2041SecondHead.DisplayName: Prime2041 Second Head
-			// Prime2041Vice.DisplayName: Prime2041 Vice
-			// Twins2041Retinazer.DisplayName: Twins2041 Retinazer
-			// Twins2041Spazmatism.DisplayName: Twins2041 Spazmatism
+			Destroyer2041Body.DisplayName: 毁灭者2041车体
+			Destroyer2041Head.DisplayName: 毁灭者2041车头
+			Destroyer2041Tail.DisplayName: 毁灭者2041车尾
+			Prime2041.DisplayName: 机械毁灭者2041
+			Prime2041Cannon.DisplayName: 机械毁灭者2041重炮
+			Prime2041Laser.DisplayName: 机械毁灭者2041激光器
+			Prime2041Saw.DisplayName: 机械毁灭者2041电锯
+			Prime2041SecondHead.DisplayName: 机械毁灭者2041副头部
+			Prime2041Vice.DisplayName: 机械毁灭者2041机械钳
+			Twins2041Retinazer.DisplayName: 双子魔眼2041·激光眼
+			Twins2041Spazmatism.DisplayName: 双子魔眼2041·魔眼
 		}
 
 		Projectiles: {
+			CallofDutyHoldout.DisplayName: 使命召唤手持体
 			ResponsibilityCommunicationSequence.DisplayName: 钨钢通讯序列
 			ResponsibilityCommunicationToken.DisplayName: 钨钢通讯字符
 			ResponsibilityHatMarker.DisplayName: 钨钢帽子

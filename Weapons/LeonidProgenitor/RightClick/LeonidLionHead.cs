@@ -216,7 +216,6 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
 
             LeonidVisualUtils.BeginAdditiveSpriteBatch();
-            LeonidVisualUtils.DrawGlowBlade(Projectile.Center, Projectile.velocity.SafeNormalize(Vector2.UnitX * Owner.direction), drawColor, IsBiting ? 0.42f : 0.22f, 0.14f * Projectile.scale, 0.032f * Projectile.scale);
             Main.EntitySpriteDraw(glow, drawPosition, null, Color.White * opacity, Projectile.rotation, glow.Size() * 0.5f, Projectile.scale, Owner.direction == -1 ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 0f);
 
             if (IsBiting)

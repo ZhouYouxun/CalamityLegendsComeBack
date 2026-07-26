@@ -53,6 +53,21 @@ Mods: {
 		}
 
 		Buffs: {
+			CosmicDischargeWhipBuff: {
+				DisplayName: 鞭形态
+				Description: 攻击速度与击退力提高。
+			}
+
+			CosmicDischargeSwordBuff: {
+				DisplayName: 剑形态
+				Description: 暴击率与伤害提高。
+			}
+
+			CosmicDischargeChainKnifeBuff: {
+				DisplayName: 链刃形态
+				Description: 移动速度与穿甲能力提高。
+			}
+
 			CosmicDischargeRiftRevivalBuff: {
 				DisplayName: 裂隙复苏
 				Description: 神明裂隙打破极限，伤害、防御力与移动速度各提高20%。
@@ -80,6 +95,8 @@ Mods: {
 		}
 
 		Projectiles: {
+			CosmicDischargeRiftCrack.DisplayName: 神明裂隙
+
 			Melee: {
 				CosmicDischargeSwordWave.DisplayName: 裂隙剑气
 				CosmicDischargeDoGRiftBomb.DisplayName: 裂隙炸弹
@@ -95,6 +112,7 @@ Mods: {
 				CosmicDischargeKillModeReady.DisplayName: 吞噬蓄势
 				CosmicDischargeKillModeSlash.DisplayName: 吞噬斩击
 				// DiseasedPikeProj.DisplayName: Diseased Pike Proj
+				// BrinyBaron_HeavySlash.DisplayName: Briny Baron_ Heavy Slash
 			}
 		}
 

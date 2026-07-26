@@ -45,12 +45,6 @@ Mods: {
 				DisplayName: 矩阵防护场
 				Description: 强化躯体 · 降低伤害 · 恢复生命 · 提升速度 · 降低仇恨
 			}
-
-			YharonSoulFragment_Buff: {
-			}
-
-			SHPCRight_DeBuff: {
-			}
 		}
 
 		Projectiles: {
@@ -79,7 +73,7 @@ Mods: {
 				MatrixCliffordTorus.DisplayName: 克利福德环面
 				MatrixSuperformulaMorph.DisplayName: 超配方形态渐变
 				MatrixSierpinskiCollapse.DisplayName: 谢尔宾斯基三角
-				// MatrixDataLaser.DisplayName: Matrix Data Laser
+				MatrixDataLaser.DisplayName: 矩阵数据激光
 			}
 		}
 	}

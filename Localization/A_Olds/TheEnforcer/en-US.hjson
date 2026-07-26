@@ -29,7 +29,6 @@ Mods: {
 			}
 
 			ChangedWeapons.EAfterDog.OldEssenceFlame2.DisplayName: Old Essence Flame2
-			CallofDutyHoldout.DisplayName: Responsibility Phone Holdout
 			Summon.ResponsibilityRoverFusionBolt.DisplayName: Responsibility Rover Fusion Bolt
 		}
 	}

@@ -797,12 +797,13 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
         private void DrawCurvedBladeGlow(System.Collections.Generic.List<Vector2> points)
         {
+            if (points == null || points.Count < 2)
+                return;
+
             Texture2D pixel = TextureAssets.MagicPixel.Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             float flash = impactFlashTimer > 0 ? impactFlashTimer / 8f : 0f;
-            Color outer = CosmicDischargeCommon.Transparent(CosmicDischargeCommon.RiftTwilight) * (0.18f + flash * 0.12f);
-            Color cyanGlow = CosmicDischargeCommon.Transparent(CosmicDischargeCommon.RiftLightBlue) * (0.24f + flash * 0.22f);
-            Color fuchsiaGlow = CosmicDischargeCommon.Transparent(CosmicDischargeCommon.RiftMagenta) * (0.18f + flash * 0.18f);
+            Color cyanGlow = CosmicDischargeCommon.Transparent(CosmicDischargeCommon.RiftLightBlue) * (0.15f + flash * 0.15f);
             Color core = CosmicDischargeCommon.DoGWhiteColor * (0.25f + flash * 0.38f);
 
             Main.spriteBatch.SetBlendState(BlendState.Additive);
@@ -815,10 +816,8 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 if (segment.LengthSquared() < 0.1f)
                     continue;
 
-                DrawLine(pixel, start, segment, outer, currentCollisionWidth * 1.48f);
-                DrawLine(pixel, start, segment, cyanGlow, currentCollisionWidth * 0.82f);
-                DrawLine(pixel, start, segment, fuchsiaGlow, currentCollisionWidth * 0.46f);
-                DrawLine(pixel, start, segment, core, MathHelper.Clamp(currentCollisionWidth * 0.16f, 2f, 5f));
+                DrawLine(pixel, start, segment, cyanGlow, 3f);
+                DrawLine(pixel, start, segment, core, 1.5f);
             }
 
             if (points.Count > 0)

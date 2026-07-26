@@ -162,7 +162,6 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
             // These textures contain black source pixels; keep all emitted light additive.
             LeonidVisualUtils.BeginAdditiveSpriteBatch();
-            LeonidVisualUtils.DrawGlowBlade(Projectile.Center - direction * 12f, direction, drawColor, 0.46f, 0.18f * Projectile.scale, 0.034f * Projectile.scale);
             LeonidVisualUtils.DrawCelestialHead(Projectile.Center, drawColor, 1f - Projectile.alpha / 255f, Projectile.scale * 1.28f, Projectile.rotation);
             Main.EntitySpriteDraw(glow, drawPosition, null, Color.White * (1f - Projectile.alpha / 255f), Projectile.rotation, glow.Size() * 0.5f, Projectile.scale, SpriteEffects.None, 0f);
             LeonidVisualUtils.DrawBloom(Projectile.Center, drawColor * 0.3f, Projectile.scale * 0.45f);

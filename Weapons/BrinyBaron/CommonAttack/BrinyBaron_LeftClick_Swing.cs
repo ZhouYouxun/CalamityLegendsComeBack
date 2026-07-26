@@ -33,7 +33,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         private static readonly Vector2 BaseHitboxSize = new(132f, 132f);
         private const float SwooshRadiusCorrection = 0.575f;
         private const float RightSpinSwooshScaleMultiplier = 0.95f;
-        private const float RightSpinVisualReachScale = 0.67f;
+        private const float RightSpinVisualReachScale = 0.335f;
         private int CurrentGrowthStage => BB_Balance.GetGrowthStage();
         private int ComboLength => BB_Balance.GetLeftClickComboSequence(CurrentGrowthStage).Length;
         private const int StandardGapFrames = 0;
@@ -58,6 +58,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         private Vector2 lockedMouseWorld;
         private Vector2 lockedAimDirection = Vector2.UnitX;
 
+        private float lastSlashFlipSide = 0f;
         private bool rightSpinActive;
         private int rightSpinTimer;
         private int rightSpinOrbitDirection = 1;
@@ -134,8 +135,15 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             Animation++;
             UseStyle();
             Owner.heldProj = Projectile.whoAmI;
-            Owner.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, Projectile.rotation + RotationOffset + ArmRotationOffset);
-            Owner.SetCompositeArmBack(true, Player.CompositeArmStretchAmount.Full, Projectile.rotation + RotationOffset + ArmRotationOffsetBack);
+            if (rightSpinActive)
+            {
+                ApplyRightSpinArmRotation();
+            }
+            else
+            {
+                Owner.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, Projectile.rotation + RotationOffset + ArmRotationOffset);
+                Owner.SetCompositeArmBack(true, Player.CompositeArmStretchAmount.Full, Projectile.rotation + RotationOffset + ArmRotationOffsetBack);
+            }
 
             int itemAnimationMax = Math.Max(1, Owner.itemAnimationMax);
             AnimationProgress = Animation % itemAnimationMax;
@@ -665,24 +673,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             float transitionSpeed = MathHelper.SmoothStep(0.18f, 1f, transitionProgress);
             float spinSpeedMultiplier = MathHelper.Lerp(1.2f, 2f, RightSpinChargeRatio);
             float spinRate = spinSpeedMultiplier * MathHelper.PiOver4 * 0.2f * rightSpinOrbitDirection * transitionSpeed;
-            // ── 椭圆参数方程驱动刀片轨迹 ──
-            // 长轴水平 A = RightSpinBladeReach，短轴垂直 B = A × 0.5（长轴:短轴 = 2:1）
+            // ── 正圆 360 度自转轨迹（回退至 07/23 稳定版本） ──
             rightSpinAngle += spinRate;
-            float rsEllipseA = RightSpinBladeReach;          // 水平长半轴（像素）
-            float rsEllipseB = RightSpinBladeReach * 0.5f;   // 垂直短半轴（像素）
-            Vector2 ellipseOffset = new Vector2(
-                rsEllipseA * MathF.Cos(rightSpinAngle),
-                rsEllipseB * MathF.Sin(rightSpinAngle));
-            // rightSpinDirectionVector 仍用于武器旋转角与其他引用，从椭圆偏移归一化得到
-            rightSpinDirectionVector = ellipseOffset.SafeNormalize(Vector2.UnitX);
-            Projectile.rotation = rightSpinDirectionVector.ToRotation() + MathHelper.PiOver4;
-            Projectile.Center = Owner.Center + ellipseOffset;
-            // ── 龙卷风状态更新 ──
-            tornadoAiTracker++;
-            if (RightSpinChargeRatio >= 1f)
-                tornadoOpacity = MathHelper.Lerp(tornadoOpacity, 1f, 0.04f);
-            else
-                tornadoOpacity = MathHelper.Lerp(tornadoOpacity, 0f, 0.08f);
+            rightSpinDirectionVector = rightSpinAngle.ToRotationVector2();
+            Projectile.rotation = rightSpinAngle + MathHelper.PiOver4;
+            Projectile.Center = Owner.Center + rightSpinDirectionVector * (RightSpinBladeReach * 0.5f);
             RotationOffset = 0f;
             postSwing = true;
             CanHit = rightSpinTransitionTimer >= RightSpinTransitionFrames && RightSpinChargeRatio >= 0.45f;
@@ -772,7 +767,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             Vector2 tangentDirection = radialDirection.RotatedBy(MathHelper.PiOver2 * rightSpinOrbitDirection);
             Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
-                Owner.Center + radialDirection * Main.rand.NextFloat(36f, 86f),
+                Owner.Center + radialDirection * Main.rand.NextFloat(18f, 43f),
                 radialDirection * Main.rand.NextFloat(10.5f, 13.5f) + tangentDirection * Main.rand.NextFloat(1f, 3f),
                 ModContent.ProjectileType<BrinyBaron_RightClick_Shuriken>(),
                 Math.Max(1, (int)(Projectile.damage * 0.34f)),
@@ -783,27 +778,17 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
         private void SpawnRightSpinParticles()
         {
-            // 椭圆半轴（匹配刀片轨迹）
             float bladeReach = RightSpinBladeReach * RightSpinVisualReachScale;
-            float ellipseA = bladeReach;         // 水平长半轴
-            float ellipseB = bladeReach * 0.5f;  // 垂直短半轴
-            // 使用 rightSpinAngle 作为相位，与刀片当前椭圆位置对齐
             float ringPhase = rightSpinAngle;
 
             for (int i = 0; i < 3; i++)
             {
                 float angle = ringPhase + MathHelper.TwoPi * i / 3f + Main.rand.NextFloat(-0.16f, 0.16f);
                 float rFactor = Main.rand.NextFloat(0.54f, 1.03f);
-                // 椭圆上的点
-                Vector2 ellipsePoint = new Vector2(ellipseA * MathF.Cos(angle), ellipseB * MathF.Sin(angle));
-                Vector2 spawnPosition = Owner.Center + ellipsePoint * rFactor;
-                // 椭圆切线方向：(-A·sinθ, B·cosθ)，带旋转方向
-                Vector2 ellipseTangent = new Vector2(
-                    -ellipseA * MathF.Sin(angle),
-                     ellipseB * MathF.Cos(angle)
-                ).SafeNormalize(Vector2.UnitX) * rightSpinOrbitDirection;
-                Vector2 velocity = ellipseTangent * Main.rand.NextFloat(0.6f, 1.6f + RightSpinChargeRatio)
-                                 + ellipsePoint.SafeNormalize(Vector2.UnitX) * Main.rand.NextFloat(0.2f, 0.9f);
+                Vector2 orbitDirection = angle.ToRotationVector2();
+                Vector2 spawnPosition = Owner.Center + orbitDirection * (bladeReach * rFactor);
+                Vector2 tangentDirection = orbitDirection.RotatedBy(MathHelper.PiOver2 * rightSpinOrbitDirection);
+                Vector2 velocity = tangentDirection * Main.rand.NextFloat(0.6f, 1.6f + RightSpinChargeRatio) + orbitDirection * Main.rand.NextFloat(0.2f, 0.9f);
 
                 Dust dust = Dust.NewDustPerfect(spawnPosition, Main.rand.NextBool() ? DustID.Water : DustID.Frost, velocity, 100, new Color(90, 205, 255), Main.rand.NextFloat(0.85f, 1.22f) * MathHelper.Lerp(0.9f, 1.16f, RightSpinChargeRatio));
                 dust.noGravity = true;
@@ -817,15 +802,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             {
                 float angle = ringPhase + Main.rand.NextFloat(MathHelper.TwoPi);
                 float rFactor = Main.rand.NextFloat(0.62f, 1.08f);
-                Vector2 ellipsePoint = new Vector2(ellipseA * MathF.Cos(angle), ellipseB * MathF.Sin(angle));
-                Vector2 spawnPosition = Owner.Center + ellipsePoint * rFactor;
-                Vector2 ellipseTangent = new Vector2(
-                    -ellipseA * MathF.Sin(angle),
-                     ellipseB * MathF.Cos(angle)
-                ).SafeNormalize(Vector2.UnitX) * rightSpinOrbitDirection;
+                Vector2 orbitDirection = angle.ToRotationVector2();
+                Vector2 spawnPosition = Owner.Center + orbitDirection * (bladeReach * rFactor);
+                Vector2 tangentDirection = orbitDirection.RotatedBy(MathHelper.PiOver2 * rightSpinOrbitDirection);
                 Vector2 velocity =
-                    ellipseTangent * Main.rand.NextFloat(0.2f, 0.7f + RightSpinChargeRatio * 0.45f) -
-                    ellipsePoint.SafeNormalize(Vector2.UnitX) * Main.rand.NextFloat(0.05f, 0.35f);
+                    tangentDirection * Main.rand.NextFloat(0.2f, 0.7f + RightSpinChargeRatio * 0.45f) -
+                    orbitDirection * Main.rand.NextFloat(0.05f, 0.35f);
                 Color color = Color.Lerp(new Color(80, 185, 255), new Color(220, 250, 255), Main.rand.NextFloat(0.2f, 0.65f));
 
                 GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
@@ -1007,13 +989,31 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         {
             if (rightSpinActive)
             {
-                ArmRotationOffset = MathHelper.ToRadians(-135f);
-                ArmRotationOffsetBack = MathHelper.ToRadians(-102f);
+                ApplyRightSpinArmRotation();
                 return;
             }
 
             ArmRotationOffset = MathHelper.ToRadians(-140f);
             ArmRotationOffsetBack = MathHelper.ToRadians(-140f);
+        }
+
+        private void ApplyRightSpinArmRotation()
+        {
+            float aimAngle = rightSpinDirectionVector.ToRotation();
+            float baseArmAngle = aimAngle - MathHelper.PiOver2;
+
+            float shakeFreq = MathHelper.Lerp(0.9f, 1.6f, RightSpinChargeRatio);
+            float shakeAmp = MathHelper.ToRadians(18f) * MathHelper.Lerp(0.85f, 1.25f, RightSpinChargeRatio);
+            float sideFactor = lastSlashFlipSide > 0.5f ? 1f : -1f;
+
+            float frontArmAngle = baseArmAngle + MathF.Sin(rightSpinTimer * shakeFreq * 1.8f) * shakeAmp + MathHelper.ToRadians(8f) * sideFactor;
+            float backArmAngle = baseArmAngle + MathF.Cos(rightSpinTimer * shakeFreq * 1.8f + 0.7f) * shakeAmp - MathHelper.ToRadians(8f) * sideFactor;
+
+            Player.CompositeArmStretchAmount frontStretch = (rightSpinTimer % 4 < 2) ? Player.CompositeArmStretchAmount.Full : Player.CompositeArmStretchAmount.ThreeQuarters;
+            Player.CompositeArmStretchAmount backStretch = (rightSpinTimer % 4 >= 2) ? Player.CompositeArmStretchAmount.Full : Player.CompositeArmStretchAmount.ThreeQuarters;
+
+            Owner.SetCompositeArmFront(true, frontStretch, frontArmAngle);
+            Owner.SetCompositeArmBack(true, backStretch, backArmAngle);
         }
 
         private void ApplyRightSpinHeldPose()
@@ -1275,99 +1275,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
         private void DrawRightSpinTornado()
         {
-            if (tornadoOpacity <= 0.01f || Main.dedServ)
-                return;
-
-            // 1. 动态地形高度检测
-            Point centerPoint = Owner.Center.ToTileCoordinates();
-            Collision.ExpandVertically(centerPoint.X, centerPoint.Y, out int topTileY, out int bottomTileY, 15, 15);
-            topTileY++;
-            bottomTileY--;
-
-            float rawTopY = topTileY * 16f;
-            float rawBottomY = bottomTileY * 16f;
-            float tornadoHeight = Math.Max(260f, rawBottomY - rawTopY);
-
-            // 龙卷风最下端完全卡在弹幕中心（Owner.Center.Y），最上端延伸至上方
-            float bottomY = Owner.Center.Y;
-            float topY = Owner.Center.Y - tornadoHeight;
-
-            // 使用灾厄原版 StormRuler 龙卷风专属贴图 TornadoProj
-            Texture2D tornadoTex = ModContent.Request<Texture2D>("CalamityMod/Projectiles/TornadoProj").Value;
-            Rectangle drawRect = tornadoTex.Frame();
-            Vector2 texOrigin = drawRect.Size() * 0.5f;
-
-            float aiTracker = tornadoAiTracker;
-            // 云朵贴图自转速度，方向随刀片旋转方向
-            float aiTrackMult = -0.06283186f * aiTracker * rightSpinOrbitDirection;
-            // 螺旋整体旋转基准向量
-            Vector2 spinningpoint = Vector2.UnitY.RotatedBy(aiTracker * 0.1f * rightSpinOrbitDirection);
-
-            // 宽度提升 200%（提升至原 3 倍宽度，变胖但不变高）：vectorMult 提升至 1.26f
-            const float vectorMult = 1.26f;
-
-            // 海洋深青蓝色
-            Color cloudColor = new Color(60, 200, 255);
-
-            SpriteBatch sb = Main.spriteBatch;
-            sb.End();
-            sb.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp,
-                     DepthStencilState.None, RasterizerState.CullNone, null,
-                     Main.GameViewMatrix.TransformationMatrix);
-
-            float increment = 5.1f;
-            float incrementStorage = 0f;
-
-            for (float j = bottomY; j > topY; j -= increment)
-            {
-                incrementStorage += increment;
-                float colorChanger = incrementStorage / tornadoHeight; // 0（底部）→1（顶部）
-
-                // 螺旋相位：每向上 20px，完整旋转一圈
-                float incStorageMult = incrementStorage * MathHelper.TwoPi / -20f * rightSpinOrbitDirection;
-
-                // 将旋转基准向量进一步旋转得到各高度层的天线樣偏移方向
-                Vector2 spinArea = spinningpoint.RotatedBy(incStorageMult);
-
-                // 漏斗形宽度渐变：底部（colorChanger=0）窄窄，顶部（colorChanger=1）开阔
-                float heightFactor = colorChanger + 1f;                // 1.0 → 2.0
-                Vector2 colorChangeVector = new Vector2(heightFactor * vectorMult, heightFactor);
-                spinArea *= colorChangeVector * 100f;
-
-                // 严格匹配 StormRuler 规范：归零 X 和 Y 偏移，使云朵在垂直线上形成完美的漏斗锥体
-                spinArea.Y = 0f;
-                spinArea.X = 0f;
-                spinArea += new Vector2(Owner.Center.X, j) - Main.screenPosition;
-
-                // 双向渐变透明度：底部与顶部各自淡入淡出
-                Color newCloudColor;
-                if (colorChanger <= 0.5f)
-                    newCloudColor = Color.Lerp(Color.Transparent, cloudColor, colorChanger * 2f);
-                else
-                    newCloudColor = Color.Lerp(Color.Transparent, cloudColor, 2f - colorChanger * 2f);
-                newCloudColor.A = (byte)(newCloudColor.A * 0.75f);
-                newCloudColor *= tornadoOpacity;
-
-                // 尺寸：放大版的 StormRuler 漏斗形 (0.85 -> 1.85) × 1.75f
-                float tornadoScale = (0.85f + colorChanger) * 1.75f;
-
-                sb.Draw(
-                    tornadoTex,
-                    spinArea,
-                    drawRect,
-                    newCloudColor,
-                    aiTrackMult + incStorageMult,   // 自转角 + 层间相位差
-                    texOrigin,
-                    tornadoScale,
-                    SpriteEffects.None,
-                    0f);
-            }
-
-            // 恢复 Alpha混合模式
-            sb.End();
-            sb.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp,
-                     DepthStencilState.None, RasterizerState.CullNone, null,
-                     Main.GameViewMatrix.TransformationMatrix);
+            // 龙卷风绘制逻辑已回退停用
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -1388,35 +1296,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             if (CanHit || postSwing)
             {
                 float baseSwooshScale = GetSwooshScale();
-                Vector2 swooshDrawPosition;
-                Vector2 swooshScaleVector;
-                float swooshRotation;
-                float swooshAlpha;
-
-                if (rightSpinActive)
-                {
-                    // 1. 椭圆形大小缩小 50%
-                    float compressedBaseScale = baseSwooshScale * 0.5f;
-                    swooshScaleVector = new Vector2(compressedBaseScale * 1.6f, compressedBaseScale * 0.72f);
-
-                    // 2. 位置根据刀片处于上半圈 (sin < 0) 或下半圈 (sin > 0) 动态向上/向下偏移
-                    float sinVal = MathF.Sin(rightSpinAngle);
-                    float rsEllipseB = (BaseHitboxOutset + BaseHitboxSize.X * 0.38f) * (1f + RightSpinChargeRatio * 0.7f) * 0.5f;
-                    Vector2 swooshCenterOffset = new Vector2(0f, sinVal * rsEllipseB * 0.85f);
-                    swooshDrawPosition = Owner.Center + swooshCenterOffset - Main.screenPosition + new Vector2(0f, Owner.gfxOffY);
-
-                    // 3. 晃到上面/下面时闪现一下：基于 sinVal 峰值的脉冲透明度
-                    float flashPulse = MathF.Pow(MathF.Abs(sinVal), 1.6f);
-                    swooshAlpha = fadeIn * 0.85f * flashPulse;
-                    swooshRotation = 0f;
-                }
-                else
-                {
-                    swooshDrawPosition = drawPosition;
-                    swooshScaleVector = new Vector2(baseSwooshScale);
-                    swooshRotation = GetSwooshRotation();
-                    swooshAlpha = fadeIn * 0.42f;
-                }
+                Vector2 swooshDrawPosition = rightSpinActive ? Owner.Center - Main.screenPosition + new Vector2(0f, Owner.gfxOffY) : drawPosition;
+                Vector2 swooshScaleVector = new Vector2(baseSwooshScale);
+                float swooshRotation = GetSwooshRotation();
+                float swooshAlpha = fadeIn * (rightSpinActive ? 0.68f : 0.42f);
 
                 Main.EntitySpriteDraw(
                     swoosh.Value,

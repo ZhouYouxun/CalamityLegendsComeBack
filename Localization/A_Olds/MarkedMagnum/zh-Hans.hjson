@@ -19,6 +19,16 @@ Mods: {
 				DisplayName: 死神标记
 				Description: 该敌人受到的伤害弹幕有概率分裂成三个
 			}
+
+			SHPCRight_DeBuff: {
+				// Description: Mods.CalamityLegendsComeBack.Buffs.SHPCRight_DeBuff.Description
+				// DisplayName: S H P C Right_ De Buff
+			}
+
+			YharonSoulFragment_Buff: {
+				// Description: Mods.CalamityLegendsComeBack.Buffs.YharonSoulFragment_Buff.Description
+				// DisplayName: Yharon Soul Fragment_ Buff
+			}
 		}
 	}
 }

@@ -53,6 +53,21 @@ Mods: {
 		}
 
 		Buffs: {
+			CosmicDischargeWhipBuff: {
+				DisplayName: Whip Form
+				Description: Attack speed and knockback increased.
+			}
+
+			CosmicDischargeSwordBuff: {
+				DisplayName: Sword Form
+				Description: Critical strike chance and damage increased.
+			}
+
+			CosmicDischargeChainKnifeBuff: {
+				DisplayName: Chain Knife Form
+				Description: Movement speed and armor penetration increased.
+			}
+
 			CosmicDischargeRiftRevivalBuff: {
 				DisplayName: Rift Revival
 				Description: The Devourer rift shatters your limits. Damage, defense, and movement speed increased by 20%.
@@ -80,6 +95,8 @@ Mods: {
 		}
 
 		Projectiles: {
+			CosmicDischargeRiftCrack.DisplayName: Cosmic Discharge Rift Crack
+
 			Melee: {
 				CosmicDischargeSwordWave.DisplayName: Cosmic Discharge Rift Wave
 				CosmicDischargeDoGRiftBomb.DisplayName: Cosmic Discharge Rift Bomb
@@ -95,6 +112,7 @@ Mods: {
 				CosmicDischargeKillModeReady.DisplayName: Cosmic Discharge Kill Mode Ready
 				CosmicDischargeKillModeSlash.DisplayName: Cosmic Discharge Kill Mode Slash
 				DiseasedPikeProj.DisplayName: Diseased Pike Proj
+				BrinyBaron_HeavySlash.DisplayName: Briny Baron_ Heavy Slash
 			}
 		}
 

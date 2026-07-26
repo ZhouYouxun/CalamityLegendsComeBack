@@ -54,6 +54,7 @@ Mods: {
 		}
 
 		Projectiles: {
+			CallofDutyHoldout.DisplayName: Call of Duty Holdout
 			ResponsibilityCommunicationSequence.DisplayName: Wulfrum Communication Sequence
 			ResponsibilityCommunicationToken.DisplayName: Wulfrum Communication Token
 			ResponsibilityHatMarker.DisplayName: Wulfrum Hat

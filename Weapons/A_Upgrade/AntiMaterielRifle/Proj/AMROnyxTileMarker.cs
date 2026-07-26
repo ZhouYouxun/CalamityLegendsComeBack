@@ -15,8 +15,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
     internal sealed class AMROnyxTileMarker : ModProjectile, ILocalizedModType
     {
         public new string LocalizationCategory => "Projectiles.AntiMaterielRifle";
-        public override string Texture =>
-            "CalamityLegendsComeBack/Weapons/SHPC/Effects/EAfterDog/Ascendant/AscendantSpirit_PROJ";
+        public override string Texture => "Terraria/Images/Projectile_661";
 
         public const float TriggerRadius = 85f;
 
@@ -291,34 +290,49 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
 
         public override bool PreDraw(ref Color lightColor)
         {
-            Texture2D texture = TextureAssets.Projectile[Type].Value;
+            bool attachedToTarget = !IsTileMarker;
+            Texture2D texture = attachedToTarget
+                ? TextureAssets.Projectile[ProjectileID.BlackBolt].Value
+                : TextureAssets.Projectile[Type].Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
-            Vector2 origin = texture.Size() * 0.5f;
+            
+            int frames = Main.projFrames[ProjectileID.BlackBolt] > 0 ? Main.projFrames[ProjectileID.BlackBolt] : 4;
+            if (texture.Height % frames != 0)
+                frames = 1;
+            int frameHeight = texture.Height / frames;
+            int frameY = frames > 1 ? (int)((Main.GameUpdateCount / 6) % frames) : 0;
+            Rectangle sourceRectangle = new Rectangle(0, frameY * frameHeight, texture.Width, frameHeight);
+            Vector2 origin = sourceRectangle.Size() * 0.5f;
+
             float opacity = Math.Min(1f, Projectile.timeLeft / 24f);
-            bool attachedToTarget = !IsTileMarker;
             Vector2 forward = (Projectile.rotation - MathHelper.PiOver2).ToRotationVector2();
             Vector2 normal = new(-forward.Y, forward.X);
             float pulse = 0.5f + 0.5f * MathF.Sin((5 * 60 - Projectile.timeLeft) * 0.19f);
 
-            // 背景发光：使用暗紫/暗蓝替掉实体黑色掩码遮罩
+            // 切换至 Additive 混合模式，彻底避免贴图内黑色像素在 AlphaBlend 下绘制出黑块/黑边
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState,
+                DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+
+            // 背景光晕
             Main.EntitySpriteDraw(
                 bloom,
                 drawPosition,
                 null,
-                OnyxDeepViolet * (opacity * 0.45f),
+                new Color(45, 18, 90, 0) * (opacity * 0.6f),
                 0f,
                 bloom.Size() * 0.5f,
                 0.22f + pulse * 0.02f,
                 SpriteEffects.None,
                 0f);
 
-            // 钉附弹本体 (采用暗曜石紫与冷蓝混色渲染)
+            // 钉附弹本体发光 (Additive 模式下黑色自动透明，保留玛瑙冷蓝紫光辉)
             Main.EntitySpriteDraw(
                 texture,
                 drawPosition,
-                null,
-                Color.Lerp(OnyxDeepViolet, OnyxRim, 0.45f) * opacity,
+                sourceRectangle,
+                new Color(44, 108, 170, 0) * (opacity * 0.75f),
                 Projectile.rotation,
                 origin,
                 Projectile.scale * 1.12f,
@@ -327,23 +341,18 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
             Main.EntitySpriteDraw(
                 texture,
                 drawPosition,
-                null,
-                Color.Lerp(lightColor, OnyxSheen, 0.72f) * (opacity * 0.85f),
+                sourceRectangle,
+                new Color(74, 150, 214, 0) * opacity,
                 Projectile.rotation,
                 origin,
                 Projectile.scale,
                 SpriteEffects.None,
                 0f);
 
-            // 叠加 Additive 发光
-            Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState,
-                DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
-
             Main.EntitySpriteDraw(
                 texture,
                 drawPosition,
-                null,
+                sourceRectangle,
                 new Color(26, 92, 152, 0) * (opacity * 0.45f),
                 Projectile.rotation,
                 origin,
@@ -356,7 +365,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
                 Main.EntitySpriteDraw(
                     texture,
                     drawPosition - forward * 3f,
-                    null,
+                    sourceRectangle,
                     new Color(76, 32, 154, 0) * (opacity * (0.25f + pulse * 0.15f)),
                     Projectile.rotation,
                     origin,

@@ -43,7 +43,7 @@ Mods: {
 				AMROnyxTileMarker.DisplayName: 玛瑙钉附弹
 				AMRCooldownStatusBar.DisplayName: 反器材滑步冷却条
 				AMRBullseye.DisplayName: 反器材战术准心
-				// AMRBeamRound.DisplayName: A M R Beam Round
+				AMRBeamRound.DisplayName: 反器材步枪光束弹
 			}
 		}
 	}

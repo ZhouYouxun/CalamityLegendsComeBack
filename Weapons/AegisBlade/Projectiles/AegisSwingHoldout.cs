@@ -355,23 +355,26 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         private void SpawnOrbitalStrikes()
         {
             int orbitalType = ModContent.ProjectileType<AegisBorrowedOrbitalStrike>();
-            int orbitalDamage = Math.Max(1, (int)(Projectile.damage * 0.52f));
+            int orbitalDamage = Math.Max(1, (int)(Projectile.damage * 0.55f));
+            int targetIndex = FindOrbitalTargetIndex();
+            Vector2 destination = targetIndex >= 0
+                ? Main.npc[targetIndex].Center
+                : AegisBlade.GetMouseWorld(Owner);
 
-            for (int i = 0; i < 4; i++)
+            // 从天空中左右 4 个不同位置发射 4 条天光弹幕，全部斜向穿过 destination 敌人焦点轰向地面
+            int beamCount = 4;
+            for (int i = 0; i < beamCount; i++)
             {
-                int targetIndex = FindOrbitalTargetIndex();
-                Vector2 destination = targetIndex >= 0
-                    ? Main.npc[targetIndex].Center + Main.rand.NextVector2Circular(42f, 34f)
-                    : AegisBlade.GetMouseWorld(Owner);
+                float xOffset = MathHelper.Lerp(-450f, 450f, i / (float)(beamCount - 1)) + Main.rand.NextFloat(-40f, 40f);
+                float yOffset = -Main.rand.NextFloat(900f, 1150f);
+                Vector2 spawnPosition = destination + new Vector2(xOffset, yOffset);
 
-                Vector2 spawnPosition = new(
-                    destination.X,
-                    destination.Y - Main.rand.NextFloat(940f, 1220f));
+                Vector2 flyDir = (destination - spawnPosition).SafeNormalize(Vector2.UnitY);
 
                 Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
                     spawnPosition,
-                    Vector2.UnitY * Main.rand.NextFloat(34f, 42f),
+                    flyDir,
                     orbitalType,
                     orbitalDamage,
                     Projectile.knockBack * 0.55f,

@@ -28,8 +28,10 @@
 	  <Folder Include="Weapons\A_Dev\SHPBow\参考文献\" />
 	  <Folder Include="Weapons\A_Upgrade\AntiMaterielRifle\Proj\" />
 	  <Folder Include="Weapons\A_Upgrade\DragoonDrizzlefish\" />
+	  <Folder Include="Weapons\A_Upgrade\Nadir\" />
 	  <Folder Include="Weapons\BlossomFlux\EXSkill\SpecialEffects\" />
 	  <Folder Include="Weapons\BlossomFlux\Hold\" />
+	  <Folder Include="Weapons\BrinyBaron\CommonAttack\HeavyAT\" />
 	  <Folder Include="Weapons\BrinyBaron\SkillD_SuperDash\Effects\" />
 	  <Folder Include="Weapons\BrinyBaron\Balance\" />
 	  <Folder Include="Weapons\B_Report\规划\" />

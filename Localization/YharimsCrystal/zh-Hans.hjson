@@ -190,17 +190,25 @@ Mods: {
 				YC_EssenceFlame.DisplayName: 精华火焰
 				YC_ThrownBlade.DisplayName: 投掷水晶刃
 				YC_RightDrone.DisplayName: 亚利姆水晶右键无人机
-				// YC_DroneShot.DisplayName: Y C_ Drone Shot
-				// YC_DroneZapBeam.DisplayName: Y C_ Drone Zap Beam
-				// YC_GoldBomb.DisplayName: Y C_ Gold Bomb
-				// YC_TrackingRocket.DisplayName: Y C_ Tracking Rocket
-				// YC_BackgroundBlade.DisplayName: Y C_ Background Blade
-				// YC_BackgroundBladeStrike.DisplayName: Y C_ Background Blade Strike
-				// YC_BackgroundCrystal.DisplayName: Y C_ Background Crystal
-				// YC_BackgroundCrystalBolt.DisplayName: Y C_ Background Crystal Bolt
+				YC_DroneShot.DisplayName: 亚哈里姆无人机弹束
+				YC_DroneZapBeam.DisplayName: 亚哈里姆无人机电击光束
+				YC_GoldBomb.DisplayName: 黄金爆弹
+				YC_TrackingRocket.DisplayName: 追踪热核火箭
+				YC_BackgroundBlade.DisplayName: 背景金剑
+				YC_BackgroundBladeStrike.DisplayName: 背景金剑打击
+				YC_BackgroundCrystal.DisplayName: 背景亚哈里姆水晶
+				YC_BackgroundCrystalBolt.DisplayName: 背景水晶光束
+				// YC_GalacticaComet.DisplayName: Y C_ Galactica Comet
 			}
 		}
 
 		Cooldowns.YC_EX: 世界的终结
+	}
+
+	Buffs: {
+		YharonSoulFragment_Buff: {
+			DisplayName: 丛龙灵火
+			Description: 正在被丛龙灵魂之火灼烧。
+		}
 	}
 }

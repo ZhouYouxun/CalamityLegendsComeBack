@@ -231,21 +231,6 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
             SoundEngine.PlaySound(SoundID.Item20 with { Volume = releaseStage >= 3 ? 0.8f : 0.62f, Pitch = releaseStage >= 3 ? -0.42f : -0.3f }, GunTip);
         }
 
-        private void SpawnMoltenAsteroid(Vector2 position, Vector2 velocity, int variant, float scale, bool noLargeExplosion, float damageMultiplier)
-        {
-            Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(),
-                position,
-                velocity,
-                ModContent.ProjectileType<VesuviusMoltenAsteroid>(),
-                Math.Max(1, (int)(Projectile.damage * damageMultiplier)),
-                Projectile.knockBack * 0.55f,
-                Projectile.owner,
-                variant,
-                scale,
-                noLargeExplosion ? 1f : 0f);
-        }
-
         private void ChargingEffects()
         {
             if (Main.dedServ)
