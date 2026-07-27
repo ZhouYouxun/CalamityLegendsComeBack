@@ -166,6 +166,20 @@ Mods: {
 				GhostSniperRound.DisplayName: 幽灵狙击弹
 				GhostSniperSpectreOrb.DisplayName: 幽灵狙击幽魂球
 			}
+
+			// Z_BrinyBaron_SkillSuperCharge_SuperDash.DisplayName: Z_ Briny Baron_ Skill Super Charge_ Super Dash
+			// BrinyBaron_SkillSlashDash_SlashDash.DisplayName: Briny Baron_ Skill Slash Dash_ Slash Dash
+			// BrinyBaron_LeftClick_Swing.DisplayName: Briny Baron_ Left Click_ Swing
+			// FuckYou.DisplayName: Fuck You
+			// BFArrow_EPlagueGas.DisplayName: B F Arrow_ E Plague Gas
+			// BFArrow_EPlague.DisplayName: B F Arrow_ E Plague
+			// BFArrow_DBomb.DisplayName: B F Arrow_ D Bomb
+			// BFArrow_CDetecReticle.DisplayName: B F Arrow_ C Detec Reticle
+			// BFArrow_CDetec.DisplayName: B F Arrow_ C Detec
+			// BFArrow_BRecovTransfer.DisplayName: B F Arrow_ B Recov Transfer
+			// BFArrow_BRecov.DisplayName: B F Arrow_ B Recov
+			// BFArrow_ABreak.DisplayName: B F Arrow_ A Break
+			// BFLeftPlagueFlame.DisplayName: B F Left Plague Flame
 		}
 
 		TheSpecialText: {

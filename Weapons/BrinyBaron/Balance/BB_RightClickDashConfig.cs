@@ -23,11 +23,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
         public const int RightClickDashLocalHitCooldown = 24;
         public const int RightClickHitCooldownAfterEnemyHit = 60;
         public const int AbyssalBastionRightClickCooldown = 120;
-        public const int AbyssalBastionDashFrames = 42;
+        public const int AbyssalBastionDashFrames = 30;
         public const float AbyssalBastionDashSpeedMultiplier = 1.25f;
 
-        public static readonly float[] RightClickGrowthSpeedMultipliers = { 2.4f, 3.0f, 3.4f, 3.8f, 4.0f };
-        public static readonly float[] RightClickGrowthContactDamageMultipliers = { 3f, 3.25f, 3.5f, 3.75f, 4f };
+        public static readonly float[] RightClickGrowthSpeedMultipliers = { 4.4f, 5.0f, 5.4f, 5.8f, 6.0f };
+        public static readonly float[] RightClickGrowthContactDamageMultipliers = { 3f, 3.5f, 4.25f, 4.75f, 5.25f };
         public static readonly bool[] RightClickGrowthEnemyReboundUnlocks = { false, true, true, true, true };
 
         public const int OceanHormoneUseTimeReduction = 12;

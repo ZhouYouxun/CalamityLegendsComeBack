@@ -546,7 +546,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     Owner.MountedCenter + shootDirection * 40f,
                     velocity,
                     ModContent.ProjectileType<BrinyBaron_SeaSpirit>(),
-                    Math.Max(1, (int)(Projectile.damage * 0.4f)),
+                    Math.Max(1, (int)(Projectile.damage * 0.35f)),
                     Projectile.knockBack * 0.45f,
                     Projectile.owner,
                     3f); // ai[0] = 3f: Stage 3 Sea Spirit
@@ -610,9 +610,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         private void SpawnFiveShurikens()
         {
             Vector2 shootDirection = lockedAimDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
-            // Third-swing fan starts at three; Duke Fishron restores the full five-blade
-            // version as an explicit progression reward.
-            int shurikenCount = NPC.downedFishron ? 5 : 3;
+            // Incoming balance keeps this third-swing fan at three projectiles.
+            // Retain the centered fan math so the three blades do not skew to one side.
+            const int shurikenCount = 3;
             int middle = shurikenCount / 2;
             for (int i = 0; i < shurikenCount; i++)
             {
@@ -641,7 +641,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 Owner.MountedCenter + shootDirection * 44f,
                 shootDirection * 13.2f,
                 ModContent.ProjectileType<BBSwing_Wave>(),
-                Math.Max(1, (int)(Projectile.damage * 2.25f)),
+                Math.Max(1, (int)(Projectile.damage * 2f)),
                 Projectile.knockBack,
                 Projectile.owner,
                 2.35f,

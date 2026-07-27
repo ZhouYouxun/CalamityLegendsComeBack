@@ -46,7 +46,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             // Stage (阶段)                                BaseDamage (基础伤害)
             { "Initial",                                    168 },
             { "Eye of Cthulhu",                             220 },
-            { "Evil Boss",                                  300 },
+            { "Evil Boss",                                  275 },
             { "Wall of Flesh",                              480 },
             { "Any Mechanical Boss",                        700 },
             { "Plantera",                                  1050 },
@@ -92,13 +92,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
         public const int InitialDamage = 168;
 
         /// <summary> 基础开火间隔帧数 (60帧 = 1秒) </summary>
-        public const int BaseFireInterval = 60;
+        public const int BaseFireInterval = 75;
 
         /// <summary> 右键瞄准镜最大蓄力帧数 (90帧 = 1.5秒) </summary>
-        public const int ScopeChargeFrames = 90;
+        public const int ScopeChargeFrames = 180;
 
         /// <summary> 右键瞄准镜允许发射的最小蓄力帧数 (12帧 = 0.2秒) </summary>
-        public const int MinimumScopeChargeFrames = 12;
+        public const int MinimumScopeChargeFrames = 30;
 
         /// <summary> 滑铲动作持续帧数 (15帧 = 0.25秒) </summary>
         public const int SlideFrames = 15;
@@ -128,10 +128,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
         public const float MaxRightProjectileSpeedUnscaled = 62f;
 
         /// <summary> 右键最小蓄力伤害倍率 (1.0x) </summary>
-        public const float MinRightDamageMultiplier = 1.0f;
+        public const float MinRightDamageMultiplier = 0.33f;
 
         /// <summary> 右键最大蓄力伤害倍率 (5.0x) </summary>
-        public const float MaxRightDamageMultiplier = 5.0f;
+        public const float MaxRightDamageMultiplier = 3.25f;
 
         #endregion
 
