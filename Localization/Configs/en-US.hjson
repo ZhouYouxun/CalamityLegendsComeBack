@@ -1,12 +1,9 @@
-﻿Mods: {
+Mods: {
 	CalamityLegendsComeBack: {
 		Configs: {
 			CalamityLegendsComeBackConfig: {
 				DisplayName: Calamity Legends Come Back Settings
-
-				Headers: {
-					RecipeSettings: Improved Experience
-				}
+				Headers.RecipeSettings: Improved Experience
 
 				AllowMassMaterialRecipes: {
 					Label: "[i:CrystalBall] Allow Bulk Material Crafting"

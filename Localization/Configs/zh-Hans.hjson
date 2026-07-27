@@ -1,12 +1,9 @@
-﻿Mods: {
+Mods: {
 	CalamityLegendsComeBack: {
 		Configs: {
 			CalamityLegendsComeBackConfig: {
 				DisplayName: 传奇归来设置
-
-				Headers: {
-					RecipeSettings: 改进体验
-				}
+				Headers.RecipeSettings: 改进体验
 
 				AllowMassMaterialRecipes: {
 					Label: "[i:CrystalBall] 允许大量材料可制作"
