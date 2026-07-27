@@ -26,6 +26,10 @@ Mods: {
 				UmbralNadirAbyssRift.DisplayName: Abyssal Maw
 				UmbralNadirThrowController.DisplayName: Umbral Volley
 				UmbralNadirJavelin.DisplayName: Umbral Void Javelin
+				UmbralNadirShadowSoul.DisplayName: Umbral Nadir Shadow Soul
+				UmbralNadirFinalExplosion.DisplayName: Umbral Nadir Final Explosion
+				UmbralNadirImpactExplosion.DisplayName: Umbral Nadir Impact Explosion
+				UmbralNadirSpinHoldout.DisplayName: Umbral Nadir Spin Holdout
 			}
 		}
 	}

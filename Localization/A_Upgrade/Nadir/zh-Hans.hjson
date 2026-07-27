@@ -26,6 +26,10 @@ Mods: {
 				UmbralNadirAbyssRift.DisplayName: 深渊之口
 				UmbralNadirThrowController.DisplayName: 冥蚀投掷
 				UmbralNadirJavelin.DisplayName: 冥蚀虚空投矛
+				// UmbralNadirShadowSoul.DisplayName: Umbral Nadir Shadow Soul
+				// UmbralNadirFinalExplosion.DisplayName: Umbral Nadir Final Explosion
+				// UmbralNadirImpactExplosion.DisplayName: Umbral Nadir Impact Explosion
+				// UmbralNadirSpinHoldout.DisplayName: Umbral Nadir Spin Holdout
 			}
 		}
 	}

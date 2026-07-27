@@ -518,7 +518,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     spawnPos,
                     shootDirection * speed,
                     ModContent.ProjectileType<BrinyBaron_SeafoamBlade>(),
-                    Math.Max(1, (int)(Projectile.damage * 0.75f)),
+                    Math.Max(1, (int)(Projectile.damage * 0.66f)),
                     Projectile.knockBack * 0.4f,
                     Projectile.owner);
                     
@@ -546,7 +546,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     Owner.MountedCenter + shootDirection * 40f,
                     velocity,
                     ModContent.ProjectileType<BrinyBaron_SeaSpirit>(),
-                    Math.Max(1, (int)(Projectile.damage * 0.35f)),
+                    Math.Max(1, (int)(Projectile.damage * 0.3f)),
                     Projectile.knockBack * 0.45f,
                     Projectile.owner,
                     3f); // ai[0] = 3f: Stage 3 Sea Spirit
@@ -566,7 +566,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     Owner.MountedCenter + shootDirection * 40f,
                     velocity,
                     ModContent.ProjectileType<BrinyBaron_SeaSpirit>(),
-                    Math.Max(1, (int)(Projectile.damage * 0.5f)),
+                    Math.Max(1, (int)(Projectile.damage * 0.45f)),
                     Projectile.knockBack * 0.45f,
                     Projectile.owner,
                     4f); // ai[0] = 4f: Stage 4 Sea Spirit
@@ -582,7 +582,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 Owner.MountedCenter + shootDirection * 44f,
                 shootDirection * speed,
                 ModContent.ProjectileType<BBSwing_Wave>(),
-                Math.Max(1, (int)(Projectile.damage * 1.33f)),
+                Math.Max(1, (int)(Projectile.damage * 0.75f)),
                 Projectile.knockBack,
                 Projectile.owner,
                 1.42f,
@@ -601,7 +601,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 Owner.MountedCenter + shootDirection * 28f,
                 shootDirection * 14f,
                 ModContent.ProjectileType<BrinyBaron_RightClick_Shuriken>(),
-                Math.Max(1, (int)(Projectile.damage * 0.5f)),
+                Math.Max(1, (int)(Projectile.damage * 0.4f)),
                 Projectile.knockBack * 0.5f,
                 Projectile.owner,
                 0f);
@@ -779,7 +779,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 Owner.Center + radialDirection * Main.rand.NextFloat(18f, 43f),
                 radialDirection * Main.rand.NextFloat(10.5f, 13.5f) + tangentDirection * Main.rand.NextFloat(1f, 3f),
                 ModContent.ProjectileType<BrinyBaron_RightClick_Shuriken>(),
-                Math.Max(1, (int)(Projectile.damage * 0.34f)),
+                Math.Max(1, (int)(Projectile.damage * 0.67f)),
                 Projectile.knockBack * 0.4f,
                 Projectile.owner,
                 0f);
@@ -798,7 +798,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     Owner.Center,
                     Vector2.Zero,
                     bubbleType,
-                    Math.Max(1, (int)(Projectile.damage * 0.32f)),
+                    Math.Max(1, (int)(Projectile.damage * 0.92f)),
                     Projectile.knockBack * 0.3f,
                     Projectile.owner,
                     rightSpinAngle,
