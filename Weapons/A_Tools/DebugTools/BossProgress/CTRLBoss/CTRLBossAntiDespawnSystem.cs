@@ -1,5 +1,6 @@
 using CalamityMod;
 using CalamityMod.NPCs;
+using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -10,10 +11,26 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.BossProgress
     {
         private const int ProtectedBossTimeLeft = 1800;
         private const float BlockedDRThreshold = 0.95f;
+        private const float MaxEscapeDistance = 2500f;
+
+        private bool wasDayTimeTemp;
+        private bool dayTimeSpoofed;
+
+        public override bool InstancePerEntity => true;
 
         public override bool PreAI(NPC npc)
         {
-            ProtectBoss(npc);
+            if (CTRLBossAntiDespawnSystem.IsActive && IsProtectedBoss(npc))
+            {
+                ProtectBoss(npc);
+
+                if (Main.dayTime && IsDaytimeRetreatingBoss(npc.type))
+                {
+                    wasDayTimeTemp = Main.dayTime;
+                    Main.dayTime = false;
+                    dayTimeSpoofed = true;
+                }
+            }
             return true;
         }
 
@@ -25,20 +42,34 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.BossProgress
             return true;
         }
 
-        public override void PostAI(NPC npc) => ProtectBoss(npc);
+        public override void PostAI(NPC npc)
+        {
+            if (dayTimeSpoofed)
+            {
+                Main.dayTime = wasDayTimeTemp;
+                dayTimeSpoofed = false;
+            }
+
+            if (CTRLBossAntiDespawnSystem.IsActive && IsProtectedBoss(npc))
+            {
+                ProtectBoss(npc);
+                PreventBossEscaping(npc);
+            }
+        }
 
         private static void ProtectBoss(NPC npc)
         {
-            if (!CTRLBossAntiDespawnSystem.IsActive || !IsProtectedBoss(npc))
-                return;
-
             if (CTRLBossAntiDespawnSystem.TryGetAnchorPlayer(out Player player))
                 npc.target = player.whoAmI;
 
             if (npc.timeLeft < ProtectedBossTimeLeft)
                 npc.timeLeft = ProtectedBossTimeLeft;
 
+            if (npc.type == NPCID.SkeletronPrime && npc.defense > npc.defDefense + 50)
+                npc.defense = npc.defDefense;
+
             CalamityGlobalNPC calamityNPC = npc.Calamity();
+            calamityNPC.DoesNotDisappearInBossRush = true;
             calamityNPC.CurrentlyEnraged = false;
             calamityNPC.CurrentlyIncreasingDefenseOrDR = false;
 
@@ -49,12 +80,35 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.BossProgress
             }
         }
 
+        private static void PreventBossEscaping(NPC npc)
+        {
+            if (!CTRLBossAntiDespawnSystem.TryGetAnchorPlayer(out Player player))
+                return;
+
+            if (Vector2.Distance(npc.Center, player.Center) <= MaxEscapeDistance)
+                return;
+
+            npc.Center = player.Center - Vector2.UnitY * 500f;
+            npc.velocity = Vector2.Zero;
+            npc.netUpdate = true;
+        }
+
         private static bool IsProtectedBoss(NPC npc)
         {
+            if (!npc.active)
+                return false;
+
             return npc.boss ||
                 npc.realLife >= 0 ||
                 NPCID.Sets.ShouldBeCountedAsBoss[npc.type];
         }
+
+        private static bool IsDaytimeRetreatingBoss(int type) =>
+            type == NPCID.Retinazer ||
+            type == NPCID.Spazmatism ||
+            type == NPCID.TheDestroyer ||
+            type == NPCID.TheDestroyerBody ||
+            type == NPCID.TheDestroyerTail;
     }
 
     internal static class CTRLBossAntiDespawnSystem
@@ -85,7 +139,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.BossProgress
             return false;
         }
 
-        public static bool PlayerHasFavoritedTool(Player player)
+        public static bool PlayerHasTool(Player player)
         {
             if (player is null || !player.active)
                 return false;
@@ -94,7 +148,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.BossProgress
             for (int i = 0; i < player.inventory.Length; i++)
             {
                 Item item = player.inventory[i];
-                if (item is not null && item.type == ctrlBossType && item.favorited)
+                if (item is not null && !item.IsAir && item.type == ctrlBossType)
                     return true;
             }
 
@@ -114,7 +168,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.BossProgress
             for (int i = 0; i < Main.maxPlayers; i++)
             {
                 Player player = Main.player[i];
-                if (!PlayerHasFavoritedTool(player))
+                if (!PlayerHasTool(player))
                     continue;
 
                 cachedActive = true;

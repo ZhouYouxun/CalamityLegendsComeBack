@@ -171,6 +171,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             Owner.manaRegenDelay = System.Math.Max(Owner.manaRegenDelay, 60);
             Owner.manaRegen = 0;
 
+            if (HeldItem != null && HeldItem.type == AssociatedItemID)
+            {
+                HeldItem.mana = 0;
+            }
+
             float armRotation = (Projectile.rotation - MathHelper.PiOver2) * Owner.gravDir +
                                 (Owner.gravDir == -1 ? MathHelper.Pi : 0f);
 

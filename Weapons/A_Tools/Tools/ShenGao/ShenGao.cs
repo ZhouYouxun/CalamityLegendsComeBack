@@ -28,7 +28,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.Tools.ShenGao
             Item.width = 52;
             Item.height = 52;
             Item.useTime = GetUseTime();
-            Item.useAnimation = GetUseTime();   // 与 useTime 一致，左右键挖掘速度相同
+            Item.useAnimation = GetUseTime();   // 始终维持 20 帧挥动节奏
             Item.useStyle = ItemUseStyleID.Swing;
             Item.knockBack = 7;
             Item.value = Item.buyPrice(gold: 50);
@@ -77,6 +77,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.Tools.ShenGao
         {
             Color c = GetTierColor();
             Lighting.AddLight(player.Center, new Vector3(c.R / 255f, c.G / 255f, c.B / 255f) * 0.40f);
+
+            // 挥动保持 20 帧，但方块破坏按 2 帧工具的效率结算。
+            player.pickSpeed *= MiningSpeedMultiplier;
         }
 
         public override void UpdateInventory(Player player)
@@ -119,53 +122,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.Tools.ShenGao
                         Main.rand.Next(6, 13),
                         Main.rand.NextFloat(0.10f, 0.24f),
                         Main.rand.NextBool(3) ? accent : primary));
-                }
-            }
-
-            // 辉光粒子——每次挥舞必有 1 个，较高阶多追加一个
-            {
-                int bloomCount = tier >= 6 ? 2 : 1;
-                for (int i = 0; i < bloomCount; i++)
-                {
-                    GeneralParticleHandler.SpawnParticle(new SquishyLightParticle(
-                        center + Main.rand.NextVector2Circular(15f, 15f),
-                        Main.rand.NextVector2Circular(0.9f, 0.9f),
-                        Main.rand.NextFloat(0.08f, 0.18f + tier * 0.004f),
-                        Color.Lerp(primary, Color.White, 0.40f),
-                        Main.rand.Next(5, 10)));
-                }
-            }
-
-            // 偶发宽脉冲环——月球领主后开始，频率随阶提升
-            if (tier >= 8 && Main.rand.NextBool(4))
-            {
-                GeneralParticleHandler.SpawnParticle(new CustomPulse(
-                    center,
-                    Vector2.Zero,
-                    primary with { A = 0 },
-                    "CalamityMod/Particles/BloomRing",
-                    Vector2.One * 0.70f,
-                    Main.rand.NextFloat(MathHelper.TwoPi),
-                    0.018f,
-                    0.11f,
-                    10));
-            }
-
-            // 虚空微辉——噬神者后开始，深色内爆光点增加神秘感
-            if (tier >= 11 && Main.rand.NextBool(5))
-            {
-                for (int i = 0; i < 2; i++)
-                {
-                    GeneralParticleHandler.SpawnParticle(new CustomPulse(
-                        center + Main.rand.NextVector2Circular(12f, 12f),
-                        Vector2.Zero,
-                        accent with { A = 0 },
-                        "CalamityMod/Particles/BloomCircle",
-                        Vector2.One * 0.18f,
-                        0f,
-                        0.42f,
-                        0.04f,
-                        8));
                 }
             }
         }
@@ -251,34 +207,33 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.Tools.ShenGao
             _  => 255
         };
 
-        private static int GetUseTime() => GetTier() switch
-        {
-            0 or 1 or 2 => 8,
-            3 or 4      => 7,
-            5 or 6      => 6,
-            7 or 8      => 5,
-            9 or 10     => 4,
-            11 or 12    => 3,
-            _           => 2
-        };
+        private const int AttackUseTime = 20;
+        private const float MiningSpeedMultiplier = 2f / AttackUseTime;
 
-        private static int GetDamage() => GetTier() switch
+        private static int GetUseTime() => AttackUseTime;
+
+        private static int GetDamage()
         {
-            0  => 20,
-            1  => 32,
-            2  => 48,
-            3  => 72,
-            4  => 92,
-            5  => 120,
-            6  => 142,
-            7  => 168,
-            8  => 202,
-            9  => 262,
-            10 => 325,
-            11 => 405,
-            12 => 508,
-            _  => 650
-        };
+            int baseDamage = GetTier() switch
+            {
+                0  => 20,
+                1  => 32,
+                2  => 48,
+                3  => 72,
+                4  => 92,
+                5  => 120,
+                6  => 142,
+                7  => 168,
+                8  => 202,
+                9  => 262,
+                10 => 325,
+                11 => 405,
+                12 => 508,
+                _  => 650
+            };
+
+            return (int)Math.Round(baseDamage * 0.8f, MidpointRounding.AwayFromZero);
+        }
 
         private static int GetAxePower() => GetTier() switch
         {
