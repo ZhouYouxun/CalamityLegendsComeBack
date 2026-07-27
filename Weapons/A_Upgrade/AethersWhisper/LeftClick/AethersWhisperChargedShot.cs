@@ -8,7 +8,9 @@ using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper
+using CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.Shared;
+
+namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.LeftClick
 {
     /// <summary>
     /// 左键的微光坍缩炮晶核（文档第 3.2 节）。
@@ -39,7 +41,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper
             Projectile.timeLeft = AethersWhisperBalance.ChargedShotLifetime;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = -1;
-            Projectile.extraUpdates = 1;              // 更平滑的高速飞行
+            // 不加 extraUpdates：初速已是“每 tick 像素”的合同值，靠 Colliding 的线段判定防漏判即可。
         }
 
         public override void AI()

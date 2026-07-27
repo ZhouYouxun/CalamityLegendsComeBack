@@ -53,7 +53,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.RightClick
             Projectile.timeLeft = 260;
             Projectile.tileCollide = true;
             Projectile.ignoreWater = true;
-            Projectile.extraUpdates = 3;
+            Projectile.extraUpdates = UmbralNadirBalance.JavelinExtraUpdates; // 7 次/帧 → 约旧版 2.4 倍飞速
             Projectile.scale = 0.85f;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = -1;

@@ -9,7 +9,9 @@ using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper
+using CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.Shared;
+
+namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.RightClick
 {
     /// <summary>
     /// 右键的单束微光折射伪激光（文档第 4.2 节）。

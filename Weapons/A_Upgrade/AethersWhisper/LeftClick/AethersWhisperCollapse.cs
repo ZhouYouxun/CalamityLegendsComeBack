@@ -6,7 +6,9 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper
+using CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.Shared;
+
+namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.LeftClick
 {
     /// <summary>
     /// 微光坍缩：左键晶核在命中点触发的一圈坍缩（文档第 3.3 节，无伤害视觉 + 可选 AoE）。

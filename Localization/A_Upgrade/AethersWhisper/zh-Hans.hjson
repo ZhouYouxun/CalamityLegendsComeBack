@@ -1,0 +1,30 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				Magic: {
+					AethersWhisper: {
+						DisplayName: 以太之低语
+						Tooltip:
+							'''
+							长按左键压缩微光，松开以发射毁灭性的坍缩炮
+							按住右键进行四连折射扫射
+							折射束会在终点分解为晶片，并沿原路回收至枪口
+							'''
+					}
+				}
+			}
+		}
+
+		Projectiles: {
+			AethersWhisper: {
+				AethersWhisperHoldout.DisplayName: 微光坍缩炮
+				AethersWhisperSweepHoldout.DisplayName: 微光折返扫射
+				AethersWhisperChargedShot.DisplayName: 微光坍缩晶核
+				AethersWhisperCollapse.DisplayName: 微光坍缩
+				AethersWhisperRefractionBeam.DisplayName: 微光折射束
+				AethersWhisperReturnShard.DisplayName: 回收晶片
+			}
+		}
+	}
+}

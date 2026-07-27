@@ -56,12 +56,43 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir
 
         // ===== 右键·高速三连投矛 =====
         public const float JavelinDamageMult = 0.85f;       // 投矛本体（相对右键基础伤害）
-        public const float JavelinSpeedMin = 4.8f;          // 每次位移（extraUpdates=3，实际飞速为其 4 倍）
-        public const float JavelinSpeedMax = 5.52f;         // 原上限 4.6 × 1.20
+        public const int JavelinExtraUpdates = 6;           // 7 次/帧移动 → 直线飞行极快且顺滑
+        public const float JavelinSpeedMin = 6.5f;          // 每次位移；实际飞速 ≈ ×7，较旧版约 2.4 倍
+        public const float JavelinSpeedMax = 7.5f;
         public const float JavelinSpreadDegrees = 4f;       // 角度散布 ±4°
         public const float JavelinLateralOffset = 14f;      // 出生横向偏移 ±14 px
         public const float JavelinForwardMin = 24f;
         public const float JavelinForwardMax = 44f;
+
+        // ===== 蚀痕叠层（呼应核心）=====
+        public static readonly int[] LeftStackPerHit = { 1, 2, 3 };  // 上挑/劈落/冲刺 每次近战命中叠层
+        public const int ShadowSoulStack = 1;                        // 魂针命中叠层
+        public const int SpinStackPerHit = 1;                        // 回旋命中叠层
+        public const float FinalStackBonusFraction = 0.14f;          // 终爆/新星每消耗 1 层，额外 +14% 基础伤害
+        public const float CorrodedSoulSeekBias = 1.6f;              // 魂针优先锁定蚀痕更高的敌人的权重
+
+        // ===== 黑洞拉扯（各段近战命中的事件视界）=====
+        public static readonly float[] ImpactPullRange = { 150f, 190f, 240f };
+        public static readonly float[] ImpactPullStrength = { 0.6f, 0.95f, 0f }; // 冲刺段拉扯交给奇点
+
+        // ===== 第三段·奇点（持续黑洞，冲刺命中生成）=====
+        public const int SingularityDuration = 96;          // 存活帧（extraUpdates=0）
+        public const float SingularityPullRange = 360f;
+        public const float SingularityPullStrength = 1.5f;
+        public const float SingularityTickDamageMult = 0.16f;   // 每次 DoT 脉冲（相对左键 holdout 伤害）
+        public const float SingularityDetonateMult = 0.9f;      // 消失时坍缩爆发（相对左键 holdout 伤害）
+
+        // ===== 奇点充能（回旋斩迹蓄满后释放黑洞新星）=====
+        public const float SingularityChargeMax = 100f;
+        public const float ChargePerLeftHit = 7f;
+        public const float ChargePerSpinHit = 5f;
+        public const int SpinNovaCooldown = 240;                // 新星冷却帧
+        public const float SpinNovaDamageMult = 2.3f;           // 新星核心（相对左键当前基础伤害）
+        public const float SpinNovaRadius = 300f;
+
+        public static int GetLeftStackPerHit(int stage) => LeftStackPerHit[Math.Clamp(stage, 0, 2)];
+        public static float GetImpactPullRange(int stage) => ImpactPullRange[Math.Clamp(stage, 0, 2)];
+        public static float GetImpactPullStrength(int stage) => ImpactPullStrength[Math.Clamp(stage, 0, 2)];
 
         // 投掷节奏（帧）：每轮 3 发，发间隔 5 帧；末发→下一轮首发间隔 35 帧 → 整轮周期 45 帧。
         public const int ThrowsPerRound = 3;

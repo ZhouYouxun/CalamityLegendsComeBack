@@ -1,18 +1,17 @@
 using System;
 using System.Collections.Generic;
 using CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.Combo;
+using CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.General;
 using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Dusts;
 using CalamityMod.Enums;
-using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
 using CalamityMod.Projectiles.BaseProjectiles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.Audio;
-using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -44,6 +43,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.LeftClick
         private int stage;
         private bool hasExploded;
         private bool spawnedSpin;
+        private bool waveSpawned;
         private readonly List<Vector2> tipHistory = new();
 
         private float StageDamageMult => stage switch
@@ -115,9 +115,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.LeftClick
                 {
                     spawnedSpin = true;
                     int spinDamage = Math.Max(1, (int)(Projectile.damage * UmbralNadirBalance.SpinDamageMult));
+                    // ai[0] = 左键基础伤害（供回旋满充能释放黑洞新星），ai[1] = 阶段尺寸
                     Projectile.NewProjectile(Projectile.GetSource_FromThis(), player.MountedCenter, Vector2.Zero,
                         ModContent.ProjectileType<UmbralNadirSpinHoldout>(), spinDamage, Projectile.knockBack,
-                        Projectile.owner, 0f, UmbralNadirBalance.GetLeftScale());
+                        Projectile.owner, Projectile.damage, UmbralNadirBalance.GetLeftScale());
                     Projectile.Kill();
                     return;
                 }
@@ -129,21 +130,32 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.LeftClick
             if (stage == 2 && inSwing)
                 OffsetDistance = (int)MathHelper.Lerp(-18f, 112f, MathF.Pow(SwingCompletion, 1.5f));
 
-            // 记录矛尖世界坐标（用于黑色 shader 残像）
-            if (inSwing)
+            // 每段挥砍甩出一记刃波（中距离压制 + 远处叠蚀痕）
+            if (inSwing && !waveSpawned && SwingCompletion >= 0.42f && Projectile.owner == Main.myPlayer)
             {
-                Vector2 radial = (Projectile.Center - player.MountedCenter).SafeNormalize(Vector2.UnitX);
-                Vector2 tip = Projectile.Center + radial * 60f * Projectile.scale;
-                tipHistory.Insert(0, tip);
-                if (tipHistory.Count > 8)
+                waveSpawned = true;
+                Vector2 dir = (-angle).SafeNormalize(Vector2.UnitX * player.direction);
+                int waveDamage = Math.Max(1, (int)(Projectile.damage * StageDamageMult * 0.5f));
+                Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, dir * 14f,
+                    ModContent.ProjectileType<UmbralNadirSlashWave>(), waveDamage, Projectile.knockBack, Projectile.owner);
+                SoundEngine.PlaySound(SoundID.Item71 with { Volume = 0.4f, Pitch = 0.25f }, Projectile.Center);
+            }
+
+            // 记录矛尖世界坐标（每真实帧一次，让残像沿挥舞弧线铺开而不是挤成一团）
+            if (Projectile.FinalExtraUpdate())
+            {
+                if (inSwing)
+                {
+                    Vector2 radial = (Projectile.Center - player.MountedCenter).SafeNormalize(Vector2.UnitX);
+                    Vector2 tip = Projectile.Center + radial * 62f * Projectile.scale;
+                    tipHistory.Insert(0, tip);
+                    if (tipHistory.Count > 12)
+                        tipHistory.RemoveAt(tipHistory.Count - 1);
+                    SpawnBlackGrit(player);
+                }
+                else if (tipHistory.Count > 0)
                     tipHistory.RemoveAt(tipHistory.Count - 1);
             }
-            else if (tipHistory.Count > 0)
-                tipHistory.RemoveAt(tipHistory.Count - 1);
-
-            // 辅视觉：黑色砂粒（每真实帧 1~2 粒，从矛尖后方逸出）
-            if (inSwing && Projectile.FinalExtraUpdate())
-                SpawnBlackGrit(player);
         }
 
         private void SpawnBlackGrit(Player player)
@@ -191,14 +203,31 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.LeftClick
         {
             target.AddBuff(ModContent.BuffType<Voidfrost>(), 120 + stage * 60);
 
-            // 每次挥砍只生成一次范围爆炸；其 AoE 半径负责扫群
+            // 呼应核心：每次近战命中都往敌人身上叠"蚀痕"，并为奇点充能
+            UmbralCorrosionGlobalNPC.AddStacks(target, UmbralNadirBalance.GetLeftStackPerHit(stage));
+            if (Projectile.owner == Main.myPlayer)
+                Main.player[Projectile.owner].GetModPlayer<UmbralNadirPlayer>().AddCharge(UmbralNadirBalance.ChargePerLeftHit);
+
+            // 每次挥砍只生成一次范围效果
             if (hasExploded || Projectile.owner != Main.myPlayer)
                 return;
             hasExploded = true;
 
-            int impactDamage = Math.Max(1, (int)(Projectile.damage * StageDamageMult * UmbralNadirBalance.GetImpactDamageMult(stage)));
-            Projectile.NewProjectile(Projectile.GetSource_FromThis(), target.Center, Vector2.Zero,
-                ModContent.ProjectileType<UmbralNadirImpactExplosion>(), impactDamage, Projectile.knockBack, Projectile.owner, stage);
+            float effectiveDamage = Projectile.damage * StageDamageMult;
+            if (stage == 2)
+            {
+                // 冲刺贯穿 → 撕开持续黑洞奇点（DoT 基准 + 坍缩基准）
+                int tick = Math.Max(1, (int)(effectiveDamage * UmbralNadirBalance.SingularityTickDamageMult));
+                Projectile.NewProjectile(Projectile.GetSource_FromThis(), target.Center, Vector2.Zero,
+                    ModContent.ProjectileType<UmbralNadirSingularity>(), tick, Projectile.knockBack, Projectile.owner, effectiveDamage);
+            }
+            else
+            {
+                // 上挑 / 劈落 → 一次短促黑洞冲击（含拉扯）
+                int impactDamage = Math.Max(1, (int)(effectiveDamage * UmbralNadirBalance.GetImpactDamageMult(stage)));
+                Projectile.NewProjectile(Projectile.GetSource_FromThis(), target.Center, Vector2.Zero,
+                    ModContent.ProjectileType<UmbralNadirImpactExplosion>(), impactDamage, Projectile.knockBack, Projectile.owner, stage);
+            }
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -212,20 +241,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.LeftClick
             float SpearRotation(Vector2 center) =>
                 (center - armCenter).SafeNormalize(Vector2.UnitX).ToRotation() + MathHelper.PiOver2 + MathHelper.PiOver4;
 
-            // 矛尖黑色 shader 残像（吞光的黑矛尖，不是烟也不是 spark）
+            // 矛尖黑色 shader 残像（吞光的黑矛尖）——由共享 Visuals 渲染，宽而明显，第三段更宽带扭曲
             if (inSwing && tipHistory.Count >= 2)
-            {
-                float maxWidth = dash ? 38f : 26f;
-                float wobble = dash ? 0.08f : 0f;
-                GameShaders.Misc["CalamityMod:TrailStreak"].SetShaderTexture(
-                    ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/SylvestaffStreak"));
-                PrimitiveRenderer.RenderTrail(tipHistory,
-                    new PrimitiveSettings(
-                        (c, _) => MathHelper.Lerp(maxWidth, 3f, c) * (1f + wobble * (float)Math.Sin(c * 18f + Main.GlobalTimeWrappedHourly * 6f)) * Projectile.scale,
-                        (c, _) => Color.Lerp(Color.Lerp(Color.Black, Color.DarkGray, c), new Color(35, 90, 45), Utils.GetLerpValue(0.82f, 1f, c)) * (1f - c),
-                        (_, _) => Vector2.Zero, shader: GameShaders.Misc["CalamityMod:TrailStreak"]),
-                    tipHistory.Count);
-            }
+                UmbralNadirVisuals.RenderTipTrail(tipHistory, dash ? 46f : 32f, Projectile.scale, dash);
 
             // 本体：纯黑剪影垫底（负光）+ 主体
             Vector2 drawPos = Projectile.Center - Main.screenPosition;

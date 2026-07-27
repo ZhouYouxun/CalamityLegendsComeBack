@@ -1,4 +1,5 @@
 using System;
+using CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.General;
 using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Dusts;
@@ -63,8 +64,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.RightClick
                 vd.color = MeldGreen;
             }
 
-            NPC target = Projectile.Center.ClosestNPCAt(600f);
-            bool canHit = target != null && Collision.CanHit(Projectile.Center, 1, 1, target.Center, 1, 1);
+            NPC target = FindTarget(600f);
+            bool canHit = target != null;
 
             if (canHit)
             {
@@ -84,9 +85,32 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.RightClick
             }
         }
 
+        private NPC FindTarget(float range)
+        {
+            NPC best = null;
+            float bestScore = float.MinValue;
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (!npc.CanBeChasedBy(Projectile, false))
+                    continue;
+                float dist = Projectile.Distance(npc.Center);
+                if (dist > range || !Collision.CanHit(Projectile.Center, 1, 1, npc.Center, 1, 1))
+                    continue;
+                // 优先扑向蚀痕更高的敌人（与左键的标记呼应）
+                float score = UmbralCorrosionGlobalNPC.GetStacks(npc) * UmbralNadirBalance.CorrodedSoulSeekBias * 45f - dist;
+                if (score > bestScore)
+                {
+                    bestScore = score;
+                    best = npc;
+                }
+            }
+            return best;
+        }
+
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(ModContent.BuffType<Voidfrost>(), 90);
+            UmbralCorrosionGlobalNPC.AddStacks(target, UmbralNadirBalance.ShadowSoulStack);
             // 小型黑核闪烁 + 少量黑砂 + 一个小绿边缘脉冲
             GeneralParticleHandler.SpawnParticle(new GenericBloom(Projectile.Center, Vector2.Zero, Color.Black, 0.32f, 10, true, false));
             GeneralParticleHandler.SpawnParticle(new CustomPulse(Projectile.Center, Vector2.Zero, MeldGreen with { A = 0 },

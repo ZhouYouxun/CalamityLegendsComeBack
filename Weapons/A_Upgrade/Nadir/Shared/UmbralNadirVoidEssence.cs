@@ -1,3 +1,4 @@
+using CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.General;
 using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Dusts;
@@ -135,6 +136,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.Shared
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(ModContent.BuffType<Voidfrost>(), 90);
+            UmbralCorrosionGlobalNPC.AddStacks(target, 1);
 
             // 命中减速
             Projectile.velocity *= 0.55f;
