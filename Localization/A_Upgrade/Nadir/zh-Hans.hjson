@@ -4,7 +4,7 @@ Mods: {
 			Weapons: {
 				Melee: {
 					UmbralNadir: {
-						DisplayName: 冥蚀天底
+						DisplayName: 冥蚀-天底
 						Tooltip:
 							'''
 							[c/8CFF96:左键：优雅的三段虚空连招 —— 上挑斩、劈落斩、冲刺贯穿。]

@@ -43,18 +43,25 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir
         private const int RightDamageColumn = 2;
         private const int ScaleColumn = 3;
 
-        // ===== 左键三段连招分段倍率（相对左键基础伤害）=====
+        // ===== 左键三段连招·本体倍率（相对左键基础伤害）=====
         public const float UpSlashDamageMult = 1.00f;    // 第一段·上挑斩
         public const float DownSlashDamageMult = 1.20f;  // 第二段·劈落斩
-        public const float DashDamageMult = 1.70f;       // 第三段·冲刺贯穿（最高，且必定暴击）
+        public const float DashDamageMult = 1.70f;       // 第三段·冲刺贯穿（最高，且必定暴击；不施加强制位移）
 
-        // 左键命中释放的虚空弹幕倍率（相对左键 holdout 武器伤害）
-        public const float VoidEssenceDamageMult = 0.50f;
-        public const float TentacleDamageMult = 0.55f;
+        // ===== 左键命中·短促范围爆炸（相对当前 holdout 实际伤害）=====
+        // 各段的爆炸伤害倍率与半径（px）
+        public static readonly float[] ImpactDamageMult = { 0.28f, 0.36f, 0.55f };
+        public static readonly float[] ImpactRadius = { 72f, 88f, 112f };
+        public static readonly float[] ImpactScreenShake = { 0f, 0f, 3.0f }; // 仅第三段轻微震屏
 
-        // ===== 右键三连投掷 =====
+        // ===== 右键·高速三连投矛 =====
         public const float JavelinDamageMult = 0.85f;       // 投矛本体（相对右键基础伤害）
-        public const float JavelinChainPulseMult = 0.42f;   // 扎入后每次连锁脉冲
+        public const float JavelinSpeedMin = 4.8f;          // 每次位移（extraUpdates=3，实际飞速为其 4 倍）
+        public const float JavelinSpeedMax = 5.52f;         // 原上限 4.6 × 1.20
+        public const float JavelinSpreadDegrees = 4f;       // 角度散布 ±4°
+        public const float JavelinLateralOffset = 14f;      // 出生横向偏移 ±14 px
+        public const float JavelinForwardMin = 24f;
+        public const float JavelinForwardMax = 44f;
 
         // 投掷节奏（帧）：每轮 3 发，发间隔 5 帧；末发→下一轮首发间隔 35 帧 → 整轮周期 45 帧。
         public const int ThrowsPerRound = 3;
@@ -62,9 +69,36 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir
         public const int RoundGap = 35;
         public const int RoundPeriod = (ThrowsPerRound - 1) * ThrowInterval + RoundGap;
 
-        // ===== 连锁上限（防止无限连锁 / 弹幕刷爆）=====
-        public const int VoidEssenceMaxGeneration = 2;   // 虚空核最多再引爆 2 代
-        public const int MaxActiveVoidEssence = 45;      // 同时存在的虚空核上限
+        // ===== 右键·前两发沿路唤出的暗影魂针 =====
+        public const float ShadowSoulDamageMult = 0.22f;     // 相对投矛伤害
+        public const int ShadowSoulsPerJavelin = 3;          // 单矛最多召唤数（若要"每矛四针"改为 4）
+        public const int ShadowSoulSpawnStart = 8;           // 投矛存活满 8 帧后开始
+        public const int ShadowSoulSpawnInterval = 9;        // 之后每 9 帧检查一次
+        public const int MaxShadowSoulsPerPlayer = 6;        // 每名玩家同时存在上限
+
+        // ===== 右键·第三发命中终爆 =====
+        public const float FinalExplosionDamageMult = 0.65f; // 相对第三发投矛伤害
+        public const float FinalExplosionRadius = 132f;
+        public const float FinalExplosionScreenShake = 3.8f;
+
+        // ===== 双键·回旋斩迹 =====
+        public const float SpinDamageMult = 0.46f;      // 相对左键当前基础伤害；不暴击、不额外爆炸
+        public const float SpinRotationSpeed = 0.40f;   // rad/帧
+        public const float SpinRadiusMin = 92f;
+        public const float SpinRadiusMax = 118f;
+        public const float SpinLineCollision = 160f;
+        public const int SpinHitCooldown = 13;
+
+        // ===== 旧链路保留常量（AbyssRift / VoidEssence 文件仍在工程内，本武器不再引用）=====
+        public const int VoidEssenceMaxGeneration = 2;
+        public const int MaxActiveVoidEssence = 45;
+
+        /// <summary>连招段数(0/1/2) → 命中爆炸倍率。</summary>
+        public static float GetImpactDamageMult(int stage) => ImpactDamageMult[Math.Clamp(stage, 0, 2)];
+        /// <summary>连招段数(0/1/2) → 命中爆炸半径。</summary>
+        public static float GetImpactRadius(int stage) => ImpactRadius[Math.Clamp(stage, 0, 2)];
+        /// <summary>连招段数(0/1/2) → 命中震屏强度。</summary>
+        public static float GetImpactScreenShake(int stage) => ImpactScreenShake[Math.Clamp(stage, 0, 2)];
 
         // =========================================================================
         // 阶段查询接口

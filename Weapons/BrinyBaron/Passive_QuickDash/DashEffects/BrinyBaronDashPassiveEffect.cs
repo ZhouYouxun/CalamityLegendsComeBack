@@ -111,7 +111,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash.DashEffec
                     Main.rand.Next(28, 48)));
             }
 
-            if (Main.rand.NextBool(3))
+            // Continuous WaterFoamParticle trail: half the old 1-in-3 emission rate.
+            if (Main.rand.NextBool(6))
             {
                 GeneralParticleHandler.SpawnParticle(new WaterFoamParticle(
                     player.Center - forward * Main.rand.NextFloat(14f, 38f) + Main.rand.NextVector2Circular(10f, 12f),

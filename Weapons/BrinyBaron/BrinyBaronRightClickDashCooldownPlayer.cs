@@ -5,22 +5,23 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
 {
     internal class BrinyBaronRightClickDashCooldownPlayer : ModPlayer
     {
-        public const int DashCooldown = 3 * 60;
-
         public int CooldownTimer { get; private set; }
+        public int CooldownDuration { get; private set; }
 
         public bool IsCoolingDown => CooldownTimer > 0;
         public bool CanUseDash => CooldownTimer <= 0;
-        public float CooldownCompletion => 1f - CooldownTimer / (float)DashCooldown;
+        public float CooldownCompletion => 1f - CooldownTimer / (float)System.Math.Max(1, CooldownDuration);
 
         public override void Initialize()
         {
             CooldownTimer = 0;
+            CooldownDuration = BB_Balance.DefaultRightClickCooldown;
         }
 
         public override void UpdateDead()
         {
             CooldownTimer = 0;
+            CooldownDuration = BB_Balance.DefaultRightClickCooldown;
         }
 
         public override void PostUpdate()
@@ -31,12 +32,13 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
 
         public void StartCooldown()
         {
-            CooldownTimer = DashCooldown;
+            StartCooldown(BB_Balance.DefaultRightClickCooldown);
         }
 
         public void StartCooldown(int frames)
         {
-            CooldownTimer = frames;
+            CooldownDuration = System.Math.Max(1, frames);
+            CooldownTimer = CooldownDuration;
         }
 
         public void ClearCooldown()

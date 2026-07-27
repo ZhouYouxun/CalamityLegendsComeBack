@@ -3,7 +3,7 @@ Mods: {
 		Items: {
 			Weapons: {
 				LeonidProgenitor: {
-					DisplayName: Meteorfall
+					DisplayName: Dense Gravity - Meteorfall
 					Tooltip: "[GFB]"
 					LeftClick:
 						'''
@@ -16,7 +16,7 @@ Mods: {
 					UltimateSkill: "[c/FFE85A:Ultimate (Press {0}): Opens a gravity field that gathers a falling meteor storm. Requires full Ultimate Energy and Stealth.]"
 					Passives: "[c/BFAFFF:Kinetic Cycle: Reflected left-click comets accelerate, grow stronger, and return to orbit after their seventh reflection.]"
 					ConstellationStatus: "[c/FFE85A:Leo Starlight: {0} available | {1} spent | {2} earned | {3} to complete]"
-					ConstellationHint: "[c/B8A8FF:Press {0} while held, or press {0} on this weapon in your inventory, to unfold the Leonid star chart.]"
+					ConstellationHint: "[c/B8A8FF:While holding this weapon, or hovering it in your inventory, press {0} to open the Leonid star chart.]"
 					LegendaryHint: "[c/BABABA:Hold Shift to read the legendary record]"
 					LegendaryText: "[c/66E6FF:Meteorfall no longer searches your inventory for metal. Each major foe overcome becomes a starlight in the Lion's sky.]"
 

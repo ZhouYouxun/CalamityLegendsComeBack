@@ -3,7 +3,7 @@ Mods: {
 		Items: {
 			Weapons: {
 				SeasSearing: {
-					DisplayName: Sea's Searing - Return of Legends
+					DisplayName: Sea-Scorching Heaven - Sea's Searing
 					Tooltip: "[GFB]"
 					Intro: "[c/58FFDA:Abyssal radiation rifle. Pollution stacks, spreads, and collapses on command.]"
 					LeftClick_Stage0: "[c/9AEAFF:Left Click: single precise shot. Each hit applies Abyssal Radiation Pollution.]"

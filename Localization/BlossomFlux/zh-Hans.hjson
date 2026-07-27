@@ -3,7 +3,7 @@ Mods: {
 		Items: {
 			Weapons: {
 				NewLegendBlossomFlux: {
-					DisplayName: 新传奇 - 叶流
+					DisplayName: 繁茂丛生-叶流
 					Tooltip: "[GFB]"
 					BF_Intro:
 						'''

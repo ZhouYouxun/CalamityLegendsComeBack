@@ -11,10 +11,13 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
     public class LeonidProgenitorPlayer : ModPlayer
     {
         public const int PalladiumHealCooldownMax = 6 * 60;
+        public const int RightClickCooldownFrames = 2 * 60;
         public const float TitaniumShieldChargePerHit = 0.05f;
         public const float TitaniumShieldChargeMax = 1f;
 
         public int PalladiumHealCooldown;
+        public int RightClickCooldownTimer;
+        private int rightClickCooldownFeedbackTimer;
         public float TitaniumShieldCharge;
         public int TitaniumStompersTimer;
 
@@ -31,6 +34,8 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
         public override void UpdateDead()
         {
             PalladiumHealCooldown = 0;
+            RightClickCooldownTimer = 0;
+            rightClickCooldownFeedbackTimer = 0;
             TitaniumShieldCharge = 0f;
             TitaniumStompersTimer = 0;
             UltimateEnergy = 0;
@@ -64,6 +69,10 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
 
             if (PalladiumHealCooldown > 0)
                 PalladiumHealCooldown--;
+            if (RightClickCooldownTimer > 0)
+                RightClickCooldownTimer--;
+            if (rightClickCooldownFeedbackTimer > 0)
+                rightClickCooldownFeedbackTimer--;
 
             if (TitaniumStompersTimer > 0)
             {
@@ -106,6 +115,33 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
             Player.statLife = Math.Min(Player.statLife + healAmount, Player.statLifeMax2);
             Player.HealEffect(healAmount, true);
             SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.45f, Pitch = 0.22f }, Player.Center);
+        }
+
+        public bool CanUseRightClick => RightClickCooldownTimer <= 0;
+
+        public void StartRightClickCooldown()
+        {
+            RightClickCooldownTimer = RightClickCooldownFrames;
+        }
+
+        public void SpawnRightClickCooldownFeedback()
+        {
+            if (Player.whoAmI != Main.myPlayer || rightClickCooldownFeedbackTimer > 0 || Main.dedServ)
+                return;
+
+            rightClickCooldownFeedbackTimer = 10;
+            for (int i = 0; i < 3; i++)
+            {
+                Vector2 velocity = Main.rand.NextVector2Circular(1.1f, 1.1f) - Vector2.UnitY * Main.rand.NextFloat(0.3f, 1.1f);
+                Dust dust = Dust.NewDustPerfect(
+                    Player.MountedCenter + Main.rand.NextVector2Circular(12f, 18f),
+                    DustID.TintableDustLighted,
+                    velocity,
+                    120,
+                    Color.Lerp(new Color(82, 216, 255), new Color(224, 240, 255), Main.rand.NextFloat()),
+                    Main.rand.NextFloat(0.5f, 0.78f));
+                dust.noGravity = true;
+            }
         }
 
         public void AddTitaniumShieldCharge(float amount)

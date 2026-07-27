@@ -1001,7 +1001,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             if (Main.myPlayer != owner.whoAmI)
                 return;
 
-            float shakePower = MathHelper.Lerp(2f, 18f, chargeCompletion);
+            // Charging should communicate weight without obscuring target tracking.
+            float shakePower = MathHelper.Lerp(0.6f, 5f, chargeCompletion);
             owner.Calamity().GeneralScreenShakePower = Math.Max(owner.Calamity().GeneralScreenShakePower, shakePower);
         }
 

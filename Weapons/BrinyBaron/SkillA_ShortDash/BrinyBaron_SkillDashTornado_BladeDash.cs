@@ -25,17 +25,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
         public new string LocalizationCategory => "Projectiles.BrinyBaron";
         public override string Texture => "CalamityLegendsComeBack/Weapons/BrinyBaron/NewLegendBrinyBaron";
 
-        private const int PrepareTime = 8;
-        private const int DashTimeMax = 32;
-        private const int ReboundTimeMax = 12;
         private const int DashHistoryLength = 8;
-        private const float DashSpeed = 9.6f;
-        private const float ReboundSpeed = 9f;
-        private const float DefaultReboundDashSpeedMultiplier = 0.6f;
-        private const float DashTurnRate = 0.01f;
-        private const float ReadyBladeDistance = 28f;
-        private const float DashBladeDistance = 20f;
-        private const float ReboundBladeDistance = 18f;
 
         private int dashState;
         private int stateTimer;
@@ -51,14 +41,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
         private bool enemyReboundUnlocked;
         private int dashShotTimer;
         private readonly System.Collections.Generic.List<Vector2> dashDirectionHistory = new();
-        private static readonly float[] ShortDashSpeedMultipliers = { 2.4f, 3.0f, 3.4f, 3.8f, 4.0f };
-        private static readonly float[] ShortDashContactDamageMultipliers = { 3f, 3.25f, 3.5f, 3.75f, 4f };
-        private static readonly bool[] ShortDashEnemyReboundUnlocks = { false, true, true, true, true };
         private bool ReboundDashMode => Projectile.ai[0] == 2f;
-        private float DashSpeedMultiplier => ReboundDashMode ? DefaultReboundDashSpeedMultiplier : 1f;
+        private float DashSpeedMultiplier => ReboundDashMode ? BB_Balance.DefaultReboundDashSpeedMultiplier : 1f;
         private bool AbyssalBastionEquipped => Main.player.IndexInRange(Projectile.owner) && Main.player[Projectile.owner].GetModPlayer<BBAccessoryPlayer>().AbyssalBastionEquipped;
-        private float AbyssalDashMultiplier => AbyssalBastionEquipped ? 1.25f : 1f;
-        private int DashTimeLimit => AbyssalBastionEquipped ? 42 : DashTimeMax;
+        private float AbyssalDashMultiplier => AbyssalBastionEquipped ? BB_Balance.AbyssalBastionDashSpeedMultiplier : 1f;
+        private int DashTimeLimit => AbyssalBastionEquipped ? BB_Balance.AbyssalBastionDashFrames : BB_Balance.RightClickDashFrames;
 
         public override void SetStaticDefaults()
         {
@@ -72,12 +59,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             Projectile.height = 72;
             Projectile.friendly = false;
             Projectile.penetrate = -1;
-            Projectile.timeLeft = PrepareTime + DashTimeMax + ReboundTimeMax + 40;
+            Projectile.timeLeft = BB_Balance.RightClickPrepareFrames + BB_Balance.RightClickDashFrames + BB_Balance.RightClickReboundFrames + 40;
             Projectile.tileCollide = true;
             Projectile.ignoreWater = true;
             Projectile.netImportant = true;
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = 24;
+            Projectile.localNPCHitCooldown = BB_Balance.RightClickDashLocalHitCooldown;
             Projectile.DamageType = DamageClass.Melee;
         }
 
@@ -160,10 +147,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             Vector2 aimDirection = (owner.Calamity().mouseWorld - owner.MountedCenter).SafeNormalize(lockedDirection);
             lockedDirection = Vector2.Lerp(lockedDirection, aimDirection, 0.18f).SafeNormalize(aimDirection);
 
-            float chargeProgress = Utils.GetLerpValue(0f, PrepareTime, stateTimer, true);
+            float chargeProgress = Utils.GetLerpValue(0f, BB_Balance.RightClickPrepareFrames, stateTimer, true);
             float eased = MathHelper.SmoothStep(0f, 1f, chargeProgress);
             // Exoblade-style pullback on charge, then thrust forward right before dash
-            float offsetDist = MathHelper.Lerp(-24f, ReadyBladeDistance, MathF.Pow(eased, 0.6f));
+            float offsetDist = MathHelper.Lerp(-24f, BB_Balance.RightClickReadyBladeDistance, MathF.Pow(eased, 0.6f));
             Projectile.Center = owner.MountedCenter + lockedDirection * offsetDist;
             Projectile.scale = MathHelper.Lerp(0.08f, 1.12f, MathF.Pow(eased, 0.4f));
             bladeRotation = lockedDirection.ToRotation() + MathHelper.PiOver4;
@@ -171,7 +158,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             if (stateTimer % 2 == 0)
                 SpawnPrepareTrail();
 
-            if (stateTimer >= PrepareTime)
+            if (stateTimer >= BB_Balance.RightClickPrepareFrames)
             {
                 SpawnChargeReadyBurst();
                 StartDash(owner);
@@ -185,9 +172,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             hasBounced = false;
 
             Projectile.friendly = true;
-            Projectile.Center = owner.MountedCenter + lockedDirection * DashBladeDistance;
-            Projectile.velocity = lockedDirection * (DashSpeed * dashSpeedMultiplier * DashSpeedMultiplier * AbyssalDashMultiplier);
-            SyncOwnerToProjectile(owner, DashBladeDistance);
+            Projectile.Center = owner.MountedCenter + lockedDirection * BB_Balance.RightClickDashBladeDistance;
+            Projectile.velocity = lockedDirection * (BB_Balance.RightClickDashSpeed * dashSpeedMultiplier * DashSpeedMultiplier * AbyssalDashMultiplier);
+            SyncOwnerToProjectile(owner, BB_Balance.RightClickDashBladeDistance);
             RecordDashDirection(Projectile.velocity.SafeNormalize(lockedDirection));
             Projectile.netUpdate = true;
 
@@ -204,10 +191,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
         {
             stateTimer++;
             Vector2 aimDirection = GetAimDirection(owner, lockedDirection);
-            float turnedRotation = lockedDirection.ToRotation().AngleTowards(aimDirection.ToRotation(), DashTurnRate);
+            float turnedRotation = lockedDirection.ToRotation().AngleTowards(aimDirection.ToRotation(), BB_Balance.RightClickDashTurnRate);
             lockedDirection = turnedRotation.ToRotationVector2();
 
-            Vector2 desiredVelocity = lockedDirection * (DashSpeed * dashSpeedMultiplier * DashSpeedMultiplier * AbyssalDashMultiplier);
+            Vector2 desiredVelocity = lockedDirection * (BB_Balance.RightClickDashSpeed * dashSpeedMultiplier * DashSpeedMultiplier * AbyssalDashMultiplier);
             Vector2 actualVelocity = ResolveSlidingVelocity(owner, desiredVelocity);
 
             Projectile.velocity = actualVelocity;
@@ -220,8 +207,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             float dashProgress = stateTimer / (float)DashTimeLimit;
             // Exoblade-style lunge retraction: smoothly retract position and shrink scale as dash completes
             float bladeDist = dashProgress > 0.72f
-                ? MathHelper.Lerp(DashBladeDistance, 8f, (dashProgress - 0.72f) / 0.28f)
-                : DashBladeDistance;
+                ? MathHelper.Lerp(BB_Balance.RightClickDashBladeDistance, 8f, (dashProgress - 0.72f) / 0.28f)
+                : BB_Balance.RightClickDashBladeDistance;
 
             Projectile.scale = dashProgress > 0.72f
                 ? MathHelper.Lerp(1.12f, 0.4f, MathF.Pow((dashProgress - 0.72f) / 0.28f, 2f))
@@ -251,12 +238,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
         {
             stateTimer++;
 
-            float reboundProgress = stateTimer / (float)ReboundTimeMax;
+            float reboundProgress = stateTimer / (float)BB_Balance.RightClickReboundFrames;
             float speedFactor = MathHelper.Lerp(1f, 0.2f, reboundProgress);
-            Projectile.velocity = lockedDirection * ReboundSpeed * DashSpeedMultiplier * speedFactor;
+            Projectile.velocity = lockedDirection * BB_Balance.RightClickReboundSpeed * DashSpeedMultiplier * speedFactor;
 
             // Exoblade-style post-dash stasis: smoothly retract weapon back to player's hand and shrink to zero
-            float bladeDist = MathHelper.Lerp(ReboundBladeDistance, 2f, MathF.Pow(reboundProgress, 0.6f));
+            float bladeDist = MathHelper.Lerp(BB_Balance.RightClickReboundBladeDistance, 2f, MathF.Pow(reboundProgress, 0.6f));
             Projectile.scale = MathHelper.Lerp(hasBounced ? 1f : 0.4f, 0f, MathF.Pow(reboundProgress, 0.7f));
 
             SyncOwnerToProjectile(owner, bladeDist);
@@ -264,7 +251,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
 
             BrinyBaron_SkillDashTornado_FlightEffects.SpawnReboundFlightEffects(Projectile, lockedDirection, bladeRotation, oceanPhase, stateTimer);
 
-            if (stateTimer >= ReboundTimeMax)
+            if (stateTimer >= BB_Balance.RightClickReboundFrames)
                 Projectile.Kill();
         }
 
@@ -280,12 +267,19 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
 
             if (dashState == 1)
             {
+                owner.immune = true;
+                owner.immuneTime = 2;
                 if (lockedDirection.Y > 0f)
                     owner.controlDown = true;
 
                 float speedY = Math.Abs(Projectile.velocity.Y);
                 if (speedY > owner.maxFallSpeed)
                     owner.maxFallSpeed = speedY;
+            }
+            else if (dashState == 2)
+            {
+                owner.immune = true;
+                owner.immuneTime = 2;
             }
         }
 
@@ -319,7 +313,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
                 if (hardmodeOrLater)
                 {
                     SpawnWaterPillarBurst(target.Center, GetReliableDashDirection());
-                    SpawnPostHardmodeTyphoon(owner, target);
+                    SpawnPostHardmodeTornado(owner, target);
                 }
             }
 
@@ -332,7 +326,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             if (Main.myPlayer == Projectile.owner)
             {
                 var dashCooldown = owner.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>();
-                dashCooldown.ReduceCooldownTo(60);
+                dashCooldown.ReduceCooldownTo(BB_Balance.RightClickHitCooldownAfterEnemyHit);
             }
             Projectile.netUpdate = true;
         }
@@ -403,9 +397,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
         {
             int tier = GetShortDashGrowthTier();
             return new ShortDashProfile(
-                ShortDashSpeedMultipliers[tier],
-                ShortDashContactDamageMultipliers[tier],
-                ShortDashEnemyReboundUnlocks[tier]);
+                BB_Balance.RightClickGrowthSpeedMultipliers[tier],
+                BB_Balance.RightClickGrowthContactDamageMultipliers[tier],
+                BB_Balance.RightClickGrowthEnemyReboundUnlocks[tier]);
         }
 
         private static int GetShortDashGrowthTier()
@@ -462,8 +456,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             bladeRotation = lockedDirection.ToRotation() + MathHelper.PiOver4;
 
             Projectile.friendly = false;
-            Projectile.velocity = lockedDirection * ReboundSpeed * DashSpeedMultiplier;
-            SyncOwnerToProjectile(owner, ReboundBladeDistance);
+            Projectile.velocity = lockedDirection * BB_Balance.RightClickReboundSpeed * DashSpeedMultiplier;
+            SyncOwnerToProjectile(owner, BB_Balance.RightClickReboundBladeDistance);
             owner.itemAnimation = 0;
             Projectile.netUpdate = true;
 
@@ -486,7 +480,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             Vector2 sideDirection = baseDirection.RotatedBy(MathHelper.PiOver2);
             int pillarDamage = 0;
 
-            for (int i = 0; i < 5; i++)
+            // One-shot WaterFoamParticle burst: 5 -> 2 particles (rounded down).
+            for (int i = 0; i < 2; i++)
             {
                 float laneOffset = i == 2 ? 0f : MathHelper.Lerp(-76f, 76f, i / 4f) + Main.rand.NextFloat(-12f, 12f);
                 Vector2 spawnPosition = impactCenter + sideDirection * laneOffset + baseDirection * Main.rand.NextFloat(-18f, 22f);
@@ -503,8 +498,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             }
         }
 
-        private void SpawnPostHardmodeTyphoon(Player owner, NPC target)
+        private void SpawnPostHardmodeTornado(Player owner, NPC target)
         {
+            // This is the Briny Baron water tornado, not the Razorblade Typhoon.
+            // Keep the original one-tornado limit so an impact cannot flood the field.
             if (owner.ownedProjectileCounts[ModContent.ProjectileType<CalamityMod.Projectiles.Melee.BrinySpout>()] != 0)
                 return;
 
@@ -618,7 +615,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
 
             Vector2 forward = lockedDirection.SafeNormalize(Vector2.UnitX);
             Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
-            Vector2 tip = Projectile.Center + forward * ReadyBladeDistance;
+            Vector2 tip = Projectile.Center + forward * BB_Balance.RightClickReadyBladeDistance;
 
             for (int i = 0; i < 5; i++)
             {
@@ -659,7 +656,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
                 return;
 
             Vector2 forward = lockedDirection.SafeNormalize(Vector2.UnitX);
-            float chargeProgress = Utils.GetLerpValue(0f, PrepareTime, stateTimer, true);
+            float chargeProgress = Utils.GetLerpValue(0f, BB_Balance.RightClickPrepareFrames, stateTimer, true);
 
             GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
                 Projectile.Center + Main.rand.NextVector2Circular(7f, 7f),
@@ -718,7 +715,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
                 new Vector2(1.1f, 1.1f),
                 0f, 0.28f, 0.04f, 30));
 
-            for (int i = 0; i < 8; i++)
+            // One-shot WaterFoamParticle burst: 8 -> 4 particles.
+            for (int i = 0; i < 4; i++)
             {
                 Vector2 foamVel = forward.RotatedByRandom(1.2f) * Main.rand.NextFloat(2f, 6.5f);
                 GeneralParticleHandler.SpawnParticle(new WaterFoamParticle(
@@ -762,7 +760,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
 
             Vector2 forward = lockedDirection.SafeNormalize(Vector2.UnitX);
 
-            for (int i = 0; i < 6; i++)
+            // One-shot WaterFoamParticle burst: 6 -> 3 particles.
+            for (int i = 0; i < 3; i++)
             {
                 Vector2 foamVelocity = -forward * Main.rand.NextFloat(0.35f, 1.2f) + Main.rand.NextVector2Circular(1.15f, 1.15f);
                 GeneralParticleHandler.SpawnParticle(new WaterFoamParticle(
@@ -815,7 +814,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             {
                 Main.spriteBatch.EnterShaderRegion();
 
-                float progress = stateTimer / (float)DashTimeMax;
+                float progress = stateTimer / (float)BB_Balance.RightClickDashFrames;
                 Color mainColor = Color.Lerp(new Color(60, 200, 255), Color.Cyan, (float)Math.Sin(oceanPhase * 0.5f) * 0.5f + 0.5f);
                 Color secondaryColor = Color.Lerp(new Color(180, 245, 255), Color.White, (float)Math.Cos(oceanPhase * 0.5f) * 0.5f + 0.5f);
 
@@ -873,8 +872,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             Vector2 drawCenter = Projectile.Center + screenOffset - Main.screenPosition;
             Vector2 glowAnchor = BrinyBaron_SkillDashTornado_FlightEffects.GetFrontAnchor(Projectile, lockedDirection) + screenOffset - Main.screenPosition;
             float glowProgress = dashState == 2
-                ? Utils.GetLerpValue(0f, ReboundTimeMax, stateTimer, true)
-                : Utils.GetLerpValue(0f, DashTimeMax, stateTimer, true);
+                ? Utils.GetLerpValue(0f, BB_Balance.RightClickReboundFrames, stateTimer, true)
+                : Utils.GetLerpValue(0f, BB_Balance.RightClickDashFrames, stateTimer, true);
             float glowStrength = dashState == 2 ? 0.72f : 1f;
             float glowPulse = 1f + 0.08f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 18f + Projectile.identity * 0.41f);
             float outerLength = dashState == 2

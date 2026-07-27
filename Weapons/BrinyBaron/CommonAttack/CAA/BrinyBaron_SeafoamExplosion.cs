@@ -48,8 +48,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                         14
                     ));
 
-                    // Denser water foams
-                    for (int i = 0; i < 8; i++)
+                    // WaterFoamParticle is a one-shot burst: 8 -> 4 particles.
+                    for (int i = 0; i < 4; i++)
                     {
                         Vector2 vel = Main.rand.NextVector2Circular(5f, 5f);
                         GeneralParticleHandler.SpawnParticle(new WaterFoamParticle(

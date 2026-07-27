@@ -3,7 +3,7 @@ Mods: {
 		Items: {
 			Weapons: {
 				NewVesuvius: {
-					DisplayName: Vesuvius
+					DisplayName: Earthshaker - Vesuvius
 					Tooltip: "[GFB]"
 					LeftClick:
 						'''
@@ -13,6 +13,7 @@ Mods: {
 					ChargeStage1: "[c/FF8A3D:Unlocked charge: Stage I - a tight spread of three molten meteors.]"
 					ChargeStage2: "[c/FF9F45:Unlocked charge: Stage II - a fast thermal core that ruptures on impact.]"
 					ChargeStage3: "[c/FFE27E:Unlocked charge: Stage III - a cataclysmic core that tears open the crust.]"
+					ChargeStage4: "[c/FFF4BE:Unlocked charge: Stage IV - an ultimate thermal core that tears open the crust.]"
 					RightClick:
 						'''
 						[c/FFB15C:Right Click: Hold to brace the staff like a javelin, then release to throw.]

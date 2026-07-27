@@ -73,6 +73,8 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         private const int ChainHandleHeight = 62;
         private const int ChainBodyStartY = 64;
         private const int ChainBodyHeight = 28;
+        private const int ChainBodyBaseStartY = 94;
+        private const int ChainBodyBaseHeight = 18;
         private const int ChainTailStartY = 114;
         private const int ChainTailHeight = 84;
         private const float ChainBodyStartOffset = 30f;
@@ -741,6 +743,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             Texture2D texture = ModContent.Request<Texture2D>(ChainTexturePath).Value;
             Rectangle handleFrame = new(0, 0, texture.Width, ChainHandleHeight);
             Rectangle bodyFrame = new(0, ChainBodyStartY, texture.Width, ChainBodyHeight);
+            Rectangle bodyBaseFrame = new(0, ChainBodyBaseStartY, texture.Width, ChainBodyBaseHeight);
             Rectangle tailFrame = new(0, ChainTailStartY, texture.Width, ChainTailHeight);
 
             Vector2 chain = endWorld - startWorld;
@@ -767,6 +770,11 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             float bodyEndDistance = MathHelper.Clamp(chainLength - tailLength, startOffset, chainLength);
             float remaining = System.Math.Max(0f, bodyEndDistance - startOffset);
             Vector2 drawPosition = startWorld + direction * startOffset;
+
+            // The original Cosmic Discharge has two complete chain-body passes: the dull
+            // mechanical link underneath and the bright crystalline link above it. Keep
+            // both passes here instead of letting a terminal glow substitute for the art.
+            DrawStraightBodySegments(texture, bodyBaseFrame, drawPosition, direction, remaining, drawColor, scale, drawOffset);
 
             while (remaining > 2f)
             {
@@ -812,6 +820,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             Texture2D texture = ModContent.Request<Texture2D>(ChainTexturePath).Value;
             Rectangle handleFrame = new(0, 0, texture.Width, ChainHandleHeight);
             Rectangle bodyFrame = new(0, ChainBodyStartY, texture.Width, ChainBodyHeight);
+            Rectangle bodyBaseFrame = new(0, ChainBodyBaseStartY, texture.Width, ChainBodyBaseHeight);
             Rectangle tailFrame = new(0, ChainTailStartY, texture.Width, ChainTailHeight);
             Vector2 drawOffset = Vector2.UnitY * gfxOffY;
 
@@ -852,6 +861,8 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 {
                     float localStart = Math.Max(bodyStartDistance, segmentStartDistance) - segmentStartDistance;
                     float localEnd = Math.Min(bodyEndDistance, segmentEndDistance) - segmentStartDistance;
+                    if (localEnd - localStart > 2f)
+                        DrawBodySegment(texture, bodyBaseFrame, points[i] + segmentDirection * localStart, points[i] + segmentDirection * localEnd, drawColor, scale, drawOffset);
                     if (localEnd - localStart > 2f)
                         DrawBodySegment(texture, bodyFrame, points[i] + segmentDirection * localStart, points[i] + segmentDirection * localEnd, drawColor, scale, drawOffset);
                 }
@@ -939,6 +950,14 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
                 position += direction * step;
             }
+        }
+
+        private static void DrawStraightBodySegments(Texture2D texture, Rectangle frame, Vector2 start, Vector2 direction, float length, Color drawColor, float scale, Vector2 drawOffset)
+        {
+            if (length <= 2f)
+                return;
+
+            DrawBodySegment(texture, frame, start, start + direction * length, drawColor, scale, drawOffset);
         }
     }
 }

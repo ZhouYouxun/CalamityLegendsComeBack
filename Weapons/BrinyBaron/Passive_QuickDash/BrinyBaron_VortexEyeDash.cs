@@ -1,5 +1,6 @@
 using System.IO;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken;
+using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.Audio;
@@ -10,7 +11,8 @@ using Terraria.ModLoader;
 namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash
 {
     // A cardinal portal dash: leave the cursor portal, cut while exiting it, then
-    // return through the same line. It never uses the normal enemy rebound path.
+    // return through the same line. Its visible movement deliberately reuses the
+    // ordinary right-click dash language so the two variants never drift apart.
     internal class BrinyBaron_VortexEyeDash : ModProjectile
     {
         private const int ExitFrames = 12;
@@ -25,7 +27,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash
         private bool initialized;
         private bool spawnedExitSlash;
         private bool spawnedReturnSlash;
-        private bool spawnedTyphoon;
+        private bool spawnedTornado;
 
         private Player Owner => Main.player[Projectile.owner];
         private Vector2 Direction => Projectile.velocity.SafeNormalize(Vector2.UnitX);
@@ -57,7 +59,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash
             writer.Write(initialized);
             writer.Write(spawnedExitSlash);
             writer.Write(spawnedReturnSlash);
-            writer.Write(spawnedTyphoon);
+            writer.Write(spawnedTornado);
         }
 
         public override void ReceiveExtraAI(BinaryReader reader)
@@ -70,7 +72,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash
             initialized = reader.ReadBoolean();
             spawnedExitSlash = reader.ReadBoolean();
             spawnedReturnSlash = reader.ReadBoolean();
-            spawnedTyphoon = reader.ReadBoolean();
+            spawnedTornado = reader.ReadBoolean();
         }
 
         public override void AI()
@@ -95,12 +97,16 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash
             {
                 timer++;
                 float progress = Utils.GetLerpValue(0f, ExitFrames, timer, true);
+                Vector2 previousCenter = owner.Center;
                 owner.Center = Vector2.Lerp(portal, exit, SmoothStep(progress));
+                Projectile.velocity = owner.Center - previousCenter;
                 if (!spawnedExitSlash)
                 {
                     SpawnDashSlash(owner, Direction);
+                    BrinyBaron_SkillDashTornado_FlightEffects.SpawnDashStartEffects(Projectile, Direction);
                     spawnedExitSlash = true;
                 }
+                BrinyBaron_SkillDashTornado_FlightEffects.SpawnDashFlightEffects(Projectile, Direction, Direction.ToRotation() + MathHelper.PiOver4, timer * 0.24f, timer);
 
                 if (timer >= ExitFrames)
                 {
@@ -113,17 +119,20 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash
             {
                 timer++;
                 float progress = Utils.GetLerpValue(0f, ReturnFrames, timer, true);
+                Vector2 previousCenter = owner.Center;
                 owner.Center = Vector2.Lerp(exit, origin, SmoothStep(progress));
+                Projectile.velocity = owner.Center - previousCenter;
                 if (!spawnedReturnSlash)
                 {
                     SpawnDashSlash(owner, -Direction);
                     spawnedReturnSlash = true;
                 }
+                BrinyBaron_SkillDashTornado_FlightEffects.SpawnReboundFlightEffects(Projectile, Direction, Direction.ToRotation() + MathHelper.PiOver4, timer * 0.24f, timer);
 
                 if (timer >= ReturnFrames)
                 {
-                    if (!spawnedTyphoon)
-                        SpawnReturnTyphoon(owner);
+                    if (!spawnedTornado)
+                        SpawnReturnTornado(owner);
                     Projectile.Kill();
                 }
             }
@@ -167,23 +176,17 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash
                 direction.X < 0f ? -1f : 1f);
         }
 
-        private void SpawnReturnTyphoon(Player owner)
+        private void SpawnReturnTornado(Player owner)
         {
-            spawnedTyphoon = true;
-            if (Main.myPlayer != Projectile.owner || owner.ownedProjectileCounts[ModContent.ProjectileType<CalamityMod.Projectiles.Melee.BrinySpout>()] != 0)
+            spawnedTornado = true;
+            if (Main.myPlayer != Projectile.owner)
                 return;
 
-            Vector2 perpendicular = Direction.RotatedBy(MathHelper.PiOver2);
-            if (System.Math.Abs(Direction.Y) > 0.5f)
-            {
-                SpawnTyphoon(exit + perpendicular * (ExitDistance * 0.5f));
-                SpawnTyphoon(exit - perpendicular * (ExitDistance * 0.5f));
-            }
-            else
-                SpawnTyphoon(exit);
+            // One enlarged water tornado sits in the middle of the return cut.
+            SpawnTornado(Vector2.Lerp(origin, exit, 0.5f));
         }
 
-        private void SpawnTyphoon(Vector2 position)
+        private void SpawnTornado(Vector2 position)
         {
             int index = Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),

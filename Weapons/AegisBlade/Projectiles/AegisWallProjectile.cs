@@ -251,8 +251,8 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         }
 
         /// <summary>
-        /// 模仿 CalamitasClone ArenaWall 的正宗动态扩散描边扫描线：
-        /// 柔和衬底 + CalamitasClone 同款黄色动态多重扩散扫描线 (Expanding Border Scanlines) + 多级描边 + 角点辉光
+        /// 模仿 CalamitasClone ArenaWall 的干净线条屏障：
+        /// 柔和全光衬底 + 双层多级高亮描边 + 动态脉动（无杂乱矩阵与拼贴碎石）
         /// </summary>
         private void DrawEnergyBarrierWall(Vector2 center, float fade, float riseProgress)
         {
@@ -277,79 +277,30 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 
             Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
 
-            // 1. 屏障柔底
+            // 1. 中间干净柔和的屏障衬底（不搞任何杂乱矩阵与碎石纹理）
             Rectangle fillRect = new((int)leftX, (int)topY, (int)(rightX - leftX), (int)(bottomY - topY));
             Main.spriteBatch.Draw(magicPixel, fillRect, flameColor * 0.16f);
 
-            // 2. CalamitasClone 同款动态黄金波幅扫描线 (Inner Border Clones / Expanding Scanlines)
-            // 机制：根据 GlobalTimeWrappedHourly 动态计算多重矩形框向外/向内偏移与透明度衰减
-            float amount = 5f;
-            float totalDistance = 56f;
-            float timePhase = (time * 1.2f) % 1f;
-
-            for (float i = timePhase; i < amount; i += 1f)
-            {
-                float progress = i / amount; // 0 ~ 1
-                float offset = totalDistance * progress;
-                float alpha = (1f - progress) * fade * 0.7f;
-
-                Color scanColor = AegisVisuals.Add(AegisVisuals.Gold, alpha);
-
-                Vector2 stl = new(leftX - offset, topY - offset);
-                Vector2 str = new(rightX + offset, topY - offset);
-                Vector2 sbl = new(leftX - offset, bottomY + offset);
-                Vector2 sbr = new(rightX + offset, bottomY + offset);
-
-                float lineThick = MathHelper.Lerp(3f, 1f, progress);
-
-                Main.spriteBatch.DrawLineBetter(stl, str, scanColor, lineThick);
-                Main.spriteBatch.DrawLineBetter(stl, sbl, scanColor, lineThick);
-                Main.spriteBatch.DrawLineBetter(str, sbr, scanColor, lineThick);
-                Main.spriteBatch.DrawLineBetter(sbr, sbl, scanColor, lineThick);
-            }
-
-            // 同款向内收缩辅助扫描线 (Contracting Scanlines)
-            for (float i = timePhase; i < 3f; i += 1f)
-            {
-                float progress = i / 3f;
-                float innerOffset = MathHelper.Lerp(0f, 24f, progress);
-                if (leftX + innerOffset < rightX - innerOffset && topY + innerOffset < bottomY - innerOffset)
-                {
-                    float alpha = (1f - progress) * fade * 0.5f;
-                    Color innerScanColor = AegisVisuals.Add(AegisVisuals.Core, alpha);
-
-                    Vector2 itl = new(leftX + innerOffset, topY + innerOffset);
-                    Vector2 itr = new(rightX - innerOffset, topY + innerOffset);
-                    Vector2 ibl = new(leftX + innerOffset, bottomY - innerOffset);
-                    Vector2 ibr = new(rightX - innerOffset, bottomY - innerOffset);
-
-                    Main.spriteBatch.DrawLineBetter(itl, itr, innerScanColor, 1.5f);
-                    Main.spriteBatch.DrawLineBetter(itl, ibl, innerScanColor, 1.5f);
-                    Main.spriteBatch.DrawLineBetter(itr, ibr, innerScanColor, 1.5f);
-                    Main.spriteBatch.DrawLineBetter(ibr, ibl, innerScanColor, 1.5f);
-                }
-            }
-
-            // 3. 干净的脉动线框（模仿 CalamitasClone 边界框的主描边与能量边框）
+            // 2. 干净的脉动线框（模仿 CalamitasClone 边界框的双层描边与能量边框）
             float pulse = 0.85f + 0.15f * MathF.Sin(time * 6f);
 
             // ① 外层外焰描边 (Glow)
             Main.spriteBatch.DrawLineBetter(tl, tr, flameColor * 0.45f, 10f * pulse);
             Main.spriteBatch.DrawLineBetter(tl, bl, flameColor * 0.45f, 10f * pulse);
             Main.spriteBatch.DrawLineBetter(tr, br, flameColor * 0.45f, 10f * pulse);
-            Main.spriteBatch.DrawLineBetter(br, bl, flameColor * 0.45f, 10f * pulse);
+            Main.spriteBatch.DrawLineBetter(bl, br, flameColor * 0.45f, 10f * pulse);
 
             // ② 主屏障圣金描边 (4px)
             Main.spriteBatch.DrawLineBetter(tl, tr, goldColor * 0.9f, 4f);
             Main.spriteBatch.DrawLineBetter(tl, bl, goldColor * 0.9f, 4f);
             Main.spriteBatch.DrawLineBetter(tr, br, goldColor * 0.9f, 4f);
-            Main.spriteBatch.DrawLineBetter(br, bl, goldColor * 0.9f, 4f);
+            Main.spriteBatch.DrawLineBetter(bl, br, goldColor * 0.9f, 4f);
 
             // ③ 内芯白金线 (1.6px)
             Main.spriteBatch.DrawLineBetter(tl, tr, coreColor, 1.6f);
             Main.spriteBatch.DrawLineBetter(tl, bl, coreColor, 1.6f);
             Main.spriteBatch.DrawLineBetter(tr, br, coreColor, 1.6f);
-            Main.spriteBatch.DrawLineBetter(br, bl, coreColor, 1.6f);
+            Main.spriteBatch.DrawLineBetter(bl, br, coreColor, 1.6f);
 
             // ④ 四角辉光点缀
             Main.EntitySpriteDraw(bloom, tl, null, coreColor * 0.75f, 0f, bloom.Size() * 0.5f, AegisVisuals.RadiusScale(bloom, 14f), SpriteEffects.None, 0);

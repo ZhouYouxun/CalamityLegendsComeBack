@@ -27,6 +27,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         private int rightClickBoostTimer;
         private int leftClickHasteTimer;
         private int leftClickScatterCounter;
+        private bool rightMouseHeldLastFrame;
 
         public bool DepletionBurstActive => depletionBurstTimer > 0;
         public bool LeftClickHasteActive => leftClickHasteTimer > 0;
@@ -45,6 +46,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             rightClickBoostTimer = 0;
             leftClickHasteTimer = 0;
             leftClickScatterCounter = 0;
+            rightMouseHeldLastFrame = false;
         }
 
         public override void PostUpdateEquips()
@@ -82,6 +84,8 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
 
             wasHoldingMalachite = currentlyHolding;
 
+            TryReleaseRightClickDuringLeftHold(currentlyHolding);
+
             if (!holdingMalachite || Player.HeldItem.type != ModContent.ItemType<Malachite>())
                 return;
 
@@ -97,6 +101,38 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                 calamity.rogueStealthMax = 1f;
 
             calamity.wearingRogueArmor = true;
+        }
+
+        private void TryReleaseRightClickDuringLeftHold(bool currentlyHolding)
+        {
+            if (Player.whoAmI != Main.myPlayer)
+                return;
+
+            bool rightHeld = Main.mouseRight && !Player.noItems && !Player.CCed && !Player.mouseInterface && !Main.mapFullscreen && !Main.blockMouse;
+            bool rightJustPressed = rightHeld && !rightMouseHeldLastFrame;
+            rightMouseHeldLastFrame = rightHeld;
+
+            // AltFunctionUse does not start a new item use while the channelled left-click
+            // is already active. Bridge only that missing input combination; ordinary
+            // right-click continues to use Malachite.Shoot as before.
+            if (!currentlyHolding || !Main.mouseLeft || !rightJustPressed || !MalachiteBalance.RightClickUnlocked)
+                return;
+
+            int featherCount = MalachiteRightFeather.CountStoredRightFeathers(Player);
+            if (featherCount <= 0)
+                return;
+
+            CalamityPlayer calamity = Player.Calamity();
+            bool stealthStrike = calamity.StealthStrikeAvailable();
+            Vector2 mouseWorld = calamity.mouseWorld == Vector2.Zero ? Main.MouseWorld : calamity.mouseWorld;
+            int damage = Math.Max(1, (int)Player.GetTotalDamage(Player.HeldItem.DamageType).ApplyTo(MalachiteBalance.GetRightClickBaseDamage()));
+            Malachite.TryReleaseRightClickAttack(
+                Player,
+                Player.GetSource_ItemUse(Player.HeldItem),
+                mouseWorld,
+                damage,
+                Player.HeldItem.knockBack,
+                stealthStrike);
         }
 
         public void RestoreStealthPoints(float points)

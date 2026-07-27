@@ -49,6 +49,19 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
         public override bool AltFunctionUse(Player player) => true;
 
+        public override bool CanUseItem(Player player)
+        {
+            if (player.altFunctionUse != 2)
+                return base.CanUseItem(player);
+
+            LeonidProgenitorPlayer leonidPlayer = player.GetModPlayer<LeonidProgenitorPlayer>();
+            if (leonidPlayer.CanUseRightClick)
+                return base.CanUseItem(player);
+
+            leonidPlayer.SpawnRightClickCooldownFeedback();
+            return false;
+        }
+
         public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
         {
             bool stealthStrike = player.Calamity().StealthStrikeAvailable();
@@ -56,6 +69,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
             if (player.altFunctionUse == 2)
             {
+                player.GetModPlayer<LeonidProgenitorPlayer>().StartRightClickCooldown();
                 // Right Click
                 if (stealthStrike)
                 {
@@ -226,8 +240,8 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             string constellationHint = string.Format(
                 this.GetLocalizedValue("ConstellationHint"),
                 InventoryActivationInput.GetDisplayKeyOrDefault(
-                    KeybindSystem.WeaponLoadingUI,
-                    Language.ActiveCulture.Name.StartsWith("zh") ? "鼠标中键" : "Middle Mouse"));
+                    KeybindSystem.LeonidConstellationChart,
+                    Language.ActiveCulture.Name.StartsWith("zh") ? "左 Ctrl" : "Left Ctrl"));
             string legendaryBody = this.GetLocalizedValue("LegendaryText");
             string legendaryHint = this.GetLocalizedValue("LegendaryHint");
             bool shiftPressed = Main.keyState.PressingShift();

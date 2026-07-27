@@ -140,6 +140,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                 return false;
 
             Texture2D glowTex = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D waterBlade = ModContent.Request<Texture2D>("CalamityMod/Particles/VerticalSmearLarge").Value;
             Vector2 drawPos = target.Center - Main.screenPosition;
             float fade = Utils.GetLerpValue(0f, 10f, Projectile.timeLeft, true) * Utils.GetLerpValue(Lifetime, Lifetime - 8f, Projectile.timeLeft, true);
             Color outer = new Color(130, 225, 255, 0) * 0.42f * fade;
@@ -147,6 +148,18 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 
             Main.EntitySpriteDraw(glowTex, drawPos, null, outer, Projectile.rotation, glowTex.Size() * 0.5f, 0.38f, SpriteEffects.None, 0f);
             Main.EntitySpriteDraw(glowTex, drawPos, null, inner, -Projectile.rotation * 1.3f, glowTex.Size() * 0.5f, 0.2f, SpriteEffects.None, 0f);
+
+            // The delayed mark now resolves into a readable water greatblade, rather than
+            // only dust and bloom. Keep it almost invisible during the warning period,
+            // then flash the whole collision length on the execution frame.
+            float executionFade = executionLanded ? Utils.GetLerpValue(0f, 4f, Projectile.timeLeft, true) : 0f;
+            if (executionFade > 0f)
+            {
+                Vector2 bladeScale = new(SlashWidth / waterBlade.Width * 1.85f, SlashLength / waterBlade.Height * 1.35f);
+                float rotation = Projectile.rotation + MathHelper.PiOver2;
+                Main.EntitySpriteDraw(waterBlade, drawPos, null, new Color(70, 205, 255, 0) * (0.86f * executionFade), rotation, waterBlade.Size() * 0.5f, bladeScale, SpriteEffects.None, 0f);
+                Main.EntitySpriteDraw(waterBlade, drawPos, null, Color.White * (0.56f * executionFade), rotation, waterBlade.Size() * 0.47f, bladeScale * 0.62f, SpriteEffects.None, 0f);
+            }
             return false;
         }
     }

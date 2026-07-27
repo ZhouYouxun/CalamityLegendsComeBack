@@ -94,16 +94,15 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.RightClick
             if (Projectile.owner != Main.myPlayer)
                 return;
 
-            // 每一发都不重样：角度散布 + 速度差异 + 垂直于瞄准的水平随机偏移，
-            // 三发不再是"参数一模一样"的整齐三连，观感更有力。主方向仍跟随鼠标（考验瞄准）。
-            // 投矛 extraUpdates=3（每帧移动 4 次），故此处速度取较低的每次位移量，飞行更慢更顺滑。
-            float spread = MathHelper.ToRadians(Main.rand.NextFloat(-7f, 7f));
-            float speed = Main.rand.NextFloat(3.6f, 4.6f);
+            // 三发各不重样，但收紧到"有活力而非散射飞镖"：速度提升到上限的 120%，角度 ±4°，横向偏移 ±14。
+            // 投矛 extraUpdates=3（每帧移动 4 次），速度是每次位移量。
+            float spread = MathHelper.ToRadians(Main.rand.NextFloat(-UmbralNadirBalance.JavelinSpreadDegrees, UmbralNadirBalance.JavelinSpreadDegrees));
+            float speed = Main.rand.NextFloat(UmbralNadirBalance.JavelinSpeedMin, UmbralNadirBalance.JavelinSpeedMax);
             Vector2 velocity = aim.RotatedBy(spread) * speed;
 
             Vector2 perp = aim.RotatedBy(MathHelper.PiOver2);
-            float lateral = Main.rand.NextFloat(-30f, 30f);   // 水平随机偏移
-            float forward = Main.rand.NextFloat(24f, 44f);
+            float lateral = Main.rand.NextFloat(-UmbralNadirBalance.JavelinLateralOffset, UmbralNadirBalance.JavelinLateralOffset);
+            float forward = Main.rand.NextFloat(UmbralNadirBalance.JavelinForwardMin, UmbralNadirBalance.JavelinForwardMax);
             Vector2 spawnPos = owner.MountedCenter + aim * forward + perp * lateral;
 
             // ai[0] = 投掷序号（0/1 引信、2 终结）

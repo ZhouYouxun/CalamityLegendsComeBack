@@ -3,7 +3,7 @@ Mods: {
 		Items: {
 			Weapons: {
 				NewLegendYharimsCrystal: {
-					DisplayName: Tyrant Crystal
+					DisplayName: Sovereign Above All - Yharim's Crystal
 					Tooltip: "[GFB]"
 					TooltipBody:
 						'''

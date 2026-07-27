@@ -1,7 +1,6 @@
 using CalamityMod.Buffs.StatDebuffs;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using ReLogic.Content;
 using System;
 using Terraria;
 using Terraria.GameContent;
@@ -189,7 +188,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
             if (Main.dedServ) return;
 
-            DrawRadiationSigns(npc, grade);
+            DrawRadiationDoseCells(npc, grade);
 
             if (Main.rand.NextFloat() > 0.08f + intensity * 0.18f) return;
 
@@ -204,29 +203,73 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             dust.noGravity = true;
         }
 
-        private static void DrawRadiationSigns(NPC npc, int grade)
+        // Five compact dose cells replace the old repeated radiation icons. Each cell is
+        // a clipped, notched square: it reads as a radiation meter without borrowing the
+        // stepped capsule silhouette used by the player-side cooldown and shield bars.
+        private static void DrawRadiationDoseCells(NPC npc, int grade)
         {
             if (grade <= 0) return;
 
-            Asset<Texture2D> iconAsset = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/Myown/IonizingRadiation");
-            if (!iconAsset.IsLoaded) return;
-            Texture2D icon = iconAsset.Value;
-            const float iconScale = 0.0075f;
-            const float spacing   = 10f;
-            int   count           = grade;        // 几级显示几个标志
-            float totalWidth      = (count - 1) * spacing;
-            float startX          = npc.Center.X - totalWidth * 0.5f;
-            float topY            = npc.Top.Y - 18f - Main.screenPosition.Y;
+            const int doseCount = 5;
+            const int cellSize = 9;
+            const int cellGap = 2;
+            int totalWidth = doseCount * cellSize + (doseCount - 1) * cellGap;
+            float bob = MathF.Sin(Main.GlobalTimeWrappedHourly * 3.5f + npc.whoAmI * 0.21f) * 0.8f;
+            Vector2 start = npc.Top - Main.screenPosition + new Vector2(-totalWidth * 0.5f, -21f + bob);
 
-            float bob = MathF.Sin(Main.GlobalTimeWrappedHourly * 3.5f) * 2f;
-            Color iconColor = Color.Lerp(SeasSearingPalette.RadioactiveCyan, Color.White, 0.25f) with { A = 220 };
-
-            for (int i = 0; i < count; i++)
+            for (int i = 0; i < doseCount; i++)
             {
-                Vector2 drawPos = new(startX + i * spacing - Main.screenPosition.X, topY + bob);
-                Main.EntitySpriteDraw(icon, drawPos, null, iconColor, 0f,
-                    icon.Size() * 0.5f, iconScale, SpriteEffects.None, 0);
+                Rectangle bounds = new((int)start.X + i * (cellSize + cellGap), (int)start.Y, cellSize, cellSize);
+                bool active = i < grade;
+                float fillPulse = active && i == grade - 1
+                    ? 0.18f + MathF.Sin(Main.GlobalTimeWrappedHourly * 6f) * 0.08f
+                    : 0f;
+                DrawRadiationDoseCell(bounds, i + 1, active, fillPulse);
             }
+        }
+
+        private static void DrawRadiationDoseCell(Rectangle bounds, int tier, bool active, float fillPulse)
+        {
+            Texture2D pixel = TextureAssets.MagicPixel.Value;
+            Color tierColor = SeasSearingPalette.GradeColor(tier);
+            Color frame = Color.Lerp(SeasSearingPalette.DeepBlue, tierColor, active ? 0.82f : 0.34f) with { A = 220 };
+            Color interior = active
+                ? Color.Lerp(tierColor, Color.White, MathHelper.Clamp(fillPulse, 0f, 0.3f)) with { A = 205 }
+                : new Color(4, 22, 36, 190);
+
+            // The eight short runs form a notched square. Every run is strictly inside
+            // its own cell rectangle, so neighboring cells never grow into a cross or
+            // an unbounded line when several grades are active.
+            DrawPixelRect(pixel, new Rectangle(bounds.X + 2, bounds.Y, 5, 1), frame);
+            DrawPixelRect(pixel, new Rectangle(bounds.X + 1, bounds.Y + 1, 7, 1), frame);
+            DrawPixelRect(pixel, new Rectangle(bounds.X, bounds.Y + 2, 1, 5), frame);
+            DrawPixelRect(pixel, new Rectangle(bounds.Right - 1, bounds.Y + 2, 1, 5), frame);
+            DrawPixelRect(pixel, new Rectangle(bounds.X + 1, bounds.Bottom - 2, 7, 1), frame);
+            DrawPixelRect(pixel, new Rectangle(bounds.X + 2, bounds.Bottom - 1, 5, 1), frame);
+
+            DrawPixelRect(pixel, new Rectangle(bounds.X + 2, bounds.Y + 2, 5, 5), interior);
+            if (active)
+            {
+                Color core = Color.Lerp(tierColor, Color.White, 0.38f) with { A = 230 };
+                DrawPixelRect(pixel, new Rectangle(bounds.X + 3, bounds.Y + 3, 3, 3), core);
+            }
+        }
+
+        private static void DrawPixelRect(Texture2D pixel, Rectangle rectangle, Color color)
+        {
+            if (rectangle.Width <= 0 || rectangle.Height <= 0 || color == Color.Transparent)
+                return;
+
+            Main.EntitySpriteDraw(
+                pixel,
+                rectangle.Location.ToVector2(),
+                new Rectangle(0, 0, 1, 1),
+                color,
+                0f,
+                Vector2.Zero,
+                new Vector2(rectangle.Width, rectangle.Height),
+                SpriteEffects.None,
+                0);
         }
 
         private void ApplyDirect(NPC npc, int owner, int amount, int duration, bool fromSpread)

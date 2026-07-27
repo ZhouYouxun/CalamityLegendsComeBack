@@ -3,7 +3,7 @@ Mods: {
 		Items: {
 			Weapons: {
 				NewLegendAntiMaterielRifle: {
-					DisplayName: 小传奇-反器材狙击步枪
+					DisplayName: 势如破竹-反器材狙击步枪
 					Tooltip: "[GFB]"
 					LeftClick: 发射极具破坏力的.408口径狙击弹
 					RightClick: 右键扩大视野，并进入沉浸式狙击模式

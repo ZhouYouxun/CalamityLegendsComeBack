@@ -3,7 +3,7 @@ Mods: {
 		Items: {
 			Weapons: {
 				NewLegendBrinyBaron: {
-					DisplayName: Briny Baron - Return of Legends
+					DisplayName: Scion of the Tides - Briny Baron
 					Tooltip: "[GFB]"
 					BB_Left_1:
 						'''
@@ -40,7 +40,8 @@ Mods: {
 					BB_Right_DefaultShuriken:
 						'''
 						[c/FFB347:Right Click: perform a tide short dash.]
-						[c/FFB347:Striking the first enemy rebounds you once.]
+						[c/FFB347:You are immune during the dash and return; striking the first enemy rebounds you once.]
+						[c/FFB347:After entering Hardmode, a large Razorblade Typhoon that pulls enemies is created on hit.]
 						'''
 					BB_Right_LostGarment:
 						'''
@@ -55,13 +56,13 @@ Mods: {
 					BB_Right_VortexPortal:
 						'''
 						[c/FFB347:Right Click: Vortex Portal warps to the cursor.]
-						[c/FFB347:After teleporting, immediately performs two tidal slashes.]
+						[c/FFB347:Dash out and immediately return along the same path, leaving one large water typhoon in the return lane.]
 						'''
 					BB_Right_Spin_Locked: "[c/DDA0FF:Hold Left Click, then hold Right Click: Whirl Cleave is locked until Stage II.]"
 					BB_Right_Spin_Unlocked:
 						'''
 						[c/DDA0FF:Hold both buttons to keep swinging the greatsword; it gradually accelerates as it spins.]
-						[c/DDA0FF:At maximum speed, it deals maximum damage and continuously releases shurikens.]
+						[c/DDA0FF:At maximum speed, it deals maximum damage and releases shurikens at a measured pace.]
 						'''
 					BB_Tide: "[c/4FAEFF:Current tide value: ]"
 					BB_Tide_Desc_NoAccessory: "[c/4FAEFF:Current tide effects: 【increases damage】【increases movement speed】【adds extra damage at full tide】]"
@@ -188,9 +189,8 @@ Mods: {
 				DisplayName: Bottled Raft
 				Tooltip:
 					'''
-					+5% melee damage
-					Increases Briny Baron's max tide to 6
-					+7% Briny Baron damage when at full tide
+					Material for the later Bottled accessory upgrades
+					[c/7F8FA6:Provides no combat stats by itself]
 					'''
 			}
 
@@ -198,10 +198,9 @@ Mods: {
 				DisplayName: Bottled Boat
 				Tooltip:
 					'''
-					+8% melee damage
+					+12% melee damage
 					Increases Briny Baron's max tide to 8
-					+10% Briny Baron damage when at full tide
-					Full tide significantly boosts shuriken homing and slash count
+					Each tide stack grants +1% melee damage and melee attack speed
 					'''
 			}
 
@@ -209,11 +208,10 @@ Mods: {
 				DisplayName: Bottled Black Pearl
 				Tooltip:
 					'''
-					+12% melee damage
+					+15% melee damage
 					Increases Briny Baron's max tide to 10
-					+14% Briny Baron damage when at full tide
+					Each tide stack grants +1% melee damage and melee attack speed; gain 1 tide every 12 seconds
 					Full tide grants +10 defense and 10% damage reduction
-					Light Wave projectiles gain near-infinite pierce
 					'''
 			}
 
@@ -222,8 +220,9 @@ Mods: {
 				Tooltip:
 					'''
 					+15% melee damage
-					Increases Briny Baron's max tide to 13
-					+18% Briny Baron damage when at full tide
+					While holding Briny Baron, gain another +15% melee damage and melee attack speed
+					Increases Briny Baron's max tide to 10; each tide stack grants +1% melee damage and melee attack speed
+					Gain 2 tide every 6 seconds; full tide grants +10 defense, 10% damage reduction, and +30% melee crit
 					'''
 			}
 

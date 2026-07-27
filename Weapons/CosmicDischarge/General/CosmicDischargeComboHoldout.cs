@@ -714,13 +714,11 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 // Chain-blade form stays visually taut and readable. The moving heads carry
                 // the fan motion; the connector itself no longer inherits their curve.
                 CosmicDischargeCommon.DrawChain(Main.spriteBatch, points[0], points[^1], lightColor, Projectile.scale, true, Owner.gfxOffY);
-                DrawChainTipHalo(points[^1], 0.8f);
                 DrawConstellationOverlay(points, CosmicDischargeCommon.RiftTwilight, 0.52f);
             }
             else
             {
                 DrawDoGFireTrail(points);
-                DrawCurvedBladeGlow(points);
                 CosmicDischargeCommon.DrawCurvedChain(Main.spriteBatch, points, lightColor, Projectile.scale, Owner.gfxOffY);
                 DrawConstellationOverlay(points, ModeAccentColor, 0.72f);
             }
@@ -738,7 +736,6 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
                     var extraPoints = GenerateChainConvergencePoints(direction, reach, lane);
                     CosmicDischargeCommon.DrawChain(Main.spriteBatch, extraPoints[0], extraPoints[^1], chainColor, Projectile.scale * 0.88f, true, Owner.gfxOffY);
-                    DrawChainTipHalo(extraPoints[^1], 0.56f);
                 }
             }
 
@@ -748,7 +745,6 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 float mirrorSide = Kind == CosmicDischargeAttackKind.WhipOver ? 1f : -1f;
                 var mirrorPoints = GenerateWhipPointsForSide(direction, Projectile.velocity.Length(), mirrorSide);
                 DrawDoGFireTrail(mirrorPoints);
-                DrawCurvedBladeGlow(mirrorPoints);
                 Color mirrorColor = Color.Lerp(lightColor, CosmicDischargeCommon.DoGSpecialColor, 0.35f);
                 CosmicDischargeCommon.DrawCurvedChain(Main.spriteBatch, mirrorPoints, mirrorColor, Projectile.scale, Owner.gfxOffY);
                 DrawConstellationOverlay(mirrorPoints, CosmicDischargeCommon.RiftLightBlue, 0.5f);
@@ -795,47 +791,6 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             PrimitiveRenderer.RenderTrail(points, new PrimitiveSettings(InnerWidth, InnerColor, smoothen: true, pixelate: false, shader: GameShaders.Misc["CalamityMod:ImpFlameTrail"]), points.Count + 8);
         }
 
-        private void DrawCurvedBladeGlow(System.Collections.Generic.List<Vector2> points)
-        {
-            if (points == null || points.Count < 2)
-                return;
-
-            Texture2D pixel = TextureAssets.MagicPixel.Value;
-            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            float flash = impactFlashTimer > 0 ? impactFlashTimer / 8f : 0f;
-            Color cyanGlow = CosmicDischargeCommon.Transparent(CosmicDischargeCommon.RiftLightBlue) * (0.15f + flash * 0.15f);
-            Color core = CosmicDischargeCommon.DoGWhiteColor * (0.25f + flash * 0.38f);
-
-            Main.spriteBatch.SetBlendState(BlendState.Additive);
-
-            for (int i = 0; i < points.Count - 1; i++)
-            {
-                Vector2 start = points[i] - Main.screenPosition + Vector2.UnitY * Owner.gfxOffY;
-                Vector2 end = points[i + 1] - Main.screenPosition + Vector2.UnitY * Owner.gfxOffY;
-                Vector2 segment = end - start;
-                if (segment.LengthSquared() < 0.1f)
-                    continue;
-
-                DrawLine(pixel, start, segment, cyanGlow, 3f);
-                DrawLine(pixel, start, segment, core, 1.5f);
-            }
-
-            if (points.Count > 0)
-            {
-                Main.EntitySpriteDraw(
-                    bloom,
-                    points[^1] - Main.screenPosition + Vector2.UnitY * Owner.gfxOffY,
-                    null,
-                    CosmicDischargeCommon.Transparent(CosmicDischargeCommon.DoGSpecialColor) * (0.22f + flash * 0.24f),
-                    0f,
-                    bloom.Size() * 0.5f,
-                    (0.22f + flash * 0.08f) * Projectile.scale,
-                    SpriteEffects.None);
-            }
-
-            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
-        }
-
         private void DrawConstellationOverlay(System.Collections.Generic.IReadOnlyList<Vector2> points, Color accent, float intensity)
         {
             if (points == null || points.Count < 2)
@@ -864,19 +819,6 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 previousNode = node;
             }
 
-            Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
-        }
-
-        private void DrawChainTipHalo(Vector2 worldPosition, float intensity)
-        {
-            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Texture2D star = ModContent.Request<Texture2D>("CalamityMod/Projectiles/StarProj").Value;
-            Vector2 drawPosition = worldPosition - Main.screenPosition + Vector2.UnitY * Owner.gfxOffY;
-            float pulse = 0.9f + 0.1f * MathF.Sin(Main.GlobalTimeWrappedHourly * 7f + worldPosition.X * 0.01f);
-
-            Main.spriteBatch.SetBlendState(BlendState.Additive);
-            Main.EntitySpriteDraw(bloom, drawPosition, null, CosmicDischargeCommon.RiftTwilight * (0.24f * intensity), 0f, bloom.Size() * 0.5f, 0.18f * pulse * intensity, SpriteEffects.None);
-            Main.EntitySpriteDraw(star, drawPosition, null, Color.White * (0.58f * intensity), Projectile.rotation, star.Size() * 0.5f, 0.13f * pulse * intensity, SpriteEffects.None);
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
         }
 

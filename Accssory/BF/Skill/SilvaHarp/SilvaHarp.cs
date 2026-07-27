@@ -36,11 +36,10 @@ namespace CalamityLegendsComeBack.Accssory.BF.SilvaHarp
         public override void AddRecipes()
         {
             CreateRecipe()
-                .AddIngredient<FairyDance.BadSeed>()
-                .AddIngredient<CalamityMod.Items.Materials.EffulgentFeather>(12)
-                .AddIngredient<CalamityMod.Items.Placeables.Abyss.PlantyMush>(30)
-                .AddIngredient(ItemID.GoldBar, 12)
-                .AddIngredient<CalamityMod.Items.Materials.AscendantSpiritEssence>(3)
+                .AddIngredient<CalamityMod.Items.Materials.EffulgentFeather>(15)
+                .AddIngredient<CalamityMod.Items.Materials.AscendantSpiritEssence>(2)
+                .AddIngredient<CalamityMod.Items.Placeables.Abyss.PlantyMush>(5)
+                .AddIngredient(ItemID.MagicalHarp)
                 .AddTile<CosmicAnvil>()
                 .Register();
         }

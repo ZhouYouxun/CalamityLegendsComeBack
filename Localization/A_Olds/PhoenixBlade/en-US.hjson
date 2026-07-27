@@ -31,6 +31,8 @@ Mods: {
 			CryogenFrostMote.DisplayName: Cryogen Frost Mote
 			AureusStarMote.DisplayName: Aureus Star Mote
 			YCAuricJudgementMatrix.DisplayName: Y C Auric Judgement Matrix
+			BrinyBaron_RightSpinOuterBubble.DisplayName: Briny Baron_ Right Spin Outer Bubble
+			BrinyBaron_DashRazorbladeTyphoon.DisplayName: Briny Baron_ Dash Razorblade Typhoon
 		}
 	}
 }

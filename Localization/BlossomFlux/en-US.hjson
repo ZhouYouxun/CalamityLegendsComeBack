@@ -3,7 +3,7 @@ Mods: {
 		Items: {
 			Weapons: {
 				NewLegendBlossomFlux: {
-					DisplayName: BlossomFlux - Return of Legends
+					DisplayName: Luxuriant Growth - BlossomFlux
 					Tooltip: "[GFB]"
 					BF_Intro:
 						'''

@@ -215,6 +215,7 @@ Mods: {
 			LegendarySkill.DisplayName: Legendary Skill
 			LegendaryWeaponFormSwitch.DisplayName: Legendary Weapon Form Switch
 			SHPCLoadingUI.DisplayName: SHPC Loading UI
+			LeonidConstellationChart.DisplayName: Open Leonid Star Chart
 			WeaponLoadingUI.DisplayName: Weapon Loading U I
 		}
 	}

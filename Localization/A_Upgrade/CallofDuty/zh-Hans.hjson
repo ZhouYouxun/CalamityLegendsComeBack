@@ -3,7 +3,7 @@ Mods: {
 		Items: {
 			Weapons: {
 				CallofDuty: {
-					DisplayName: 责任的电话
+					DisplayName: 通情达理-责任的电话
 					Tooltip: "[GFB]"
 					Compact:
 						'''

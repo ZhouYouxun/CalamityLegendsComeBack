@@ -22,7 +22,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
     {
         public new string LocalizationCategory => "Items.Weapons";
 
-        private const float RightClickDamageMultiplier = 1.08f;
         private static bool CanUseQuickDash => true;
         private static bool HasDesignedSuperDashUnlock => NPC.downedFishron;
 
@@ -125,7 +124,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
                         rightClickDamage,
                         knockback,
                         player.whoAmI);
-                    player.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>().StartCooldown(360);
+                    player.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>().StartCooldown(BB_Balance.VortexEyeCooldown);
                     return false;
                 }
 
@@ -142,7 +141,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
                         2f);
 
                     player.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>().StartCooldown(
-                        player.GetModPlayer<BBAccessoryPlayer>().AbyssalBastionEquipped ? 120 : BrinyBaronRightClickDashCooldownPlayer.DashCooldown);
+                        player.GetModPlayer<BBAccessoryPlayer>().AbyssalBastionEquipped ? BB_Balance.AbyssalBastionRightClickCooldown : BB_Balance.DefaultRightClickCooldown);
                     return false;
                 }
 
@@ -292,7 +291,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
         private int GetCurrentRightClickDamage(Player player)
         {
             int baseDamage = BB_Balance.GetLeftClickBaseDamage();
-            float scaledDamage = player.GetTotalDamage(Item.DamageType).ApplyTo(baseDamage * RightClickDamageMultiplier);
+            float scaledDamage = player.GetTotalDamage(Item.DamageType).ApplyTo(baseDamage * BB_Balance.RightClickDamageMultiplier);
             return Math.Max(1, (int)(scaledDamage * player.GetModPlayer<BBTideValuePlayer>().TideDamageMultiplier));
         }
 
@@ -322,7 +321,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             string tideDesc = hasDashAcc
                 ? this.GetLocalizedValue("BB_Tide_Desc_HasAccessory")
                 : this.GetLocalizedValue("BB_Tide_Desc_NoAccessory");
-            string tide = this.GetLocalizedValue("BB_Tide") + tidePlayer.TideValue + "\n" + tideDesc;
 
             string passiveState = this.GetLocalizedValue(dashPlayer.DashEnabled ? "PassiveStateOn" : "PassiveStateOff");
             string passiveDevice = this.GetLocalizedValue(dashPlayer.EquippedDashDeviceLocalizationKey);
@@ -347,7 +345,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
                 string finalText =
                    left.TrimEnd('\r', '\n') + "\n" +
                    rightSection.TrimEnd('\r', '\n') + "\n" +
-                   tide.TrimEnd('\r', '\n') + "\n" +
+                   tideDesc.TrimEnd('\r', '\n') + "\n" +
                    passive.TrimEnd('\r', '\n') + "\n" +
                    final.TrimEnd('\r', '\n') + "\n";
 
@@ -397,9 +395,18 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             var acc = player.GetModPlayer<BBAccessoryPlayer>();
             if (acc.OceanHormoneEquipped && player.Calamity().adrenalineModeActive)
             {
-                return Math.Max(1, Item.useTime - 6) / (float)Item.useTime;
+                return Math.Max(1, Item.useTime - BB_Balance.OceanHormoneUseTimeReduction) / (float)Item.useTime;
             }
             return base.UseTimeMultiplier(player);
+        }
+
+        public override float UseAnimationMultiplier(Player player)
+        {
+            var acc = player.GetModPlayer<BBAccessoryPlayer>();
+            if (acc.OceanHormoneEquipped && player.Calamity().adrenalineModeActive)
+                return Math.Max(1, Item.useAnimation - BB_Balance.OceanHormoneUseTimeReduction) / (float)Item.useAnimation;
+
+            return base.UseAnimationMultiplier(player);
         }
 
         private static bool HasActiveRightClickDash(Player player)

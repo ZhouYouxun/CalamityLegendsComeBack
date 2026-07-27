@@ -3,7 +3,7 @@ Mods: {
 		Items: {
 			Weapons: {
 				AegisBlade: {
-					DisplayName: Aegis Blade
+					DisplayName: Unyielding Bulwark - Aegis Blade
 					Tooltip: "[GFB]"
 					FunctionalTooltip:
 						'''

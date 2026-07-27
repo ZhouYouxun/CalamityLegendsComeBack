@@ -113,23 +113,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
 
             if (player.altFunctionUse == 2)
             {
-                int currentFeathers = MalachiteRightFeather.CountStoredRightFeathers(player);
-                if (currentFeathers > 0)
-                {
-                    if (MalachiteRightFeather.ReleaseStoredRightFeathers(player, source, mouseWorld, damage, knockback, stealthStrike))
-                    {
-                        if (MalachiteBalance.RightClickMoveBoostUnlocked)
-                            malachitePlayer.TriggerRightClickBoost();
-                        if (MalachiteBalance.RightClickLeftHasteUnlocked)
-                            malachitePlayer.TriggerLeftClickHaste();
-
-                        if (stealthStrike)
-                            HandleStealthAttackCost(malachitePlayer, calamity, rightClick: true);
-
-                        SoundEngine.PlaySound(SoundID.Item92 with { Volume = 0.86f, Pitch = stealthStrike ? -0.08f : 0.18f }, player.Center);
-                        SoundEngine.PlaySound(SoundID.Item71 with { Volume = 0.56f, Pitch = 0.35f }, player.Center);
-                    }
-                }
+                TryReleaseRightClickAttack(player, source, mouseWorld, damage, knockback, stealthStrike);
 
                 return false;
             }
@@ -314,6 +298,38 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             }
 
             malachitePlayer.ConsumeHalfStealthAndRestore(calamity);
+        }
+
+        // Shared by the normal alt-use Shoot path and MalachitePlayer's left-hold input
+        // bridge, so both routes spend stealth, launch feathers, and grant follow-up buffs
+        // in exactly the same way.
+        internal static bool TryReleaseRightClickAttack(
+            Player player,
+            IEntitySource source,
+            Vector2 mouseWorld,
+            int damage,
+            float knockback,
+            bool stealthStrike)
+        {
+            if (!MalachiteBalance.RightClickUnlocked ||
+                MalachiteRightFeather.CountStoredRightFeathers(player) <= 0 ||
+                !MalachiteRightFeather.ReleaseStoredRightFeathers(player, source, mouseWorld, damage, knockback, stealthStrike))
+            {
+                return false;
+            }
+
+            MalachitePlayer malachitePlayer = player.GetModPlayer<MalachitePlayer>();
+            if (MalachiteBalance.RightClickMoveBoostUnlocked)
+                malachitePlayer.TriggerRightClickBoost();
+            if (MalachiteBalance.RightClickLeftHasteUnlocked)
+                malachitePlayer.TriggerLeftClickHaste();
+
+            if (stealthStrike)
+                HandleStealthAttackCost(malachitePlayer, player.Calamity(), rightClick: true);
+
+            SoundEngine.PlaySound(SoundID.Item92 with { Volume = 0.86f, Pitch = stealthStrike ? -0.08f : 0.18f }, player.Center);
+            SoundEngine.PlaySound(SoundID.Item71 with { Volume = 0.56f, Pitch = 0.35f }, player.Center);
+            return true;
         }
 
         private static void SpawnLeftClickScatterBurst(

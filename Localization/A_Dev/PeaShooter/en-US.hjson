@@ -52,6 +52,20 @@ Mods: {
 			AzureThunderGroundSwordMatrix.DisplayName: Azure Thunder Ground Sword Matrix
 			SHPCLeftClickHoldout.DisplayName: S H P C Left Click Holdout
 			SHPCMagazineStatusPanel.DisplayName: S H P C Magazine Status Panel
+			BFLeftPlagueFlame.DisplayName: B F Left Plague Flame
+			BFArrow_ABreak.DisplayName: B F Arrow_ A Break
+			BFArrow_BRecov.DisplayName: B F Arrow_ B Recov
+			BFArrow_BRecovTransfer.DisplayName: B F Arrow_ B Recov Transfer
+			BFArrow_CDetec.DisplayName: B F Arrow_ C Detec
+			BFArrow_CDetecReticle.DisplayName: B F Arrow_ C Detec Reticle
+			BFArrow_DBomb.DisplayName: B F Arrow_ D Bomb
+			BFArrow_EPlague.DisplayName: B F Arrow_ E Plague
+			BFArrow_EPlagueGas.DisplayName: B F Arrow_ E Plague Gas
+			FuckYou.DisplayName: Fuck You
+			BrinyBaron_LeftClick_Swing.DisplayName: Briny Baron_ Left Click_ Swing
+			BrinyBaron_SkillSlashDash_SlashDash.DisplayName: Briny Baron_ Skill Slash Dash_ Slash Dash
+			BrinyBaron.BBASD_Lighting.DisplayName: B B A S D_ Lighting
+			Z_BrinyBaron_SkillSuperCharge_SuperDash.DisplayName: Z_ Briny Baron_ Skill Super Charge_ Super Dash
 		}
 
 		PeaShooter: {

@@ -3,7 +3,7 @@ Mods: {
 		Items: {
 			Weapons: {
 				Malachite: {
-					DisplayName: 新传奇 - 孔雀翎
+					DisplayName: 悄无声息-孔雀翎
 					Tooltip: "[GFB]"
 					LeftClick0:
 						'''
@@ -82,7 +82,7 @@ Mods: {
 						'''
 					Finale:
 						'''
-						[c/D6FF9A:大招【翎羽灯光秀】满潜伏且冷却结束时按] [[c/D6FF9A:{0}]] [c/D6FF9A:。]
+						[c/D6FF9A:大招【华丽收场】满潜伏且冷却结束时按] [[c/D6FF9A:{0}]] [c/D6FF9A:。]
 						[c/D6FF9A:30秒充能，潜伏攻击推进5秒。]
 						[c/D6FF9A:花瓣化为轻快追踪苦无。]
 						'''
@@ -208,7 +208,7 @@ Mods: {
 				MalachiteRightFeatherExplosion.DisplayName: 孔雀石羽爆
 				MalachiteRightNovaShard.DisplayName: 孔雀石新星
 				MalachiteGrazeSlashVisual.DisplayName: 灵动擦弹斩
-				MalachiteFinaleController.DisplayName: 翎羽灯光秀
+				MalachiteFinaleController.DisplayName: 华丽收场
 				MalachiteFinaleSlash.DisplayName: 孔雀翎斩击
 				MalachiteFinaleHitSlash.DisplayName: 孔雀翎斩杀
 				MalachiteFinaleDart.DisplayName: 孔雀翎飞刃
@@ -217,6 +217,6 @@ Mods: {
 			}
 		}
 
-		Cooldowns.Malachite_EX: 翎羽灯光秀
+		Cooldowns.Malachite_EX: 华丽收场
 	}
 }

@@ -33,12 +33,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         private static readonly Vector2 BaseHitboxSize = new(132f, 132f);
         private const float SwooshRadiusCorrection = 0.575f;
         private const float RightSpinSwooshScaleMultiplier = 0.95f;
-        private const float RightSpinVisualReachScale = 0.335f;
+        // Keep the blade disc unchanged; only spread the water/ice field outward.
+        private const float RightSpinVisualReachScale = 1.005f;
         private int CurrentGrowthStage => BB_Balance.GetGrowthStage();
         private int ComboLength => BB_Balance.GetLeftClickComboSequence(CurrentGrowthStage).Length;
         private const int StandardGapFrames = 0;
         private const int RightSpinTransitionFrames = 14;
-        private const int RightSpinShurikenInterval = 12;
         private const float RightSpinMaxEmpowerment = 180f;
 
         private int comboIndex;
@@ -69,6 +69,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         private int rightSpinTransitionTimer;
         private Vector2 rightSpinDirectionVector = Vector2.UnitX;
         private Particle rightSpinSmear;
+        private int rightSpinOuterBubbleIndex = -1;
         // 椭圆旋转：rightSpinAngle 是椭圆参数方程的累积角度 θ
         private float rightSpinAngle;
         // 龙卷风特效：透明度（0→1 淡入，1→0 淡出）
@@ -609,10 +610,14 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         private void SpawnFiveShurikens()
         {
             Vector2 shootDirection = lockedAimDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
-            for (int i = 0; i < 5; i++)
+            // Third-swing fan starts at three; Duke Fishron restores the full five-blade
+            // version as an explicit progression reward.
+            int shurikenCount = NPC.downedFishron ? 5 : 3;
+            int middle = shurikenCount / 2;
+            for (int i = 0; i < shurikenCount; i++)
             {
-                float spread = MathHelper.ToRadians((i - 2) * 10f);
-                float speedMultiplier = 1f - Math.Abs(i - 2) * 0.15f;
+                float spread = MathHelper.ToRadians((i - middle) * 10f);
+                float speedMultiplier = 1f - Math.Abs(i - middle) * 0.15f;
                 Vector2 velocity = shootDirection.RotatedBy(spread).RotatedByRandom(0.02f) * (15f * speedMultiplier);
 
                 Projectile.NewProjectile(
@@ -694,8 +699,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             SpawnRightSpinParticles();
             UpdateRightSpinSmear();
 
-            if (RightSpinChargeRatio >= 1f && (rightSpinTimer + (int)rightSpinOverEmpowerment) % RightSpinShurikenInterval == 1)
+            if (RightSpinChargeRatio >= 1f && (rightSpinTimer + (int)rightSpinOverEmpowerment) % BB_Balance.RightSpinShurikenInterval == 1)
                 SpawnRightSpinShuriken();
+
+            MaintainPostFishronOuterBubble();
 
             rightSpinEmpowerment++;
             if (rightSpinEmpowerment > RightSpinMaxEmpowerment)
@@ -728,6 +735,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             rightSpinAngle = rightSpinDirectionVector.ToRotation();
             tornadoOpacity = 0f;
             tornadoAiTracker = 0;
+            rightSpinOuterBubbleIndex = -1;
             ClearBladeShaderTrail();
 
             for (int i = 0; i < Main.maxNPCs; i++)
@@ -749,6 +757,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             // tornadoOpacity 不在此清零，由 AI() 的淡出逻辑平滑处理
             rightSpinSmear?.Kill();
             rightSpinSmear = null;
+            rightSpinOuterBubbleIndex = -1;
             ClearBladeShaderTrail();
             CanHit = false;
             postSwing = false;
@@ -774,6 +783,30 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 Projectile.knockBack * 0.4f,
                 Projectile.owner,
                 0f);
+        }
+
+        private void MaintainPostFishronOuterBubble()
+        {
+            if (!NPC.downedFishron || Main.myPlayer != Projectile.owner)
+                return;
+
+            int bubbleType = ModContent.ProjectileType<BrinyBaron_RightSpinOuterBubble>();
+            if (!Main.projectile.IndexInRange(rightSpinOuterBubbleIndex) || !Main.projectile[rightSpinOuterBubbleIndex].active || Main.projectile[rightSpinOuterBubbleIndex].type != bubbleType)
+            {
+                rightSpinOuterBubbleIndex = Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    Owner.Center,
+                    Vector2.Zero,
+                    bubbleType,
+                    Math.Max(1, (int)(Projectile.damage * 0.32f)),
+                    Projectile.knockBack * 0.3f,
+                    Projectile.owner,
+                    rightSpinAngle,
+                    rightSpinOrbitDirection);
+            }
+
+            if (Main.projectile.IndexInRange(rightSpinOuterBubbleIndex))
+                Main.projectile[rightSpinOuterBubbleIndex].timeLeft = 3;
         }
 
         private void SpawnRightSpinParticles()

@@ -55,7 +55,7 @@ Mods: {
 
 			Weapons: {
 				NewLegendPristineFury: {
-					DisplayName: Pristine Fury - Return of Legends
+					DisplayName: Scorch All Things - Pristine Fury
 					PristineFuryIntro: "[c/FF9340:Current imprint: {0}.]"
 					RightClick: "[c/FFB066:Right Click: charge and release a pristine nova shot.]"
 					Hook: "[c/9AEAFF:Hold Left + Right to launch the extraction hook; valid bosses grant imprints.]"

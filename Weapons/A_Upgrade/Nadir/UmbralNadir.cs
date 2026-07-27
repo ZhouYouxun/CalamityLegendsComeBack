@@ -1,4 +1,5 @@
 using System;
+using CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.Combo;
 using CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.LeftClick;
 using CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.RightClick;
 using CalamityMod;
@@ -31,8 +32,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir
         {
             // 禁用全局攻速加成，让连招节奏由武器自身掌控。
             ItemID.Sets.BonusAttackSpeedMultiplier[Item.type] = 0f;
-            // 允许长按右键持续触发（三连投掷靠这个自动续期控制器）。
-            ItemID.Sets.ItemsThatAllowRepeatedRightClick[Item.type] = true;
+            // 不使用长按右键连发：一次右键点击生成一个投掷控制器，控制器自身读取 mouseRight 续期成轮。
         }
 
         public override void SetDefaults()
@@ -72,32 +72,30 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir
         {
             bool leftHoldoutActive = HasActiveProjectile(player, ModContent.ProjectileType<UmbralNadirHoldout>());
             bool throwControllerActive = HasActiveProjectile(player, ModContent.ProjectileType<UmbralNadirThrowController>());
+            bool spinActive = HasActiveProjectile(player, ModContent.ProjectileType<UmbralNadirSpinHoldout>());
             bool isLocal = Main.myPlayer == player.whoAmI;
 
-            // ===== 右键：三连投掷（优先级始终高于左键）=====
+            // ===== 右键 =====
+            // 单独右键 = 投矛；但"按住左键期间再按右键"属于回旋（由左键 holdout 检测 mouseRight 自行切换），
+            // 所以此处：正按住左键时右键不生成投掷控制器，把这一输入让给回旋逻辑。
             if (player.altFunctionUse == 2)
             {
-                // 右键始终可用，不受左键阻挡；触发时会在 Shoot 里接管并中断左键。
-                // 仅避免重复生成控制器。
-                if (throwControllerActive)
+                if (spinActive || throwControllerActive)
+                    return false;
+                if (isLocal && Main.mouseLeft)
                     return false;
 
                 Item.useStyle = ItemUseStyleID.Shoot;
                 Item.useTime = Item.useAnimation = 8;
                 Item.channel = false;
-                Item.autoReuse = true;
+                Item.autoReuse = false; // 一次点击一个控制器，长按由控制器自身维持成轮
                 Item.shoot = ModContent.ProjectileType<UmbralNadirThrowController>();
                 Item.UseSound = null;
                 return true;
             }
 
-            // ===== 左键：近战连招（右键优先，故左键让位于右键）=====
-            // 右键投掷进行中、或此刻正摁着右键，左键都不生效。
-            if (throwControllerActive)
-                return false;
-            if (isLocal && Main.mouseRight)
-                return false;
-            if (leftHoldoutActive)
+            // ===== 左键：近战连招 =====
+            if (spinActive || throwControllerActive || leftHoldoutActive)
                 return false;
 
             Item.useStyle = ItemUseStyleID.Shoot;
@@ -113,12 +111,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir
         {
             if (player.altFunctionUse == 2)
             {
-                // 右键接管：中断正在进行的左键连招（右键优先）
-                CancelLeftHoldout(player);
-
+                // 单独右键：生成三连投掷控制器（独立的右键基础伤害，含玩家近战加成，与左键解耦）
                 if (!HasActiveProjectile(player, ModContent.ProjectileType<UmbralNadirThrowController>()))
                 {
-                    // 右键使用独立的右键基础伤害（含玩家近战加成），与左键解耦
                     int rightDamage = Math.Max(1, (int)player.GetTotalDamage(Item.DamageType).ApplyTo(UmbralNadirBalance.GetRightBaseDamage()));
                     Projectile.NewProjectile(source, player.MountedCenter, Vector2.Zero,
                         ModContent.ProjectileType<UmbralNadirThrowController>(), rightDamage, knockback, player.whoAmI);
@@ -126,26 +121,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir
                 return false;
             }
 
+            // 左键：生成近战连招 holdout（回旋切换由 holdout 内部检测右键完成）
             if (!HasActiveProjectile(player, ModContent.ProjectileType<UmbralNadirHoldout>()))
             {
                 Projectile.NewProjectile(source, player.MountedCenter, Vector2.Zero,
                     ModContent.ProjectileType<UmbralNadirHoldout>(), damage, knockback, player.whoAmI);
             }
             return false;
-        }
-
-        private static void CancelLeftHoldout(Player player)
-        {
-            int holdoutType = ModContent.ProjectileType<UmbralNadirHoldout>();
-            if (player.ownedProjectileCounts[holdoutType] <= 0)
-                return;
-
-            for (int i = 0; i < Main.maxProjectiles; i++)
-            {
-                Projectile proj = Main.projectile[i];
-                if (proj.active && proj.owner == player.whoAmI && proj.type == holdoutType)
-                    proj.Kill();
-            }
         }
 
         private static bool HasActiveProjectile(Player player, int projectileType)

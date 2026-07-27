@@ -3,7 +3,7 @@ Mods: {
 		Items: {
 			Weapons: {
 				NewDragoonDrizzlefish: {
-					DisplayName: 宴火龙骑鱼
+					DisplayName: 食髓知味-硫磺喷吐鱼
 					Tooltip:
 						'''
 						一条饿着肚子就不肯打架的小鱼炮

@@ -181,9 +181,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             visualPlayer.ghost = false;
             visualPlayer.invis = false;
             visualPlayer.shimmering = false;
+            visualPlayer.opacityForAnimation = opacity;
             visualPlayer.immune = false;
             visualPlayer.immuneTime = 0;
-            visualPlayer.immuneAlpha = (int)MathHelper.Clamp(255f - opacity * 185f, 0f, 255f);
+            // Do not feed the proxy's afterimage alpha through Terraria's invulnerability
+            // blink path; that path can make a detached renderer disappear entirely.
+            visualPlayer.immuneAlpha = 0;
             visualPlayer.stealth = 1f;
             visualPlayer.heldProj = -1;
             visualPlayer.inventory[0].TurnToAir();

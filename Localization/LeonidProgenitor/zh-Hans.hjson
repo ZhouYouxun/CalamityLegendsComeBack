@@ -3,7 +3,7 @@ Mods: {
 		Items: {
 			Weapons: {
 				LeonidProgenitor: {
-					DisplayName: 狮子座流星雨
+					DisplayName: 致密重力-狮源流星
 					Tooltip: "[GFB]"
 					LeftClick:
 						'''
@@ -16,7 +16,7 @@ Mods: {
 					UltimateSkill: "[c/FFE85A:终结技（按 {0}）：展开引力场，召来从天空落下的流星暴。需要满终结能量和潜伏值。]"
 					Passives: "[c/BFAFFF:动能循环：左键流星反射后会加速、增伤；第七次反射后会回到身边环绕。]"
 					ConstellationStatus: "[c/FFE85A:狮子座星辉：可用 {0} | 已消耗 {1} | 已获得 {2} | 全图需 {3}]"
-					ConstellationHint: "[c/B8A8FF:手持时点击{0}，或在背包中对本武器点击{0}，展开狮子座星图。]"
+					ConstellationHint: "[c/B8A8FF:手持本武器，或在背包中悬停本武器时，按 {0} 展开狮源流星星图。]"
 					LegendaryHint: "[c/BABABA:按住 Shift 阅读传奇记录]"
 					LegendaryText: "[c/66E6FF:狮子座流星雨不再从背包寻找金属。每一位被击败的大型 Boss，都会成为狮子天空中的一颗星辉。]"
 

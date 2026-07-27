@@ -641,7 +641,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken
                 return;
 
             int baseFoamCount = 6 + highestUnlockedStage * 2;
-            int foamCount = Math.Max(1, (int)MathF.Ceiling(baseFoamCount * 0.34f));
+            // WaterFoamParticle is a one-shot impact burst, so halve its count rather
+            // than thinning a timer. This keeps the hit readable without foam stacking.
+            int foamCount = Math.Max(1, (int)MathF.Ceiling(baseFoamCount * 0.17f));
             Vector2 hitRight = hitForward.RotatedBy(MathHelper.PiOver2);
             Color foamColor = Color.Lerp(new Color(150, 230, 255), Color.White, 0.46f);
 

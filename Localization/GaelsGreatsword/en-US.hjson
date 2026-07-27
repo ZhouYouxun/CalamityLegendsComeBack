@@ -3,7 +3,7 @@ Mods: {
 		Items: {
 			Weapons: {
 				NewLegendGaelsGreatsword: {
-					DisplayName: Gael's Greatsword
+					DisplayName: Embers of the End - Gael's Greatsword
 					Tooltip: "[GFB]"
 					FunctionalTooltip:
 						'''

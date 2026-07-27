@@ -11,14 +11,15 @@ using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.UI;
+using Microsoft.Xna.Framework.Input;
 
 namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 {
     /// <summary>
     /// A draw-only matrix UI. It deliberately has two opening contexts:
     /// held in the world (closing the inventory closes it) and hovered in the inventory
-    /// (closing the inventory immediately closes it).
-    /// Both contexts share the WeaponLoadingUI keybind with SHPC's loading UI, falling back to middle click.
+    /// (closing the inventory immediately closes it). Both contexts use the dedicated
+    /// Leonid constellation keybind and never consume SHPC's loading key or middle mouse.
     /// </summary>
     internal sealed class LeonidConstellationMatrixUI : ModSystem
     {
@@ -29,8 +30,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
         private static bool isOpen;
         private static bool openedFromInventory;
-        private static bool previousMiddleMouse;
-        private static bool previousKeybind;
+        private static bool previousConstellationKey;
         private static Rectangle resetArea;
 
         public static bool IsOpen => isOpen;
@@ -57,12 +57,9 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 return;
 
             Player player = Main.LocalPlayer;
-            bool keyBound = InventoryActivationInput.HasBoundKey(KeybindSystem.WeaponLoadingUI);
-            bool keybindPressed = InventoryActivationInput.IsPressed(KeybindSystem.WeaponLoadingUI);
-            bool justPressedKeybind = keybindPressed && !previousKeybind;
-            bool justPressedMiddle = Main.mouseMiddle && !previousMiddleMouse;
-            previousKeybind = keybindPressed;
-            previousMiddleMouse = Main.mouseMiddle;
+            bool constellationKeyPressed = IsConstellationKeyPressed();
+            bool justPressedConstellationKey = constellationKeyPressed && !previousConstellationKey;
+            previousConstellationKey = constellationKeyPressed;
 
             if (isOpen)
             {
@@ -79,17 +76,27 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 }
             }
 
-            // In the inventory the bound key replaces middle click, matching how SHPC's loading UI opens.
+            // The chart may be opened while hovering Leonid in the inventory, but only
+            // through Leonid's own keybind.
             if (Main.playerInventory)
             {
-                if ((keyBound ? justPressedKeybind : justPressedMiddle) && Main.HoverItem?.ModItem is LeonidProgenitor)
+                if (justPressedConstellationKey && Main.HoverItem?.ModItem is LeonidProgenitor)
                     Toggle(true);
                 return;
             }
 
-            // Held in the world middle click always works, and the bound key is an extra shortcut alongside it.
-            if ((justPressedMiddle || justPressedKeybind) && player.HeldItem?.ModItem is LeonidProgenitor)
+            if (justPressedConstellationKey && player.HeldItem?.ModItem is LeonidProgenitor)
                 Toggle(false);
+        }
+
+        private static bool IsConstellationKeyPressed()
+        {
+            // The keybind is registered with LeftControl as its default. If a player
+            // explicitly clears it, retain LeftControl as the documented fallback.
+            if (InventoryActivationInput.HasBoundKey(KeybindSystem.LeonidConstellationChart))
+                return InventoryActivationInput.IsPressed(KeybindSystem.LeonidConstellationChart);
+
+            return Main.keyState.IsKeyDown(Keys.LeftControl);
         }
 
         private static void Toggle(bool fromInventory)

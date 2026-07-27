@@ -113,9 +113,15 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.TideValue
             if (amount <= 0)
                 return;
 
-            TideValue += amount;
-            if (TideValue > CurrentTideMax)
-                TideValue = CurrentTideMax;
+            // A full gauge is sticky: further gain events must be a no-op, never a
+            // wrapped/reapplied amount. Clamp both operands because accessory changes
+            // can alter the cap during the same update that a hit grants tide.
+            int cap = Math.Max(0, CurrentTideMax);
+            TideValue = Utils.Clamp(TideValue, 0, cap);
+            if (TideValue >= cap)
+                return;
+
+            TideValue = Math.Min(cap, TideValue + amount);
         }
 
         public bool TryAddTideFromBlade()
