@@ -1,5 +1,6 @@
 using System;
 using CalamityMod;
+using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -8,7 +9,10 @@ using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper
+using CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.Shared;
+using CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.RightClick;
+
+namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.Holdout
 {
     /// <summary>
     /// 右键：微光折返扫射的持握 / 节奏控制器（文档第 4.1 节）。

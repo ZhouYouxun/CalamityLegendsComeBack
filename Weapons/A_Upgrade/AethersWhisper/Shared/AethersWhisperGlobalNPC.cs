@@ -1,7 +1,7 @@
 using Terraria;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper
+namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.Shared
 {
     /// <summary>
     /// 回收晶片的「同组防重」记录器（第 6.4 节）。
@@ -19,26 +19,25 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper
         private int lastReturnHitTick = int.MinValue;
 
         /// <summary>
-        /// 尝试为一枚回收晶片登记一次命中。允许则记录并返回 true；
-        /// 若同一 (owner, groupId) 已在存活窗口内命中过该 NPC，则拒绝并返回 false。
+        /// 预检（不改状态）：某 NPC 是否已在存活窗口内被同一 (owner, groupId) 的晶片伤到。
+        /// 用于让另一枚同组晶片“穿过而不结算”，且不消耗它自己的唯一命中。
         /// </summary>
-        internal static bool TryRegisterReturnHit(NPC target, int owner, int groupId)
+        internal static bool IsGroupBlocked(NPC target, int owner, int groupId)
         {
             AethersWhisperGlobalNPC state = target.GetGlobalNPC<AethersWhisperGlobalNPC>();
             int now = (int)Main.GameUpdateCount;
+            return state.lastReturnOwner == owner &&
+                   state.lastReturnGroupId == groupId &&
+                   now - state.lastReturnHitTick <= AethersWhisperBalance.ReturnGroupImmuneWindow;
+        }
 
-            bool sameGroupStillActive =
-                state.lastReturnOwner == owner &&
-                state.lastReturnGroupId == groupId &&
-                now - state.lastReturnHitTick <= AethersWhisperBalance.ReturnGroupImmuneWindow;
-
-            if (sameGroupStillActive)
-                return false;
-
+        /// <summary>登记一次同组命中（在真正结算伤害时调用）。</summary>
+        internal static void RegisterGroupHit(NPC target, int owner, int groupId)
+        {
+            AethersWhisperGlobalNPC state = target.GetGlobalNPC<AethersWhisperGlobalNPC>();
             state.lastReturnOwner = owner;
             state.lastReturnGroupId = groupId;
-            state.lastReturnHitTick = now;
-            return true;
+            state.lastReturnHitTick = (int)Main.GameUpdateCount;
         }
     }
 }

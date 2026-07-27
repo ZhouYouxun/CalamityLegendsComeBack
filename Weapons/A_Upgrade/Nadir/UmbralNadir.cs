@@ -68,6 +68,16 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir
             damage.Base += UmbralNadirBalance.GetLeftBaseDamage() - Item.damage;
         }
 
+        // 动态显示奇点充能，让"叠层→回旋蓄满→释放新星"的循环对玩家可读。
+        public override void ModifyTooltips(System.Collections.Generic.List<TooltipLine> tooltips)
+        {
+            var mp = Main.LocalPlayer.GetModPlayer<UmbralNadirPlayer>();
+            string line = mp.NovaReady
+                ? this.GetLocalizedValue("NovaReady")
+                : string.Format(this.GetLocalizedValue("Charge"), (int)(mp.ChargeRatio * 100f));
+            tooltips.Add(new TooltipLine(Mod, "UmbralNadirCharge", line));
+        }
+
         public override bool CanUseItem(Player player)
         {
             bool leftHoldoutActive = HasActiveProjectile(player, ModContent.ProjectileType<UmbralNadirHoldout>());

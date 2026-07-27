@@ -7,13 +7,15 @@ Mods: {
 						DisplayName: Umbral Nadir
 						Tooltip:
 							'''
-							[c/8CFF96:Left Click: an elegant three-hit void combo - a rising slash, a falling slash, then a piercing dash.]
-							[c/8CFF96:Every strike tears open an Abyssal Maw that lashes out void tentacles; the dash also detonates a collapsing black sun for terrifying damage.]
-							[c/6FE0C0:Right Click: a three-shot void javelin volley - three per round, five frames apart, each with a little random spread, and a brief pause between rounds.]
-							[c/6FE0C0:The javelins embed into foes and keep triggering chain-reaction void bursts, flinging out Meld Void Cores and spreading frostblight.]
-							[c/5FBF8A:Abyssal Maws gaze, devour and spew tentacles; Meld Void Cores home in and split along chains - an ever-spreading lattice of black and green.]
-							[c/4E9C74:Right Click takes priority over Left Click - hold both and the volley wins, interrupting the combo.]
+							[c/8CFF96:Left Click: a three-hit spear form - rising slash, falling slash, piercing dash - each strike tears a black-hole shockwave and stacks Corrosion.]
+							[c/8CFF96:The dash leaves a devouring singularity that drags foes into a single knot.]
+							[c/6FE0C0:Right Click: hurl three high-speed umbral javelins. The first two tear out shadow-soul needles that hunt the most-corroded enemies;]
+							[c/6FE0C0:the third detonates on impact, consuming all Corrosion nearby - the more it eats, the bigger the blast.]
+							[c/DDA0FF:Hold Left Click, then press Right Click: enter the whirling slash, dragging foes in, stacking Corrosion and charging the singularity; release either button to end it.]
+							[c/DDA0FF:When the singularity is full, the whirl unleashes a black-hole nova centered on you that devours all nearby Corrosion.]
 							'''
+						Charge: "[c/8A6FE0:Singularity Charge: {0}%]"
+						NovaReady: "[c/DDA0FF:Singularity full - the whirling slash will unleash a black-hole nova]"
 					}
 				}
 			}
@@ -22,14 +24,24 @@ Mods: {
 		Projectiles: {
 			Nadir: {
 				UmbralNadirHoldout.DisplayName: Umbral Slash
+				UmbralNadirImpactExplosion.DisplayName: Umbral Black-Hole Burst
+				UmbralNadirSingularity.DisplayName: Nadir Singularity
+				UmbralNadirSlashWave.DisplayName: Umbral Slash Wave
+				UmbralNadirThrowController.DisplayName: Umbral Volley
+				UmbralNadirJavelin.DisplayName: Umbral Javelin
+				UmbralNadirShadowSoul.DisplayName: Shadow Soul
+				UmbralNadirVoidShard.DisplayName: Void Shard
+				UmbralNadirFinalExplosion.DisplayName: Umbral Detonation
+				UmbralNadirSpinHoldout.DisplayName: Whirling Slash
+				UmbralNadirSpinNova.DisplayName: Singularity Nova
 				UmbralNadirVoidEssence.DisplayName: Meld Void Core
 				UmbralNadirAbyssRift.DisplayName: Abyssal Maw
-				UmbralNadirThrowController.DisplayName: Umbral Volley
-				UmbralNadirJavelin.DisplayName: Umbral Void Javelin
-				UmbralNadirShadowSoul.DisplayName: Umbral Nadir Shadow Soul
-				UmbralNadirFinalExplosion.DisplayName: Umbral Nadir Final Explosion
-				UmbralNadirImpactExplosion.DisplayName: Umbral Nadir Impact Explosion
-				UmbralNadirSpinHoldout.DisplayName: Umbral Nadir Spin Holdout
+			}
+		}
+		Buffs: {
+			UmbralCorrosion: {
+				DisplayName: Umbral Corrosion
+				Description: Etched by Umbral Nadir; the more it stacks, the harder black holes and detonations rend it.
 			}
 		}
 	}

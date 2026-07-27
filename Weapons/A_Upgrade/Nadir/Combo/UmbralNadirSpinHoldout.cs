@@ -1,33 +1,31 @@
 using System;
 using System.Collections.Generic;
+using CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.General;
 using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Dusts;
 using CalamityMod.Enums;
-using CalamityMod.Graphics.Primitives;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.Audio;
-using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.Combo
 {
     /// <summary>
-    /// 回旋斩迹 —— "按住左键期间再按右键"进入的贴身自保模式。
-    /// 一根常驻长矛绕玩家匀速回旋，细长 line 碰撞清理贴身包围；只在左右键同时按住时维持。
-    /// 视觉是矛尖的短黑色 shader 环迹 + 少量黑砂 + 每圈至多一次很弱的绿边缘闪烁。
-    /// 不生成灵魂 / 裂隙 / 触手 / 爆炸，不暴击。
+    /// 回旋斩迹——"按住左键期间再按右键"进入的贴身模式。
+    /// 一根长矛绕玩家匀速回旋，用细长 line 碰撞清理贴身包围，同时**把周围敌人吸拢**、叠蚀痕、蓄奇点。
+    /// 奇点蓄满即以玩家为中心释放黑洞新星（消耗蚀痕暴发）。只在左右键同时按住时维持。
+    /// 视觉：矛尖黑色 shader 环迹 + 黑砂 + 每圈至多一次很弱的绿边缘闪烁。回旋本体不暴击。
+    /// ai[0] = 左键基础伤害（供新星），ai[1] = 阶段尺寸。
     /// </summary>
     public class UmbralNadirSpinHoldout : ModProjectile, ILocalizedModType
     {
         public new string LocalizationCategory => "Projectiles.Nadir";
         public override string Texture => "CalamityLegendsComeBack/Weapons/A_Upgrade/Nadir/UmbralNadirSpear";
-
-        private static readonly Color MeldGreen = Color.LightGreen;
 
         private float spinAngle;
         private int spinDir;
@@ -36,7 +34,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.Combo
         private readonly List<Vector2> tipHistory = new();
 
         private Player Owner => Main.player[Projectile.owner];
-        public ref float Scale => ref Projectile.ai[1]; // 阶段尺寸缩放（由生成者写入）
+        public ref float NovaBaseDamage => ref Projectile.ai[0];
+        public ref float Scale => ref Projectile.ai[1];
 
         public override void SetDefaults()
         {
@@ -55,7 +54,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.Combo
         {
             if (Projectile.owner == Main.myPlayer)
                 return Main.mouseLeft && Main.mouseRight && !Main.mapFullscreen && !Main.blockMouse;
-            return Owner.channel; // 远端退化：靠同步的 channel 维持
+            return Owner.channel;
         }
 
         public override void AI()
@@ -79,16 +78,18 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.Combo
                 return;
             }
             Projectile.timeLeft = 2;
-
             Owner.Calamity().rightClickListener = true;
             Owner.Calamity().mouseWorldListener = true;
 
-            // 匀速回旋 + 轻微半径呼吸
+            // 匀速回旋 + 半径呼吸
             spinAngle += UmbralNadirBalance.SpinRotationSpeed * spinDir;
             float radius = MathHelper.Lerp(UmbralNadirBalance.SpinRadiusMin, UmbralNadirBalance.SpinRadiusMax,
                 0.5f + 0.5f * (float)Math.Sin(spinAngle * 2f)) * Scale;
             Vector2 dir = spinAngle.ToRotationVector2();
             Projectile.Center = Owner.MountedCenter + dir * radius;
+
+            // 把周围敌人吸拢到玩家身边（回旋的战术职责：卷走贴身包围）
+            UmbralNadirVisuals.PullNPCs(Owner.MountedCenter, radius + 120f, 0.5f);
 
             // 玩家持握姿态
             Owner.heldProj = Projectile.whoAmI;
@@ -101,10 +102,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.Combo
             Owner.itemRotation = MathHelper.WrapAngle(Owner.itemRotation);
             Owner.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, dir.ToRotation() - MathHelper.PiOver2);
 
-            // 记录矛尖世界坐标用于黑色 shader 环迹
+            // 矛尖世界坐标 → 黑色 shader 环迹
             Vector2 tip = Owner.MountedCenter + dir * (radius + 34f * Scale);
             tipHistory.Insert(0, tip);
-            if (tipHistory.Count > 14)
+            if (tipHistory.Count > 16)
                 tipHistory.RemoveAt(tipHistory.Count - 1);
 
             // 少量黑砂
@@ -117,9 +118,21 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.Combo
                 greenFlashCooldown--;
             else if (Main.rand.NextBool(30))
             {
-                greenFlashCooldown = MathHelper.TwoPi / UmbralNadirBalance.SpinRotationSpeed; // 约一圈
-                GeneralParticleHandler.SpawnParticle(new GenericBloom(tip, Vector2.Zero, MeldGreen with { A = 0 },
+                greenFlashCooldown = MathHelper.TwoPi / UmbralNadirBalance.SpinRotationSpeed;
+                GeneralParticleHandler.SpawnParticle(new GenericBloom(tip, Vector2.Zero, UmbralNadirPalette.MeldGreen with { A = 0 },
                     0.28f * Scale, 10, false, true), false, GeneralDrawLayer.AfterEverything);
+            }
+
+            // 奇点蓄满 → 释放黑洞新星
+            if (Projectile.owner == Main.myPlayer)
+            {
+                var mp = Owner.GetModPlayer<UmbralNadirPlayer>();
+                if (mp.NovaReady)
+                {
+                    Projectile.NewProjectile(Projectile.GetSource_FromThis(), Owner.MountedCenter, Vector2.Zero,
+                        ModContent.ProjectileType<UmbralNadirSpinNova>(), 1, Projectile.knockBack, Projectile.owner, NovaBaseDamage);
+                    mp.SpendChargeForNova();
+                }
             }
         }
 
@@ -135,22 +148,18 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.Combo
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
-            => target.AddBuff(ModContent.BuffType<Voidfrost>(), 90);
+        {
+            target.AddBuff(ModContent.BuffType<Voidfrost>(), 90);
+            UmbralCorrosionGlobalNPC.AddStacks(target, UmbralNadirBalance.SpinStackPerHit);
+            if (Projectile.owner == Main.myPlayer)
+                Owner.GetModPlayer<UmbralNadirPlayer>().AddCharge(UmbralNadirBalance.ChargePerSpinHit);
+        }
 
         public override bool PreDraw(ref Color lightColor)
         {
             // 矛尖黑色 shader 环迹
             if (tipHistory.Count >= 2)
-            {
-                GameShaders.Misc["CalamityMod:TrailStreak"].SetShaderTexture(
-                    ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/SylvestaffStreak"));
-                PrimitiveRenderer.RenderTrail(tipHistory,
-                    new PrimitiveSettings(
-                        (c, _) => MathHelper.Lerp(22f * Scale, 2f, c),
-                        (c, _) => Color.Lerp(Color.Black, new Color(35, 90, 45), c) * (1f - c),
-                        (_, _) => Vector2.Zero, shader: GameShaders.Misc["CalamityMod:TrailStreak"]),
-                    tipHistory.Count);
-            }
+                UmbralNadirVisuals.RenderTipTrail(tipHistory, 24f, Scale, false);
 
             // 矛体：黑剪影垫底 + 主体，矛尖朝外（radialDir + 135°）
             Texture2D tex = ModContent.Request<Texture2D>(Texture).Value;

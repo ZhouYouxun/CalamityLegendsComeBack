@@ -1,5 +1,7 @@
 using System;
 using CalamityMod;
+using CalamityMod.Enums;
+using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -8,7 +10,10 @@ using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper
+using CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.Shared;
+using CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.LeftClick;
+
+namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.Holdout
 {
     /// <summary>
     /// 左键：微光坍缩炮的持握 / 蓄力控制器（文档第 3 节）。
@@ -75,8 +80,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper
             if (Main.myPlayer == Projectile.owner)
                 HandleInput();
 
-            // 视觉同步：把蓄力进度镜像到 ai[0]（其它客户端只读来画环）。
-            Projectile.ai[0] = chargeTicks;
+            // 视觉同步：只有拥有者把蓄力进度写入 ai[0]，其它客户端只读它来画环
+            // （若在非拥有者上也写，会把同步过来的进度覆盖为 0，导致他人看不到蓄力环）。
+            if (Main.myPlayer == Projectile.owner)
+                Projectile.ai[0] = chargeTicks;
 
             ApplyMovePenalty();
             PlayChargeSounds();

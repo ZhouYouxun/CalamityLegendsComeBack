@@ -1,9 +1,7 @@
 using System;
+using CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.General;
 using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
-using CalamityMod.Dusts;
-using CalamityMod.Enums;
-using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.Audio;
@@ -14,16 +12,14 @@ using Terraria.ModLoader;
 namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.RightClick
 {
     /// <summary>
-    /// 第三发投矛命中时的终爆：黑核收缩一拍后炸开。
-    /// 前 2 帧造成一次范围伤害（半径 132），随后只剩视觉。
-    /// 只由第三发命中 NPC 时生成；撞墙 / 超时绝不生成它。不产生灵魂 / 触手 / 裂隙 / 持续伤害。
+    /// 第三发投矛命中的终爆——冥蚀天底"呼应循环"的结算点。
+    /// 生成时消耗半径内所有敌人的蚀痕层数，消耗越多，本次爆发伤害越高；随后一次范围坍缩。
+    /// 只由第三发命中 NPC 时生成；撞墙 / 超时绝不生成它。
     /// </summary>
     public class UmbralNadirFinalExplosion : ModProjectile, ILocalizedModType
     {
         public new string LocalizationCategory => "Projectiles.Nadir";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
-
-        private static readonly Color MeldGreen = Color.LightGreen;
 
         public override void SetStaticDefaults() => ProjectileID.Sets.CultistIsResistantTo[Type] = true;
 
@@ -48,39 +44,45 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.RightClick
         public override void OnSpawn(IEntitySource source)
         {
             Vector2 c = Projectile.Center;
-            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/MeldExplosion") with { Volume = 0.85f, Pitch = -0.1f }, c);
+            float radius = UmbralNadirBalance.FinalExplosionRadius;
 
-            // 黑核（AlphaBlend，透明底 SmallBloom）：先小后大炸开
-            GeneralParticleHandler.SpawnParticle(new CustomPulse(c, Vector2.Zero, Color.Black,
-                "CalamityMod/Particles/SmallBloom", Vector2.One, Main.rand.NextFloat(-10f, 10f), 0.14f, 0.62f, 18, false));
-            // 冥思招牌"外绿内黑"坍缩核
-            GeneralParticleHandler.SpawnParticle(new DetailedExplosion(c, Vector2.Zero, MeldGreen with { A = 0 },
-                Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.18f, 0.85f, 24), false, GeneralDrawLayer.AfterEverything);
-            GeneralParticleHandler.SpawnParticle(new DetailedExplosion(c, Vector2.Zero, Color.Black,
-                Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.1f, 0.45f, 22, false));
-            // 一圈荧绿外环
-            GeneralParticleHandler.SpawnParticle(new CustomPulse(c, Vector2.Zero, MeldGreen,
-                "CalamityMod/Particles/BloomRing", Vector2.One, Main.rand.NextFloat(-10f, 10f), 0f, 1.2f, 18),
-                false, GeneralDrawLayer.AfterEverything);
-
-            // 16~24 粒黑色颗粒 + 少量深渊尘
-            int grit = Main.rand.Next(16, 25);
-            for (int i = 0; i < grit; i++)
-                GeneralParticleHandler.SpawnParticle(new GenericBloom(c,
-                    Main.rand.NextVector2Unit() * Main.rand.NextFloat(3f, 9f), Color.Black,
-                    Main.rand.NextFloat(0.2f, 0.42f), Main.rand.Next(10, 16), true, false));
-            for (int i = 0; i < 10; i++)
+            // 消耗半径内所有蚀痕，按总层数放大本次伤害
+            int totalStacks = 0;
+            foreach (NPC npc in Main.ActiveNPCs)
             {
-                Dust vd = Dust.NewDustPerfect(c, ModContent.DustType<VoidDustInverted>());
-                vd.noGravity = true;
-                vd.velocity = Main.rand.NextVector2Unit() * Main.rand.NextFloat(3f, 8f);
-                vd.scale = Main.rand.NextFloat(1.2f, 1.9f);
-                vd.color = MeldGreen;
+                if (npc.friendly || Vector2.Distance(npc.Center, c) > radius)
+                    continue;
+                int s = UmbralCorrosionGlobalNPC.ConsumeStacks(npc);
+                if (s > 0)
+                {
+                    totalStacks += s;
+                    // 每个被引爆的蚀痕点上闪一记小黑洞
+                    UmbralNadirVisuals.EventHorizon(npc.Center, 0.32f, false);
+                    npc.AddBuff(ModContent.BuffType<Voidfrost>(), 180);
+                }
             }
+            if (totalStacks > 0)
+                Projectile.damage += (int)(Projectile.damage * UmbralNadirBalance.FinalStackBonusFraction * totalStacks);
 
-            float f = Utils.GetLerpValue(1400f, 0f, Vector2.Distance(c, Main.LocalPlayer.Center), true);
-            Main.LocalPlayer.Calamity().GeneralScreenShakePower =
-                Math.Max(Main.LocalPlayer.Calamity().GeneralScreenShakePower, UmbralNadirBalance.FinalExplosionScreenShake * f);
+            bool big = totalStacks >= 6;
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/MeldExplosion") with { Volume = big ? 1f : 0.85f, Pitch = big ? -0.25f : -0.1f }, c);
+            UmbralNadirVisuals.EventHorizon(c, big ? 1.5f : 1.15f, true);
+            UmbralNadirVisuals.ImplosionDust(c, big ? 1.6f : 1.2f);
+            UmbralNadirVisuals.MeldSparkBurst(c, big ? 26 : 18, big ? 10f : 8f);
+            UmbralNadirVisuals.ScreenShake(c, UmbralNadirBalance.FinalExplosionScreenShake + (big ? 1.5f : 0f));
+
+            // 碎渊：把"引爆"重新变成"再叠层"的起点
+            if (Projectile.owner == Main.myPlayer)
+            {
+                int shards = big ? 6 : 4;
+                int shardDamage = Math.Max(1, (int)(Projectile.damage * 0.32f));
+                for (int i = 0; i < shards; i++)
+                {
+                    Vector2 v = (MathHelper.TwoPi * i / shards + Main.rand.NextFloat(-0.3f, 0.3f)).ToRotationVector2() * Main.rand.NextFloat(5f, 9f);
+                    Projectile.NewProjectile(Projectile.GetSource_FromThis(), c, v,
+                        ModContent.ProjectileType<UmbralNadirVoidShard>(), shardDamage, Projectile.knockBack * 0.4f, Projectile.owner);
+                }
+            }
         }
 
         public override void AI() => Projectile.velocity = Vector2.Zero;

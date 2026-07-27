@@ -4,16 +4,18 @@ Mods: {
 			Weapons: {
 				Melee: {
 					UmbralNadir: {
-						DisplayName: 冥蚀-天底
+						DisplayName: 冥蚀天底
 						Tooltip:
 							'''
-							[c/8CFF96:左键：优雅的三段虚空连招 —— 上挑斩、劈落斩、冲刺贯穿。]
-							[c/8CFF96:每一段命中都会撕开一道"深渊之口"，探出深渊触须；冲刺段更引爆黑日坍缩，造成恐怖伤害。]
-							[c/6FE0C0:右键：三连虚空投矛 —— 每轮三发、发间隔五帧、每发略带随机散布，轮与轮之间稍作停顿。]
-							[c/6FE0C0:投矛会扎入敌人体内，持续引发连锁虚空爆裂，甩出冥融虚空核并蔓延霜蚀。]
-							[c/5FBF8A:深渊之口会凝视吞噬、不断吐出触须；冥融虚空核则会追踪、连锁分裂，织成不断蔓延的黑绿罗网。]
-							[c/4E9C74:右键优先级高于左键：同时摁住时以右键为准，左键让位于三连投掷。]
+							[c/8CFF96:左键：上挑、劈落、冲刺贯穿的三段矛法，命中撕开黑洞冲击并叠加"蚀痕"。]
+							[c/8CFF96:冲刺贯穿会留下持续吞噬的黑洞奇点，把敌群吸拢成一团。]
+							[c/6FE0C0:右键：投出高速三连冥蚀矛。前两矛沿飞行轨迹唤出暗影魂针，专扑蚀痕最深的敌人；]
+							[c/6FE0C0:第三矛命中即引爆终爆，消耗范围内全部蚀痕，消耗越多、爆发越猛。]
+							[c/DDA0FF:按住左键时再按右键：进入回旋斩迹，将敌人卷拢、疯狂叠层并蓄满奇点；松开任一键即结束。]
+							[c/DDA0FF:奇点蓄满时，回旋会以你为中心释放一记吞噬全场蚀痕的黑洞新星。]
 							'''
+						Charge: "[c/8A6FE0:奇点充能：{0}%]"
+						NovaReady: "[c/DDA0FF:奇点已满——回旋斩迹将释放黑洞新星]"
 					}
 				}
 			}
@@ -22,14 +24,24 @@ Mods: {
 		Projectiles: {
 			Nadir: {
 				UmbralNadirHoldout.DisplayName: 冥蚀连斩
+				UmbralNadirImpactExplosion.DisplayName: 冥蚀黑洞冲击
+				UmbralNadirSingularity.DisplayName: 天底奇点
+				UmbralNadirSlashWave.DisplayName: 冥蚀刃波
+				UmbralNadirThrowController.DisplayName: 冥蚀投掷
+				UmbralNadirJavelin.DisplayName: 冥蚀矛
+				UmbralNadirShadowSoul.DisplayName: 暗影魂针
+				UmbralNadirVoidShard.DisplayName: 虚空碎渊
+				UmbralNadirFinalExplosion.DisplayName: 冥蚀终爆
+				UmbralNadirSpinHoldout.DisplayName: 回旋斩迹
+				UmbralNadirSpinNova.DisplayName: 奇点新星
 				UmbralNadirVoidEssence.DisplayName: 冥融虚空核
 				UmbralNadirAbyssRift.DisplayName: 深渊之口
-				UmbralNadirThrowController.DisplayName: 冥蚀投掷
-				UmbralNadirJavelin.DisplayName: 冥蚀虚空投矛
-				// UmbralNadirShadowSoul.DisplayName: Umbral Nadir Shadow Soul
-				// UmbralNadirFinalExplosion.DisplayName: Umbral Nadir Final Explosion
-				// UmbralNadirImpactExplosion.DisplayName: Umbral Nadir Impact Explosion
-				// UmbralNadirSpinHoldout.DisplayName: Umbral Nadir Spin Holdout
+			}
+		}
+		Buffs: {
+			UmbralCorrosion: {
+				DisplayName: 蚀痕
+				Description: 被冥蚀天底刻蚀；层数越高，越易被黑洞与终爆撕裂。
 			}
 		}
 	}

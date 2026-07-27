@@ -11,6 +11,8 @@ using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 
+using CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.Holdout;
+
 namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper
 {
     /// <summary>

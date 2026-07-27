@@ -4,7 +4,7 @@ using ReLogic.Content;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper
+namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.Shared
 {
     /// <summary>
     /// 以太之低语的统一视觉语言（第 5.1 / 5.4 节）：冷青、珠白、深紫、蓝黑三层关系，
