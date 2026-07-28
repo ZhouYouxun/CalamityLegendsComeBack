@@ -5,9 +5,9 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Accssory.BB.Skill
 {
-    public class OceanHormone : ModItem
+    public class AbyssalBastion : ModItem
     {
-        public override string Texture => "CalamityLegendsComeBack/Accssory/BB/Skill/OceanHormone/OceanHormone";
+        public override string Texture => "CalamityLegendsComeBack/Accssory/BB/贴图/渊洋壁垒";
 
         public override void SetDefaults()
         {
@@ -20,16 +20,14 @@ namespace CalamityLegendsComeBack.Accssory.BB.Skill
 
         public override void UpdateAccessory(Player player, bool hideVisual)
         {
-            player.GetModPlayer<BBAccessoryPlayer>().OceanHormoneEquipped = true;
+            player.GetModPlayer<BBAccessoryPlayer>().AbyssalBastionEquipped = true;
         }
 
         public override void AddRecipes()
         {
             CreateRecipe()
-                .AddIngredient(ItemID.Bottle, 1)
-                .AddIngredient(ItemID.BattlePotion, 6)
-                .AddIngredient(ItemID.Stinger, 6)
-                .AddIngredient<DepthCells>(6)
+                .AddIngredient(ItemID.CobaltShield)
+                .AddIngredient<SulphuricScale>(15)
                 .AddTile(TileID.Anvils)
                 .Register();
         }

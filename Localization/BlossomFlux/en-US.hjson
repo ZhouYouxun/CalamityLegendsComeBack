@@ -184,24 +184,6 @@ Mods: {
 					'''
 			}
 
-			SwordsplosionQuiver: {
-				DisplayName: Swordsplosion Quiver
-				Tooltip:
-					'''
-					Changes Bombardment's falling projectiles into Swordsplosion blade rain.
-					Each blade can only deal damage once.
-					'''
-			}
-
-			BlightSpewerQuiver: {
-				DisplayName: Blight Spewer Quiver
-				Tooltip:
-					'''
-					Changes Plague left-click into Blight Spewer plague flames.
-					Keeps BlossomFlux's base plague effects.
-					'''
-			}
-
 			SeedOfSilva: {
 				DisplayName: Seed of Silva
 				Tooltip:

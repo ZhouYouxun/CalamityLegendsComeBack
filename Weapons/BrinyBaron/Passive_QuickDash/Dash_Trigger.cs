@@ -72,7 +72,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash
                 return true;
 
             // 潮汐被动触媒：背包中存有海爵剑即可激活被动，无需手持
-            if (Player.GetModPlayer<BBAccessoryPlayer>().AbyssalBastionEquipped)
+            if (Player.GetModPlayer<BBAccessoryPlayer>().TideRadarEquipped)
             {
                 int bbType = ModContent.ItemType<NewLegendBrinyBaron>();
                 foreach (Item item in Player.inventory)

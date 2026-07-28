@@ -17,7 +17,6 @@ Mods: {
 						[c/66CCFF:海沫可以散射出更大的水刃，并穿透更多敌人。]
 						[c/66CCFF:海灵可以更快追踪敌人，并施加激流。]
 						[c/66CCFF:光波可以向前推进，形成宽大的潮汐斩击。]
-						[c/66CCFF:近战剑刃命中可以召来龙卷。]
 						'''
 					BB_Left_3:
 						'''
@@ -26,7 +25,6 @@ Mods: {
 						[c/66CCFF:海灵可以成群追踪敌人，并施加激流。]
 						[c/66CCFF:手里剑可以扇形飞出，切割敌人，并在命中时释放海沫。]
 						[c/66CCFF:光波可以向前推进，终段释放更巨大的潮汐斩击。]
-						[c/66CCFF:近战剑刃命中可以召来龙卷。]
 						'''
 					BB_Left_4:
 						'''
@@ -35,28 +33,13 @@ Mods: {
 						[c/66CCFF:海灵可以成群追踪敌人，并施加激流。]
 						[c/66CCFF:手里剑可以扇形飞出，切割敌人，并在命中时释放海沫。]
 						[c/66CCFF:光波可以向前推进，终段释放更巨大的潮汐斩击。]
-						[c/66CCFF:近战剑刃命中可以召来龙卷，并追加海灵弹幕。]
+						[c/66CCFF:近战剑刃命中会追加海灵弹幕。]
 						'''
 					BB_Right_DefaultShuriken:
 						'''
 						[c/FFB347:右键：化作潮汐短冲刺。]
 						[c/FFB347:冲刺与回弹期间免疫伤害；撞击第一个敌人后会反向弹开一次。]
-						[c/FFB347:肉后命中会生成可牵引敌人的大号剃刀刃台风。]
-						'''
-					BB_Right_LostGarment:
-						'''
-						[c/FFB347:右键：旧日战甲将攻击改为穿刺突进。]
-						[c/FFB347:突进会穿过路径上的所有敌人，不会反弹。]
-						'''
-					BB_Right_CeruleanShield:
-						'''
-						[c/FFB347:右键：碧蓝护盾会生成随身泡泡盾。]
-						[c/FFB347:泡泡盾可以拦截敌对弹幕，破裂后提供短暂无敌。]
-						'''
-					BB_Right_VortexPortal:
-						'''
-						[c/FFB347:右键：涡旋传送门会将你传送到鼠标位置。]
-						[c/FFB347:沿路径冲出并立刻折返；返程路径上会生成一个大号水台风。]
+						[c/FFB347:肉后命中会在敌人身下释放蓝色【爵士台风】。]
 						'''
 					BB_Right_Spin_Locked: "[c/DDA0FF:按住左键再按住右键：回旋斩需二阶段解锁。]"
 					BB_Right_Spin_Unlocked:
@@ -98,92 +81,6 @@ Mods: {
 				}
 			}
 
-			BBTest: {
-				DisplayName: BB测试
-				Tooltip: ""
-			}
-
-			OffshoreWindTurbine: {
-				DisplayName: 离岸风力发电机
-				Tooltip:
-					'''
-					海爵剑的潮汐上限直接增加 4 层
-					潮汐层数越多，每层 3% 的伤害加成积累上限越高，长线战斗优势越明显
-					[c/7F8FA6:多件叠加生效]
-					'''
-			}
-
-			ImpactRestarter: {
-				DisplayName: 冲击重启器
-				Tooltip:
-					'''
-					右键突进命中敌人后立刻将冷却重置为零，可以立即再次发动
-					满潮状态下的回旋冲刺命中敌人时，冷却从 3 秒压缩至 1 秒
-					[c/7F8FA6:适合在密集敌群中以右键突进为核心节奏反复冲打]
-					'''
-			}
-
-			HighTideOverloadBarrier: {
-				DisplayName: 满潮过载防护层
-				Tooltip:
-					'''
-					潮汐值为满时，获得 20 点防御力与 20% 伤害减免
-					同时会在身周持续产生水尘粒子，作为满潮防护层激活的视觉标志
-					[c/7F8FA6:潮汐一旦消耗，防护立即解除；保住满潮是持续防御的关键]
-					'''
-			}
-
-			SurgeChainReactor: {
-				DisplayName: 电涌连锁反应器
-				Tooltip:
-					'''
-					海爵左键挥刀伤害降低 50%，但快刀斩伤害提升至 2000%
-					快刀斩期间会持续释放更猛烈的海灵弹幕
-					[c/7F8FA6:用速度换爆发：快刀斩成为核心输出手段]
-					'''
-			}
-
-			VortexPortal: {
-				DisplayName: 涡旋传送门
-				Tooltip:
-					'''
-					[c/99CCFF:将海爵右键替换为"传送双斩"]
-					传送到鼠标位置，连续施展两刀（第一刀结束时自动接第二刀）
-					[c/FFB347:冷却时间为 6 秒，远长于普通冲刺的 3 秒；技能优先级最高]
-					'''
-			}
-
-			LostGarment: {
-				DisplayName: 旧日战甲
-				Tooltip:
-					'''
-					[c/99CCFF:将海爵右键替换为"穿透突进"]
-					朝鼠标方向冲刺，穿过沿途所有敌人，造成多段伤害
-					[c/FFB347:技能优先级最低]
-					'''
-			}
-
-			CeruleanShield: {
-				DisplayName: 碧蓝护盾
-				Tooltip:
-					'''
-					[c/99CCFF:将海爵右键替换为"反弹突进"]
-					朝鼠标方向冲刺，撞击第一个敌人后弹开并造成碧蓝爆炸
-					若成功撞到敌人，冷却立即缩短至 1 秒（而非 3 秒）
-					[c/FFB347:技能优先级20，高于旧日战甲，低于涡旋传送门]
-					'''
-			}
-
-			BBPassiveChanneler: {
-				DisplayName: 潮汐雷达
-				Tooltip:
-					'''
-					[c/9AEF9E:只要背包任意位置存有海爵剑，快刀斩被动即持续激活，无需手持武器]
-					被动效果与手持时完全一致，不会增强或改变任何数值
-					[c/7F8FA6:不提供其他战斗加成，仅用于让被动在换持武器期间也不中断]
-					'''
-			}
-
 			BottledRaft: {
 				DisplayName: 瓶中筏
 				Tooltip:
@@ -219,9 +116,52 @@ Mods: {
 				Tooltip:
 					'''
 					战士伤害 +15%
-					手持海爵剑时额外获得 15% 战士伤害与近战攻速
-					海爵潮汐上限提升至 10；每层潮汐额外提供 1% 战士伤害与近战攻速
-					每 6 秒自动获得 2 层潮汐；满潮时获得 10 防御、10% 伤害减免与 30% 近战暴击
+					海爵潮汐上限提升至 10
+					每层潮汐额外提供 1% 近战伤害与近战攻速
+					每 6 秒自动获得 2 层潮汐
+					满潮时获得 10 防御、10% 减伤与 30% 近战暴击
+					'''
+			}
+
+			OceanHormone: {
+				DisplayName: 海洋激素
+				Tooltip:
+					'''
+					通用暴击 -10%，近战攻速 +20%
+					获得【鸦片酊】效果：部分减益不再产生负面作用，并转化为增益
+					肾上腺素激活时，海爵剑使用时间与动画 -12 帧
+					'''
+			}
+
+			TideWiseHat: {
+				DisplayName: 潮汐智者
+				Tooltip:
+					'''
+					魔力上限 +50，近战伤害 +15%
+					每层潮汐提供 1% 近战暴击
+					潮汐清空与非 Boss 衰减时间翻倍
+					近战暴击有 1% 概率获得 1 层潮汐
+					终结技消耗全部魔力强化所有斩击
+					'''
+			}
+
+			AbyssalBastion: {
+				DisplayName: 渊洋壁垒
+				Tooltip:
+					'''
+					防御 +6，减伤 +6%，免疫击退
+					海爵右键冲刺速度 ×1.25，冷却缩短至 2 秒
+					右键命中后获得 100 点泡泡盾
+					护盾存在时额外获得 25 防御与 25% 减伤
+					'''
+			}
+
+			TideRadar: {
+				DisplayName: 潮汐雷达
+				Tooltip:
+					'''
+					背包中持有海爵剑时，获得【快刀斩】被动
+					无需手持海爵剑；被动效果与手持时完全一致
 					'''
 			}
 
@@ -229,19 +169,31 @@ Mods: {
 				DisplayName: 饮水机
 				Tooltip:
 					'''
-					剑刃命中敌人时在命中点生成回血水球
-					满血时水球不回血，转而追踪敌人造成伤害
-					[c/7F8FA6:水球属于近战伤害，受潮汐加成影响]
+					海爵剑命中敌人时生成一枚水泡弹
+					满生命时追踪敌人造成近战伤害；受伤时返回治疗玩家
 					'''
 			}
 
-			AdrenalineInjector: {
-				DisplayName: 肾上腺素注射器
+			BaronHelix: {
+				DisplayName: 爵士螺旋
 				Tooltip:
 					'''
-					剑刃命中敌人叠加层数，提升伤害与攻速（最多18层）
-					一旦受到伤害，立刻清空全部层数，且该次伤害额外增加
-					[c/7F8FA6:层数越高风险越大；适合高压进攻节奏]
+					近战伤害 +10%，近战攻速 +10%
+					海爵右键命中后，改为释放 3 个更小的【爵士台风】
+					它们先围绕目标作三圈椭圆轨迹，随后缓慢追踪敌人
+					每个爵士台风的伤害为右键冲刺伤害的 30%
+					'''
+			}
+
+			VortexEye: {
+				DisplayName: 漩涡之眼
+				Tooltip:
+					'''
+					近战伤害 +10%，近战攻速 +10%，移速 +15%
+					将海爵右键改为漩涡传送冲刺
+					在鼠标处开门，沿水平或垂直方向穿出并折返
+					返程路径中央生成一个大型水龙卷
+					冷却时间为 6 秒
 					'''
 			}
 		}
@@ -255,6 +207,7 @@ Mods: {
 			BrinyBaron: {
 				BBSwing_Wave.DisplayName: 潮锋波斩
 				BrinyBaron_HomingLightOrb.DisplayName: 潮汐追踪光球
+				BBDrinkingFountainOrb.DisplayName: 饮水机水泡弹
 				BBSwing_INV.DisplayName: 巨刃判定
 				BBSwing_Slash.DisplayName: 潮锋斩痕
 				BrinyBaron_LeftClick_Swing.DisplayName: 海爵连斩
@@ -262,22 +215,18 @@ Mods: {
 				BrinyBaron_TornadoBolt.DisplayName: 海爵龙卷弹
 				BrinyBaron_TornadoWaterExplosion.DisplayName: 海爵水爆炸
 				BrinyBaron_DashWaterPillar.DisplayName: 海爵突进水柱
+				BrinyBaron_JazzTyphoon.DisplayName: 爵士台风
 				BrinyBaron_SkillDashTornado_BladeDash.DisplayName: 刃岚突进
-				BrinyBaron_SkillSpinRush_SpinBlade.DisplayName: 回旋裂斩
 				BrinyBaron_SkillSlashDash_SlashDash.DisplayName: 盾潮连斩
 				Z_BrinyBaron_SkillSuperCharge_SuperDash.DisplayName: 激流送葬
+				BrinyBaron_UltimateAzureRiftBeam.DisplayName: 激流天穹裂隙
 				BBSD_Star.DisplayName: 终潮星刃
 				BBSD_Final_INV.DisplayName: 终潮刻印
-				SurgeChainWaterBurst.DisplayName: 电涌水爆
-				BrinyBaron_HomingBubble.DisplayName: 海爵追踪泡泡
-				BrinyBaron_Tornado.DisplayName: 海爵龙卷
 				BrinyBaron_WaterStream.DisplayName: 海爵水流
 				BrinyBaron_SeafoamBlade.DisplayName: 海爵海沫刃
 				BrinyBaron_SeafoamExplosion.DisplayName: 海爵海沫爆炸
 				BrinyBaron_SeaSpirit.DisplayName: 海灵
 			}
-
-			BBDrinkingFountainOrb.DisplayName: 饮水治疗球
 		}
 
 		Cooldowns: {

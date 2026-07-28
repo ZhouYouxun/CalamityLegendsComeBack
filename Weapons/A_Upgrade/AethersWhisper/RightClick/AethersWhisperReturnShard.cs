@@ -139,13 +139,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.RightClick
         private Vector2 GetMuzzle()
         {
             Player owner = Main.player[Projectile.owner];
-            // 优先跟随当前持握弹幕（左/右 holdout）的枪口方向；其枪口即回收环所在。
-            int sweep = ModContent.ProjectileType<AethersWhisperSweepHoldout>();
+            // 跟随当前持械弹幕的枪口方向；其枪口即回收环所在。
             int hold = ModContent.ProjectileType<AethersWhisperHoldout>();
             for (int i = 0; i < Main.maxProjectiles; i++)
             {
                 Projectile p = Main.projectile[i];
-                if (p.active && p.owner == Projectile.owner && (p.type == sweep || p.type == hold))
+                if (p.active && p.owner == Projectile.owner && p.type == hold)
                 {
                     Vector2 aim = p.velocity.SafeNormalize(Vector2.UnitX * owner.direction);
                     return owner.MountedCenter + aim * (62f + AethersWhisperBalance.MuzzleRingRadius) + new Vector2(0f, -6f * owner.gravDir);
@@ -157,10 +156,17 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.RightClick
 
         private void ReassembleFlash()
         {
-            // 24px 收束闪光。
-            GeneralParticleHandler.SpawnParticle(new GenericBloom(
-                Projectile.Center, Vector2.Zero, AethersWhisperVisuals.ShimmerCyan with { A = 0 }, 0.3f, 10, false, true),
-                false, GeneralDrawLayer.AfterEverything);
+            // 收束重组：一记青白强闪 + 几粒硬光方块被吸入枪口环。
+            GeneralParticleHandler.SpawnParticle(new StrongBloom(
+                Projectile.Center, Vector2.Zero, AethersWhisperVisuals.ToWhite(AethersWhisperVisuals.ShimmerCyan, 0.5f), 0.28f, 10));
+            for (int i = 0; i < 3; i++)
+            {
+                Vector2 edge = Projectile.Center + Main.rand.NextVector2CircularEdge(14f, 14f);
+                GeneralParticleHandler.SpawnParticle(new CustomSpark(edge,
+                    (Projectile.Center - edge).SafeNormalize(Vector2.Zero) * 3f, AethersWhisperVisuals.GlowSquareTex,
+                    false, 12, 0.06f, AethersWhisperVisuals.ToWhite(AethersWhisperVisuals.AetherPurple, 0.3f),
+                    new Vector2(1f, 1f), true, false, spin: 0.2f));
+            }
             SoundEngine.PlaySound(SoundID.Item25 with { Volume = 0.2f, Pitch = 0.6f }, Projectile.Center);
         }
 
@@ -203,10 +209,17 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.RightClick
                 AethersWhisperVisuals.DrawBeamSegment(sb, a, b, AethersWhisperVisuals.ShimmerCyan with { A = 0 } * fade, 8f * (1f - i / (float)Projectile.oldPos.Length));
             }
 
-            // 晶片本体：深紫外缘 + 珠白核心（占位程序绘制；正式请换 Assets/AetherReturnShard.png）。
+            // 晶片本体：军械库硬光方块（GlowSquareFading）拧成一枚能量晶片——深紫外层 + 珠白窄核心（双绘制），
+            // 底下垫一层冷青柔光晕，跟随飞行方向自旋。
             Vector2 pos = Projectile.Center - Main.screenPosition;
-            sb.Draw(bloom, pos, null, AethersWhisperVisuals.AetherPurple with { A = 0 }, Projectile.rotation, bloom.Size() * 0.5f, 0.14f, SpriteEffects.None, 0f);
-            sb.Draw(bloom, pos, null, AethersWhisperVisuals.PearlWhite with { A = 0 }, Projectile.rotation, bloom.Size() * 0.5f, 0.06f, SpriteEffects.None, 0f);
+            Texture2D square = ModContent.Request<Texture2D>(AethersWhisperVisuals.GlowSquareTex).Value;
+            Vector2 sqOrigin = square.Size() * 0.5f;
+            float shardRot = Projectile.rotation + MathHelper.PiOver4;
+            Vector2 shardScale = new(16f / square.Width, 16f / square.Height);
+
+            sb.Draw(bloom, pos, null, AethersWhisperVisuals.ShimmerCyan with { A = 0 } * 0.5f, 0f, bloom.Size() * 0.5f, 0.09f, SpriteEffects.None, 0f);
+            sb.Draw(square, pos, null, AethersWhisperVisuals.AetherPurple with { A = 0 }, shardRot, sqOrigin, shardScale, SpriteEffects.None, 0f);
+            sb.Draw(square, pos, null, AethersWhisperVisuals.PearlWhite with { A = 0 }, shardRot, sqOrigin, shardScale * 0.5f, SpriteEffects.None, 0f);
 
             AethersWhisperVisuals.EndAdditive(sb);
             return false;

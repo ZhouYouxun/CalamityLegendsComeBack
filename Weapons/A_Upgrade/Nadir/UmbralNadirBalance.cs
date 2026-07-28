@@ -48,6 +48,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir
         public const float DownSlashDamageMult = 1.20f;  // 第二段·劈落斩
         public const float DashDamageMult = 1.70f;       // 第三段·冲刺贯穿（最高，且必定暴击；不施加强制位移）
 
+        // ===== 左键抛射弹幕（随挥舞序列打出，各有独立发射技巧）=====
+        public const float SlashWaveDamageMult = 0.5f;      // 上挑/劈落 的领刃月波
+        public const int VoidBoltsPerSwing = 5;             // 上挑每次挥砍喷出的散射虚空弹数（劈落再 +1）
+        public const float VoidBoltDamageMult = 0.34f;      // 散射虚空弹
+        public const float VoidLanceDamageMult = 0.95f;     // 冲刺贯穿的音速激光矛
+
         // ===== 左键命中·短促范围爆炸（相对当前 holdout 实际伤害）=====
         // 各段的爆炸伤害倍率与半径（px）
         public static readonly float[] ImpactDamageMult = { 0.28f, 0.36f, 0.55f };

@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using CalamityLegendsComeBack.Accssory.BB;
 using CalamityLegendsComeBack.Weapons.BrinyBaron;
+using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.TideValue;
 using CalamityMod;
@@ -33,6 +34,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
         private float bladeRotation;
         private bool initialized;
         private bool hasBounced;
+        private bool enemyImpactRebound;
         private bool canceledCharge;
         private bool tileContactTideGranted;
         private float oceanPhase;
@@ -43,6 +45,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
         private readonly System.Collections.Generic.List<Vector2> dashDirectionHistory = new();
         private bool ReboundDashMode => Projectile.ai[0] == 2f;
         private float DashSpeedMultiplier => ReboundDashMode ? BB_Balance.DefaultReboundDashSpeedMultiplier : 1f;
+        private float EnemyImpactReboundSpeedMultiplier => ReboundDashMode && enemyImpactRebound ? BB_Balance.RightClickEnemyReboundSpeedMultiplier : 1f;
         private bool AbyssalBastionEquipped => Main.player.IndexInRange(Projectile.owner) && Main.player[Projectile.owner].GetModPlayer<BBAccessoryPlayer>().AbyssalBastionEquipped;
         private float AbyssalDashMultiplier => AbyssalBastionEquipped ? BB_Balance.AbyssalBastionDashSpeedMultiplier : 1f;
         private int DashTimeLimit => AbyssalBastionEquipped ? BB_Balance.AbyssalBastionDashFrames : BB_Balance.RightClickDashFrames;
@@ -118,6 +121,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             dashState = 0;
             stateTimer = 0;
             hasBounced = false;
+            enemyImpactRebound = false;
             canceledCharge = false;
             tileContactTideGranted = false;
             oceanPhase = 0f;
@@ -170,6 +174,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             dashState = 1;
             stateTimer = 0;
             hasBounced = false;
+            enemyImpactRebound = false;
 
             Projectile.friendly = true;
             Projectile.Center = owner.MountedCenter + lockedDirection * BB_Balance.RightClickDashBladeDistance;
@@ -240,7 +245,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
 
             float reboundProgress = stateTimer / (float)BB_Balance.RightClickReboundFrames;
             float speedFactor = MathHelper.Lerp(1f, 0.2f, reboundProgress);
-            Projectile.velocity = lockedDirection * BB_Balance.RightClickReboundSpeed * DashSpeedMultiplier * speedFactor;
+            Projectile.velocity = lockedDirection * BB_Balance.RightClickReboundSpeed * DashSpeedMultiplier * EnemyImpactReboundSpeedMultiplier * speedFactor;
 
             // Exoblade-style post-dash stasis: smoothly retract weapon back to player's hand and shrink to zero
             float bladeDist = MathHelper.Lerp(BB_Balance.RightClickReboundBladeDistance, 2f, MathF.Pow(reboundProgress, 0.6f));
@@ -268,7 +273,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             if (dashState == 1)
             {
                 owner.immune = true;
-                owner.immuneTime = 2;
+                owner.immuneTime = Math.Max(owner.immuneTime, 2);
                 if (lockedDirection.Y > 0f)
                     owner.controlDown = true;
 
@@ -279,7 +284,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             else if (dashState == 2)
             {
                 owner.immune = true;
-                owner.immuneTime = 2;
+                owner.immuneTime = Math.Max(owner.immuneTime, 2);
             }
         }
 
@@ -313,13 +318,16 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
                 if (hardmodeOrLater)
                 {
                     SpawnWaterPillarBurst(target.Center, GetReliableDashDirection());
-                    SpawnPostHardmodeTornado(owner, target);
+                    SpawnJazzTyphoon(owner, target);
                 }
             }
 
             if (hardmodeOrLater)
                 SpawnDashImpactExplosion(target.Center, GetReliableDashDirection());
-            StartRebound(owner, target.Center);
+            // Match Myrindael's post-impact protection: a real hit grants a
+            // standalone i-frame window that remains after the rebound begins.
+            owner.GiveIFrames(-1, BB_Balance.RightClickEnemyHitIFrameDuration);
+            StartRebound(owner, target.Center, fromEnemyImpact: true);
 
             owner.GetModPlayer<BBAccessoryPlayer>().GrantBubbleShield();
 
@@ -441,9 +449,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             Projectile.netUpdate = true;
         }
 
-        private void StartRebound(Player owner, Vector2 impactCenter)
+        private void StartRebound(Player owner, Vector2 impactCenter, bool fromEnemyImpact = false)
         {
             hasBounced = true;
+            enemyImpactRebound = fromEnemyImpact;
             dashState = 2;
             stateTimer = 0;
 
@@ -456,7 +465,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             bladeRotation = lockedDirection.ToRotation() + MathHelper.PiOver4;
 
             Projectile.friendly = false;
-            Projectile.velocity = lockedDirection * BB_Balance.RightClickReboundSpeed * DashSpeedMultiplier;
+            Projectile.velocity = lockedDirection * BB_Balance.RightClickReboundSpeed * DashSpeedMultiplier * EnemyImpactReboundSpeedMultiplier;
             SyncOwnerToProjectile(owner, BB_Balance.RightClickReboundBladeDistance);
             owner.itemAnimation = 0;
             Projectile.netUpdate = true;
@@ -498,21 +507,19 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
             }
         }
 
-        private void SpawnPostHardmodeTornado(Player owner, NPC target)
+        private void SpawnJazzTyphoon(Player owner, NPC target)
         {
-            // This is the Briny Baron water tornado, not the Razorblade Typhoon.
-            // Keep the original one-tornado limit so an impact cannot flood the field.
-            if (owner.ownedProjectileCounts[ModContent.ProjectileType<CalamityMod.Projectiles.Melee.BrinySpout>()] != 0)
+            bool helixVariant = owner.GetModPlayer<BBAccessoryPlayer>().BaronHelixEquipped;
+            if (helixVariant)
+            {
+                int damage = Math.Max(1, (int)(Projectile.damage * BB_Balance.BaronHelixJazzTyphoonDamageMultiplier));
+                for (int i = 0; i < 3; i++)
+                    BrinyBaron_JazzTyphoon.Spawn(Projectile, target, damage, Projectile.knockBack, true, i);
                 return;
+            }
 
-            Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(),
-                target.Center,
-                Vector2.Zero,
-                ModContent.ProjectileType<CalamityMod.Projectiles.Melee.BrinyTyphoonBubble>(),
-                Math.Max(1, Projectile.damage),
-                Projectile.knockBack,
-                Projectile.owner);
+            int normalDamage = Math.Max(1, (int)(Projectile.damage * BB_Balance.JazzTyphoonDamageMultiplier));
+            BrinyBaron_JazzTyphoon.Spawn(Projectile, target, normalDamage, Projectile.knockBack, false);
         }
 
         private void SpawnDashImpactExplosion(Vector2 impactCenter, Vector2 dashDirection)

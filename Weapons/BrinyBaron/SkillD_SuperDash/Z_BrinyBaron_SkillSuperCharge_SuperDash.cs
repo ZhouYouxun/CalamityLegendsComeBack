@@ -755,6 +755,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             impactTriggeredThisStrike = true;
             executionGlowIntensity = ExecutionGlowMax;
             SpawnImpactAfterimage(Owner, lockedDirection * FinalStrikeExitSpeed);
+            SpawnUltimateAzureRiftBeam(target);
             SpawnFinalMark(target);
             BBSD_Strike_Effects.SpawnFinalExecutionImpactEffects(Projectile, target.Center, lockedDirection);
 
@@ -867,6 +868,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             Vector2 strikeDirection = lockedDirection.SafeNormalize(DefaultDirection);
             executionGlowIntensity = MathHelper.Clamp(executionGlowIntensity + ExecutionGlowGain, 0f, ExecutionGlowMax);
             SpawnImpactShurikenBurst(target, strikeDirection);
+            SpawnUltimateAzureRiftBeam(target);
             Vector2 afterimageVelocity = Projectile.velocity;
             SpawnImpactAfterimage(Owner, afterimageVelocity);
 
@@ -893,6 +895,23 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             }, target.Center);
 
             AdvanceAfterStrike(Owner, target);
+        }
+
+        private void SpawnUltimateAzureRiftBeam(NPC target)
+        {
+            if (Main.myPlayer != Projectile.owner)
+                return;
+
+            int damage = Math.Max(1, (int)(Projectile.damage * BB_Balance.UltimateAzureRiftBeamDamageMultiplier));
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                target.Center,
+                Vector2.Zero,
+                ModContent.ProjectileType<BrinyBaron_UltimateAzureRiftBeam>(),
+                damage,
+                0f,
+                Projectile.owner,
+                Main.rand.NextFloat(MathHelper.TwoPi));
         }
 
         private void SpawnImpactAfterimage(Player owner, Vector2 driftVelocity)

@@ -35,8 +35,8 @@ Mods: {
 					PrismReworkInfo: "[c/F8E28A:左键] [c/DCD6C8:按住后部署六枚带惯性的棱镜；它们的辅助光束会逐渐汇聚成由本体发射的持续破坏死光。]"
 					RightCommandInfo:
 						'''
-						[c/73DFFF:右键阵列] [c/DCD6C8:部署六台金色无人机组成防空阵列。]
-						[c/DCD6C8:前列发射追踪火箭，中列持续扫射穿透弹幕，后列释放瞬发金色镭射。]
+						[c/73DFFF:右键阵列] [c/DCD6C8:部署六台金色无人机组成防空阵列：前列发射高速金源针弹，中列编织弧形交叉火力，后列投放会越飞越快、越追越紧的追踪心。]
+						[c/DCD6C8:右键期间按住左键进入聚焦，所有无人机子弹与本体主炮会严格集中到鼠标位置；随后全阵列齐射双黄金爆弹并停机2秒。]
 						[c/DCD6C8:水晶本体持续输出主激光；开火时点左键会令全阵列齐射双联金色炸弹，随后宕机2秒。]
 						'''
 					ResetInfo: "[c/FF7A45:重置] [c/DCD6C8:松开左键、死亡或魔力耗尽都会清空整个展开进度。]"
@@ -201,8 +201,7 @@ Mods: {
 				YC_EssenceFlame.DisplayName: 精华火焰
 				YC_ThrownBlade.DisplayName: 投掷水晶刃
 				YC_RightDrone.DisplayName: 亚利姆水晶右键无人机
-				YC_DroneShot.DisplayName: 亚哈里姆无人机弹束
-				YC_DroneZapBeam.DisplayName: 亚哈里姆无人机电击光束
+				YC_DroneShot.DisplayName: 亚哈里姆无人机金源弹
 				YC_GoldBomb.DisplayName: 黄金爆弹
 				YC_TrackingRocket.DisplayName: 追踪热核火箭
 				YC_BackgroundBlade.DisplayName: 背景金剑

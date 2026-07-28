@@ -1,11 +1,14 @@
 using System;
 using System.IO;
 using CalamityMod;
+using CalamityMod.Graphics.Primitives;
+using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
+using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -34,6 +37,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.RightClick
         private Vector2 reflectNormal;
         private int reflectAge = -1;      // 反射后计时（画折射标记 8 tick）
         private bool disassembled;
+
+        public override void SetStaticDefaults()
+        {
+            // 伪激光弹体的“粗光痕”用历史位置缓存做 L3 图元流光。
+            ProjectileID.Sets.TrailCacheLength[Type] = 20;
+            ProjectileID.Sets.TrailingMode[Type] = 2;
+        }
 
         public override void SetDefaults()
         {
@@ -85,8 +95,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.RightClick
 
             if (!Main.dedServ && Main.rand.NextBool())
             {
-                Dust d = Dust.NewDustPerfect(Projectile.Center, DustID.PurpleTorch,
-                    Projectile.velocity * -0.02f, 120, AethersWhisperVisuals.ShimmerCyan, Main.rand.NextFloat(0.7f, 1.1f));
+                Dust d = Dust.NewDustPerfect(Projectile.Center, AethersWhisperVisuals.ElectricDust,
+                    Projectile.velocity * -0.02f, 120, AethersWhisperVisuals.ShimmerCyan, Main.rand.NextFloat(0.8f, 1.2f));
                 d.noGravity = true;
             }
         }
@@ -131,10 +141,15 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.RightClick
             SoundEngine.PlaySound(SoundID.Item27 with { Volume = 0.35f, Pitch = 0.5f }, reflectPos);
             if (!Main.dedServ)
             {
+                // 折射铃：沿墙面法线弹出的电弧尘 + 硬光方块，表现「这一束折过了」。
+                GeneralParticleHandler.SpawnParticle(new CustomSpark(reflectPos, reflectNormal * 2f,
+                    "CalamityMod/Particles/BloomCircle", false, 12, 0.1f, AethersWhisperVisuals.ShimmerCyan,
+                    new Vector2(0.7f, 1.4f), true, true, glowCenterScale: 0.7f, shrinkSpeed: 0.2f));
                 for (int i = 0; i < 6; i++)
                 {
-                    Dust d = Dust.NewDustPerfect(reflectPos, DustID.PurpleTorch,
-                        reflectNormal.RotatedByRandom(0.6f) * Main.rand.NextFloat(1.5f, 4f), 80, AethersWhisperVisuals.ShimmerCyan, Main.rand.NextFloat(0.9f, 1.4f));
+                    Color c = AethersWhisperVisuals.ToWhite(AethersWhisperVisuals.ShimmerCyan, Main.rand.NextFloat(0.5f));
+                    Dust d = Dust.NewDustPerfect(reflectPos, AethersWhisperVisuals.ElectricDust,
+                        reflectNormal.RotatedByRandom(0.6f) * Main.rand.NextFloat(1.5f, 4f), 80, c, Main.rand.NextFloat(0.9f, 1.4f));
                     d.noGravity = true;
                 }
             }
@@ -223,42 +238,106 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.RightClick
 
         public override bool PreDraw(ref Color lightColor)
         {
+            // L3 图元带：粗冷青外层 + 细珠白核心的双通道流光拖尾——伪激光弹体的“粗光痕”（文档 4.5）。
+            // smoothen:false → 反射处保留真实折角，不被样条抹圆；OffsetFunction 恒为零（禁止叠 screenPosition）。
+            DrawShaderTrail();
+
             SpriteBatch sb = Main.spriteBatch;
             AethersWhisperVisuals.BeginAdditive(sb);
 
-            Vector2 head = Projectile.Center;
-            if (reflected)
-            {
-                DrawBeam(sb, startPos, reflectPos);
-                DrawBeam(sb, reflectPos, head);
-
-                // 折射标记：反射后只持续 8 tick 的薄六边形折射环（占位：HollowCircleHardEdge；
-                // 正式请换 Assets/AetherReflectionGlyph.png）。
-                if (reflectAge >= 0 && reflectAge < 8)
-                {
-                    float p = 1f - reflectAge / 8f;
-                    AethersWhisperVisuals.DrawShimmerRing(sb, reflectPos, 26f, reflectNormal.ToRotation(), p);
-                }
-            }
-            else
-            {
-                DrawBeam(sb, startPos, head);
-            }
-
-            // 头部珠白核心。
+            // 头部珠白核心 bloom。
             Texture2D bloom = AethersWhisperVisuals.BloomCircle.Value;
-            sb.Draw(bloom, head - Main.screenPosition, null, AethersWhisperVisuals.PearlWhite with { A = 0 },
+            sb.Draw(bloom, Projectile.Center - Main.screenPosition, null, AethersWhisperVisuals.PearlWhite with { A = 0 },
                 0f, bloom.Size() * 0.5f, AethersWhisperBalance.BeamVisualWidth / bloom.Width, SpriteEffects.None, 0f);
+
+            // 折射标记：反射后只持续 8 tick 的薄折射环（复用 HollowCircleHardEdge 空心环）；
+            // 一出现即最亮、cos 爆发淡出。
+            if (reflected && reflectAge >= 0 && reflectAge < 8)
+            {
+                float p = AethersWhisperVisuals.BurstFade(reflectAge / 8f);
+                AethersWhisperVisuals.DrawShimmerRing(sb, reflectPos, 26f, reflectNormal.ToRotation(), p);
+            }
 
             AethersWhisperVisuals.EndAdditive(sb);
             return false;
         }
 
-        private static void DrawBeam(SpriteBatch sb, Vector2 from, Vector2 to)
+        private void DrawShaderTrail()
         {
-            // 冷青粗外层 + 珠白细核心（可见体明显粗于碰撞）。
-            AethersWhisperVisuals.DrawBeamSegment(sb, from, to, AethersWhisperVisuals.ShimmerCyan with { A = 0 }, AethersWhisperBalance.BeamVisualWidth);
-            AethersWhisperVisuals.DrawBeamSegment(sb, from, to, AethersWhisperVisuals.PearlWhite with { A = 0 }, AethersWhisperBalance.BeamVisualWidth * 0.28f);
+            Vector2[] points = BuildTrailPoints();
+            if (points.Length < 3)
+                return;
+
+            MiscShaderData shader = GameShaders.Misc["CalamityMod:TrailStreak"];
+            var streak = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/BasicTrail");
+
+            // 粗冷青外层（可见体明显粗于碰撞）。
+            shader.SetShaderTexture(streak);
+            PrimitiveRenderer.RenderTrail(points,
+                new PrimitiveSettings(OuterWidth, OuterColor, (_, _) => Vector2.Zero,
+                    smoothen: false, pixelate: false, shader: shader),
+                points.Length * 2);
+
+            // 细珠白核心（双绘制的窄核心）。
+            shader.SetShaderTexture(streak);
+            PrimitiveRenderer.RenderTrail(points,
+                new PrimitiveSettings(CoreWidth, CoreColor, (_, _) => Vector2.Zero,
+                    smoothen: false, pixelate: false, shader: shader),
+                points.Length * 2);
+        }
+
+        // 用历史位置构造拖尾控制点：去掉零点、合并过近点，至少 3 个（反射折角靠这些点保留）。
+        private Vector2[] BuildTrailPoints()
+        {
+            Vector2[] points = new Vector2[Projectile.oldPos.Length + 3];
+            int count = 0;
+            points[count++] = Projectile.Center;
+
+            Vector2 last = Projectile.Center;
+            for (int i = 0; i < Projectile.oldPos.Length; i++)
+            {
+                if (Projectile.oldPos[i] == Vector2.Zero)
+                    continue;
+                Vector2 point = Projectile.oldPos[i] + Projectile.Size * 0.5f;
+                if (Vector2.DistanceSquared(point, last) < 4f)
+                    continue;
+                points[count++] = point;
+                last = point;
+            }
+
+            while (count < 3)
+            {
+                points[count] = Projectile.Center - Projectile.velocity * count;
+                count++;
+            }
+
+            Array.Resize(ref points, count);
+            return points;
+        }
+
+        private static float OuterWidth(float completion, Vector2 _) => TaperWidth(completion, AethersWhisperBalance.BeamVisualWidth);
+        private static float CoreWidth(float completion, Vector2 _) => TaperWidth(completion, AethersWhisperBalance.BeamVisualWidth * 0.32f);
+
+        private static Color OuterColor(float completion, Vector2 _)
+        {
+            float tailFade = 1f - Utils.GetLerpValue(0.35f, 1f, completion, true);
+            return AethersWhisperVisuals.ShimmerCyan * (tailFade * 0.55f);
+        }
+
+        private static Color CoreColor(float completion, Vector2 _)
+        {
+            float tailFade = 1f - Utils.GetLerpValue(0.55f, 1f, completion, true);
+            return AethersWhisperVisuals.PearlWhite * tailFade;
+        }
+
+        // 头部快速起宽、尾部按幂次收细——头粗尾尖的梭形光痕。
+        private static float TaperWidth(float completion, float maxWidth)
+        {
+            const float headFraction = 0.15f;
+            if (completion < headFraction)
+                return MathHelper.SmoothStep(maxWidth * 0.35f, maxWidth, completion / headFraction);
+            float tail = (completion - headFraction) / (1f - headFraction);
+            return maxWidth * MathF.Pow(1f - tail, 0.6f);
         }
     }
 }

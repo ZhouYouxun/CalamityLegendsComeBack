@@ -23,17 +23,15 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         private int laserIndex = -1;
         private readonly int[] droneIndices = new int[] { -1, -1, -1, -1, -1, -1 };
 
-        // Charge state: 0 = charging, 1 = charged/converged, 2 = charged + left-held (scattered)
-        // Stored in laser ai[1]: 0f=normal, 1f=converged, 2f=scattered
+        // Charge state stored in the main beam: 0 = charging, 1 = charged/converged.
+        // Focus is now a real cursor lock, so it retains the converged state instead of scattering.
         private const float LaserStateNormal = 0f;
         private const float LaserStateConverged = 1f;
-        private const float LaserStateScattered = 2f;
 
         public float ChargeRatio => MathHelper.Clamp(HoldFrameCounter / balance.GetRightChargeFrames(), 0f, 1f);
         public bool Charged => HoldFrameCounter >= balance.GetRightChargeFrames();
         public Vector2 Muzzle => Projectile.Center + ForwardDirection * 32f;
-        /// <summary>True when fully charged AND left mouse is held, causing scattered (wider turn) beam mode.</summary>
-        public bool IsScatteredMode => Charged && IsLeftHeld();
+        public bool IsFocusMode => IsLeftHeld();
 
         protected override float HoldoutDistance => 12f;
         protected override float SoundPitch => 0.14f;
@@ -117,9 +115,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
             Projectile laser = Main.projectile[laserIndex];
 
             float desiredState;
-            if (Charged && IsLeftHeld())
-                desiredState = LaserStateScattered;
-            else if (Charged)
+            if (Charged)
                 desiredState = LaserStateConverged;
             else
                 desiredState = LaserStateNormal;
@@ -311,11 +307,20 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
                 }
                 else
                 {
-                    // Turn rate: normal = 2 deg/frame, charged = 0.8 deg/frame, scattered (left held while charged) = 3.5 deg/frame
+                    // A focus command is a true cursor lock. The core beam and every drone round
+                    // therefore share the same point instead of merely turning toward it at different speeds.
+                    if (IsFocusMode)
+                    {
+                        if (Projectile.velocity != targetAim)
+                            Projectile.netUpdate = true;
+
+                        Projectile.velocity = targetAim;
+                    }
+                    else
+                    {
+                    // Turn rate: normal = 2 deg/frame, charged = 0.8 deg/frame.
                     float maxTurnDeg;
-                    if (Charged && IsLeftHeld())
-                        maxTurnDeg = 3.5f;
-                    else if (Charged)
+                    if (Charged)
                         maxTurnDeg = 0.8f;
                     else
                         maxTurnDeg = 2f;
@@ -330,6 +335,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
                         Projectile.netUpdate = true;
 
                     Projectile.velocity = newAim;
+                    }
                 }
             }
 

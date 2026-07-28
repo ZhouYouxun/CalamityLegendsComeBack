@@ -25,8 +25,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir
     {
         public new string LocalizationCategory => "Items.Weapons.Melee";
 
-        // 左键单段挥砍的基础用时（会被攻速修正）。
-        private const int LeftUseTime = 26;
+        // 左键单段挥砍的基础用时（会被攻速修正）。整体较旧版加速约 50%（26 → 17）。
+        private const int LeftUseTime = 17;
 
         public override void SetStaticDefaults()
         {

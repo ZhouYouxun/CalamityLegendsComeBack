@@ -903,10 +903,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
             float completion = 1f - Projectile.timeLeft / 3f;
             float scale = MathHelper.Lerp(0.15f, 1.25f, completion);
 
-            Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition, null,
-                Color.Black * (0.92f - completion * 0.5f), 0f, bloom.Size() * 0.5f, scale * 1.15f,
-                SpriteEffects.None, 0f);
-
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState,
                 DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
@@ -920,9 +916,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState,
                 DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
 
-            Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition, null,
-                Color.Black * (0.7f - completion * 0.45f), 0f, bloom.Size() * 0.5f, scale * 0.5f,
-                SpriteEffects.None, 0f);
             return false;
         }
     }

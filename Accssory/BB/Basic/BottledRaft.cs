@@ -7,7 +7,7 @@ namespace CalamityLegendsComeBack.Accssory.BB.General
 {
     public class BottledRaft : ModItem
     {
-        public override string Texture => "CalamityLegendsComeBack/Accssory/BB/General/BottledRaft/BottledRaft";
+        public override string Texture => "CalamityLegendsComeBack/Accssory/BB/贴图/BottledRaft";
 
         public override void SetDefaults()
         {

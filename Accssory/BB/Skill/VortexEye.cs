@@ -3,22 +3,26 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Accssory.BB.ChangeRight.VortexEye
+namespace CalamityLegendsComeBack.Accssory.BB.Skill
 {
-    public class VortexEye : BBRightClickAccessory
+    public class VortexEye : ModItem
     {
-        protected override BBRightClickMode Mode => BBRightClickMode.VortexEye;
+        public override string Texture => "CalamityLegendsComeBack/Accssory/BB/贴图/漩涡之眼";
 
         public override void SetDefaults()
         {
-            base.SetDefaults();
+            Item.width = 32;
+            Item.height = 32;
+            Item.accessory = true;
+            Item.value = Item.sellPrice(gold: 8);
             Item.rare = ItemRarityID.Yellow;
         }
 
         public override void UpdateAccessory(Player player, bool hideVisual)
         {
-            base.UpdateAccessory(player, hideVisual);
-            player.GetModPlayer<BBAccessoryPlayer>().VortexEyeEquipped = true;
+            BBAccessoryPlayer accessoryPlayer = player.GetModPlayer<BBAccessoryPlayer>();
+            accessoryPlayer.SetRightClickMode(BBRightClickMode.VortexEye);
+            accessoryPlayer.VortexEyeEquipped = true;
             player.GetDamage(DamageClass.Melee) += 0.10f;
             player.GetAttackSpeed(DamageClass.Melee) += 0.10f;
             player.moveSpeed += 0.15f;

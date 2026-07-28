@@ -23,8 +23,6 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
         public bool SeedOfSilvaEquipped;
         public bool SilvaHarpEquipped;
         public bool PastLingeringEquipped;
-        public bool SwordsplosionQuiverEquipped;
-        public bool BlightSpewerQuiverEquipped;
         public bool FairyDanceEquipped;
         public bool RainbowSpiritDanceEquipped;
         public bool BadSeedEquipped;
@@ -60,8 +58,6 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
             SeedOfSilvaEquipped = false;
             SilvaHarpEquipped = false;
             PastLingeringEquipped = false;
-            SwordsplosionQuiverEquipped = false;
-            BlightSpewerQuiverEquipped = false;
             FairyDanceEquipped = false;
             RainbowSpiritDanceEquipped = false;
             BadSeedEquipped = false;

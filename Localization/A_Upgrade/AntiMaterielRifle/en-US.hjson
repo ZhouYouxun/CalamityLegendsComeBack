@@ -6,7 +6,7 @@ Mods: {
 					DisplayName: Little Legend - Anti-materiel Rifle
 					Tooltip: "[GFB]"
 					LeftClick: Fires highly destructive .408 anti-materiel rounds
-					RightClick: Right click to widen your view and enter immersive sniping mode
+					RightClick: Right click to widen your view and enter immersive sniping mode; full charge grants Deadly Strike for 0.5 seconds
 					CurrentStage: Current record: {0}
 					InventoryToggle: Right click in your inventory to toggle the view change
 					ZoomState: Aiming zoom: {0}
@@ -44,6 +44,13 @@ Mods: {
 				AMRCooldownStatusBar.DisplayName: AMR Slide Cooldown Bar
 				AMRBullseye.DisplayName: AMR Tactical Bullseye
 				AMRBeamRound.DisplayName: A M R Beam Round
+			}
+		}
+
+		Buffs: {
+			AMRDeadlyStrikeBuff: {
+				DisplayName: Deadly Strike
+				Description: Your next critical ranged hit deals double damage
 			}
 		}
 	}

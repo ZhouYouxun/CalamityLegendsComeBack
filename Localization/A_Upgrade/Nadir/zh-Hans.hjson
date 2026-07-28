@@ -27,6 +27,8 @@ Mods: {
 				UmbralNadirImpactExplosion.DisplayName: 冥蚀黑洞冲击
 				UmbralNadirSingularity.DisplayName: 天底奇点
 				UmbralNadirSlashWave.DisplayName: 冥蚀刃波
+				UmbralNadirVoidBolt.DisplayName: 散射虚空弹
+				UmbralNadirVoidLance.DisplayName: 冥蚀贯穿矛
 				UmbralNadirThrowController.DisplayName: 冥蚀投掷
 				UmbralNadirJavelin.DisplayName: 冥蚀矛
 				UmbralNadirShadowSoul.DisplayName: 暗影魂针
@@ -38,6 +40,7 @@ Mods: {
 				UmbralNadirAbyssRift.DisplayName: 深渊之口
 			}
 		}
+
 		Buffs: {
 			UmbralCorrosion: {
 				DisplayName: 蚀痕

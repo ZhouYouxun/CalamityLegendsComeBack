@@ -6,7 +6,7 @@ Mods: {
 					DisplayName: 势如破竹-反器材狙击步枪
 					Tooltip: "[GFB]"
 					LeftClick: 发射极具破坏力的.408口径狙击弹
-					RightClick: 右键扩大视野，并进入沉浸式狙击模式
+					RightClick: 右键扩大视野，并进入沉浸式狙击模式；满蓄力时获得持续0.5秒的绝命一击
 					CurrentStage: 当前战绩：{0}
 					InventoryToggle: 可自行在背包中右键开关视角变化功能
 					ZoomState: 视野拉远：{0}
@@ -44,6 +44,13 @@ Mods: {
 				AMRCooldownStatusBar.DisplayName: 反器材滑步冷却条
 				AMRBullseye.DisplayName: 反器材战术准心
 				AMRBeamRound.DisplayName: 反器材步枪光束弹
+			}
+		}
+
+		Buffs: {
+			AMRDeadlyStrikeBuff: {
+				DisplayName: 绝命一击
+				Description: 下一次远程攻击暴击时造成双倍伤害
 			}
 		}
 	}

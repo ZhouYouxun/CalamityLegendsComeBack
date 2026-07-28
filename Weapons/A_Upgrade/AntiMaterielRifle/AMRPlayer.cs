@@ -116,6 +116,23 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             ResetCalibration();
         }
 
+        public override void ModifyHitNPCWithProj(Projectile proj, NPC target, ref NPC.HitModifiers modifiers)
+        {
+            if (!Player.HasBuff(ModContent.BuffType<AMRDeadlyStrikeBuff>()) ||
+                !proj.DamageType.CountsAsClass(DamageClass.Ranged))
+                return;
+
+            modifiers.ModifyHitInfo += (ref NPC.HitInfo hit) =>
+            {
+                // The buff waits for a real ranged critical hit; non-crits do not consume it.
+                if (!hit.Crit)
+                    return;
+
+                hit.Damage = (int)Math.Min((long)hit.Damage * 2L, int.MaxValue);
+                Player.ClearBuff(ModContent.BuffType<AMRDeadlyStrikeBuff>());
+            };
+        }
+
         internal float GetCalibrationMultiplier(int targetIndex)
         {
             if (!AMRBalance.CalibrationUnlocked || calibrationTarget != targetIndex || calibrationStacks < 2)

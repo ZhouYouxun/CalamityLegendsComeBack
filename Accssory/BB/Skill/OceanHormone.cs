@@ -3,11 +3,11 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Accssory.BB.Skill.AbyssalBastion
+namespace CalamityLegendsComeBack.Accssory.BB.Skill
 {
-    public class AbyssalBastion : ModItem
+    public class OceanHormone : ModItem
     {
-        public override string Texture => "CalamityLegendsComeBack/Accssory/BB/Skill/AbyssalBastion/AbyssalBastion";
+        public override string Texture => "CalamityLegendsComeBack/Accssory/BB/贴图/海洋激素";
 
         public override void SetDefaults()
         {
@@ -20,14 +20,16 @@ namespace CalamityLegendsComeBack.Accssory.BB.Skill.AbyssalBastion
 
         public override void UpdateAccessory(Player player, bool hideVisual)
         {
-            player.GetModPlayer<BBAccessoryPlayer>().AbyssalBastionEquipped = true;
+            player.GetModPlayer<BBAccessoryPlayer>().OceanHormoneEquipped = true;
         }
 
         public override void AddRecipes()
         {
             CreateRecipe()
-                .AddIngredient(ItemID.CobaltShield)
-                .AddIngredient<SulphuricScale>(15)
+                .AddIngredient(ItemID.Bottle, 1)
+                .AddIngredient(ItemID.BattlePotion, 6)
+                .AddIngredient(ItemID.Stinger, 6)
+                .AddIngredient<DepthCells>(6)
                 .AddTile(TileID.Anvils)
                 .Register();
         }

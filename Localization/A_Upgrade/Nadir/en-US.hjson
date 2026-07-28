@@ -27,6 +27,8 @@ Mods: {
 				UmbralNadirImpactExplosion.DisplayName: Umbral Black-Hole Burst
 				UmbralNadirSingularity.DisplayName: Nadir Singularity
 				UmbralNadirSlashWave.DisplayName: Umbral Slash Wave
+				UmbralNadirVoidBolt.DisplayName: Void Bolt
+				UmbralNadirVoidLance.DisplayName: Umbral Void Lance
 				UmbralNadirThrowController.DisplayName: Umbral Volley
 				UmbralNadirJavelin.DisplayName: Umbral Javelin
 				UmbralNadirShadowSoul.DisplayName: Shadow Soul
@@ -38,6 +40,7 @@ Mods: {
 				UmbralNadirAbyssRift.DisplayName: Abyssal Maw
 			}
 		}
+
 		Buffs: {
 			UmbralCorrosion: {
 				DisplayName: Umbral Corrosion

@@ -21,6 +21,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral.Drone
         public int cometType = 0;
         public Color useColor = Color.White;
         public float baseSpeed = 14f;
+        private bool Focused => Projectile.ai[0] >= 1f;
 
         public override void SetStaticDefaults()
         {
@@ -38,7 +39,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral.Drone
             Projectile.tileCollide = false;
             Projectile.penetrate = -1;
             Projectile.extraUpdates = 2;
-            Projectile.timeLeft = 500;
+            Projectile.timeLeft = 270;
             Projectile.ignoreWater = true;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = 8;
@@ -67,21 +68,30 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral.Drone
             // 惰性弧形追踪 (Inertial smooth homing towards mouse)
             if (owner.active && !owner.dead)
             {
-                Vector2 targetPos = NewLegendYharimsCrystal.GetMouseWorld(owner);
+                NPC target = Focused ? null : Projectile.Center.ClosestNPCAt(2400f);
+                Vector2 targetPos = Focused
+                    ? NewLegendYharimsCrystal.GetMouseWorld(owner)
+                    : target?.Center ?? NewLegendYharimsCrystal.GetMouseWorld(owner);
                 Vector2 toTarget = targetPos - Projectile.Center;
                 float dist = toTarget.Length();
 
                 if (dist > 30f)
                 {
-                    float targetAngle = toTarget.ToRotation();
+                    float leadFrames = MathHelper.Clamp(dist / MathHelper.Max(baseSpeed, 1f), 5f, 34f);
+                    if (target is not null)
+                        targetPos += target.velocity * leadFrames;
+
+                    float targetAngle = (targetPos - Projectile.Center).ToRotation();
                     float currentAngle = Projectile.velocity.ToRotation();
 
                     // 动态调整转向速率：在前几帧较软，随后具有平滑惯性，距离近时增强以离心弧线划过
-                    float maxTurn = MathHelper.ToRadians(MathHelper.Clamp(1.8f + time * 0.05f, 1.8f, 4.5f));
+                    float growth = Utils.GetLerpValue(0f, 150f, time, true);
+                    float maxTurn = MathHelper.ToRadians(Focused ? 52f : MathHelper.Lerp(1.6f, 16f, growth));
                     float newAngle = currentAngle.AngleTowards(targetAngle, maxTurn);
 
                     // 加速与惯性保持
-                    baseSpeed = Math.Min(baseSpeed * 1.008f, 26f);
+                    float targetSpeed = Focused ? 30f : MathHelper.Lerp(14f, 34f, growth);
+                    baseSpeed = MathHelper.Lerp(baseSpeed, targetSpeed, Focused ? 0.22f : 0.045f);
                     Projectile.velocity = newAngle.ToRotationVector2() * baseSpeed;
                 }
             }

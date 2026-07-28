@@ -16,6 +16,10 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
         public const float RightClickDashSpeed = 9.6f;
         public const float RightClickReboundSpeed = 9f;
         public const float DefaultReboundDashSpeedMultiplier = 0.6f;
+        // Enemy-hit return only. This doubles the already-tuned rebound speed,
+        // without changing the outgoing dash or a rebound caused by terrain.
+        public const float RightClickEnemyReboundSpeedMultiplier = 2f;
+        public const int RightClickEnemyHitIFrameDuration = 20;
         public const float RightClickDashTurnRate = 0.01f;
         public const float RightClickReadyBladeDistance = 28f;
         public const float RightClickDashBladeDistance = 20f;

@@ -3,11 +3,11 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Accssory.BF.PastLingering
+namespace CalamityLegendsComeBack.Accssory.BF.Skill
 {
     public sealed class PastLingering : ModItem
     {
-        public override string Texture => "CalamityLegendsComeBack/Accssory/BF/ChangeZS/PastLingering/PastLingering";
+        public override string Texture => "CalamityLegendsComeBack/Accssory/BF/Skill/PastLingering";
 
         public override void SetDefaults()
         {

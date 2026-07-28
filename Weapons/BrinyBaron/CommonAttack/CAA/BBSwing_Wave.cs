@@ -30,7 +30,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         private int lifeTimer;
         private int bubbleTimer;
         private float initialSpeed;
-        private int tornadoCooldown = 0;
 
         private int SpawnStage => Utils.Clamp((int)Projectile.ai[1], 0, 3);
         private bool IsAegisBlade => Main.player[Projectile.owner].HeldItem.type == ModContent.ItemType<global::CalamityLegendsComeBack.Weapons.AegisBlade.AegisBlade>();
@@ -78,9 +77,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         public override void AI()
         {
             lifeTimer++;
-            if (tornadoCooldown > 0)
-                tornadoCooldown--;
-
             float velocityLoss = GetVelocityLoss();
             Projectile.velocity *= 1f - velocityLoss;
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
@@ -102,45 +98,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
             SpawnHitEffects(Projectile, target.Center, SpawnStage, StageIntensity, IsAegisBlade);
 
-            // Stage 4/5 (SpawnStage == 3) summons a tornado on hit with 5 frames cooldown
-            if (SpawnStage == 3 && tornadoCooldown <= 0)
-            {
-                tornadoCooldown = 9;
-                
-                Player owner = Main.player[Projectile.owner];
-                if (owner.ownedProjectileCounts[ModContent.ProjectileType<CalamityMod.Projectiles.Melee.BrinySpout>()] == 0)
-                {
-                    Projectile.NewProjectile(
-                        Projectile.GetSource_FromThis(),
-                        target.Center,
-                        Vector2.Zero,
-                        ModContent.ProjectileType<CalamityMod.Projectiles.Melee.BrinyTyphoonBubble>(),
-                        Math.Max(1, (int)(Projectile.damage * 1.85f)),
-                        Projectile.knockBack,
-                        Projectile.owner);
-                }
-
-                // Spawn water explosions
-                int explosionType = ModContent.ProjectileType<BrinyBaron_TornadoWaterExplosion>();
-                int explosionDamage = Math.Max(1, (int)(Projectile.damage * 0.5f));
-                float explosionKnockback = Projectile.knockBack * 0.55f;
-
-                for (int i = 0; i < 5; i++)
-                {
-                    Vector2 spawnPosition = target.Center + Main.rand.NextVector2Circular(54f, 54f);
-                    Projectile.NewProjectile(
-                        Projectile.GetSource_FromThis(),
-                        spawnPosition,
-                        Vector2.Zero,
-                        explosionType,
-                        explosionDamage,
-                        explosionKnockback,
-                        Projectile.owner,
-                        Main.rand.NextFloat(MathHelper.TwoPi));
-                }
-
-                SoundEngine.PlaySound(SoundID.Item84 with { Volume = 0.62f, Pitch = -0.18f }, target.Center);
-            }
+            // Post-Plantera sword waves retain their hit effects, but no longer
+            // create a persistent tornado or its attached explosion package.
         }
 
         public override void OnKill(int timeLeft)

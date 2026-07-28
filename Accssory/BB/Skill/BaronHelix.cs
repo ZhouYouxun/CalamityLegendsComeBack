@@ -3,11 +3,11 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Accssory.BB.Skill.BaronHelix
+namespace CalamityLegendsComeBack.Accssory.BB.Skill
 {
     public class BaronHelix : ModItem
     {
-        public override string Texture => "CalamityLegendsComeBack/Accssory/BB/Skill/BaronHelix/BaronHelix";
+        public override string Texture => "CalamityLegendsComeBack/Accssory/BB/贴图/爵士螺旋";
 
         public override void SetDefaults()
         {

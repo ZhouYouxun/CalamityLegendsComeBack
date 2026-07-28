@@ -3,11 +3,11 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace CalamityLegendsComeBack.Accssory.BB.Skill.TideWiseHat
+namespace CalamityLegendsComeBack.Accssory.BB.Skill
 {
     public class TideWiseHat : ModItem
     {
-        public override string Texture => "CalamityLegendsComeBack/Accssory/BB/Skill/TideWiseHat/TideWiseHat";
+        public override string Texture => "CalamityLegendsComeBack/Accssory/BB/贴图/潮汐智者";
 
         public override void SetDefaults()
         {

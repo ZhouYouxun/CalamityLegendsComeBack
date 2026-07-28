@@ -311,12 +311,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
         private void FireBombardRain(IEntitySource source, int projectileType, float speed, int damage, float knockback)
         {
-            if (BFAccessories.SwordsplosionQuiverEquipped)
-            {
-                FireSwordsplosionRain(source, damage, knockback);
-                return;
-            }
-
             BFBombardLeftStats stats = BFBombardLeftBalance.GetStats();
             float arrowSpeed = Main.rand.Next(25, 30) * stats.ProjectileSpeedMultiplier;
             Vector2 realPlayerPos = Owner.RotatedRelativePoint(Owner.MountedCenter, true);
@@ -414,12 +408,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
         private void FirePlagueReapers(IEntitySource source, int projectileType, float speed, int damage, float knockback)
         {
-            int finalProjectileType = BFAccessories.BlightSpewerQuiverEquipped
-                ? ModContent.ProjectileType<BlightFlames>()
-                : ModContent.ProjectileType<BFLeftPlagueReaper>();
+            int finalProjectileType = ModContent.ProjectileType<BFLeftPlagueReaper>();
             Vector2 baseDirection = AimDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
             Vector2 origin = GunTipPosition;
-            float shotSpeed = Math.Max(speed, BFAccessories.BlightSpewerQuiverEquipped ? 7f : 12.5f) * (BFAccessories.BlightSpewerQuiverEquipped ? 0.62f : 0.92f);
+            float shotSpeed = Math.Max(speed, 12.5f) * 0.92f;
             Vector2 shootVelocity = baseDirection.RotatedBy(Main.rand.NextFloat(-0.05f, 0.05f)) * shotSpeed;
             Vector2 spawnPosition = origin + baseDirection.RotatedBy(MathHelper.PiOver2) * Main.rand.NextFloat(-4f, 4f);
 
@@ -428,11 +420,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 spawnPosition,
                 shootVelocity,
                 finalProjectileType,
-                Math.Max(1, (int)(damage * (BFAccessories.BlightSpewerQuiverEquipped ? 0.8f : 1.05f))),
+                Math.Max(1, (int)(damage * 1.05f)),
                 knockback * 0.72f,
                 Owner.whoAmI,
-                BFAccessories.BlightSpewerQuiverEquipped ? 0f : Main.rand.NextFloat(1000f),
-                BFAccessories.BlightSpewerQuiverEquipped ? 0f : Main.rand.NextFloat(3f));
+                Main.rand.NextFloat(1000f),
+                Main.rand.NextFloat(3f));
 
             if (BFArrowCommon.InBounds(projectileIndex, Main.maxProjectiles))
             {

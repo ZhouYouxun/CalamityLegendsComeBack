@@ -1,7 +1,6 @@
-using CalamityLegendsComeBack.Accssory.BB.Skill.BaronHelix;
+using CalamityLegendsComeBack.Accssory.BB.Skill;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.TideValue;
 using CalamityMod;
-using CalamityMod.World;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
@@ -25,6 +24,8 @@ namespace CalamityLegendsComeBack.Accssory.BB
         public bool AbyssalBastionEquipped;
         public bool BaronHelixEquipped;
         public bool VortexEyeEquipped;
+        public bool TideRadarEquipped;
+        public bool DrinkingFountainEquipped;
 
         public float GeneralMeleeDamageBonus;
         public int BottleTideCapBonus;
@@ -45,6 +46,8 @@ namespace CalamityLegendsComeBack.Accssory.BB
             AbyssalBastionEquipped = false;
             BaronHelixEquipped = false;
             VortexEyeEquipped = false;
+            TideRadarEquipped = false;
+            DrinkingFountainEquipped = false;
             GeneralMeleeDamageBonus = 0f;
             BottleTideCapBonus = 0;
             RightClickMode = BBRightClickMode.DefaultShuriken;
@@ -155,6 +158,19 @@ namespace CalamityLegendsComeBack.Accssory.BB
         {
             if (TideWiseHatEquipped && hit.Crit && Main.myPlayer == Player.whoAmI && Main.rand.NextBool(100))
                 Player.GetModPlayer<BBTideValuePlayer>().AddTide();
+
+            if (DrinkingFountainEquipped && Main.myPlayer == Player.whoAmI)
+            {
+                Vector2 velocity = (Player.Center - target.Center).SafeNormalize(Vector2.UnitY) * 7.5f;
+                Projectile.NewProjectile(
+                    Player.GetSource_FromThis(),
+                    target.Center,
+                    velocity,
+                    ModContent.ProjectileType<BBDrinkingFountainOrb>(),
+                    36,
+                    0f,
+                    Player.whoAmI);
+            }
         }
 
         public void GrantBubbleShield()
@@ -163,24 +179,5 @@ namespace CalamityLegendsComeBack.Accssory.BB
                 BubbleShieldHealth = 100;
         }
 
-        public void TrySpawnBaronHelixBubble()
-        {
-            if (!BaronHelixEquipped || Main.myPlayer != Player.whoAmI)
-                return;
-
-            bool healPlayer = Player.statLife < Player.statLifeMax2;
-            int damage = DownedBossSystem.downedDoG ? 300 : NPC.downedMoonlord ? 140 : 60;
-            Vector2 spawnOffset = Main.rand.NextVector2Circular(110f, 70f);
-            Vector2 velocity = spawnOffset.SafeNormalize(Vector2.UnitY) * -2f;
-            Projectile.NewProjectile(
-                Player.GetSource_FromThis(),
-                Player.Center + spawnOffset,
-                velocity,
-                ModContent.ProjectileType<BaronHelixBubble>(),
-                damage,
-                1f,
-                Player.whoAmI,
-                healPlayer ? 1f : 0f);
-        }
     }
 }

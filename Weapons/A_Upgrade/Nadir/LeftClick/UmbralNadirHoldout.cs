@@ -44,7 +44,15 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.LeftClick
         private bool hasExploded;
         private bool spawnedSpin;
         private bool waveSpawned;
+        private int boltsSpawned;
+        private bool smearSpawned;
+        private Particle voidSmear;
         private readonly List<Vector2> tipHistory = new();
+
+        // 单段挥砍"先快后慢"缓动（ease-out）：起手瞬间最快，随后减速收尾；每段独立，逐段重复
+        private float SwingEase => 1f - MathF.Pow(1f - SwingCompletion, 2.6f);
+        // 当前瞬时快慢（1=最快 起手，0=最慢 收尾），用来调制抛出的特效强度
+        private float SwingSpeedFactor => MathF.Pow(1f - SwingCompletion, 1.55f);
 
         private float StageDamageMult => stage switch
         {
@@ -71,17 +79,17 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.LeftClick
             switch (stage)
             {
                 case 0: // 上挑斩
-                    StartupTime = 6; CooldownTime = 8; OffsetDistance = 48;
+                    StartupTime = 4; CooldownTime = 5; OffsetDistance = 48;
                     RotateInStartup = 0.35f; RotateInCooldown = 0.22f;
                     UseSound = SoundID.Item71;
                     break;
                 case 1: // 劈落斩
-                    StartupTime = 6; CooldownTime = 8; OffsetDistance = 48;
+                    StartupTime = 4; CooldownTime = 5; OffsetDistance = 48;
                     RotateInStartup = 0.35f; RotateInCooldown = 0.22f;
                     UseSound = SoundID.Item71;
                     break;
                 default: // 冲刺贯穿（动作保留，但不推玩家）
-                    StartupTime = 5; CooldownTime = 12; OffsetDistance = 30;
+                    StartupTime = 3; CooldownTime = 8; OffsetDistance = 30;
                     RotateInStartup = 0.5f; RotateInCooldown = 0.15f;
                     UseSound = SoundID.DD2_BetsysWrathImpact;
                     Projectile.CritChance = 100; // 必暴
@@ -95,11 +103,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.LeftClick
 
         public override float SwingFunction()
         {
+            // 用 ease-out 的 SwingEase 取代对称的 SmoothStep：每段都"先快后慢"，起手一挥而出、收尾自然减速
             return stage switch
             {
-                0 => MathHelper.ToRadians(MathHelper.SmoothStep(-80f, 118f, SwingCompletion)),  // 上挑
-                1 => MathHelper.ToRadians(MathHelper.SmoothStep(118f, -80f, SwingCompletion)),  // 劈落
-                _ => MathHelper.ToRadians(MathHelper.SmoothStep(26f, -26f, SwingCompletion)),   // 冲刺（小幅贯穿）
+                0 => MathHelper.ToRadians(MathHelper.Lerp(-80f, 118f, SwingEase)),  // 上挑
+                1 => MathHelper.ToRadians(MathHelper.Lerp(118f, -80f, SwingEase)),  // 劈落
+                _ => MathHelper.ToRadians(MathHelper.Lerp(26f, -26f, SwingEase)),   // 冲刺（小幅贯穿）
             };
         }
 
@@ -126,20 +135,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.LeftClick
 
             player.GetModPlayer<UmbralNadirPlayer>().KeepComboAlive();
 
-            // 冲刺段：只保留前探动作（OffsetDistance），不施加任何玩家位移
+            // 冲刺段：只保留前探动作（OffsetDistance，同样先快后慢），不施加任何玩家位移
             if (stage == 2 && inSwing)
-                OffsetDistance = (int)MathHelper.Lerp(-18f, 112f, MathF.Pow(SwingCompletion, 1.5f));
+                OffsetDistance = (int)MathHelper.Lerp(-18f, 112f, SwingEase);
 
-            // 每段挥砍甩出一记刃波（中距离压制 + 远处叠蚀痕）
-            if (inSwing && !waveSpawned && SwingCompletion >= 0.42f && Projectile.owner == Main.myPlayer)
-            {
-                waveSpawned = true;
-                Vector2 dir = (-angle).SafeNormalize(Vector2.UnitX * player.direction);
-                int waveDamage = Math.Max(1, (int)(Projectile.damage * StageDamageMult * 0.5f));
-                Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, dir * 14f,
-                    ModContent.ProjectileType<UmbralNadirSlashWave>(), waveDamage, Projectile.knockBack, Projectile.owner);
-                SoundEngine.PlaySound(SoundID.Item71 with { Volume = 0.4f, Pitch = 0.25f }, Projectile.Center);
-            }
+            // 随挥舞序列抛出弹幕（各有独立发射技巧）：
+            // 上挑/劈落 = 领刃月波 + 沿挥舞一颗颗扇形扫射的散射虚空弹；冲刺 = 突入瞬间的音速激光矛
+            if (inSwing && Projectile.owner == Main.myPlayer)
+                FireSwingProjectiles(player);
 
             // 记录矛尖世界坐标（每真实帧一次，让残像沿挥舞弧线铺开而不是挤成一团）
             if (Projectile.FinalExtraUpdate())
@@ -151,44 +154,110 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.LeftClick
                     tipHistory.Insert(0, tip);
                     if (tipHistory.Count > 12)
                         tipHistory.RemoveAt(tipHistory.Count - 1);
-                    SpawnBlackGrit(player);
+                    UpdateVoidSmear(player);
+                    SpawnSwingVoidEffects(player);
                 }
                 else if (tipHistory.Count > 0)
                     tipHistory.RemoveAt(tipHistory.Count - 1);
             }
         }
 
-        private void SpawnBlackGrit(Player player)
+        /// <summary>随挥舞进程抛出弹幕：上挑/劈落 = 领刃 + 一颗颗扇形扫射的散射虚空弹；冲刺 = 音速激光矛。</summary>
+        private void FireSwingProjectiles(Player player)
         {
-            Vector2 bladeDir = (Projectile.Center - player.MountedCenter).SafeNormalize(Vector2.UnitX * player.direction);
-            int count = Main.rand.Next(1, 3);
-            for (int i = 0; i < count; i++)
+            if (stage < 2)
             {
-                Vector2 pos = Projectile.Center + bladeDir * Main.rand.NextFloat(-32f, -10f) * Projectile.scale
-                            + bladeDir.RotatedBy(MathHelper.PiOver2) * Main.rand.NextFloat(-6f, 6f);
-                Vector2 vel = -bladeDir.RotatedByRandom(0.5f) * Main.rand.NextFloat(0.4f, 1.6f);
-                // 小、短命、无发光的黑色粒屑
-                if (Main.rand.NextBool())
+                // 领刃月波（一次，SwingCompletion ~0.30）
+                if (!waveSpawned && SwingCompletion >= 0.30f)
                 {
-                    GeneralParticleHandler.SpawnParticle(new GenericBloom(pos, vel, Color.Black,
-                        Main.rand.NextFloat(0.18f, 0.38f), Main.rand.Next(8, 14), true, false));
+                    waveSpawned = true;
+                    Vector2 dir = (-angle).SafeNormalize(Vector2.UnitX * player.direction);
+                    int waveDamage = Math.Max(1, (int)(Projectile.damage * StageDamageMult * UmbralNadirBalance.SlashWaveDamageMult));
+                    Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, dir * 15f,
+                        ModContent.ProjectileType<UmbralNadirSlashWave>(), waveDamage, Projectile.knockBack, Projectile.owner);
+                    SoundEngine.PlaySound(SoundID.Item71 with { Volume = 0.4f, Pitch = 0.25f }, Projectile.Center);
                 }
-                else
+
+                // 散射虚空弹：随挥舞一颗颗打出，沿当前刀身方向铺成扇形（劈落比上挑多一颗）
+                int total = UmbralNadirBalance.VoidBoltsPerSwing + stage;
+                while (boltsSpawned < total && SwingCompletion >= 0.22f + 0.68f * boltsSpawned / (float)(total - 1))
                 {
-                    Dust d = Dust.NewDustPerfect(pos, DustID.Shadowflame, vel, 120, Color.Black, Main.rand.NextFloat(0.7f, 1.1f));
-                    d.noGravity = true;
-                    d.fadeIn = 0f;
+                    Vector2 bladeDir = (Projectile.Center - player.MountedCenter).SafeNormalize(Vector2.UnitX * player.direction);
+                    Vector2 vel = bladeDir.RotatedByRandom(0.16f) * Main.rand.NextFloat(8f, 10.5f);
+                    int boltDamage = Math.Max(1, (int)(Projectile.damage * StageDamageMult * UmbralNadirBalance.VoidBoltDamageMult));
+                    Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, vel,
+                        ModContent.ProjectileType<UmbralNadirVoidBolt>(), boltDamage, Projectile.knockBack * 0.4f, Projectile.owner);
+                    SoundEngine.PlaySound(SoundID.Item104 with { Volume = 0.22f, Pitch = 0.4f + boltsSpawned * 0.05f }, Projectile.Center);
+                    boltsSpawned++;
                 }
             }
-            // 深渊识别点（低频，每 3 真实帧最多 1 粒）
-            if (Main.rand.NextBool(3))
+            else if (!waveSpawned && SwingCompletion >= 0.4f)
             {
-                Vector2 pos = Projectile.Center + bladeDir * Main.rand.NextFloat(20f, 56f) * Projectile.scale;
-                Dust vd = Dust.NewDustPerfect(pos, ModContent.DustType<VoidDustInverted>());
+                // 冲刺贯穿：突入瞬间射出音速激光矛
+                waveSpawned = true;
+                Vector2 dir = (-angle).SafeNormalize(Vector2.UnitX * player.direction);
+                int lanceDamage = Math.Max(1, (int)(Projectile.damage * StageDamageMult * UmbralNadirBalance.VoidLanceDamageMult));
+                Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, dir * 9f,
+                    ModContent.ProjectileType<UmbralNadirVoidLance>(), lanceDamage, Projectile.knockBack, Projectile.owner);
+            }
+        }
+
+        /// <summary>沿矛尖持续更新一道黑色刀光弧（CircularSmear），随挥舞旋转，快相更浓。</summary>
+        private void UpdateVoidSmear(Player player)
+        {
+            Vector2 pivot = player.MountedCenter;
+            Vector2 bladeDir = (Projectile.Center - pivot).SafeNormalize(Vector2.UnitX * player.direction);
+            float rot = bladeDir.ToRotation() + MathHelper.PiOver2;
+            float reach = (stage == 2 ? 100f : 122f) * Projectile.scale;
+            float scale = reach / 78f; // CircularSmearSmokey 156px，半径 78
+            Color col = Color.Lerp(Color.Black, UmbralNadirPalette.MeldGreenDeep, 0.16f) * MathHelper.Clamp(0.45f + SwingSpeedFactor, 0.4f, 1f);
+            if (!smearSpawned)
+            {
+                smearSpawned = true;
+                voidSmear = new CircularSmearSmokeyVFX(pivot, col, rot, scale);
+                GeneralParticleHandler.SpawnParticle(voidSmear);
+            }
+            else if (voidSmear != null)
+            {
+                voidSmear.Position = pivot;
+                voidSmear.Rotation = rot;
+                voidSmear.Scale = scale;
+                voidSmear.Color = col;
+                voidSmear.Time = 0;
+            }
+        }
+
+        /// <summary>挥砍抛出的特效：黑色撕裂条痕 + 稀疏绿色事件视界火花 + 被吸向刀尖的碎渊尘，全部随"先快后慢"节奏调制。</summary>
+        private void SpawnSwingVoidEffects(Player player)
+        {
+            float speed = SwingSpeedFactor;
+            Vector2 bladeDir = (Projectile.Center - player.MountedCenter).SafeNormalize(Vector2.UnitX * player.direction);
+            Vector2 tangent = bladeDir.RotatedBy(MathHelper.PiOver2);
+            Vector2 tip = Projectile.Center + bladeDir * 58f * Projectile.scale;
+
+            // 黑色撕裂条痕（像矛尖在划开空间）——越快越多越长
+            int rips = 1 + (int)(speed * 3f);
+            for (int i = 0; i < rips; i++)
+            {
+                Vector2 pos = Projectile.Center + bladeDir * Main.rand.NextFloat(22f, 64f) * Projectile.scale + tangent * Main.rand.NextFloat(-8f, 8f);
+                Vector2 vel = tangent.RotatedByRandom(0.3f) * Main.rand.NextFloat(2f, 6f) * (0.5f + speed);
+                GeneralParticleHandler.SpawnParticle(new LineParticle(pos, vel, false, Main.rand.Next(9, 15), Main.rand.NextFloat(0.5f, 0.95f) * (0.6f + speed), Color.Black));
+            }
+
+            // 刀尖事件视界绿边火花（仅快相，稀疏，顶层加色）
+            if (speed > 0.35f && Main.rand.NextFloat() < speed)
+                GeneralParticleHandler.SpawnParticle(new CustomSpark(tip, tangent.RotatedByRandom(0.4f) * Main.rand.NextFloat(2f, 5f) * speed,
+                    "CalamityMod/Particles/GlowSpark", false, Main.rand.Next(10, 15), Main.rand.NextFloat(0.02f, 0.038f),
+                    UmbralNadirPalette.MeldGreen, new Vector2(0.6f, 1.3f), true, false), false, GeneralDrawLayer.AfterEverything);
+
+            // 被吸向刀尖的碎渊尘（迷你黑洞感）
+            if (Main.rand.NextBool(2))
+            {
+                Vector2 edge = tip + Main.rand.NextVector2Unit() * Main.rand.NextFloat(28f, 66f) * Projectile.scale;
+                Vector2 inward = (tip - edge).SafeNormalize(Vector2.Zero) * Main.rand.NextFloat(1.5f, 4.5f);
+                Dust vd = Dust.NewDustPerfect(edge, ModContent.DustType<VoidDustInverted>(), inward, 0, UmbralNadirPalette.MeldGreen, Main.rand.NextFloat(0.7f, 1.2f));
                 vd.noGravity = true;
-                vd.velocity = -bladeDir * Main.rand.NextFloat(0.3f, 1.2f);
-                vd.scale = Main.rand.NextFloat(0.7f, 1.1f);
-                vd.color = Color.LightGreen;
+                vd.color = UmbralNadirPalette.MeldGreen;
             }
         }
 

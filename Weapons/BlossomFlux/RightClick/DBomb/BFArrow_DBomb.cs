@@ -688,12 +688,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                 Vector2 targetPosition = center + Main.rand.NextVector2Circular(82f, 42f);
                 Vector2 velocity = (targetPosition - spawnPosition).SafeNormalize(Vector2.UnitY) * (storedAmmoSpeed * Main.rand.NextFloat(1.25f, 1.62f));
 
-                if (Main.player[Projectile.owner].GetModPlayer<BFAccessoryPlayer>().SwordsplosionQuiverEquipped)
-                {
-                    SpawnSwordsplosionRainSword(spawnPosition, velocity);
-                    continue;
-                }
-
                 int projectileIndex = Projectile.NewProjectile(
                     Projectile.GetSource_FromThis(),
                     spawnPosition, velocity,

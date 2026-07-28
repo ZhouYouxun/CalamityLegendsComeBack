@@ -176,6 +176,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
             if (!playedReadySound && chargeFrames >= AMRBalance.ScopeChargeFrames)
             {
                 playedReadySound = true;
+                Owner.AddBuff(ModContent.BuffType<AMRDeadlyStrikeBuff>(), AMRDeadlyStrikeBuff.DurationFrames);
                 SoundEngine.PlaySound(SoundID.Item82 with { Volume = 0.55f, Pitch = 0.25f }, GunTipPosition);
             }
         }

@@ -17,7 +17,6 @@ Mods: {
 						[c/66CCFF:Seafoam blades scatter into larger water blades and pierce more enemies.]
 						[c/66CCFF:Sea spirits home in faster and inflict Riptide.]
 						[c/66CCFF:Waves surge forward as wide tidal slashes.]
-						[c/66CCFF:True blade hits can call forth a tornado.]
 						'''
 					BB_Left_3:
 						'''
@@ -26,7 +25,6 @@ Mods: {
 						[c/66CCFF:Sea spirits swarm toward enemies and inflict Riptide.]
 						[c/66CCFF:Shurikens fan outward, cut enemies, and release seafoam on hit.]
 						[c/66CCFF:Waves surge forward; the finisher releases a larger tidal slash.]
-						[c/66CCFF:True blade hits can call forth a tornado.]
 						'''
 					BB_Left_4:
 						'''
@@ -35,28 +33,13 @@ Mods: {
 						[c/66CCFF:Sea spirits swarm toward enemies and inflict Riptide.]
 						[c/66CCFF:Shurikens fan outward, cut enemies, and release seafoam on hit.]
 						[c/66CCFF:Waves surge forward; the finisher releases a larger tidal slash.]
-						[c/66CCFF:True blade hits can call forth a tornado and add a burst of sea spirits.]
+						[c/66CCFF:True blade hits add a burst of sea spirits.]
 						'''
 					BB_Right_DefaultShuriken:
 						'''
 						[c/FFB347:Right Click: perform a tide short dash.]
 						[c/FFB347:You are immune during the dash and return; striking the first enemy rebounds you once.]
-						[c/FFB347:After entering Hardmode, a large Razorblade Typhoon that pulls enemies is created on hit.]
-						'''
-					BB_Right_LostGarment:
-						'''
-						[c/FFB347:Right Click: Lost Garment converts the attack into a piercing dash.]
-						[c/FFB347:The dash cuts through every enemy in its path without rebounding.]
-						'''
-					BB_Right_CeruleanShield:
-						'''
-						[c/FFB347:Right Click: Cerulean Shield creates a bubble shield around you.]
-						[c/FFB347:The bubble shield blocks hostile projectiles and grants brief immunity when it bursts.]
-						'''
-					BB_Right_VortexPortal:
-						'''
-						[c/FFB347:Right Click: Vortex Portal warps to the cursor.]
-						[c/FFB347:Dash out and immediately return along the same path, leaving one large water typhoon in the return lane.]
+						[c/FFB347:After entering Hardmode, an impact releases a blue Jazz Typhoon beneath the enemy.]
 						'''
 					BB_Right_Spin_Locked: "[c/DDA0FF:Hold Left Click, then hold Right Click: Whirl Cleave is locked until Stage II.]"
 					BB_Right_Spin_Unlocked:
@@ -98,93 +81,6 @@ Mods: {
 				}
 			}
 
-			BBTest: {
-				DisplayName: BB Test
-				Tooltip: ""
-			}
-
-			OffshoreWindTurbine: {
-				DisplayName: Offshore Wind Turbine
-				Tooltip:
-					'''
-					Increases Briny Baron's maximum tide by 4
-					A higher tide cap means more stacked 3% damage bonuses, rewarding sustained combat
-					[c/7F8FA6:Multiple copies stack]
-					'''
-			}
-
-			ImpactRestarter: {
-				DisplayName: Impact Restarter
-				Tooltip:
-					'''
-					Right-click dash cooldown instantly resets on enemy hit, allowing immediate re-use
-					Cerulean Shield dash cooldown is compressed from 3 seconds down to 1 second on hit
-					[c/7F8FA6:Best used in dense crowds where the right-click dash becomes the core attack rhythm]
-					'''
-			}
-
-			HighTideOverloadBarrier: {
-				DisplayName: High-Tide Overload Barrier
-				Tooltip:
-					'''
-					While at full tide, gain 20 defense and 20% damage reduction
-					Water mist particles pulse around you as a visual indicator that the barrier is active
-					[c/7F8FA6:The barrier drops the moment tide is consumed — keeping tide full is the key]
-					'''
-			}
-
-			SurgeChainReactor: {
-				DisplayName: Surge Chain Reactor
-				Tooltip:
-					'''
-					Briny Baron left-click damage reduced by 50%
-					Quick Slash damage increased to 2000% (×20)
-					Quick Slash continuously unleashes a fiercer barrage of sea spirits during its swing
-					[c/7F8FA6:Sacrifice sustained damage for extreme Quick Slash burst]
-					'''
-			}
-
-			VortexPortal: {
-				DisplayName: Vortex Portal
-				Tooltip:
-					'''
-					[c/99CCFF:Replaces right-click skill with Vortex Portal Assault]
-					Teleport to the cursor's position, then perform two consecutive slash attacks
-					[c/FFB347:Cooldown: 6 seconds — significantly longer than standard dash. Highest skill priority]
-					'''
-			}
-
-			LostGarment: {
-				DisplayName: Lost Garment
-				Tooltip:
-					'''
-					[c/99CCFF:Replaces right-click skill with Blade Storm Dash (Pass-Through)]
-					Dash in the cursor's direction, passing straight through all enemies and dealing continuous damage
-					[c/FFB347:Skill priority 10 — lowest; any other right-click skill accessory overrides this]
-					'''
-			}
-
-			CeruleanShield: {
-				DisplayName: Cerulean Shield
-				Tooltip:
-					'''
-					[c/99CCFF:Replaces right-click skill with Cerulean Rebound Dash]
-					Dash into the first enemy hit, bounce back, and trigger a cerulean explosion
-					On hit, dash cooldown is immediately reduced to 1 second (Impact Restarter clears it entirely)
-					[c/FFB347:Skill priority 20 — overrides Lost Garment, overridden by Vortex Portal]
-					'''
-			}
-
-			BBPassiveChanneler: {
-				DisplayName: Tide Radar
-				Tooltip:
-					'''
-					[c/9AEF9E:As long as Briny Baron is anywhere in your inventory, the Quick Slash passive stays active — no need to hold it]
-					Passive behavior is identical to holding the weapon; no values are changed or enhanced
-					[c/7F8FA6:Grants no other combat bonuses — purely keeps the passive running while you swap weapons]
-					'''
-			}
-
 			BottledRaft: {
 				DisplayName: Bottled Raft
 				Tooltip:
@@ -220,9 +116,52 @@ Mods: {
 				Tooltip:
 					'''
 					+15% melee damage
-					While holding Briny Baron, gain another +15% melee damage and melee attack speed
-					Increases Briny Baron's max tide to 10; each tide stack grants +1% melee damage and melee attack speed
-					Gain 2 tide every 6 seconds; full tide grants +10 defense, 10% damage reduction, and +30% melee crit
+					Increases Briny Baron's max tide to 10
+					Each tide stack grants +1% melee damage and attack speed
+					Gain 2 tide every 6 seconds
+					Full tide grants +10 defense, 10% DR, and 30% melee crit
+					'''
+			}
+
+			OceanHormone: {
+				DisplayName: Ocean Hormone
+				Tooltip:
+					'''
+					-10% generic critical strike chance and +20% melee attack speed
+					Grants the Laudanum effect
+					During Adrenaline, Briny Baron use time and animation are reduced by 12 frames
+					'''
+			}
+
+			TideWiseHat: {
+				DisplayName: Tide Wise Hat
+				Tooltip:
+					'''
+					+50 maximum mana and +15% melee damage
+					Each tide stack grants 1% melee critical strike chance
+					Tide clearing and non-boss decay take twice as long
+					Melee critical strikes have a 1% chance to grant 1 tide
+					The finisher consumes all mana to empower every strike
+					'''
+			}
+
+			AbyssalBastion: {
+				DisplayName: Abyssal Bastion
+				Tooltip:
+					'''
+					+6 defense, 6% damage reduction, and knockback immunity
+					Briny Baron right-click dash speed ×1.25; cooldown reduced to 2 seconds
+					A right-click hit grants a 100-health bubble shield
+					While shielded, gain 25 defense and 25% damage reduction
+					'''
+			}
+
+			TideRadar: {
+				DisplayName: Tide Radar
+				Tooltip:
+					'''
+					Grants Briny Baron's Quick Slash passive while the weapon is in your inventory
+					The passive functions exactly as it does while holding Briny Baron
 					'''
 			}
 
@@ -230,19 +169,31 @@ Mods: {
 				DisplayName: Drinking Fountain
 				Tooltip:
 					'''
-					Blade hits spawn a healing water orb at the impact point
-					When at full health, the orb instead homes in on enemies and deals damage
-					[c/7F8FA6:The water orb counts as melee damage and benefits from tide bonuses]
+					Briny Baron hits create a water bubble
+					At full life it seeks enemies for melee damage; otherwise it returns to heal you
 					'''
 			}
 
-			AdrenalineInjector: {
-				DisplayName: Adrenaline Injector
+			BaronHelix: {
+				DisplayName: Baron Helix
 				Tooltip:
 					'''
-					Blade hits stack adrenaline, boosting damage and attack speed (up to 18 stacks)
-					Taking any damage instantly clears all stacks, and that hit deals additional damage scaling with lost stacks
-					[c/7F8FA6:Higher stacks mean higher risk — best for aggressive, uninterrupted offense]
+					+10% melee damage and +10% melee attack speed
+					Briny Baron right-click hits release 3 smaller Jazz Typhoons
+					They orbit the target in three elliptical loops, then home in slowly
+					Each Jazz Typhoon deals 30% of the right-click dash damage
+					'''
+			}
+
+			VortexEye: {
+				DisplayName: Vortex Eye
+				Tooltip:
+					'''
+					+10% melee damage, +10% melee attack speed, and +15% movement speed
+					Replaces Briny Baron's right click with a vortex teleport dash
+					Open a portal at the cursor, exit cardinally, and cut back along the path
+					A large water tornado forms at the center of the return path
+					Cooldown: 6 seconds
 					'''
 			}
 		}
@@ -256,6 +207,7 @@ Mods: {
 			BrinyBaron: {
 				BBSwing_Wave.DisplayName: Tidal Wave Slash
 				BrinyBaron_HomingLightOrb.DisplayName: Tidal Homing Light Orb
+				BBDrinkingFountainOrb.DisplayName: Drinking Fountain Water Bubble
 				BBSwing_INV.DisplayName: Giant Slash Hitbox
 				BBSwing_Slash.DisplayName: Tidal Slash
 				BrinyBaron_LeftClick_Swing.DisplayName: Baron Combo Slash
@@ -263,22 +215,18 @@ Mods: {
 				BrinyBaron_TornadoBolt.DisplayName: Baron Vortex Caller
 				BrinyBaron_TornadoWaterExplosion.DisplayName: Baron Water Burst
 				BrinyBaron_DashWaterPillar.DisplayName: Baron Dash Water Pillar
+				BrinyBaron_JazzTyphoon.DisplayName: Jazz Typhoon
 				BrinyBaron_SkillDashTornado_BladeDash.DisplayName: Blade Dash
-				BrinyBaron_SkillSpinRush_SpinBlade.DisplayName: Spiral Cleave
 				BrinyBaron_SkillSlashDash_SlashDash.DisplayName: Shield-Surge Cleave
 				Z_BrinyBaron_SkillSuperCharge_SuperDash.DisplayName: Tidal Jail Execution
+				BrinyBaron_UltimateAzureRiftBeam.DisplayName: Tidal Sky Rift
 				BBSD_Star.DisplayName: Final Tide Star
 				BBSD_Final_INV.DisplayName: Final Tide Brand
-				SurgeChainWaterBurst.DisplayName: Surge Chain Water Burst
-				BrinyBaron_HomingBubble.DisplayName: Briny Baron Homing Bubble
-				BrinyBaron_Tornado.DisplayName: Briny Baron Tornado
 				BrinyBaron_WaterStream.DisplayName: Briny Baron Water Stream
 				BrinyBaron_SeafoamBlade.DisplayName: Tidal Seafoam Blade
 				BrinyBaron_SeafoamExplosion.DisplayName: Tidal Seafoam Explosion
 				BrinyBaron_SeaSpirit.DisplayName: Sea Spirit
 			}
-
-			BBDrinkingFountainOrb.DisplayName: Drinking Fountain Orb
 		}
 
 		Cooldowns: {

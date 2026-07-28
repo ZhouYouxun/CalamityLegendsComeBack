@@ -1128,60 +1128,31 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             if (!rightSpinActive)
             {
                 int growthStage = CurrentGrowthStage;
-                if (growthStage > 1 && onHitSpawnsCount < 3)
+                if (growthStage >= 4 && onHitSpawnsCount < 3)
                 {
-                    bool spawnedSomething = false;
-
-                    SpawnTrueMeleeTyphoon(target);
-                    spawnedSomething = true;
-
-                    if (growthStage >= 4)
+                    // Keep the late-game sea-spirit follow-up, but remove the
+                    // old true-melee tornado that enhanced sword hits created.
+                    for (int i = 0; i < 8; i++)
                     {
-                        // Release a burst of 8 Sea Spirits with sin-wave homing on melee hits
-                        for (int i = 0; i < 8; i++)
-                        {
-                            float angle = Main.rand.NextFloat(MathHelper.TwoPi);
-                            float speed = Main.rand.NextFloat(8f, 12f);
-                            Vector2 velocity = angle.ToRotationVector2() * speed;
+                        float angle = Main.rand.NextFloat(MathHelper.TwoPi);
+                        float speed = Main.rand.NextFloat(8f, 12f);
+                        Vector2 velocity = angle.ToRotationVector2() * speed;
 
-                            Projectile.NewProjectile(
-                                Projectile.GetSource_FromThis(),
-                                target.Center,
-                                velocity,
-                                ModContent.ProjectileType<BrinyBaron_SeaSpirit>(),
-                                Math.Max(1, (int)(Projectile.damage * 0.35f)),
-                                Projectile.knockBack * 0.3f,
-                                Projectile.owner,
-                                5f, // ai[0] = 5f: Stage 4/5 melee-spawned
-                                1f  // ai[1] = 1f: enable sin wave movement
-                            );
-                        }
+                        Projectile.NewProjectile(
+                            Projectile.GetSource_FromThis(),
+                            target.Center,
+                            velocity,
+                            ModContent.ProjectileType<BrinyBaron_SeaSpirit>(),
+                            Math.Max(1, (int)(Projectile.damage * 0.35f)),
+                            Projectile.knockBack * 0.3f,
+                            Projectile.owner,
+                            5f,
+                            1f);
                     }
 
-                    if (spawnedSomething)
-                    {
-                        onHitSpawnsCount++;
-                    }
+                    onHitSpawnsCount++;
                 }
             }
-        }
-
-        private void SpawnTrueMeleeTyphoon(NPC target)
-        {
-            if (Main.myPlayer != Projectile.owner)
-                return;
-
-            if (Owner.ownedProjectileCounts[ModContent.ProjectileType<BrinySpout>()] != 0)
-                return;
-
-            Projectile.NewProjectile(
-                Owner.GetSource_ItemUse(Owner.HeldItem),
-                target.Center,
-                Vector2.Zero,
-                ModContent.ProjectileType<BrinyTyphoonBubble>(),
-                CurrentProjectileDamage(),
-                Owner.HeldItem.knockBack,
-                Owner.whoAmI);
         }
 
         private void SyncCurrentWeaponDamage()
@@ -1334,6 +1305,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 float swooshRotation = GetSwooshRotation();
                 float swooshAlpha = fadeIn * (rightSpinActive ? 0.68f : 0.42f);
 
+                // VerticalSmearLarge is an emission texture with a dark source background.
+                // Keep its glow isolated in additive blending so the background is never drawn.
+                Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
                 Main.EntitySpriteDraw(
                     swoosh.Value,
                     swooshDrawPosition,
@@ -1343,6 +1317,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     swoosh.Size() * 0.5f,
                     swooshScaleVector,
                     SpriteEffects.None);
+                Main.spriteBatch.ExitShaderRegion();
             }
 
             for (int i = 0; i < 18; i++)
