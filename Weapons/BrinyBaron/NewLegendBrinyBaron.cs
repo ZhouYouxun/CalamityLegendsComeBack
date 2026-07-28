@@ -55,7 +55,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             {
                 BBRightClickMode rightClickMode = player.GetModPlayer<BBAccessoryPlayer>().RightClickMode;
                 bool usesDashBody = rightClickMode == BBRightClickMode.DefaultShuriken;
-                bool usesAccessoryCooldown = usesDashBody || rightClickMode == BBRightClickMode.VortexEye;
+                BrinyBaronRightClickDashCooldownPlayer dashCooldown = player.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>();
+                BrinyBaronVortexEyeTeleportPlayer vortexTeleport = player.GetModPlayer<BrinyBaronVortexEyeTeleportPlayer>();
 
                 if (usesDashBody && HasActiveRightClickDash(player))
                     return false;
@@ -69,7 +70,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
                     activeLeftSwing.Kill();
                 }
 
-                if (usesAccessoryCooldown && !player.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>().CanUseDash)
+                // Vortex Eye deliberately remains usable during its cooldown when it has a
+                // stored return point. Every later right click swaps the two endpoints.
+                if (usesDashBody && !dashCooldown.CanUseDash)
+                    return false;
+
+                if (rightClickMode == BBRightClickMode.VortexEye && !dashCooldown.CanUseDash && !vortexTeleport.CanReturn)
                     return false;
 
                 Item.useTime = 18;
@@ -116,6 +122,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
 
                 if (rightClickMode == BBRightClickMode.VortexEye)
                 {
+                    BrinyBaronRightClickDashCooldownPlayer dashCooldown = player.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>();
+                    bool returnToAnchor = dashCooldown.IsCoolingDown && player.GetModPlayer<BrinyBaronVortexEyeTeleportPlayer>().CanReturn;
                     Projectile.NewProjectile(
                         source,
                         player.MountedCenter,
@@ -123,8 +131,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
                         ModContent.ProjectileType<BrinyBaron_VortexEyeDash>(),
                         rightClickDamage,
                         knockback,
-                        player.whoAmI);
-                    player.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>().StartCooldown(BB_Balance.VortexEyeCooldown);
+                        player.whoAmI,
+                        returnToAnchor ? 1f : 0f);
+
+                    if (!returnToAnchor)
+                        dashCooldown.StartCooldown(BB_Balance.VortexEyeCooldown);
                     return false;
                 }
 
@@ -159,9 +170,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
 
             BBRightClickMode rightClickMode = player.GetModPlayer<BBAccessoryPlayer>().RightClickMode;
             bool usesDashBody = rightClickMode == BBRightClickMode.DefaultShuriken;
-            bool usesAccessoryCooldown = usesDashBody || rightClickMode == BBRightClickMode.VortexEye;
+            BrinyBaronRightClickDashCooldownPlayer dashCooldown = player.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>();
+            bool vortexCanSwap = rightClickMode == BBRightClickMode.VortexEye && player.GetModPlayer<BrinyBaronVortexEyeTeleportPlayer>().CanReturn;
             return (!usesDashBody || !HasActiveRightClickDash(player)) &&
-                   (!usesAccessoryCooldown || player.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>().CanUseDash);
+                   (!usesDashBody || dashCooldown.CanUseDash) &&
+                   (rightClickMode != BBRightClickMode.VortexEye || dashCooldown.CanUseDash || vortexCanSwap);
         }
 
         public override void UseStyle(Player player, Rectangle heldItemFrame)
@@ -253,33 +266,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
 
         public override void AddRecipes()
         {
-        }
-
-        private void ExecuteVortexEyeDash(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 direction, int damage, float knockback)
-        {
-            direction = Math.Abs(direction.X) >= Math.Abs(direction.Y)
-                ? new Vector2(Math.Sign(direction.X == 0f ? player.direction : direction.X), 0f)
-                : new Vector2(0f, Math.Sign(direction.Y == 0f ? -1f : direction.Y));
-            Vector2 destination = Main.MouseWorld;
-            Vector2 topLeft = destination - player.Size * 0.5f;
-            if (Collision.SolidCollision(topLeft, player.width, player.height))
-                destination = player.Center + direction * 240f;
-
-            player.Center = destination;
-            player.velocity = Vector2.Zero;
-            player.ChangeDir(direction.X >= 0f ? 1 : -1);
-
-            SoundEngine.PlaySound(SoundID.Item6 with { Volume = 0.75f, Pitch = 0.18f }, player.Center);
-            Projectile.NewProjectile(
-                source,
-                player.MountedCenter,
-                direction,
-                ModContent.ProjectileType<BrinyBaron_SkillSlashDash_SlashDash>(),
-                damage,
-                knockback,
-                player.whoAmI,
-                0f,
-                player.direction);
         }
 
         public override void ModifyWeaponDamage(Player player, ref StatModifier damage)

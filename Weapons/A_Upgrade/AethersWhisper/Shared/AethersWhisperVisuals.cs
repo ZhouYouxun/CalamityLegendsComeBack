@@ -47,9 +47,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.Shared
         /// <summary>硬光方块能量碎片（脉冲步枪/高斯都用它做火花）。</summary>
         public const string GlowSquareTex = "CalamityMod/Particles/GlowSquareFading";
         public const string DualTrailTex = "CalamityMod/Particles/DualTrail";
-        // 星芒核心贴图（本项目 KsTexture，512²，BF 同款）。
+        // 星芒核心贴图（混用：灾厄 SimpleStar/HalfStar 十字长臂 + 本项目 KsTexture 512² 星）。
         public static Asset<Texture2D> CoreStar => ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/star_06");
         public static Asset<Texture2D> CoreFlower => ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/star_08");
+        public static Asset<Texture2D> CoreSimpleStar => ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/SimpleStar");
+        public static Asset<Texture2D> CoreHalfStar => ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar");
+        public static Asset<Texture2D> CoreOrbitStar => ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/star_04");
 
         // ===== 批次管理 =====
         public static void BeginAdditive(SpriteBatch sb)
@@ -121,37 +124,57 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.Shared
         {
             if (Main.dedServ) return;
             Texture2D bloom = BloomCircle.Value;
-            Texture2D star = CoreStar.Value;
+            Texture2D simpleStar = CoreSimpleStar.Value;
+            Texture2D halfStar = CoreHalfStar.Value;
+            Texture2D orbit = CoreOrbitStar.Value;
             Texture2D flower = CoreFlower.Value;
             Vector2 core = worldCenter - Main.screenPosition;
             float charge = MathHelper.Clamp(power, 0f, 1f);
             float time = Main.GlobalTimeWrappedHourly;
 
-            Color theme = Lerp(purpleMix);
-            Color white = ToWhite(theme, 0.6f);
+            // 紫为主、青点缀（用户要求整体偏紫）。
+            Color purple = AetherPurple;
+            Color cyan = ShimmerCyan;
+            Color starWhite = ToWhite(purple, 0.55f);
 
             // 3 层底光
             for (int i = 0; i < 3; i++)
             {
-                float iMult = 1f - 0.15f * i;
                 float rot = time * 0.4f * (i % 2 == 0 ? 1f : -1f);
-                Vector2 scale = new Vector2(0.16f, 0.15f) * (0.9f + charge * 0.9f) * iMult;
-                sb.Draw(bloom, core, null, Color.Lerp(theme, white, charge) with { A = 0 } * ((0.16f + charge * 0.24f) * (1f - 0.2f * i)),
+                Vector2 scale = new Vector2(0.15f, 0.14f) * (0.9f + charge * 0.9f) * (1f - 0.15f * i);
+                sb.Draw(bloom, core, null, ToWhite(purple, charge * 0.5f) with { A = 0 } * ((0.15f + charge * 0.24f) * (1f - 0.2f * i)),
                     rot, bloom.Size() * 0.5f, scale, SpriteEffects.None, 0f);
             }
-            // star_06 竖直脉动自转
+
+            // SimpleStar 十字星（画两次、相差 45° = 八芒），紫白、随蓄力放大自转（SHPC 同款）。
+            float starRot = aimDir.ToRotation() + time * 0.5f + phaseKick;
+            float starScale = 0.035f + charge * 0.06f;
+            for (int s = 0; s < 2; s++)
+                sb.Draw(simpleStar, core, null, starWhite with { A = 0 } * (0.34f + charge * 0.42f),
+                    starRot + s * MathHelper.PiOver4, simpleStar.Size() * 0.5f,
+                    new Vector2(0.32f + charge * 0.12f, 1.2f + charge * 0.5f) * starScale, SpriteEffects.None, 0f);
+
+            // HalfStar 长臂（十字两条，青白），比十字星慢一点自转，制造干涉。
+            float rayScale = 0.045f + charge * 0.05f;
+            for (int s = 0; s < 2; s++)
+                sb.Draw(halfStar, core, null, ToWhite(cyan, 0.3f) with { A = 0 } * (0.22f + charge * 0.3f),
+                    starRot * 0.6f + s * MathHelper.PiOver2, halfStar.Size() * 0.5f,
+                    new Vector2(0.14f, 1f) * rayScale, SpriteEffects.None, 0f);
+
+            // 一圈绕核心公转的小星星（KsTexture star_04，512²），紫——即「一堆小星星旋转发光」。
+            int n = 5;
+            float orbitR = (13f + charge * 12f);
+            for (int i = 0; i < n; i++)
             {
-                float sine = MathHelper.Lerp((float)Math.Sin(time * 20f / MathHelper.Pi), 0.5f, 0.6f);
-                float rot = aimDir.ToRotation() + MathHelper.PiOver4 + phaseKick + charge * time * 0.5f;
-                Vector2 scale = new Vector2(0.0033f, 0.0186f * sine) * (0.85f + charge * 0.75f);
-                sb.Draw(star, core, null, white with { A = 0 } * (0.28f + charge * 0.34f), rot, star.Size() * 0.5f, scale, SpriteEffects.None, 0f);
+                float a = time * 1.3f + MathHelper.TwoPi * i / n + phaseKick;
+                Vector2 p = core + a.ToRotationVector2() * orbitR;
+                sb.Draw(orbit, p, null, ToWhite(purple, 0.2f) with { A = 0 } * (0.3f + charge * 0.35f),
+                    a * 2f, orbit.Size() * 0.5f, (0.006f + charge * 0.004f), SpriteEffects.None, 0f);
             }
-            // star_08 慢自转
-            {
-                float rot = time * 0.85f + MathHelper.PiOver2;
-                float scale = (0.7f + charge * 0.5f) * 0.25f * 0.6f;
-                sb.Draw(flower, core, null, ToWhite(theme, 0.55f) with { A = 0 } * (0.3f + charge * 0.24f), rot, flower.Size() * 0.5f, scale, SpriteEffects.None, 0f);
-            }
+
+            // star_08 花瓣慢自转垫底
+            sb.Draw(flower, core, null, ToWhite(purple, 0.35f) with { A = 0 } * (0.24f + charge * 0.22f),
+                time * 0.85f + MathHelper.PiOver2, flower.Size() * 0.5f, (0.7f + charge * 0.5f) * 0.15f, SpriteEffects.None, 0f);
         }
     }
 }

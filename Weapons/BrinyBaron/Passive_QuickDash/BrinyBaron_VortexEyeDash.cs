@@ -1,6 +1,4 @@
 using System.IO;
-using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken;
-using CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.Audio;
@@ -10,39 +8,27 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash
 {
-    // A cardinal portal dash: leave the cursor portal, cut while exiting it, then
-    // return through the same line. Its visible movement deliberately reuses the
-    // ordinary right-click dash language so the two variants never drift apart.
-    internal class BrinyBaron_VortexEyeDash : ModProjectile
+    // A single Vortex Eye activation. It teleports immediately; the return endpoint
+    // is retained by BrinyBaronVortexEyeTeleportPlayer until the cooldown ends.
+    internal sealed class BrinyBaron_VortexEyeDash : ModProjectile
     {
-        private const int ExitFrames = 12;
-        private const int ReturnFrames = 12;
-        private const float ExitDistance = 300f;
-
         private Vector2 origin;
-        private Vector2 portal;
-        private Vector2 exit;
-        private int state;
-        private int timer;
+        private Vector2 destination;
         private bool initialized;
-        private bool spawnedExitSlash;
-        private bool spawnedReturnSlash;
-        private bool spawnedTornado;
 
         private Player Owner => Main.player[Projectile.owner];
-        private Vector2 Direction => Projectile.velocity.SafeNormalize(Vector2.UnitX);
+        private bool IsReturnTeleport => Projectile.ai[0] == 1f;
 
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         public override void SetDefaults()
         {
-            Projectile.width = 40;
-            Projectile.height = 40;
+            Projectile.width = Projectile.height = 2;
             Projectile.friendly = false;
             Projectile.hostile = false;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
-            Projectile.timeLeft = ExitFrames + ReturnFrames + 20;
+            Projectile.timeLeft = 10;
             Projectile.DamageType = DamageClass.Melee;
             Projectile.netImportant = true;
         }
@@ -52,27 +38,15 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash
         public override void SendExtraAI(BinaryWriter writer)
         {
             writer.WriteVector2(origin);
-            writer.WriteVector2(portal);
-            writer.WriteVector2(exit);
-            writer.Write((byte)state);
-            writer.Write((byte)timer);
+            writer.WriteVector2(destination);
             writer.Write(initialized);
-            writer.Write(spawnedExitSlash);
-            writer.Write(spawnedReturnSlash);
-            writer.Write(spawnedTornado);
         }
 
         public override void ReceiveExtraAI(BinaryReader reader)
         {
             origin = reader.ReadVector2();
-            portal = reader.ReadVector2();
-            exit = reader.ReadVector2();
-            state = reader.ReadByte();
-            timer = reader.ReadByte();
+            destination = reader.ReadVector2();
             initialized = reader.ReadBoolean();
-            spawnedExitSlash = reader.ReadBoolean();
-            spawnedReturnSlash = reader.ReadBoolean();
-            spawnedTornado = reader.ReadBoolean();
         }
 
         public override void AI()
@@ -87,56 +61,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash
             if (!initialized)
                 Initialize(owner);
 
-            owner.immune = true;
-            owner.immuneTime = 2;
-            owner.noKnockback = true;
-            owner.velocity = Vector2.Zero;
-            owner.ChangeDir(Direction.X == 0f ? owner.direction : System.Math.Sign(Direction.X));
-
-            if (state == 0)
-            {
-                timer++;
-                float progress = Utils.GetLerpValue(0f, ExitFrames, timer, true);
-                Vector2 previousCenter = owner.Center;
-                owner.Center = Vector2.Lerp(portal, exit, SmoothStep(progress));
-                Projectile.velocity = owner.Center - previousCenter;
-                if (!spawnedExitSlash)
-                {
-                    SpawnDashSlash(owner, Direction);
-                    BrinyBaron_SkillDashTornado_FlightEffects.SpawnDashStartEffects(Projectile, Direction);
-                    spawnedExitSlash = true;
-                }
-                BrinyBaron_SkillDashTornado_FlightEffects.SpawnDashFlightEffects(Projectile, Direction, Direction.ToRotation() + MathHelper.PiOver4, timer * 0.24f, timer);
-
-                if (timer >= ExitFrames)
-                {
-                    state = 1;
-                    timer = 0;
-                    Projectile.netUpdate = true;
-                }
-            }
-            else
-            {
-                timer++;
-                float progress = Utils.GetLerpValue(0f, ReturnFrames, timer, true);
-                Vector2 previousCenter = owner.Center;
-                owner.Center = Vector2.Lerp(exit, origin, SmoothStep(progress));
-                Projectile.velocity = owner.Center - previousCenter;
-                if (!spawnedReturnSlash)
-                {
-                    SpawnDashSlash(owner, -Direction);
-                    spawnedReturnSlash = true;
-                }
-                BrinyBaron_SkillDashTornado_FlightEffects.SpawnReboundFlightEffects(Projectile, Direction, Direction.ToRotation() + MathHelper.PiOver4, timer * 0.24f, timer);
-
-                if (timer >= ReturnFrames)
-                {
-                    if (!spawnedTornado)
-                        SpawnReturnTornado(owner);
-                    Projectile.Kill();
-                }
-            }
-
             Projectile.Center = owner.Center;
         }
 
@@ -144,26 +68,54 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash
         {
             initialized = true;
             origin = owner.Center;
-            portal = Main.MouseWorld;
-            Vector2 portalTopLeft = portal - owner.Size * 0.5f;
-            if (Collision.SolidCollision(portalTopLeft, owner.width, owner.height))
-                portal = origin + Direction * 240f;
+            BrinyBaronVortexEyeTeleportPlayer vortexTeleport = owner.GetModPlayer<BrinyBaronVortexEyeTeleportPlayer>();
 
-            exit = portal + Direction * ExitDistance;
-            Vector2 exitTopLeft = exit - owner.Size * 0.5f;
-            if (Collision.SolidCollision(exitTopLeft, owner.width, owner.height))
-                exit = portal + Direction * 160f;
+            if (IsReturnTeleport && vortexTeleport.CanReturn)
+                destination = vortexTeleport.UseReturnAnchor(origin);
+            else
+            {
+                destination = FindSafeDestination(owner, Main.MouseWorld);
+                vortexTeleport.BeginCycle(origin);
+            }
 
-            owner.Center = portal;
+            Vector2 direction = (destination - origin).SafeNormalize(Vector2.UnitX * owner.direction);
+            TeleportOwner(owner, destination, direction);
+
+            if (Main.myPlayer == Projectile.owner)
+            {
+                BrinyBaronVortexEyeTeleportEffects.SpawnDeparture(origin, direction);
+                BrinyBaronVortexEyeTeleportEffects.SpawnArrival(destination, direction);
+                SpawnPathCutters(origin, destination, direction);
+                SpawnTwinSlash(owner, direction);
+            }
+
             Projectile.netUpdate = true;
-            SoundEngine.PlaySound(SoundID.Item6 with { Volume = 0.75f, Pitch = 0.18f }, portal);
         }
 
-        private void SpawnDashSlash(Player owner, Vector2 direction)
+        private static Vector2 FindSafeDestination(Player owner, Vector2 desiredDestination)
         {
-            if (Main.myPlayer != Projectile.owner)
-                return;
+            Vector2 topLeft = desiredDestination - owner.Size * 0.5f;
+            if (!Collision.SolidCollision(topLeft, owner.width, owner.height))
+                return desiredDestination;
 
+            Vector2 fallbackDirection = (desiredDestination - owner.Center).SafeNormalize(Vector2.UnitX * owner.direction);
+            return owner.Center + fallbackDirection * 240f;
+        }
+
+        private static void TeleportOwner(Player owner, Vector2 target, Vector2 direction)
+        {
+            owner.Center = target;
+            owner.velocity = Vector2.Zero;
+            owner.fallStart = (int)(owner.position.Y / 16f);
+            if (direction.X != 0f)
+                owner.ChangeDir(System.Math.Sign(direction.X));
+
+            SoundEngine.PlaySound(SoundID.Item6 with { Volume = 0.72f, Pitch = 0.2f }, target);
+        }
+
+        private void SpawnTwinSlash(Player owner, Vector2 direction)
+        {
+            // This holdout automatically chains its first slash into the second one.
             Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
                 owner.MountedCenter,
@@ -176,36 +128,32 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash
                 direction.X < 0f ? -1f : 1f);
         }
 
-        private void SpawnReturnTornado(Player owner)
+        private void SpawnPathCutters(Vector2 start, Vector2 end, Vector2 direction)
         {
-            spawnedTornado = true;
-            if (Main.myPlayer != Projectile.owner)
-                return;
+            float distance = Vector2.Distance(start, end);
+            int cutterCount = (int)MathHelper.Clamp(distance / 58f, 5f, 11f);
+            int damage = System.Math.Max(1, (int)(Projectile.damage * 0.28f));
 
-            // One enlarged water tornado sits in the middle of the return cut.
-            SpawnTornado(Vector2.Lerp(origin, exit, 0.5f));
+            for (int i = 0; i < cutterCount; i++)
+            {
+                float completion = (i + 0.25f) / cutterCount;
+                Vector2 position = Vector2.Lerp(start, end, completion);
+                Vector2 velocity = direction.RotatedBy(Main.rand.NextFloat(-0.09f, 0.09f)) * Main.rand.NextFloat(19f, 25f);
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    position,
+                    velocity,
+                    ModContent.ProjectileType<BrinyBaron_VortexEyePathCutter>(),
+                    damage,
+                    Projectile.knockBack * 0.25f,
+                    Projectile.owner);
+            }
         }
-
-        private void SpawnTornado(Vector2 position)
-        {
-            int index = Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(),
-                position,
-                Vector2.Zero,
-                ModContent.ProjectileType<CalamityMod.Projectiles.Melee.BrinyTyphoonBubble>(),
-                Projectile.damage,
-                Projectile.knockBack,
-                Projectile.owner);
-
-            if (Main.projectile.IndexInRange(index))
-                Main.projectile[index].scale = 2f;
-        }
-
-        private static float SmoothStep(float value) => value * value * (3f - 2f * value);
     }
 
-    // The portal is visible while the weapon is held. It deliberately has no hitbox.
-    internal class BrinyBaron_VortexEyePortalPreview : ModProjectile
+    // The portal remains a quiet aiming marker. The actual teleport effect is much larger
+    // and deliberately appears only once the player commits with right click.
+    internal sealed class BrinyBaron_VortexEyePortalPreview : ModProjectile
     {
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 

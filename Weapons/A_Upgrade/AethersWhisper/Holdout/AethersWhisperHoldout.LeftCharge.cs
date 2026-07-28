@@ -122,7 +122,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.Holdout
             float charge = AethersWhisperBalance.ChargeProgress(chargeTicks);
             bool full = IsFullCharge;
             Vector2 aim = AimDirection;
-            float speed = AethersWhisperBalance.ChargedShotSpeed(charge);
+            float speed = AethersWhisperBalance.ChargedShotSpeed(charge) * AethersWhisperBalance.ChargedShotSpeedMult;
             int weaponDamage = Owner.GetWeaponDamage(Owner.HeldItem);
             int damage = Math.Max(1, (int)(weaponDamage * AethersWhisperBalance.ChargeDamageMultiplier(charge)));
 
@@ -139,12 +139,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.Holdout
                 }
             }
 
-            // 后坐 + 姿态 + 星芒相位推进
-            recoilOffset = full ? 22f : 10f + charge * 6f;
+            // 只保留枪体后坐「动画」，不再推动玩家（无后坐力）；满蓄仍保留屏震表现重量。
+            recoilOffset = full ? 18f : 8f + charge * 5f;
             recoilTimer = AethersWhisperBalance.FullChargeRecoilTicks;
             muzzleFlashTimer = full ? 14 : 9;
             starPhaseKick = (starPhaseKick + MathHelper.PiOver4) % MathHelper.TwoPi;
-            Owner.velocity -= aim * (full ? AethersWhisperBalance.FullChargeRecoilSpeed : 1.4f + charge * 1.8f);
 
             if (full)
             {

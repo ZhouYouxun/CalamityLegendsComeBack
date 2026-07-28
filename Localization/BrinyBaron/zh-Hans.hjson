@@ -190,9 +190,10 @@ Mods: {
 				Tooltip:
 					'''
 					近战伤害 +10%，近战攻速 +10%，移速 +15%
-					将海爵右键改为漩涡传送冲刺
-					在鼠标处开门，沿水平或垂直方向穿出并折返
-					返程路径中央生成一个大型水龙卷
+					将海爵右键改为漩涡传送
+					右键传送至鼠标位置，并发动两次海潮斩击
+					冷却期间再次右键，会折返至上一个传送点
+					每次折返都会在路径上留下快速切割的蓝色光弹
 					冷却时间为 6 秒
 					'''
 			}
@@ -202,6 +203,8 @@ Mods: {
 			BBSD_VirtualPROJ.DisplayName: 海王虚幻弹幕
 			BrinyBaron_VortexEyePortalPreview.DisplayName: 漩涡之眼传送预览
 			BrinyBaron_VortexEyeDash.DisplayName: 漩涡之眼冲刺
+			BrinyBaron_VortexEyePhaseResidue.DisplayName: 漩涡之眼相位残影
+			BrinyBaron_VortexEyePathCutter.DisplayName: 漩涡之眼路径切割
 			BrinyBaron_DashOceanSwirl.DisplayName: 海澜涡流
 
 			BrinyBaron: {

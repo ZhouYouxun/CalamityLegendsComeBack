@@ -48,6 +48,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.LeftClick
         private bool smearSpawned;
         private Particle voidSmear;
         private readonly List<Vector2> tipHistory = new();
+        private readonly List<Vector2> bladeCenterHistory = new();
+        private readonly List<float> bladeRotationHistory = new();
 
         // 单段挥砍"先快后慢"缓动（ease-out）：起手瞬间最快，随后减速收尾；每段独立，逐段重复
         private float SwingEase => 1f - MathF.Pow(1f - SwingCompletion, 2.6f);
@@ -154,11 +156,26 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.LeftClick
                     tipHistory.Insert(0, tip);
                     if (tipHistory.Count > 12)
                         tipHistory.RemoveAt(tipHistory.Count - 1);
+                    bladeCenterHistory.Insert(0, Projectile.Center);
+                    bladeRotationHistory.Insert(0, radial.ToRotation() + MathHelper.PiOver2 + MathHelper.PiOver4);
+                    if (bladeCenterHistory.Count > 10)
+                    {
+                        bladeCenterHistory.RemoveAt(bladeCenterHistory.Count - 1);
+                        bladeRotationHistory.RemoveAt(bladeRotationHistory.Count - 1);
+                    }
                     UpdateVoidSmear(player);
                     SpawnSwingVoidEffects(player);
                 }
-                else if (tipHistory.Count > 0)
-                    tipHistory.RemoveAt(tipHistory.Count - 1);
+                else
+                {
+                    if (tipHistory.Count > 0)
+                        tipHistory.RemoveAt(tipHistory.Count - 1);
+                    if (bladeCenterHistory.Count > 0)
+                    {
+                        bladeCenterHistory.RemoveAt(bladeCenterHistory.Count - 1);
+                        bladeRotationHistory.RemoveAt(bladeRotationHistory.Count - 1);
+                    }
+                }
             }
         }
 
@@ -310,9 +327,26 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.LeftClick
             float SpearRotation(Vector2 center) =>
                 (center - armCenter).SafeNormalize(Vector2.UnitX).ToRotation() + MathHelper.PiOver2 + MathHelper.PiOver4;
 
+            // 直接绘制的大型刀盘不依赖粒子存续：武器一转动就能稳定看见完整黑绿斩盘。
+            if (inSwing)
+                DrawBladeDisc(armCenter, dash);
+
             // 矛尖黑色 shader 残像（吞光的黑矛尖）——由共享 Visuals 渲染，宽而明显，第三段更宽带扭曲
             if (inSwing && tipHistory.Count >= 2)
                 UmbralNadirVisuals.RenderTipTrail(tipHistory, dash ? 46f : 32f, Projectile.scale, dash);
+
+            // 武器本体的逐帧旋转残像；不再只有矛尖轨迹，整把武器的转动都能被读出来。
+            for (int i = bladeCenterHistory.Count - 1; i >= 1; i--)
+            {
+                float history = 1f - i / (float)bladeCenterHistory.Count;
+                float fade = history * history * (dash ? 0.42f : 0.3f);
+                Vector2 afterPos = bladeCenterHistory[i] - Main.screenPosition;
+                float afterRot = bladeRotationHistory[i];
+                Main.EntitySpriteDraw(tex, afterPos, null, Color.Black * fade, afterRot, origin,
+                    Projectile.scale * 1.08f, SpriteEffects.None, 0);
+                Main.EntitySpriteDraw(tex, afterPos, null, UmbralNadirPalette.MeldGreenDeep with { A = 0 } * (fade * 0.28f),
+                    afterRot, origin, Projectile.scale, SpriteEffects.None, 0);
+            }
 
             // 本体：纯黑剪影垫底（负光）+ 主体
             Vector2 drawPos = Projectile.Center - Main.screenPosition;
@@ -322,6 +356,31 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.LeftClick
 
             player.heldProj = Projectile.whoAmI;
             return false;
+        }
+
+        private void DrawBladeDisc(Vector2 pivot, bool dash)
+        {
+            Texture2D fullSmear = ModContent.Request<Texture2D>("CalamityMod/Particles/CircularSmearSmokey").Value;
+            Texture2D halfSmear = ModContent.Request<Texture2D>("CalamityMod/Particles/SemiCircularSmearSwipe").Value;
+            Vector2 bladeDir = (Projectile.Center - pivot).SafeNormalize(Vector2.UnitX);
+            Vector2 drawPos = pivot - Main.screenPosition;
+            float reach = (dash ? 122f : 148f) * Projectile.scale;
+            float fullScale = reach * 2f / Math.Max(fullSmear.Width, fullSmear.Height);
+            float halfScale = reach * 2.12f / Math.Max(halfSmear.Width, halfSmear.Height);
+            float rotation = bladeDir.ToRotation() + MathHelper.PiOver2;
+            float strength = MathHelper.Clamp(0.45f + SwingSpeedFactor * 0.75f, 0f, 1f);
+            float pulse = 0.9f + 0.1f * MathF.Sin(Main.GlobalTimeWrappedHourly * 18f + Projectile.identity);
+
+            Main.EntitySpriteDraw(fullSmear, drawPos, null, Color.Black * (0.58f * strength), -rotation * 0.35f,
+                fullSmear.Size() * 0.5f, new Vector2(fullScale * 1.08f, fullScale * 0.9f), SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(fullSmear, drawPos, null,
+                UmbralNadirPalette.MeldGreenDeep with { A = 0 } * (0.3f * strength * pulse), rotation * 0.7f,
+                fullSmear.Size() * 0.5f, fullScale, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(halfSmear, drawPos, null,
+                UmbralNadirPalette.MeldGreen with { A = 0 } * (0.46f * strength), rotation,
+                halfSmear.Size() * 0.5f, new Vector2(halfScale, halfScale * (dash ? 0.72f : 1f)), SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(halfSmear, drawPos, null, Color.Black * (0.42f * strength), rotation + MathHelper.Pi,
+                halfSmear.Size() * 0.5f, new Vector2(halfScale * 0.94f, halfScale), SpriteEffects.None, 0);
         }
     }
 }

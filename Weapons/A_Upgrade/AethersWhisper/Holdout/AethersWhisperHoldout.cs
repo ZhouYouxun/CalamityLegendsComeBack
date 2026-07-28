@@ -20,7 +20,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.Holdout
         public override int AssociatedItemID => ModContent.ItemType<AethersWhisper>();
         public override int IntendedProjectileType => ModContent.ProjectileType<AethersWhisperHoldout>();
 
-        private const float BarrelLength = 56f;
+        private const float BarrelLength = 88f; // 枪口再往前约 2 格（+32px），贴住枪身前端
         private const float IdleOffset = 26f;
 
         // 姿态
@@ -34,10 +34,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.Holdout
         private int lastPulseStep = -1;
         private bool playedFullReady;
 
-        // 右键扫射
+        // 右键散射
         private bool rightActive;
         private int roundTick;
-        private int beamsFiredThisRound;
+        private int scattersFiredThisRound;
         private int rightFlashTimer;
 
         // 星芒相位（每次开火推进，让核心像会转动的能量星）

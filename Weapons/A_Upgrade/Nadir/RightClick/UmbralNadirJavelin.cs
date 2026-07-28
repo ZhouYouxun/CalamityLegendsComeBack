@@ -1,4 +1,5 @@
 using System;
+using CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.General;
 using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Dusts;
@@ -17,7 +18,7 @@ using Terraria.ModLoader;
 namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.RightClick
 {
     /// <summary>
-    /// 冥蚀天底右键投矛（三连之一）。物品贴图（更短小）、高更新次数、低速、直线飞行、不追踪。
+    /// 冥蚀天底右键投矛（三连之一）。物品贴图（更短小）、极高更新次数、直线飞行、不追踪。
     /// 前两发（ai[0]=0/1）飞行时从轨迹后方唤出少量暗影魂针追敌；第三发（ai[0]=2）命中即刻终爆。
     /// 撞墙 / 超时只有无伤害的小型熄灭特效，绝不触发终爆或召唤。
     /// </summary>
@@ -37,10 +38,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.RightClick
         private ref float SoulCount => ref Projectile.localAI[0];
         private ref float FrameTimer => ref Projectile.localAI[1];
         private bool hitEnemy;
+        private Vector2 lastFrameCenter;
 
         public override void SetStaticDefaults()
         {
-            ProjectileID.Sets.TrailCacheLength[Projectile.type] = 12;
+            ProjectileID.Sets.TrailCacheLength[Projectile.type] = 48;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 2;
         }
 
@@ -53,14 +55,17 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.RightClick
             Projectile.timeLeft = 260;
             Projectile.tileCollide = true;
             Projectile.ignoreWater = true;
-            Projectile.extraUpdates = UmbralNadirBalance.JavelinExtraUpdates; // 7 次/帧 → 约旧版 2.4 倍飞速
+            Projectile.extraUpdates = UmbralNadirBalance.JavelinExtraUpdates; // 9 次/帧，高速仍由长缓存保持清晰
             Projectile.scale = 0.85f;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = -1;
         }
 
         public override void OnSpawn(IEntitySource source)
-            => Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
+        {
+            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
+            lastFrameCenter = Projectile.Center - Projectile.velocity * (Projectile.extraUpdates + 1);
+        }
 
         public override void AI()
         {
@@ -72,6 +77,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.RightClick
             {
                 FrameTimer++;
                 SpawnFlightTrail();
+                if (FrameTimer == 2f && Projectile.owner == Main.myPlayer)
+                    SpawnJavelinCurtain();
 
                 // 前两发：沿飞行轨迹后方唤出暗影魂针
                 if (!IsFinisher && Projectile.owner == Main.myPlayer)
@@ -82,9 +89,24 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.RightClick
         private void SpawnFlightTrail()
         {
             Vector2 back = -Projectile.velocity.SafeNormalize(Vector2.UnitX);
-            GeneralParticleHandler.SpawnParticle(new GenericBloom(
-                Projectile.Center + Main.rand.NextVector2Circular(6f, 6f), back * Main.rand.NextFloat(0.2f, 1.1f),
-                Color.Black, Main.rand.NextFloat(0.22f, 0.4f), Main.rand.Next(9, 13), true, false));
+            Vector2 side = back.RotatedBy(MathHelper.PiOver2);
+            Vector2 segment = Projectile.Center - lastFrameCenter;
+            int samples = Math.Clamp((int)MathF.Ceiling(segment.Length() / 12f), 3, 9);
+            for (int i = 1; i <= samples; i++)
+            {
+                float t = i / (float)samples;
+                Vector2 p = Vector2.Lerp(lastFrameCenter, Projectile.Center, t);
+                float weave = MathF.Sin((FrameTimer + t) * 2.4f + Projectile.identity) * 5f;
+                GeneralParticleHandler.SpawnParticle(new GenericBloom(
+                    p + side * weave, back * Main.rand.NextFloat(0.15f, 0.65f),
+                    Color.Black, Main.rand.NextFloat(0.14f, 0.25f), Main.rand.Next(9, 14), true, false));
+                if ((i & 1) == 0)
+                    GeneralParticleHandler.SpawnParticle(new GenericBloom(
+                        p - side * weave * 0.65f, back * 0.2f,
+                        UmbralNadirPalette.MeldGreenDeep with { A = 0 }, Main.rand.NextFloat(0.05f, 0.1f),
+                        Main.rand.Next(7, 11), true, false), false, GeneralDrawLayer.AfterEverything);
+            }
+
             GeneralParticleHandler.SpawnParticle(new CustomSpark(
                 Projectile.Center, back * Main.rand.NextFloat(0.3f, 0.9f), "CalamityMod/Particles/GlowSpark2",
                 false, 16, Main.rand.NextFloat(0.04f, 0.06f), Color.Black, new Vector2(0.6f, 1.3f), false));
@@ -100,6 +122,15 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.RightClick
                 vd.noGravity = true;
                 vd.color = MeldGreen;
             }
+            lastFrameCenter = Projectile.Center;
+        }
+
+        private void SpawnJavelinCurtain()
+        {
+            int curtainDamage = Math.Max(1, (int)(Projectile.damage * UmbralNadirBalance.JavelinCurtainDamageMult));
+            Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, Vector2.Zero,
+                ModContent.ProjectileType<UmbralNadirJavelinCurtain>(), curtainDamage, Projectile.knockBack * 0.55f,
+                Projectile.owner, Projectile.velocity.ToRotation(), IsFinisher ? 1f : 0f);
         }
 
         private void TrySpawnShadowSoul()
@@ -177,11 +208,17 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.RightClick
         private float PrimitiveWidthFunction(float completionRatio, Vector2 vertexPos)
         {
             float arrowheadCutoff = 0.36f;
-            float width = 52f;
+            float width = 58f;
             if (completionRatio <= arrowheadCutoff)
                 width = MathHelper.Lerp(0.03f, width, Utils.GetLerpValue(0f, arrowheadCutoff, completionRatio, true));
             return width;
         }
+
+        private float OuterPrimitiveWidthFunction(float completionRatio, Vector2 vertexPos)
+            => PrimitiveWidthFunction(completionRatio, vertexPos) * 1.65f;
+
+        private float CorePrimitiveWidthFunction(float completionRatio, Vector2 vertexPos)
+            => PrimitiveWidthFunction(completionRatio, vertexPos) * 0.28f;
 
         private Color PrimitiveColorFunction(float completionRatio, Vector2 vertexPos)
         {
@@ -193,18 +230,54 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.RightClick
             return Color.Lerp(startingColor, MeldGreen, MathHelper.SmoothStep(0f, 1f, Utils.GetLerpValue(0f, endFadeRatio, completionRatio, true)));
         }
 
+        private Color OuterPrimitiveColorFunction(float completionRatio, Vector2 vertexPos)
+            => Color.Black * (0.72f * (1f - completionRatio * 0.72f));
+
+        private Color CorePrimitiveColorFunction(float completionRatio, Vector2 vertexPos)
+            => Color.Lerp(Color.White, MeldGreen, completionRatio) with { A = 0 } * (0.62f * (1f - completionRatio));
+
         public override bool PreDraw(ref Color lightColor)
         {
             GameShaders.Misc["CalamityMod:TrailStreak"].SetShaderTexture(
                 ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/SylvestaffStreak"));
-            Vector2 overallOffset = Projectile.Size * 0.5f + Projectile.velocity * 1.4f;
+            Vector2 overallOffset = Projectile.Size * 0.5f + Projectile.velocity * 1.1f;
+            PrimitiveRenderer.RenderTrail(Projectile.oldPos,
+                new PrimitiveSettings(OuterPrimitiveWidthFunction, OuterPrimitiveColorFunction,
+                    (completionRatio, vertexPos) => overallOffset, shader: GameShaders.Misc["CalamityMod:TrailStreak"]), 120);
             PrimitiveRenderer.RenderTrail(Projectile.oldPos,
                 new PrimitiveSettings(PrimitiveWidthFunction, PrimitiveColorFunction,
-                    (completionRatio, vertexPos) => overallOffset, shader: GameShaders.Misc["CalamityMod:TrailStreak"]), 90);
+                    (completionRatio, vertexPos) => overallOffset, shader: GameShaders.Misc["CalamityMod:TrailStreak"]), 120);
+            PrimitiveRenderer.RenderTrail(Projectile.oldPos,
+                new PrimitiveSettings(CorePrimitiveWidthFunction, CorePrimitiveColorFunction,
+                    (completionRatio, vertexPos) => overallOffset, shader: GameShaders.Misc["CalamityMod:TrailStreak"]), 120);
 
             Texture2D texture = ModContent.Request<Texture2D>(Texture).Value;
             Vector2 origin = texture.Size() * 0.5f;
             Vector2 drawPos = Projectile.Center - Main.screenPosition;
+            Texture2D roundSmear = ModContent.Request<Texture2D>("CalamityMod/Particles/CircularSmearSmokey").Value;
+            Texture2D halfSmear = ModContent.Request<Texture2D>("CalamityMod/Particles/SemiCircularSmearSwipe").Value;
+            float smearPulse = 0.78f + 0.22f * MathF.Sin(Main.GlobalTimeWrappedHourly * 22f + Projectile.identity);
+            float smearScale = (IsFinisher ? 0.72f : 0.58f) * Projectile.scale;
+            Main.EntitySpriteDraw(roundSmear, drawPos, null, Color.Black * 0.55f,
+                -Projectile.rotation * 0.7f, roundSmear.Size() * 0.5f,
+                new Vector2(smearScale * 1.45f, smearScale * 0.62f), SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(halfSmear, drawPos, null, MeldGreen with { A = 0 } * (0.48f * smearPulse),
+                Projectile.velocity.ToRotation(), halfSmear.Size() * 0.5f,
+                new Vector2(smearScale * 1.25f, smearScale * 0.78f), SpriteEffects.None, 0);
+
+            // 长缓存中的武器本体残像让 9 次更新/帧读成一次高速贯穿，而不是瞬移。
+            for (int i = 6; i < Projectile.oldPos.Length; i += 7)
+            {
+                if (Projectile.oldPos[i] == Vector2.Zero)
+                    continue;
+                float fade = (1f - i / (float)Projectile.oldPos.Length) * 0.22f;
+                Vector2 echoPos = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
+                Main.EntitySpriteDraw(texture, echoPos, null, Color.Black * fade, Projectile.oldRot[i],
+                    origin, Projectile.scale * 0.94f, SpriteEffects.None, 0);
+                Main.EntitySpriteDraw(texture, echoPos, null, UmbralNadirPalette.MeldGreenDeep with { A = 0 } * (fade * 0.45f),
+                    Projectile.oldRot[i], origin, Projectile.scale * 0.94f, SpriteEffects.None, 0);
+            }
+
             Main.EntitySpriteDraw(texture, drawPos, null, Color.Black * 0.5f, Projectile.rotation, origin, Projectile.scale * 1.08f, SpriteEffects.None, 0);
             Main.EntitySpriteDraw(texture, drawPos, null, lightColor, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0);
             return false;

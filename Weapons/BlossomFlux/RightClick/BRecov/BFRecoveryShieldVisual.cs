@@ -1,7 +1,10 @@
+using System;
 using CalamityMod.Particles;
+using CalamityMod;
 using CalamityLegendsComeBack.UI;
 using Microsoft.Xna.Framework;
 using Terraria;
+using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -106,6 +109,18 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                 opacity,
                 hit,
                 Main.GlobalTimeWrappedHourly + Projectile.identity * 0.11f);
+
+            string shieldText = MathF.Ceiling(modPlayer.ShieldHitPoints).ToString();
+            Vector2 textSize = FontAssets.MouseText.Value.MeasureString(shieldText) * 0.56f;
+            Vector2 textPosition = center - textSize * 0.5f;
+            CalamityUtils.DrawBorderStringEightWay(
+                Main.spriteBatch,
+                FontAssets.MouseText.Value,
+                shieldText,
+                textPosition,
+                Color.White * opacity,
+                Color.Black * opacity,
+                0.56f);
 
             return false;
         }

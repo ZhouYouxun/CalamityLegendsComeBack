@@ -147,7 +147,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.RightClick
                 if (p.active && p.owner == Projectile.owner && p.type == hold)
                 {
                     Vector2 aim = p.velocity.SafeNormalize(Vector2.UnitX * owner.direction);
-                    return owner.MountedCenter + aim * (62f + AethersWhisperBalance.MuzzleRingRadius) + new Vector2(0f, -6f * owner.gravDir);
+                    return owner.MountedCenter + aim * (88f + AethersWhisperBalance.MuzzleRingRadius) + new Vector2(0f, -6f * owner.gravDir);
                 }
             }
             // 兜底：朝向面向方向的枪口前方。

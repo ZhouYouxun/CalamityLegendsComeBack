@@ -190,9 +190,10 @@ Mods: {
 				Tooltip:
 					'''
 					+10% melee damage, +10% melee attack speed, and +15% movement speed
-					Replaces Briny Baron's right click with a vortex teleport dash
-					Open a portal at the cursor, exit cardinally, and cut back along the path
-					A large water tornado forms at the center of the return path
+					Replaces Briny Baron's right click with a vortex teleport
+					Teleport to the cursor and unleash two tidal slashes
+					Right click again during cooldown to return to the previous teleport point
+					Each return leaves a rapid chain of blue cutting lights along the path
 					Cooldown: 6 seconds
 					'''
 			}
@@ -202,6 +203,8 @@ Mods: {
 			BBSD_VirtualPROJ.DisplayName: BBSD Virtual Proj
 			BrinyBaron_VortexEyePortalPreview.DisplayName: Briny Baron Vortex Eye Portal Preview
 			BrinyBaron_VortexEyeDash.DisplayName: Briny Baron Vortex Eye Dash
+			BrinyBaron_VortexEyePhaseResidue.DisplayName: Vortex Eye Phase Residue
+			BrinyBaron_VortexEyePathCutter.DisplayName: Vortex Eye Path Cutter
 			BrinyBaron_DashOceanSwirl.DisplayName: Briny Baron Dash Ocean Swirl
 
 			BrinyBaron: {

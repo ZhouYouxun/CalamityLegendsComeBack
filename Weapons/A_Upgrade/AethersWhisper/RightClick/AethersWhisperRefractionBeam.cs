@@ -27,11 +27,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.RightClick
         public new string LocalizationCategory => "Projectiles.AethersWhisper";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
-        private Vector2 AimWorld => new(Projectile.ai[0], Projectile.ai[1]);
-
         private Vector2 startPos;         // 枪口出生点
         private float rangeBudget;        // 剩余射程
-        private float mouseDistLimit;     // 到锁定准星点的距离（仅反射前有效）
         private bool reflected;
         private Vector2 reflectPos;
         private Vector2 reflectNormal;
@@ -62,7 +59,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.RightClick
         {
             startPos = Projectile.Center;
             rangeBudget = AethersWhisperBalance.BeamMaxRange;
-            mouseDistLimit = MathF.Min(Vector2.Distance(startPos, AimWorld), AethersWhisperBalance.BeamMaxRange);
         }
 
         public override void AI()
@@ -75,14 +71,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.RightClick
 
             float step = Projectile.velocity.Length();
 
-            // 反射前：到达锁定准星点即空点分解（“打鼠标位置”有真实用途）。
-            if (!reflected && Vector2.Distance(startPos, Projectile.Center) >= mouseDistLimit)
-            {
-                Disassemble(Projectile.Center);
-                return;
-            }
-
-            // 手动砖块检测与一次反射。
+            // 直接飞行：不再飞向鼠标点/命中鼠标，鼠标很近就直接穿过去。
+            // 结束条件只有：首个敌人命中 / 第二次墙碰撞 / 射程耗尽。
             HandleTileCollision();
 
             // 射程耗尽即分解。
@@ -93,11 +83,21 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.RightClick
                 return;
             }
 
-            if (!Main.dedServ && Main.rand.NextBool())
+            if (!Main.dedServ)
             {
-                Dust d = Dust.NewDustPerfect(Projectile.Center, AethersWhisperVisuals.ElectricDust,
-                    Projectile.velocity * -0.02f, 120, AethersWhisperVisuals.ShimmerCyan, Main.rand.NextFloat(0.8f, 1.2f));
-                d.noGravity = true;
+                // 电弧尘 + 军械库 DualTrail 光条，让粗光痕更有能量密度。
+                if (Main.rand.NextBool())
+                {
+                    Dust d = Dust.NewDustPerfect(Projectile.Center, AethersWhisperVisuals.ElectricDust,
+                        Projectile.velocity * -0.02f, 120, AethersWhisperVisuals.ShimmerCyan, Main.rand.NextFloat(0.8f, 1.2f));
+                    d.noGravity = true;
+                }
+                if (Main.rand.NextBool(3))
+                {
+                    GeneralParticleHandler.SpawnParticle(new CustomSpark(Projectile.Center, Projectile.velocity * 0.05f,
+                        AethersWhisperVisuals.DualTrailTex, false, Main.rand.Next(9, 14), 0.06f,
+                        AethersWhisperVisuals.Lerp(Main.rand.NextFloat()), new Vector2(0.7f, 1.5f), true, false, shrinkSpeed: 0.25f));
+                }
             }
         }
 

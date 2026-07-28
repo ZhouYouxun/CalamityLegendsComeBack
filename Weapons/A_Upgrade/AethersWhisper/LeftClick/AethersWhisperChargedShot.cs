@@ -33,8 +33,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.LeftClick
 
         public override void SetStaticDefaults()
         {
-            // 飞行后残影（文档 5.3）用历史位置缓存。
-            ProjectileID.Sets.TrailCacheLength[Type] = 8;
+            ProjectileID.Sets.TrailCacheLength[Type] = 20; // 更长的高速残影
             ProjectileID.Sets.TrailingMode[Type] = 2;
         }
 
@@ -46,10 +45,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.LeftClick
             Projectile.tileCollide = true;            // 撞墙即坍缩
             Projectile.ignoreWater = true;
             Projectile.DamageType = DamageClass.Magic;
-            Projectile.timeLeft = AethersWhisperBalance.ChargedShotLifetime;
+            // extraUpdates=9 → 每帧更新 10 次；timeLeft 按子步计，×10 保持约 70 帧寿命。
+            Projectile.extraUpdates = AethersWhisperBalance.ChargedShotExtraUpdates;
+            Projectile.timeLeft = AethersWhisperBalance.ChargedShotLifetime * (AethersWhisperBalance.ChargedShotExtraUpdates + 1);
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = -1;
-            // 不加 extraUpdates：初速已是“每 tick 像素”的合同值，靠 Colliding 的线段判定防漏判即可。
         }
 
         public override void AI()
@@ -59,32 +59,54 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.LeftClick
                 Projectile.ArmorPenetration = AethersWhisperBalance.FullChargeArmorPen;
 
             Projectile.rotation = Projectile.velocity.ToRotation();
-            Lighting.AddLight(Projectile.Center, AethersWhisperVisuals.Lerp(Charge).ToVector3() * (0.6f + Charge * 0.6f));
+            Lighting.AddLight(Projectile.Center, AethersWhisperVisuals.Lerp(Charge).ToVector3() * (0.7f + Charge * 0.7f));
 
-            if (Main.dedServ) return;
+            // 高速：特效只在每帧最后一个子步生成一次，避免 ×10 刷爆粒子。
+            if (Main.dedServ || !Projectile.FinalExtraUpdate())
+                return;
+
             int time = (int)Projectile.localAI[0]++;
+            Vector2 fwd = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 perp = fwd.RotatedBy(MathHelper.PiOver2);
+            float scaleP = 0.8f + Charge;
 
-            // 军械库高斯炮同款拖尾：BloomCircle CustomSpark 光核 + SquashDust 压扁尘 + 偶发硬光方块。
-            if (time % 2 == 0)
+            // ① 特斯拉同款「旋转能量螺旋」——但用粒子而非纯尘：两条相位相反的臂 × 三层半径，绕弹体自转。
+            float spin = time * 0.42f;
+            for (int layer = 0; layer < 3; layer++)
             {
-                GeneralParticleHandler.SpawnParticle(new CustomSpark(Projectile.Center, Projectile.velocity * 0.15f,
-                    "CalamityMod/Particles/BloomCircle", false, Main.rand.Next(16, 24), (0.16f + Charge * 0.14f),
-                    AethersWhisperVisuals.Lerp(Main.rand.NextFloat(0.3f, 0.8f)), new Vector2(1f, 1.8f), true, true,
-                    glowCenterScale: 0.7f, shrinkSpeed: 0.06f));
+                float radius = (7f + layer * 6f) * scaleP;
+                for (int arm = 0; arm < 2; arm++)
+                {
+                    Vector2 off = perp.RotatedBy(spin + arm * MathHelper.Pi) * radius;
+                    bool square = layer == 2;
+                    GeneralParticleHandler.SpawnParticle(new CustomSpark(Projectile.Center + off, off * 0.04f,
+                        square ? AethersWhisperVisuals.GlowSquareTex : "CalamityMod/Particles/BloomCircle",
+                        false, Main.rand.Next(10, 16), (square ? 0.06f : 0.09f) * scaleP,
+                        AethersWhisperVisuals.Lerp(layer / 2f), square ? new Vector2(1f, 1f) : new Vector2(0.7f, 1.2f),
+                        true, !square, glowCenterScale: 0.6f, shrinkSpeed: 0.15f));
+                }
             }
-            if (time % 3 == 0)
+
+            // ② 主光核残影 + 高斯压扁尘拖尾
+            GeneralParticleHandler.SpawnParticle(new CustomSpark(Projectile.Center, Projectile.velocity * 0.12f,
+                "CalamityMod/Particles/BloomCircle", false, Main.rand.Next(16, 24), (0.18f + Charge * 0.16f),
+                AethersWhisperVisuals.ToWhite(AethersWhisperVisuals.Lerp(Charge), 0.35f), new Vector2(1f, 2f), true, true,
+                glowCenterScale: 0.7f, shrinkSpeed: 0.05f));
+            for (int i = 0; i < 2; i++)
             {
-                Dust d = Dust.NewDustPerfect(Projectile.Center + Main.rand.NextVector2Circular(4f, 4f), AethersWhisperVisuals.SquashDust,
-                    -Projectile.velocity.SafeNormalize(Vector2.UnitX).RotatedByRandom(0.15f) * Main.rand.NextFloat(3f, 9f), 0,
-                    AethersWhisperVisuals.Lerp(Main.rand.NextFloat()), Main.rand.NextFloat(1.1f, 1.6f) * (0.7f + Charge));
+                Dust d = Dust.NewDustPerfect(Projectile.Center + Main.rand.NextVector2Circular(5f, 5f), AethersWhisperVisuals.SquashDust,
+                    -fwd.RotatedByRandom(0.25f) * Main.rand.NextFloat(4f, 12f), 0,
+                    AethersWhisperVisuals.Lerp(Main.rand.NextFloat()), Main.rand.NextFloat(1.2f, 1.8f) * scaleP);
                 d.noGravity = true;
                 d.fadeIn = -0.4f;
             }
-            if (time % 8 == 0)
+
+            // ③ 偶发硬光方块（VelChangingSpark）从弹体后方甩出，强化「压缩微光被拉出」的硬光质感
+            if (time % 3 == 0)
             {
-                GeneralParticleHandler.SpawnParticle(new VelChangingSpark(Projectile.Center, -Projectile.velocity * 0.1f, -Projectile.velocity * 0.05f,
-                    AethersWhisperVisuals.GlowSquareTex, 30, 0.12f + Charge * 0.08f, AethersWhisperVisuals.ToWhite(AethersWhisperVisuals.AetherPurple, 0.25f),
-                    new Vector2(1f, 0.8f), lerpRate: 0.1f));
+                GeneralParticleHandler.SpawnParticle(new VelChangingSpark(Projectile.Center, -Projectile.velocity * 0.12f, -Projectile.velocity * 0.04f,
+                    AethersWhisperVisuals.GlowSquareTex, 30, 0.13f + Charge * 0.09f, AethersWhisperVisuals.ToWhite(AethersWhisperVisuals.AetherPurple, 0.3f),
+                    new Vector2(1f, 0.9f), lerpRate: 0.1f));
             }
         }
 
@@ -179,9 +201,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.LeftClick
             AethersWhisperVisuals.DrawBeamSegment(sb, tail, Projectile.Center + aim * visualWidth * 0.4f,
                 AethersWhisperVisuals.PearlWhite with { A = 0 }, visualWidth * 0.32f);
 
-            // 核心 bloom。
-            sb.Draw(bloom, Projectile.Center - Main.screenPosition, null, AethersWhisperVisuals.ShimmerCyan with { A = 0 },
-                0f, bloom.Size() * 0.5f, visualWidth / bloom.Width * 1.4f, SpriteEffects.None, 0f);
+            // 压缩微光核心：军械库同款 7 层生长辉光球（青→白渐变），拉成沿飞行方向的椭球。
+            AethersWhisperVisuals.DrawEnergyOrb(sb, Projectile.Center, visualWidth * 1.7f,
+                AethersWhisperVisuals.Lerp(Charge), 0.9f, new Vector2(1.5f, 1f).RotatedBy(0f));
+            // 一枚硬光方块内芯（军械库硬光质感）随飞行方向自旋。
+            Texture2D square = ModContent.Request<Texture2D>(AethersWhisperVisuals.GlowSquareTex).Value;
+            sb.Draw(square, Projectile.Center - Main.screenPosition, null, AethersWhisperVisuals.PearlWhite with { A = 0 } * 0.8f,
+                Projectile.rotation + Main.GlobalTimeWrappedHourly * 3f, square.Size() * 0.5f,
+                visualWidth / square.Width * 0.5f, SpriteEffects.None, 0f);
 
             AethersWhisperVisuals.EndAdditive(sb);
             return false;

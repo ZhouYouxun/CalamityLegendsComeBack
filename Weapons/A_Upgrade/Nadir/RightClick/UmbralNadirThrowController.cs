@@ -94,8 +94,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.RightClick
             if (Projectile.owner != Main.myPlayer)
                 return;
 
-            // 三发各不重样，但收紧到"有活力而非散射飞镖"：速度提升到上限的 120%，角度 ±4°，横向偏移 ±14。
-            // 投矛 extraUpdates=3（每帧移动 4 次），速度是每次位移量。
+            // 三发各不重样，但收紧到"有活力而非散射飞镖"：角度 ±4°，横向偏移 ±14。
+            // 投矛 extraUpdates=8（每帧移动 9 次），速度是每次位移量。
             float spread = MathHelper.ToRadians(Main.rand.NextFloat(-UmbralNadirBalance.JavelinSpreadDegrees, UmbralNadirBalance.JavelinSpreadDegrees));
             float speed = Main.rand.NextFloat(UmbralNadirBalance.JavelinSpeedMin, UmbralNadirBalance.JavelinSpeedMax);
             Vector2 velocity = aim.RotatedBy(spread) * speed;

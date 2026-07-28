@@ -62,13 +62,16 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir
 
         // ===== 右键·高速三连投矛 =====
         public const float JavelinDamageMult = 0.85f;       // 投矛本体（相对右键基础伤害）
-        public const int JavelinExtraUpdates = 6;           // 7 次/帧移动 → 直线飞行极快且顺滑
-        public const float JavelinSpeedMin = 6.5f;          // 每次位移；实际飞速 ≈ ×7，较旧版约 2.4 倍
+        public const int JavelinExtraUpdates = 8;           // 9 次/帧移动；在现有基础上再加 2 次更新
+        public const float JavelinSpeedMin = 6.5f;          // 每次位移；实际飞速 ≈ ×9
         public const float JavelinSpeedMax = 7.5f;
         public const float JavelinSpreadDegrees = 4f;       // 角度散布 ±4°
         public const float JavelinLateralOffset = 14f;      // 出生横向偏移 ±14 px
         public const float JavelinForwardMin = 24f;
         public const float JavelinForwardMax = 44f;
+        public const float JavelinCurtainDamageMult = 0.34f; // 每支投矛额外展开一次大范围冥幕斩
+        public const float JavelinCurtainLength = 760f;
+        public const float JavelinCurtainWidth = 82f;
 
         // ===== 蚀痕叠层（呼应核心）=====
         public static readonly int[] LeftStackPerHit = { 1, 2, 3 };  // 上挑/劈落/冲刺 每次近战命中叠层

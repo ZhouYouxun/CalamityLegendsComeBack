@@ -78,6 +78,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper
 
         /// <summary>晶核飞行寿命（tick）。</summary>
         public const int ChargedShotLifetime = 70;
+        /// <summary>晶核 extraUpdates（子步数）：更新次数 = 1 + 9 = 10 次/帧。</summary>
+        public const int ChargedShotExtraUpdates = 9;
+        /// <summary>晶核绝对速度额外倍率（在阶段初速基础上再 ×1.3）。</summary>
+        public const float ChargedShotSpeedMult = 1.3f;
         /// <summary>周边坍缩伤害相对直击伤害的比例（排除直击目标）。</summary>
         public const float CollapseDamageRatio = 0.30f;
         /// <summary>满蓄直击额外护甲穿透。</summary>
@@ -88,19 +92,30 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper
         public const int NormalShadowflameTicks = 180;
 
         // =====================================================================
-        // 右键：四连折射扫射（第 2.2 / 4.x 节）
+        // 右键：二连散射折返扫射
+        // 一「组」= 2 次散射；每次散射 5~7 束随机角度伪激光；两次散射间隔 15 tick，
+        // 两组之间间隔 35 tick（即散射①@0、散射②@15、下一组@50）。
         // =====================================================================
-        /// <summary>一小节的四束发射 tick：0 / 7 / 14 / 21。</summary>
-        public static readonly int[] BeamFireTicks = { 0, 7, 14, 21 };
-        /// <summary>四束数量。</summary>
-        public const int BeamsPerRound = 4;
-        /// <summary>下一小节可开始的 tick（第 36 tick）。</summary>
-        public const int RoundRestartTick = 36;
+        /// <summary>每组的散射次数。</summary>
+        public const int ScattersPerRound = 2;
+        /// <summary>每次散射的最少 / 最多束数（随机）。</summary>
+        public const int ScatterBeamsMin = 5;
+        public const int ScatterBeamsMax = 7;
+        /// <summary>同组两次散射之间的间隔 tick。</summary>
+        public const int ScatterGapTicks = 15;
+        /// <summary>两组之间的间隔 tick（末次散射后再等这么多才开新一组）。</summary>
+        public const int RoundGapTicks = 35;
+        /// <summary>一组的总周期 tick = (次数-1)×散射间隔 + 组间隔。</summary>
+        public const int RoundPeriodTicks = (ScattersPerRound - 1) * ScatterGapTicks + RoundGapTicks;
+        /// <summary>散射的半张角（弧度），充满随机性。</summary>
+        public const float ScatterSpread = 0.42f;
+        /// <summary>每次散射扣一次魔力（一次扳机=一次开销，不按束数）。</summary>
+        public const int ScatterManaCost = 10;
 
         /// <summary>每束主伪激光直接伤害倍率（相对物品基础伤害）。</summary>
-        public const float BeamDamageMult = 0.35f;
+        public const float BeamDamageMult = 0.30f;
         /// <summary>主伪激光飞行速度 px/tick。</summary>
-        public const float BeamSpeed = 48f;
+        public const float BeamSpeed = 58f;
         /// <summary>主伪激光可见宽度 px。</summary>
         public const float BeamVisualWidth = 32f;
         /// <summary>主伪激光碰撞宽度 px（明显细于可见体）。</summary>
