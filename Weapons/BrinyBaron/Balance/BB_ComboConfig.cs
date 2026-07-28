@@ -45,7 +45,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
         public static readonly int[] SeafoamBladeHitCooldown = { 15, 15, 15, 15, 15 };
         public static readonly int[] SwordWaveHitCooldown = { -1, -1, -1, -1, -1 };
         public static readonly int[] SeaSpiritHitCooldown = { 15, 15, 15, 15, 15 };
-        public static readonly int[] ShurikenHitCooldown = { 25, 25, 25, 25, 25 };
+        public static readonly int[] ShurikenHitCooldown = { 30, 30, 30, 30, 30 };
         public static readonly int[] HomingLightOrbHitCooldown = { 16, 16, 16, 16, 16 };
         public static readonly int[] WaterStreamHitCooldown = { 12, 12, 12, 12, 12 };
         public static readonly int[] TornadoBoltHitCooldown = { 12, 12, 12, 12, 12 };
