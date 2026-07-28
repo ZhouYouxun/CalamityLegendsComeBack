@@ -279,9 +279,9 @@ namespace CalamityLegendsComeBack.Accssory.BF.FairyDance
 
     internal sealed class RainbowSpiritLacewing : ModProjectile
     {
-        internal const int LifetimeFrames = 18 * 60;
+        internal const int LifetimeFrames = 20 * 60;
         internal const int MaximumCount = 7;
-        private const float DashSpeed = 30f;
+        private const float DashSpeed = 42f;
         private const string LacewingTexture = "Terraria/Images/NPC_661";
 
         private int State { get => (int)Projectile.ai[1]; set => Projectile.ai[1] = value; }
@@ -376,7 +376,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.FairyDance
         {
             Player owner = Main.player[Projectile.owner];
             Projectile.velocity = (target - Projectile.Center).SafeNormalize(Vector2.UnitX * owner.direction) * DashSpeed;
-            Projectile.damage = Math.Max(1, (int)owner.GetTotalDamage(DamageClass.Ranged).ApplyTo(1200f));
+            Projectile.damage = Math.Max(1, (int)owner.GetTotalDamage(DamageClass.Ranged).ApplyTo(1600f));
             Projectile.penetrate = 1;
             State = 1;
             Projectile.netUpdate = true;
