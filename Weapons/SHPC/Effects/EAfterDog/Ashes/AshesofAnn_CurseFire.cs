@@ -125,16 +125,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.Ashes
             Projectile.alpha = Math.Max(0, Projectile.alpha - 24);
             Lighting.AddLight(Projectile.Center, new Color(255, 120, 48).ToVector3() * 0.55f);
 
-            // Blazing-cursor fire rides ONLY the homing form; the piercing / self-wandering
-            // form deliberately carries no fluid fire.
-            if (!IsPiercingShot)
-            {
-                AshesFluidFieldSystem.RegisterSource(
-                    Projectile.Center,
-                    Projectile.velocity * -0.055f,
-                    Color.Lerp(new Color(255, 92, 34), new Color(255, 206, 112), 0.28f + ShotCompletion * 0.22f),
-                    0.7f * Utils.GetLerpValue(255f, 0f, Projectile.alpha, true));
-            }
+            // The screen-space fluid-fire field remains available for other users, but Ashes'
+            // homing souls no longer feed it. Their local flight VFX below remain unchanged.
 
             if (!Main.dedServ)
             {
