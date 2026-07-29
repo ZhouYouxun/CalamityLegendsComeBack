@@ -15,6 +15,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
     // 左键连段生成的飞剑：先蓄势悬停，再沿锁定鼠标方向高速飞出。
     internal sealed class AzureThunderFlyingSword : ModProjectile, ILocalizedModType
     {
+        public const int AttackModeNormal = 0;
+        public const int AttackModeTriggerCannon = 1;
+
         public new string LocalizationCategory => "Projectiles.AzureThunder";
         public override string Texture => "CalamityLegendsComeBack/Weapons/A_Dev/AzureThunder/AzureThunder";
 
@@ -32,12 +35,20 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             set => Projectile.localAI[1] = value;
         }
 
-        // ai[0] 是每把飞剑的延迟帧，ai[1]/ai[2] 保存左键段开始时的鼠标坐标。
+        // ai[0] 是发射延迟（-1 表示等待雷击命中信号），ai[1] 是目标，ai[2] 是命中行为。
         private int Delay => Math.Max(0, (int)Projectile.ai[0]);
-        private Vector2 StoredMouseWorld => new(Projectile.ai[1], Projectile.ai[2]);
+        private bool WaitingForLightning => Projectile.ai[0] < 0f;
+        private int TargetIndex => (int)Projectile.ai[1];
+        private int AttackMode
+        {
+            get => (int)Projectile.ai[2];
+            set => Projectile.ai[2] = value;
+        }
+        private int GroupToken => (int)Projectile.localAI[2];
 
         // 初始悬停点和后撤偏移只在生成首帧计算一次。
         private bool initialized;
+        private bool launched;
         private Vector2 hoverAnchor;
         private Vector2 retreatOffset;
 
@@ -68,8 +79,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         {
             Timer++;
             Player owner = Main.player[Projectile.owner];
-            // 如果没有存到鼠标坐标，则默认向玩家朝向前方飞行。
-            Vector2 targetPoint = StoredMouseWorld == Vector2.Zero ? owner.Center + Vector2.UnitX * owner.direction * 400f : StoredMouseWorld;
+            Vector2 targetPoint = ResolveTargetPoint(owner);
 
             if (!initialized)
             {
@@ -82,23 +92,29 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 retreatOffset = -aimDirection * 34f + aimDirection.RotatedBy(MathHelper.PiOver2) * sideOffset;
             }
 
-            if (Timer <= Delay)
+            if (WaitingForLightning)
+            {
+                // 第二段的两把剑必须等头顶落雷真正命中后才允许冲刺；目标失效时 36 帧兜底释放。
+                Projectile.friendly = false;
+                HoverAtAnchor(targetPoint, Math.Max(18, Timer));
+                if (Timer > 36)
+                    Projectile.ai[0] = 0f;
+                else
+                    return;
+            }
+
+            if (!launched && Timer <= Delay)
             {
                 // 延迟期只做蓄势悬停，不造成伤害。
                 Projectile.friendly = false;
-                float hoverWave = (float)Math.Sin((Main.GameUpdateCount + Projectile.identity * 17) * 0.08f) * 5f;
-                float retreatInterpolant = 1f - (float)Math.Pow(1f - Utils.GetLerpValue(0f, Math.Max(1f, Delay), Timer, true), 2.4f);
-                Vector2 desiredCenter = hoverAnchor + retreatOffset * retreatInterpolant + new Vector2(0f, hoverWave);
-                Projectile.Center = Vector2.Lerp(Projectile.Center, desiredCenter, 0.34f);
-                Projectile.rotation = Projectile.rotation.AngleLerp((targetPoint - Projectile.Center).ToRotation() + MathHelper.PiOver4, 0.15f);
-                Projectile.velocity *= 0.78f;
-                SpawnChargeDust();
+                HoverAtAnchor(targetPoint, Math.Max(1, Delay));
                 return;
             }
 
-            if (Timer == Delay + 1)
+            if (!launched)
             {
                 // 延迟结束后锁定发射方向；之后不再重新追踪敌人。
+                launched = true;
                 Projectile.friendly = true;
                 LaunchBoostTimer = 18;
                 Vector2 direction = (targetPoint - Projectile.Center).SafeNormalize(Vector2.UnitX * owner.direction);
@@ -128,6 +144,45 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             }
         }
 
+        private void HoverAtAnchor(Vector2 targetPoint, int preparationDuration)
+        {
+            float hoverWave = (float)Math.Sin((Main.GameUpdateCount + Projectile.identity * 17) * 0.08f) * 5f;
+            float retreatInterpolant = 1f - (float)Math.Pow(1f - Utils.GetLerpValue(0f, Math.Max(1f, preparationDuration), Timer, true), 2.4f);
+            Vector2 desiredCenter = hoverAnchor + retreatOffset * retreatInterpolant + new Vector2(0f, hoverWave);
+            Projectile.Center = Vector2.Lerp(Projectile.Center, desiredCenter, 0.34f);
+            Projectile.rotation = Projectile.rotation.AngleLerp((targetPoint - Projectile.Center).ToRotation() + MathHelper.PiOver4, 0.15f);
+            Projectile.velocity *= 0.78f;
+            SpawnChargeDust();
+        }
+
+        private Vector2 ResolveTargetPoint(Player owner)
+        {
+            if (Main.npc.IndexInRange(TargetIndex))
+            {
+                NPC target = Main.npc[TargetIndex];
+                if (target.active && target.CanBeChasedBy(Projectile))
+                    return target.Center;
+            }
+
+            Vector2 mouse = AzureThunderPlayer.GetMouseWorld(owner);
+            return mouse == Vector2.Zero ? owner.Center + Vector2.UnitX * owner.direction * 400f : mouse;
+        }
+
+        public static void ReleaseWaitingGroup(int owner, int groupToken)
+        {
+            int type = ModContent.ProjectileType<AzureThunderFlyingSword>();
+            foreach (Projectile projectile in Main.ActiveProjectiles)
+            {
+                if (!projectile.active || projectile.owner != owner || projectile.type != type)
+                    continue;
+                if ((int)projectile.localAI[2] != groupToken || projectile.ai[0] >= 0f)
+                    continue;
+
+                projectile.ai[0] = 0f;
+                projectile.netUpdate = true;
+            }
+        }
+
         private void SpawnChargeDust()
         {
             // 蓄势粒子不需要每帧生成，三分之一概率足够明显。
@@ -153,6 +208,31 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             // 命中点朝四周炸开一圈裂变电弧，不局限于头顶方向；大体型敌人裂得更开。
             float burstRadius = MathHelper.Clamp(target.Size.Length() * 0.6f, 74f, 190f);
             AzureThunderFissionBolt.Burst(target.Center, burstRadius, 9, 0.95f);
+
+            if (AttackMode == AttackModeTriggerCannon && Main.myPlayer == Projectile.owner)
+            {
+                // 同组四把剑只有第一把命中能触发重炮；立刻清掉其余成员的触发权。
+                int groupToken = GroupToken;
+                int swordType = ModContent.ProjectileType<AzureThunderFlyingSword>();
+                foreach (Projectile sibling in Main.ActiveProjectiles)
+                {
+                    if (!sibling.active || sibling.owner != Projectile.owner || sibling.type != swordType)
+                        continue;
+                    if ((int)sibling.localAI[2] == groupToken)
+                        sibling.ai[2] = AttackModeNormal;
+                }
+
+                AttackMode = AttackModeNormal;
+                AzureThunderCannonStrike.Spawn(
+                    Projectile.GetSource_FromThis(),
+                    target.Center,
+                    target,
+                    Math.Max(1, (int)(Projectile.damage * 4.8f)),
+                    Projectile.knockBack,
+                    Projectile.owner,
+                    1.08f,
+                    AzureThunderCannonStrike.SwordTriggeredFlag);
+            }
 
             Vector2 forward = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 spawnPosition = target.Center - forward * 10f * 16f;
@@ -199,14 +279,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 effects,
                 AzureThunderColors.Yellow,
                 2.6f,
-                Timer <= Delay ? 0.32f : 0.2f,
+                !launched ? 0.32f : 0.2f,
                 Main.GlobalTimeWrappedHourly + Projectile.identity * 0.1f,
                 14);
 
             for (int i = 0; i < 10; i++)
             {
                 // 周围淡金幽灵影在蓄势阶段更宽，表现剑身凝聚。
-                Vector2 offset = (MathHelper.TwoPi * i / 10f).ToRotationVector2() * (Timer <= Delay ? 5f : 2.5f);
+                Vector2 offset = (MathHelper.TwoPi * i / 10f).ToRotationVector2() * (!launched ? 5f : 2.5f);
                 Main.EntitySpriteDraw(ghost, drawPosition + offset, null, AzureThunderColors.PaleYellow with { A = 0 } * 0.08f, Projectile.rotation, origin, Projectile.scale, effects);
             }
 

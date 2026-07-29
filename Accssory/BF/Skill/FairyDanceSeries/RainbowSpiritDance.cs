@@ -1,0 +1,49 @@
+using CalamityLegendsComeBack.Accssory.BF.Common;
+using Terraria;
+using Terraria.ID;
+using Terraria.ModLoader;
+
+namespace CalamityLegendsComeBack.Accssory.BF.FairyDanceSeries
+{
+    public sealed class RainbowSpiritDance : ModItem
+    {
+        public override string Texture => "CalamityLegendsComeBack/Accssory/BF/Skill/FairyDanceSeries/虹灵";
+
+        public override void SetDefaults()
+        {
+            Item.width = 32;
+            Item.height = 32;
+            Item.accessory = true;
+            Item.value = Item.sellPrice(gold: 18);
+            Item.rare = ItemRarityID.Red;
+        }
+
+        public override void UpdateAccessory(Player player, bool hideVisual)
+        {
+            player.lifeRegen += 6;
+            player.statDefense += 10;
+            player.GetDamage(DamageClass.Ranged) += 0.10f;
+
+            // 虹灵舞不再继承妖精舞的三只仙灵（FairyDanceEquipped），只保留自己的七彩草蛉。
+            player.GetModPlayer<BFAccessoryPlayer>().RainbowSpiritDanceEquipped = true;
+        }
+
+        public override bool CanAccessoryBeEquippedWith(Item equippedItem, Item incomingItem, Player player)
+        {
+            return equippedItem.type != ModContent.ItemType<FairyDance>() &&
+                   incomingItem.type != ModContent.ItemType<FairyDance>() &&
+                   base.CanAccessoryBeEquippedWith(equippedItem, incomingItem, player);
+        }
+
+        public override void AddRecipes()
+        {
+            CreateRecipe()
+                .AddIngredient<FairyDance>()
+                .AddIngredient(ItemID.EmpressButterfly)
+                .AddIngredient(ItemID.Ectoplasm, 15)
+                .AddIngredient(ItemID.LunarBar, 10)
+                .AddTile(TileID.LunarCraftingStation)
+                .Register();
+        }
+    }
+}

@@ -214,7 +214,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.LeftClick
                 waveSpawned = true;
                 Vector2 dir = (-angle).SafeNormalize(Vector2.UnitX * player.direction);
                 int lanceDamage = Math.Max(1, (int)(Projectile.damage * StageDamageMult * UmbralNadirBalance.VoidLanceDamageMult));
-                Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, dir * 9f,
+                Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, dir * UmbralNadirBalance.VoidLanceFireSpeed,
                     ModContent.ProjectileType<UmbralNadirVoidLance>(), lanceDamage, Projectile.knockBack, Projectile.owner);
             }
         }
@@ -371,7 +371,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.LeftClick
             float strength = MathHelper.Clamp(0.45f + SwingSpeedFactor * 0.75f, 0f, 1f);
             float pulse = 0.9f + 0.1f * MathF.Sin(Main.GlobalTimeWrappedHourly * 18f + Projectile.identity);
 
-            Main.EntitySpriteDraw(fullSmear, drawPos, null, Color.Black * (0.58f * strength), -rotation * 0.35f,
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState,
+                DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.EntitySpriteDraw(fullSmear, drawPos, null, UmbralNadirPalette.MeldGreenDeep with { A = 0 } * (0.58f * strength), -rotation * 0.35f,
                 fullSmear.Size() * 0.5f, new Vector2(fullScale * 1.08f, fullScale * 0.9f), SpriteEffects.None, 0);
             Main.EntitySpriteDraw(fullSmear, drawPos, null,
                 UmbralNadirPalette.MeldGreenDeep with { A = 0 } * (0.3f * strength * pulse), rotation * 0.7f,
@@ -379,8 +382,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.LeftClick
             Main.EntitySpriteDraw(halfSmear, drawPos, null,
                 UmbralNadirPalette.MeldGreen with { A = 0 } * (0.46f * strength), rotation,
                 halfSmear.Size() * 0.5f, new Vector2(halfScale, halfScale * (dash ? 0.72f : 1f)), SpriteEffects.None, 0);
-            Main.EntitySpriteDraw(halfSmear, drawPos, null, Color.Black * (0.42f * strength), rotation + MathHelper.Pi,
+            Main.EntitySpriteDraw(halfSmear, drawPos, null, UmbralNadirPalette.MeldGreenDeep with { A = 0 } * (0.42f * strength), rotation + MathHelper.Pi,
                 halfSmear.Size() * 0.5f, new Vector2(halfScale * 0.94f, halfScale), SpriteEffects.None, 0);
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState,
+                DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
         }
     }
 }

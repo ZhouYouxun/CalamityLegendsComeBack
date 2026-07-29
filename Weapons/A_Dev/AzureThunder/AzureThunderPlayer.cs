@@ -570,7 +570,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 if (!projectile.active || projectile.owner != player.whoAmI || projectile.type != groundType)
                     continue;
 
-                if (projectile.DistanceSQ(center) <= radiusSquared)
+                if (projectile.ModProjectile is AzureThunderGroundSword sword &&
+                    sword.IsReadyForCommand &&
+                    projectile.DistanceSQ(center) <= radiusSquared)
                     count++;
             }
 
@@ -702,7 +704,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 Main.projectile[mark].netImportant = false;
         }
 
-        public static void SpawnVerticalLightning(
+        public static int SpawnVerticalLightning(
             IEntitySource source,
             Vector2 impactPosition,
             NPC target,
@@ -758,7 +760,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 flags |= AzureThunderFlatLightning.OneThirdVisualIntensityFlag;
             flags |= additionalFlags;
 
-            SpawnDirectionalLightning(
+            return SpawnDirectionalLightning(
                 source,
                 spawnPosition,
                 velocity,
@@ -771,7 +773,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 lightningScale);
         }
 
-        public static void SpawnDirectionalLightning(
+        public static int SpawnDirectionalLightning(
             IEntitySource source,
             Vector2 spawnPosition,
             Vector2 velocity,
@@ -811,6 +813,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                     projectile.Center = center;
                 }
             }
+
+            return lightning;
         }
 
         public static void SpawnFlatLightning(

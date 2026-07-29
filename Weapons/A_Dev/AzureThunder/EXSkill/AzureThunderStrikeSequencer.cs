@@ -150,9 +150,24 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 damageFactor *= 0.8f;
 
             Vector2 strikePoint = target.Center + Main.rand.NextVector2Circular(HarmonyMode ? 95f : 55f, HarmonyMode ? 55f : 35f);
-            if (HarmonyMode && finalStrike)
+            if (finalStrike)
             {
-                SpawnFinalJudgement(target, strikePoint);
+                Player owner = Main.player[Projectile.owner];
+                float radius = AzureThunderAccessoryPlayer.GetGroundSwordEffectRadius(owner);
+                int effectiveSwordCount = AzureThunderPlayer.CountGroundSwordsNear(owner, owner.Center, radius);
+                int cannonFlags = HarmonyMode ? AzureThunderCannonStrike.HarmonyFlag : 0;
+                if (AzureThunderProgression.DownedYharon && effectiveSwordCount >= AzureThunderGroundSword.MaxGroundSwords)
+                    cannonFlags |= AzureThunderCannonStrike.CrumblingFlag;
+
+                AzureThunderCannonStrike.Spawn(
+                    Projectile.GetSource_FromThis(),
+                    strikePoint,
+                    target,
+                    Math.Max(1, (int)(Projectile.damage * damageFactor)),
+                    Projectile.knockBack,
+                    Projectile.owner,
+                    HarmonyMode ? 1.55f : 1.25f,
+                    cannonFlags);
                 return;
             }
 

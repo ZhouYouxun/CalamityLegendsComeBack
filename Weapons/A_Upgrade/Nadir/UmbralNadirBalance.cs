@@ -52,7 +52,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir
         public const float SlashWaveDamageMult = 0.5f;      // 上挑/劈落 的领刃月波
         public const int VoidBoltsPerSwing = 5;             // 上挑每次挥砍喷出的散射虚空弹数（劈落再 +1）
         public const float VoidBoltDamageMult = 0.34f;      // 散射虚空弹
-        public const float VoidLanceDamageMult = 0.95f;     // 冲刺贯穿的音速激光矛
+        public const float VoidLanceDamageMult = 0.95f;     // 冲刺贯穿的贯穿光矛本体
+        public const int VoidLanceExtraUpdates = 10;        // 11 次/帧，凸显庞大动能冲击
+        public const int VoidLanceTimeLeft = 600;           // 持续（子帧计，约 54 真帧）
+        public const float VoidLanceFireSpeed = 4.6f;       // 每次位移；实际 ≈ ×11
+        public const float VoidLanceHitExplosionMult = 0.5f; // 每次命中敌人额外一记中等黑爆的伤害
 
         // ===== 左键命中·短促范围爆炸（相对当前 holdout 实际伤害）=====
         // 各段的爆炸伤害倍率与半径（px）
@@ -115,6 +119,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir
         public const int ShadowSoulSpawnStart = 8;           // 投矛存活满 8 帧后开始
         public const int ShadowSoulSpawnInterval = 9;        // 之后每 9 帧检查一次
         public const int MaxShadowSoulsPerPlayer = 6;        // 每名玩家同时存在上限
+
+        // ===== 右键·前两发命中后自下方升起的原版虚空核 =====
+        public const int RisingEssencesPerJavelinHit = 3;
+        public const int MaxRisingEssencesPerPlayer = 18;
+        public const float RisingEssenceDamageMult = 0.32f;
+        public const float RisingEssenceSpawnBelowMin = 50f * 16f;
+        public const float RisingEssenceSpawnBelowMax = 60f * 16f;
+        public const float RisingEssenceSpawnSpread = 13f * 16f;
 
         // ===== 右键·第三发命中终爆 =====
         public const float FinalExplosionDamageMult = 0.65f; // 相对第三发投矛伤害

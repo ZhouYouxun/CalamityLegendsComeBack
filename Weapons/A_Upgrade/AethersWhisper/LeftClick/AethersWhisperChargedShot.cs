@@ -61,31 +61,31 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.LeftClick
             Projectile.rotation = Projectile.velocity.ToRotation();
             Lighting.AddLight(Projectile.Center, AethersWhisperVisuals.Lerp(Charge).ToVector3() * (0.7f + Charge * 0.7f));
 
-            // 高速：特效只在每帧最后一个子步生成一次，避免 ×10 刷爆粒子。
-            if (Main.dedServ || !Projectile.FinalExtraUpdate())
-                return;
-
-            int time = (int)Projectile.localAI[0]++;
+            if (Main.dedServ) return;
             Vector2 fwd = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             Vector2 perp = fwd.RotatedBy(MathHelper.PiOver2);
             float scaleP = 0.8f + Charge;
 
-            // ① 特斯拉同款「旋转能量螺旋」——但用粒子而非纯尘：两条相位相反的臂 × 三层半径，绕弹体自转。
-            float spin = time * 0.42f;
-            for (int layer = 0; layer < 3; layer++)
+            // ① 特斯拉同款「旋转能量螺旋」——用 dust 逐子步生成（每 ~15px 一环 = 连续螺旋，
+            //    高速下也不会断成点；dust 走独立 6000 槽不挤占粒子预算），两条反相臂 × 两层半径。
+            Projectile.localAI[1] += 0.13f;
+            float spin = Projectile.localAI[1];
+            for (int arm = 0; arm < 2; arm++)
             {
-                float radius = (7f + layer * 6f) * scaleP;
-                for (int arm = 0; arm < 2; arm++)
+                for (int layer = 0; layer < 2; layer++)
                 {
-                    Vector2 off = perp.RotatedBy(spin + arm * MathHelper.Pi) * radius;
-                    bool square = layer == 2;
-                    GeneralParticleHandler.SpawnParticle(new CustomSpark(Projectile.Center + off, off * 0.04f,
-                        square ? AethersWhisperVisuals.GlowSquareTex : "CalamityMod/Particles/BloomCircle",
-                        false, Main.rand.Next(10, 16), (square ? 0.06f : 0.09f) * scaleP,
-                        AethersWhisperVisuals.Lerp(layer / 2f), square ? new Vector2(1f, 1f) : new Vector2(0.7f, 1.2f),
-                        true, !square, glowCenterScale: 0.6f, shrinkSpeed: 0.15f));
+                    Vector2 off = perp.RotatedBy(spin + arm * MathHelper.Pi) * (6f + layer * 7f) * scaleP;
+                    Dust h = Dust.NewDustPerfect(Projectile.Center + off,
+                        layer == 1 ? AethersWhisperVisuals.HardLightDust : AethersWhisperVisuals.ElectricDust,
+                        off * 0.02f, 60, AethersWhisperVisuals.Lerp(layer), Main.rand.NextFloat(0.9f, 1.4f) * scaleP);
+                    h.noGravity = true;
                 }
             }
+
+            // 以下粒子高光每帧只生成一次（FinalExtraUpdate），避免 ×10 刷爆粒子预算。
+            if (!Projectile.FinalExtraUpdate())
+                return;
+            int time = (int)Projectile.localAI[0]++;
 
             // ② 主光核残影 + 高斯压扁尘拖尾
             GeneralParticleHandler.SpawnParticle(new CustomSpark(Projectile.Center, Projectile.velocity * 0.12f,

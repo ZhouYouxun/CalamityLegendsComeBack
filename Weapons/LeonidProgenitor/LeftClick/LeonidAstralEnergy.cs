@@ -14,6 +14,9 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 {
     public class LeonidAstralEnergy : ModProjectile, ILocalizedModType
     {
+        private const int DamageDelay = 30;
+        private const int HomingDelay = 42;
+
         public new string LocalizationCategory => "Projectiles.LeonidProgenitor";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
@@ -25,7 +28,6 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             Projectile.friendly = true;
             Projectile.penetrate = 1;
             Projectile.timeLeft = 240;
-            Projectile.extraUpdates = 1;
             Projectile.DamageType = ModContent.GetInstance<RogueDamageClass>();
             Projectile.tileCollide = false;
             Projectile.usesLocalNPCImmunity = true;
@@ -36,10 +38,10 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
         {
             Timer++;
 
-            // 前 40 tick 正常飞行，之后开启 480 像素范围内的敌怪自动追踪
-            if (Timer >= 40f)
+            // First travel harmlessly, then ease into a wide soft homing curve.
+            if (Timer >= HomingDelay)
             {
-                CalamityUtils.HomeInOnNPC(Projectile, true, 480f, 13f, 20f);
+                CalamityUtils.HomeInOnNPC(Projectile, true, 540f, 11f, 44f);
             }
 
             // 保留兵匠之傲星辉能量束的原版正弦双螺旋 Dust 特效
@@ -61,7 +63,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             GeneralParticleHandler.SpawnParticle(obligatory);
 
             // 狮子座 (LeonidProgenitor) 专属的附加星光特效
-            if (Main.rand.NextBool(3))
+            if (Main.rand.NextBool(10))
             {
                 LeonidStarlight.Shed(
                     Projectile.Center,
@@ -74,6 +76,8 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 );
             }
         }
+
+        public override bool? CanDamage() => Timer < DamageDelay ? false : null;
 
         public override void OnKill(int timeLeft)
         {

@@ -1,0 +1,36 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				Pisces: {
+					DisplayName: 双鱼座
+					Tooltip:
+						'''
+						左键喷吐带重力的硫火火球，火球会下坠、爆破，落地积成持续灼烧的地火
+						每第四发是更大的火球，飞行后分裂成一扇向下坠落的火雨
+						按住右键逐级提纯极光射击——校准、聚焦、再到北辰锁定；蓄到满级松开则释放双束神圣激光
+						精准的光学射击与满蓄激光，会把你留下的硫火串成一次定向引爆
+						击败血肉之墙与月球领主只会让硫火喷吐更密、更大
+						'''
+				}
+			}
+		}
+
+		Projectiles: {
+			Pisces: {
+				PiscesBrimstoneFireball.DisplayName: 硫火火球
+				PiscesBrimstoneFireballBig.DisplayName: 硫火爆球
+				PiscesBrimstoneFireballSplit.DisplayName: 硫火余烬
+				PiscesAnchor.DisplayName: 地火
+				PiscesLinkChain.DisplayName: 串联链线
+				PiscesLinkBurst.DisplayName: 串联引爆
+				PiscesPolarShot.DisplayName: 极光射弹
+				PiscesRefractionShard.DisplayName: 折射碎片
+				PiscesHolyBeam.DisplayName: 神圣激光
+				PiscesOpticHoldout.DisplayName: 北辰光学
+				// PiscesBrimstoneHoldout.DisplayName: Pisces Brimstone Holdout
+				// PiscesTotalityEmber.DisplayName: Pisces Totality Ember
+			}
+		}
+	}
+}

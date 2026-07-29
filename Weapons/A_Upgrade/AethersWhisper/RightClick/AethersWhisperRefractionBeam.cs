@@ -18,8 +18,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.RightClick
 {
     /// <summary>
     /// 右键的单束微光折射伪激光（文档第 4.2 节）。
-    /// 出生时锁定本束鼠标世界坐标；向前飞行，可借实体砖块真实反射一次（保留 55% 剩余射程）。
-    /// 到达锁定准星点 / 首个敌人 / 第二次墙碰撞 / 射程耗尽 → 立即在终点分解为一对回收晶片。
+    /// 出生时锁定本束鼠标世界坐标；向前飞行，可借实体砖块真实反射一次。
+    /// 首个敌人 / 第二次墙碰撞 / timeLeft 耗尽 → 立即在终点分解为一对回收晶片。
     /// 禁止自动索敌；反射只来自真实碰撞法线。
     /// </summary>
     internal sealed class AethersWhisperRefractionBeam : ModProjectile, ILocalizedModType
@@ -28,7 +28,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.RightClick
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         private Vector2 startPos;         // 枪口出生点
-        private float rangeBudget;        // 剩余射程
         private bool reflected;
         private Vector2 reflectPos;
         private Vector2 reflectNormal;
@@ -58,7 +57,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.RightClick
         public override void OnSpawn(IEntitySource source)
         {
             startPos = Projectile.Center;
-            rangeBudget = AethersWhisperBalance.BeamMaxRange;
         }
 
         public override void AI()
@@ -69,19 +67,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.RightClick
             if (reflectAge >= 0)
                 reflectAge++;
 
-            float step = Projectile.velocity.Length();
-
             // 直接飞行：不再飞向鼠标点/命中鼠标，鼠标很近就直接穿过去。
-            // 结束条件只有：首个敌人命中 / 第二次墙碰撞 / 射程耗尽。
+            // 结束条件只有：首个敌人命中 / 第二次墙碰撞 / timeLeft 耗尽。
             HandleTileCollision();
-
-            // 射程耗尽即分解。
-            rangeBudget -= step;
-            if (rangeBudget <= 0f)
-            {
-                Disassemble(Projectile.Center);
-                return;
-            }
 
             if (!Main.dedServ)
             {
@@ -118,7 +106,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.RightClick
                 return;
             }
 
-            // 第一次撞墙：按真实法线反射一次，剩余射程保留 55%，反射点不造成直接伤害。
+            // 第一次撞墙：按真实法线反射一次，反射点不造成直接伤害。
             bool xBlocked = Collision.SolidCollision(new Vector2(next.X, Projectile.Center.Y) - half, probe, probe);
             bool yBlocked = Collision.SolidCollision(new Vector2(Projectile.Center.X, next.Y) - half, probe, probe);
 
@@ -135,7 +123,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.RightClick
             reflectNormal = normal.SafeNormalize(Vector2.UnitY);
             reflectAge = 0;
             Projectile.velocity = Vector2.Reflect(vel, reflectNormal);
-            rangeBudget *= AethersWhisperBalance.BeamReflectRangeRetain;
             Projectile.netUpdate = true;
 
             SoundEngine.PlaySound(SoundID.Item27 with { Volume = 0.35f, Pitch = 0.5f }, reflectPos);
@@ -224,7 +211,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.RightClick
             writer.Write(reflected);
             writer.WriteVector2(reflectPos);
             writer.WriteVector2(reflectNormal);
-            writer.Write(rangeBudget);
         }
 
         public override void ReceiveExtraAI(BinaryReader reader)
@@ -233,7 +219,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.RightClick
             reflected = reader.ReadBoolean();
             reflectPos = reader.ReadVector2();
             reflectNormal = reader.ReadVector2();
-            rangeBudget = reader.ReadSingle();
         }
 
         public override bool PreDraw(ref Color lightColor)

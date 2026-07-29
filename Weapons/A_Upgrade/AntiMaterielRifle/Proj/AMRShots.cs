@@ -832,24 +832,24 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
                 GeneralParticleHandler.SpawnParticle(new CustomPulse(
                     Projectile.Center,
                     Vector2.Zero,
-                    Color.Black,
+                    new Color(42, 16, 88),
                     "CalamityMod/Particles/SmallBloom",
                     Vector2.One,
                     Main.rand.NextFloat(-10f, 10f),
                     1.9f + i * 0.55f,
                     0f,
                     46,
-                    false));
+                    true));
             }
 
             GeneralParticleHandler.SpawnParticle(new GenericBloom(
                 Projectile.Center,
                 Vector2.Zero,
-                Color.Black,
+                new Color(42, 16, 88),
                 1.1f,
                 26,
                 false,
-                false));
+                true));
 
             Particle violetRing = new CustomPulse(
                 Projectile.Center,
@@ -884,9 +884,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
                     false,
                     Main.rand.Next(16, 24),
                     Main.rand.NextFloat(0.04f, 0.085f),
-                    Color.Black,
+                    new Color(42, 16, 88),
                     new Vector2(0.55f, 1.45f),
-                    false);
+                    true);
                 GeneralParticleHandler.SpawnParticle(blackShard);
                 blackShard.DrawLayer = GeneralDrawLayer.AfterEverything;
             }

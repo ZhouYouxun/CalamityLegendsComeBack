@@ -1,0 +1,36 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				Pisces: {
+					DisplayName: Pisces
+					Tooltip:
+						'''
+						Left click sprays gravity-bound brimstone fireballs that fall, burst and pool into lingering ground fire
+						Every fourth shot is a heavier fireball that splits into a downward fan
+						Hold right click to charge ever-sharper aurora shots — calibrated, focused, then a polar lock; hold to the limit to release a twin holy lance
+						Precise optic shots and the full-charge lance chain the brimstone you left behind into a directed detonation
+						Defeating the Wall of Flesh and the Moon Lord only makes the brimstone spew denser and larger
+						'''
+				}
+			}
+		}
+
+		Projectiles: {
+			Pisces: {
+				PiscesBrimstoneFireball.DisplayName: Brimstone Fireball
+				PiscesBrimstoneFireballBig.DisplayName: Brimstone Blast
+				PiscesBrimstoneFireballSplit.DisplayName: Brimstone Ember
+				PiscesAnchor.DisplayName: Ground Fire
+				PiscesLinkChain.DisplayName: Link Chain
+				PiscesLinkBurst.DisplayName: Chain Detonation
+				PiscesPolarShot.DisplayName: Aurora Shot
+				PiscesRefractionShard.DisplayName: Refraction Shard
+				PiscesHolyBeam.DisplayName: Holy Lance
+				PiscesOpticHoldout.DisplayName: Polar Optic
+				PiscesBrimstoneHoldout.DisplayName: Pisces Brimstone Holdout
+				PiscesTotalityEmber.DisplayName: Pisces Totality Ember
+			}
+		}
+	}
+}

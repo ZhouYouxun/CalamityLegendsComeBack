@@ -163,14 +163,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             // 右键命中序列优先锁定鼠标附近目标；没有目标时只完成召剑和消耗。
             NPC target = AzureThunderPlayer.FindMouseNearestTarget(player);
-            int activeSwordCount = AzureThunderPlayer.CountOwnedGroundSwords(player);
+            float swordEffectRadius = AzureThunderAccessoryPlayer.GetGroundSwordEffectRadius(player);
+            int activeSwordCount = AzureThunderPlayer.CountGroundSwordsNear(player, player.Center, swordEffectRadius);
             player.GetModPlayer<AzureThunderAccessoryPlayer>().OnConsumeThunderCharge(consumedCharge, harmony, activeSwordCount, target);
 
-            if (target != null)
+            if (target != null && activeSwordCount > 0)
             {
-                // 序列器读取附近地剑数量决定雷击次数，ai[2] 同时编码消耗层数和终极模式。
-                float swordEffectRadius = AzureThunderAccessoryPlayer.GetGroundSwordEffectRadius(player);
-                int swordCount = System.Math.Max(1, AzureThunderPlayer.CountGroundSwordsNear(player, player.Center, swordEffectRadius));
+                // 只有已落地且位于有效半径内的地剑能接入右键重炮。
+                int swordCount = activeSwordCount;
 
                 int encodedMode = (consumedCharge * 10) + (harmony ? 1 : 0);
                 Projectile.NewProjectile(

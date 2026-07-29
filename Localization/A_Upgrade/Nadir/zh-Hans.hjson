@@ -38,6 +38,7 @@ Mods: {
 				UmbralNadirSpinNova.DisplayName: 奇点新星
 				UmbralNadirVoidEssence.DisplayName: 冥融虚空核
 				UmbralNadirAbyssRift.DisplayName: 深渊之口
+				// UmbralNadirJavelinCurtain.DisplayName: Umbral Nadir Javelin Curtain
 			}
 		}
 

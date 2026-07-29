@@ -1,0 +1,238 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				NewLegendYharimsCrystal: {
+					DisplayName: 唯我独尊-暴君水晶
+					Tooltip: "[GFB]"
+					TooltipBody:
+						'''
+						[c/F8E28A:左键]：按住左键舞出高速旋转的黄金水晶圆盘，绞杀四周敌人。
+						每转完一圈，刀势缓缓收力归零，随后跟着准星重新蓄势。
+						水晶圆盘击中敌人会迸出追踪的金焰火球与燃烧碎片。
+						它们环绕目标持续灼烧，最终炸成金色圣焰。
+						[c/73DFFF:右键]：按住右键召唤六台黄金护卫战舰，列成防空阵列。
+						同时水晶本体喷射一道永不熄灭的灼热主激光。
+						右键期间点击左键发动协同重击：主激光瞬间增粗，
+						并向两侧喷洒金色光弹与成扇的分裂镭射。
+						战舰齐射双联金色炸弹后，会短暂宕机整备。
+						[c/F6D06B:金源绝技]：能量积满且装备传说徽记时，按[技能键]释放。
+						共有两套大招：
+						[c/F6D06B:· 烈焰圣刃（刀刃形态）]：挥出撕裂空间的巨型圣刃，并从大地唤起贯穿天际的金焰火柱。
+						[c/F6D06B:· 激光风暴（水晶形态）]：在目标上空部署十二艘金辉激光舰，编织毁灭一切的死光风暴。
+						'''
+					CurrentMode: "[c/F6D06B:当前形态] {0}"
+					Mode_Drill: "[c/F2B85D:攻城钻头]"
+					Mode_Flamethrower: "[c/FF7A45:金焰喷射]"
+					Mode_Warships: "[c/73DFFF:帝国舰队]"
+					Mode_HelixLaser: "[c/F8E28A:螺旋棱镜]"
+					Mode_Drill_Desc: "[c/F2B85D:攻城钻头] [c/DCD6C8:短暂启动后收束成窄而长的盘锯轨迹，持续撕咬近身目标，命中时震动屏幕。]"
+					Mode_Flamethrower_Desc: "[c/FF7A45:金焰喷射] [c/DCD6C8:预热后喷出高速能量火舌伪激光，直线单体、弱追踪，并在喷射与休息之间循环。]"
+					Mode_Warships_Desc: "[c/73DFFF:帝国舰队] [c/DCD6C8:部署6护卫、4巡洋、2重炮舰、1前置超级激光舰与1后置维修舰。]"
+					Mode_HelixLaser_Desc: "[c/F8E28A:螺旋棱镜] [c/DCD6C8:编织螺旋光束、折射针光与短促金色切线激光；开火时按住右键可加速聚焦到一点。]"
+					SwitchInfo: "[c/B5E7FF:切换] [c/DCD6C8:右键玩家左半边切换到上一个形态，右键玩家右半边切换到下一个形态。]"
+					FocusInfo: "[c/F8E28A:聚焦] [c/DCD6C8:只在螺旋棱镜左键开火时生效，光束会逐渐加速收束，而不是瞬间贴到同一点。]"
+					PrismReworkInfo: "[c/F8E28A:左键] [c/DCD6C8:按住后部署六枚带惯性的棱镜；它们的辅助光束会逐渐汇聚成由本体发射的持续破坏死光。]"
+					RightCommandInfo:
+						'''
+						[c/73DFFF:右键阵列] [c/DCD6C8:部署六台金色无人机组成防空阵列：前列发射高速金源针弹，中列编织弧形交叉火力，后列投放会越飞越快、越追越紧的追踪心。]
+						[c/DCD6C8:右键期间按住左键进入聚焦，所有无人机子弹与本体主炮会严格集中到鼠标位置；随后全阵列齐射双黄金爆弹并停机2秒。]
+						[c/DCD6C8:水晶本体持续输出主激光；开火时点左键会令全阵列齐射双联金色炸弹，随后宕机2秒。]
+						'''
+					ResetInfo: "[c/FF7A45:重置] [c/DCD6C8:松开左键、死亡或魔力耗尽都会清空整个展开进度。]"
+					EXInfo: "[c/F6D06B:大招【激光风暴】] [c/DCD6C8:召唤12艘金色激光舰进入轨道；准备完成后点击左键齐射。]"
+					LegendaryHint: "[c/BABABA:按住 Shift 读取记录]"
+					LegendaryText:
+						'''
+						[c/E6C024:最初的暴君水晶更接近一枚金色棱镜：折射光束，聚拢能量，再把毁灭射向前方。]
+						[c/E6C024:但如果只写成遥远舰队或泛用帝国科技，它反而会离暴君、金源与龙焰越来越远。]
+						[c/E6C024:重构后，左键的光束不再只是数量变化，而是在分散与收束之间逐步逼近真正的焦点。]
+						[c/E6C024:右键释放的爆裂结构，则像是把水晶中过载的能量提前拆出，让战场承受连续校准。]
+						[c/E6C024:当最终阶段展开，棱镜不再寻找更亮的光，它只等待暴君的意志把所有光线压成同一道命令。]
+						'''
+				}
+			}
+
+			Accessories: {
+				YharimsCrystalAlpha: {
+					DisplayName: 亚利姆水晶 - Alpha
+					Tooltip: 使用亚利姆水晶时，武器伤害提高 10%。
+				}
+
+				YharimsCrystalChi: {
+					DisplayName: 亚利姆水晶 - Chi
+					Tooltip: 使用亚利姆水晶时，获得较小的武器伤害加成。
+				}
+
+				YharimsCrystalDelta: {
+					DisplayName: 亚利姆水晶 - Delta
+					Tooltip: 强化亚利姆水晶的杀戮形态，并缩短杀戮模式冷却。
+				}
+
+				YharimsCrystalSigma: {
+					DisplayName: 亚利姆水晶 - Sigma
+					Tooltip: 暴君棱镜无人机在攻击形态下额外发射一枚机枪光弹。
+				}
+
+				YharimsCrystalGamma: {
+					DisplayName: 亚利姆水晶 - Gamma
+					Tooltip: 暴君棱镜无人机光弹飞行速度提高 12%。
+				}
+
+				YharimsCrystalOmega: {
+					DisplayName: 亚利姆水晶 - Omega
+					Tooltip: 小幅提高亚利姆水晶伤害，并改善传奇技能充能。
+				}
+
+				YharimsCrystalPhi: {
+					DisplayName: 亚利姆水晶 - Phi
+					Tooltip: 亚利姆水晶传奇技能充能更快，冷却更短。
+				}
+
+				YharimsCrystalPi: {
+					DisplayName: 亚利姆水晶 - Pi
+					Tooltip: 强化暴君棱镜重火力齐射，并更频繁发射以太通量光线。
+				}
+
+				YharimsCrystalPsi: {
+					DisplayName: 亚利姆水晶 - Psi
+					Tooltip: 暴君棱镜无人机在攻击形态下额外发射一枚机枪光弹。
+				}
+
+				YharimsCrystalTheta: {
+					DisplayName: 亚利姆水晶 - Theta
+					Tooltip: 亚利姆水晶魔力消耗降低 18%。
+				}
+
+				YharimsCrystalUpsilon: {
+					DisplayName: 亚利姆水晶 - Upsilon
+					Tooltip: 暴君棱镜无人机光弹飞行速度小幅提高。
+				}
+			}
+		}
+
+		Projectiles: {
+			YharimsCrystal: {
+				YC_LeftHoldOut.DisplayName: 暴君水晶左翼舰阵
+				YC_RightHoldOut.DisplayName: 暴君水晶右翼舰阵
+				YC_EX_VIP.DisplayName: 暴君水晶EX核心舰
+				YC_EX_Drone.DisplayName: 暴君水晶EX护卫舰
+				YC_EX_LaserCruiser.DisplayName: 暴君水晶EX巡洋舰
+				YC_EX_Battleship.DisplayName: 暴君水晶EX战列舰
+				YC_CBeam.DisplayName: 暴君水晶主炮光束
+				YC_Left_Frigate.DisplayName: 左翼护卫舰
+				YC_Left_LaserCruiser.DisplayName: 左翼巡洋舰
+				YC_Left_MissileBattleship.DisplayName: 左翼战列舰
+				YC_Left_RepairShip.DisplayName: 后方维修舰
+				YC_Left_FakeLazer.DisplayName: 诱导伪激光
+				YC_Left_Rocket.DisplayName: 舰载追踪导弹
+				YC_Left_RepairBolt.DisplayName: 维修脉冲核
+				YC_Left_Drone.DisplayName: 左翼无人机
+				YC_Right_Drone.DisplayName: 右翼无人机
+				YC_Right_LaserCruiser.DisplayName: 右翼巡洋舰
+				YC_Right_Battleship.DisplayName: 右翼战列舰
+				YC_Right_RepairShip.DisplayName: 右翼维修舰
+				YC_Right_RepairShield.DisplayName: 维修护盾圈
+				YC_Right_HeavyBolt.DisplayName: 重型能量核
+				YC_Right_TrackerLaser.DisplayName: 追踪激光
+				YC_ModeSwitchGlyph.DisplayName: 暴君水晶形态星图
+				YC_DrillHoldout.DisplayName: 暴君水晶攻城钻头
+				YC_FlamethrowerHoldout.DisplayName: 暴君水晶金焰喷射器
+				YC_FlameLance.DisplayName: 暴君金焰枪
+				YC_WarshipHoldout.DisplayName: 暴君水晶帝国舰队
+				YC_WarshipEscort.DisplayName: 金辉护卫舰
+				YC_WarshipCruiser.DisplayName: 金辉巡洋舰
+				YC_WarshipBattleship.DisplayName: 金辉重炮舰
+				YC_WarshipLaserShip.DisplayName: 金辉激光舰
+				YC_WarshipRepairShip.DisplayName: 金辉维修舰
+				YC_WarshipAuricRail.DisplayName: 金辉轨道重炮
+				YC_HelixLaserHoldout.DisplayName: 暴君水晶螺旋棱镜
+				YC_HelixLaserBeam.DisplayName: 螺旋棱镜光束
+				YC_EX_LaserDrone.DisplayName: 暴君水晶EX激光舰
+				ApolloRocket.DisplayName: 阿波罗导弹
+				ChickenRocket.DisplayName: 小鸡导弹
+				CosmicViperHomingRocket.DisplayName: 宇宙蝰蛇追踪弹
+				CosmicViperSplitRocket1.DisplayName: 宇宙蝰蛇分裂弹
+				CosmicViperSplittingRocket.DisplayName: 宇宙蝰蛇裂变弹
+				GoliathRocket.DisplayName: 歌利亚导弹
+				MagnomalyRocket.DisplayName: 磁畸导弹
+				MK2RocketHoming.DisplayName: MK2追踪导弹
+				MK2RocketNormal.DisplayName: MK2导弹
+				PeanutRocket.DisplayName: 花生导弹
+				PrismRocket.DisplayName: 棱镜导弹
+				RainbowRocket.DisplayName: 彩虹导弹
+				RocketFire.DisplayName: 导弹尾焰
+				ScorchedEarthRocket.DisplayName: 焦土导弹
+				ScorpioLargeRocket.DisplayName: 天蝎重型导弹
+				ScorpioRocket.DisplayName: 天蝎导弹
+				SeaDragonRocket.DisplayName: 海龙导弹
+				MirrorBladeSlash.DisplayName: 镜刃斩击
+				MirrorBladeSlashCreator.DisplayName: 镜刃斩击发生器
+				YC_WarshipArtilleryShell.DisplayName: 舰载重炮弹
+				YC_WarshipMissile.DisplayName: 舰载导弹
+				YC_WarshipPulse.DisplayName: 舰载脉冲波
+				YC_WarshipSuperLaser.DisplayName: 金辉舰队超级激光
+				YC_PrismNeedleLaser.DisplayName: 棱镜针状激光
+				SODLazer.DisplayName: 金辉折射枪
+				YC_TyrantPrismHoldout.DisplayName: 暴君水晶破坏棱镜
+				YC_TyrantPrismDrone.DisplayName: 暴君水晶棱镜
+				YC_TyrantPrismBolt.DisplayName: 暴君水晶棱镜光弹
+				YC_TyrantPrismMainBeam.DisplayName: 暴君水晶破坏死光
+				YC_TyrantPrismConvergeBeam.DisplayName: 暴君水晶汇聚光束
+				YC_TyrantPrismLaserLance.DisplayName: 暴君水晶棱镜光矛
+				YC_TyrantPrismMissile.DisplayName: 暴君水晶棱镜导弹
+				YC_TyrantSlaughterFlame.DisplayName: 暴君屠戮火焰
+				YC_TyrantSlaughterHoldout.DisplayName: 暴君屠戮持握体
+				YC_TyrantSlaughterSlash.DisplayName: 暴君屠戮斩击
+				YC_TyrantSlaughterTail.DisplayName: 暴君屠戮尾迹
+				YC_YharimsCrystalBeam.DisplayName: 亚利姆水晶光束
+				YC_EXBladeGrandSlash.DisplayName: 亚利姆水晶EX巨刃斩
+				YC_EXFirePillar.DisplayName: 亚利姆水晶EX火柱
+				YC_EXStormLaser.DisplayName: 亚利姆水晶EX风暴激光
+				YC_AuricJudgementWave.DisplayName: 金源审判波
+				YC_BrimstoneWheelMissile.DisplayName: 硫火轮导弹
+				YC_BurningShard.DisplayName: 燃烧碎片
+				YC_BurningShardSplinter.DisplayName: 燃烧碎片裂片
+				YC_LeftBladeSwing.DisplayName: 亚利姆水晶左键挥刃
+				YC_RainbowUltimaBolt.DisplayName: 彩虹终焉光弹
+				YC_RightCrystalHoldout.DisplayName: 亚利姆水晶右键持握体
+				YC_RightScorchingLaser.DisplayName: 亚利姆水晶灼热激光
+				YC_LaserBlast.DisplayName: 亚利姆水晶灼热爆裂
+				YC_EssenceFlame.DisplayName: 精华火焰
+				YC_ThrownBlade.DisplayName: 投掷水晶刃
+				YC_RightDrone.DisplayName: 亚利姆水晶右键无人机
+				YC_DroneShot.DisplayName: 亚哈里姆无人机金源弹
+				YC_GoldBomb.DisplayName: 黄金爆弹
+				YC_TrackingRocket.DisplayName: 追踪热核火箭
+				YC_BackgroundBlade.DisplayName: 背景金剑
+				YC_BackgroundBladeStrike.DisplayName: 背景金剑打击
+				YC_BackgroundCrystal.DisplayName: 背景亚哈里姆水晶
+				YC_BackgroundCrystalBolt.DisplayName: 背景水晶光束
+				// YC_GalacticaComet.DisplayName: Y C_ Galactica Comet
+			}
+
+			// FairyDanceWisp.DisplayName: Fairy Dance Wisp
+			// RainbowSpiritBolt.DisplayName: Rainbow Spirit Bolt
+			// RainbowSpiritLacewing.DisplayName: Rainbow Spirit Lacewing
+			// HDMCArena.DisplayName: H D M C Arena
+			// CryogenFrostMote.DisplayName: Cryogen Frost Mote
+			// AureusStarMote.DisplayName: Aureus Star Mote
+			// Summon.ResponsibilityRoverFusionBolt.DisplayName: Responsibility Rover Fusion Bolt
+			// BrinyBaron_RightSpinOuterBubble.DisplayName: Briny Baron_ Right Spin Outer Bubble
+			// BBSuperDashAfterimage.DisplayName: B B Super Dash Afterimage
+			// AncientIceShieldVisual.DisplayName: Ancient Ice Shield Visual
+			// GlacialWeaponFamiliar.DisplayName: Glacial Weapon Familiar
+			// GlacialWeaponFamiliarShot.DisplayName: Glacial Weapon Familiar Shot
+			// YCAuricJudgementMatrix.DisplayName: Y C Auric Judgement Matrix
+		}
+
+		Cooldowns.YC_EX: 世界的终结
+	}
+
+	Buffs: {
+		YharonSoulFragment_Buff: {
+			DisplayName: 丛龙灵火
+			Description: 正在被丛龙灵魂之火灼烧。
+		}
+	}
+}

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using CalamityLegendsComeBack.Accssory.TS;
 using CalamityLegendsComeBack.Systems;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -83,7 +84,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             Player owner = Main.player[Projectile.owner];
             Vector2 matrixCenter = owner.Center - Main.screenPosition + new Vector2(-CenterLeftOffset, owner.gfxOffY - 8f);
-            int swordCount = AzureThunderPlayer.CountOwnedGroundSwords(owner);
+            float effectiveRadius = AzureThunderAccessoryPlayer.GetGroundSwordEffectRadius(owner);
+            int swordCount = AzureThunderPlayer.CountGroundSwordsNear(owner, owner.Center, effectiveRadius);
             float opacity = Projectile.Opacity;
             float pulse = 0.5f + 0.5f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 5.6f);
 
@@ -98,6 +100,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             if (swordCount > SlotOffsets.Length)
                 DrawOverflowCore(matrixCenter, opacity, pulse);
+            if (swordCount >= AzureThunderGroundSword.MaxGroundSwords)
+                DrawFullMatrixEffect(matrixCenter, opacity, pulse);
 
             return false;
         }
@@ -137,6 +141,37 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             Color core = Color.Lerp(new Color(255, 238, 126), Color.White, pulse * 0.45f);
             DrawDiamond(center, SlotSize * 1.7f, core * (0.34f * opacity));
             DrawDiamond(center, SlotSize * 0.92f, core * (0.88f * opacity));
+        }
+
+        private static void DrawFullMatrixEffect(Vector2 center, float opacity, float pulse)
+        {
+            float time = Main.GlobalTimeWrappedHourly;
+            Color teal = Color.Lerp(new Color(45, 255, 207), Color.White, pulse * 0.42f) * (0.78f * opacity);
+            Color dark = new Color(5, 18, 24) * (0.74f * opacity);
+            Color hot = new Color(223, 255, 246) * (0.68f * opacity);
+
+            // 九剑全有效时，面板外侧出现规则四角构件和反向旋转的双层方阵。
+            for (int layer = 0; layer < 2; layer++)
+            {
+                float rotation = (layer == 0 ? 1f : -1f) * time * (1.1f + layer * 0.35f) + MathHelper.PiOver4;
+                float radius = 31f + layer * 8f + pulse * 3f;
+                Vector2 previous = center + rotation.ToRotationVector2() * radius;
+                for (int i = 1; i <= 4; i++)
+                {
+                    Vector2 next = center + (rotation + MathHelper.PiOver2 * i).ToRotationVector2() * radius;
+                    DrawLine(previous, next, layer == 0 ? dark : teal, layer == 0 ? 4f : 1.4f);
+                    previous = next;
+                }
+            }
+
+            for (int i = 0; i < 4; i++)
+            {
+                float angle = time * 1.7f + MathHelper.PiOver2 * i;
+                Vector2 cubeCenter = center + angle.ToRotationVector2() * (42f + pulse * 4f);
+                DrawDiamond(cubeCenter, 8.5f, dark);
+                DrawDiamond(cubeCenter, 5.4f, i % 2 == 0 ? teal : hot);
+                DrawLine(center + angle.ToRotationVector2() * 27f, cubeCenter, teal * 0.42f, 1f);
+            }
         }
 
         private static void DrawDiamond(Vector2 center, float size, Color color)

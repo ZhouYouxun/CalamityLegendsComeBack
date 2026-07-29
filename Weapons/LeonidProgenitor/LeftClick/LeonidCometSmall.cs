@@ -39,7 +39,6 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
         public bool IsOrbiting;
         private int orbitTransitionTimer = -1;
         private int bounceCooldown;
-        private bool hitNPC;
 
         public override void SetStaticDefaults()
         {
@@ -394,31 +393,12 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            hitNPC = true;
-
             if (BounceCount >= 7)
             {
                 int energy = Owner.GetModPlayer<LeonidConstellationPlayer>().IsUnlocked(LeonidStar.Chertan) ? 4 : 3;
                 Owner.GetModPlayer<LeonidProgenitorPlayer>().AddUltimateEnergy(energy);
             }
 
-            // 无论普通还是潜伏，左键弹幕命中敌人时，在目标处释放 1 发 LeonidAstralEnergy
-            if (Projectile.owner == Main.myPlayer)
-            {
-                Vector2 spawnPos = target.Center;
-                Vector2 randVel = Main.rand.NextVector2Circular(6f, 6f);
-                if (randVel == Vector2.Zero) randVel = -Vector2.UnitY * 6f;
-
-                Projectile.NewProjectile(
-                    Projectile.GetSource_OnHit(target),
-                    spawnPos,
-                    randVel,
-                    ModContent.ProjectileType<LeonidAstralEnergy>(),
-                    (int)(Projectile.damage * 0.5f),
-                    0f,
-                    Projectile.owner
-                );
-            }
         }
 
         public override bool OnTileCollide(Vector2 oldVelocity)
@@ -436,31 +416,17 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             LeonidVisualUtils.SpawnCelestialPulse(Projectile.Center, Projectile.oldVelocity, MeteorColor, FromStealthRain ? 1.35f : 1f, FromStealthRain ? 24 : 18);
             CLCBLightingBoltsSystem.Spawn_LeonidStarfieldMatrixBurst(Projectile.Center, FromStealthRain ? 1.8f : 1f);
 
-            // 潜伏攻击模式下，若弹幕销毁且未命中敌人，在 OnKill 时向四周每隔 120 度发射 3 发 LeonidAstralEnergy
-            if (FromStealthRain && !hitNPC && Projectile.owner == Main.myPlayer)
+            // Every small comet releases one delayed-damage energy wisp from its actual death point.
+            if (Projectile.owner == Main.myPlayer)
             {
-                float baseAngle = Main.rand.NextFloat(MathHelper.TwoPi);
-                float speed = 10f;
-                for (int i = 0; i < 3; i++)
-                {
-                    float angle = baseAngle + i * (MathHelper.TwoPi / 3f);
-                    Vector2 vel = angle.ToRotationVector2() * speed;
-
-                    Projectile.NewProjectile(
-                        Projectile.GetSource_FromThis(),
-                        Projectile.Center,
-                        vel,
-                        ModContent.ProjectileType<LeonidAstralEnergy>(),
-                        (int)(Projectile.damage * 0.5f),
-                        0f,
-                        Projectile.owner
-                    );
-                }
+                Vector2 energyVelocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(7f, 10f);
+                Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, energyVelocity,
+                    ModContent.ProjectileType<LeonidAstralEnergy>(), (int)(Projectile.damage * 0.5f), 0f, Projectile.owner);
             }
 
             LeonidStarlight.Burst(
                 Projectile.Center,
-                FromStealthRain ? 9 : 6,
+                FromStealthRain ? 4 : 3,
                 MeteorColor,
                 LeonidStarlightShape.Shard,
                 speed: FromStealthRain ? 7.5f : 5.5f,
@@ -471,7 +437,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
             LeonidStarlight.Burst(
                 Projectile.Center,
-                FromStealthRain ? 6 : 4,
+                FromStealthRain ? 3 : 2,
                 Color.Lerp(MeteorColor, LeonidVisualUtils.MoonWhite, 0.4f),
                 LeonidStarlightShape.Mote,
                 speed: 4f,
@@ -484,6 +450,8 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 LeonidStarlight.Spawn(Projectile.Center, Vector2.Zero, LeonidVisualUtils.StarGold,
                     LeonidStarlightShape.Halo, 0.9f, 12, 80, 12f, linksToSiblings: false);
             }
+
+            LeonidPolarStarBurst.Spawn(Projectile.Center, Projectile.oldVelocity, MeteorColor, FromStealthRain ? 1.15f : 0.9f);
         }
 
         public override bool PreDraw(ref Color lightColor)

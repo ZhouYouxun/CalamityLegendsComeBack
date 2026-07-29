@@ -196,6 +196,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             if (VisualOnly)
                 return;
 
+            // 第二段连招把两把待机飞剑挂在这道落雷上：雷的碰撞真正发生时才释放。
+            if (Projectile.localAI[1] == 1f && Projectile.localAI[0] > 0f)
+            {
+                AzureThunderFlyingSword.ReleaseWaitingGroup(Projectile.owner, (int)Projectile.localAI[0]);
+                Projectile.localAI[1] = 0f;
+            }
+
             Player owner = Main.player[Projectile.owner];
             AzureThunderPlayer thunderPlayer = owner.GetModPlayer<AzureThunderPlayer>();
             if (thunderPlayer.HarmonyActive && Projectile.numHits == 0 && Main.myPlayer == Projectile.owner)

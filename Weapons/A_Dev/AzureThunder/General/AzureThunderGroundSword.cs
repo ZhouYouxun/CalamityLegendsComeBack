@@ -35,7 +35,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         private const float FollowEllipseRadiusY = 42f;
         private const float FollowOrbitSpeed = 0.045f;
 
-        // ai[0] 表示行为模式：0=待机/跟随，1=俯冲。
+        private const int ArrivalMode = 0;
+        private const int ReadyMode = 1;
+        private const int DiveMode = 2;
+        private const int MaterializeTime = 18;
+        private const float ArrivalHeight = 540f;
+
+        // ai[0] 表示行为模式；ai[1]/ai[2] 保存解析后的最终插地点。
         private int Mode
         {
             get => (int)Projectile.ai[0];
@@ -49,7 +55,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             set => Projectile.localAI[0] = value;
         }
 
-        private bool Diving => Mode == 1;
+        private Vector2 LandingPoint => new(Projectile.ai[1], Projectile.ai[2]);
+        private bool Arriving => Mode == ArrivalMode;
+        private bool Ready => Mode == ReadyMode;
+        private bool Diving => Mode == DiveMode;
+        public bool IsReadyForCommand => initialized && Ready;
 
         public override void SetDefaults()
         {
@@ -75,20 +85,29 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         {
             if (!initialized)
             {
-                // 首帧对齐地面、播放锻造雷和出生粒子，并同步给其他客户端。
+                // 生成参数表示目的地；先向下解析地面，再把剑移到高空进行显形与坠落。
                 initialized = true;
-                SnapToGroundIfPossible();
+                Vector2 landingPoint = FindGroundPosition(Projectile.Center);
+                Projectile.ai[1] = landingPoint.X;
+                Projectile.ai[2] = landingPoint.Y;
+                Projectile.Center = landingPoint - Vector2.UnitY * ArrivalHeight;
+                Mode = ArrivalMode;
+                Timer = 0;
                 Projectile.rotation = MathHelper.PiOver2 + MathHelper.PiOver4 + MathHelper.ToRadians(Main.rand.NextBool() ? 5f : -5f);
                 AzureThunderSounds.PlaySwordMaterialize(Projectile.Center);
-                SpawnForgingLightning();
                 SpawnIntroBurst();
-                PulseLightningOutline();
                 Projectile.netUpdate = true;
             }
 
             Timer++;
             if (outlinePulse > 0)
                 outlinePulse--;
+
+            if (Arriving)
+            {
+                DoArrivalAI();
+                return;
+            }
 
             if (Diving)
             {
@@ -130,8 +149,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
         public void BeginDive(Vector2 target, int damage, float knockback)
         {
+            if (!IsReadyForCommand)
+                return;
+
             // 外部序列器调用此方法，把待机地剑切成一次性俯冲弹幕。
-            Mode = 1;
+            Mode = DiveMode;
             Timer = 0;
             diveTarget = target;
             Projectile.damage = Math.Max(1, damage);
@@ -139,6 +161,58 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             Projectile.friendly = false;
             Projectile.timeLeft = Math.Min(Projectile.timeLeft, 90);
             AzureThunderSounds.PlaySwordLaunch(Projectile.Center);
+            Projectile.netUpdate = true;
+        }
+
+        private void DoArrivalAI()
+        {
+            Projectile.friendly = false;
+            Vector2 landingPoint = LandingPoint;
+
+            if (Timer <= MaterializeTime)
+            {
+                // 高空先由透明到实体，位置只做很小的悬浮，不提前下坠。
+                Projectile.velocity = Vector2.Zero;
+                Projectile.Center = new Vector2(landingPoint.X, landingPoint.Y - ArrivalHeight + (float)Math.Sin((Timer + Projectile.identity) * 0.28f) * 7f);
+                SpawnChargeVisuals();
+                if (Timer % 6 == 0 && !Main.dedServ)
+                    AzureThunderFissionBolt.Burst(Projectile.Center, 42f, 4, 0.38f);
+                return;
+            }
+
+            // 显形结束后迅速加速下坠；视觉闪电沿途在剑身周围裂开。
+            Projectile.velocity.Y = Math.Min(76f, Projectile.velocity.Y + 9.5f);
+            Projectile.velocity.X = MathHelper.Lerp(Projectile.velocity.X, (landingPoint.X - Projectile.Center.X) * 0.18f, 0.32f);
+            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
+
+            if (Timer % 3 == 0 && !Main.dedServ)
+                AzureThunderFissionBolt.Burst(Projectile.Center, 58f, 5, 0.46f);
+
+            for (int i = 0; i < 2; i++)
+            {
+                Dust dust = Dust.NewDustPerfect(
+                    Projectile.Center - Projectile.velocity.SafeNormalize(Vector2.UnitY) * Main.rand.NextFloat(8f, 34f) + Main.rand.NextVector2Circular(10f, 8f),
+                    DustID.FireworksRGB,
+                    -Projectile.velocity * Main.rand.NextFloat(0.025f, 0.065f),
+                    0,
+                    Main.rand.NextBool(4) ? Color.White : AzureThunderColors.Azure,
+                    Main.rand.NextFloat(0.7f, 1.15f));
+                dust.noGravity = true;
+            }
+
+            if (Projectile.Center.Y < landingPoint.Y)
+                return;
+
+            Projectile.Center = landingPoint;
+            Projectile.velocity = Vector2.Zero;
+            Projectile.rotation = MathHelper.PiOver2 + MathHelper.PiOver4;
+            Mode = ReadyMode;
+            Timer = 0;
+            PulseLightningOutline();
+            SpawnForgingLightning();
+            SpawnIntroBurst();
+            AzureThunderSounds.PlaySwordBurst(Projectile.Center, true);
+            Main.player[Projectile.owner].Calamity().GeneralScreenShakePower = Math.Max(Main.player[Projectile.owner].Calamity().GeneralScreenShakePower, 2.2f);
             Projectile.netUpdate = true;
         }
 
@@ -174,10 +248,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 Projectile.Kill();
         }
 
-        private void SnapToGroundIfPossible()
+        private static Vector2 FindGroundPosition(Vector2 originalCenter)
         {
             // 生成点往下扫描实体方块，让地剑看起来插在地面上。
-            Vector2 originalCenter = Projectile.Center;
             Point startTile = originalCenter.ToTileCoordinates();
 
             for (int y = startTile.Y; y < startTile.Y + 45 && y < Main.maxTilesY - 2; y++)
@@ -186,9 +259,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 if (!tile.HasTile || !Main.tileSolid[tile.TileType] || Main.tileSolidTop[tile.TileType])
                     continue;
 
-                Projectile.Center = new Vector2(originalCenter.X, y * 16f - 16f);
-                return;
+                return new Vector2(originalCenter.X, y * 16f - 16f);
             }
+
+            return originalCenter;
         }
 
         private void SpawnChargeVisuals()
@@ -296,7 +370,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             Vector2 origin = texture.Size() * 0.5f;
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
 
-            float fadeIn = 1f - (float)Math.Pow(1f - Utils.GetLerpValue(0f, 18f, Timer, true), 3f);
+            float fadeIn = Arriving ? 1f - (float)Math.Pow(1f - Utils.GetLerpValue(0f, MaterializeTime, Timer, true), 3f) : 1f;
             float chargeCompletion = MathHelper.Clamp(Timer / 45f, 0f, 1f);
             float pulseCompletion = outlinePulse / 20f;
             float pulseOpacity = (float)Math.Pow(pulseCompletion, 0.55f) * 0.52f;

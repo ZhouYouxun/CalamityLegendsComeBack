@@ -19,8 +19,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper
         public const float KnockBack = 5.5f;
         /// <summary>左键实际发射时扣除的魔力（未达最小蓄力松开不扣）。</summary>
         public const int LeftManaCost = 30;
-        /// <summary>右键每束扣除的魔力（四束共 32；扣魔失败立刻结束本轮）。</summary>
-        public const int RightManaPerBeam = 8;
 
         // =====================================================================
         // 左键：蓄力（第 3.1 / 3.2 节）
@@ -120,11 +118,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper
         public const float BeamVisualWidth = 32f;
         /// <summary>主伪激光碰撞宽度 px（明显细于可见体）。</summary>
         public const float BeamHitWidth = 16f;
-        /// <summary>右键最大射程 px（96 格）。</summary>
-        public const float BeamMaxRange = 1536f;
-        /// <summary>反射后剩余射程保留比例。</summary>
-        public const float BeamReflectRangeRetain = 0.55f;
-
         // =====================================================================
         // 回收晶片（第 4.3 / 4.4 节）
         // =====================================================================

@@ -86,42 +86,42 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.RightClick
             }
         }
 
+        // 来自深渊的黑→绿双股虚空螺旋（借鉴 OntologicalDespoiler 的正弦双螺旋），沿真实帧间路径补点。
         private void SpawnFlightTrail()
         {
-            Vector2 back = -Projectile.velocity.SafeNormalize(Vector2.UnitX);
-            Vector2 side = back.RotatedBy(MathHelper.PiOver2);
+            Vector2 fwd = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 back = -fwd;
+            Vector2 perp = fwd.RotatedBy(MathHelper.PiOver2);
             Vector2 segment = Projectile.Center - lastFrameCenter;
-            int samples = Math.Clamp((int)MathF.Ceiling(segment.Length() / 12f), 3, 9);
+            int samples = Math.Clamp((int)MathF.Ceiling(segment.Length() / 11f), 3, 12);
+
             for (int i = 1; i <= samples; i++)
             {
                 float t = i / (float)samples;
                 Vector2 p = Vector2.Lerp(lastFrameCenter, Projectile.Center, t);
-                float weave = MathF.Sin((FrameTimer + t) * 2.4f + Projectile.identity) * 5f;
-                GeneralParticleHandler.SpawnParticle(new GenericBloom(
-                    p + side * weave, back * Main.rand.NextFloat(0.15f, 0.65f),
-                    Color.Black, Main.rand.NextFloat(0.14f, 0.25f), Main.rand.Next(9, 14), true, false));
+                float phase = (FrameTimer + t) * 0.62f + Projectile.identity;
+                float amp = 20f;
+
+                // 黑股：VoidDust；绿股：VoidDustInverted，正弦反相对摆，绕弹旋转成双螺旋
+                Dust b = Dust.NewDustPerfect(p + perp * MathF.Sin(phase) * amp, ModContent.DustType<VoidDust>(),
+                    back * 0.35f, 0, Color.Black, Main.rand.NextFloat(0.9f, 1.4f));
+                b.noGravity = true;
+                Dust g = Dust.NewDustPerfect(p + perp * MathF.Sin(phase + MathHelper.Pi) * amp, ModContent.DustType<VoidDustInverted>(),
+                    back * 0.35f, 0, MeldGreen, Main.rand.NextFloat(0.7f, 1.1f));
+                g.noGravity = true;
+                g.color = MeldGreen;
+
+                // 黑色弹芯
                 if ((i & 1) == 0)
-                    GeneralParticleHandler.SpawnParticle(new GenericBloom(
-                        p - side * weave * 0.65f, back * 0.2f,
-                        UmbralNadirPalette.MeldGreenDeep with { A = 0 }, Main.rand.NextFloat(0.05f, 0.1f),
-                        Main.rand.Next(7, 11), true, false), false, GeneralDrawLayer.AfterEverything);
+                    GeneralParticleHandler.SpawnParticle(new GenericBloom(p, back * 0.3f, Color.Black,
+                        Main.rand.NextFloat(0.16f, 0.28f), Main.rand.Next(9, 13), true, false));
             }
 
-            GeneralParticleHandler.SpawnParticle(new CustomSpark(
-                Projectile.Center, back * Main.rand.NextFloat(0.3f, 0.9f), "CalamityMod/Particles/GlowSpark2",
-                false, 16, Main.rand.NextFloat(0.04f, 0.06f), Color.Black, new Vector2(0.6f, 1.3f), false));
-            GeneralParticleHandler.SpawnParticle(new CustomSpark(
-                Projectile.Center, back * Main.rand.NextFloat(0.3f, 0.9f), "CalamityMod/Particles/GlowSpark",
-                false, 16, Main.rand.NextFloat(0.02f, 0.035f), MeldGreen, new Vector2(0.6f, 1.3f), true, false),
-                false, GeneralDrawLayer.AfterEverything);
+            // 偶发向后抽离的黑色能量痕
             if (Main.rand.NextBool(3))
-            {
-                Dust vd = Dust.NewDustPerfect(Projectile.Center, ModContent.DustType<VoidDustInverted>());
-                vd.scale = Main.rand.NextFloat(0.7f, 1.2f);
-                vd.velocity = back.RotatedByRandom(0.4f) * Main.rand.NextFloat(0.3f, 1.6f);
-                vd.noGravity = true;
-                vd.color = MeldGreen;
-            }
+                GeneralParticleHandler.SpawnParticle(new AltLineParticle(Projectile.Center, back * Main.rand.NextFloat(1f, 3f),
+                    false, Main.rand.Next(9, 14), Main.rand.NextFloat(0.5f, 0.9f), Color.Black));
+
             lastFrameCenter = Projectile.Center;
         }
 
@@ -171,12 +171,51 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.RightClick
             hitEnemy = true;
             target.AddBuff(ModContent.BuffType<Voidfrost>(), IsFinisher ? 240 : 150);
 
-            // 第三发命中：立刻在目标中心生成终爆（前两发不产生爆炸，其价值在沿路魂针）
+            if (!IsFinisher && Projectile.owner == Main.myPlayer)
+            {
+                SpawnNonFinisherHitEffects(target);
+                return;
+            }
+
+            // 第三发命中：立刻在目标中心生成终爆（不生成前两发的上升虚空核）。
             if (IsFinisher && Projectile.owner == Main.myPlayer)
             {
                 int finalDamage = Math.Max(1, (int)(Projectile.damage * UmbralNadirBalance.FinalExplosionDamageMult));
                 Projectile.NewProjectile(Projectile.GetSource_FromThis(), target.Center, Vector2.Zero,
                     ModContent.ProjectileType<UmbralNadirFinalExplosion>(), finalDamage, Projectile.knockBack, Projectile.owner);
+            }
+        }
+
+        /// <summary>
+        /// 前两发命中后，先在命中点展开黑白双相坍缩，再从其正下方召回旧版同款虚空核。
+        /// 生成位置、向上初速度和延迟追踪节奏均沿用 NadirJavPROJ/NadirJavVoidEssence，
+        /// 仅将伤害与并发上限收进当前武器的平衡表。
+        /// </summary>
+        private void SpawnNonFinisherHitEffects(NPC target)
+        {
+            Projectile.NewProjectile(Projectile.GetSource_FromThis(), target.Center, Vector2.Zero,
+                ModContent.ProjectileType<UmbralNadirJavelinImpact>(), 0, 0f, Projectile.owner,
+                Projectile.velocity.ToRotation());
+
+            int essenceType = ModContent.ProjectileType<UmbralNadirRisingVoidEssence>();
+            Player owner = Main.player[Projectile.owner];
+            int available = UmbralNadirBalance.MaxRisingEssencesPerPlayer - owner.ownedProjectileCounts[essenceType];
+            int count = Math.Min(UmbralNadirBalance.RisingEssencesPerJavelinHit, Math.Max(0, available));
+            int damage = Math.Max(1, (int)(Projectile.damage * UmbralNadirBalance.RisingEssenceDamageMult));
+            float launchSpeed = Projectile.velocity.Length();
+
+            for (int i = 0; i < count; i++)
+            {
+                Vector2 spawnCenter = target.Center + Vector2.UnitY * Main.rand.NextFloat(
+                    UmbralNadirBalance.RisingEssenceSpawnBelowMin,
+                    UmbralNadirBalance.RisingEssenceSpawnBelowMax);
+                Vector2 spawnPosition = spawnCenter + Main.rand.NextVector2Circular(
+                    UmbralNadirBalance.RisingEssenceSpawnSpread,
+                    UmbralNadirBalance.RisingEssenceSpawnSpread);
+                Vector2 velocity = (target.Center - spawnPosition).SafeNormalize(Vector2.UnitY) * launchSpeed;
+
+                Projectile.NewProjectile(Projectile.GetSource_FromThis(), spawnPosition, velocity, essenceType,
+                    damage, Projectile.knockBack * 0.35f, Projectile.owner);
             }
         }
 
@@ -258,12 +297,18 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.RightClick
             Texture2D halfSmear = ModContent.Request<Texture2D>("CalamityMod/Particles/SemiCircularSmearSwipe").Value;
             float smearPulse = 0.78f + 0.22f * MathF.Sin(Main.GlobalTimeWrappedHourly * 22f + Projectile.identity);
             float smearScale = (IsFinisher ? 0.72f : 0.58f) * Projectile.scale;
-            Main.EntitySpriteDraw(roundSmear, drawPos, null, Color.Black * 0.55f,
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState,
+                DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.EntitySpriteDraw(roundSmear, drawPos, null, UmbralNadirPalette.MeldGreenDeep with { A = 0 } * 0.55f,
                 -Projectile.rotation * 0.7f, roundSmear.Size() * 0.5f,
                 new Vector2(smearScale * 1.45f, smearScale * 0.62f), SpriteEffects.None, 0);
             Main.EntitySpriteDraw(halfSmear, drawPos, null, MeldGreen with { A = 0 } * (0.48f * smearPulse),
                 Projectile.velocity.ToRotation(), halfSmear.Size() * 0.5f,
                 new Vector2(smearScale * 1.25f, smearScale * 0.78f), SpriteEffects.None, 0);
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState,
+                DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
 
             // 长缓存中的武器本体残像让 9 次更新/帧读成一次高速贯穿，而不是瞬移。
             for (int i = 6; i < Projectile.oldPos.Length; i += 7)

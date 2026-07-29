@@ -12,6 +12,9 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 {
     public class LeonidReflectiveMeteor : ModProjectile, ILocalizedModType
     {
+        public const float StealthFloaterFlag = 1f;
+        private const int StealthFloaterLifetime = 90;
+
         public override string Texture => "CalamityMod/Items/Weapons/Rogue/LeonidProgenitor";
         public new string LocalizationCategory => "Projectiles.LeonidProgenitor";
 
@@ -24,6 +27,8 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             get => Projectile.ai[0] == 1f;
             set => Projectile.ai[0] = value ? 1f : 0f;
         }
+
+        public bool IsStealthFloater => Projectile.ai[2] == StealthFloaterFlag;
 
         public int TimesBounced;
         public int decelerateTimer;
@@ -51,6 +56,9 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
         public override void AI()
         {
+            if (IsStealthFloater && Projectile.timeLeft > StealthFloaterLifetime)
+                Projectile.timeLeft = StealthFloaterLifetime;
+
             Projectile.alpha -= 16;
             if (Projectile.alpha < 0)
                 Projectile.alpha = 0;
@@ -191,6 +199,25 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 hoverTime: 26,
                 lifetime: 160);
 
+            if (IsStealthFloater)
+            {
+                LeonidStarlight.Burst(
+                    Projectile.Center,
+                    2,
+                    Color.Lerp(LeonidVisualUtils.StratusBlue, LeonidVisualUtils.MoonWhite, 0.45f),
+                    LeonidStarlightShape.Mote,
+                    speed: 4f,
+                    scale: 0.7f,
+                    hoverTime: 30,
+                    lifetime: 145);
+
+                LeonidPolarStarBurst.Spawn(Projectile.Center, Projectile.oldVelocity,
+                    Color.Lerp(LeonidVisualUtils.StratusBlue, LeonidVisualUtils.MoonWhite, 0.35f), 0.85f);
+
+                if (Projectile.owner == Main.myPlayer)
+                    ReleaseStealthPayload();
+            }
+
             // Spawn some nice dusts
             for (int i = 0; i < 12; i++)
             {
@@ -203,6 +230,42 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                     Main.rand.NextFloat(1.2f, 1.8f));
                 d.noGravity = true;
             }
+        }
+
+        private void ReleaseStealthPayload()
+        {
+            NPC target = FindClosestNPC(900f);
+            if (target == null)
+                return;
+
+            Vector2 direction = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY);
+            Projectile.NewProjectile(Projectile.GetSource_Death(), Projectile.Center, direction * 15f,
+                ModContent.ProjectileType<LeonidPolarStar>(), (int)(Projectile.damage * 0.6f), Projectile.knockBack * 0.5f, Projectile.owner);
+
+            for (int i = -1; i <= 1; i += 2)
+            {
+                Projectile.NewProjectile(Projectile.GetSource_Death(), Projectile.Center, direction.RotatedBy(i * 0.16f) * 8.5f,
+                    ModContent.ProjectileType<LeonidVoidSeeker>(), (int)(Projectile.damage * 0.26f), Projectile.knockBack * 0.25f, Projectile.owner);
+            }
+        }
+
+        private NPC FindClosestNPC(float range)
+        {
+            NPC closest = null;
+            float closestDistanceSquared = range * range;
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (!npc.CanBeChasedBy())
+                    continue;
+
+                float distanceSquared = Vector2.DistanceSquared(Projectile.Center, npc.Center);
+                if (distanceSquared < closestDistanceSquared)
+                {
+                    closestDistanceSquared = distanceSquared;
+                    closest = npc;
+                }
+            }
+            return closest;
         }
 
         public override bool PreDraw(ref Color lightColor)

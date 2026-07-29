@@ -18,9 +18,9 @@ using Terraria.ModLoader;
 namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.LeftClick
 {
     /// <summary>
-    /// 冥蚀贯穿矛 —— 左键第三段冲刺贯穿在突入瞬间射出的音速虚空激光。
-    /// 极高更新次数下近乎瞬移地贯穿全部敌人，拖出一道宽亮的黑→荧绿光束；命中叠 2 层蚀痕并划一道事件视界。
-    /// 这是三段连招的"射击"收尾：不是匀速直线飞镖，而是一记贴脸拉爆的贯穿光矛。
+    /// 冥蚀贯穿矛 —— 左键第三段冲刺贯穿在突入瞬间射出的宏伟黑暗贯穿光矛。
+    /// 11 次/帧的极高更新凸显庞大动能冲击，笔直匀速前进、无限穿透，拖出黑→荧绿双股虚空螺旋与巨大黑核光束。
+    /// 每贯穿一个敌人都炸开一记中等的黑洞爆裂（借冥蚀冲击的分层事件视界）。
     /// </summary>
     public class UmbralNadirVoidLance : ModProjectile, ILocalizedModType
     {
@@ -28,78 +28,122 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.LeftClick
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         private static readonly Color Green = UmbralNadirPalette.MeldGreen;
+        private Vector2 lastFrameCenter;
+        private int frameTimer;
 
         public override void SetStaticDefaults()
         {
-            ProjectileID.Sets.TrailCacheLength[Projectile.type] = 18;
+            ProjectileID.Sets.TrailCacheLength[Projectile.type] = 34;
             ProjectileID.Sets.TrailingMode[Projectile.type] = 2;
         }
 
         public override void SetDefaults()
         {
-            Projectile.width = Projectile.height = 22;
+            Projectile.width = Projectile.height = 40;
             Projectile.friendly = true;
-            Projectile.penetrate = -1;
+            Projectile.penetrate = -1;                                       // 无限穿透
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.DamageType = DamageClass.Melee;
-            Projectile.timeLeft = 26;
-            Projectile.extraUpdates = 5;              // 音速：6 次/帧
+            Projectile.timeLeft = UmbralNadirBalance.VoidLanceTimeLeft;       // 600（子帧）
+            Projectile.extraUpdates = UmbralNadirBalance.VoidLanceExtraUpdates; // 11 次/帧
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = 6;
+            Projectile.localNPCHitCooldown = 12;
         }
 
         public override void OnSpawn(IEntitySource source)
         {
             Projectile.rotation = Projectile.velocity.ToRotation();
-            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/DeadSunRicochet") with { Volume = 0.7f, Pitch = 0.3f }, Projectile.Center);
+            lastFrameCenter = Projectile.Center - Projectile.velocity * (Projectile.extraUpdates + 1);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/DeadSunRicochet") with { Volume = 0.85f, Pitch = -0.1f }, Projectile.Center);
+            SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/MeldExplosion") with { Volume = 0.55f, Pitch = 0.15f }, Projectile.Center);
         }
 
         public override void AI()
         {
-            Projectile.rotation = Projectile.velocity.ToRotation();
-            Projectile.velocity *= 1.01f;
-            Lighting.AddLight(Projectile.Center, 0.3f, 0.9f, 0.45f);
+            Projectile.rotation = Projectile.velocity.ToRotation();          // 笔直匀速，不加速不追踪
+            Lighting.AddLight(Projectile.Center, 0.4f, 1.1f, 0.55f);
 
             if (Projectile.FinalExtraUpdate())
             {
-                Vector2 perp = Projectile.velocity.SafeNormalize(Vector2.UnitX).RotatedBy(MathHelper.PiOver2);
-                for (int i = -1; i <= 1; i += 2)
-                {
-                    Dust vd = Dust.NewDustPerfect(Projectile.Center + perp * i * Main.rand.NextFloat(2f, 8f),
-                        ModContent.DustType<VoidDustInverted>(), perp * i * Main.rand.NextFloat(1f, 3f), 0, Green, Main.rand.NextFloat(0.7f, 1.2f));
-                    vd.noGravity = true;
-                    vd.color = Green;
-                }
-                GeneralParticleHandler.SpawnParticle(new GenericBloom(Projectile.Center, Vector2.Zero, Color.Black,
-                    Main.rand.NextFloat(0.2f, 0.34f), Main.rand.Next(6, 10), true, false));
+                frameTimer++;
+                SpawnHelixTrail();
             }
         }
 
-        // 拉长判定，读作贯穿光束
+        /// <summary>黑→绿双股虚空螺旋（来自深渊），沿真实帧间路径补点以在极高速下保持连续。</summary>
+        private void SpawnHelixTrail()
+        {
+            Vector2 fwd = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 back = -fwd;
+            Vector2 perp = fwd.RotatedBy(MathHelper.PiOver2);
+            Vector2 segment = Projectile.Center - lastFrameCenter;
+            int samples = Math.Clamp((int)MathF.Ceiling(segment.Length() / 10f), 4, 16);
+
+            for (int i = 1; i <= samples; i++)
+            {
+                float t = i / (float)samples;
+                Vector2 p = Vector2.Lerp(lastFrameCenter, Projectile.Center, t);
+                float phase = (frameTimer + t) * 0.7f + Projectile.identity;
+                float amp = 26f;
+
+                // 黑股：VoidDust
+                Dust b = Dust.NewDustPerfect(p + perp * MathF.Sin(phase) * amp, ModContent.DustType<VoidDust>(),
+                    back * 0.4f, 0, Color.Black, Main.rand.NextFloat(1.1f, 1.7f));
+                b.noGravity = true;
+                // 绿股：VoidDustInverted，反相对摆
+                Dust g = Dust.NewDustPerfect(p + perp * MathF.Sin(phase + MathHelper.Pi) * amp, ModContent.DustType<VoidDustInverted>(),
+                    back * 0.4f, 0, Green, Main.rand.NextFloat(0.9f, 1.4f));
+                g.noGravity = true;
+                g.color = Green;
+
+                // 黑色弹芯球
+                if ((i & 1) == 0)
+                    GeneralParticleHandler.SpawnParticle(new GenericBloom(p, back * 0.35f, Color.Black,
+                        Main.rand.NextFloat(0.26f, 0.44f), Main.rand.Next(9, 14), true, false));
+            }
+
+            // 巨大黑核 + 向后抽离的黑色能量痕
+            GeneralParticleHandler.SpawnParticle(new GenericBloom(Projectile.Center, Vector2.Zero, Color.Black,
+                Main.rand.NextFloat(0.5f, 0.7f), Main.rand.Next(8, 12), true, false));
+            if (Main.rand.NextBool(2))
+                GeneralParticleHandler.SpawnParticle(new AltLineParticle(Projectile.Center, back * Main.rand.NextFloat(1.5f, 4f),
+                    false, Main.rand.Next(10, 16), Main.rand.NextFloat(0.7f, 1.1f), Color.Black));
+
+            lastFrameCenter = Projectile.Center;
+        }
+
+        // 拉长判定，读作贯穿光矛
         public override void ModifyDamageHitbox(ref Rectangle hitbox)
         {
             Vector2 dir = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-            Vector2 back = Projectile.Center - dir * 70f;
-            Vector2 tl = Vector2.Min(Projectile.Center, back) - new Vector2(14f);
-            Vector2 br = Vector2.Max(Projectile.Center, back) + new Vector2(14f);
+            Vector2 back = Projectile.Center - dir * 96f;
+            Vector2 tl = Vector2.Min(Projectile.Center, back) - new Vector2(20f);
+            Vector2 br = Vector2.Max(Projectile.Center, back) + new Vector2(20f);
             hitbox = new Rectangle((int)tl.X, (int)tl.Y, (int)(br.X - tl.X), (int)(br.Y - tl.Y));
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            target.AddBuff(ModContent.BuffType<Voidfrost>(), 150);
+            target.AddBuff(ModContent.BuffType<Voidfrost>(), 180);
             UmbralCorrosionGlobalNPC.AddStacks(target, 2);
-            UmbralNadirVisuals.EventHorizon(target.Center, 0.42f, false);
+
+            // 每次贯穿都炸一记中等黑洞爆裂（含范围伤害、拉扯与叠层）
+            if (Projectile.owner == Main.myPlayer)
+            {
+                int explosionDamage = Math.Max(1, (int)(Projectile.damage * UmbralNadirBalance.VoidLanceHitExplosionMult));
+                Projectile.NewProjectile(Projectile.GetSource_FromThis(), target.Center, Vector2.Zero,
+                    ModContent.ProjectileType<UmbralNadirImpactExplosion>(), explosionDamage, Projectile.knockBack, Projectile.owner, 1f);
+            }
         }
 
-        // ===== 黑→荧绿激光束 =====
+        // ===== 黑→荧绿宏伟光束 =====
 
         private float BeamWidth(float completionRatio, Vector2 _)
-            => MathHelper.Lerp(46f, 4f, completionRatio) * Utils.GetLerpValue(0f, 6f, Projectile.timeLeft, true);
+            => MathHelper.Lerp(64f, 6f, completionRatio) * Utils.GetLerpValue(0f, 10f, Projectile.timeLeft, true);
 
         private Color BeamColor(float completionRatio, Vector2 _)
-            => Color.Lerp(UmbralNadirPalette.MeldGreenBright, Color.Lerp(Green, Color.Black, completionRatio), completionRatio) * (1f - completionRatio * 0.5f);
+            => Color.Lerp(UmbralNadirPalette.MeldGreenBright, Color.Lerp(Green, Color.Black, completionRatio * 1.2f), completionRatio) * (1f - completionRatio * 0.55f);
 
         public override bool PreDraw(ref Color lightColor)
         {
@@ -107,12 +151,15 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.LeftClick
                 ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/SylvestaffStreak"));
             Vector2 offset = Projectile.Size * 0.5f;
             PrimitiveRenderer.RenderTrail(Projectile.oldPos,
-                new PrimitiveSettings(BeamWidth, BeamColor, (_, _) => offset, shader: GameShaders.Misc["CalamityMod:TrailStreak"]), 60);
+                new PrimitiveSettings(BeamWidth, BeamColor, (_, _) => offset, shader: GameShaders.Misc["CalamityMod:TrailStreak"]), 90);
 
-            // 亮绿弹头闪
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Main.EntitySpriteDraw(bloom, Projectile.Center - Main.screenPosition, null, UmbralNadirPalette.MeldGreenBright with { A = 0 }, 0f,
-                bloom.Size() * 0.5f, 0.3f, SpriteEffects.None, 0);
+            Texture2D soft = ModContent.Request<Texture2D>("CalamityMod/Particles/SmallBloom").Value;
+            Vector2 pos = Projectile.Center - Main.screenPosition;
+            // 巨大纯黑核（透明底 SmallBloom）+ 亮绿事件视界弹头
+            Main.EntitySpriteDraw(soft, pos, null, Color.Black, Projectile.rotation, soft.Size() * 0.5f, 0.34f, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(bloom, pos, null, Green with { A = 0 }, 0f, bloom.Size() * 0.5f, 0.55f, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(bloom, pos, null, UmbralNadirPalette.MeldGreenBright with { A = 0 }, 0f, bloom.Size() * 0.5f, 0.28f, SpriteEffects.None, 0);
             return false;
         }
     }

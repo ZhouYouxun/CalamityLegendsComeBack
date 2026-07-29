@@ -28,8 +28,8 @@ namespace CalamityLegendsComeBack.Accssory.BF.SilvaHarp
 
         public override bool CanAccessoryBeEquippedWith(Item equippedItem, Item incomingItem, Player player)
         {
-            return equippedItem.type != ModContent.ItemType<FairyDance.BadSeed>() &&
-                   incomingItem.type != ModContent.ItemType<FairyDance.BadSeed>() &&
+            return equippedItem.type != ModContent.ItemType<FairyDanceSeries.BadSeed>() &&
+                   incomingItem.type != ModContent.ItemType<FairyDanceSeries.BadSeed>() &&
                    base.CanAccessoryBeEquippedWith(equippedItem, incomingItem, player);
         }
 

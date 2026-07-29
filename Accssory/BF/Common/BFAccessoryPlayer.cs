@@ -1,5 +1,5 @@
 using CalamityLegendsComeBack.Accssory.BF.SeedOfSilva;
-using CalamityLegendsComeBack.Accssory.BF.FairyDance;
+using CalamityLegendsComeBack.Accssory.BF.FairyDanceSeries;
 using CalamityLegendsComeBack.Weapons.BlossomFlux;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;

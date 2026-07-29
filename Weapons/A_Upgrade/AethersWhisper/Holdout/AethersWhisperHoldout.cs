@@ -35,7 +35,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.Holdout
         private bool playedFullReady;
 
         // 右键散射
-        private bool rightActive;
         private int roundTick;
         private int scattersFiredThisRound;
         private int rightFlashTimer;
@@ -76,7 +75,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.Holdout
             if (Main.myPlayer == Projectile.owner)
                 Owner.Calamity().rightClickListener = true;
 
-            rightActive = false;
             if (Main.myPlayer == Projectile.owner)
                 HandleInput();
 
@@ -98,9 +96,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.Holdout
 
             if (rightHeld)
             {
-                // 右键优先：中断左键蓄力（不发射），执行四连扫射。
+                // 右键优先：中断左键蓄力（不发射），执行二连散射。
                 if (IsCharging) CancelLeftCharge();
-                rightActive = true;
                 RunRightSweep();
                 return;
             }

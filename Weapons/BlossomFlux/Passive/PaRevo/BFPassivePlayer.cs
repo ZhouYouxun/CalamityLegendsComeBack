@@ -1,7 +1,7 @@
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
 using CalamityLegendsComeBack.Accssory.BF.Common;
-using CalamityLegendsComeBack.Accssory.BF.FairyDance;
+using CalamityLegendsComeBack.Accssory.BF.FairyDanceSeries;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;

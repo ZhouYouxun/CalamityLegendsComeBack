@@ -145,7 +145,10 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                                 reflectiveType,
                                 splitDamage,
                                 Projectile.knockBack * 0.4f,
-                                Projectile.owner);
+                                Projectile.owner,
+                                0f,
+                                0f,
+                                LeonidReflectiveMeteor.StealthFloaterFlag);
                         }
                     }
                 }

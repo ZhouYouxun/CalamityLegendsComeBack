@@ -147,10 +147,16 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.RightClick
             Texture2D smear = ModContent.Request<Texture2D>("CalamityMod/Particles/CircularSmearSmokey").Value;
             Vector2 drawPos = Projectile.Center - Main.screenPosition;
             float smearScale = CurtainWidth * 2.4f / Math.Max(smear.Width, smear.Height);
-            Main.EntitySpriteDraw(smear, drawPos, null, Color.Black * (0.44f * opacity), -phase * 0.25f,
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState,
+                DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.EntitySpriteDraw(smear, drawPos, null, UmbralNadirPalette.MeldGreenDeep with { A = 0 } * (0.44f * opacity), -phase * 0.25f,
                 smear.Size() * 0.5f, new Vector2(smearScale * 1.5f, smearScale * 0.8f), SpriteEffects.None, 0);
             Main.EntitySpriteDraw(smear, drawPos, null, UmbralNadirPalette.MeldGreen with { A = 0 } * (0.24f * opacity),
                 phase * 0.18f, smear.Size() * 0.5f, smearScale, SpriteEffects.None, 0);
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState,
+                DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
             return false;
         }
     }

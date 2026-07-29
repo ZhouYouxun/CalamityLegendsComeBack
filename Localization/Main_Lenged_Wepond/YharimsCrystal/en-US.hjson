@@ -1,0 +1,227 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				NewLegendYharimsCrystal: {
+					DisplayName: Sovereign Above All - Yharim's Crystal
+					Tooltip: "[GFB]"
+					TooltipBody:
+						'''
+						[c/F8E28A:Left Click]: Hold to whirl the crystal into a high-speed spinning golden disc that shreds nearby enemies; after each full revolution the blade eases to a stop and re-aims toward your cursor.
+						Striking enemies bursts out homing gold-flame fireballs and burning shards that orbit targets, scorch them, and detonate in holy fire.
+						[c/73DFFF:Right Click]: Hold to summon six golden escort warships into an air-defense formation while the crystal itself vents an unending scorching main laser.
+						Clicking left during the barrage unleashes a coordinated heavy strike: the main laser instantly thickens, sprays golden bolts to both sides, fans out splitting lasers, and the fleet volleys twin gold bombs before briefly powering down.
+						[c/F6D06B:Auric Ultimate]: With full energy and the Legendary Emblem equipped, press the [Legendary Skill Key] to unleash one of two ultimates:
+						[c/F6D06B:- Sacred Flame Blade (blade form)]: swing a colossal sacred blade that tears through space and raises sky-piercing pillars of golden fire.
+						[c/F6D06B:- Laser Storm (crystal form)]: deploy twelve gold-sheened laser ships above the target, weaving an all-destroying storm of deathrays.
+						'''
+					CurrentMode: "[c/F6D06B:Current core] {0}"
+					Mode_Drill: "[c/F2B85D:Siege Drill]"
+					Mode_Flamethrower: "[c/FF7A45:Auric Flamethrower]"
+					Mode_Warships: "[c/73DFFF:Imperial Fleet]"
+					Mode_HelixLaser: "[c/F8E28A:Helix Prism]"
+					Mode_Drill_Desc: "[c/F2B85D:Siege Drill] [c/DCD6C8:spins up into a narrow sawline, chewing close targets and shaking the screen on impact.]"
+					Mode_Flamethrower_Desc: "[c/FF7A45:Auric Flamethrower] [c/DCD6C8:vents, then fires rapid energy-flame pseudo-lasers with light homing before resting.]"
+					Mode_Warships_Desc: "[c/73DFFF:Imperial Fleet] [c/DCD6C8:deploys 6 escorts, 4 cruisers, 2 artillery ships, 1 forward super-laser ship, and 1 rear repair ship.]"
+					Mode_HelixLaser_Desc: "[c/F8E28A:Helix Prism] [c/DCD6C8:weaves helix beams, refraction needles, and short golden lances; hold right click while firing to smoothly focus them into one point.]"
+					SwitchInfo: "[c/B5E7FF:Switch] [c/DCD6C8:right click the left side of the player to cycle backward, or the right side to cycle forward.]"
+					FocusInfo: "[c/F8E28A:Focus] [c/DCD6C8:only works while the Helix Prism is firing, and converges with acceleration instead of snapping.]"
+					PrismReworkInfo: "[c/F8E28A:Left Click] [c/DCD6C8:hold to deploy six inertial prisms; their helper beams converge into a continuous destruction ray fired from the crystal.]"
+					RightCommandInfo: "[c/73DFFF:Right Array] [c/DCD6C8:deploy six golden drones into an air-defense battery: the front pair fire fast auric needles, the middle pair weave curving crossfire, and the rear pair launch tracking hearts that grow faster and sharper over time. While holding left click, every round and the main beam lock directly onto your cursor; the command also volleys twin gold bombs before a 2-second shutdown.]"
+					ResetInfo: "[c/FF7A45:Reset] [c/DCD6C8:releasing left click, dying, or running out of mana clears the entire sequence.]"
+					EXInfo: "[c/F6D06B:Legendary Skill (Laser Storm)] [c/DCD6C8:summon 12 golden laser ships into orbit. Left click when they are ready to fire.]"
+					LegendaryHint: "[c/BABABA:Hold Shift to access the record]"
+					LegendaryText:
+						'''
+						[c/E6C024:The first Tyrant Crystal was closer to a golden prism: refract the beam, gather the energy, then fire ruin forward.]
+						[c/E6C024:But if it is written only as distant fleets or generic imperial technology, it drifts farther from the Tyrant, auric power, and dragonflame.]
+						[c/E6C024:After the rebuild, the left-click beams are no longer just a matter of quantity. Between spreading and converging, they keep closing in on the true focus.]
+						[c/E6C024:The burst structure released by right click feels like overloaded crystal energy being split out early, forcing the battlefield through repeated calibration.]
+						[c/E6C024:When the final stage opens, the prism no longer searches for brighter light. It waits for the Tyrant's will to press every ray into one command.]
+						'''
+				}
+			}
+
+			Accessories: {
+				YharimsCrystalAlpha: {
+					DisplayName: Tyrant Crystal - Alpha
+					Tooltip: While using Tyrant Crystal, increases weapon damage by 10%.
+				}
+
+				YharimsCrystalChi: {
+					DisplayName: Tyrant Crystal - Chi
+					Tooltip: While using Tyrant Crystal, adds a smaller weapon damage bonus.
+				}
+
+				YharimsCrystalDelta: {
+					DisplayName: Tyrant Crystal - Delta
+					Tooltip: Strengthens Tyrant Crystal's Slaughter form and shortens its kill-mode cooldown.
+				}
+
+				YharimsCrystalSigma: {
+					DisplayName: Tyrant Crystal - Sigma
+					Tooltip: Tyrant Prism drones fire one additional machine-gun bolt during attack form.
+				}
+
+				YharimsCrystalGamma: {
+					DisplayName: Tyrant Crystal - Gamma
+					Tooltip: Tyrant Prism drone bolts fly 12% faster.
+				}
+
+				YharimsCrystalOmega: {
+					DisplayName: Tyrant Crystal - Omega
+					Tooltip: Adds a small Tyrant Crystal damage bonus and improves legendary skill charge gain.
+				}
+
+				YharimsCrystalPhi: {
+					DisplayName: Tyrant Crystal - Phi
+					Tooltip: Tyrant Crystal's legendary skill charges faster and has a shorter cooldown.
+				}
+
+				YharimsCrystalPi: {
+					DisplayName: Tyrant Crystal - Pi
+					Tooltip: Improves Tyrant Prism heavy salvos and fires Aetherflux rays more often.
+				}
+
+				YharimsCrystalPsi: {
+					DisplayName: Tyrant Crystal - Psi
+					Tooltip: Tyrant Prism drones fire one additional machine-gun bolt during attack form.
+				}
+
+				YharimsCrystalTheta: {
+					DisplayName: Tyrant Crystal - Theta
+					Tooltip: Reduces Tyrant Crystal's mana cost by 18%.
+				}
+
+				YharimsCrystalUpsilon: {
+					DisplayName: Tyrant Crystal - Upsilon
+					Tooltip: Tyrant Prism drone bolts fly slightly faster.
+				}
+			}
+		}
+
+		Projectiles: {
+			YharimsCrystal: {
+				YC_LeftHoldOut.DisplayName: Tyrant Crystal Left Formation
+				YC_RightHoldOut.DisplayName: Tyrant Crystal Right Formation
+				YC_EX_VIP.DisplayName: Tyrant Crystal EX Command Ship
+				YC_EX_Drone.DisplayName: Tyrant Crystal EX Frigate
+				YC_EX_LaserCruiser.DisplayName: Tyrant Crystal EX Cruiser
+				YC_EX_Battleship.DisplayName: Tyrant Crystal EX Battleship
+				YC_CBeam.DisplayName: Tyrant Crystal Main Beam
+				YC_Left_Frigate.DisplayName: Port Frigate
+				YC_Left_LaserCruiser.DisplayName: Port Cruiser
+				YC_Left_MissileBattleship.DisplayName: Port Battleship
+				YC_Left_RepairShip.DisplayName: Rear Repair Ship
+				YC_Left_FakeLazer.DisplayName: Decoy Laser
+				YC_Left_Rocket.DisplayName: Shipborne Homing Missile
+				YC_Left_RepairBolt.DisplayName: Repair Bolt
+				YC_Left_Drone.DisplayName: Port Drone
+				YC_Right_Drone.DisplayName: Starboard Drone
+				YC_Right_LaserCruiser.DisplayName: Starboard Cruiser
+				YC_Right_Battleship.DisplayName: Starboard Battleship
+				YC_Right_RepairShip.DisplayName: Starboard Repair Ship
+				YC_Right_RepairShield.DisplayName: Repair Shield
+				YC_Right_HeavyBolt.DisplayName: Heavy Bolt
+				YC_Right_TrackerLaser.DisplayName: Tracking Laser
+				YC_ModeSwitchGlyph.DisplayName: Tyrant Crystal Mode Glyph
+				YC_DrillHoldout.DisplayName: Tyrant Crystal Siege Drill
+				YC_FlamethrowerHoldout.DisplayName: Tyrant Crystal Flamethrower
+				YC_FlameLance.DisplayName: Tyrant Flame Lance
+				YC_WarshipHoldout.DisplayName: Tyrant Crystal Imperial Fleet
+				YC_WarshipEscort.DisplayName: Auric Escort
+				YC_WarshipCruiser.DisplayName: Auric Cruiser
+				YC_WarshipBattleship.DisplayName: Auric Battleship
+				YC_WarshipLaserShip.DisplayName: Auric Laser Ship
+				YC_WarshipRepairShip.DisplayName: Auric Repair Ship
+				YC_WarshipAuricRail.DisplayName: Auric Rail Cannon
+				YC_HelixLaserHoldout.DisplayName: Tyrant Crystal Helix Prism
+				YC_HelixLaserBeam.DisplayName: Helix Prism Beam
+				YC_EX_LaserDrone.DisplayName: Tyrant Crystal EX Laser Ship
+				ApolloRocket.DisplayName: Apollo Rocket
+				ChickenRocket.DisplayName: Chicken Rocket
+				CosmicViperHomingRocket.DisplayName: Cosmic Viper Homing Rocket
+				CosmicViperSplitRocket1.DisplayName: Cosmic Viper Split Rocket
+				CosmicViperSplittingRocket.DisplayName: Cosmic Viper Splitting Rocket
+				GoliathRocket.DisplayName: Goliath Rocket
+				MagnomalyRocket.DisplayName: Magnomaly Rocket
+				MK2RocketHoming.DisplayName: MK2 Homing Rocket
+				MK2RocketNormal.DisplayName: MK2 Rocket
+				PeanutRocket.DisplayName: Peanut Rocket
+				PrismRocket.DisplayName: Prism Rocket
+				RainbowRocket.DisplayName: Rainbow Rocket
+				RocketFire.DisplayName: Rocket Flame
+				ScorchedEarthRocket.DisplayName: Scorched Earth Rocket
+				ScorpioLargeRocket.DisplayName: Scorpio Heavy Rocket
+				ScorpioRocket.DisplayName: Scorpio Rocket
+				SeaDragonRocket.DisplayName: Sea Dragon Rocket
+				MirrorBladeSlash.DisplayName: Mirror Blade Slash
+				MirrorBladeSlashCreator.DisplayName: Mirror Blade Slash Emitter
+				YC_WarshipArtilleryShell.DisplayName: Warship Artillery Shell
+				YC_WarshipMissile.DisplayName: Warship Missile
+				YC_WarshipPulse.DisplayName: Warship Pulse
+				YC_WarshipSuperLaser.DisplayName: Auric Fleet Super Laser
+				YC_PrismNeedleLaser.DisplayName: Prism Needle Laser
+				SODLazer.DisplayName: Auric Refraction Lance
+				YC_TyrantPrismHoldout.DisplayName: Tyrant Crystal Destruction Prism
+				YC_TyrantPrismDrone.DisplayName: Tyrant Crystal Prism
+				YC_TyrantPrismBolt.DisplayName: Tyrant Crystal Prism Bolt
+				YC_TyrantPrismMainBeam.DisplayName: Tyrant Crystal Destruction Ray
+				YC_TyrantPrismConvergeBeam.DisplayName: Tyrant Crystal Convergence Beam
+				YC_TyrantPrismLaserLance.DisplayName: Y C_ Tyrant Prism Laser Lance
+				YC_TyrantPrismMissile.DisplayName: Y C_ Tyrant Prism Missile
+				YC_TyrantSlaughterFlame.DisplayName: Y C_ Tyrant Slaughter Flame
+				YC_TyrantSlaughterHoldout.DisplayName: Y C_ Tyrant Slaughter Holdout
+				YC_TyrantSlaughterSlash.DisplayName: Y C_ Tyrant Slaughter Slash
+				YC_TyrantSlaughterTail.DisplayName: Y C_ Tyrant Slaughter Tail
+				YC_YharimsCrystalBeam.DisplayName: Y C_ Yharims Crystal Beam
+				YC_EXBladeGrandSlash.DisplayName: Y C_ E X Blade Grand Slash
+				YC_EXFirePillar.DisplayName: Y C_ E X Fire Pillar
+				YC_EXStormLaser.DisplayName: Y C_ E X Storm Laser
+				YC_AuricJudgementWave.DisplayName: Y C_ Auric Judgement Wave
+				YC_BrimstoneWheelMissile.DisplayName: Y C_ Brimstone Wheel Missile
+				YC_BurningShard.DisplayName: Y C_ Burning Shard
+				YC_BurningShardSplinter.DisplayName: Y C_ Burning Shard Splinter
+				YC_LeftBladeSwing.DisplayName: Y C_ Left Blade Swing
+				YC_RainbowUltimaBolt.DisplayName: Y C_ Rainbow Ultima Bolt
+				YC_RightCrystalHoldout.DisplayName: Y C_ Right Crystal Holdout
+				YC_RightScorchingLaser.DisplayName: Y C_ Right Scorching Laser
+				YC_LaserBlast.DisplayName: Scorching Laser Blast
+				YC_EssenceFlame.DisplayName: Y C_ Essence Flame
+				YC_ThrownBlade.DisplayName: Y C_ Thrown Blade
+				YC_RightDrone.DisplayName: Y C_ Right Drone
+				YC_DroneShot.DisplayName: Y C_ Auric Drone Bolt
+				YC_GoldBomb.DisplayName: Y C_ Gold Bomb
+				YC_TrackingRocket.DisplayName: Y C_ Tracking Rocket
+				YC_BackgroundBlade.DisplayName: Y C_ Background Blade
+				YC_BackgroundBladeStrike.DisplayName: Y C_ Background Blade Strike
+				YC_BackgroundCrystal.DisplayName: Y C_ Background Crystal
+				YC_BackgroundCrystalBolt.DisplayName: Y C_ Background Crystal Bolt
+				YC_GalacticaComet.DisplayName: Y C_ Galactica Comet
+			}
+
+			FairyDanceWisp.DisplayName: Fairy Dance Wisp
+			RainbowSpiritBolt.DisplayName: Rainbow Spirit Bolt
+			RainbowSpiritLacewing.DisplayName: Rainbow Spirit Lacewing
+			HDMCArena.DisplayName: H D M C Arena
+			CryogenFrostMote.DisplayName: Cryogen Frost Mote
+			AureusStarMote.DisplayName: Aureus Star Mote
+			Summon.ResponsibilityRoverFusionBolt.DisplayName: Responsibility Rover Fusion Bolt
+			BrinyBaron_RightSpinOuterBubble.DisplayName: Briny Baron_ Right Spin Outer Bubble
+			BBSuperDashAfterimage.DisplayName: B B Super Dash Afterimage
+			AncientIceShieldVisual.DisplayName: Ancient Ice Shield Visual
+			GlacialWeaponFamiliar.DisplayName: Glacial Weapon Familiar
+			GlacialWeaponFamiliarShot.DisplayName: Glacial Weapon Familiar Shot
+			YCAuricJudgementMatrix.DisplayName: Y C Auric Judgement Matrix
+		}
+
+		Cooldowns.YC_EX: Laser Storm Cooldown
+	}
+
+	Buffs: {
+		YharonSoulFragment_Buff: {
+			DisplayName: Yharon Soul Fragment
+			Description: Burning with dragon soul flames.
+		}
+	}
+}

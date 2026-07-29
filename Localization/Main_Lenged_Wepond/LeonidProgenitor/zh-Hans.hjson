@@ -1,0 +1,109 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				LeonidProgenitor: {
+					DisplayName: 致密重力-狮源流星
+					Tooltip: "[GFB]"
+					LeftClick:
+						'''
+						[c/74D8FF:左键：在身边生成两颗小流星，短暂停留后飞向鼠标，命中时释放追击的星辉能量束。]
+						[c/99CCFF:小流星会撞击反射陨星，增伤、加速并改变轨道。]
+						[c/9AD8FF:点亮狮子座主星，永久改变你的流星雨。]
+						'''
+					StealthLeftClick: "[c/B7A4FF:潜伏左键：在鼠标斜上方召来一阵流星雨；消散时向周围散射3发星辉能量束。]"
+					RightClick: "[c/8DEBFF:右键：长按蓄力大流星；潜伏右键放出狮首。命中敌人时触发盗贼大地之潮冲击波。]"
+					UltimateSkill: "[c/FFE85A:终结技（按 {0}）：展开引力场，召来从天空落下的流星暴。需要满终结能量和潜伏值。]"
+					Passives: "[c/BFAFFF:动能循环：左键流星反射后会加速、增伤；第七次反射后会回到身边环绕。]"
+					ConstellationStatus: "[c/FFE85A:狮子座星辉：可用 {0} | 已消耗 {1} | 已获得 {2} | 全图需 {3}]"
+					ConstellationHint: "[c/B8A8FF:手持本武器，或在背包中悬停本武器时，按 {0} 展开狮源流星星图。]"
+					LegendaryHint: "[c/BABABA:按住 Shift 阅读传奇记录]"
+					LegendaryText: "[c/66E6FF:狮子座流星雨不再从背包寻找金属。每一位被击败的大型 Boss，都会成为狮子天空中的一颗星辉。]"
+
+					Constellation: {
+						Title: 狮子座流星雨星图
+						Subtitle: 轩辕十四为狮心；可任选一颗主星点亮。
+						Status: 可用 {0}    已消耗 {1}    已获得 {2}    全图需 {3}
+						HoverHint: 悬停主星查看星辉印记
+						Reset: 重置星图（免费）
+						Heart: 狮心主星 — 恒常点亮
+						Unlocked: 已点亮
+						Cost: 消耗：{0} 星辉
+
+						Nodes: {
+							Regulus: {
+								Name: 轩辕十四 狮心
+								Description: 狮子座的固定心脏 锚定所有已点亮主星
+							}
+
+							Algieba: {
+								Name: 轩辕十二 双鬃
+								Description: 小流星初始飞行速度提高20%
+							}
+
+							Adhafera: {
+								Name: 轩辕十一 冠冕丝线
+								Description: 普通左键额外释放一颗小流星
+							}
+
+							Rasalas: {
+								Name: 轩辕十 镰刃折转
+								Description: 每次反射获得12%速度与6%伤害
+							}
+
+							Zosma: {
+								Name: 轩辕十五 落星侧翼
+								Description: 潜伏流星雨额外增加两颗小流星
+							}
+
+							Chertan: {
+								Name: 轩辕十三 狩猎轨迹
+								Description: 完全反射的小流星回复4点终结能量
+							}
+
+							Denebola: {
+								Name: 五帝座一 尾星曙光
+								Description: 终结技引力场额外持续2秒
+							}
+
+							Alterf: {
+								Name: 轩辕八 咆哮冠冕
+								Description: 潜伏狮首伤害提高25%，并放出18颗流星
+							}
+
+							Subra: {
+								Name: 轩辕六 前爪彗星
+								Description: 蓄力大流星伤害提高20%
+							}
+						}
+					}
+				}
+			}
+		}
+
+		Projectiles: {
+			LeonidProgenitor: {
+				LeonidCometSmall.DisplayName: 小流星
+				LeonidReflectiveMeteor.DisplayName: 反射流星
+				LeonidCometLarge.DisplayName: 大流星
+				LeonidLionHead.DisplayName: 咆哮狮首
+				LeonidGravityField.DisplayName: 狮子座引力场
+				LeonidUltimateUI.DisplayName: 终结能量
+				LeonidRightClickHoldout.DisplayName: 流星蓄力
+				LeonidStealthRainSpawner.DisplayName: 潜伏流星雨
+				LeonidAstralEnergy.DisplayName: 星辉能量束
+				// LeonidVoidSeeker.DisplayName: Leonid Void Seeker
+				// LeonidPolarStar.DisplayName: Leonid Polar Star
+			}
+		}
+
+		Buffs: {
+			LeonidGravityDebuff: {
+				DisplayName: 星辰引力
+				Description: 引力场限制水平移动，并将你向下拉扯。
+			}
+		}
+
+		Cooldowns.LeonidEX: 狮子座终结能量
+	}
+}
