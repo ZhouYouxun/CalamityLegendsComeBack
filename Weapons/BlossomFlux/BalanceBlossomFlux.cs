@@ -24,11 +24,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             { "Plantera",                                   36,    24,    14,   15,     30 },
             { "Golem",                                      42,    30,    15,   20,     51 },
             { "Plaguebringer Goliath",                      52,    44,    23,   30,     67 },
-            { "Moon Lord",                                  79,    84,    52,   32,     76 },
-            { "Providence",                                104,   106,    65,   51,     98 },
-            { "Polterghast",                               147,   152,   102,   93,    103 },
-            { "Devourer of Gods",                          172,   174,   121,   95,    136 },
-            { "Yharon",                                    277,   256,   193,  105,    179 },
+            { "Moon Lord",                                  66,    84,    52,   32,     76 },
+            { "Providence",                                 92,   107,    68,   51,     98 },
+            { "Polterghast",                               136,   154,   105,   93,    103 },
+            { "Devourer of Gods",                          172,   176,   124,   95,    136 },
+            { "Yharon",                                    277,   259,   193,  105,    179 },
             { "Exo Mechs and Supreme Calamitas",           777,   777,   777,  400,    777 }
         };
 
@@ -285,9 +285,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         public static BFBreakthroughRightStats GetStats()
         {
             return new BFBreakthroughRightStats(
-                framesPerArrow: 20,
+                framesPerArrow: 15,
                 maxLoadedArrows: MathMax(1, BFBalanceTable.Get(BFStat.Breakthrough_Right_MaxArrows)),
-                penetrate: 7,
+                penetrate: 9,
                 ignorePenetrationDamageFalloff: false,
                 projectileSpeedMultiplier: 1f,
                 damagePerChargeStack: 0f);
@@ -547,7 +547,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
             if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.Polterghast))
             {
-                heal = 15;
+                heal = 20;
                 maxTime = 25 * 60;
                 defense = 20;
                 damageReduction = 0.15f;
@@ -614,7 +614,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             return new BFRecoveryRightStats(
                 chargeFrames: 5 * 60,
                 flashCount: MathMax(1, BFBalanceTable.Get(BFStat.Recovery_Right_OrbCount)),
-                healAmount: 20,
+                healAmount: 25,
                 chargeDamageReduction: 0f);
         }
 
