@@ -641,7 +641,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 Owner.MountedCenter + shootDirection * 44f,
                 shootDirection * 13.2f,
                 ModContent.ProjectileType<BBSwing_Wave>(),
-                Math.Max(1, (int)(Projectile.damage * 2f)),
+                Math.Max(1, (int)(Projectile.damage * 2.25f)),
                 Projectile.knockBack,
                 Projectile.owner,
                 2.35f,

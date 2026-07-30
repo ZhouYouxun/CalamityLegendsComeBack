@@ -9,8 +9,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.TideValue
     internal class BBTideValuePlayer : ModPlayer
     {
         public const int MaxDesignedTideCap = 8;
-        public const float TideDamageBonusPerStack = 0.03f;
-        public const float FullTideDamageBonus = 0.10f;
+        public const float TideDamageBonusPerStack = 0.01f;
+        public const float FullTideDamageBonus = 0.2f;
         public const int TideChargeMax = 90 * 60;
         public const int TideDisplayMax = 90;
 
