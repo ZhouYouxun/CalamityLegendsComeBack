@@ -1,0 +1,17 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				EmergencyRecall: {
+					DisplayName: Richiamo d'emergenza
+					Tooltip:
+						'''
+						Si attiva quando si trova nell'inventario ed è segnato come preferito.
+						Quando subisci danni letali senza un boss attivo, usa automaticamente un oggetto di richiamo per tornare a casa.
+						Priorità di consumo: Pozione del ritorno > Pozione di richiamo > Specchio magico (gli specchi non vengono consumati)
+						'''
+				}
+			}
+		}
+	}
+}

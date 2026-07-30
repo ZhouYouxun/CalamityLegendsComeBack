@@ -1,0 +1,19 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				PreDrawLabItem: {
+					DisplayName: Лаборатория PreDraw
+					Tooltip: Щелчок левой кнопкой выпускает тестовый снаряд-кисть. Щелчок правой кнопкой открывает панель тестирования PreDraw.
+				}
+			}
+		}
+
+		Projectiles: {
+			A_Dev: {
+				PreDrawLabProjectile.DisplayName: Тестовый снаряд PreDraw
+				PreDrawLabPanel.DisplayName: Панель лаборатории PreDraw
+			}
+		}
+	}
+}

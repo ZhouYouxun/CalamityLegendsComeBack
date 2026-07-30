@@ -1,0 +1,74 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				CallofDuty: {
+					// DisplayName: Call of Responsibility
+					// Tooltip: "[GFB]"
+					/* Compact:
+						'''
+						[c/8FDFFF:Left-click [Dial]: 3-pulse sequence (Cursor lock -> Packet curve -> Confirm pulse)]
+						[c/8FDFFF:Right-click [Redial]: Pops a 3x4 LCD keypad over connected target to unleash keycap blasts (2.5s CD)]
+						[c/8FDFFF:Hold Left+Right [Speed Dial]: Charge for 0.5s to fire a main signal, tagging target as VIP]
+						[c/6FA8FF:Held in main inventory, grants a Rover Drive-equivalent shield; worn Rover Drive boosts shield layers]
+						[c/C2FF43:Legendary skill ({0}): Everyone, get over here]
+						[c/C2FF43:Drops an Amplifier that locks down, then calls 16 Wulfrum squad machines]
+						[c/C2FF43:The army and cooldown both last 60 seconds; defeating a real boss immediately resets cooldown]
+						''' */
+					// DetailsHint: "[c/97ADB8:Hold Shift for attack modes and squad details]"
+					/* Details:
+						'''
+						[c/8FDFFF:3-Pulse Dial:] 1st shot cursor locks on, 2nd packet curves, 3rd confirm key pincers & triggers Connect Pulse
+						[c/8FDFFF:Redial:] Requires connecting a target with Left-click; Right-click pops keycaps around the target
+						[c/8FDFFF:Speed Dial:] Reduces movement speed during 0.5s charge; tagging a target boosts tracking and adds a 4th keycap to Redial
+
+						[c/C2FF43:Everyone, get over here:] 1 Amplifier, 6 Rovers, 4 Gyrators, 4 Drones, and 2 Hovercraft
+						Every ally has a blue outline, independent health, your full defense, and physically intercepts safe hostile projectiles
+						The Amplifier field gives players 20 defense and squad machines 50% health, defense, and attack
+						''' */
+					// LegendaryText: “Everyone, get over here.”
+				}
+			}
+		}
+
+		// Cooldowns.CallofDuty_Ultimate: Everyone, get over here
+		// UI.CallofDuty.Return: Return
+
+		NPCs: {
+			// ResponsibilityArmyAmplifier.DisplayName: Responsibility Squad Amplifier
+			// ResponsibilityArmyRover.DisplayName: Responsibility Squad Rover
+			// ResponsibilityArmyGyrator.DisplayName: Responsibility Squad Gyrator
+			// ResponsibilityArmyDrone.DisplayName: Responsibility Squad Drone
+			// ResponsibilityArmyHovercraft.DisplayName: Responsibility Squad Hovercraft
+			// Destroyer2041Body.DisplayName: Destroyer2041 Body
+			// Destroyer2041Head.DisplayName: Destroyer2041 Head
+			// Destroyer2041Tail.DisplayName: Destroyer2041 Tail
+			// Prime2041.DisplayName: Prime2041
+			// Prime2041Cannon.DisplayName: Prime2041 Cannon
+			// Prime2041Laser.DisplayName: Prime2041 Laser
+			// Prime2041Saw.DisplayName: Prime2041 Saw
+			// Prime2041SecondHead.DisplayName: Prime2041 Second Head
+			// Prime2041Vice.DisplayName: Prime2041 Vice
+			// Twins2041Retinazer.DisplayName: Twins2041 Retinazer
+			// Twins2041Spazmatism.DisplayName: Twins2041 Spazmatism
+		}
+
+		Projectiles: {
+			// CallofDutyHoldout.DisplayName: Call of Duty Holdout
+			// ResponsibilityCommunicationSequence.DisplayName: Wulfrum Communication Sequence
+			// ResponsibilityCommunicationToken.DisplayName: Wulfrum Communication Token
+			// ResponsibilityHatMarker.DisplayName: Wulfrum Hat
+			// ResponsibilityHatImpact.DisplayName: Mandatory Hat Application
+			// ResponsibilityStaticRing.DisplayName: Communication Static Ring
+			// ResponsibilityUnitRamHitbox.DisplayName: Wulfrum Heavy Impact
+			// ResponsibilityDroneLaser.DisplayName: Wulfrum Query Laser
+			// ResponsibilityHovercraftMissile.DisplayName: Wulfrum Delayed Missile
+			// ResponsibilityMissileExplosion.DisplayName: Wulfrum Missile Blast
+			// ResponsibilityRoverScrap.DisplayName: Responsibility Scrap Round
+			// ResponsibilityRoverFusionBolt.DisplayName: Responsibility Fusion Bolt
+			// CallofDutyRedialKeyboard.DisplayName: Redial Keypad
+			// CallofDutyRedialKeyCap.DisplayName: Redial Keycap
+			// CallofDutyFastDialSignal.DisplayName: Speed Dial Signal
+		}
+	}
+}

@@ -1,0 +1,7 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Projectiles.A_Dev.ExtraBackpackPanel.DisplayName: Дополнительный рюкзак
+		Keybinds.ExtraBackpack.DisplayName: Дополнительный рюкзак
+		TheSpecialText.ExtraBackpackTitle: Дополнительный рюкзак [20x10]
+	}
+}

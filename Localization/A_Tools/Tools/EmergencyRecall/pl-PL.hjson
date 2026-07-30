@@ -1,0 +1,17 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				EmergencyRecall: {
+					DisplayName: Awaryjny powrót
+					Tooltip:
+						'''
+						Uruchamia się, gdy znajduje się w ekwipunku i jest oznaczony jako ulubiony.
+						Po otrzymaniu śmiertelnych obrażeń bez aktywnego bossa automatycznie używa przedmiotu powrotu do domu.
+						Priorytet zużycia: Mikstura powrotu > Mikstura przywołania > Magiczne lustro (lustra nie są zużywane)
+						'''
+				}
+			}
+		}
+	}
+}

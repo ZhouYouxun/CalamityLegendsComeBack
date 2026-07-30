@@ -1,0 +1,17 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				EmergencyRecall: {
+					DisplayName: Rappel d'urgence
+					Tooltip:
+						'''
+						S'active lorsqu'il est dans l'inventaire et mis en favori.
+						Lors de dégâts mortels sans boss actif, utilise automatiquement un objet de rappel pour rentrer chez vous.
+						Priorité de consommation : Potion de retour > Potion de rappel > Miroir magique (les miroirs ne sont pas consommés)
+						'''
+				}
+			}
+		}
+	}
+}

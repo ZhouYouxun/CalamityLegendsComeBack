@@ -1,0 +1,55 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				NewDragoonDrizzlefish: {
+					// DisplayName: Banquet Dragoon Drizzlefish
+					/* Tooltip:
+						'''
+						A hungry little fish-cannon that needs snacks before it will fight
+						If it is hungry when you fire, it automatically eats the first valid unfavorited food from the front of your inventory and loads 50 shots
+						<right> makes it pose cutely, granting 5% damage and 5% movement speed for 10 seconds
+						Different food categories completely reshape the loaded shots
+						It chirps when fed, pouts when hungry, and occasionally celebrates while firing
+						[c/9DA8B8:Hold Shift to view food category effects]
+						''' */
+					/* MealDetails:
+						'''
+						[c/FFE09A:Feeding rule] If the magazine is empty when you left-click, it automatically consumes the first valid feed item found from the front of your inventory and loads 50 shots. Favorited items are skipped.
+						[c/FFBE5F:Right-click charm] Right-click shows a random cute face, plays a cute sound, and grants 10 seconds of warm flame: 5% damage and 5% movement speed.
+						[c/9DA8B8:Only broad food categories matter. Guarded non-food items, bait, weapon-like catches, and excluded special cases are never fed.]
+						[c/8FD8FF:Gel] Basic fishflames, keeping the original drifting fireball rhythm.
+						[c/FF7A42:Meat] Larger fishflames with far more penetration and heavier knockback.
+						[c/74F074:Fruit] Rapidly sprays three slim green homing needles.
+						[c/55D2FF:Fish] Fires boiling bubbles; after touching water they gain homing and pass through tiles.
+						[c/BE78FF:Alcohol] Replaces the shot with a straight purple laser that bursts into extra sparks on hit.
+						[c/FFE09A:Feast] Launches a heavy cooked comet that bursts into a warm flame spread.
+						[c/FF96EB:Snacks] Fires a candy rocket that airbursts into many fragments.
+						[c/FFFF78:Golden Delight] Fires one golden homing shot with doubled damage and a compact blast.
+						[c/B6FF50:Odd Mushroom] Splits each shot into four strange homing spores, each at full damage.
+						[c/FF6A6A:Hungry] If the magazine is empty, it will refuse to fire until fed again.
+						''' */
+				}
+			}
+		}
+
+		Projectiles: {
+			DragoonDrizzlefish: {
+				// FoodDrizzlefishFireball.DisplayName: Banquet Fishflame
+				// FoodDrizzlefishFire.DisplayName: Banquet Greater Fishflame
+				// FoodDrizzlefishFireSplit.DisplayName: Banquet Split Flame
+				// FoodDrizzlefishFruitNeedle.DisplayName: Fruit Needle
+				// FoodDrizzlefishFishBubble.DisplayName: Boiling Bubble
+				// FoodDrizzlefishBoozeLaser.DisplayName: Tipsy Laser
+				// FoodDrizzlefishBoozeDroplet.DisplayName: Tipsy Droplet
+				// FoodDrizzlefishSnackRocket.DisplayName: Snack Cluster
+				// FoodDrizzlefishSnackShard.DisplayName: Snack Fragment
+				// FoodDrizzlefishGoldenSeeker.DisplayName: Golden Delight Shot
+				// FoodDrizzlefishOddSpore.DisplayName: Odd Spore
+				// FoodDrizzlefishFeastComet.DisplayName: Feast Comet
+				// FoodDrizzlefishMealBurst.DisplayName: Banquet Burst
+				// FoodDrizzlefishStatusBar.DisplayName: Food Drizzlefish Status Bar
+			}
+		}
+	}
+}

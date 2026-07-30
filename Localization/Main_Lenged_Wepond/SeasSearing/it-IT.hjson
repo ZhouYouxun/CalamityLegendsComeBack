@@ -1,0 +1,110 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				SeasSearing: {
+					// DisplayName: Sea-Scorching Heaven - Sea's Searing
+					// Tooltip: "[GFB]"
+					// Intro: "[c/58FFDA:Abyssal radiation rifle. Pollution stacks, spreads, and collapses on command.]"
+					// LeftClick_Stage0: "[c/9AEAFF:Left Click: single precise shot. Each hit applies Abyssal Radiation Pollution.]"
+					// LeftClick_Stage1: "[c/9AEAFF:Left Click: 2-round burst. Each hit applies Abyssal Radiation Pollution.]"
+					/* LeftClick_Stage2:
+						'''
+						[c/9AEAFF:Left Click: 2-round burst. Each hit applies Abyssal Radiation Pollution.]
+						[c/4CD268:Each bullet impact scatters 2–4 Pollution Bubbles on contact.]
+						''' */
+					/* LeftClick_Stage3:
+						'''
+						[c/9AEAFF:Left Click: 3-round burst. Each hit applies Pollution and scatters Pollution Bubbles.]
+						[c/58FFDA:After the burst: deploys one rotating companion — Skyfin Torpedo, Pollution Rocket, or Pressure Depth Charge.]
+						''' */
+					/* LeftClick_Stage4:
+						'''
+						[c/9AEAFF:Left Click: 4-round burst. Each hit scatters Pollution Bubbles.]
+						[c/58FFDA:After the burst: deploys a rotating pair of Skyfin Torpedoes, Pollution Rockets, and Pressure Depth Charges.]
+						[c/FF8A30:Last bullet in burst triggers a Nukesplosion, dealing 2× bullet damage with independent iframes.]
+						''' */
+					/* LeftClick_Stage5:
+						'''
+						[c/9AEAFF:Left Click: 4-round burst. Each burst deploys a rotating pair of companion ordnance.]
+						[c/FF8A30:The pair cycles between Skyfin Torpedoes, Pollution Rockets, Pressure Depth Charges, and Seeking Missiles.]
+						[c/FF8A30:Last bullet in burst triggers a Nukesplosion.]
+						''' */
+					// LeftClick_ReconSoul: "[c/7DFFE8:Each bullet also releases a +/-1 degree reconnaissance soul that locks onto nearby enemies.]"
+					/* RightClick:
+						'''
+						[c/58FFDA:Right Click · 3-stage Pressure Protocol: Hold to Charge → release for a Pressure Bolt that spawns homing satellites.]
+						[c/58FFDA:Hold longer to Lock → release for a powerful bolt + 80-frame enhanced bursts.]
+						[c/58FFDA:Hold to maximum to trigger Abyssal Rupture: 3 geysers detonate all pollution, followed by a double spray; normal left-click bursts resume immediately.]
+						''' */
+					// Passive: "[c/4CD268:Held: emits an abyssal pressure field that slows nearby enemies and slowly seeds pollution.]"
+					// Ultimate: "[c/FF8A30:Ultimate (Air-to-Ground Nuclear Missile): Press] [[c/FF8A30:{0}]] [c/FF8A30: to charge for one second, then left-click to designate a target for a deep-sea thermonuclear strike. The blast heavily pollutes survivors.]"
+					// LegendaryHint: "[c/BABABA:Hold Shift to access the disaster record]"
+					/* LegendaryText:
+						'''
+						[c/58FFDA:The first Sea's Searing only needed to do one thing: put bullets into the target and let pollution begin to spread.]
+						[c/4CD268:That design already suited the Sulphurous Sea, but it too easily reduced disaster to damage-over-time numbers.]
+						[c/58FFDA:After the rebuild, every shot leaves disaster coordinates, while pollution clouds, cracked light, and acid corrosion stack across the field.]
+						[c/4CD268:Right click is no longer just extra damage. It chooses when to detonate the areas already infected.]
+						[c/FF8A30:When the final strike lands, what bursts is not one bullet, but the collapse all previous pollution had been pointing toward.]
+						''' */
+				}
+			}
+		}
+
+		Projectiles: {
+			SeasSearing: {
+				// SeasSearingHoldout.DisplayName: Sea's Searing Holdout
+				// SeasSearingPollutionRound.DisplayName: Abyssal Pollution Round
+				// SeasSearingPollutionJuice.DisplayName: Fluorescent Pollution Sludge
+				// SeasSearingResonancePulse.DisplayName: Abyssal Resonance Pulse
+				// SeasSearingDetonationBlast.DisplayName: Pollution Collapse
+				// SeasSearingFalloutCloud.DisplayName: Abyssal Fallout Cloud
+				// SeasSearingDesignatorBeam.DisplayName: Thermonuclear Designator
+				// SeasSearingNukeMarker.DisplayName: Thermonuclear Strike Marker
+				// SeasSearingThermonuclearWarhead.DisplayName: Air-to-Ground Nuclear Missile
+				// SeasSearingNuclearDetonation.DisplayName: Deep-Sea Nuclear Disaster
+				// SeasSearingFalloutRain.DisplayName: Radioactive Abyssal Rain
+				// SSDeathPollutionCloud.DisplayName: Death Pollution Cloud
+				// SSPollutionSpike.DisplayName: Abyssal Pollution Spike
+				// SSPollutionVortex.DisplayName: Abyssal Pollution Vortex
+				// SeasSearingPressureBolt.DisplayName: Abyssal Pressure Bolt
+				// SeasSearingSatellite.DisplayName: Pressure Satellite
+				// SeasSearingAbyssalGeyser.DisplayName: Abyssal Geyser
+				// SeasSearingVentShot.DisplayName: Pressure Vent Round
+				// SeasSearingTorrentShot.DisplayName: Abyssal Torrent Shot
+				// SkyfinTorpedo.DisplayName: Skyfin Torpedo
+				// SkyfinTorpedoExplosion.DisplayName: Skyfin Torpedo Explosion
+				// SeasSearingPollutionBubble.DisplayName: Abyssal Pollution Bubble
+				// SeasSearingPollutionRocket.DisplayName: Abyssal Pollution Rocket
+				// SeasSearingPressureDepthCharge.DisplayName: Abyssal Pressure Depth Charge
+				// SeasSearingMissile.DisplayName: Abyssal Seeking Missile
+				// SeasSearingReconSoul.DisplayName: Abyssal Recon Soul
+				// SeasSearingMissileExplosion.DisplayName: Abyssal Missile Detonation
+				// SeasSearingNukesplosion.DisplayName: Abyssal Nukesplosion
+			}
+		}
+
+		Buffs: {
+			SeasSearingPlayerRadiationBuff: {
+				// DisplayName: Radiation Excitement
+				// Description: Sustained hits with Sea's Searing build Radiation Excitement
+				// DisplayName_Level1: Radiation Excitement — Level I
+				// Description_Level1: Ranged damage increased by 8%
+				// DisplayName_Level2: Radiation Excitement — Level II
+				// Description_Level2: Ranged damage increased by 16% and ranged armor penetration increased by 8
+				// DisplayName_Level3: Radiation Excitement — Level III
+				// Description_Level3: Ranged damage increased by 26%, ranged armor penetration increased by 16, and movement speed increased by 12%
+				// DisplayName_Level4: Radiation Excitement — Level IV
+				// Description_Level4: Ranged damage increased by 38%, ranged armor penetration increased by 26, movement speed increased by 20%, and ranged critical chance increased by 10%
+			}
+
+			SeasSearingRadiationBuff: {
+				// DisplayName: Abyssal Radiation Pollution
+				// Description: Pressure, poison, and unstable deep-sea radiation are accumulating
+			}
+		}
+
+		// Cooldowns.SeasSearing_Ultimate: Deep-Sea Thermonuclear Strike
+	}
+}

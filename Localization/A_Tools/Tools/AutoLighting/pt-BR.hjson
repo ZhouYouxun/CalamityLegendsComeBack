@@ -1,0 +1,16 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				AutoLighting: {
+					DisplayName: Acendedor automático
+					Tooltip:
+						'''
+						Quando marcado como favorito, coloca automaticamente a tocha mais acima no inventário em áreas escuras.
+						Debaixo d'água, lança uma luz química no lugar.
+						'''
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,24 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				PlayerSaddleItem: {
+					DisplayName: Siodło dla gracza
+					Tooltip:
+						'''
+						Kliknij lewym przyciskiem pobliskiego gracza, aby na nim jechać.
+						Podczas jazdy nie możesz się poruszać, ale nadal możesz normalnie atakować i wchodzić w interakcje.
+						Automatycznie zsiadasz, jeśli twój wierzchowiec zginie.
+						Ponownie kliknij lewym przyciskiem, aby zsiąść, lub prawym, aby zrzucić własnego jeźdźca.
+						'''
+				}
+			}
+		}
+
+		TheSpecialText: {
+			PlayerSaddleNoTarget: Nie znaleziono pobliskiego gracza, na którym można jechać.
+			PlayerSaddleOccupied: Ten gracz ma już jeźdźca.
+			PlayerSaddleMounted: "{0} jedzie teraz na {1}!"
+		}
+	}
+}

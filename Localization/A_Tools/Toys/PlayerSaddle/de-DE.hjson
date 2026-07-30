@@ -1,0 +1,24 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				PlayerSaddleItem: {
+					DisplayName: Spielersattel
+					Tooltip:
+						'''
+						Linksklick auf einen Spieler in der Nähe, um auf ihm zu reiten.
+						Während du reitest, kannst du dich nicht bewegen, aber weiterhin normal angreifen und interagieren.
+						Steigt automatisch ab, wenn dein Reittier stirbt.
+						Linksklick erneut zum Absteigen oder Rechtsklick, um deinen eigenen Reiter abzuwerfen.
+						'''
+				}
+			}
+		}
+
+		TheSpecialText: {
+			PlayerSaddleNoTarget: Kein Spieler in der Nähe zum Aufsitzen gefunden.
+			PlayerSaddleOccupied: Dieser Spieler hat bereits einen Reiter.
+			PlayerSaddleMounted: "{0} reitet nun auf {1}!"
+		}
+	}
+}

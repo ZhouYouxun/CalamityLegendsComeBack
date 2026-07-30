@@ -1,0 +1,17 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				EmergencyRecall: {
+					DisplayName: Retorno de emergência
+					Tooltip:
+						'''
+						É ativado quando está no inventário e marcado como favorito.
+						Ao receber dano fatal sem um chefe ativo, usa automaticamente um item de retorno para voltar para casa.
+						Prioridade de consumo: Poção do Retorno > Poção de Teleporte > Espelho Mágico (espelhos não são consumidos)
+						'''
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,24 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				PlayerSaddleItem: {
+					DisplayName: Sella per giocatori
+					Tooltip:
+						'''
+						Fai clic sinistro su un giocatore vicino per cavalcarlo.
+						Mentre cavalchi non puoi muoverti, ma puoi ancora attaccare e interagire normalmente.
+						Scendi automaticamente se la tua cavalcatura muore.
+						Fai di nuovo clic sinistro per scendere, oppure clic destro per scaraventare giù chi ti sta cavalcando.
+						'''
+				}
+			}
+		}
+
+		TheSpecialText: {
+			PlayerSaddleNoTarget: Nessun giocatore vicino da cavalcare.
+			PlayerSaddleOccupied: Quel giocatore ha già un cavaliere.
+			PlayerSaddleMounted: "{0} ora cavalca {1}!"
+		}
+	}
+}

@@ -1,0 +1,32 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Buffs: {
+			ZhuangFangYiPetBuff: {
+				// DisplayName: Yi
+				// Description: Zhuang Fangyi will fight for you. She looks a little dazed...
+			}
+
+			YharonSoulFragment_Buff: {
+				// DisplayName: Yharon Soul Fragment_ Buff
+				// Description: Mods.CalamityLegendsComeBack.Buffs.YharonSoulFragment_Buff.Description
+			}
+
+			SHPCRight_DeBuff: {
+				// DisplayName: S H P C Right_ De Buff
+				// Description: Mods.CalamityLegendsComeBack.Buffs.SHPCRight_DeBuff.Description
+			}
+		}
+
+		Projectiles: {
+			AzureThunder: {
+				// ZhuangFangYiPetProjectile.DisplayName: Zhuang Fangyi
+				// AzureThunderCannonStrike.DisplayName: Azure Thunder Cannon Strike
+			}
+
+			// BFPlagueBoom.DisplayName: B F Plague Boom
+			// BFPlagueSporeBomb.DisplayName: B F Plague Spore Bomb
+			// BrinyBaron_BubbleShield.DisplayName: Briny Baron_ Bubble Shield
+			// BrinyBaron.BaronHelixBubble.DisplayName: Baron Helix Bubble
+		}
+	}
+}

@@ -1,0 +1,18 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				MagnetBombItem: {
+					DisplayName: Магнитная бомба
+					Tooltip:
+						'''
+						Щелчок левой кнопкой бросает липкую бомбу, которая прилипает к поверхностям.
+						Щелчок правой кнопкой одновременно подрывает все установленные бомбы.
+						'''
+				}
+			}
+		}
+
+		Projectiles.A_Tools.MagnetBombProj.DisplayName: Магнитная бомба
+	}
+}

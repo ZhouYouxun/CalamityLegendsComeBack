@@ -1,0 +1,127 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				Summon: {
+					GlacialEmbrace: {
+						// ModeName0: Cleave Mode
+						// ModeName1: Pierce Mode
+						// ModeName2: Strike Mode
+						/* GE_Intro:
+							'''
+							[c/7BC8E5:Current form: {0} (auto-rotates every 5 seconds)]
+							[c/A0D8EF:Summon legendary weapon — 48 base damage, 10 mana]
+							[c/A0D8EF:First use summons a Glacial Core (0 slots) as anchor]
+							[c/A0D8EF:Full slots: hold for a special attack; release enforces a 15-frame cooldown]
+							''' */
+						/* GE_LeftClick:
+							'''
+							[c/A0D8EF:◆ Left Click: summon Glacial Core first if absent]
+							[c/A0D8EF:  Then click to summon orbiting Ice Spikes]
+							[c/A0D8EF:  Hold when full to charge, release for special attack]
+							''' */
+						/* GE_SpikeMode0:
+							'''
+							[c/90FFB0:◈ Cleave — paired inner/outer crystals orbit and periodically rush out]
+							[c/90FFB0:  Inner spikes cut faster; outer spikes hit heavier]
+							[c/90FFB0:  Both can leave orbit to slash through targets]
+							''' */
+						/* GE_SpikeMode1:
+							'''
+							[c/80EFFF:◈ Pierce — spikes orbit briefly, then fly out faster to embed]
+							[c/80EFFF:  Max 6 spikes per enemy; reduces orbit count while out]
+							[c/80EFFF:  Whip hits command embedded or idle spikes into a frenzy thrust]
+							''' */
+						/* GE_SpikeMode2:
+							'''
+							[c/FF8B60:◈ Strike — spikes ram targets on their own while waiting]
+							[c/FF8B60:  Left click when aligned: spikes collide and shockwave]
+							[c/FF8B60:  Collision hibernates spikes for 4s]
+							''' */
+						// GE_SpecialIntro: "[c/A0D8EF:◆ Special Attack (hold Left Click when minion slots are full; non-perfect releases scale from 10% to 100% damage)]"
+						/* GE_SpecialMode0:
+							'''
+							[c/90FFB0:Cleave Special: condense ice blade at cursor position]
+							[c/90FFB0:  Release to spin 2 rotations around player after delay]
+							[c/90FFB0:  Multi-hit with 8-frame NPC immunity per hit]
+							''' */
+						/* GE_SpecialMode1:
+							'''
+							[c/80EFFF:Pierce Special: fire a homing ice wedge toward cursor]
+							[c/80EFFF:  Shatters on hit; detonates ALL embedded spikes on target]
+							''' */
+						/* GE_SpecialMode2:
+							'''
+							[c/FF8B60:Strike Special: launch a heavy gravity-affected ice pillar]
+							[c/FF8B60:  Wide explosion on hit; force-knockbacks bosses]
+							[c/FF8B60:  Detonates all spikes into shockwaves; spikes hibernate]
+							''' */
+						/* GE_PassiveRhythm:
+							'''
+							[c/B0E0FF:◇ Rift Archiving: hold Right Click to start rhythm QTE bar]
+							[c/B0E0FF:  Release in the green sweet-spot zone: combo +1 (max 20)]
+							[c/B0E0FF:  Whip hits command all spikes into a short coordinated frenzy]
+							''' */
+						// GE_PassiveCombo: "[c/B0E0FF:  Combo: {0} (+{1} life regen/s, +{2} defense)]"
+						// GE_PassiveDivinity: "[c/B0E0FF:  At 10 combo: spike speed +10% for 5s (Glacial Divinity)]"
+						/* GE_PassiveAurora:
+							'''
+							[c/C8A0FF:◇ Aurora Melody: special hits within 0.75s of each other]
+							[c/C8A0FF:  Grant 5s Aurora Grace (+10 defense, 15% pre-DR reduction)]
+							''' */
+						/* GE_PassiveSeal:
+							'''
+							[c/00C8FF:◇ Tri-Phase Seal: ice spike hits leave mode marks (Rift 6s / Pierce 8s / Strike 10s, max 3 each)]
+							[c/00C8FF:  All 3 types on one foe → SEALED: 3s countdown then CRYOBURST (3x+ dmg, cascades to nearby foes, max 3 chains)]
+							[c/00C8FF:  Glacial Divinity active: burst ×1.5 and leaves a 2s Afterglow zone; QTE Perfect = early detonation]
+							''' */
+						// GE_PassiveSealInfo: "[c/FFE050:  Sealed foes: {0}  Resonance Echo (+15% dmg / +8 def): {1}]"
+						/* GE_Ultimate:
+							'''
+							[c/A0F0FF:★ Ultimate — Dimensional Compression (press {0} to release)]
+							[c/A0F0FF:  Special hits give +4 energy. Current: {1}/240]
+							[c/A0F0FF:  On release: spikes triple into 3-layer drill (max 30)]
+							[c/A0F0FF:  Left click to launch; high-freq hits; player is invulnerable]
+							[c/A0F0FF:  Shatters after 3s for 6x area damage; clears all spikes]
+							''' */
+						// LegendaryHint: "[c/BABABA:Hold Shift to read the legendary record]"
+						/* LegendaryText:
+							'''
+							[c/B0D8FF:The first Glacial Embrace was closer to an awakened ice core, answering the wielder with spikes and cold blades.]
+							[c/B0D8FF:That design already had forms, but cleave, pierce, and strike too easily felt like three unrelated move sets.]
+							[c/80C8FF:After the rebuild, every form belongs to the same ice formation: cleaves spread cold blades, pierces nail targets, and strikes clamp the ice frame shut.]
+							[c/A0B0FF:Stable combos quicken the spikes and weave recovery, armor, and brief aurora protection into the rhythm.]
+							[c/E0C0FF:When glacial energy is pushed to its limit, the formation gathers into a three-layer divine drill and drives every previous rotation through at once.]
+							[c/C0A0FF:Learn to listen to its beat, step in rhythm with each frozen cadence —]
+							[c/C0A0FF:that is the only key to commanding absolute cold.]
+							[c/E0C0FF:When the final beat falls perfectly, the Diamond Drill awakens,]
+							[c/E0C0FF:forging every spike into one starlit aurora lance.]
+							[c/E0C0FF:Ending this battlefield of ice and fire with the will of absolute zero.]
+							''' */
+					}
+				}
+			}
+		}
+
+		Projectiles: {
+			// IceBlockMinion.DisplayName: Glacial Core
+			// IceSpikeMinion.DisplayName: Glacial Ice Spike
+			// GlacialEmbraceChargeHoldout.DisplayName: Glacial Charge Holdout
+			// IceBladeProj.DisplayName: Glacial Cleaver Blade
+			// IceWedgeProj.DisplayName: Glacial Piercing Wedge
+			// IcePillarProj.DisplayName: Glacial Strike Pillar
+			// GlacialDrillProj.DisplayName: Dimensional Compression
+			// FrostSealDetonation.DisplayName: Frost Seal Detonation
+			// FrostSealAfterglow.DisplayName: Frost Seal Afterglow
+		}
+
+		Buffs: {
+			GlacialEmbraceBuff: {
+				// DisplayName: Glacial Embrace
+				// Description: An ancient glacier coils around you, granting the guardian's embrace of absolute cold.
+			}
+		}
+
+		// Cooldowns.GlacialEmbrace_Ultimate: Dimensional Compression
+	}
+}

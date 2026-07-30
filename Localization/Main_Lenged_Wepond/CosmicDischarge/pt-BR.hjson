@@ -1,0 +1,125 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				Melee: {
+					CosmicDischarge: {
+						// DisplayName: Stellar Verdict - The Devourer of Gods' Cosmic Discharge
+						// Tooltip: ""
+					}
+
+					DiseasedPike: {
+						// DisplayName: Diseased Pike
+						// Tooltip: ""
+					}
+				}
+
+				NewLegendCosmicDischarge: {
+					// DisplayName: God-Rift Cosmic Discharge - Legend Reborn
+					// Tooltip: "[GFB]"
+					// WhipName: Whip Mode
+					// SwordName: Sword Mode
+					// ChainKnifeName: Chain Blade Mode
+					// UltimateActiveText: God-rift opened!
+					/* CosmicDischargeLeft:
+						'''
+						[c/8DEBFF:Left click: performs a three-hit combo in the current form. All hits inflict Godslayer Inferno and a rift mark.]
+						[c/8DEBFF:Whip form: each hit has its own smear, lightning, or line-beam signature. Lashes throw rift bombs; the thrust detonates where it hits.]
+						[c/8DEBFF:Sword form: the blade stays straight and fixed-length. Swings release heavy-homing DoG blades; the finisher creates distortion, rift cracks, and triple explosions.]
+						[c/8DEBFF:Chain Blade form: multiple chains converge on the cursor. The first two hits emphasize current and stars; the finisher uses starsmoke, laser walls, and a severe explosion.]
+						''' */
+					/* CosmicDischargeRight:
+						'''
+						[c/6FDFFF:Right click: opens a divine rift portal and cycles forms (Whip -> Sword -> Chain Blade).]
+						[c/6FDFFF:During a third-hit windup: triggers Quick Draw. After a 20-frame charge, the target point erupts with a divine particle burst, granting 10 ultimate energy.]
+						''' */
+					/* CosmicDischargeUltimate:
+						'''
+						[c/FFE85A:Dimensional Compression: at 120 energy, press] [[c/FFE85A:{0}]] [c/FFE85A: to begin a 60-frame rift charge.]
+						[c/FFE85A:Burst: full-screen divine laser walls and a massive rift explosion, followed by a lingering divine fire field.]
+						''' */
+					// CosmicDischargePassive: "[c/B8F4FF:Rift Seal:] [c/DCD6C8:while held, any single hit that would exceed 20% of your max HP is capped at that value. When triggered, gain 5 seconds of Rift Revival (+20% damage). Cooldown: 60 seconds.]"
+					// LegendaryHint: "[c/BABABA:Hold Shift to read the legendary record]"
+					/* LegendaryText:
+						'''
+						[c/8DEBFF:The first Cosmic Discharge felt like a compressed cosmic slash: open the rift and pour the energy straight out.]
+						[c/6FDFFF:That burst was dangerous enough, but it struggled to show the Devourer's segmented pressure, its chasing bites, and its constant approach.]
+						[c/8DEBFF:After the rebuild, rifts are no longer just exits for projectiles. They are where each form begins to consume the battlefield.]
+						[c/6FDFFF:Blade, opening, and void echo take over in turn, splitting a single release into a multi-stage language of endings.]
+						[c/B8F4FF:When the seal lights again, it is not promising safety. It is confirming that the next devouring still has a target to find.]
+						''' */
+				}
+			}
+		}
+
+		Buffs: {
+			CosmicDischargeWhipBuff: {
+				// DisplayName: Whip Form
+				// Description: Attack speed and knockback increased.
+			}
+
+			CosmicDischargeSwordBuff: {
+				// DisplayName: Sword Form
+				// Description: Critical strike chance and damage increased.
+			}
+
+			CosmicDischargeChainKnifeBuff: {
+				// DisplayName: Chain Knife Form
+				// Description: Movement speed and armor penetration increased.
+			}
+
+			CosmicDischargeRiftRevivalBuff: {
+				// DisplayName: Rift Revival
+				// Description: The Devourer rift shatters your limits. Damage, defense, and movement speed increased by 20%.
+			}
+
+			CosmicDischargeUltimateGuardBuff: {
+				// DisplayName: Rift Field Guard
+				// Description: Damage taken is reduced and defense is increased.
+			}
+
+			CosmicDischargeDoGMarkDebuff: {
+				// DisplayName: Rift Mark
+				// Description: Marked by Devourer rift energy. Certain attacks can detonate the mark.
+			}
+
+			CosmicDischargeDevourerAscensionBuff: {
+				// DisplayName: Devourer Ascension
+				// Description: Damage, mobility, defense, damage reduction, and melee attack speed are increased.
+			}
+
+			CosmicDischargeDevourerSliverBuff: {
+				// DisplayName: Rift Sliver
+				// Description: Damage and defense are slightly increased.
+			}
+		}
+
+		Projectiles: {
+			// CosmicDischargeRiftCrack.DisplayName: Cosmic Discharge Rift Crack
+
+			Melee: {
+				// CosmicDischargeSwordWave.DisplayName: Cosmic Discharge Rift Wave
+				// CosmicDischargeDoGRiftBomb.DisplayName: Cosmic Discharge Rift Bomb
+				// CosmicDischargeDoGEnergyBolt.DisplayName: Cosmic Discharge DoG Blade
+				// CosmicDischargeDoGConvergenceExplosion.DisplayName: Cosmic Discharge Segment Rift
+				// CosmicDischargeSwitchPortal.DisplayName: Cosmic Discharge Switch Portal
+				// CosmicDischargeUltimateField.DisplayName: Cosmic Discharge Rift Field
+				// CosmicDischargeChainKnife.DisplayName: Cosmic Discharge Chain Blade
+				// CosmicDischargeComboHoldout.DisplayName: Cosmic Discharge Combo Holdout
+				// CosmicDischargeRiftSplit.DisplayName: Cosmic Discharge Rift Split
+				// CosmicDischargeHookHead.DisplayName: Cosmic Discharge Hook Head
+				// CosmicDischargeHookLimb.DisplayName: Cosmic Discharge Hook Limb
+				// CosmicDischargeKillModeReady.DisplayName: Cosmic Discharge Kill Mode Ready
+				// CosmicDischargeKillModeSlash.DisplayName: Cosmic Discharge Kill Mode Slash
+				// DiseasedPikeProj.DisplayName: Diseased Pike Proj
+				// BrinyBaron_HeavySlash.DisplayName: Briny Baron_ Heavy Slash
+			}
+		}
+
+		Cooldowns: {
+			// CosmicDischarge_Ultimate: Rift Energy
+			// CosmicDischarge_RiftSeal: Rift Seal
+			// CosmicDischarge_QuickDraw: Rift Draw
+		}
+	}
+}

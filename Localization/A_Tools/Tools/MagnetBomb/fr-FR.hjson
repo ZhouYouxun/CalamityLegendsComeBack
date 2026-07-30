@@ -1,0 +1,18 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				MagnetBombItem: {
+					DisplayName: Bombe magnétique
+					Tooltip:
+						'''
+						Un clic gauche lance une bombe collante qui adhère aux surfaces.
+						Un clic droit fait exploser toutes les bombes posées simultanément.
+						'''
+				}
+			}
+		}
+
+		Projectiles.A_Tools.MagnetBombProj.DisplayName: Bombe magnétique
+	}
+}

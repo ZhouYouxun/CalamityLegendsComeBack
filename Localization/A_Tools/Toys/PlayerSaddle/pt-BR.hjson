@@ -1,0 +1,24 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				PlayerSaddleItem: {
+					DisplayName: Sela de jogador
+					Tooltip:
+						'''
+						Clique com o botão esquerdo em um jogador próximo para montá-lo.
+						Enquanto estiver montado, você não pode se mover, mas ainda pode atacar e interagir normalmente.
+						Desmonta automaticamente se a sua montaria morrer.
+						Clique com o botão esquerdo novamente para desmontar ou com o direito para derrubar quem está montado em você.
+						'''
+				}
+			}
+		}
+
+		TheSpecialText: {
+			PlayerSaddleNoTarget: Nenhum jogador próximo para montar foi encontrado.
+			PlayerSaddleOccupied: Esse jogador já tem um cavaleiro.
+			PlayerSaddleMounted: "{0} agora está montando em {1}!"
+		}
+	}
+}

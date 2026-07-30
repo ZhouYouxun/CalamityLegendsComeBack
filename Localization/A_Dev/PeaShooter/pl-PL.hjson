@@ -1,0 +1,80 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				NewLegendPeaShooter: {
+					// DisplayName: Pea Shooter
+					// Tooltip: "[GFB]"
+					// PeaShooter_Left: "[c/9FEA78:Left click: current form is {0}.]"
+					// PeaShooter_Right: "[c/F7D87C:Right click cycles peas. Current: {0}.]"
+					// PeaShooter_Effect: "[c/B8FF9E:{0}]"
+					/* PeaShooter_Accessory:
+						'''
+						[c/8FE8FF:Equip it to become a Pea Zombie.]
+						[c/8FE8FF:It fires random peas at the same rate.]
+						[c/79DFBF:Adrenaline briefly turns it into a Super Gatling Pea.]
+						''' */
+					// PeaShooter_Zombie: "[c/9FEA78:Deals 1.5x damage to zombies.]"
+					// PeaShooter_Flavor: "[c/BABABA:No matter how many times, we will defend the garden.]"
+				}
+			}
+		}
+
+		Projectiles: {
+			A_Dev: {
+				// PeaShooterHoldout.DisplayName: Pea Shooter Holdout
+				// PeaShooterASSHold.DisplayName: Pea Zombie Helmet
+				// PeaShooterPea.DisplayName: Pea
+				// PeaShooterSplash.DisplayName: Pea Splash
+				// PeaShooterLightning.DisplayName: Pea Micro Lightning
+				// PeaShooterFirePatch.DisplayName: Pea Fire Patch
+			}
+
+			// BFPa5BreakthroughDashHitbox.DisplayName: B F Pa5 Breakthrough Dash Hitbox
+			// PFMarkStatusArc.DisplayName: P F Mark Status Arc
+			// PristineFuryHookSoul.DisplayName: Pristine Fury Hook Soul
+
+			PristineFury: {
+				// PFSkeletronWhiteBurst.DisplayName: P F Skeletron White Burst
+				// PFPolterghast_StarBolt.DisplayName: P F Polterghast_ Star Bolt
+				// PFEmpress_ScatterBolt.DisplayName: P F Empress_ Scatter Bolt
+			}
+
+			// BBSD_Star.DisplayName: B B S D_ Star
+			// BrinyBaron_SkillDashTornado_BladeDash.DisplayName: Briny Baron_ Skill Dash Tornado_ Blade Dash
+			// BrinyBaron_RightClick_Shuriken.DisplayName: Briny Baron_ Right Click_ Shuriken
+			// BrinyBaron_SeaSpirit.DisplayName: Briny Baron_ Sea Spirit
+			// BrinyBaron_SeafoamExplosion.DisplayName: Briny Baron_ Seafoam Explosion
+			// BrinyBaron_SeafoamBlade.DisplayName: Briny Baron_ Seafoam Blade
+			// BrinyBaron.BBASD_Lighting.DisplayName: B B A S D_ Lighting
+			// BFRecoveryShieldVisual.DisplayName: B F Recovery Shield Visual
+			// BFRightChargeHaloProj.DisplayName: B F Right Charge Halo Proj
+			// AzureThunderHarmonyBar.DisplayName: Azure Thunder Harmony Bar
+			// AzureThunderGroundSwordMatrix.DisplayName: Azure Thunder Ground Sword Matrix
+			// SHPCLeftClickHoldout.DisplayName: S H P C Left Click Holdout
+			// SHPCMagazineStatusPanel.DisplayName: S H P C Magazine Status Panel
+		}
+
+		PeaShooter: {
+			// FireStyleSingle: Single Peashooter
+			// FireStyleDouble: Repeater
+			// FireStyleThreeLine: Threepeater
+			// FireStyleGatling: Gatling Pea
+			// FireStyleWildGatling: Wild Gatling Pea
+			// PeaNameNormal: Normal Pea
+			// PeaNameElectric: Electric Pea
+			// PeaNameFire: Fire Pea
+			// PeaNameIce: Ice Pea
+			// PeaNameStarlight: Starlight Pea
+			// PeaNamePoison: Poison Pea
+			// PeaNameRock: Rock Pea
+			// PeaEffectNormal: Normal Pea: direct hits deal 1.2x damage.
+			// PeaEffectElectric: Electric Pea: releases tiny lightning.
+			// PeaEffectFire: Fire Pea: may leave a brief fire patch.
+			// PeaEffectIce: Ice Pea: can freeze non-boss enemies.
+			// PeaEffectStarlight: Starlight Pea: infects with blue star sparks.
+			// PeaEffectPoison: Poison Pea: rolls many toxic debuffs.
+			// PeaEffectRock: Rock Pea: huge knockback, may stun bosses.
+		}
+	}
+}

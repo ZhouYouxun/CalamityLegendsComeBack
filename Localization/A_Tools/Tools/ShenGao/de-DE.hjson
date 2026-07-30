@@ -1,0 +1,12 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				ShenGao: {
+					DisplayName: Göttliche Spitzhacke
+					Tooltip: Eine Spitzhacke, die mit dem Spielfortschritt besser wird
+				}
+			}
+		}
+	}
+}

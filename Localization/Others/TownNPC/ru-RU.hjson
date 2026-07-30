@@ -1,0 +1,49 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		NPCs: {
+			LegendMerchant: {
+				// DisplayName: Legend Merchant
+				// Bestiary: A wandering merchant who collects and sells lost legendary weapons, boss summoning relics, and even Draedon's decryption technology.
+
+				Name: {
+					// Name1: Carlisle
+					// Name2: Vera
+					// Name3: Auden
+					// Name4: Lorne
+				}
+
+				Chat: {
+					// Normal1: Legendary weapons, boss summons, codebreaker gear - if you can pay, I've got it.
+					// Normal2: Use the button below to flip between my shelves. I carry a lot.
+					// Normal3: Those legendary blades? On sale from the start. Whether you can wield them is your problem.
+					// Normal4: Summons depend on how far you've gotten. No progress, no sale.
+				}
+
+				ShopButton: {
+					// LegendWeapons: Legend Weapons
+					// BossSummons: Boss Summons
+					// Draedon: Codebreaker Gear
+				}
+
+				// SwitchShopButton: Switch Shelf
+
+				SwitchChat: {
+					// LegendWeapons: Switched to the [Legend Weapons] shelf.
+					// BossSummons: Switched to the [Boss Summons] shelf.
+					// Draedon: Switched to the [Codebreaker Gear] shelf.
+				}
+
+				TownNPCMood: {
+					// Content: 我很满足。
+					// NoHome: 我讨厌没有家。
+					// FarFromHome: 我离家太远了。
+					// LoveSpace: 我非常喜欢有这么大的空间。
+					// DislikeCrowded: 我不喜欢这么拥挤。
+					// HateCrowded: 我讨厌这么拥挤。
+					// LikeNPC_Princess: 我喜欢 {NPCName}。
+					// Princess_LovesNPC: 我喜欢 {NPCName}。
+				}
+			}
+		}
+	}
+}

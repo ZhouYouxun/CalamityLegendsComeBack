@@ -1,0 +1,24 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				ArtisanToken: {
+					// DisplayName: Artisan Token
+					/* Tooltip:
+						'''
+						Right-click this item in your inventory to open the modifier selection menu.
+						Clicking a modifier instantly reforges all equipped accessories with it.
+						Sold by the Goblin Tinkerer.
+						''' */
+				}
+			}
+		}
+
+		// Projectiles.A_Dev.ArtisanTokenPanel.DisplayName: Artisan Token Panel
+
+		TheSpecialText: {
+			// ArtisanTokenTitle: Artisan Token — Select Modifier
+			// ArtisanTokenApplied: Applied modifier [{0}] to {1} accessories.
+		}
+	}
+}

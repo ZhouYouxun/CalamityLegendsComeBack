@@ -1,0 +1,16 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				AutoLighting: {
+					DisplayName: Accenditore automatico
+					Tooltip:
+						'''
+						Quando è segnato come preferito, piazza automaticamente la torcia più in alto nel tuo inventario nelle aree buie.
+						Sott'acqua lancia invece un bastoncino luminoso.
+						'''
+				}
+			}
+		}
+	}
+}

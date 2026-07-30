@@ -1,0 +1,19 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				ParticleLabDebugItem: {
+					DisplayName: Laboratorio particellare
+					Tooltip: Il clic destro apre la matrice delle particelle. Il clic sinistro attiva l'effetto particellare singolo selezionato.
+				}
+			}
+		}
+
+		Projectiles: {
+			A_Dev: {
+				ParticleLabProjectile.DisplayName: Proiettile di prova del laboratorio particellare
+				ParticleLabPanel.DisplayName: Matrice delle particelle
+			}
+		}
+	}
+}

@@ -1,0 +1,19 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				ParticleLabDebugItem: {
+					DisplayName: Laboratorium Cząsteczek
+					Tooltip: Kliknięcie prawym przyciskiem otwiera matrycę cząsteczek. Kliknięcie lewym przyciskiem uruchamia wybrany pojedynczy efekt cząsteczkowy.
+				}
+			}
+		}
+
+		Projectiles: {
+			A_Dev: {
+				ParticleLabProjectile.DisplayName: Pocisk testowy Laboratorium Cząsteczek
+				ParticleLabPanel.DisplayName: Matryca cząsteczek
+			}
+		}
+	}
+}

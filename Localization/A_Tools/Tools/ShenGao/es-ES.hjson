@@ -1,0 +1,12 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				ShenGao: {
+					DisplayName: Pico divino
+					Tooltip: Un pico que mejora a medida que avanza el juego
+				}
+			}
+		}
+	}
+}

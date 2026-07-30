@@ -1,0 +1,18 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				MagnetBombItem: {
+					DisplayName: Magnetbombe
+					Tooltip:
+						'''
+						Linksklick wirft eine klebrige Bombe, die an Oberflächen haftet.
+						Rechtsklick zündet alle platzierten Bomben gleichzeitig.
+						'''
+				}
+			}
+		}
+
+		Projectiles.A_Tools.MagnetBombProj.DisplayName: Magnetbombe
+	}
+}

@@ -1,0 +1,88 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				NewVesuvius: {
+					// DisplayName: Earthshaker - Vesuvius
+					// Tooltip: "[GFB]"
+					/* LeftClick:
+						'''
+						[c/FF8A3D:Left Click: Hold to charge one of three mutually exclusive eruptions, then release to fire.]
+						[c/FF8A3D:Short taps release two weak molten meteors; later stages replace the meteor spread with a fast, straight thermal core.]
+						''' */
+					// ChargeStage1: "[c/FF8A3D:Unlocked charge: Stage I - a tight spread of three molten meteors.]"
+					// ChargeStage2: "[c/FF9F45:Unlocked charge: Stage II - a fast thermal core that ruptures on impact.]"
+					// ChargeStage3: "[c/FFE27E:Unlocked charge: Stage III - a cataclysmic core that tears open the crust.]"
+					// ChargeStage4: "[c/FFF4BE:Unlocked charge: Stage IV - an ultimate thermal core that tears open the crust.]"
+					/* RightClick:
+						'''
+						[c/FFB15C:Right Click: Hold to brace the staff like a javelin, then release to throw.]
+						[c/FFB15C:When it strikes terrain it becomes an active fault core; progression adds turret fire, pyroclastic flow, and a subduction zone.]
+						''' */
+					/* Passive:
+						'''
+						[c/CC9A6A:Passive: Volcanic ash falls around you while held.]
+						[c/CC9A6A:Landing after a fall causes a quake. Greater fall speed means greater range and damage.]
+						''' */
+					/* EXHint:
+						'''
+						[c/FFD86B:While held, Vesuvius charges ultimate energy up to 60.]
+						[c/FFD86B:At full energy, press] [[c/FFD86B:{0}]] [c/FFD86B: to raise the staff overhead and charge Volcanic Eruption.]
+						[c/FFD86B:After the ready sound, left click to unleash five seconds of ash, magma, meteors, fireballs, and obsidian shards.]
+						''' */
+					// EXDisabledHint: "[c/9A9A9A:Golden Emblem is not equipped. The ultimate is disabled.]"
+					// Final: "[c/FFB15C:The crust splits, ash shuts out the sky, and the pyroclastic flow sweeps the battlefield.]"
+					// LegendaryHint: "[c/BABABA:Hold Shift to access the record]"
+					/* LegendaryText:
+						'''
+						[c/FFB15C:The first Vesuvius understood volcanoes as meteors: fall from above, smash the target, then explode.]
+						[c/FF8A3D:That design was direct enough, but it only showed the surface fall of a volcano, not the disaster moving through the earth below.]
+						[c/FFB15C:After the rebuild, scattered ejecta are compressed into a single thermal core; a precise hit drives the eruption into the target.]
+						[c/D84BFF:Right click is no longer just another projectile. It pulls earthquakes, faults, and crust pressure into the fight.]
+						[c/FF4422:When the final eruption comes, what falls is no longer lava. It is an entire layer of earth finishing the volcano's declaration.]
+						''' */
+				}
+			}
+		}
+
+		Projectiles: {
+			// VesuviusEmberProj.DisplayName: Vesuvius Ember Proj
+
+			Vesuvius: {
+				// VesuviusLeftHoldout.DisplayName: Vesuvius
+				// VesuviusArcOrb.DisplayName: Volcanic Arc Orb
+				// VesuviusMoltenAsteroid.DisplayName: Molten Asteroid
+				// VesuviusVolcanicAsh.DisplayName: Volcanic Ash
+				// VesuviusVolcanicBomb.DisplayName: Volcanic Bomb
+				// VesuviusLingeringLava.DisplayName: Lingering Lava
+				// VesuviusMagmaPillar.DisplayName: Magma Pillar
+				// VesuviusMagmaResidual.DisplayName: Magma Residue
+				// VesuviusHomingCinder.DisplayName: Homing Cinder
+				// VesuviusObsidianShard.DisplayName: Obsidian Shard
+				// VesuviusObsidianSlash.DisplayName: Obsidian Slash
+				// VesuviusObsidianBlast.DisplayName: Obsidian Blast
+				// VesuviusRightJavelinHoldout.DisplayName: Fault Staff Holdout
+				// VesuviusFaultJavelin.DisplayName: Fault Staff
+				// VesuviusFaultCore.DisplayName: Active Fault Core
+				// VesuviusFaultFireball.DisplayName: Volcanic Fireball
+				// VesuviusPyroclasticFlow.DisplayName: Pyroclastic Flow
+				// VesuviusSubductionZone.DisplayName: Subduction Zone
+				// VesuviusAshFall.DisplayName: Volcanic Ash
+				// VesuviusLandingQuake.DisplayName: Landing Quake
+				// VesuviusEXWeapon.DisplayName: Volcanic Eruption
+				// VesuviusVolcanicGasCloud.DisplayName: Vesuvius Volcanic Gas Cloud
+				// VesuviusThermalCore.DisplayName: Vesuvius Thermal Core
+				// VesuviusThermalCoreBlast.DisplayName: Vesuvius Thermal Core Blast
+				// VesuviusRightGravityFlame.DisplayName: Vesuvius Right Gravity Flame
+				// VesuviusRightJavelinVent.DisplayName: Vesuvius Right Javelin Vent
+				// VesuviusRightMeteorExplosion.DisplayName: Vesuvius Right Meteor Explosion
+				// VesuviusRightReturningMeteor.DisplayName: Vesuvius Right Returning Meteor
+				// VesuviusRightRisingSpark.DisplayName: Vesuvius Right Rising Spark
+			}
+
+			// PurifiedGel_BallExplosion.DisplayName: Purified Gel_ Ball Explosion
+		}
+
+		// Cooldowns.Vesuvius_EX: Volcanic Eruption
+	}
+}

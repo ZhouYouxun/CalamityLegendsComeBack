@@ -1,0 +1,16 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				AutoLighting: {
+					DisplayName: Automatyczne oświetlenie
+					Tooltip:
+						'''
+						Gdy przedmiot jest oznaczony jako ulubiony, automatycznie stawia najwyżej położoną pochodnię z ekwipunku w ciemnych miejscach.
+						Pod wodą zamiast tego rzuca pałkę świetlną.
+						'''
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,18 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				MagnetBombItem: {
+					DisplayName: Bomba magnetyczna
+					Tooltip:
+						'''
+						Kliknięcie lewym przyciskiem rzuca lepką bombę, która przyczepia się do powierzchni.
+						Kliknięcie prawym przyciskiem detonuje jednocześnie wszystkie rozstawione bomby.
+						'''
+				}
+			}
+		}
+
+		Projectiles.A_Tools.MagnetBombProj.DisplayName: Bomba magnetyczna
+	}
+}

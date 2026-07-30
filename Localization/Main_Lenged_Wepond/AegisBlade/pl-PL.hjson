@@ -1,0 +1,70 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				AegisBlade: {
+					// DisplayName: Unyielding Bulwark - Aegis Blade
+					// Tooltip: "[GFB]"
+					/* FunctionalTooltip:
+						'''
+						[c/FFD966:Left Click] [c/DCD6C8:Hold to swing the greatsword; while it spins, golden tracking souls continuously scatter around you]
+						[c/8DB8FF:Right Click] [c/DCD6C8:Raise the 40-frame Aegis shield — the first 15 frames are the Perfect Parry window, then it can be charged]
+						[c/8DB8FF:Shield Bash] [c/DCD6C8:Release right-click to dash toward the cursor and ram enemies with the shield; longer charge means more distance and damage]
+						[c/8DB8FF:Full Charge] [c/DCD6C8:Unlocked after any Mechanical Boss; left-click to hurl down the Aegis Blade and raise 16-tile rapid barricades on both sides]
+						[c/DCD6C8:Barricades last 60 seconds, or 10 seconds during boss fights]
+						[c/8DB8FF:Perfect Parry] [c/DCD6C8:Absorbs all damage, grants 35 iframes and 8 energy; your next shield bash is empowered]
+						[c/8DB8FF:Shield Raised] [c/DCD6C8:+20 defense and knockback immunity]
+						[c/7FE886:Aegis] [c/DCD6C8:Gain 6–15 bonus defense based on movement speed; maximized while standing still]
+						[c/7FE886:Bulwark] [c/DCD6C8:Without damage-over-time debuffs, contact damage reduced by 20%, doubled while stationary]
+						[c/FFD700:Legendary Skill (Golden Hand)] [c/DCD6C8:When energy is full, press the Legendary Skill key to summon a golden hand granting 10s of full invincibility]
+						''' */
+					// LegendaryHint: "[c/BABABA:Hold Shift to read the legendary record]"
+					/* LegendaryText:
+						'''
+						[c/FFD966:The first Aegis Blade was closer to a defensive relic: raise the shield, take the hit, then answer with the edge.]
+						[c/FFD966:That direction was clear enough, but it made "protection" too easy to reduce to damage cuts and standing still.]
+						[c/FFD966:After the rebuild, it no longer rewards only holding your ground. Speed, position, and guard timing are all part of the line.]
+						[c/FFD966:A perfect guard briefly resets that defensive logic, making hesitation, retreat, and counterattack parts of the same judgment.]
+						[c/FFD966:What it truly protects is not the wielder from harm, but the rule that every incoming hit must pass through sword and shield first.]
+						''' */
+				}
+
+				Summon: {
+					GlacialEmbrace: {
+						// DisplayName: Glacial Embrace
+						// Tooltip: ""
+					}
+				}
+			}
+
+			NewLegendGaelsGreatsword: {
+				// DisplayName: New Legend Gaels Greatsword
+				// Tooltip: ""
+			}
+		}
+
+		Projectiles: {
+			// AegisSparkExplosion.DisplayName: Aegis Spark Explosion
+			// AegisBigFireball.DisplayName: Aegis Big Fireball
+			// AegisSwingHoldout.DisplayName: Aegis Blade Swing
+			// AegisShieldHoldout.DisplayName: Aegis Shield
+			// AegisFireball.DisplayName: Aegis Fireball
+			// AegisBladeThrown.DisplayName: Thrown Aegis Blade
+
+			AegisBlade: {
+				// AegisBorrowedLazharLaser.DisplayName: Aegis Borrowed Lazhar Laser
+				// AegisBorrowedOrbitalStrike.DisplayName: Aegis Borrowed Orbital Strike
+				// AegisWallStatusBar.DisplayName: Aegis Wall Status Bar
+			}
+
+			// AegisWallProjectile.DisplayName: Aegis Earth Wall
+			// AegisUltimateHand.DisplayName: Golden Hand
+			// AegisEnergyUI.DisplayName: Aegis Energy Bar
+			// LeonidUltimateUI.DisplayName: Leonid Ultimate U I
+			// IceShardProj.DisplayName: Ice Shard Proj
+			// Magic.AnodizedWulfrumShard.DisplayName: Anodized Wulfrum Shard
+		}
+
+		// Cooldowns.AegisEX: Golden Hand
+	}
+}

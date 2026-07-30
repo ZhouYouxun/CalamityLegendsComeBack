@@ -1,0 +1,33 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				StructureExtractor: {
+					DisplayName: Извлекатель структур
+					Tooltip: Удерживайте этот предмет, выделите область перетаскиванием левой кнопкой мыши и подтвердите экспорт файла структуры Calamity .csch.
+				}
+			}
+		}
+
+		Projectiles.A_Dev.StructureExtractorOverlay.DisplayName: Матрица извлечения структур
+
+		TheSpecialText: {
+			StructureExtractorSelectionLabel: "{0}x{1} | начало {2}, {3} | {4} блоков"
+			StructureExtractorConfirmTitle: Подтвердить экспорт структуры
+			StructureExtractorConfirmBody:
+				'''
+				Верхний левый угол: {0}, {1}
+				Размер: {2} x {3}
+				Всего блоков: {4}
+				Папка сохранения: {5}
+				'''
+			StructureExtractorCancel: Отмена
+			StructureExtractorConfirm: Экспортировать
+			StructureExtractorCanceled: Извлечение структуры отменено.
+			StructureExtractorExportSaved: Файл структуры сохранён в: {0}
+			StructureExtractorExportDetails: Выделение: верхний левый угол {0}, {1}; размер {2}x{3}; {4} блоков.
+			StructureExtractorExportFailed: Не удалось экспортировать структуру: {0}
+			StructureExtractorExportError: Ошибка экспорта структуры: {0}
+		}
+	}
+}

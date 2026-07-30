@@ -1,0 +1,178 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				NewLegendMK14EBR: {
+					// DisplayName: MK14EBR-缄花
+					// Tooltip: "[GFB]"
+					// MK14_Intro: Hear the roar of traditionalism
+					// MK14_Ammo: Fires bullets, converting Musket Balls into M61 armor-piercing rounds
+					// MK14_RightClick: Right click to call up the modification panel
+					// MK14_LoadoutHint: Hold Shift to read the current modification setup
+				}
+
+				NewLegendM14: {
+					// DisplayName: M14
+					// Tooltip: Fires fully automatically, gradually speeding up while becoming less accurate
+				}
+			}
+		}
+
+		Projectiles: {
+			MK14EBR: {
+				// MK14EBRHoldout.DisplayName: MK14EBR-缄花
+				// MK14ModificationPanel.DisplayName: MK14EBR-缄花 Modification Panel
+				// NewLegendM14.DisplayName: M14
+				// M61Bullet.DisplayName: M61 AP Round
+				// MK14GrenadeProjectile.DisplayName: MK14 Underbarrel Grenade
+				// MK14DragonBreathPellet.DisplayName: Dragon's Breath Pellet
+			}
+		}
+
+		MK14EBR: {
+			UI: {
+				// Title: MK14EBR-缄花
+				// Locked: Locked
+				// LockedWithStage: Locked: {0}. Unlock condition: {1}. {2}
+				// EffectHeader: Installed Effects
+
+				Stage: {
+					// PostPlantera: Post-Plantera
+					// Golem: After Golem
+					// Plaguebringer: After The Plaguebringer Goliath
+					// MoonLord: After Moon Lord
+					// Providence: After Providence
+					// Polterghast: After Polterghast
+					// DevourerOfGods: After The Devourer of Gods
+					// Yharon: After Yharon
+					// Endgame: After Exo Mechs and Supreme Witch Calamitas
+				}
+
+				Category: {
+					// Barrel: Barrel
+					// Muzzle: Muzzle
+					// Underbarrel: Underbarrel
+					// Stock: Stock
+					// Sight: Sight
+				}
+			}
+
+			Attachments: {
+				Barrel: {
+					Long: {
+						// Name: Default Long Barrel
+						// Effect: 660 RPM; no extra properties; default spread starts at 1 degree and linearly reaches 5 degrees after about 100 sustained shots.
+					}
+
+					SniperHeavy: {
+						// Name: Heavy Sniper Barrel
+						// Effect: Fire rate reduced to 330 RPM; projectile size x1.7; projectile penetration +20; listed projectile damage x1.2.
+					}
+
+					CQBShort: {
+						// Name: CQB Short Barrel
+						// Effect: Fire rate increased to 990 RPM; spread starts at 5 degrees and linearly reaches 15 degrees after about 100 sustained shots.
+					}
+				}
+
+				Muzzle: {
+					None: {
+						// Name: No Muzzle
+						// Effect: No muzzle changes.
+					}
+
+					UniversalSuppressor: {
+						// Name: Universal Suppressor
+						// Effect: Replaces the firing sound with M14 suppressed fire; aggro -1000; sustained fire linearly increases projectile damage from x1.0 to x1.15 across 100 shots.
+					}
+
+					UniversalBrake: {
+						// Name: Universal Brake
+						// Effect: Sustained fire linearly increases projectile damage, reaching x1.15 after about 100 sustained shots.
+					}
+
+					HeavySuppressor: {
+						// Name: Heavy Suppressor
+						// Effect: Replaces the firing sound with M250 suppressed fire; aggro -2000; projectile speed +20%; shots have infinite penetration for 5 frames after leaving the muzzle.
+					}
+
+					SpiderBrake: {
+						// Name: Spider Brake
+						// Effect: Hits apply a 0.5 second web mark that reduces target movement displacement by 10%; repeated hits refresh the timer.
+					}
+
+					HeavyCompensator: {
+						// Name: Heavy Compensator
+						// Effect: Makes each bullet deal only one double-damage hit.
+					}
+				}
+
+				Underbarrel: {
+					None: {
+						// Name: No Underbarrel
+						// Effect: No underbarrel weapon.
+					}
+
+					GrenadeLauncher: {
+						// Name: Grenade Launcher
+						// Effect: Automatically fires gravity-affected grenades that explode into fragments.
+					}
+
+					DragonBreathShotgun: {
+						// Name: Dragon's Breath Launcher
+						// Effect: Automatically fires medium-range fire pellets; hits burn targets and amplify primary fire.
+					}
+
+					FoldingBipod: {
+						// Name: Folding Bipod
+						// Effect: Linearly adjusts projectile damage and speed by horizontal movement speed: +15% each below 3 mph, down to -15% each at full movement speed.
+					}
+
+					LaserPointer: {
+						// Name: Laser Pointer
+						// Effect: Projectile spread is always fixed at 1 degree and never rises during sustained fire.
+					}
+				}
+
+				Stock: {
+					EBR: {
+						// Name: EBR Stock
+						// Effect: Player movement speed +8%; horizontal max speed +8%; horizontal acceleration +12%.
+					}
+
+					Heavy: {
+						// Name: Heavy Stock
+						// Effect: Horizontal max speed -10%; horizontal acceleration -10%; defense +10%, plus an extra +10 defense.
+					}
+
+					Skeleton: {
+						// Name: Skeleton Stock
+						// Effect: Underbarrel weapon cooldown -30%.
+					}
+				}
+
+				Sight: {
+					RedDot: {
+						// Name: Red Dot Sight
+						// Effect: Within 25 tiles counts as close range and deals x1.15 damage; beyond 60 tiles counts as long range and deals x0.9 damage.
+					}
+
+					FireControl: {
+						// Name: Fire-Control Scope
+						// Effect: Primary shots home in on targets; the turn-angle limit widens over flight time and fully unlocks after about 90 frames.
+					}
+
+					Thermal: {
+						// Name: Thermal Optic
+						// Effect: Deals x1.9 damage at night or during a solar eclipse.
+					}
+
+					HighPower: {
+						// Name: High-Power Scope
+						// Effect: Long-range damage scales linearly from +0% to +30% over 0 to 75 tiles; close range has no damage penalty.
+					}
+				}
+			}
+		}
+	}
+}

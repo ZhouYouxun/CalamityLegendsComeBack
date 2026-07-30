@@ -1,0 +1,19 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				ParticleLabDebugItem: {
+					DisplayName: Лаборатория частиц
+					Tooltip: Щелчок правой кнопкой открывает матрицу частиц. Щелчок левой кнопкой запускает выбранный одиночный эффект частиц.
+				}
+			}
+		}
+
+		Projectiles: {
+			A_Dev: {
+				ParticleLabProjectile.DisplayName: Тестовый снаряд лаборатории частиц
+				ParticleLabPanel.DisplayName: Матрица частиц
+			}
+		}
+	}
+}

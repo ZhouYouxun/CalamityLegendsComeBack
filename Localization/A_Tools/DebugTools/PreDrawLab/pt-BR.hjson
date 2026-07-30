@@ -1,0 +1,19 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				PreDrawLabItem: {
+					DisplayName: Laboratório PreDraw
+					Tooltip: Clique com o botão esquerdo para disparar um projétil de teste de pincel. Clique com o botão direito para abrir o painel de testes PreDraw.
+				}
+			}
+		}
+
+		Projectiles: {
+			A_Dev: {
+				PreDrawLabProjectile.DisplayName: Projétil de teste PreDraw
+				PreDrawLabPanel.DisplayName: Painel do laboratório PreDraw
+			}
+		}
+	}
+}

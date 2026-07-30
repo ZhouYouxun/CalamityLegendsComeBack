@@ -1,0 +1,240 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				NewLegendBrinyBaron: {
+					// DisplayName: Scion of the Tides - Briny Baron
+					// Tooltip: "[GFB]"
+					/* BB_Left_1:
+						'''
+						[c/66CCFF:Left Click: perform a series of swings and fire seafoam blades and sea spirits.]
+						[c/66CCFF:Seafoam blades fly quickly, then burst into splashing water.]
+						[c/66CCFF:Sea spirits home in on enemies and inflict Riptide.]
+						''' */
+					/* BB_Left_2:
+						'''
+						[c/66CCFF:Left Click: perform a three-swing chain and fire seafoam blades, sea spirits, and waves.]
+						[c/66CCFF:Seafoam blades scatter into larger water blades and pierce more enemies.]
+						[c/66CCFF:Sea spirits home in faster and inflict Riptide.]
+						[c/66CCFF:Waves surge forward as wide tidal slashes.]
+						''' */
+					/* BB_Left_3:
+						'''
+						[c/66CCFF:Left Click: perform a four-swing chain and fire seafoam blades, sea spirits, shurikens, and waves.]
+						[c/66CCFF:Seafoam blades fire in parallel, pierce enemies, and burst into splashing water.]
+						[c/66CCFF:Sea spirits swarm toward enemies and inflict Riptide.]
+						[c/66CCFF:Shurikens fan outward, cut enemies, and release seafoam on hit.]
+						[c/66CCFF:Waves surge forward; the finisher releases a larger tidal slash.]
+						''' */
+					/* BB_Left_4:
+						'''
+						[c/66CCFF:Left Click: perform the complete swing chain and fire seafoam blades, sea spirits, shurikens, and waves.]
+						[c/66CCFF:Seafoam blades fire in parallel, pierce enemies, and burst into splashing water.]
+						[c/66CCFF:Sea spirits swarm toward enemies and inflict Riptide.]
+						[c/66CCFF:Shurikens fan outward, cut enemies, and release seafoam on hit.]
+						[c/66CCFF:Waves surge forward; the finisher releases a larger tidal slash.]
+						[c/66CCFF:True blade hits add a burst of sea spirits.]
+						''' */
+					/* BB_Right_DefaultShuriken:
+						'''
+						[c/FFB347:Right Click: perform a tide short dash.]
+						[c/FFB347:You are immune during the dash and return; striking the first enemy rebounds you once.]
+						[c/FFB347:After entering Hardmode, an impact releases a blue Jazz Typhoon beneath the enemy.]
+						''' */
+					// BB_Right_Spin_Locked: "[c/DDA0FF:Hold Left Click, then hold Right Click: Whirl Cleave is locked until Stage II.]"
+					/* BB_Right_Spin_Unlocked:
+						'''
+						[c/DDA0FF:Hold both buttons to keep swinging the greatsword; it gradually accelerates as it spins.]
+						[c/DDA0FF:At maximum speed, it deals maximum damage and releases shurikens at a measured pace.]
+						''' */
+					// BB_Tide: "[c/4FAEFF:Current tide value: ]"
+					// BB_Tide_Desc_NoAccessory: "[c/4FAEFF:Current tide effects: 【increases damage】【increases movement speed】【adds extra damage at full tide】]"
+					// BB_Tide_Desc_HasAccessory: "[c/4FAEFF:Current tide effects: 【increases damage】【increases movement speed】【adds extra damage at full tide】【gear adds right-click or full-tide effects】]"
+					// Dash1_Unlock: "[c/66FFAA:Unlocked: Basic Dash]"
+					// Dash1_Lock: "[c/7F8FA6:Locked: Defeat the Eye of Cthulhu to unlock it.]"
+					// Dash2_Unlock: "[c/66FFAA:Unlocked: Spiral Cleave]"
+					// Dash2_Lock: "[c/DDA0FF:Locked: Defeat the Wall of Flesh to unlock it.]"
+					// Dash3_Unlock: "[c/66FFAA:Unlocked: Quick Slash]"
+					// Dash3_Lock: "[c/99CCFF:Locked: Defeat the Wall of Flesh to unlock it.]"
+					/* BB_Passive:
+						'''
+						[c/9AEF9E:Dash reinforcement follows the current shield device. State: ]{0}[c/9AEF9E:; right-click in inventory to toggle.]
+						{1}
+						''' */
+					// PassiveStateOn: "[c/7BFFB7:On]"
+					// PassiveStateOff: "[c/F0D070:Off]"
+					// PassiveDevice_None: "[c/7F8FA6:No dash capability detected.]"
+					// PassiveDevice_Any: "[c/99CCFF:Dash capability detected; dashing triggers quick slash combo and fires tidal blades to both sides every 7 frames.]"
+					// Dash4_Unlock: "[c/66FFAA:Unlocked: EX Skill「Tidal Jail Execution」]"
+					// Dash4_Lock: "[c/FFB347:EX Skill「Tidal Jail Execution」locked (Equip Legendary Emblem to unlock)]"
+					// BB_Final: "[c/9FD8A2:At full tide, press the Legendary Skill key to mark prey; left click confirms the execution.]"
+					// UltimateOutOfRange: Out of Range
+					// LegendaryHint: "[c/6C8EFF:Hold Shift to read the record]"
+					/* LegendaryText:
+						'''
+						[c/66CCFF:The first Briny Baron kept only the most direct way to fight: swing the blade, raise a typhoon, then throw a homing shuriken.]
+						[c/66CCFF:That design was clean enough, but it could not carry the tide rhythm a legendary weapon deserves.]
+						[c/99CCFF:After the rebuild, slashes no longer wait only for a hit. They build tide step by step, unfolding seafoam, sea spirits, shuriken, and waves through the combo.]
+						[c/FFB347:Right click is no longer locked to throwing. Different devices can rewrite it into dashes, rebounds, teleports, or more aggressive pursuit.]
+						[c/DDA0FF:When the tide is pushed to its limit, every path, lock, and lingering mark is gathered into one final execution.]
+						''' */
+				}
+			}
+
+			BottledRaft: {
+				// DisplayName: Bottled Raft
+				/* Tooltip:
+					'''
+					Material for the later Bottled accessory upgrades
+					[c/7F8FA6:Provides no combat stats by itself]
+					''' */
+			}
+
+			BottledBoat: {
+				// DisplayName: Bottled Boat
+				/* Tooltip:
+					'''
+					+12% melee damage
+					Increases Briny Baron's max tide to 8
+					Each tide stack grants +1% melee damage and melee attack speed
+					''' */
+			}
+
+			BottledBlackPearl: {
+				// DisplayName: Bottled Black Pearl
+				/* Tooltip:
+					'''
+					+15% melee damage
+					Increases Briny Baron's max tide to 10
+					Each tide stack grants +1% melee damage and melee attack speed; gain 1 tide every 12 seconds
+					Full tide grants +10 defense and 10% damage reduction
+					''' */
+			}
+
+			BottledAircraftCarrier: {
+				// DisplayName: Bottled Aircraft Carrier
+				/* Tooltip:
+					'''
+					+15% melee damage
+					Increases Briny Baron's max tide to 10
+					Each tide stack grants +1% melee damage and attack speed
+					Gain 2 tide every 6 seconds
+					Full tide grants +10 defense, 10% DR, and 30% melee crit
+					''' */
+			}
+
+			OceanHormone: {
+				// DisplayName: Ocean Hormone
+				/* Tooltip:
+					'''
+					-10% generic critical strike chance and +20% melee attack speed
+					Grants the Laudanum effect
+					During Adrenaline, Briny Baron use time and animation are reduced by 12 frames
+					''' */
+			}
+
+			TideWiseHat: {
+				// DisplayName: Tide Wise Hat
+				/* Tooltip:
+					'''
+					+50 maximum mana and +15% melee damage
+					Each tide stack grants 1% melee critical strike chance
+					Tide clearing and non-boss decay take twice as long
+					Melee critical strikes have a 1% chance to grant 1 tide
+					The finisher consumes all mana to empower every strike
+					''' */
+			}
+
+			AbyssalBastion: {
+				// DisplayName: Abyssal Bastion
+				/* Tooltip:
+					'''
+					+6 defense, 6% damage reduction, and knockback immunity
+					Briny Baron right-click dash speed ×1.25; cooldown reduced to 2 seconds
+					A right-click hit grants a 100-health bubble shield
+					While shielded, gain 25 defense and 25% damage reduction
+					''' */
+			}
+
+			TideRadar: {
+				// DisplayName: Tide Radar
+				/* Tooltip:
+					'''
+					Grants Briny Baron's Quick Slash passive while the weapon is in your inventory
+					The passive functions exactly as it does while holding Briny Baron
+					''' */
+			}
+
+			DrinkingFountain: {
+				// DisplayName: Drinking Fountain
+				/* Tooltip:
+					'''
+					Briny Baron hits create a water bubble
+					At full life it seeks enemies for melee damage; otherwise it returns to heal you
+					''' */
+			}
+
+			BaronHelix: {
+				// DisplayName: Baron Helix
+				/* Tooltip:
+					'''
+					+10% melee damage and +10% melee attack speed
+					Briny Baron right-click hits release 3 smaller Jazz Typhoons
+					They orbit the target in three elliptical loops, then home in slowly
+					Each Jazz Typhoon deals 30% of the right-click dash damage
+					''' */
+			}
+
+			VortexEye: {
+				// DisplayName: Vortex Eye
+				/* Tooltip:
+					'''
+					+10% melee damage, +10% melee attack speed, and +15% movement speed
+					Replaces Briny Baron's right click with a vortex teleport
+					Teleport to the cursor and unleash two tidal slashes
+					Right click again during cooldown to return to the previous teleport point
+					Each return leaves a rapid chain of blue cutting lights along the path
+					Cooldown: 6 seconds
+					''' */
+			}
+		}
+
+		Projectiles: {
+			// BBSD_VirtualPROJ.DisplayName: BBSD Virtual Proj
+			// BrinyBaron_VortexEyePortalPreview.DisplayName: Briny Baron Vortex Eye Portal Preview
+			// BrinyBaron_VortexEyeDash.DisplayName: Briny Baron Vortex Eye Dash
+			// BrinyBaron_VortexEyePhaseResidue.DisplayName: Vortex Eye Phase Residue
+			// BrinyBaron_VortexEyePathCutter.DisplayName: Vortex Eye Path Cutter
+			// BrinyBaron_DashOceanSwirl.DisplayName: Briny Baron Dash Ocean Swirl
+
+			BrinyBaron: {
+				// BBSwing_Wave.DisplayName: Tidal Wave Slash
+				// BrinyBaron_HomingLightOrb.DisplayName: Tidal Homing Light Orb
+				// BBDrinkingFountainOrb.DisplayName: Drinking Fountain Water Bubble
+				// BBSwing_INV.DisplayName: Giant Slash Hitbox
+				// BBSwing_Slash.DisplayName: Tidal Slash
+				// BrinyBaron_LeftClick_Swing.DisplayName: Baron Combo Slash
+				// BrinyBaron_RightClick_Shuriken.DisplayName: Baron Shuriken
+				// BrinyBaron_TornadoBolt.DisplayName: Baron Vortex Caller
+				// BrinyBaron_TornadoWaterExplosion.DisplayName: Baron Water Burst
+				// BrinyBaron_DashWaterPillar.DisplayName: Baron Dash Water Pillar
+				// BrinyBaron_JazzTyphoon.DisplayName: Jazz Typhoon
+				// BrinyBaron_SkillDashTornado_BladeDash.DisplayName: Blade Dash
+				// BrinyBaron_SkillSlashDash_SlashDash.DisplayName: Shield-Surge Cleave
+				// Z_BrinyBaron_SkillSuperCharge_SuperDash.DisplayName: Tidal Jail Execution
+				// BrinyBaron_UltimateAzureRiftBeam.DisplayName: Tidal Sky Rift
+				// BBSD_Star.DisplayName: Final Tide Star
+				// BBSD_Final_INV.DisplayName: Final Tide Brand
+				// BrinyBaron_WaterStream.DisplayName: Briny Baron Water Stream
+				// BrinyBaron_SeafoamBlade.DisplayName: Tidal Seafoam Blade
+				// BrinyBaron_SeafoamExplosion.DisplayName: Tidal Seafoam Explosion
+				// BrinyBaron_SeaSpirit.DisplayName: Sea Spirit
+			}
+		}
+
+		Cooldowns: {
+			// BrinyBaron_Tide: Tide
+			// BrinyBaron_SuperDash: Jail Execution
+		}
+	}
+}

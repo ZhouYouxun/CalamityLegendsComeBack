@@ -1,0 +1,16 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				AutoLighting: {
+					DisplayName: Allumeur automatique
+					Tooltip:
+						'''
+						Lorsqu'il est mis en favori, place automatiquement la torche la plus haute de votre inventaire dans les zones sombres.
+						Sous l'eau, lance un bâton lumineux à la place.
+						'''
+				}
+			}
+		}
+	}
+}

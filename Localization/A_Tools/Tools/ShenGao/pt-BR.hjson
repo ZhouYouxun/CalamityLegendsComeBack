@@ -1,0 +1,12 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				ShenGao: {
+					DisplayName: Picareta divina
+					Tooltip: Uma picareta que melhora conforme o jogo avança
+				}
+			}
+		}
+	}
+}

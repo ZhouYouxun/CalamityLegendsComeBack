@@ -1,0 +1,18 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				MagnetBombItem: {
+					DisplayName: Bomba magnetica
+					Tooltip:
+						'''
+						Il clic sinistro lancia una bomba adesiva che si attacca alle superfici.
+						Il clic destro detona contemporaneamente tutte le bombe piazzate.
+						'''
+				}
+			}
+		}
+
+		Projectiles.A_Tools.MagnetBombProj.DisplayName: Bomba magnetica
+	}
+}

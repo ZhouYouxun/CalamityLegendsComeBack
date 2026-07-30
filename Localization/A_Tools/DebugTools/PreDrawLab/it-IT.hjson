@@ -1,0 +1,19 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				PreDrawLabItem: {
+					DisplayName: Laboratorio PreDraw
+					Tooltip: Il clic sinistro spara un proiettile di prova con pennello. Il clic destro apre il pannello di prova PreDraw.
+				}
+			}
+		}
+
+		Projectiles: {
+			A_Dev: {
+				PreDrawLabProjectile.DisplayName: Proiettile di prova PreDraw
+				PreDrawLabPanel.DisplayName: Pannello del laboratorio PreDraw
+			}
+		}
+	}
+}

@@ -1,0 +1,16 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				AutoLighting: {
+					DisplayName: Automatischer Beleuchter
+					Tooltip:
+						'''
+						Solange als Favorit markiert, platziert es in dunklen Bereichen automatisch die oberste Fackel aus deinem Inventar.
+						Unter Wasser wird stattdessen ein Leuchtstab geworfen.
+						'''
+				}
+			}
+		}
+	}
+}

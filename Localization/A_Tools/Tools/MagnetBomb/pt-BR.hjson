@@ -1,0 +1,18 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				MagnetBombItem: {
+					DisplayName: Bomba magnética
+					Tooltip:
+						'''
+						Clique com o botão esquerdo para arremessar uma bomba pegajosa que adere às superfícies.
+						Clique com o botão direito para detonar todas as bombas posicionadas ao mesmo tempo.
+						'''
+				}
+			}
+		}
+
+		Projectiles.A_Tools.MagnetBombProj.DisplayName: Bomba magnética
+	}
+}

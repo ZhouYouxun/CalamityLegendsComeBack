@@ -1,0 +1,19 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				ShaderTestItem: {
+					DisplayName: Probador de shaders
+					Tooltip: Haz clic derecho para abrir la matriz de shaders. Haz clic izquierdo para ejecutar el shader seleccionado. Soltar el objeto o morir desactiva los efectos de pantalla.
+				}
+			}
+		}
+
+		Projectiles: {
+			A_Dev: {
+				ShaderTestProjectile.DisplayName: Proyectil de prueba de shaders
+				ShaderTestPanel.DisplayName: Matriz de selección de shaders
+			}
+		}
+	}
+}

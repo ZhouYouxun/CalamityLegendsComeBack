@@ -1,0 +1,59 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				NewLegendGaelsGreatsword: {
+					// DisplayName: Embers of the End - Gael's Greatsword
+					// Tooltip: "[GFB]"
+					/* FunctionalTooltip:
+						'''
+						[c/FFD966:Left Click] [c/DCD6C8:Custom greatsword swings slightly faster than Aegis Blade, the blade swelling at the peak of each strike; each swing cycles through blood skulls, brimstone darts, vengeful souls, catastrophe slashes, and condemnation arrows]
+						[c/8DB8FF:Right Click] [c/DCD6C8:Hold to raise the blade and guard, slowly kindling Embers while the stance is held; taking damage while guarding halves that hit, breaks the guard, knocks you back, and starts a 5-second cooldown]
+						[c/EED6FA:Perfect Guard] [c/DCD6C8:Getting hit within 0.23 seconds of raising the blade counts as a Perfect Guard - the hit is fully turned aside, the stance holds with no cooldown, a surge of Embers is refunded, the followup slash is unlocked instantly, and a blood-fire counter nova with vengeful souls answers the attack]
+						[c/8DB8FF:Cooldown Right Click] [c/DCD6C8:While guard is cooling down, right click becomes a vertical plunge from 10 tiles above the recorded cursor point, exploding into souls on impact]
+						[c/7B5CFF:Dark Soul] [c/DCD6C8:Before Hardmode, steadily restores Calamity Rage and grants slow fall; boss progression upgrades it into short flight]
+						[c/A01A2A:Blood and Fire] [c/DCD6C8:At 50% life or lower, or at 75% Rage or higher, gain Dark Blood; left-click hit windows consume life, increase damage, and kindle Embers]
+						[c/A01A2A:Dark Blood] [c/DCD6C8:Lasts 3 seconds after leaving its trigger threshold]
+						[c/C86AFF:Dark Embers] [c/DCD6C8:Hits and Dark Blood charge Embers; higher Embers slightly increase melee damage, speed, and damage reduction; at full charge, the finisher is ready]
+						[c/7B5CFF:Dark Humanity] [c/DCD6C8:At 50% life or lower, gain Rage and greatly increased melee speed; after Hardmode, this is Gael's only Rage source]
+						[c/FFD700:Finisher] [c/DCD6C8:After the Wall of Flesh, no Legendary Emblem is required; at full Embers, press the Calamity Rage key {0} to spend them, spin the cloak, and release homing blood skulls, ending the spin with a finale nova and a ring of souls]
+						''' */
+					// LegendaryHint: "[c/BABABA:Hold Shift to read the legendary record]"
+					/* LegendaryText:
+						'''
+						[c/8B6CFF:The first Gael's Greatsword only needed to keep one thing: an old blade still swinging forward at the end.]
+						[c/8B6CFF:But if it only copied the swing, it would remain a tribute, not a weapon that could keep fighting in this world.]
+						[c/8B6CFF:After the rebuild, left click became a rotating sequence of old SCal weapon echoes, tying close-range cuts to distant aftershocks.]
+						[c/A01A2A:Right click is no longer just a heavy drop. It is a guarded stance first, and a brutal vertical answer only after that stance breaks.]
+						[c/A01A2A:And in the instant the blade rises, an old hunter can still turn a killing blow aside entirely, returning it in blood and fire.]
+						[c/8B6CFF:It is still not a noble sword. It only drags blood, fire, and late anger back to the center of the battlefield again and again.]
+						''' */
+					// FinisherLocked: Gael reaches the end of the world only after the Wall of Flesh
+					// FinisherNeedsEmbers: Dark Embers are not yet full
+					// ParryText: Perfect Guard!
+				}
+			}
+		}
+
+		Projectiles: {
+			// GaelGreatswordSwingHoldout.DisplayName: Gael Greatsword Swing
+			// GaelGreatswordPlungeHoldout.DisplayName: Sacrificial Plunge
+			// GaelGreatswordGuardHoldout.DisplayName: Gael Guard
+			// GaelGreatswordCapeFinisher.DisplayName: Dark Soul Cloak
+			// GaelGreatswordEmberUI.DisplayName: Dark Embers
+			// GaelGreatswordBloodEcho.DisplayName: Blood-Fire Echo
+			// GaelGreatswordBrimstoneDart.DisplayName: Brimstone Memory
+			// GaelGreatswordVengefulSoul.DisplayName: Vengeful Dark Soul
+			// GaelGreatswordCatastropheSlash.DisplayName: Catastrophe Memory
+			// GaelGreatswordCondemnationArrow.DisplayName: Condemned Arrow
+			// GaelGreatswordDarkSoul.DisplayName: Blood Skull
+		}
+
+		Buffs: {
+			GaelGreatswordBlackBlood: {
+				// DisplayName: Dark Blood
+				// Description: Left-click attacks spend life for increased damage
+			}
+		}
+	}
+}

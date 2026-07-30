@@ -1,0 +1,12 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				ShenGao: {
+					DisplayName: Boski kilof
+					Tooltip: Kilof, który ulepsza się wraz z postępem w grze
+				}
+			}
+		}
+	}
+}

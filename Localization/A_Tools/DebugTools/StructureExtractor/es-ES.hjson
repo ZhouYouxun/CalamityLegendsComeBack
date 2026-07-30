@@ -1,0 +1,33 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				StructureExtractor: {
+					DisplayName: Extractor de estructuras
+					Tooltip: Mantén este objeto, arrastra con clic izquierdo para seleccionar un área y confirma para exportar un archivo de estructura .csch de Calamity.
+				}
+			}
+		}
+
+		Projectiles.A_Dev.StructureExtractorOverlay.DisplayName: Matriz de extracción de estructuras
+
+		TheSpecialText: {
+			StructureExtractorSelectionLabel: "{0}x{1} | origen {2}, {3} | {4} bloques"
+			StructureExtractorConfirmTitle: Confirmar exportación de estructura
+			StructureExtractorConfirmBody:
+				'''
+				Esquina superior izquierda: {0}, {1}
+				Tamaño: {2} x {3}
+				Bloques totales: {4}
+				Carpeta de guardado: {5}
+				'''
+			StructureExtractorCancel: Cancelar
+			StructureExtractorConfirm: Exportar
+			StructureExtractorCanceled: Extracción de estructura cancelada.
+			StructureExtractorExportSaved: Archivo de estructura guardado en: {0}
+			StructureExtractorExportDetails: Selección: esquina superior izquierda {0}, {1}; tamaño {2}x{3}; {4} bloques.
+			StructureExtractorExportFailed: Error al exportar la estructura: {0}
+			StructureExtractorExportError: Error de exportación de estructura: {0}
+		}
+	}
+}

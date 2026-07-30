@@ -1,0 +1,19 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				ParticleLabDebugItem: {
+					DisplayName: Laboratorio de partículas
+					Tooltip: Haz clic derecho para abrir la matriz de partículas. Haz clic izquierdo para activar el efecto de partícula individual seleccionado.
+				}
+			}
+		}
+
+		Projectiles: {
+			A_Dev: {
+				ParticleLabProjectile.DisplayName: Proyectil de prueba del laboratorio de partículas
+				ParticleLabPanel.DisplayName: Matriz de partículas
+			}
+		}
+	}
+}

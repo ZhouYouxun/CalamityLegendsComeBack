@@ -1,0 +1,30 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				Magic: {
+					AethersWhisper: {
+						// DisplayName: Aether's Whisper
+						/* Tooltip:
+							'''
+							Hold left click to compress shimmer, then release a devastating collapse cannon
+							Hold right click to fire refracting bursts of four
+							Each beam disassembles at its end point and returns to the barrel as lethal shards
+							''' */
+					}
+				}
+			}
+		}
+
+		Projectiles: {
+			AethersWhisper: {
+				// AethersWhisperHoldout.DisplayName: Shimmer Collapse Cannon
+				// AethersWhisperSweepHoldout.DisplayName: Shimmer Reassembly Sweep
+				// AethersWhisperChargedShot.DisplayName: Collapse Crystal Core
+				// AethersWhisperCollapse.DisplayName: Shimmer Collapse
+				// AethersWhisperRefractionBeam.DisplayName: Refraction Beam
+				// AethersWhisperReturnShard.DisplayName: Return Shard
+			}
+		}
+	}
+}

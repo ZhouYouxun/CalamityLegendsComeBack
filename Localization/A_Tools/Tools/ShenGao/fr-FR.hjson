@@ -1,0 +1,12 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				ShenGao: {
+					DisplayName: Pioche divine
+					Tooltip: Une pioche qui s'améliore au fil de la progression
+				}
+			}
+		}
+	}
+}

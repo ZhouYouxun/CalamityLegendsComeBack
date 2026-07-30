@@ -1,0 +1,12 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				ShenGao: {
+					DisplayName: Божественная кирка
+					Tooltip: Кирка, которая улучшается по мере прохождения игры
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,12 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Placeables: {
+				SHPPPlatform: {
+					// DisplayName: SHPP Platform
+					// Tooltip: A high-tech platform you can place infinitely
+				}
+			}
+		}
+	}
+}

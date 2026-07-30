@@ -1,0 +1,70 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				LegendaryBlackHawkRemote: {
+					// DisplayName: Black Hawk Tactical Remote
+					/* Tooltip:
+						'''
+						Left-click deploys one Black Hawk fighter that uses 1 minion slot
+						Fighters line up a straight attack axis, slow for the weapon pass, then accelerate away; empty aircraft return to rearm
+						Hold <right> to open the loadout wheel, point at a sector, and release to order the next fleet-wide rearm
+						Autonomous dispatch scores threats, local density, size, speed, and existing area effects for every fighter
+						Whip hits illuminate a target for 4 seconds, improving dispatch priority and prediction accuracy
+						''' */
+					// CurrentLoadout: Current dispatch: {0}
+					// DetailsHint: "[c/91A9B6:Hold Shift to view all nine loadouts]"
+					/* LoadoutDetails:
+						'''
+						[c/FFD982:Machine-gun strafe] 5 sorties; 12 tracers at 0.35x damage per pass for fast, scattered targets
+						[c/FF5C46:Twin guided missiles] 4 sorties; one 1.40x missile from each wing for steady single-target pressure
+						[c/FFAE48:Cluster bomb] 3 sorties; six 0.55x submunitions spread along the flight axis through tight groups
+						[c/FF5B26:Napalm] 3 sorties; a 0.70x initial blast followed by four separated 3-second fire lanes
+						[c/70E7FF:Cryogenic bomb] 2 sorties; a 1.10x blast, five ice shards, and 2.5 seconds of slowing mist
+						[c/688EFF:EMP bomb] 2 sorties; a 0.60x pulse and 3.5 seconds of disruption; bosses only become easier for the squadron to predict
+						[c/FFF091:Holy payload] 2 sorties; a 1.60x blast that fans out four 0.40x holy shards
+						[c/9BD64A:Dirty bomb] 1 sortie; a 2.00x blast followed by three separated 4-second contamination zones
+						[c/FF8042:Heavy bomb] 1 sortie; a delayed 6.80x single-hit heavy shockwave
+						''' */
+					// LegendaryText: "[c/FFAE4C:One flight line, one loadout, one mission]"
+				}
+			}
+		}
+
+		Buffs: {
+			LegendaryBlackHawkBuff: {
+				// DisplayName: Black Hawk Squadron
+				// Description: Black Hawk fighters are cruising, attacking, and rearming
+			}
+		}
+
+		Projectiles: {
+			BlackHawk: {
+				// LegendaryBlackHawkFighter.DisplayName: Black Hawk Fighter
+				// BlackHawkLoadoutWheel.DisplayName: Black Hawk Loadout Wheel
+				// BlackHawkMachineGunRound.DisplayName: Black Hawk Machine-gun Round
+				// BlackHawkGuidedMissile.DisplayName: Black Hawk Guided Missile
+				// BlackHawkClusterShard.DisplayName: Black Hawk Submunition
+				// BlackHawkCryoShard.DisplayName: Black Hawk Cryogenic Shard
+				// BlackHawkHolyShard.DisplayName: Black Hawk Holy Shard
+				// BlackHawkPayload.DisplayName: Black Hawk Payload
+				// BlackHawkCompactBlast.DisplayName: Black Hawk Airstrike Blast
+				// BlackHawkPersistentZone.DisplayName: Black Hawk Suppression Zone
+			}
+		}
+
+		TheSpecialText: {
+			// BlackHawkWheelTitle: BLACK HAWK LOADOUT CONTROL
+			// BlackHawkLoadoutAuto: Autonomous Dispatch
+			// BlackHawkLoadoutMachineGun: Machine-gun Strafe
+			// BlackHawkLoadoutGuidedMissiles: Twin Guided Missiles
+			// BlackHawkLoadoutClusterBomb: Cluster Bomb
+			// BlackHawkLoadoutNapalm: Napalm
+			// BlackHawkLoadoutCryogenic: Cryogenic Bomb
+			// BlackHawkLoadoutEMP: EMP Bomb
+			// BlackHawkLoadoutHolyPayload: Holy Payload
+			// BlackHawkLoadoutDirtyBomb: Dirty Bomb
+			// BlackHawkLoadoutHeavyBomb: Heavy Bomb
+		}
+	}
+}

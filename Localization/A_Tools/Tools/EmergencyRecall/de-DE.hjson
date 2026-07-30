@@ -1,0 +1,17 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				EmergencyRecall: {
+					DisplayName: Notfallrückruf
+					Tooltip:
+						'''
+						Wird ausgelöst, wenn es im Inventar liegt und als Favorit markiert ist.
+						Bei tödlichem Schaden ohne aktiven Boss wird automatisch ein Rückrufgegenstand benutzt, um nach Hause zurückzukehren.
+						Verbrauchspriorität: Rückkehrtrank > Rückruftrank > Magischer Spiegel (Spiegel werden nicht verbraucht)
+						'''
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,16 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				AutoLighting: {
+					DisplayName: Encendedor automático
+					Tooltip:
+						'''
+						Mientras esté marcado como favorito, coloca automáticamente la antorcha superior de tu inventario en zonas oscuras.
+						Bajo el agua lanza una barra luminosa en su lugar.
+						'''
+				}
+			}
+		}
+	}
+}

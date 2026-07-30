@@ -1,0 +1,57 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				NewLegendAntiMaterielRifle: {
+					// DisplayName: Little Legend - Anti-materiel Rifle
+					// Tooltip: "[GFB]"
+					// LeftClick: Fires highly destructive .408 anti-materiel rounds
+					// RightClick: Right click to widen your view and enter immersive sniping mode; full charge grants Deadly Strike for 0.5 seconds
+					// CurrentStage: Current record: {0}
+					// InventoryToggle: Right click in your inventory to toggle the view change
+					// ZoomState: Aiming zoom: {0}
+					// ZoomEnabled: Enabled
+					// ZoomDisabled: Disabled
+					// Stage0: ""
+					// Stage1: Hits inflict Death Mark and ignore 60% of enemy defense
+					// Stage2: Spawns extra metal jet shards on hit to damage enemies
+					// Stage3: Locks onto enemy bounding box edges with a tactical bullseye; main round hits trigger 1.25x damage and a mathematical vortex burst
+					// Stage4: ""
+					// Stage5: ""
+					// Stage6: Critical chance above 100% is converted into extra critical damage multiplier
+					// Stage7: Summons additional flanking rounds on regular and aimed hits
+					// Stage8: God-Slayer Firearm! .408 rounds execute regular enemies
+					/* Stage9:
+						'''
+						Draedon Onyx Explosive Mag! Marker rounds stick to targets or tiles
+						Detonator rounds trigger 200% weapon damage Onyx explosions
+						''' */
+					// LegendaryText: Atrocity without remainder.
+				}
+			}
+		}
+
+		Projectiles: {
+			AntiMaterielRifle: {
+				// AMRHoldout.DisplayName: Anti-materiel Rifle
+				// AMRAimScope.DisplayName: Anti-materiel Sight Lines
+				// AMRRound.DisplayName: .408 Anti-materiel Round
+				// AMROnyxDetonation.DisplayName: Onyx Detonation
+				// AMRSlideExplosion.DisplayName: AMR Slide Explosion
+				// AMRMetalJetShard.DisplayName: Metal Jet Shard
+				// AMRSubBullet.DisplayName: AMR Flanking Round
+				// AMROnyxTileMarker.DisplayName: Onyx Embedded Round
+				// AMRCooldownStatusBar.DisplayName: AMR Slide Cooldown Bar
+				// AMRBullseye.DisplayName: AMR Tactical Bullseye
+				// AMRBeamRound.DisplayName: A M R Beam Round
+			}
+		}
+
+		Buffs: {
+			AMRDeadlyStrikeBuff: {
+				// DisplayName: Deadly Strike
+				// Description: Your next critical ranged hit deals double damage
+			}
+		}
+	}
+}
