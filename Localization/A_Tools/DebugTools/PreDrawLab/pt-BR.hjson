@@ -1,0 +1,19 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				PreDrawLabItem: {
+					// DisplayName: PreDraw Lab
+					// Tooltip: Left-click fires a paintbrush test projectile. Right-click opens the PreDraw testing panel.
+				}
+			}
+		}
+
+		Projectiles: {
+			A_Dev: {
+				// PreDrawLabProjectile.DisplayName: PreDraw Lab Test Projectile
+				// PreDrawLabPanel.DisplayName: PreDraw Lab Panel
+			}
+		}
+	}
+}

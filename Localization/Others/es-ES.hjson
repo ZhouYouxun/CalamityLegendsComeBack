@@ -1,0 +1,200 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				Tetris: {
+					// DisplayName: Tetris
+					/* Tooltip:
+						'''
+						Hold this item to unfold a pixel Tetris board.
+						Right click in multiplayer to invite the nearest player who is also holding Tetris.
+						A/D or Left/Right moves the falling piece. S or Down soft drops. Space hard drops.
+						W, Up, or X rotates clockwise. Z rotates counterclockwise. C stores the current piece.
+						Clear full rows to score and survive. If the stack reaches the top, game over. Press R after game over to restart.
+						''' */
+				}
+
+				Game2048: {
+					// DisplayName: "2048"
+					/* Tooltip:
+						'''
+						Hold this item to unfold a 4x4 pixel 2048 board.
+						Use W/A/S/D or the arrow keys to slide all tiles. Equal tiles merge once per slide.
+						Every successful slide creates a new 2 or 4 tile. Press R after game over to restart.
+						''' */
+				}
+
+				Snake: {
+					// DisplayName: Snake
+					/* Tooltip:
+						'''
+						Hold this item to unfold a pixel Snake board.
+						Tap W/A/S/D once to turn the snake. Eat apples to grow longer and faster.
+						Hitting a wall or your own body ends the game. Press R after game over to restart.
+						''' */
+				}
+
+				Minesweeper: {
+					// DisplayName: Minesweeper
+					/* Tooltip:
+						'''
+						Hold this item to unfold a pixel Minesweeper board.
+						Left-click a covered tile to reveal it. Right-click a covered tile to place or remove a flag.
+						Numbers show how many mines touch that tile. Revealing a mine ends the game.
+						Correctly flag every mine, with no wrong flags, or reveal every safe tile to win. Left-click after the game ends to restart.
+						''' */
+				}
+
+				STG: {
+					/* Tooltip:
+						'''
+						Hold this item to unfold a vertical retro shooter panel.
+						A/D moves left and right. W/S moves forward and back. The plane fires automatically.
+						Destroy randomly incoming enemy aircraft to score. Enemy planes, enemy bullets, and collisions cost one life.
+						Enemies sometimes drop P upgrades that add extra shots and spread. Lose all three lives and it is game over. Press R to restart.
+						''' */
+					// DisplayName: STG
+				}
+
+				LegendaryCodex: {
+					// DisplayName: Legendary Guide
+					/* Tooltip:
+						'''
+						[c/55DFFF:Welcome to Calamity: Legend!]
+						[c/FF5555:If your screen turns black while a Legendary weapon's tooltip is shown ]
+						[c/FF5555:Go to Mod Configuration > Calamity > Client Config > the 2nd option, Extra Text Effects, and turn it off.]
+						[c/70E0A0:This mod also includes many QOL features See Mod Configuration for details:]
+						[c/70E0A0:Bulk material crafting and many extra recipes that improve gameplay flow]
+						[c/70E0A0:The Zoologist sells Boss summons when appropriate]
+						[c/70E0A0:A custom Boss health bar and internal item names]
+						[c/70E0A0:Faster decryption and charging]
+						[c/70E0A0:Hostile projectile outlines and more]
+						[c/FFFFFF:Left-click to view the Legendary Guide]
+						''' */
+				}
+
+				CTRLBoss: {
+					// DisplayName: Boss Progress Controller
+					// Tooltip: Left click to open or close the boss progress debug panel.
+				}
+
+				SoundproofEarmuffs: {
+					// DisplayName: Soundproof Earmuffs
+					/* Tooltip:
+						'''
+						Right-click in the inventory to toggle muffling.
+						When enabled, sound effects are reduced by 90%. Music is unaffected.
+						Current state: [STATE]
+						''' */
+					// EnabledState: On
+					// DisabledState: Off
+				}
+			}
+
+			Consumables: {
+				LegendarySupplyBox: {
+					// DisplayName: Legendary Supply Box
+					// Tooltip: Right click to claim the current legendary weapon and its guide disc.
+				}
+
+				RetroGameConsoleSupplyBox: {
+					// DisplayName: Retro Game Console Supply Box
+					// Tooltip: Right click to claim the currently available retro game consoles.
+				}
+			}
+
+			LegendaryEmblem: {
+				// DisplayName: Legendary Emblem
+				// Tooltip: Permanently unlocks every legendary weapon ultimate for this character
+				// AlreadyConsumed: This character has already received the Legendary Emblem's permanent boost.
+			}
+
+			LegendaryUltimateTester: {
+				// DisplayName: Legendary Ultimate Tester
+				// Tooltip: Testing only: completes every legendary weapon ultimate charge within 1 second
+			}
+		}
+
+		Projectiles: {
+			A_Dev: {
+				// TetrisPanel.DisplayName: Tetris Board
+				// Game2048Panel.DisplayName: 2048 Board
+				// SnakePanel.DisplayName: Snake Board
+				// MinesweeperPanel.DisplayName: Minesweeper Board
+				// STGPanel.DisplayName: STG Shooter Board
+				// CTRLBossPanel.DisplayName: Boss Progress Panel
+			}
+
+			// TeachingProjectileA_LineTrailLaser.DisplayName: Teaching Projectile A_ Line Trail Laser
+			// TeachingProjectileB_FlashSparklePoint.DisplayName: Teaching Projectile B_ Flash Sparkle Point
+			// TeachingProjectileC_BloomGlowCore.DisplayName: Teaching Projectile C_ Bloom Glow Core
+			// TeachingProjectileD_PulseRingField.DisplayName: Teaching Projectile D_ Pulse Ring Field
+			// TeachingProjectileE_ExplosionImpact.DisplayName: Teaching Projectile E_ Explosion Impact
+			// TeachingProjectileF_SmokeMistDust.DisplayName: Teaching Projectile F_ Smoke Mist Dust
+			// TeachingProjectileG_FireAshBurn.DisplayName: Teaching Projectile G_ Fire Ash Burn
+			// TeachingProjectileH_WaterFoamOcean.DisplayName: Teaching Projectile H_ Water Foam Ocean
+			// TeachingProjectileI_BloodFleshBiology.DisplayName: Teaching Projectile I_ Blood Flesh Biology
+			// TeachingProjectileJ_DebrisMechanicalParts.DisplayName: Teaching Projectile J_ Debris Mechanical Parts
+			// TeachingProjectileK_MagicStatusUI.DisplayName: Teaching Projectile K_ Magic Status U I
+			// TeachingProjectileL_SlashSmearAfterimage.DisplayName: Teaching Projectile L_ Slash Smear Afterimage
+			// TeachingProjectileM_TechHoloSquare.DisplayName: Teaching Projectile M_ Tech Holo Square
+			// TeachingProjectileN_ParticleSetsControllers.DisplayName: Teaching Projectile N_ Particle Sets Controllers
+			// TeachingProjectile.DisplayName: Teaching Projectile
+
+			GhostSniperRifle: {
+				// GhostSniperRound.DisplayName: Ghost Sniper Round
+				// GhostSniperSpectreOrb.DisplayName: Ghost Sniper Spectre Orb
+			}
+		}
+
+		TheSpecialText: {
+			// TetrisLevel: LEVEL {0}
+			// TetrisMultiplayerLevel: CO-OP LEVEL {0}
+			// TetrisGameOver: GAME OVER
+			// TetrisRestart: Press R to restart
+			// TetrisNoInviteTarget: No nearby Tetris player found.
+			// TetrisInviteSent: Tetris invite sent to {0}.
+			// TetrisInviteIncoming: "{0} invited you to co-op Tetris. Press Y or Enter to accept. Press N or Esc to decline."
+			// TetrisInviteRejected: Tetris invite was rejected.
+			// TetrisInviteAccepted: Co-op Tetris linked.
+			// TetrisMultiplayerGuest: Waiting for host board sync
+			// Game2048Score: SCORE {0}
+			// Game2048Best: BEST {0}
+			// Game2048Slide: Slide tiles to merge matching numbers
+			// Game2048Won: 2048 reached
+			// Game2048GameOver: NO MOVES
+			// Game2048Restart: Press R to restart
+			// SnakeSpeed: SPEED {0}
+			// SnakeGameOver: GAME OVER
+			// SnakeRestart: Press R to restart
+			// MinesweeperMines: "{0} MINES"
+			// MinesweeperGameOver: GAME OVER
+			// MinesweeperWin: You Win
+			// MinesweeperRestart: Left-click to restart
+			// STGGameOver: GAME OVER
+			// STGRestart: Press R to restart
+			// CTRLBossDefeated: defeated
+			// CTRLBossUndefeated: undefeated
+			// CTRLBossStatusSet: "{0} has been set to {1}."
+			// CTRLBossBulkPreHardmode: Toggle all pre-Hardmode bosses
+			// CTRLBossBulkHardmode: Toggle all Hardmode bosses
+			// CTRLBossBulkPostMoonLord: Toggle all post-Moon Lord bosses
+			// CTRLBossBulkAll: Toggle all bosses
+			// CTRLBossBulkInvert: Invert every boss flag
+			// CTRLBossBulkChanged: "{0}: changed {1} boss flags."
+			/* WelcomeMessage:
+				'''
+				Welcome to Calamity: Legend!
+				This mod has just gotten started and is under active development.
+				Every legendary weapon will be reworked over time, with plenty more new content on the way -- stay tuned.
+				Feedback and suggestions are welcome -- please leave a rational comment in the review section.
+				''' */
+		}
+
+		Keybinds: {
+			// LegendarySkill.DisplayName: Legendary Skill
+			// LegendaryWeaponFormSwitch.DisplayName: Legendary Weapon Form Switch
+			// SHPCLoadingUI.DisplayName: SHPC Loading UI
+		}
+	}
+}

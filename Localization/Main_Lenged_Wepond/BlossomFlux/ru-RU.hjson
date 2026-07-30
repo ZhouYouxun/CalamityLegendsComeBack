@@ -1,0 +1,466 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				NewLegendBlossomFlux: {
+					// DisplayName: BlossomFlux - Return of Legends
+					// Tooltip: "[GFB]"
+					/* BF_Intro:
+						'''
+						[c/7BE495:Current doctrine: {0}]
+						[c/F7D87C:Hold right click to enter the current doctrine's charge stance, then release to fire its special arrow.]
+						''' */
+					// PresetName0: Breakthrough
+					// PresetName1: Recovery
+					// PresetName2: Reconnaissance
+					// PresetName3: Bombardment
+					// PresetName4: Plague
+					/* PresetLeft0:
+						'''
+						[c/8BE89A:Left Click - Breakthrough: converts wooden arrows into rapid leaf arrows.]
+						[c/8BE89A:Straight shots pierce cleanly and reward sustained fire.]
+						''' */
+					/* PresetLeft1:
+						'''
+						[c/70E0D0:Left Click - Recovery: fires twin-strand leaf shots.]
+						[c/70E0D0:Hits can heal the player and prepare a protective leaf barrier.]
+						''' */
+					/* PresetLeft2:
+						'''
+						[c/66CCFF:Left Click - Reconnaissance: fires tracking scout volleys.]
+						[c/66CCFF:Scout arrows re-read their target and accelerate mid-flight.]
+						''' */
+					/* PresetLeft3:
+						'''
+						[c/FFA07A:Left Click - Bombardment: converts wooden arrows into falling volleys.]
+						[c/FFA07A:Converted arrows detonate on impact; other arrows fire normally.]
+						''' */
+					/* PresetLeft4:
+						'''
+						[c/DDA0FF:Left Click - Plague: inflicts Wither for 4 seconds; repeated hits extend its duration.]
+						[c/DDA0FF:Wither erodes defense and deals steady damage over time.]
+								
+						''' */
+					/* PresetRight0:
+						'''
+						[c/FFB347:Right Click - Breakthrough: hold to load enhanced leaf arrows.]
+						[c/FFB347:Release to fire the stored arrows in a fast burst.]
+						''' */
+					/* PresetRight1:
+						'''
+						[c/FFB347:Right Click - Recovery: hold to gather a wide recovery flash.]
+						[c/FFB347:Release to heal yourself without granting a leaf barrier.]
+						''' */
+					/* PresetRight2:
+						'''
+						[c/FFB347:Right Click - Reconnaissance: hold to fire a gravity-immune marking arrow.]
+						[c/FFB347:The marked high-life target takes increased left-click damage.]
+						''' */
+					/* PresetRight3:
+						'''
+						[c/FFB347:Right Click - Bombardment: hold to place the reticle and launch a guide arrow.]
+						[c/FFB347:The strike falls from above and detonates at the marked point.]
+						''' */
+					/* PresetRight4:
+						'''
+						[c/FFB347:Right Click - Plague: hold to fire a heavy spore cloud.]
+						[c/FFB347:The cloud inflicts Deathblight for 60 seconds and amplifies Leaf Flow hits.]
+								
+						''' */
+					/* PresetPassive0:
+						'''
+						[c/B7FFB0:Doctrine Passive - Breakthrough: when no other dash is available, double-tap left or right to dash at high speed.]
+						[c/B7FFB0:You pass through enemies with an impact hit and invincibility during the dash.]
+						''' */
+					/* PresetPassive1:
+						'''
+						[c/B7FFB0:Doctrine Passive - Recovery: immune to defense damage and greatly expands heart pickup range.]
+						[c/B7FFB0:Debuff life drain is halved; when a hit exceeds 30% max life, half of the excess damage is removed.]
+						''' */
+					/* PresetPassive2:
+						'''
+						[c/B7FFB0:Doctrine Passive - Reconnaissance: immune to movement slowdowns, +25% movement speed, +100% acceleration, and +50% flight time.]
+						[c/B7FFB0:Grapple launch, retreat, and pull speed +30%; platform or slope grapples release automatically when reached.]
+						''' */
+					/* PresetPassive3:
+						'''
+						[c/B7FFB0:Doctrine Passive - Bombardment: gains fire rate from enemies on screen.]
+						[c/B7FFB0:At 5/10/20 enemies on screen, BlossomFlux use time and left-fire delay are reduced by 1/2/3 frames.]
+						''' */
+					/* PresetPassive4:
+						'''
+						[c/B7FFB0:Doctrine Passive - Plague: BlossomFlux attacks extend any debuff already on the target.]
+						[c/B7FFB0:Debuffs on all enemies tick down at half speed.]
+						''' */
+					/* BF_Passive:
+						'''
+						[c/9AEF9E:Passive - Final Stand: blocks one lethal hit while held.]
+						[c/9AEF9E:Immediately restores 100 life, then begins recharging. Current: {0}]
+						''' */
+					// PassiveStateReady: "[c/7BFFB7:Ready]"
+					// PassiveStateActive: "[c/FF9B8B:Final Stand Active]"
+					// PassiveStateCooldown: "[c/F0D070:Charging {0}/{1}s]"
+					// PassiveStateLocked: "[c/9A9A9A:Unlocked in Hardmode]"
+					/* BF_EXHint:
+						'''
+						[c/8EF5A8:Ultimate: holding fire and right-click attacks charge vernal energy.]
+						[c/8EF5A8:At full energy, press] [[c/8EF5A8:{0}]] [c/8EF5A8:to release the verdant barrage.]
+						''' */
+					// BF_EXDisabledHint: "[c/9A9A9A:Golden Emblem is not equipped. The ultimate is disabled.]"
+					// BF_FormWheelHint: "[c/F7D87C:Hold] [[c/F7D87C:{0}]] [c/F7D87C:to open the doctrine wheel; release over a sector to switch.]"
+					// BF_Final: "[c/9FD8A2:The bowstring hums, and the forest answers.]"
+					// LegendaryHint: "[c/BABABA:Hold Shift to read the legendary record]"
+					/* LegendaryText:
+						'''
+						[c/66E6FF:I once believed that, if the bowstring rang swiftly enough, the forest could bar every invader from its bounds.]
+						[c/66E6FF:But a thousand leaves without guidance are only blades scattered to the wind. True guardianship cannot have only one answer.]
+						[c/66E6FF:Floral beast, gather the power strewn throughout this canopy, and let every drawn string carry a purpose.]
+						[c/66E6FF:Let Breakthrough pierce the way ahead; let Recovery preserve the living; let Recon find the most dangerous foe; let Bombardment call down a rain of arrows; let Plague leave every sown affliction to linger.]
+						[c/66E6FF:With a common draw, let the five branches fulfill their duties. When the bowstring is drawn taut, awaken the deeper power within each.]
+						[c/66E6FF:Should the bowbearer stand at death's threshold, raise the Final Stand and turn aside that last step; when Bloom Energy overflows, let the whole canopy answer their call as a hail of arrows.]
+						[c/66E6FF:From this day forward, no Godseeker, whatever their station, may cross the boundary the forest has drawn.]
+						[c/66E6FF:Guard this land, still remembered by its people, until the last light leaves the boughs.]
+						''' */
+				}
+
+				AegisBlade: {
+				}
+			}
+
+			BFSpareQuiver: {
+				// DisplayName: Spare Quiver
+				/* Tooltip:
+					'''
+					+8% ranged damage, +4 defense
+					All BlossomFlux right-click charge times reduced by 10%
+					Recovery: right-click healing flashes +1.
+					Reconnaissance: right-click mark duration slightly increased.
+					''' */
+			}
+
+			BFTunedQuiver: {
+				// DisplayName: Tuned Quiver
+				/* Tooltip:
+					'''
+					+11% ranged damage, +6% ranged critical strike chance
+					All BlossomFlux right-click charge times reduced by 20%
+					Recovery: right-click healing flashes +2.
+					Reconnaissance: right-click mark duration increased.
+					Bombardment: right-click explosion radius increased.
+					''' */
+			}
+
+			BFResonatingQuiver: {
+				// DisplayName: Resonating Quiver
+				/* Tooltip:
+					'''
+					+14% ranged damage, +12 ranged armor penetration
+					All BlossomFlux right-click charge times reduced by 35%
+					Recovery: right-click healing flashes +3.
+					Reconnaissance: right-click mark duration greatly increased.
+					Bombardment: right-click barrage damage increased.
+					Plague: unlocks the first set of advanced debuffs.
+					''' */
+			}
+
+			BFDominationQuiver: {
+				// DisplayName: Domination Quiver
+				/* Tooltip:
+					'''
+					+18% ranged damage, +8% ranged critical strike chance
+					All BlossomFlux right-click charge times reduced by 50%
+					Recovery: right-click healing flashes +4.
+					Reconnaissance: right-click mark duration reaches its maximum.
+					Bombardment: right-click barrage damage and radius increased.
+					Plague: unlocks all advanced debuffs.
+					''' */
+			}
+
+			PastLingering: {
+				// DisplayName: Lingering Remnant
+				/* Tooltip:
+					'''
+					Changes Breakthrough into a Phantasm-like mode: arrows are no longer converted and release strongly homing shards after hitting enemies.
+					Continuous fire gradually increases attack speed. Reaching the maximum tier plays an extra sound.
+					Recipe: Phantasm + 12 Luminite Bars + 5 Vortex Fragments @ Ancient Manipulator
+					''' */
+			}
+
+			SwordsplosionQuiver: {
+				// DisplayName: Swordsplosion Quiver
+				/* Tooltip:
+					'''
+					Changes Bombardment's falling projectiles into Swordsplosion blade rain.
+					Each blade can only deal damage once.
+					''' */
+			}
+
+			BlightSpewerQuiver: {
+				// DisplayName: Blight Spewer Quiver
+				/* Tooltip:
+					'''
+					Changes Plague left-click into Blight Spewer plague flames.
+					Keeps BlossomFlux's base plague effects.
+					''' */
+			}
+
+			SeedOfSilva: {
+				// DisplayName: Seed of Silva
+				/* Tooltip:
+					'''
+					Generates five seeds that slowly orbit the player and emit a faint green glow.
+					While holding BlossomFlux, the seeds bloom into different flowers based on the current doctrine.
+					Breakthrough: Sunflower
+					Sunflowers create a small field. Breakthrough arrows passing through it gain 30% damage and 15% critical strike chance.
+					Recovery: Daisy
+					Daisies have 15 maximum life, regenerate 1.2 life per second, and inherit the player's defense and damage reduction.
+					If a daisy takes 20 or more damage, it heals the player for its stored regenerated life, rounded down.
+					Reconnaissance: Delphinium
+					Delphiniums attack nearby enemies once every 1.5 seconds with a curving arc that deals light damage and stuns for 1 second.
+					Stunned enemies are heavily slowed and take double damage from reconnaissance arrows.
+					Enemies immune to knockback only receive the damage bonus, reduced to 1.15x.
+					Each successful delphinium stun restores 0.5 seconds of flight time.
+					Bombardment: Torchflower
+					Torchflowers spray flames when enemies approach.
+					Arrows passing through a torchflower also trigger an explosion with an independent cooldown.
+					Plague: Mandrake
+					Mandrakes slow nearby enemies and reduce their contact damage by 15%.
+					Mandrakes constantly create spores, like a Spore Sac, applying debuffs for 3 seconds each. Their cap follows the current weapon.
+					Mandrakes also occasionally fire homing withering-flower projectiles that paralyze and slow enemies.
+					Recipe: Bloom Stone + 50 Planty Mush + 10 Auric Bars @ Mythril Anvil
+					''' */
+			}
+
+			SilvaHarp: {
+				// DisplayName: Silva Harp
+				/* Tooltip:
+					'''
+					Grants 150% of Bad Seed's positive attributes: +30% ranged damage, +15% ranged critical strike chance, and +22.5% arrow velocity.
+					BlossomFlux gains a further +7.5% damage and +12% critical strike chance.
+					+15 life per second. This regeneration cannot be reduced by any factor.
+					+90 frames of invincibility after taking damage.
+					Final Stand recharges twice as fast and can recharge during boss fights; it restores 300 life and immediately triggers an ultimate.
+					That ultimate skips charging without shortening its barrage. It neither halves defense nor inflicts Withered.
+					Recipe: Bad Seed + 12 Effulgent Feathers + 30 Planty Mush + 12 Gold Bars + 3 Divine Geodes @ Cosmic Anvil
+					''' */
+			}
+
+			FairyDance: {
+				// DisplayName: Fairy Dance
+				/* Tooltip:
+					'''
+					+4 life regeneration and +6 defense.
+					Summons pink, green, and blue fairies.
+					Holding either attack with BlossomFlux sends them toward the cursor.
+					Fairies launch every 5 frames, with 2 frames between each color.
+					Contact deals 20 ranged damage, increased to 30 while holding right click.
+					Releasing a charged right-click attack launches all three at once.
+					Each simultaneous charge deals 120 damage and has 10 armor penetration.
+					Fairy damage receives ranged bonuses but cannot critically strike.
+					''' */
+			}
+
+			RainbowSpiritDance: {
+				// DisplayName: Rainbow Spirit Dance
+				/* Tooltip:
+					'''
+					+6 life regeneration, +10 defense, and +10% ranged damage.
+					Includes every effect of Fairy Dance.
+					Every 60 BlossomFlux hits summons a Prismatic Lacewing.
+					Lacewings live for 18 seconds, with at most 7 active.
+					While holding left click, each fires a fast rainbow bolt every 45 frames.
+					Bolts deal 60 ranged damage, can critically strike, and inflict Holy Flames.
+					Rainbow bolts have a maximum range of 35 tiles.
+					Holding right click makes the lacewings rapidly orbit the player.
+					Releasing right click sends every lacewing toward the cursor.
+					Each deals 1200 ranged damage and is guaranteed to critically strike.
+					Healing at least 200 life at once consumes one fairy and restores 100 life.
+					If Final Stand is cooling down, its cooldown is reduced by 60 seconds.
+					''' */
+			}
+
+			BadSeed: {
+				// DisplayName: Bad Seed
+				/* Tooltip:
+					'''
+					Halves defense and grants +20% ranged damage.
+					Grants +10% ranged critical strike chance and +15% arrow velocity.
+					BlossomFlux gains a further +5% damage and +8% critical strike chance.
+					Final Stand immediately triggers an ultimate and skips its charge phase.
+					All BlossomFlux ultimates have half their normal barrage duration.
+					Final Stand recharges twice as fast and can recharge during boss fights.
+					It no longer grants temporary invulnerability and instead restores 200 life.
+					The revival also inflicts Withered for 30 seconds.
+					''' */
+			}
+
+			BFArrowRest: {
+				// DisplayName: BFArrowRest
+				/* Tooltip:
+					'''
+					While equipped, BlossomFlux Breakthrough and Bombardment convert wooden arrows into their own projectiles; all other arrows fire normally.
+					Without this accessory, both modes always fire their own projectiles regardless of arrow type.
+					Recovery, Reconnaissance, and Plague are unaffected and always fire their custom projectiles.
+					''' */
+			}
+		}
+
+		Projectiles: {
+			BlossomFlux: {
+				// NewLegendBlossomFluxHoldOut.DisplayName: BlossomFlux Holdout
+				// BFSelectionPanel.DisplayName: Tactical Selection Panel
+				// BFArrow_ABreak.DisplayName: Breakthrough Arrow
+				// BFArrow_BRecov.DisplayName: Recovery Arrow
+				// BFArrow_BRecovBlast.DisplayName: Recovery Burst
+				// BFArrow_BRecovTransfer.DisplayName: Recovery Transfer
+				// BFArrow_CDetec.DisplayName: Reconnaissance Arrow
+				// BFArrow_CDetecReticle.DisplayName: Reconnaissance Reticle
+				// BFArrow_DBomb.DisplayName: Bombardment Arrow
+				// BFArrow_EPlague.DisplayName: Plague Arrow
+				// BFArrow_EPlagueGas.DisplayName: Plague Gas
+				// BFLeafProj.DisplayName: Leaf Arrow
+				// BFLeafBombExplosion.DisplayName: Branch Burst
+				// BFLeftPlagueFlame.DisplayName: Plague Flame
+				// FuckYou.DisplayName: Bloomburst Explosion
+				// BFPassiveRecoveryField.DisplayName: Resurgence Field
+				// BFPassiveRecoveryFieldWave.DisplayName: Resurgence Wave
+				// BFEXWeapon.DisplayName: BlossomFlux Overgrowth Barrage
+				// BFEXVernalShot.DisplayName: Vernal Barrage Shot
+				// BFLeftPlagueReaper.DisplayName: B F Left Plague Reaper
+				// BFRecoveryFlash.DisplayName: B F Recovery Flash
+				// BFArrow_DBombVisual.DisplayName: B F Arrow_ D Bomb Visual
+				// BFEXConvergingLeaf.DisplayName: B F E X Converging Leaf
+				// BFEXConvergingWisp.DisplayName: B F E X Converging Wisp
+				// BFRightChargeHaloProj.DisplayName: Charge Halo
+				// BFBombardCallSpear.DisplayName: B F Bombard Call Spear
+			}
+
+			Ranged: {
+				// BFAimScope.DisplayName: BlossomFlux Aim Scope
+				// SporeBomb.DisplayName: Spore Bomb
+				// ResponsibilityRoverScrap.DisplayName: Responsibility Rover Scrap
+			}
+
+			// PastLingeringShard.DisplayName: Lingering Remnant Shard
+			// SeedOfSilvaDelphiniumArc.DisplayName: Silva Delphinium Arc
+			// SeedOfSilvaDelphinium.DisplayName: Silva Delphinium
+			// SeedOfSilvaDaisy.DisplayName: Silva Daisy
+			// SeedOfSilvaMandrake.DisplayName: Silva Mandrake
+			// SeedOfSilvaMandrakeDart.DisplayName: Silva Mandrake Dart
+			// SeedOfSilvaMandrakeSpore.DisplayName: Silva Mandrake Spore
+			// SeedOfSilvaSunflower.DisplayName: Silva Sunflower
+			// SeedOfSilvaTorchflower.DisplayName: Silva Torchflower
+			// SeedOfSilvaTorchFlame.DisplayName: Silva Torchflower Flame
+			// SeedOfSilvaTorchShockwave.DisplayName: Silva Torchflower Shockwave
+			// BFBreakthroughChargeConvergeFX.DisplayName: B F Breakthrough Charge Converge F X
+			// BFBombardStrafeFX.DisplayName: B F Bombard Strafe F X
+			// BFPlagueNanomachineCloudFX.DisplayName: B F Plague Nanomachine Cloud F X
+			// BFReconContractingWaveFX.DisplayName: B F Recon Contracting Wave F X
+			// BFRecoveryHeartConvergeFX.DisplayName: B F Recovery Heart Converge F X
+			// BFChargeGlowSparkFX.DisplayName: B F Charge Glow Spark F X
+			// TacticalComputerNEWReticle.DisplayName: Tactical Computer N E W Reticle
+			// AzureThunderGroundSwordMatrix.DisplayName: Azure Thunder Ground Sword Matrix
+			// AzureThunderHarmonyBar.DisplayName: Azure Thunder Harmony Bar
+			// DesertEagleHoldout.DisplayName: Desert Eagle Holdout
+			// BFLeftPlagueFlame.DisplayName: B F Left Plague Flame
+			// BFArrow_ABreak.DisplayName: B F Arrow_ A Break
+			// BFArrow_BRecov.DisplayName: B F Arrow_ B Recov
+			// BFArrow_BRecovTransfer.DisplayName: B F Arrow_ B Recov Transfer
+			// BFArrow_CDetec.DisplayName: B F Arrow_ C Detec
+			// BFArrow_CDetecReticle.DisplayName: B F Arrow_ C Detec Reticle
+			// BFArrow_DBomb.DisplayName: B F Arrow_ D Bomb
+			// BFArrow_EPlague.DisplayName: B F Arrow_ E Plague
+			// BFArrow_EPlagueGas.DisplayName: B F Arrow_ E Plague Gas
+			// FuckYou.DisplayName: Fuck You
+			// BrinyBaron_LeftClick_Swing.DisplayName: Briny Baron_ Left Click_ Swing
+			// BrinyBaron_SeafoamBlade.DisplayName: Briny Baron_ Seafoam Blade
+			// BrinyBaron_SeafoamExplosion.DisplayName: Briny Baron_ Seafoam Explosion
+			// BrinyBaron_SeaSpirit.DisplayName: Briny Baron_ Sea Spirit
+			// BrinyBaron_RightClick_Shuriken.DisplayName: Briny Baron_ Right Click_ Shuriken
+			// BrinyBaron_SkillSlashDash_SlashDash.DisplayName: Briny Baron_ Skill Slash Dash_ Slash Dash
+			// BrinyBaron.BBASD_Lighting.DisplayName: B B A S D_ Lighting
+			// BrinyBaron_SkillDashTornado_BladeDash.DisplayName: Briny Baron_ Skill Dash Tornado_ Blade Dash
+			// BBSD_Star.DisplayName: B B S D_ Star
+			// BBSD_VirtualPROJ.DisplayName: B B S D_ Virtual P R O J
+			// Z_BrinyBaron_SkillSuperCharge_SuperDash.DisplayName: Z_ Briny Baron_ Skill Super Charge_ Super Dash
+			// Copper_ChainLightning.DisplayName: Copper_ Chain Lightning
+			// Demonite_Wisp.DisplayName: Demonite_ Wisp
+			// Perennial_HealingOrb.DisplayName: Perennial_ Healing Orb
+			// Scoria_LavaGlob.DisplayName: Scoria_ Lava Glob
+			// Mythril_OrbitFlame.DisplayName: Mythril_ Orbit Flame
+			// Orichalcum_PetalBolt.DisplayName: Orichalcum_ Petal Bolt
+			// Lunar_Strike.DisplayName: Lunar_ Strike
+			// Shroomite_TrailMushroom.DisplayName: Shroomite_ Trail Mushroom
+			// Astral_Blast.DisplayName: Astral_ Blast
+			// PostLunar_Shard.DisplayName: Post Lunar_ Shard
+			// Shared_LingeringField.DisplayName: Shared_ Lingering Field
+			// Shared_Shockwave.DisplayName: Shared_ Shockwave
+			// Shared_SplitMeteor.DisplayName: Shared_ Split Meteor
+			// PFMarkStatusArc.DisplayName: P F Mark Status Arc
+
+			SHPC: {
+				// LazharBeacon.DisplayName: Lazhar Beacon
+				// LazharLaser.DisplayName: Lazhar Laser
+				// LazharOrbitalStrike.DisplayName: Lazhar Orbital Strike
+			}
+
+			// PristineFuryHookSoul.DisplayName: Pristine Fury Hook Soul
+
+			PristineFury: {
+				// PFBrimstoneElemental_StarBolt.DisplayName: P F Brimstone Elemental_ Star Bolt
+				// PFEmpress_ScatterBolt.DisplayName: P F Empress_ Scatter Bolt
+				// PFSkeletronWhiteBurst.DisplayName: P F Skeletron White Burst
+				// PFPolterghast_StarBolt.DisplayName: P F Polterghast_ Star Bolt
+			}
+		}
+
+		Cooldowns: {
+			// BlossomFlux_Passive: BlossomFlux Final Stand
+			// BlossomFlux_EX: Bloom Energy
+		}
+
+		// TheSpecialText.BlossomFluxPresetSelected: Doctrine Selected: {0}
+
+		Buffs: {
+			BFRecoveryLeafBuff: {
+				// DisplayName: Recovery Leaf
+				// Description: The recovery branchflow is protecting and healing you.
+			}
+
+			BFPlagueWitherBuff: {
+				// DisplayName: Wither
+				// Description: Takes 5% more damage, loses 44 life per second, and loses 1 defense.
+			}
+
+			BFPlagueDeathBuff: {
+				// DisplayName: Deathblight
+				// Description: Takes 10% more damage and loses 140 life per second, plus 40 for each Plague disease.
+			}
+
+			CosmicDischargeChainKnifeBuff: {
+				// DisplayName: Chain Blade Mode
+				// Description: Movement speed and armor penetration increased.
+			}
+
+			CosmicDischargeSwordBuff: {
+				// DisplayName: Sword Mode
+				// Description: Critical strike chance and damage increased.
+			}
+
+			CosmicDischargeWhipBuff: {
+				// DisplayName: Whip Mode
+				// Description: Attack speed and knockback increased.
+			}
+
+			YharonSoulFragment_Buff: {
+				// DisplayName: Dragonfire
+				// Description: Burning in dragon soulfire.
+			}
+
+			SHPCRight_DeBuff: {
+				// DisplayName: SHPC Heat Mode
+				// Description: At heat levels IV–V, life regeneration is suppressed and life slowly drains.
+			}
+		}
+	}
+}

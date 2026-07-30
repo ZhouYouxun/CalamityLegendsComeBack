@@ -1,0 +1,34 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				ShaderTestItem: {
+					// DisplayName: Shader Tester
+					// Tooltip: Right click opens the shader matrix. Left click runs the selected shader. Releasing the item or dying disables screen effects.
+				}
+
+				Magic: {
+					Lazhar: {
+						// DisplayName: Lazhar
+						// Tooltip: ""
+					}
+				}
+			}
+		}
+
+		Projectiles: {
+			A_Dev: {
+				// ShaderTestProjectile.DisplayName: Shader Test Projectile
+				// ShaderTestPanel.DisplayName: Shader Selection Matrix
+			}
+
+			// ElephantHunterBigGameRound.DisplayName: Elephant Hunter Big Game Round
+			// ElephantHunterSiegeRound.DisplayName: Elephant Hunter Siege Round
+			// LightningEagleArcRound.DisplayName: Lightning Eagle Arc Round
+			// MagnumLifeRound.DisplayName: Magnum Life Round
+			// MagnumSilverRound.DisplayName: Magnum Silver Round
+			// LazharHoldout.DisplayName: Lazhar Holdout
+			// BFPa5BreakthroughDashHitbox.DisplayName: B F Pa5 Breakthrough Dash Hitbox
+		}
+	}
+}

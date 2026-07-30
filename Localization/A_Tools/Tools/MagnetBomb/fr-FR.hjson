@@ -1,0 +1,18 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				MagnetBombItem: {
+					// DisplayName: Magnet Bomb
+					/* Tooltip:
+						'''
+						Left click to throw a sticky bomb that adheres to surfaces.
+						Right click to detonate all deployed bombs simultaneously.
+						''' */
+				}
+			}
+		}
+
+		// Projectiles.A_Tools.MagnetBombProj.DisplayName: Magnet Bomb
+	}
+}

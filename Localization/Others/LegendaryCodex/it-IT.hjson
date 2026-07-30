@@ -1,0 +1,66 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		LegendaryCodex: {
+			SHPC: {
+				// Tag: SYSTEM // SHPC
+				/* Body:
+					'''
+					Fires SHPLB and SHPL
+					Empowers SHPLB through different materials
+					Spends heat to release SHPLB
+					''' */
+			}
+
+			ProjectileOutline: {
+				// Name: Hostile Projectile Outlines
+				// Tag: VISUAL // ACCESSIBILITY
+				/* Body:
+					'''
+					Disabled by default; enable it in Client Settings
+					Standard hostile sprites use their current frame's dominant color
+					Transparent, hidden, and specially drawn projectiles are excluded
+					''' */
+			}
+
+			BlossomFlux: {
+				// Tag: ???
+				/* Body:
+					'''
+					???
+					???
+					???
+					''' */
+			}
+
+			BrinyBaron: {
+				// Tag: ???
+				/* Body:
+					'''
+					???
+					???
+					???
+					''' */
+			}
+
+			PristineFury: {
+				// Tag: ???
+				/* Body:
+					'''
+					???
+					???
+					???
+					''' */
+			}
+
+			Vesuvius: {
+				// Tag: ???
+				/* Body:
+					'''
+					???
+					???
+					???
+					''' */
+			}
+		}
+	}
+}

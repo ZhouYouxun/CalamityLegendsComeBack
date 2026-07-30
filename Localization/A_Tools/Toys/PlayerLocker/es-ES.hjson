@@ -1,0 +1,21 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				PlayerLocker: {
+					// DisplayName: Inventory Looter
+					// Tooltip: Right-click on a nearby player to open and plunder their inventory.
+				}
+			}
+		}
+
+		// Projectiles.A_Dev.PlayerLockerPanel.DisplayName: Player Inventory Looter Panel
+
+		TheSpecialText: {
+			// PlayerLockerTitle: Looting {0}'s inventory
+			// PlayerLockerNoTarget: No nearby player found. Aim closer to a player and right-click.
+			// PlayerLockerLoading: Fetching inventory data...
+			// PlayerLockerStolen: Swiped [{0}] from {1}!
+		}
+	}
+}

@@ -1,0 +1,449 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				NewLegendSHPC: {
+					// DisplayName: SHPC - Return of Legends
+					// SHPC_LeftIntro: "[c/66CCFF:Left click fires energy orbs. By default, white orbs deal area damage.]"
+					// SHPC_LoadingUIHint: "[c/66CCFF:Open inventory and press] [[c/66CCFF:{0}]] [c/66CCFF:to open the loading UI. Load specific materials to change attack effects.]"
+					// SHPC_CurrentAmmoEffect: "[c/66CCFF:Current loaded effect: {0}]"
+					// SHPC_DefaultAmmoEffect: No special material loaded; fires default white orbs that deal area damage.
+					// SHPC_UnloadHint: "[c/CFCFCF:Right-click in inventory: unload the current magazine's material; Shift+Right-click: unload all magazines.]"
+					// SHPC_Passive: "[c/B8FF9E:Passive (Extra Preparation): increases maximum mana and mana potion restoration, and shortens Mana Sickness duration.]"
+					/* SHPC_RightIntro1:
+						'''
+						[c/FFB347:Right click fires a laser barrage. Barrage fire builds heat; at full heat the weapon overheats and shuts down. Heat dissipates after you stop attacking.]
+						[c/FFB347:As progression advances, full heat can enter higher levels. Each heat level multiplicatively increases right-click damage by 5% and adds special effects.]
+						[c/FFB347:Current heat cap: I. Effect: no bonus.]
+						[c/FFB347:Left click during barrage consumes one heat level to immediately fire three energy orbs.]
+						''' */
+					/* SHPC_RightIntro2:
+						'''
+						[c/FFB347:Right click fires a laser barrage. Barrage fire builds heat; at full heat the weapon overheats and shuts down. Heat dissipates after you stop attacking.]
+						[c/FFB347:As progression advances, full heat can enter higher levels. Each heat level multiplicatively increases right-click damage by 5% and adds special effects.]
+						[c/FFB347:Current heat cap: II. Effect: adds a secondary beam; beams pierce 3 enemies.]
+						[c/FFB347:Left click during barrage consumes one heat level to immediately fire three energy orbs.]
+						''' */
+					/* SHPC_RightIntro3:
+						'''
+						[c/FFB347:Right click fires a laser barrage. Barrage fire builds heat; at full heat the weapon overheats and shuts down. Heat dissipates after you stop attacking.]
+						[c/FFB347:As progression advances, full heat can enter higher levels. Each heat level multiplicatively increases right-click damage by 5% and adds special effects.]
+						[c/FFB347:Current heat cap: III. Effect: first hits from main and secondary beams may trigger heat blasts.]
+						[c/FFB347:Left click during barrage consumes one heat level to immediately fire three energy orbs.]
+						''' */
+					/* SHPC_RightIntro4:
+						'''
+						[c/FFB347:Right click fires a laser barrage. Barrage fire builds heat; at full heat the weapon overheats and shuts down. Heat dissipates after you stop attacking.]
+						[c/FFB347:As progression advances, full heat can enter higher levels. Each heat level multiplicatively increases right-click damage by 5% and adds special effects.]
+						[c/FFB347:Current heat cap: IV. Effect: adds a second secondary beam, increases damage, and lets heat blasts trigger through pierce.]
+						[c/FFB347:Left click during barrage consumes one heat level to immediately fire three energy orbs.]
+						''' */
+					/* SHPC_RightIntro5:
+						'''
+						[c/FFB347:Right click fires a laser barrage. Barrage fire builds heat; before heat level V is unlocked, full heat overheats and shuts the weapon down. Heat dissipates after you stop attacking.]
+						[c/FFB347:As progression advances, full heat can enter higher levels. Each heat level multiplicatively increases right-click damage by 5% and adds special effects.]
+						[c/FFB347:Current heat cap: V. Effect: infinite pierce. At full heat, the weapon no longer shuts down, but holding right click rapidly burns your own life.]
+						[c/FFB347:Left click during barrage consumes one heat level to immediately fire three energy orbs.]
+						''' */
+					// SHPC_Final: "[c/99B3FF:The system is still evolving......]"
+					/* SHPC_EXHint:
+						'''
+						[c/66CCFF:EX Skill (Super Laser): When enemies are nearby, each left-click shot grants 1 ultimate energy, up to 60.]
+						[c/66CCFF:Once fully charged, press] [[c/66CCFF:{0}]] [c/66CCFF:to activate the ultimate mode.]
+						[c/66CCFF:After a brief charge, unleash a colossal laser that pierces through everything.]
+						''' */
+					// SHPC_EXDisabledHint: "[c/9A9A9A:Golden Emblem is not equipped. The ultimate is disabled.]"
+					// SHPC_AmmoWheelHint: "[c/F7D87C:Close inventory and press] [[c/F7D87C:{0}]] [c/F7D87C:to open the selection wheel and switch loaded ammo.]"
+					// Tooltip: "[GFB]"
+					// TooltipGFB: Have you finally arrived here?
+					// LegendaryHint: "[c/BABABA:Hold Shift to access the record]"
+					/* LegendaryText:
+						'''
+						[c/66E6FF:The initial design relied too heavily on a single energy source, and was ultimately deemed unstable.]
+						[c/66E6FF:The revised system no longer depends on souls; any material with sufficient energy density is now viable.]
+						[c/66E6FF:Different inputs produce drastically varied responses, with some combinations exhibiting anomalous amplification.]
+						[c/66E6FF:The control system was redesigned accordingly, forcing premature release before full containment.]
+						[c/66E6FF:In theory, this device is no longer limited by ammunition type, yet its true limits remain unknown.]
+						[c/66E6FF:In barrage mode, all prior reliance on soul-based energy has been eliminated, replaced by a more primitive thermal drive.]
+						[c/66E6FF:To stabilize output, the cooling system was redefined, giving rise to new thermal instability effects.]
+						[c/66E6FF:With continued operation, the system will inevitably enter an overheat state, trading safety for greater output efficiency.]
+						[c/66E6FF:Without timely intervention, this optimization will ultimately consume the operator.]
+						''' */
+				}
+
+				SHPCBook: {
+					// DisplayName: SHPC Codex Disc
+					// Tooltip: Left click opens the SHPC material index. Right click opens the right-click heat system index.
+				}
+			}
+
+			FastChip: {
+				// DisplayName: Fast Chip
+				// Tooltip: "[GFB]"
+				// TooltipLocked: "[c/9A9A9A:Unlock the ultimate to reveal this tooltip]"
+				/* TooltipUnlocked:
+					'''
+					Left-click energy orbs grant double ultimate charge; right-click laser barrage also grants charge
+					Halves life regeneration; regen drops even further during right-click barrage
+					''' */
+			}
+
+			DiffuChip: {
+				// DisplayName: Diffusion Chip
+				/* Tooltip:
+					'''
+					Increases magic damage and magic critical strike chance by 7% each
+					The heat-barrage's empowered attack gains a tighter, more focused spread
+					''' */
+			}
+
+			CommandAscend: {
+				// DisplayName: Gun Body Upgrade - Mortar
+				/* Tooltip:
+					'''
+					While holding SHPC, right click switches to mortar mode
+					Fires a mortar shell at enemies
+					Causes a violent explosion and calls down a rain of lasers
+					"Cover never crossed their mind"
+					''' */
+			}
+
+			MilitaryCaller: {
+				// DisplayName: Gun Body Upgrade - Turret
+				/* Tooltip:
+					'''
+					While holding SHPC, right click switches to Military Caller mode
+					This mode does not use the right-click heat system
+					Fires a tech beacon that air-drops one friendly Calamity tech turret
+					Each call has a base cost of 40 mana
+					Up to 8 turrets can exist at once
+					Deploying a ninth turret makes the oldest turret explode in place
+					Each turret lasts up to 5 minutes
+					Deployment fails within 18 tiles of another turret
+					Biome turret mapping:
+					Jungle = Plague; Snow = Ice; Underworld or Brimstone Crags = Fire
+					Ocean, Sulphurous Sea, Abyss, or Sunken Sea = Water
+					Astral, Hallow, or Sky = Laser
+					Desert or Evil biome = Onyx; other biomes = Lab
+					''' */
+			}
+
+			MatrixChargingBarrier: {
+				// DisplayName: Matrix Charging Barrier
+				// Tooltip: While holding SHPC, charges a shield equal to 25% of maximum life. After a full shield takes damage, it waits 10 seconds and then fully recharges over 5 seconds; damage does not interrupt either stage. While active, it reduces pre-defense damage by 10%. Does not conflict with other barriers
+			}
+
+			CtrlChip: {
+				// DisplayName: Control Chip
+				/* Tooltip:
+					'''
+					Increases critical strike chance by 7%
+					A targeting reticle appears while holding SHPC
+					The reticle can latch onto, track, and auto-aim at targets
+					Hiding the accessory's visuals also hides the reticle
+					''' */
+			}
+
+			FlyChip: {
+				// DisplayName: Ascension Chip
+				/* Tooltip:
+					'''
+					While holding SHPC
+					Flight time increased by 70%
+					Movement speed and jump speed increased by 10%, acceleration increased by 0.7x
+					''' */
+			}
+
+			HeatModule: {
+				// DisplayName: Heat Sensor
+				/* Tooltip:
+					'''
+					Laser barrage heat builds much faster
+					Heat levels grant a larger damage boost
+					When the weapon overheats, it burns nearby enemies for heavy damage
+					At Heat V, overheat keeps burning nearby enemies
+					Overheat shutdown time is halved
+					''' */
+			}
+
+			AIOC: {
+				// DisplayName: AIOC
+				// Tooltip: "[GFB]"
+				/* TooltipCompact:
+					'''
+					Has all the effects of all 4 chips and the Matrix Charging Barrier
+					Hold Shift to show the effects provided by each chip and the barrier
+					Matrix Charging Barrier shield health +50%
+					No longer inherits any chip's drawbacks
+					"Hello, World"
+					''' */
+				/* TooltipFull:
+					'''
+					Fast Chip: left-click energy orbs grant double ultimate charge, and laser barrage also grants charge
+					Diffusion Chip: +7% magic damage and magic critical strike chance; empowered heat attacks become more focused
+					Control Chip: +7% critical strike chance; while holding SHPC, gain a reticle that latches, tracks, and auto-aims
+					Ascension Chip: while holding SHPC, +70% flight time and improved movement speed, jump speed, and acceleration
+					Matrix Charging Barrier: while holding SHPC, gain its charging shield with 50% more shield health; does not conflict with other barriers
+					No longer inherits any chip's drawbacks
+					"Hello, World"
+					''' */
+			}
+
+			ProjectilePossessionModule: {
+				// DisplayName: Gun Body Upgrade - Absorption
+				/* Tooltip:
+					'''
+					While holding SHPC, right click switches to projectile possession mode
+					Hold right click to capture clones of nearby hostile projectiles in a vacuum cone, up to 15 stored
+					The original hostile projectile keeps existing, but its velocity and damage are permanently reduced by 20%
+					The clone is pulled to the player and becomes friendly
+					Release right click to fire the stored friendly clones forward in a straight burst
+					Projectiles spawned by those clones remain friendly; if they have no damage type, they count as magic damage
+					Projectiles with more than 3600 damage or more than 3600 time left cannot be absorbed
+					Some persistent beams and blacklisted projectiles are ignored
+					"Sprite, DMG, SPD, Size, I-Frames, Yoink!"
+					''' */
+			}
+
+			KarasawaModule: {
+				// DisplayName: Karasawa Module
+				/* Tooltip:
+					'''
+					While holding SHPC, right click switches to Karasawa charge-cannon mode
+					Hold right click to charge, then release a defense-piercing hypervelocity energy cannon; releasing too early triggers a failure cooldown
+					KARASAWA cannon... what an excellent weapon...
+					Unfortunately, it has gathered dust in storage for far too long
+					No matter what, it must see the light of day again
+					''' */
+			}
+
+			WastelandEnergyCore: {
+				// DisplayName: Wasteland Energy Core
+				/* Tooltip:
+					'''
+					+7% SHPC damage
+					SHPC left-click mana cost -8%; right-click mana cost -12%
+					Adds an energy orb canister; ammo capacity +10%
+					While holding SHPC, cease fire to rapidly restore mana
+					Grants Mana Flower automatic mana potion use
+					''' */
+			}
+
+			EverfrostEnergyCore: {
+				// DisplayName: Everfrost Energy Core
+				/* Tooltip:
+					'''
+					+15% SHPC damage
+					SHPC left-click mana cost -10%; right-click mana cost -20%; left click has a 20% chance not to consume ammo
+					Adds energy orb canisters; ammo capacity +25%
+					While holding SHPC, cease fire to rapidly restore mana
+					Grants Mana Flower automatic mana potion use
+					Shortens right-click startup
+					''' */
+			}
+
+			EvolutionEnergyCore: {
+				// DisplayName: Evolution Energy Core
+				/* Tooltip:
+					'''
+					+15% SHPC damage, +5% critical strike chance, allows laser barrage to crit, and shortens laser barrage startup
+					Energy orb mana cost -15%; laser barrage energy cost -30%; firing energy orbs has a 20% chance not to consume ammo
+					Adds energy orb canisters; ammo capacity +50%
+					While holding SHPC, cease fire to rapidly restore mana
+					Grants Mana Flower automatic mana potion use
+					''' */
+			}
+
+			ExoEnergyCore: {
+				// DisplayName: Exo Energy Core
+				/* Tooltip:
+					'''
+					+20% SHPC damage, +10% critical strike chance, allows laser barrage to crit, and shortens laser barrage startup
+					While holding SHPC, gain infinite mana; firing energy orbs has a 50% chance not to consume ammo
+					Right-click laser barrage never overheats
+					Adds energy orb canisters; ammo capacity +100%
+					''' */
+			}
+		}
+
+		TheSpecialText: {
+			// SHPCAmmoWheelHover: "{0} - {1} shots"
+			// SHPCBookNoRecords: No registered SHPC material records.
+			// SHPCBookMissingEffect: No effect record
+		}
+
+		AMMO: {
+			// SHPCAmmoPrompt: This item can be used to charge SHPC. Effect:
+			// SHPCAmmoPanel: Left-click displayed multiplier: {0}x; load capacity: {1} shots
+			// SHPCAmmo1: Energy Core makes the orb bounce while scattering dense electric sparks along its path.
+			// SHPCAmmo2: Stormlion Mandible releases five chaining lightning arcs that jump rapidly between enemy groups.
+			// SHPCAmmo3: Sulphuric Scale bursts when the orb hits the ground, leaving a corrosive sulphur mist area.
+			// SHPCAmmo4: Purified Gel splits directly into multiple pursuing energy orbs.
+			// SHPCAmmo5: Essence of Havoc is affected by extreme gravity, dealing stronger damage while falling.
+			// SHPCAmmo6: Essence of Eleum spreads a cryogenic liquid nitrogen zone at the blast site, continuously suppressing enemies in the area.
+			// SHPCAmmo7: Essence of Sunlight opens a core above the blast point, rapidly firing seven homing sunlight lasers.
+			// SHPCAmmo8: Starblight Soot scatters multiple star souls, producing a medium explosion and inflicting Astral Infection upon hitting.
+			// SHPCAmmo9: Soul of Light summons high-damage light souls to orbit the orb and continuously damage surrounding targets.
+			// SHPCAmmo10: Soul of Night pours out chasing dark souls, letting them automatically search for nearby enemies.
+			// SHPCAmmo11: Soul of Flight rises into the air, then dives down from above to bombard the target.
+			// SHPCAmmo12: Soul of Fright leaves hovering terror souls that continuously search for prey near the blast point.
+			// SHPCAmmo13: Soul of Might releases three delayed-explosion energy orbs.
+			// SHPCAmmo14: Soul of Sight causes the orb to unleash a more violent explosion the longer it flies.
+			// SHPCAmmo15: Living Shard fires a burst of life butterflies that track enemies and heal the player.
+			// SHPCAmmo16: !!!
+			// SHPCAmmo17: Depth Cells fires a Viperfish that falls from above and bursts.
+			// SHPCAmmo18: Plague Cell Canister fires a marking ray and calls plague missiles.
+			// SHPCAmmo19: Ashes of Calamity pours out red souls; some slowly weave forward and pierce enemies endlessly.
+			// SHPCAmmo20: !!!
+			// SHPCAmmo21: Solar Fragment summons multiple piercing solar lances from the sky at the blast point.
+			// SHPCAmmo22: Vortex Fragment releases homing missiles during flight to escort it.
+			// SHPCAmmo23: Nebula Fragment releases three chasing nebular stars; the blue star has a stronger effect.
+			// SHPCAmmo24: Stardust Fragment splits into a large number of cells, letting them continuously reproduce recursively.
+			// SHPCAmmo25: Meld Blob releases high-speed dark light, causing a violent explosion.
+			// SHPCAmmo26: Unholy Essence releases a violent directional shockwave.
+			// SHPCAmmo27: !!!
+			// SHPCAmmo28: Divine Geode refracts multiple homing geometric lasers upon exploding.
+			// SHPCAmmo29: Bloodstone Core absorbs player life to empower itself, releasing healing and damaging orbs after exploding.
+			// SHPCAmmo30: Ruinous Soul releases homing souls and orbiting/returning souls.
+			// SHPCAmmo31: Ectoplasm releases a large number of homing souls along its path and upon hitting enemies.
+			// SHPCAmmo32: Dark Plasma generates a miniature dark core that actively tracks enemies, pulls them in, and ignores defense and damage reduction below 95%.
+			// SHPCAmmo33: Twisting Nether releases multiple void blades that pierce through many enemies.
+			// SHPCAmmo34: Endothermic Energy creates a liquid nitrogen zone and releases a large number of ice spikes.
+			// SHPCAmmo35: Nightmare Fuel splits into nightmare arcs that continuously strike enemies.
+			// SHPCAmmo36: Ascendant Spirit Essence continuously fires a large number of star needles that pierce many enemies.
+			// SHPCAmmo37: Yharon Soul Fragment releases violent flames.
+			// SHPCAmmo38: Exo Prism fires judgment lasers and unfolds fractal geometry attacks.
+			// SHPCAmmo39: Ashes of Annihilation locks onto an enemy and releases a large amount of annihilation strikes.
+			// SHPCAmmo40: Armored Shell fires a large amount of gradually slowing electromagnetic orbs, subsequently forming a sustained storm.
+			// SHPCAmmo41: Pearl Shard fires three large pearls that split into accelerating homing small pearls upon breaking.
+			// SHPCAmmo42: Darksun Fragment creates an eclipsed black sun that can be continuously empowered, eventually releasing a powerful explosion.
+			// SHPCAmmo43: Cynosure fires a heavy armor-piercing round that releases electromagnetic lightning, two auric-orb ellipses, and an outer charged-cell ring on hit.
+			// SHPCAmmo44: Core of Calamity splits into four strongly homing energy bolts.
+		}
+
+		Projectiles: {
+			SHPC: {
+				// EnergyCore_Spark.DisplayName: Energy Core Spark
+				// PearlShardLargePearl.DisplayName: Pearl Shard
+				// PearlShardSmallPearl.DisplayName: Pearl Shard
+				// PurifiedGel_Ball.DisplayName: Purified Gel Orb
+				// StormlionMandible_ARC.DisplayName: Stormlion Arc
+				// BossSoulofMight_Ball.DisplayName: Soul of Might Orb
+				// BossSoulofMight_EXP.DisplayName: Soul of Might Burst
+				// BossSoulofFright_SecondarySoul.DisplayName: Soul of Fright Secondary Soul
+				// TitanHeart_BigINV.DisplayName: Titan Heart Phantom Core
+				// EssenceofHavoc_INV.DisplayName: Essence of Havoc Shockwave
+				// EssenceofSnow_N2.DisplayName: Essence of Snow Nitrogen
+				// EssenceofSunlight_Lighting.DisplayName: Essence of Sunlight Bolt
+				// EssenceofSunlight_BurstRelay.DisplayName: Essence of Sunlight Burst Relay
+				// NewSHPS.DisplayName: SHPS Support Core
+				// AshesofCalamity_Fire.DisplayName: Ashes of Calamity Fire
+				// LivingShard_Butterfly.DisplayName: Firefly Soul Butterfly
+				// FragmentEntropyExplosion.DisplayName: Entropy Fragment Explosion
+				// FragmentSolar_Spear.DisplayName: Solar Fragment Spear
+				// FragmentStardust_Cell.DisplayName: Stardust Fragment Cell
+				// DivineGeode_Lazer.DisplayName: Divine Geode Laser
+				// ArmoredShell_Ball.DisplayName: Armored Shell Orb
+				// SHPCNecroplasmDamage.DisplayName: Necroplasm Burst
+				// UnholyEssence_Wave.DisplayName: Unholy Essence Wave
+				// AscendantSpirit_PROJ.DisplayName: Ascendant Spirit Projectile
+				// AscendantSpirit_BurstRelay.DisplayName: Ascendant Spirit Burst Relay
+				// AshesofAnn_Located.DisplayName: Ashes of Ann Locator
+				// AshesofAnn_SuperEXP.DisplayName: Ashes of Ann Super Burst
+				// AshesofAnn_BurstRelay.DisplayName: Ashes of Ann Burst Relay
+				// AshesofAnn_CurseFire.DisplayName: Ashes of Ann Curse Fire
+				// EndothermicEnergy_Copy.DisplayName: Endothermic Energy Copy
+				// EndothermicEnergy_Shadow.DisplayName: Endothermic Energy Shadow
+				// EndothermicEnergy_Split.DisplayName: Endothermic Energy Split
+				// ExoPrism_Geometry.DisplayName: Exo Prism Geometry
+				// ExoPrism_Lazer.DisplayName: Exo Prism Laser
+				// ExoPrism_Light.DisplayName: Exo Prism Radiance
+				// NightmareFuel_ARC.DisplayName: Nightmare Fuel Arc
+				// NightmareFuel_Scythe.DisplayName: Nightmare Fuel Scythe
+				// YharonSoulFragment_Flame.DisplayName: Yharon Soul Fragment Flame
+				// NewLegendSHPB.DisplayName: SHPC Energy Orb
+				// NewLegendSHPE.DisplayName: SHPC Explosion
+				// SHPCRight_HoulOut.DisplayName: SHPC Holdout
+				// SHPCRight_Proj.DisplayName: SHPC Main Beam
+				// SHPCRight_Explosion.DisplayName: SHPC Heat Blast
+				// NL_SHPC_EXWeapon.DisplayName: SHPC EX Super Laser
+				// PlagueCell_Marked.DisplayName: Marked Plague Cell
+				// SHPCPassiveOrb.DisplayName: SHPC Passive Orb
+				// SHPC_SuperLazer.DisplayName: SHPC Super Laser
+				// TwistingNether_BlackSLASH.DisplayName: Twisting Nether Dark Slash
+				// TwistingNether_Blade.DisplayName: Twisting Nether Blade
+				// TwistingNether_Shadow.DisplayName: Twisting Nether Shadow
+				// ExoPrism_LazerMark.DisplayName: Exo Prism_ Lazer Mark
+				// SHPC_SLINV.DisplayName: S H P C_ S L I N V
+				// RightClickMortar_HoldOut.DisplayName: Right Click Mortar_ Hold Out
+				// RightClickMortar_Proj.DisplayName: Right Click Mortar_ Proj
+				// RightClickMortar_Lazer.DisplayName: Right Click Mortar_ Lazer
+				// MilitaryCaller_HoldOut.DisplayName: SHPC Military Caller
+				// MilitaryCallerBeacon.DisplayName: Military Call Beacon
+				// MilitaryTurretDropPod.DisplayName: Military Turret Drop Pod
+				// MilitaryFriendlyTurret.DisplayName: Friendly Tech Turret
+				// MilitaryTurretSelfDestruct.DisplayName: Military Turret Self-Destruct
+				// KarasawaHoldout.DisplayName: SHPC Karasawa Charge Cannon
+				// KarasawaBurst.DisplayName: Karasawa Super Cannon
+				// DarksunFragmentBlackSun.DisplayName: Eclipsed Black Sun
+				// DarksunFragmentEclipseBolt.DisplayName: Eclipsed Solar Bolt
+				// DarksunFragmentBlackSunExplosion.DisplayName: Eclipsed Black Sun Burst
+				// DepthCells_Shark.DisplayName: Abyssal Cell Shark
+				// DepthCells_SharkExplosion.DisplayName: Abyssal Cell Rupture
+				// CynosureArmorPiercingRound.DisplayName: Cynosure Armor-Piercing Round
+				// CynosureAuricBall.DisplayName: Cynosure Auric Orb
+				// CynosureChargedCell.DisplayName: Cynosure Charged Cell
+				// CynosureLightningExplosion.DisplayName: Cynosure Lightning Burst
+				// CynosureLightningArc.DisplayName: Cynosure Lightning Arc
+				// CoreOfCalamityEnergyOrb.DisplayName: Calamitous Energy Orb
+				// CoreOfCalamityExplosion.DisplayName: Calamitous Energy Rupture
+				// CoreOfCalamitySplitOrb.DisplayName: Calamitous Energy Fragment
+				// ProjectilePossessionHoldout.DisplayName: SHPC Vacuum Cleaner
+				// BloodstoneCore_BloodOrb.DisplayName: Bloodstone Core_ Blood Orb
+				// RuinousSoul_GhostExplosion.DisplayName: Ruinous Soul_ Ghost Explosion
+				// RuinousSoul_OrbitGhost.DisplayName: Ruinous Soul_ Orbit Ghost
+				// Necroplasm_Orb.DisplayName: Necroplasm_ Orb
+				// FragmentNebula_Star.DisplayName: Fragment Nebula_ Star
+				// EndlessDevourJavOrbSmall.DisplayName: Endless Devour Jav Orb Small
+				// EndothermicEnergy_LN2.DisplayName: Endothermic Energy_ L N2
+				// FragmentEntropy_CosmicFire.DisplayName: Fragment Entropy_ Cosmic Fire
+				// FragmentNebula_BurstRelay.DisplayName: Fragment Nebula_ Burst Relay
+				// ArmoredShell_Lightning.DisplayName: Armored Shell_ Lightning
+				// UnholyEssence_HolyNova.DisplayName: Unholy Essence_ Holy Nova
+				// RuinousSoul_GhastlyES.DisplayName: Ruinous Soul_ Ghastly E S
+				// FragmentVortex_Pixel.DisplayName: Fragment Vortex_ Pixel
+				// PlagueCell_Lazer.DisplayName: Plague Cell_ Lazer
+				// AshesofCalamity_SoulRelay.DisplayName: Ashes of Calamity Soul Relay
+				// AshesofCalamity_Soul.DisplayName: Ashes of Calamity Soul
+				// StarblightSootShard.DisplayName: Starblight Soot Soul
+				// EndothermicEnergy_ARROW.DisplayName: Endothermic Energy_ A R R O W
+				// SHPCAmmoSelectionPanel.DisplayName: S H P C Ammo Selection Panel
+				// SHPCRight_HeatRedirectField.DisplayName: S H P C Right_ Heat Redirect Field
+				// PlagueCell_Fog.DisplayName: Plague Cell_ Fog
+				// PlagueCell_Nuke.DisplayName: Plague Cell_ Nuke
+				// SHPC_ChargeSpiralInv.DisplayName: S H P C_ Charge Spiral Inv
+				// StellarVortexShard.DisplayName: Stellar Vortex Shard
+				// AshesofAnn_CataclysmFist.DisplayName: Ashesof Ann_ Cataclysm Fist
+				// AshesofAnn_CatastropheSlash.DisplayName: Ashesof Ann_ Catastrophe Slash
+				// AshesofAnn_VerdictHunter.DisplayName: Ashesof Ann_ Verdict Hunter
+				// AshesofAnn_VerdictPiercer.DisplayName: Ashesof Ann_ Verdict Piercer
+			}
+
+			// SHPCRight_HeatUI.DisplayName: S H P C Right_ Heat U I
+			// ProjectilePossessionUI.DisplayName: SHPC Vacuum Meter
+
+			A_Dev: {
+				// SHPCBookPanel.DisplayName: SHPC Material Manual Panel
+				// SHPCBookRightPanel.DisplayName: SHPC Heat Manual Panel
+			}
+		}
+
+		Cooldowns: {
+			// SHPC_EX: Super Laser
+			// SHPC_BarrierDurability: Matrix Charging Barrier Durability
+			// SHPC_BarrierRecharge: Matrix Charging Barrier Recharge
+		}
+
+		// Conditions.HoldingSHPC: While holding SHPC
+	}
+}

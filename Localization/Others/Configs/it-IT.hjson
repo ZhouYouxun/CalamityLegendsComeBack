@@ -1,0 +1,79 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Configs: {
+			CalamityLegendsComeBackConfig: {
+				// DisplayName: Calamity Legends Come Back Settings
+				// Headers.RecipeSettings: Improved Experience
+
+				AllowMassMaterialRecipes: {
+					// Label: "[i:CrystalBall] Allow Bulk Material Crafting"
+					// Tooltip: Allows many in-game raw materials to be crafted quickly
+				}
+
+				AllowBossRelicWeaponRecipes: {
+					// Label: "[i:CalamityMod/ProvidenceRelic] Allow Boss Relic Weapon Exchanges"
+					// Tooltip: Allows Master or Revenge Mode relics to be exchanged directly for weapons
+				}
+
+				AllowOtherRecipes: {
+					// Label: "[i:Toolbox] Allow Extra QOL Recipes"
+					// Tooltip: Enables many recipes that improve gameplay flow
+				}
+
+				AllowBossSummonShop: {
+					// Label: "[i:GuideVoodooDoll] Allow Zoologist Boss Summons"
+					// Tooltip: The Zoologist sells Boss summons at the appropriate progression; a few recipes that would return pre-kill materials are temporarily disabled.
+				}
+
+				AllowMechanicDraedonShop: {
+					// Label: "[i:CalamityMod/CodebreakerBase] Allow Mechanic Draedon Equipment"
+					// Tooltip: The Mechanic sells Draedon Power Cells and every tier of Codebreaker upgrade at the appropriate progression; schematics must still be found yourself.
+				}
+
+				LightningDecryption: {
+					// Label: "[i:CalamityMod/CodebreakerBase] Rapid Decryption and Charging"
+					// Tooltip: Codebreaker schematics and charging-station lab-seeking mechanisms complete within one second while retaining their normal power-cell costs
+				}
+			}
+
+			CLCBClientConfig: {
+				// DisplayName: Calamity Legends Come Back Client Settings
+
+				Headers: {
+					// Interface: Interface
+					// Readability: Readability
+				}
+
+				ShowMatrixBossBar: {
+					// Label: "[i:CalamityMod/DraedonsHeart] Custom Health Bar Display"
+					// Tooltip: Displays a new custom health bar at the top of the screen
+				}
+
+				LockAmmoWheelToScreenCenter: {
+					// Label: "[i:CalamityMod/PlasmaDriveCore] Lock SHPC Ammo Wheel to Screen Center"
+					// Tooltip: When enabled, holding the Legendary Weapon Form Switch key opens the ammo wheel at the center of the screen.
+				}
+
+				ShowModListIconShine: {
+					// Label: "[i:GoldenCandelabra] Icon Glow Effect"
+					// Tooltip: Displays a diagonal shine effect over this mod's icon in the Mods list.
+				}
+
+				ShowInternalEnglishNames: {
+					// Label: "[i:Book] Show Internal English Names"
+					// Tooltip: Enabled by default and shows an item's internal name while viewing it but has no effect when the game language is English
+				}
+
+				ShowHostileProjectileOutlines: {
+					// Label: "[i:RainbowGun] Show Hostile Projectile Outlines"
+					// Tooltip: Makes enemy projectile borders easier to see
+				}
+
+				HostileProjectileOutlineWidth: {
+					// Label: "[i:RainbowGun] Hostile Projectile Outline Width"
+					// Tooltip: Levels 1 through 4 correspond to 1 through 4 pixels; only applies when Show Hostile Projectile Outlines is enabled.
+				}
+			}
+		}
+	}
+}

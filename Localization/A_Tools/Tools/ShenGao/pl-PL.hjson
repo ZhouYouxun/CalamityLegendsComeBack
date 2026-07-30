@@ -1,0 +1,12 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				ShenGao: {
+					// DisplayName: Divine Pickaxe
+					// Tooltip: A pickaxe that improves as the game progresses
+				}
+			}
+		}
+	}
+}

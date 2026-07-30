@@ -1,0 +1,85 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				HyperdimensionalMatrixCore: {
+					// DisplayName: Hyperdimensional Matrix Core
+					/* Tooltip:
+						'''
+						[c/7EB8FF:Summons a Matrix Core; every minion slot it consumes grants 25% damage to all attacks]
+						[c/FF9040:Always locks onto the nearest enemy]
+						[c/5880C0:Fortifies your body · reduces incoming damage · regenerates life · boosts movement speed · reduces aggro · extends flight time]
+						[c/FF3030:Overclocks all attack modules when health is critical]
+						[c/AA88FF:The Matrix Core completely occupies your minion slots]
+						[c/787888:"Together, a dragon; apart, a sky full of stars"]
+						[c/9DA8B8:Hold Shift to view attack modes]
+						''' */
+					/* AttackDetails:
+						'''
+						[c/7EB8FF:Data Matrix: Unfolds a data panel and launches tracking data lances at the target.]
+						[c/FF9040:Geometry Burst: Forms a geometric body, then erupts with sharp shards from its vertices.]
+						[c/FFEC40:Five-Element Orbiting Orbs: Five elemental energy orbs orbit and scorch the target.]
+						[c/5880C0:Fusion Explosion: Gathers energy before detonating it at the target.]
+						[c/AA88FF:Space Warp: Continuously warps and damages large enemies.]
+						[c/9DA8B8:Heptagram Inscription: Inscribes a seven-pointed sigil that fires shards and a tracking data lance.]
+						[c/B4FFC8:Möbius Data Ring: Projects a 3D Möbius strip; data flows along the twisted surface before firing tracking lances from sample points.]
+						[c/78FF50:Fractal Recursion Tree: Grows an L-System fractal tree toward the target, 4 layers deep; all leaf nodes fire shards simultaneously.]
+						[c/FFA0C8:Voronoi Shatter: Generates a Delaunay triangulation mesh around the target, shattering cell by cell before all seed points fire data lances.]
+						[c/FFDC64:Torus Knot Bind: Projects a (2,3) trefoil torus knot that constricts around the target, dealing continuous warp damage.]
+						[c/C878FF:Lorenz Attractor Swarm: Generates three butterfly-shaped Lorenz attractor trajectories; data streams scorch the target along the chaotic orbits.]
+						[c/FFC83C:Fibonacci Spiral Lance: Unfurls a golden spiral with 18 nodes distributed by the golden angle; nodes light up sequentially before firing tracking lances in unison.]
+						[c/64B4FF:Penrose Tiling Collapse: Lays an aperiodic Penrose rhombus tiling pattern; rhombuses collapse inward before detonating a fusion explosion.]
+						[c/FF8080:Paraboloid Warp: Unfolds a rotating hyperbolic paraboloid saddle grid; fires crossing data lances from its 8 boundary vertices.]
+						[c/96C8FF:Clifford Torus circulars: Builds a 4D stereographic projection of a Clifford torus's Hopf circles; periodically launches 6 tracking lances.]
+						[c/C8FF64:Superformula Morph: Projects a Gielis Superformula极坐标 loop morphing its symmetry dynamically; periodically scatters shards from curvature peaks.]
+						[c/FF64FF:Sierpinski Collapse: Constructs a recursive subdivision Sierpinski triangle; fragment grid collapses inward before triggering a fusion explosion.]
+						[c/FF3030:Persistent Data Field: Continuously erodes enemies that approach the core.]
+						[c/FFFFFF:Compile Storm: Activates all major attacks at once, then detonates a data singularity.]
+						''' */
+				}
+			}
+		}
+
+		Buffs: {
+			HyperdimensionalMatrixCoreBuff: {
+				// DisplayName: Matrix Protection Field
+				// Description: Fortifies body · reduces damage · regenerates life · boosts speed · reduces aggro; the core recompiles the battlefield
+			}
+
+			YharonSoulFragment_Buff: {
+			}
+
+			SHPCRight_DeBuff: {
+			}
+		}
+
+		Projectiles: {
+			HyperdimensionalMatrixCore: {
+				// HyperdimensionalMatrixCoreProjectile.DisplayName: Hyperdimensional Matrix Core
+				// MatrixDataGridPanel.DisplayName: Data Matrix Panel
+				// MatrixGridCell.DisplayName: Data Lance
+				// MatrixGeoBurst.DisplayName: Geometry Burst
+				// MatrixGeoShard.DisplayName: Geometry Edge Shard
+				// MatrixShaderOrb.DisplayName: Geometry Satellite
+				// MatrixFusionController.DisplayName: Fusion Convergence
+				// MatrixFusionExplosion.DisplayName: Fusion Collapse
+				// MatrixSpaceWarpField.DisplayName: Space Warp Field
+				// MatrixDataAura.DisplayName: Data Field Aura
+				// MatrixRunicStamp.DisplayName: Hyperdimensional Inscription
+				// MatrixCompileStorm.DisplayName: Compile Storm
+				// MatrixSingularity.DisplayName: Data Singularity
+				// MatrixMobiusRing.DisplayName: Möbius Data Ring
+				// MatrixFractalTree.DisplayName: Fractal Recursion Tree
+				// MatrixVoronoiShatter.DisplayName: Voronoi Shatter
+				// MatrixTorusKnot.DisplayName: Torus Knot Bind
+				// MatrixLorenzSwarm.DisplayName: Lorenz Attractor Swarm
+				// MatrixFibonacciSpiral.DisplayName: Fibonacci Spiral Lance
+				// MatrixPenroseTiling.DisplayName: Penrose Tiling Collapse
+				// MatrixParaboloidWarp.DisplayName: Paraboloid Warp
+				// MatrixCliffordTorus.DisplayName: Clifford Torus Bind
+				// MatrixSuperformulaMorph.DisplayName: Superformula Morph
+				// MatrixSierpinskiCollapse.DisplayName: Sierpinski Gasket Collapse
+			}
+		}
+	}
+}
