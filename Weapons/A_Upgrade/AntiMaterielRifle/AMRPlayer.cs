@@ -128,7 +128,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
                 if (!hit.Crit)
                     return;
 
-                hit.Damage = (int)Math.Min((long)hit.Damage * 3L, int.MaxValue);
+                hit.Damage = (int)Math.Min((long)hit.Damage * 2L, int.MaxValue);
                 Player.ClearBuff(ModContent.BuffType<AMRDeadlyStrikeBuff>());
             };
         }
