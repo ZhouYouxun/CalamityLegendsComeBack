@@ -89,12 +89,18 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.BlackHawkRemote
                 return;
             }
 
-            owner.AddBuff(ModContent.BuffType<LegendaryBlackHawkBuff>(), 3600);
-            Projectile.timeLeft = 2;
-
             BlackHawkCommandPlayer commandPlayer = owner.GetModPlayer<BlackHawkCommandPlayer>();
+            if (!commandPlayer.BlackHawkSquadronActive)
+            {
+                Projectile.Kill();
+                return;
+            }
+
+            Projectile.timeLeft = 2;
             if (Projectile.localAI[0] == 0f)
                 Initialize(owner, commandPlayer);
+
+            UpdateFrameAnimation();
 
             if (sortieCooldown > 0)
                 sortieCooldown--;
@@ -134,9 +140,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.BlackHawkRemote
                     break;
             }
 
-            Projectile.rotation = Projectile.velocity.LengthSquared() > 0.04f
-                ? Projectile.velocity.ToRotation() + MathHelper.Pi
-                : Projectile.rotation;
+            if (Projectile.velocity.LengthSquared() > 0.04f)
+            {
+                float desiredRotation = Projectile.velocity.ToRotation() + MathHelper.Pi;
+                float turnRate = MathHelper.Lerp(0.07f, 0.20f, MathHelper.Clamp(Projectile.velocity.Length() / 42f, 0f, 1f));
+                Projectile.rotation = Projectile.rotation.AngleTowards(desiredRotation, turnRate);
+            }
             EmitFlightVFX();
         }
 
@@ -188,7 +197,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.BlackHawkRemote
         {
             StateTimer++;
             targetIndex = -1;
-            MoveToward(FormationPosition(owner, CruiseRadius), 16f, 22f);
+            MoveToward(FormationPosition(owner, CruiseRadius), 18f, 15f);
 
             if (sortieCooldown > 0 || Main.myPlayer != Projectile.owner)
                 return;
@@ -244,19 +253,24 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.BlackHawkRemote
                 return;
             }
 
-            float speed = StateTimer < 12f ? 18f : StateTimer < 61f ? 10.5f : 27f;
-            Projectile.velocity = Vector2.Lerp(Projectile.velocity, attackDirection * speed, 0.22f);
+            float passSlowdown = MathHelper.SmoothStep(0f, 1f, MathHelper.Clamp(StateTimer / 18f, 0f, 1f));
+            float speed = MathHelper.Lerp(19f, 12.5f, passSlowdown);
+            Projectile.velocity = Vector2.Lerp(Projectile.velocity, attackDirection * speed, 0.20f);
             TryReleaseWeapon(owner);
 
-            if (StateTimer >= 80f)
+            bool sortieComplete = payloadReleased && (loadedWeapon == BlackHawkLoadout.MachineGun ? StateTimer >= 58f : StateTimer >= 42f);
+            if (sortieComplete || StateTimer >= 72f)
                 BeginEgress(payloadReleased);
         }
 
         private void UpdateEgress(Player owner)
         {
             StateTimer++;
-            Projectile.velocity = Vector2.Lerp(Projectile.velocity, attackDirection * 28f, 0.18f);
-            if (StateTimer < 48f)
+            float accelerationProgress = MathHelper.SmoothStep(0f, 1f, MathHelper.Clamp(StateTimer / 22f, 0f, 1f));
+            float egressSpeed = MathHelper.Lerp(18f, 43f, accelerationProgress);
+            float steeringStrength = MathHelper.Lerp(0.12f, 0.30f, accelerationProgress);
+            Projectile.velocity = Vector2.Lerp(Projectile.velocity, attackDirection * egressSpeed, steeringStrength);
+            if (StateTimer < 38f)
                 return;
 
             if (ammoRemaining <= 0 || returnAfterSortie)
@@ -448,6 +462,20 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.BlackHawkRemote
             Projectile.velocity = (Projectile.velocity * (inertia - 1f) + desiredVelocity) / inertia;
         }
 
+        private void UpdateFrameAnimation()
+        {
+            int frameInterval = State is BlackHawkFlightState.AttackRun or BlackHawkFlightState.Egress
+                ? 2
+                : Projectile.velocity.LengthSquared() > 100f ? 3 : 5;
+
+            Projectile.frameCounter++;
+            if (Projectile.frameCounter < frameInterval)
+                return;
+
+            Projectile.frameCounter = 0;
+            Projectile.frame = (Projectile.frame + 1) % Main.projFrames[Type];
+        }
+
         private Vector2 FormationPosition(Player owner, float radius)
         {
             int count = 0;
@@ -463,8 +491,15 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.BlackHawkRemote
             }
 
             count = Math.Max(1, count);
-            float angle = Main.GameUpdateCount * 0.011f + MathHelper.TwoPi * index / count;
-            return owner.Center + angle.ToRotationVector2() * radius;
+            float phase = Projectile.identity * 0.618034f + MathHelper.TwoPi * index / count;
+            float time = Main.GameUpdateCount;
+            float angle = time * (0.0155f + 0.0008f * count) + phase;
+            float breathingRadius = radius + (float)Math.Sin(time * 0.029f + phase * 1.7f) * 18f;
+            Vector2 ellipticalOrbit = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle) * 0.62f) * breathingRadius;
+            Vector2 weave = new Vector2(
+                (float)Math.Sin(time * 0.047f + phase) * 11f,
+                (float)Math.Cos(time * 0.071f + phase * 1.3f) * 8f);
+            return owner.Center + owner.velocity * 5f + ellipticalOrbit + weave;
         }
 
         private bool TryGetTarget(out NPC target)
@@ -728,9 +763,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.BlackHawkRemote
         {
             Texture2D texture = TextureAssets.Projectile[Type].Value;
             Texture2D glow = ModContent.Request<Texture2D>("CalamityMod/Projectiles/Summon/BlackHawkGlow").Value;
-            int frameIndex = Math.Clamp((int)(Projectile.velocity.Length() / 5.2f), 0, Main.projFrames[Type] - 1);
-            Rectangle frame = texture.Frame(1, Main.projFrames[Type], 0, frameIndex);
-            Rectangle glowFrame = glow.Frame(1, Main.projFrames[Type], 0, frameIndex);
+            Rectangle frame = texture.Frame(1, Main.projFrames[Type], 0, Projectile.frame);
+            Rectangle glowFrame = glow.Frame(1, Main.projFrames[Type], 0, Projectile.frame);
 
             if (State is BlackHawkFlightState.AttackRun or BlackHawkFlightState.Egress)
             {

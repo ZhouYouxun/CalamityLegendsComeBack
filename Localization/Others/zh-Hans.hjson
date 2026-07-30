@@ -111,18 +111,18 @@ Mods: {
 				}
 
 				Destroyer2041Summoner: {
-					DisplayName: 毁灭者2041召唤物
-					// Tooltip: ""
+					DisplayName: 可疑的不得了的机械蠕虫
+					Tooltip: 召唤2041版本的毁灭者
 				}
 
 				Prime2041Summoner: {
-					DisplayName: 机械毁灭者2041召唤物
-					// Tooltip: ""
+					DisplayName: 可疑的不得了的机械骷髅头
+					Tooltip: 召唤2041版本的机械骷髅王
 				}
 
 				Twins2041Summoner: {
-					DisplayName: 双子魔眼2041召唤物
-					// Tooltip: ""
+					DisplayName: 可疑的不得了的机械晶状体
+					Tooltip: 召唤2041版本的双子魔眼
 				}
 
 				QuickStartBox: {

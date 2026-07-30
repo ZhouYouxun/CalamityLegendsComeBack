@@ -1,4 +1,5 @@
 using System;
+using CalamityLegendsComeBack.Weapons.YharimsCrystal;
 using CalamityMod;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -12,6 +13,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
     internal sealed class AMRAimScope : ModProjectile, ILocalizedModType
     {
         private const float MaxSightAngle = MathHelper.Pi / 3f;
+        private const float PreviewLaserStartCharge = 0.5f;
+        private const float PreviewLaserFullCharge = 0.75f;
+        private const float PreviewLaserMaxLength = 2600f;
         private int holdoutIdentity = -1;
 
         public new string LocalizationCategory => "Projectiles.AntiMaterielRifle";
@@ -49,7 +53,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
             }
 
             Projectile.Center = holdout.GunTipPosition;
-            Projectile.rotation = holdout.AimDirection.ToRotation();
+            Projectile.velocity = holdout.AimDirection;
+            Projectile.rotation = Projectile.velocity.ToRotation();
             Projectile.localAI[0] = holdout.ScopeChargeCompletion;
             Projectile.timeLeft = 2;
 
@@ -102,6 +107,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
             Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition, null, Color.White,
                 Projectile.rotation, texture.Size() * 0.5f, sightsSize, SpriteEffects.None, 0f);
 
+            DrawPreviewLaser(charge);
+
             Effect lineEffect = Filters.Scene["CalamityMod:PixelatedSightLine"].GetShader().Shader;
             lineEffect.Parameters["sampleTexture2"].SetValue(
                 ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/GreyscaleGradients/CertifiedCrustyNoise").Value);
@@ -132,6 +139,26 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
             Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, Main.DefaultSamplerState,
                 DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
             return false;
+        }
+
+        // 仅作为预瞄显示：沿用水晶 C 类连续激光的绘制，不参与任何碰撞或伤害计算。
+        private void DrawPreviewLaser(float charge)
+        {
+            float visibility = Utils.GetLerpValue(PreviewLaserStartCharge, PreviewLaserFullCharge, charge, true);
+            if (visibility <= 0f)
+                return;
+
+            float[] samples = new float[3];
+            Collision.LaserScan(Projectile.Center, Projectile.velocity, 1f, PreviewLaserMaxLength, samples);
+            float beamLength = 0f;
+            foreach (float sample in samples)
+                beamLength += sample;
+            beamLength /= samples.Length;
+
+            // 75% 蓄力时达到完整可见度；保留较细的宽度，避免压过原有两条 Scope 辅助线。
+            float beamScale = MathHelper.Lerp(0.08f, 0.34f, visibility);
+            Color beamColor = Color.Lerp(new Color(255, 125, 50), new Color(255, 232, 130), visibility);
+            YC_YharimBeamVisuals.DrawYharimBeam(Projectile, beamLength, beamScale, visibility, beamColor);
         }
     }
 }

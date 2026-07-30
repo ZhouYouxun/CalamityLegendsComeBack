@@ -446,23 +446,36 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
 
             int maxHealAmount = Utils.Clamp((int)MathF.Round(StoredHealAmount), 1, 999);
             int healAmount = Math.Min(maxHealAmount, Math.Max(0, target.statLifeMax2 - target.statLife));
+            BFRecoveryShieldPlayer shieldPlayer = target.GetModPlayer<BFRecoveryShieldPlayer>();
+            bool restoredHealth = false;
+            bool restoredShield = false;
+
+            // Recovery is deliberately mutually exclusive: missing life always takes priority.
+            // Only a fully healthy player can turn a returning light into shield durability.
             if (healAmount > 0)
             {
                 target.statLife += healAmount;
-                if (target.statLife > target.statLifeMax2)
-                    target.statLife = target.statLifeMax2;
+                target.HealEffect(healAmount, true);
+                restoredHealth = true;
             }
 
-            target.HealEffect(maxHealAmount, true);
+            // A shield with no capacity has not been created yet and can be charged. Once it
+            // reaches its capacity, the light remains visual-only and cannot waste healing or
+            // refresh shield durability.
+            if (!restoredHealth && (shieldPlayer.ShieldMaxHitPoints <= 0f || shieldPlayer.ShieldHitPoints < shieldPlayer.ShieldMaxHitPoints))
+            {
+                float shieldBefore = shieldPlayer.ShieldHitPoints;
+                shieldPlayer.AddShieldHitPoints(maxHealAmount);
+                restoredShield = shieldPlayer.ShieldHitPoints > shieldBefore;
+            }
 
-            target.GetModPlayer<BFRecoveryShieldPlayer>().AddShieldHitPoints(maxHealAmount);
-            if (Main.netMode == NetmodeID.Server)
+            if (restoredShield && Main.netMode == NetmodeID.Server)
                 BFRecoveryShieldPackets.SendState(target, target.whoAmI);
 
             if (!FromChargedRelease)
                 target.GetModPlayer<BFRecoveryEcologyPlayer>().AddRecoveryLeaf(BFRecoveryLeftBalance.GetStats().LeafTimePerFlash);
 
-            healedTarget = true;
+            healedTarget = restoredHealth || restoredShield;
             SpawnTransferBurst(target.Center, 1.15f, true);
             SoundEngine.PlaySound(BlossomFluxSounds.RightRecoveryTransfer, target.Center);
             Projectile.Kill();

@@ -187,6 +187,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.BlackHawkRemote
         {
             if (player.ownedProjectileCounts[ModContent.ProjectileType<LegendaryBlackHawkFighter>()] > 0)
             {
+                player.GetModPlayer<BlackHawkCommandPlayer>().BlackHawkSquadronActive = true;
                 player.buffTime[buffIndex] = 18000;
                 return;
             }
@@ -200,10 +201,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.BlackHawkRemote
     {
         internal BlackHawkLoadout Command { get; private set; } = BlackHawkLoadout.Auto;
         internal int CommandRevision { get; private set; }
+        internal bool BlackHawkSquadronActive { get; set; }
 
         private int radioCooldown;
         private ulong nextAnyDispatchFrame;
         private readonly ulong[] nextTargetDispatchFrames = new ulong[Main.maxNPCs];
+
+        public override void ResetEffects() => BlackHawkSquadronActive = false;
 
         public override void PostUpdate()
         {
