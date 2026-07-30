@@ -127,10 +127,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Pisces.RightClick
 
             PiscesVisuals.BeginAdditive(Main.spriteBatch);
 
-            // 外→内：极低透明度椭圆 Bloom（不比主体粗）
+            // 速射光束比终结双束更轻：两条实体光带 + 稀疏辅光，不抢走满蓄释放的视觉位阶。
             DrawBloomAlongBeam();
-            // 金白薄边（很薄、低亮度）
-            DrawBeamWithColor(PiscesVisuals.GoldWhite with { A = 0 } * 0.5f, Projectile.scale * 1.12f);
+            if (!IsRapidBeam)
+                DrawBeamWithColor(PiscesVisuals.GoldWhite with { A = 0 } * 0.5f, Projectile.scale * 1.12f);
             // 青蓝主光带
             DrawBeamWithColor(PiscesVisuals.AuroraCyan with { A = 0 } * 0.95f, Projectile.scale);
             // 白色细核心
@@ -145,12 +145,13 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Pisces.RightClick
             Texture2D bloom = PiscesVisuals.SmallBloom.Value;
             Vector2 origin = bloom.Size() * 0.5f;
             float len = LaserLength;
-            int steps = Math.Max(1, (int)(len / 60f));
+            int steps = Math.Max(1, (int)(len / (IsRapidBeam ? 155f : 60f)));
+            float opacity = IsRapidBeam ? 0.10f : 0.16f;
             for (int i = 0; i <= steps; i++)
             {
                 Vector2 pos = Projectile.Center + Projectile.velocity * (len * i / steps) - Main.screenPosition;
-                Main.spriteBatch.Draw(bloom, pos, null, PiscesVisuals.AuroraCyan with { A = 0 } * 0.16f, Projectile.rotation,
-                    origin, new Vector2(Projectile.scale * 1.8f, Projectile.scale * 1.8f), SpriteEffects.None, 0f);
+                Main.spriteBatch.Draw(bloom, pos, null, PiscesVisuals.AuroraCyan with { A = 0 } * opacity, Projectile.rotation,
+                    origin, new Vector2(Projectile.scale * (IsRapidBeam ? 1.25f : 1.8f), Projectile.scale * (IsRapidBeam ? 1.25f : 1.8f)), SpriteEffects.None, 0f);
             }
         }
     }

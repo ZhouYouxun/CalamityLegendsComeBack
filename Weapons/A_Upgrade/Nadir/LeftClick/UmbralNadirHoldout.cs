@@ -184,14 +184,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.LeftClick
         {
             if (stage < 2)
             {
-                // 领刃月波（一次，SwingCompletion ~0.30）
+                // 前两段也射出与冲刺段相同的贯穿光矛；SlashWave 文件保留，但不再由连招调用。
                 if (!waveSpawned && SwingCompletion >= 0.30f)
                 {
                     waveSpawned = true;
                     Vector2 dir = (-angle).SafeNormalize(Vector2.UnitX * player.direction);
-                    int waveDamage = Math.Max(1, (int)(Projectile.damage * StageDamageMult * UmbralNadirBalance.SlashWaveDamageMult));
-                    Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, dir * 15f,
-                        ModContent.ProjectileType<UmbralNadirSlashWave>(), waveDamage, Projectile.knockBack, Projectile.owner);
+                    int lanceDamage = Math.Max(1, (int)(Projectile.damage * StageDamageMult * UmbralNadirBalance.VoidLanceDamageMult));
+                    Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, dir * UmbralNadirBalance.VoidLanceFireSpeed,
+                        ModContent.ProjectileType<UmbralNadirVoidLance>(), lanceDamage, Projectile.knockBack, Projectile.owner);
                     SoundEngine.PlaySound(SoundID.Item71 with { Volume = 0.4f, Pitch = 0.25f }, Projectile.Center);
                 }
 

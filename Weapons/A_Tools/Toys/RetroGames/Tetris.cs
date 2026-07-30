@@ -41,7 +41,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.Toys.RetroGames
         CallofDutyStateSync = 21,
         CallofDutyLanguageSelection = 22,
         LeonidConstellationRequest = 23,
-        LeonidConstellationStateSync = 24
+        LeonidConstellationStateSync = 24,
+        BFRecoveryShieldStartRequest = 25,
+        BFRecoveryShieldStateSync = 26,
+        LegendarySupplyBoxClaimRequest = 27
     }
 
     internal enum TetrisInputCommand : byte

@@ -145,21 +145,26 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Pisces.RightClick
         {
             if (Main.dedServ)
                 return;
-            for (int i = 0; i < 8; i++)
+
+            // 联动点由右键完成折射：保持青白、沿原弹道展开，不把左键的硫火颗粒带入光学弹体。
+            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
+            for (int i = 0; i < 6; i++)
             {
-                Dust d = Dust.NewDustPerfect(Projectile.Center, PiscesVisuals.BrimstoneDust,
-                    Main.rand.NextVector2Circular(3f, 3f), 0, PiscesVisuals.BrimLerp(Main.rand.NextFloat()), Main.rand.NextFloat(0.9f, 1.4f));
+                float spread = MathHelper.Lerp(-0.24f, 0.24f, i / 5f);
+                Dust d = Dust.NewDustPerfect(Projectile.Center, PiscesVisuals.HolyDust,
+                    direction.RotatedBy(spread) * Main.rand.NextFloat(2.4f, 4.4f), 55,
+                    PiscesVisuals.AuroraLerp(i / 5f), Main.rand.NextFloat(0.65f, 0.95f));
                 d.noGravity = true;
             }
         }
 
         private void EmitTrailPoints()
         {
-            if (Main.dedServ || !Main.rand.NextBool(Tier == 0 ? 3 : 2))
+            if (Main.dedServ || !Main.rand.NextBool(Tier == 0 ? 4 : 3))
                 return;
             Color c = PiscesVisuals.AuroraLerp(Main.rand.NextFloat(0.4f, 1f));
             Dust d = Dust.NewDustPerfect(Projectile.Center - Projectile.velocity * 0.5f, PiscesVisuals.HolyDust,
-                -Projectile.velocity * 0.05f, 60, c, Main.rand.NextFloat(0.7f, 1.1f) * Projectile.scale);
+                -Projectile.velocity * 0.05f, 60, c, Main.rand.NextFloat(0.6f, 0.9f) * Projectile.scale);
             d.noGravity = true;
         }
 
@@ -211,37 +216,43 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Pisces.RightClick
                 return false;
             PiscesVisuals.BeginAdditive(Main.spriteBatch);
 
-            // 干净细尾（少量稳定光点）
-            for (int i = 1; i < ProjectileID.Sets.TrailCacheLength[Type]; i++)
+            // 高频弹只保留三段稀疏尾点，避免连续 Bloom 把飞行轨迹涂成光带。
+            for (int i = 2; i < ProjectileID.Sets.TrailCacheLength[Type]; i += 2)
             {
                 Vector2 pos = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
                 if (pos == Projectile.Size * 0.5f - Main.screenPosition)
                     continue;
                 float fade = 1f - i / (float)ProjectileID.Sets.TrailCacheLength[Type];
-                PiscesVisuals.DrawBloom(Main.spriteBatch, pos + Main.screenPosition, 0.05f * Projectile.scale * fade,
-                    PiscesVisuals.AuroraCyan, 0.5f * fade);
+                PiscesVisuals.DrawBloom(Main.spriteBatch, pos + Main.screenPosition, 0.035f * Projectile.scale * fade,
+                    PiscesVisuals.AuroraCyan, 0.35f * fade);
             }
 
             Vector2 center = Projectile.Center;
-            float tierGlow = 0.6f + Tier * 0.2f;
-            // 极光主带（青蓝）+ 白核 + 金白薄边
-            PiscesVisuals.DrawEnergyOrb(Main.spriteBatch, center, 20f * Projectile.scale, PiscesVisuals.AuroraCyan, tierGlow, new Vector2(1f, 1f));
-
-            // III 级重弹使用本地 UltimaBolt 图形作“被压缩的极光箭核”。
-            // 原图纵向，因此沿当前飞行角再补 Pi/2；只给最高级，不污染 I/II 的小型光弹身份。
-            if (Tier >= 2)
+            // I 是小白核，II 加稳定折射环；III 才提升为有轮廓的 UltimaBolt 重弹。
+            if (Tier == 0)
             {
+                PiscesVisuals.DrawBloom(Main.spriteBatch, center, 0.055f * Projectile.scale, PiscesVisuals.AuroraCyan, 0.45f);
+                PiscesVisuals.DrawBloom(Main.spriteBatch, center, 0.028f * Projectile.scale, PiscesVisuals.AuroraWhite, 0.85f);
+            }
+            else if (Tier == 1)
+            {
+                PiscesVisuals.DrawBloom(Main.spriteBatch, center, 0.07f * Projectile.scale, PiscesVisuals.AuroraCyan, 0.5f);
+                PiscesVisuals.DrawBloom(Main.spriteBatch, center, 0.03f * Projectile.scale, PiscesVisuals.AuroraWhite, 0.9f);
+                PiscesVisuals.DrawRing(Main.spriteBatch, center, 11f * Projectile.scale, Main.GlobalTimeWrappedHourly * 2.4f,
+                    PiscesVisuals.AuroraCyan, 0.32f);
+            }
+            else
+            {
+                PiscesVisuals.DrawBloom(Main.spriteBatch, center, 0.10f * Projectile.scale, PiscesVisuals.AuroraCyan, 0.48f);
                 Texture2D ultimaBolt = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/Calamity/RangePROJ/UltimaBolt").Value;
                 Main.EntitySpriteDraw(ultimaBolt, center - Main.screenPosition, null,
+                    PiscesVisuals.AuroraCyan with { A = 0 } * 0.55f, Projectile.rotation + MathHelper.PiOver2,
+                    ultimaBolt.Size() * 0.5f, Projectile.scale * 0.92f, SpriteEffects.None, 0f);
+                Main.EntitySpriteDraw(ultimaBolt, center - Main.screenPosition, null,
                     PiscesVisuals.AuroraWhite with { A = 0 }, Projectile.rotation + MathHelper.PiOver2,
-                    ultimaBolt.Size() * 0.5f, Projectile.scale * 0.82f, SpriteEffects.None, 0f);
+                    ultimaBolt.Size() * 0.5f, Projectile.scale * 0.74f, SpriteEffects.None, 0f);
+                PiscesVisuals.DrawBloom(Main.spriteBatch, center, 0.03f * Projectile.scale, PiscesVisuals.AuroraWhite, 0.9f);
             }
-            PiscesVisuals.DrawBloom(Main.spriteBatch, center, 0.09f * Projectile.scale, PiscesVisuals.AuroraWhite, 0.9f);
-            PiscesVisuals.DrawBloom(Main.spriteBatch, center, 0.16f * Projectile.scale, PiscesVisuals.GoldWhite, 0.3f);
-
-            // II+ 稳定极光环
-            if (Tier >= 1)
-                PiscesVisuals.DrawRing(Main.spriteBatch, center, 14f * Projectile.scale, Main.GlobalTimeWrappedHourly * 2.4f, PiscesVisuals.AuroraCyan, 0.5f);
 
             PiscesVisuals.EndAdditive(Main.spriteBatch);
             return false;

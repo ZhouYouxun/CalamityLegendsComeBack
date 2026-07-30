@@ -163,13 +163,6 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
         public override void HoldItem(Player player)
         {
-            // Spawn UI
-            int uiType = ModContent.ProjectileType<LeonidUltimateUI>();
-            if (Main.myPlayer == player.whoAmI && player.ownedProjectileCounts[uiType] == 0)
-            {
-                Projectile.NewProjectile(Item.GetSource_FromThis(), player.Center, Vector2.Zero, uiType, 0, 0f, player.whoAmI);
-            }
-
             // Sync Ultimate energy to CalamityMod's cooldown UI
             if (Main.myPlayer == player.whoAmI)
             {

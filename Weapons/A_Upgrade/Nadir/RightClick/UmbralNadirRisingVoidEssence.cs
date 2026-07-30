@@ -1,3 +1,4 @@
+using System;
 using CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.General;
 using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
@@ -76,15 +77,39 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.RightClick
             {
                 NPC target = Projectile.Center.ClosestNPCAt(500f);
                 if (target != null)
-                {
-                    Vector2 desired = (target.Center - Projectile.Center).SafeNormalize(Vector2.Zero) * 12f;
-                    Projectile.velocity = Vector2.Lerp(Projectile.velocity, desired, 0.08f);
-                }
+                    SpiralHome(target);
             }
 
             if (StartFading)
                 Projectile.alpha += 12;
             Time++;
+        }
+
+        private void SpiralHome(NPC target)
+        {
+            Vector2 toTarget = target.Center - Projectile.Center;
+            float distance = toTarget.Length();
+            float homingCompletion = MathHelper.Clamp((Time - HomingStartTime) / 100f, 0f, 1f);
+
+            // 每颗虚空精华用黄金角错开初相，并按不同方向绕目标收束；靠近时螺旋半径会压缩到命中尺度。
+            float spiralDirection = (Projectile.identity & 1) == 0 ? 1f : -1f;
+            float phase = Projectile.identity * 2.39996323f + spiralDirection * Time * MathHelper.Lerp(0.18f, 0.32f, homingCompletion);
+            float orbitRadius = MathHelper.Clamp(distance * MathHelper.Lerp(0.4f, 0.08f, homingCompletion), 8f, 135f);
+            Vector2 orbitPoint = target.Center + phase.ToRotationVector2() * orbitRadius;
+            float speed = MathHelper.Lerp(12f, 17f, homingCompletion);
+            Vector2 desiredVelocity = (orbitPoint - Projectile.Center).SafeNormalize(toTarget.SafeNormalize(Vector2.UnitY)) * speed;
+
+            Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, MathHelper.Lerp(0.13f, 0.26f, homingCompletion));
+            if (Projectile.velocity.Length() > speed)
+                Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitY) * speed;
+
+            if (Main.rand.NextBool(2))
+            {
+                Vector2 orbitDustPosition = Projectile.Center + phase.ToRotationVector2().RotatedBy(MathHelper.PiOver2) * MathF.Min(orbitRadius, 48f);
+                Dust dust = Dust.NewDustPerfect(orbitDustPosition, ModContent.DustType<VoidDustInverted>(),
+                    -Projectile.velocity * 0.06f, 0, VoidWhite, Main.rand.NextFloat(0.5f, 0.82f));
+                dust.noGravity = true;
+            }
         }
 
         public override bool PreDraw(ref Color lightColor)

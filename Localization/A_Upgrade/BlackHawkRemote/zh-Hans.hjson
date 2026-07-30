@@ -1,0 +1,70 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				LegendaryBlackHawkRemote: {
+					DisplayName: 黑鹰战术遥控器
+					Tooltip:
+						'''
+						左键部署一架占用 1 个召唤栏位的黑鹰战斗机
+						战斗机会自行寻找直线攻击轴，低速掠袭后高速脱离；挂载耗尽时返航补给
+						按住<right>打开挂载轮盘，指向扇区并松开即可统一安排下一轮装填
+						自主调度会根据威胁、密度、体型、速度和已有区域效果为每架飞机分配挂载
+						鞭子命中会照射目标 4 秒，提高该目标的调度优先级与预测精度
+						'''
+					CurrentLoadout: 当前调度：{0}
+					DetailsHint: "[c/91A9B6:按住 Shift 查看九种挂载]"
+					LoadoutDetails:
+						'''
+						[c/FFD982:机枪扫射] 5 个航次；每次 12 发 0.35 倍伤害曳光弹，处理快速、分散目标
+						[c/FF5C46:双发制导导弹] 4 个航次；左右翼各发射 1 枚 1.40 倍伤害导弹，稳定对单
+						[c/FFAE48:集束炸弹] 3 个航次；沿航线展开 6 枚 0.55 倍伤害子炸弹，清理紧密敌群
+						[c/FF5B26:凝固汽油弹] 3 个航次；0.70 倍主爆并铺设 4 段 3 秒燃烧带
+						[c/70E7FF:液氮弹] 2 个航次；1.10 倍主爆、5 枚冰晶和 2.5 秒冰雾，普通敌人会减速
+						[c/688EFF:电磁脉冲弹] 2 个航次；0.60 倍脉冲并干扰 3.5 秒，Boss 仅提高航空命中精度
+						[c/FFF091:神圣爆破弹] 2 个航次；1.60 倍主爆并扇出 4 枚 0.40 倍圣光碎片
+						[c/9BD64A:脏弹] 1 个航次；2.00 倍主爆并留下 3 个互不重叠的 4 秒污染区
+						[c/FF8042:重型航空炸弹] 1 个航次；延迟引爆 6.80 倍伤害的大型单次冲击波
+						'''
+					LegendaryText: "[c/FFAE4C:一条航线，一套挂载，一次任务]"
+				}
+			}
+		}
+
+		Buffs: {
+			LegendaryBlackHawkBuff: {
+				DisplayName: 黑鹰航空编队
+				Description: 黑鹰战斗机正在执行巡航、出击与补给任务
+			}
+		}
+
+		Projectiles: {
+			BlackHawk: {
+				LegendaryBlackHawkFighter.DisplayName: 黑鹰战斗机
+				BlackHawkLoadoutWheel.DisplayName: 黑鹰挂载轮盘
+				BlackHawkMachineGunRound.DisplayName: 黑鹰机枪弹
+				BlackHawkGuidedMissile.DisplayName: 黑鹰制导导弹
+				BlackHawkClusterShard.DisplayName: 黑鹰集束子弹
+				BlackHawkCryoShard.DisplayName: 黑鹰液氮冰晶
+				BlackHawkHolyShard.DisplayName: 黑鹰圣光碎片
+				BlackHawkPayload.DisplayName: 黑鹰航空挂载
+				BlackHawkCompactBlast.DisplayName: 黑鹰航空爆破
+				BlackHawkPersistentZone.DisplayName: 黑鹰压制区
+			}
+		}
+
+		TheSpecialText: {
+			BlackHawkWheelTitle: 黑鹰挂载调度
+			BlackHawkLoadoutAuto: 自主调度
+			BlackHawkLoadoutMachineGun: 机枪扫射
+			BlackHawkLoadoutGuidedMissiles: 双发制导导弹
+			BlackHawkLoadoutClusterBomb: 集束炸弹
+			BlackHawkLoadoutNapalm: 凝固汽油弹
+			BlackHawkLoadoutCryogenic: 液氮弹
+			BlackHawkLoadoutEMP: 电磁脉冲弹
+			BlackHawkLoadoutHolyPayload: 神圣爆破弹
+			BlackHawkLoadoutDirtyBomb: 脏弹
+			BlackHawkLoadoutHeavyBomb: 重型航空炸弹
+		}
+	}
+}

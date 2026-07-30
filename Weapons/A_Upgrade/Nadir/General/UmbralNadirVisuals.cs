@@ -37,8 +37,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.General
             GeneralParticleHandler.SpawnParticle(new DetailedExplosion(center, Vector2.Zero, Green with { A = 0 },
                 Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.18f, 0.85f * sizeMult, finale ? 28 : 24),
                 false, GeneralDrawLayer.AfterEverything);
-            GeneralParticleHandler.SpawnParticle(new DetailedExplosion(center, Vector2.Zero, Color.Black,
-                Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi), 0.12f, 0.5f * sizeMult, finale ? 26 : 22, false));
+            GeneralParticleHandler.SpawnParticle(new DetailedExplosion(center, Vector2.Zero,
+                UmbralNadirPalette.MeldGreenDeep with { A = 0 }, Vector2.One, Main.rand.NextFloat(MathHelper.TwoPi),
+                0.12f, 0.5f * sizeMult, finale ? 26 : 22));
 
             // 荧光绿事件视界环
             GeneralParticleHandler.SpawnParticle(new CustomPulse(center, Vector2.Zero, Green,
@@ -82,7 +83,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.General
             {
                 Vector2 v = Main.rand.NextVector2Unit() * Main.rand.NextFloat(2f, speed);
                 GeneralParticleHandler.SpawnParticle(new CustomSpark(center, v, "CalamityMod/Particles/GlowSpark2",
-                    false, Main.rand.Next(14, 20), Main.rand.NextFloat(0.05f, 0.08f), Color.Black, new Vector2(0.6f, 1.3f), false));
+                    false, Main.rand.Next(14, 20), Main.rand.NextFloat(0.05f, 0.08f), UmbralNadirPalette.MeldGreenDeep with { A = 0 }, new Vector2(0.6f, 1.3f)));
                 if (Main.rand.NextBool())
                     GeneralParticleHandler.SpawnParticle(new CustomSpark(center, v * 0.8f, "CalamityMod/Particles/GlowSpark",
                         false, Main.rand.Next(12, 18), Main.rand.NextFloat(0.025f, 0.045f), Green, new Vector2(0.6f, 1.3f), true, false),

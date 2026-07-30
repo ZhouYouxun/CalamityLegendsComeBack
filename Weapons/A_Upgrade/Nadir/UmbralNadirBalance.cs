@@ -53,9 +53,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir
         public const int VoidBoltsPerSwing = 5;             // 上挑每次挥砍喷出的散射虚空弹数（劈落再 +1）
         public const float VoidBoltDamageMult = 0.34f;      // 散射虚空弹
         public const float VoidLanceDamageMult = 0.95f;     // 冲刺贯穿的贯穿光矛本体
-        public const int VoidLanceExtraUpdates = 10;        // 11 次/帧，凸显庞大动能冲击
-        public const int VoidLanceTimeLeft = 600;           // 持续（子帧计，约 54 真帧）
-        public const float VoidLanceFireSpeed = 4.6f;       // 每次位移；实际 ≈ ×11
+        public const int VoidLanceExtraUpdates = 12;        // 13 次/帧，进一步压实直线贯穿的运动密度
+        public const int VoidLanceTimeLeft = 600;           // 持续（子帧计，约 46 真帧）
+        public const float VoidLanceFireSpeed = 5.52f;      // 每次位移；绝对初速在原有基础上 +20%
         public const float VoidLanceHitExplosionMult = 0.5f; // 每次命中敌人额外一记中等黑爆的伤害
 
         // ===== 左键命中·短促范围爆炸（相对当前 holdout 实际伤害）=====
@@ -138,7 +138,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir
         public const float SpinRotationSpeed = 0.40f;   // rad/帧
         public const float SpinRadiusMin = 92f;
         public const float SpinRadiusMax = 118f;
-        public const float SpinLineCollision = 160f;
+        public const float SpinLineCollision = 256f; // 原 160px 的有效攻击半径 +60%
         public const int SpinHitCooldown = 13;
 
         // ===== 旧链路保留常量（AbyssRift / VoidEssence 文件仍在工程内，本武器不再引用）=====

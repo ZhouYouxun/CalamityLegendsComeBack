@@ -8,6 +8,7 @@ using CalamityLegendsComeBack.Weapons.A_Tools.Toys.RetroGames;
 using CalamityLegendsComeBack.Weapons.A_Tools.Tools.ArtisanToken;
 using CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty;
 using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core;
+using CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -99,6 +100,15 @@ namespace CalamityLegendsComeBack
                     break;
                 case GamePacketType.LeonidConstellationStateSync:
                     LeonidConstellationPackets.HandleState(reader);
+                    break;
+                case GamePacketType.BFRecoveryShieldStartRequest:
+                    BFRecoveryShieldPackets.HandleStartBurstRequest(whoAmI);
+                    break;
+                case GamePacketType.BFRecoveryShieldStateSync:
+                    BFRecoveryShieldPackets.HandleState(reader);
+                    break;
+                case GamePacketType.LegendarySupplyBoxClaimRequest:
+                    LegendarySupplyBoxPackets.HandleClaimRequest(reader, whoAmI);
                     break;
                 default:
                     TetrisMultiplayerPackets.HandlePacket(packetType, reader, whoAmI);

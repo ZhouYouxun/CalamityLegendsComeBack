@@ -235,7 +235,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Pisces.RightClick
             recoilOffset = Math.Max(recoilOffset, 9f);
             recoilTimer = 5;
             muzzleFlashTimer = 7;
-            SpawnMuzzleBurst(aim, 2);
+            SpawnRapidLaserFlash(aim);
         }
 
         private void FireHolyBeams()
@@ -369,6 +369,22 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Pisces.RightClick
                 Vector2 vel = aim.RotatedByRandom(0.35f) * Main.rand.NextFloat(3f, 8f + tier * 2f);
                 Dust d = Dust.NewDustPerfect(muzzle, PiscesVisuals.HolyDust, vel, 40, band, Main.rand.NextFloat(0.8f, 1.3f));
                 d.noGravity = true;
+            }
+        }
+
+        // 满蓄期间的周期快激光使用短促、定向的四点闪光；它是补拍，不应复用终结技的重型枪口爆发。
+        private void SpawnRapidLaserFlash(Vector2 aim)
+        {
+            if (Main.dedServ)
+                return;
+
+            Vector2 muzzle = GunTipPosition + aim * 4f;
+            for (int i = 0; i < 4; i++)
+            {
+                Vector2 velocity = aim.RotatedByRandom(0.16f) * Main.rand.NextFloat(3.5f, 6f);
+                Dust dust = Dust.NewDustPerfect(muzzle, PiscesVisuals.HolyDust, velocity, 50,
+                    PiscesVisuals.AuroraWhite, Main.rand.NextFloat(0.65f, 0.9f));
+                dust.noGravity = true;
             }
         }
 

@@ -32,6 +32,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             ShieldHitFlashTimer = 0;
         }
 
+        public override void SyncPlayer(int toWho, int fromWho, bool newPlayer)
+        {
+            if (Main.netMode == Terraria.ID.NetmodeID.Server)
+                BFRecoveryShieldPackets.SendState(Player, toWho, fromWho);
+        }
+
         public override void PostUpdate()
         {
             if (ShieldHitFlashTimer > 0)
@@ -63,13 +69,15 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             }
         }
 
-        public void StartNewShieldBurst(float burstMaxShield)
+        internal void StartNewShieldBurst(float burstMaxShield)
         {
             float maxShield = Math.Max(10f, burstMaxShield);
             ShieldMaxHitPoints = maxShield;
-
-            if (ShieldHitPoints > ShieldMaxHitPoints)
-                ShieldHitPoints = ShieldMaxHitPoints;
+            // A release creates a new shield. Carrying durability from the previous burst made
+            // the displayed capacity and the damage absorber disagree, and could preserve an
+            // old full shield through repeated releases.
+            ShieldHitPoints = 0f;
+            ShieldHitFlashTimer = 0;
         }
 
         public void AddShieldHitPoints(float amount)
@@ -85,7 +93,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
 
         public override void ModifyHurt(ref Player.HurtModifiers modifiers)
         {
-            if (!ShieldActive)
+            // Damage resolution must happen exactly once on the authoritative side. Client-side
+            // subtraction was the source of the intermittent "no damage" and desync reports.
+            if (Main.netMode == Terraria.ID.NetmodeID.MultiplayerClient || !ShieldActive)
                 return;
 
             modifiers.ModifyHurtInfo += ApplyShieldDamage;
@@ -115,6 +125,16 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                     ShieldHitPoints <= 0f ? RoverDrive.BreakSound : RoverDrive.ShieldHurtSound,
                     Player.Center);
             }
+
+            if (Main.netMode == Terraria.ID.NetmodeID.Server)
+                BFRecoveryShieldPackets.SendState(Player, Player.whoAmI);
+        }
+
+        internal void ReceiveState(float hitPoints, float maxHitPoints, int hitFlashTimer)
+        {
+            ShieldMaxHitPoints = Math.Max(0f, maxHitPoints);
+            ShieldHitPoints = MathHelper.Clamp(hitPoints, 0f, ShieldMaxHitPoints);
+            ShieldHitFlashTimer = Math.Max(0, hitFlashTimer);
         }
     }
 }

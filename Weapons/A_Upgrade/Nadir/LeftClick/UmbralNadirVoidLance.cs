@@ -133,7 +133,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.LeftClick
             {
                 int explosionDamage = Math.Max(1, (int)(Projectile.damage * UmbralNadirBalance.VoidLanceHitExplosionMult));
                 Projectile.NewProjectile(Projectile.GetSource_FromThis(), target.Center, Vector2.Zero,
-                    ModContent.ProjectileType<UmbralNadirImpactExplosion>(), explosionDamage, Projectile.knockBack, Projectile.owner, 1f);
+                    ModContent.ProjectileType<UmbralNadirImpactExplosion>(), explosionDamage, Projectile.knockBack, Projectile.owner,
+                    1f, 20f + Projectile.velocity.ToRotation());
             }
         }
 

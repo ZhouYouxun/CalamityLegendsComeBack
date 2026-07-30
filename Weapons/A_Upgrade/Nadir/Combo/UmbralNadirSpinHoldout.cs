@@ -152,7 +152,40 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.Combo
             target.AddBuff(ModContent.BuffType<Voidfrost>(), 90);
             UmbralCorrosionGlobalNPC.AddStacks(target, UmbralNadirBalance.SpinStackPerHit);
             if (Projectile.owner == Main.myPlayer)
+            {
                 Owner.GetModPlayer<UmbralNadirPlayer>().AddCharge(UmbralNadirBalance.ChargePerSpinHit);
+                SpawnSpinHitBurst(target.Center);
+            }
+        }
+
+        private void SpawnSpinHitBurst(Vector2 center)
+        {
+            // 回旋本身沿切线扫过敌人，因此命中特效也沿切线打开成扇面，而不是再叠一团原地闪光。
+            float tangentAngle = spinAngle + spinDir * MathHelper.PiOver2;
+            Vector2 tangent = tangentAngle.ToRotationVector2();
+
+            UmbralNadirVisuals.EventHorizon(center, 0.42f, false);
+            UmbralNadirVisuals.ImplosionDust(center, 0.62f);
+            UmbralNadirVisuals.MeldSparkBurst(center, 10, 6.5f);
+
+            const int rays = 9;
+            for (int i = 0; i < rays; i++)
+            {
+                float ratio = i / (float)(rays - 1);
+                float angle = tangentAngle + MathHelper.Lerp(-0.8f, 0.8f, ratio);
+                Vector2 direction = angle.ToRotationVector2();
+                float speed = MathHelper.Lerp(3.5f, 8.5f, 1f - MathF.Abs(ratio - 0.5f) * 1.35f);
+                Color color = i % 2 == 0 ? UmbralNadirPalette.MeldGreenBright with { A = 0 } : UmbralNadirPalette.MeldGreenDeep with { A = 0 };
+
+                GeneralParticleHandler.SpawnParticle(new GenericBloom(center + direction * 10f, direction * speed, color,
+                    MathHelper.Lerp(0.16f, 0.32f, 1f - MathF.Abs(ratio - 0.5f) * 1.5f), Main.rand.Next(12, 19), false, true),
+                    false, GeneralDrawLayer.AfterEverything);
+            }
+
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(center, tangent * 0.35f, UmbralNadirPalette.MeldGreenBright with { A = 0 },
+                "CalamityMod/Particles/BloomRing", new Vector2(1.45f, 0.7f), tangentAngle, 0.12f, 1.12f, 18),
+                false, GeneralDrawLayer.AfterEverything);
+            UmbralNadirVisuals.ScreenShake(center, 0.65f);
         }
 
         public override bool PreDraw(ref Color lightColor)

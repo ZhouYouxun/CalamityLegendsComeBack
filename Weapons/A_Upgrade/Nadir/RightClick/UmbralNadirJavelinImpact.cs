@@ -45,8 +45,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.RightClick
             Vector2 center = Projectile.Center;
             GeneralParticleHandler.SpawnParticle(new CustomPulse(center, Vector2.Zero, Color.Black,
                 "CalamityMod/Particles/SmallBloom", Vector2.One, DirectionAngle, 0.08f, 0.72f, 28, false));
-            GeneralParticleHandler.SpawnParticle(new DetailedExplosion(center, Vector2.Zero, Color.Black,
-                Vector2.One, DirectionAngle, 0.12f, 0.6f, 24, false));
+            GeneralParticleHandler.SpawnParticle(new DetailedExplosion(center, Vector2.Zero,
+                UmbralNadirPalette.MeldGreenDeep with { A = 0 }, Vector2.One, DirectionAngle, 0.12f, 0.6f, 24));
             GeneralParticleHandler.SpawnParticle(new DetailedExplosion(center, Vector2.Zero, VoidWhite with { A = 0 },
                 Vector2.One, -DirectionAngle, 0.14f, 0.76f, 22), false, GeneralDrawLayer.AfterEverything);
             GeneralParticleHandler.SpawnParticle(new CustomPulse(center, Vector2.Zero, VoidWhite with { A = 0 },
@@ -55,10 +55,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.RightClick
             for (int i = 0; i < 10; i++)
             {
                 Vector2 velocity = Main.rand.NextVector2Unit() * Main.rand.NextFloat(1.5f, 5.5f);
-                Color color = i % 2 == 0 ? Color.Black : VoidWhite with { A = 0 };
+                Color color = i % 2 == 0 ? UmbralNadirPalette.MeldGreenDeep with { A = 0 } : VoidWhite with { A = 0 };
                 GeneralParticleHandler.SpawnParticle(new GenericBloom(center, velocity, color,
-                    Main.rand.NextFloat(0.11f, 0.23f), Main.rand.Next(10, 17), true, false),
-                    i % 2 != 0, GeneralDrawLayer.AfterEverything);
+                    Main.rand.NextFloat(0.11f, 0.23f), Main.rand.Next(10, 17), true),
+                    false, GeneralDrawLayer.AfterEverything);
             }
             UmbralNadirVisuals.ScreenShake(center, 1.8f);
         }
@@ -75,20 +75,36 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.RightClick
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Texture2D ring = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
 
-            Main.EntitySpriteDraw(circularSmear, drawPos, null, Color.Black * (0.64f * opacity), -spin * 0.55f,
-                circularSmear.Size() * 0.5f, new Vector2(0.7f + progress * 0.52f, 0.62f + progress * 0.38f), SpriteEffects.None, 0);
-            Main.EntitySpriteDraw(halfSmear, drawPos, null, VoidWhite with { A = 0 } * (0.46f * opacity), spin,
-                halfSmear.Size() * 0.5f, new Vector2(0.75f + progress * 0.65f, 0.6f + progress * 0.45f), SpriteEffects.None, 0);
-            Main.EntitySpriteDraw(halfSmear, drawPos, null, Color.Black * (0.56f * opacity), spin + MathHelper.Pi,
-                halfSmear.Size() * 0.5f, new Vector2(0.75f + progress * 0.65f, 0.6f + progress * 0.45f), SpriteEffects.None, 0);
-            Main.EntitySpriteDraw(ring, drawPos, null, VoidWhite with { A = 0 } * (0.38f * opacity), -spin * 0.2f,
-                ring.Size() * 0.5f, 0.46f + progress * 0.66f, SpriteEffects.None, 0);
+            // 带发光边缘的贴图必须走加色段：它们的黑色像素不是透明像素，留在 AlphaBlend 会露出黑底。
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState,
+                DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
 
-            Vector2 orbit = spin.ToRotationVector2() * (8f + progress * 18f);
-            Main.EntitySpriteDraw(bloom, drawPos + orbit, null, VoidWhite with { A = 0 } * (0.62f * opacity), 0f,
-                bloom.Size() * 0.5f, 0.14f + progress * 0.16f, SpriteEffects.None, 0);
-            Main.EntitySpriteDraw(bloom, drawPos - orbit, null, Color.Black * (0.78f * opacity), 0f,
-                bloom.Size() * 0.5f, 0.2f + progress * 0.2f, SpriteEffects.None, 0);
+            Color abyssGlow = UmbralNadirPalette.MeldGreenDeep with { A = 0 };
+            Main.EntitySpriteDraw(circularSmear, drawPos, null, abyssGlow * (0.58f * opacity), -spin * 0.55f,
+                circularSmear.Size() * 0.5f, new Vector2(1.05f + progress * 0.92f, 0.86f + progress * 0.68f), SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(ring, drawPos, null, VoidWhite with { A = 0 } * (0.44f * opacity), -spin * 0.2f,
+                ring.Size() * 0.5f, 0.72f + progress * 1.18f, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(ring, drawPos, null, abyssGlow * (0.34f * opacity), spin * 0.34f,
+                ring.Size() * 0.5f, 0.42f + progress * 1.64f, SpriteEffects.None, 0);
+
+            // 五瓣旋臂与等距外推的光点，让命中从一个小圆爆开成有秩序地裂开的深渊印记。
+            const int petals = 5;
+            for (int i = 0; i < petals; i++)
+            {
+                float petalAngle = spin + MathHelper.TwoPi * i / petals;
+                float radius = 18f + progress * 64f + 8f * MathF.Sin(progress * MathHelper.TwoPi + i * 2.4f);
+                Vector2 petalOffset = petalAngle.ToRotationVector2() * radius;
+                Color petalColor = i % 2 == 0 ? VoidWhite with { A = 0 } : abyssGlow;
+                Main.EntitySpriteDraw(halfSmear, drawPos, null, petalColor * (0.42f * opacity), petalAngle,
+                    halfSmear.Size() * 0.5f, new Vector2(0.66f + progress * 0.74f, 0.38f + progress * 0.36f), SpriteEffects.None, 0);
+                Main.EntitySpriteDraw(bloom, drawPos + petalOffset, null, petalColor * (0.52f * opacity), 0f,
+                    bloom.Size() * 0.5f, 0.12f + progress * 0.24f, SpriteEffects.None, 0);
+            }
+
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState,
+                DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
             return false;
         }
     }

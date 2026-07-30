@@ -60,8 +60,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Pisces.LeftClick
                 Projectile.velocity.Y = PiscesBalance.SmallFireballMaxFallSpeed;
 
             Lighting.AddLight(Projectile.Center, 0.25f, 0f, 0f);
-            EmitFireDust(3, 5f, 0.9f, 1.5f, 12);
-            EmitBrimstoneDustWake(2, 5f);
+            // 保持 Dragoon Drizzlefish 的默认火球表现；新增内容只在大火球分裂时介入。
+            EmitFireDust(2, 5f, 0.9f, 1.5f, 8);
             Projectile.rotation = Projectile.velocity.ToRotation();
         }
 
@@ -93,38 +93,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Pisces.LeftClick
                     dust.velocity = Projectile.velocity.RotatedByRandom(0.8f) * Main.rand.NextFloat(0.3f, 1.3f);
                     dust.noGravity = true;
                 }
-            }
-        }
-
-        /// <summary>
-        /// 左键的特效主体：不是泛用 bloom，而是沿飞行方向持续剥落的硫火 Dust。
-        /// 保留 Dragoon Drizzlefish 的红橙喷吐，并加一层黄绿硫黄余烬来强调化学燃烧。
-        /// </summary>
-        protected void EmitBrimstoneDustWake(int count, float lateralSpread)
-        {
-            if (Main.dedServ || Time <= 7)
-                return;
-
-            Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-            Vector2 normal = direction.RotatedBy(MathHelper.PiOver2);
-            for (int i = 0; i < count; i++)
-            {
-                Vector2 offset = normal * Main.rand.NextFloat(-lateralSpread, lateralSpread);
-                Vector2 velocity = -direction * Main.rand.NextFloat(1.2f, 3.8f) + normal * Main.rand.NextFloat(-1.3f, 1.3f);
-                Dust dust = Dust.NewDustPerfect(Projectile.Center + offset - direction * Main.rand.NextFloat(4f, 10f),
-                    PiscesVisuals.BrimstoneDust, velocity, 40, PiscesVisuals.BrimLerp(Main.rand.NextFloat()),
-                    Main.rand.NextFloat(0.75f, 1.3f) * Projectile.scale);
-                dust.noGravity = true;
-                dust.fadeIn = 1.05f;
-            }
-
-            // 硫黄热气不每帧都出，避免烟雾把火球主体盖住。
-            if (Time % 3 == 0)
-            {
-                Dust sulfur = Dust.NewDustPerfect(Projectile.Center + Main.rand.NextVector2Circular(lateralSpread, lateralSpread),
-                    DustID.Smoke, -direction * Main.rand.NextFloat(0.2f, 0.8f) + new Vector2(0f, -0.65f), 110,
-                    PiscesVisuals.SulfurGreen, Main.rand.NextFloat(0.55f, 0.9f) * Projectile.scale);
-                sulfur.noGravity = true;
             }
         }
 
@@ -174,17 +142,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Pisces.LeftClick
                 d.noGravity = true;
             }
 
-            // 终点的主体仍是 Dust：一圈火屑 + 少量硫黄烟，而不是贴图爆炸遮住战场。
-            for (int i = 0; i < Math.Max(4, count / 2); i++)
-            {
-                Vector2 vel = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.5f, 4.5f);
-                Dust ember = Dust.NewDustPerfect(pos, Main.rand.NextBool() ? 183 : 90, vel, 30,
-                    PiscesVisuals.EmberOrange, Main.rand.NextFloat(0.85f, 1.45f));
-                ember.noGravity = true;
-                Dust sulfur = Dust.NewDustPerfect(pos, DustID.Smoke, vel * 0.35f + new Vector2(0f, -0.5f), 120,
-                    PiscesVisuals.SulfurGreen, Main.rand.NextFloat(0.55f, 0.95f));
-                sulfur.noGravity = true;
-            }
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -239,8 +196,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Pisces.LeftClick
             // 大火球主要直飞，带一点点下坠感。
             Projectile.velocity.Y += 0.08f;
             Lighting.AddLight(Projectile.Center, 0.25f, 0f, 0f);
-            EmitFireDust(7, 9f, 1.2f, 1.9f, 22);
-            EmitBrimstoneDustWake(4, 9f);
+            EmitFireDust(5, 9f, 1.2f, 1.9f, 16);
 
             splitTimer--;
             if (splitTimer <= 0)
@@ -269,9 +225,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Pisces.LeftClick
                     ModContent.ProjectileType<PiscesBrimstoneFireballSplit>(), Projectile.damage, Projectile.knockBack, Projectile.owner);
             }
 
-            // 只在大火球分裂时补两种原版火焰语言：
-            // 1) TotalityFire 的小型燃烧余烬（本地改为射手伤害）；
-            // 2) HellbornProj 的高速火花，但缩小、缩寿命，仍是左键群体弹幕的附属而非主角。
+            // 新增层只保留两枚 TotalityFire 余烬：与原版三枚扇形火球错开，
+            // 用清楚的侧翼轮廓丰富爆点，不再叠加会抢走主体的高速火花。
             for (int i = -1; i <= 1; i += 2)
             {
                 Vector2 emberVelocity = Projectile.velocity.RotatedBy(MathHelper.ToRadians(20f) * i) * 0.62f;
@@ -280,14 +235,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Pisces.LeftClick
                     Projectile.knockBack * 0.35f, Projectile.owner);
             }
 
-            int hellborn = Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center,
-                Projectile.velocity * 0.78f, ModContent.ProjectileType<CalamityMod.Projectiles.Ranged.HellbornProj>(),
-                Math.Max(1, (int)(Projectile.damage * 0.55f)), Projectile.knockBack * 0.5f, Projectile.owner);
-            if (Main.projectile.IndexInRange(hellborn))
-            {
-                Main.projectile[hellborn].scale = 0.58f;
-                Main.projectile[hellborn].timeLeft = Math.Min(Main.projectile[hellborn].timeLeft, 100);
-            }
         }
 
         public override bool OnTileCollide(Vector2 oldVelocity)
@@ -332,8 +279,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Pisces.LeftClick
             Projectile.velocity.X *= 0.98f;
             Projectile.velocity.Y += PiscesBalance.SplitFireballGravity;
             Lighting.AddLight(Projectile.Center, 0.25f, 0f, 0f);
-            EmitFireDust(3, 4f, 0.4f, 0.8f, 0);
-            EmitBrimstoneDustWake(2, 4f);
+            EmitFireDust(2, 4f, 0.4f, 0.8f, 0);
             Projectile.rotation += 0.3f * Projectile.direction;
         }
 
@@ -411,15 +357,20 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Pisces.LeftClick
             }
 
             Lighting.AddLight(Projectile.Center, PiscesVisuals.EmberOrange.ToVector3() * 0.35f);
-            if (!Main.dedServ)
+            // 余烬不是连续烟幕：隔帧只留一颗拖后的 Dust，偶尔补一颗上浮硫黄热气。
+            if (!Main.dedServ && time % 2 == 0)
             {
-                for (int i = 0; i < 2; i++)
+                int dustType = time % 4 == 0 ? PiscesVisuals.BrimstoneDust : (Main.rand.NextBool() ? 183 : 90);
+                Dust dust = Dust.NewDustPerfect(Projectile.Center - Projectile.velocity * 0.35f + Main.rand.NextVector2Circular(3f, 3f),
+                    dustType, -Projectile.velocity * Main.rand.NextFloat(0.1f, 0.2f), 35,
+                    PiscesVisuals.BrimLerp(Main.rand.NextFloat()), Main.rand.NextFloat(0.65f, 0.95f));
+                dust.noGravity = true;
+
+                if (time % 6 == 0)
                 {
-                    Dust dust = Dust.NewDustPerfect(Projectile.Center + Main.rand.NextVector2Circular(4f, 4f),
-                        i == 0 ? PiscesVisuals.BrimstoneDust : Main.rand.NextBool() ? 183 : 90,
-                        -Projectile.velocity * Main.rand.NextFloat(0.08f, 0.22f), 35,
-                        PiscesVisuals.BrimLerp(Main.rand.NextFloat()), Main.rand.NextFloat(0.65f, 1.05f));
-                    dust.noGravity = true;
+                    Dust heat = Dust.NewDustPerfect(Projectile.Center, DustID.Smoke, new Vector2(0f, -0.65f), 110,
+                        PiscesVisuals.SulfurGreen, 0.55f);
+                    heat.noGravity = true;
                 }
             }
         }
@@ -431,10 +382,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Pisces.LeftClick
         {
             if (Main.dedServ)
                 return;
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 8; i++)
             {
+                float angle = MathHelper.TwoPi * i / 8f + Main.rand.NextFloat(-0.15f, 0.15f);
                 Dust dust = Dust.NewDustPerfect(Projectile.Center, i % 2 == 0 ? PiscesVisuals.BrimstoneDust : 183,
-                    Main.rand.NextVector2Circular(3f, 3f) + new Vector2(0f, -1f), 30,
+                    angle.ToRotationVector2() * Main.rand.NextFloat(1.8f, 3.2f) + new Vector2(0f, -0.7f), 30,
                     PiscesVisuals.BrimLerp(Main.rand.NextFloat()), Main.rand.NextFloat(0.75f, 1.25f));
                 dust.noGravity = true;
             }

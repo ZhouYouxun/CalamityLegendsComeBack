@@ -438,6 +438,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
 
         private void HealTarget(Player target)
         {
+            // Healing and shield charging must be applied on the server (or in single-player)
+            // only. Every client simulates this visual projectile, so doing it on both sides
+            // could duplicate charge or leave the client and server with different durability.
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+                return;
+
             int maxHealAmount = Utils.Clamp((int)MathF.Round(StoredHealAmount), 1, 999);
             int healAmount = Math.Min(maxHealAmount, Math.Max(0, target.statLifeMax2 - target.statLife));
             if (healAmount > 0)
@@ -450,6 +456,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             target.HealEffect(maxHealAmount, true);
 
             target.GetModPlayer<BFRecoveryShieldPlayer>().AddShieldHitPoints(maxHealAmount);
+            if (Main.netMode == NetmodeID.Server)
+                BFRecoveryShieldPackets.SendState(target, target.whoAmI);
 
             if (!FromChargedRelease)
                 target.GetModPlayer<BFRecoveryEcologyPlayer>().AddRecoveryLeaf(BFRecoveryLeftBalance.GetStats().LeafTimePerFlash);

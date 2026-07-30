@@ -94,7 +94,14 @@ Mods: {
 			Consumables: {
 				LegendarySupplyBox: {
 					DisplayName: Legendary Supply Box
-					Tooltip: Right click to claim the current legendary weapon and its guide disc.
+					Tooltip: Right click to open the legendary weapon showcase and choose one main-line legendary weapon.
+					Title: LEGENDARY WEAPON SHOWCASE
+					BrowseHint: Click any weapon to lock it in and begin the showcase.
+					SpinningHint: Presenting your selected legendary weapon…
+					ClaimHint: Target locked. Confirm to claim your weapon.
+					Footer: CLICK A WEAPON TO CHOOSE // ARROWS TO BROWSE // CLICK OUTSIDE TO CANCEL
+					SpinFooter: SHOWCASE IN PROGRESS. PLEASE WAIT.
+					ClaimButton: CLAIM WEAPON
 				}
 
 				RetroGameConsoleSupplyBox: {

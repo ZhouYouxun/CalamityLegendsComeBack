@@ -3,6 +3,7 @@ using CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.General;
 using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
@@ -89,5 +90,49 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.RightClick
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
             => target.AddBuff(ModContent.BuffType<Voidfrost>(), 180);
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            float progress = 1f - Projectile.timeLeft / 18f;
+            float opacity = MathF.Sin(progress * MathHelper.Pi);
+            float spin = Projectile.identity * 0.37f + progress * MathHelper.TwoPi * 1.45f;
+            Vector2 drawPos = Projectile.Center - Main.screenPosition;
+            Texture2D circularSmear = ModContent.Request<Texture2D>("CalamityMod/Particles/CircularSmearSmokey").Value;
+            Texture2D halfSmear = ModContent.Request<Texture2D>("CalamityMod/Particles/SemiCircularSmearSwipe").Value;
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Texture2D ring = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
+
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState,
+                DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+
+            Color deepGreen = UmbralNadirPalette.MeldGreenDeep with { A = 0 };
+            Color brightGreen = UmbralNadirPalette.MeldGreenBright with { A = 0 };
+            Main.EntitySpriteDraw(circularSmear, drawPos, null, deepGreen * (0.62f * opacity), -spin * 0.48f,
+                circularSmear.Size() * 0.5f, new Vector2(1.45f + progress * 1.85f, 1.04f + progress * 1.28f), SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(ring, drawPos, null, brightGreen * (0.48f * opacity), spin * 0.2f,
+                ring.Size() * 0.5f, 0.88f + progress * 2.05f, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(ring, drawPos, null, deepGreen * (0.38f * opacity), -spin * 0.32f,
+                ring.Size() * 0.5f, 0.42f + progress * 2.7f, SpriteEffects.None, 0);
+
+            // 八条旋臂以等角展开，并用两组不同半径的光点打破单一圆形爆炸的局限。
+            const int arms = 8;
+            for (int i = 0; i < arms; i++)
+            {
+                float armAngle = spin + MathHelper.TwoPi * i / arms;
+                float radius = 34f + progress * 138f + 14f * MathF.Sin(progress * MathHelper.TwoPi * 1.5f + i);
+                Vector2 armOffset = armAngle.ToRotationVector2() * radius;
+                Color armColor = i % 2 == 0 ? brightGreen : deepGreen;
+                Main.EntitySpriteDraw(halfSmear, drawPos, null, armColor * (0.5f * opacity), armAngle,
+                    halfSmear.Size() * 0.5f, new Vector2(0.76f + progress * 1.15f, 0.34f + progress * 0.44f), SpriteEffects.None, 0);
+                Main.EntitySpriteDraw(bloom, drawPos + armOffset, null, armColor * (0.62f * opacity), 0f,
+                    bloom.Size() * 0.5f, 0.16f + progress * 0.3f, SpriteEffects.None, 0);
+            }
+
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState,
+                DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+            return false;
+        }
     }
 }
