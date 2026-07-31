@@ -1,4 +1,5 @@
 using CalamityLegendsComeBack.Weapons.BlossomFlux;
+using CalamityLegendsComeBack.Accssory.BF.Common;
 using CalamityMod;
 using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Buffs.StatDebuffs;
@@ -40,13 +41,16 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         public const int DeathDuration = 60 * 60;
 
         private ulong lastLeafFlowDeathProcFrame;
+        private readonly int[] silvaWitherTimers = new int[Main.maxPlayers];
 
         public override bool InstancePerEntity => true;
 
-        public void ApplyWither(NPC npc)
+        public void ApplyWither(NPC npc, int owner = -1, bool fromRightClick = false)
         {
             AddOrExtendBuff(npc, ModContent.BuffType<BFPlagueWitherBuff>(), WitherDuration, int.MaxValue);
             ApplyStagedDiseaseDebuffs(npc);
+            if (fromRightClick && BFArrowCommon.InBounds(owner, Main.maxPlayers) && Main.player[owner].GetModPlayer<BFAccessoryPlayer>().SilvaHarpEquipped)
+                silvaWitherTimers[owner] = System.Math.Max(silvaWitherTimers[owner], WitherDuration);
         }
 
         public void ApplyDeath(NPC npc)
@@ -66,6 +70,17 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             {
                 npc.lifeRegen -= 88;
                 damage = System.Math.Max(damage, 44);
+
+                bool silvaWither = false;
+                for (int i = 0; i < Main.maxPlayers; i++)
+                    silvaWither |= silvaWitherTimers[i] > 0;
+
+                if (silvaWither)
+                {
+                    int silvaDamagePerSecond = System.Math.Max(100, (int)System.MathF.Ceiling(npc.lifeMax * 0.0001f));
+                    npc.lifeRegen -= silvaDamagePerSecond * 2;
+                    damage = System.Math.Max(damage, silvaDamagePerSecond);
+                }
             }
 
             if (!dying)
@@ -125,6 +140,15 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                 dying ? new Color(204, 236, 96) : new Color(96, 174, 64),
                 dying ? Main.rand.NextFloat(0.75f, 1.05f) : Main.rand.NextFloat(0.55f, 0.82f));
             dust.noGravity = true;
+        }
+
+        public override void PostAI(NPC npc)
+        {
+            for (int i = 0; i < Main.maxPlayers; i++)
+            {
+                if (silvaWitherTimers[i] > 0)
+                    silvaWitherTimers[i]--;
+            }
         }
 
         private static void ApplyStagedDiseaseDebuffs(NPC npc)

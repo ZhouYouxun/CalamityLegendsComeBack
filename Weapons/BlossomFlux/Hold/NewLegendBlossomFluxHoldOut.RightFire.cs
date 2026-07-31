@@ -134,6 +134,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         {
             float chargeDr = RecoveryChargePoseActive ? BFRecoveryRightBalance.GetStats().ChargeDamageReduction : 0f;
             Owner.GetModPlayer<BFRecoveryEcologyPlayer>().SetRecoveryChargeDamageReduction(chargeDr);
+            if (RecoveryChargePoseActive)
+                Owner.GetModPlayer<BFAccessoryPlayer>().UpdateSilvaRecoveryAura();
         }
 
         private void UpdateBreakthroughChargeState()
@@ -328,6 +330,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             breakthroughQueuedShotIndex = 0;
             breakthroughQueuedShotTimer = 0;
             breakthroughQueuedDamage = damage;
+            breakthroughQueuedSilvaDamage = (int)(GetCurrentRightClickDamage() * RightClickBaseDamageMultiplier * 1.5f);
             breakthroughQueuedPenetrate = stats.Penetrate;
             breakthroughQueuedSpeed = speed;
             breakthroughQueuedKnockback = knockback;
@@ -360,6 +363,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 breakthroughQueuedPenetrate,
                 breakthroughQueuedNoFalloff);
 
+            if (Owner.GetModPlayer<BFAccessoryPlayer>().SilvaHarpEquipped && Projectile.owner == Main.myPlayer)
+                SpawnSilvaBreakthroughLeaves(shootDirection, breakthroughQueuedSpeed);
+
             SpawnSHPCLeftMuzzleParticles(spawnPosition, shootVelocity, CurrentPreset, 0.68f);
             BlossomFluxSounds.PlayRightBreakthroughQueuedFire(spawnPosition, breakthroughQueuedShotIndex);
 
@@ -374,6 +380,28 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             }
 
             breakthroughQueuedShotTimer = BreakthroughQueuedShotGap - 1;
+        }
+
+        private void SpawnSilvaBreakthroughLeaves(Vector2 shootDirection, float speed)
+        {
+            Vector2 behind = -shootDirection;
+            for (int i = 0; i < 2; i++)
+            {
+                float angle = Main.rand.NextFloat(-0.7f, 0.7f);
+                float distance = Main.rand.NextFloat(70f, 150f);
+                Vector2 spawnPosition = Owner.Center + behind.RotatedBy(angle) * distance + Main.rand.NextVector2Circular(12f, 12f);
+                Vector2 target = GetCurrentMouseWorld() + Main.rand.NextVector2Circular(10f, 10f);
+                Vector2 velocity = (target - spawnPosition).SafeNormalize(shootDirection) * speed;
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    spawnPosition,
+                    velocity,
+                    ModContent.ProjectileType<BFLeafProj>(),
+                    System.Math.Max(1, breakthroughQueuedSilvaDamage),
+                    breakthroughQueuedKnockback,
+                    Projectile.owner,
+                    (float)BlossomFluxChloroplastPresetType.Chlo_ABreak);
+            }
         }
 
         private static float GetBreakthroughArrowAngle(int index, int arrowCount)

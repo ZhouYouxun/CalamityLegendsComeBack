@@ -31,6 +31,8 @@ Mods: {
 				PiscesBrimstoneHoldout.DisplayName: Pisces Brimstone Holdout
 				PiscesTotalityEmber.DisplayName: Pisces Totality Ember
 			}
+
+			SilvaHarpNote.DisplayName: Silva Harp Note
 		}
 	}
 }

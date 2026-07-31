@@ -53,7 +53,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             // 冲击波只上「疫萎」这一档，「疫亡」留给疫球本体直击。
-            target.GetGlobalNPC<BFPlaguePollutionNPC>().ApplyWither(target);
+            target.GetGlobalNPC<BFPlaguePollutionNPC>().ApplyWither(target, Projectile.owner, fromRightClick: true);
             target.AddBuff(BuffID.Venom, 240);
         }
     }

@@ -215,13 +215,15 @@ Mods: {
 				DisplayName: Silva Harp
 				Tooltip:
 					'''
-					Grants 150% of Bad Seed's positive attributes: +30% ranged damage, +15% ranged critical strike chance, and +22.5% arrow velocity.
-					BlossomFlux gains a further +7.5% damage and +12% critical strike chance.
-					+15 life per second. This regeneration cannot be reduced by any factor.
-					+90 frames of invincibility after taking damage.
-					Final Stand recharges twice as fast and can recharge during boss fights; it restores 300 life and immediately triggers an ultimate.
-					That ultimate skips charging without shortening its barrage. It neither halves defense nor inflicts Withered.
-					Recipe: Bad Seed + 12 Effulgent Feathers + 30 Planty Mush + 12 Gold Bars + 3 Divine Geodes @ Cosmic Anvil
+					15% increased ranged damage and 5% increased ranged critical strike chance.
+					Leaf Flow critical strikes have a 5% chance to create a life orb that heals the player.
+					Summons five Magical Harp notes that orbit the player horizontally like Titanium shards.
+					Breakthrough: Each loaded arrow adds two leaf arrows from behind the player, each dealing 1.5 times the Breakthrough panel damage.
+					Recovery: Charging right click creates a life-support field that follows the player for 60 frames, then remains in place.
+					Recon: The right-click arrow sticks for up to 15 seconds, dealing damage and refreshing its mark once per second; enemies in its blue field take 5% more damage from Leaf Flow.
+					Bombard: Right-click arrow rain falls evenly within 80 pixels of the designated position.
+					Plague: Enemies Withered by right click lose an additional 0.01% of maximum life per second, with a minimum of 100 damage.
+					Recipe: 15 Effulgent Feathers + 2 Ascendant Spirit Essences + 5 Planty Mush + Magical Harp @ Cosmic Anvil
 					'''
 			}
 

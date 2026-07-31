@@ -13,6 +13,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         private readonly int[] markTimers = new int[Main.maxPlayers];
         private readonly int[] priorityTimers = new int[Main.maxPlayers];
         private readonly int[] damageAmpTimers = new int[Main.maxPlayers];
+        private readonly int[] silvaFieldTimers = new int[Main.maxPlayers];
 
         public override bool InstancePerEntity => true;
 
@@ -40,6 +41,14 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         public bool IsMarkedBy(int owner) => BFArrowCommon.InBounds(owner, Main.maxPlayers) && markTimers[owner] > 0;
 
         public bool IsPriorityMarkedBy(int owner) => BFArrowCommon.InBounds(owner, Main.maxPlayers) && priorityTimers[owner] > 0;
+
+        public void ApplySilvaField(int owner, int timeLeft)
+        {
+            if (BFArrowCommon.InBounds(owner, Main.maxPlayers))
+                silvaFieldTimers[owner] = System.Math.Max(silvaFieldTimers[owner], timeLeft);
+        }
+
+        public bool IsInsideSilvaField(int owner) => BFArrowCommon.InBounds(owner, Main.maxPlayers) && silvaFieldTimers[owner] > 0;
 
         public int MultiplyCurrentMarkTime(int owner, float multiplier)
         {
@@ -104,6 +113,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
 
                 if (damageAmpTimers[i] > 0)
                     damageAmpTimers[i]--;
+
+                if (silvaFieldTimers[i] > 0)
+                    silvaFieldTimers[i]--;
             }
         }
 

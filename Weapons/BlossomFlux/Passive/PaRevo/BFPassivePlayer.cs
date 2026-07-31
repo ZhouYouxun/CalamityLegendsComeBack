@@ -33,10 +33,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
         // need to recognise the weapon immediately on the frame it becomes held.
         private bool HoldingBlossomFluxNow => Player.HeldItem.type == ModContent.ItemType<NewLegendBlossomFlux>();
         private bool BadSeedActive => Player.GetModPlayer<BFAccessoryPlayer>().BadSeedEquipped;
-        private bool SilvaHarpActive => Player.GetModPlayer<BFAccessoryPlayer>().SilvaHarpEquipped;
         public bool PassiveUnlocked => Main.hardMode;
         public bool FinalStandActive => FinalStandTimer > 0;
-        public int PassiveChargeFramesRequired => BadSeedActive || SilvaHarpActive ? PassiveCooldownFrames / 2 : PassiveCooldownFrames;
+        public int PassiveChargeFramesRequired => BadSeedActive ? PassiveCooldownFrames / 2 : PassiveCooldownFrames;
         public bool PassiveReady => PassiveUnlocked && PassiveCooldownTimer >= PassiveChargeFramesRequired;
         public bool ShouldShowCooldownDisplay => HoldingBlossomFluxNow && PassiveUnlocked;
 
@@ -61,7 +60,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
             {
                 PassiveCooldownTimer = 0;
             }
-            else if (HoldingBlossomFluxNow && (BadSeedActive || SilvaHarpActive || !AnyBossAlive()))
+            else if (HoldingBlossomFluxNow && (BadSeedActive || !AnyBossAlive()))
             {
                 int requiredFrames = PassiveChargeFramesRequired;
                 int previousTimer = PassiveCooldownTimer;
@@ -91,9 +90,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
             if (CalamityReviveShouldGoFirst())
                 return true;
 
-            if (SilvaHarpActive)
-                TriggerSilvaHarpRevival();
-            else if (BadSeedActive)
+            if (BadSeedActive)
                 TriggerBadSeedRevival();
             else
                 TriggerFinalStand();
@@ -154,13 +151,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
         private void TriggerBadSeedRevival()
         {
             TriggerSpecialSeedRevival(200, 200, applyWithered: true, ultimateFlags: 3f);
-        }
-
-        // 竖琴继承坏种的正面分支：半冷却、首领战充能与立即发动终结技；
-        // 舍弃防御减半、枯萎和终结技时长减半。
-        private void TriggerSilvaHarpRevival()
-        {
-            TriggerSpecialSeedRevival(300, 300, applyWithered: false, ultimateFlags: 2f);
         }
 
         private void TriggerSpecialSeedRevival(int restoreLife, int healNotification, bool applyWithered, float ultimateFlags)

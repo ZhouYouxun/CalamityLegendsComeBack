@@ -1,9 +1,12 @@
 using CalamityLegendsComeBack.Accssory.BF.SeedOfSilva;
 using CalamityLegendsComeBack.Accssory.BF.FairyDanceSeries;
+using CalamityLegendsComeBack.Accssory.BF.SilvaHarp;
 using CalamityLegendsComeBack.Weapons.BlossomFlux;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;
+using CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick;
 using Microsoft.Xna.Framework;
+using CalamityMod.Projectiles.Healing;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -33,6 +36,8 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
         private int nextLacewingSlot;
         private int lifeAtFrameStart;
         private bool largeHealHandledThisFrame;
+        private int silvaRecoveryAuraIndex = -1;
+        private int silvaRecoveryAuraFollowTime;
 
         // ── 箭袋强化字段（每帧由 EquipQuiver 写入，ResetEffects 清零）──
         public float ChargeMultiplier = 1f;           // 所有战术右键蓄力时间乘数
@@ -45,7 +50,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
         public bool ArrowConversionEquipped;
 
         public bool HoldingBlossomFlux => Player.HeldItem?.type == ModContent.ItemType<NewLegendBlossomFlux>();
-        public float BadSeedAttributeMultiplier => SilvaHarpEquipped ? 1.5f : BadSeedEquipped ? 1f : 0f;
+        public float BadSeedAttributeMultiplier => BadSeedEquipped ? 1f : 0f;
         public bool HasBadSeedAttributes => BadSeedAttributeMultiplier > 0f;
 
         public BlossomFluxChloroplastPresetType CurrentPreset =>
@@ -78,6 +83,8 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
             fairyRespawnTimer = 0;
             blossomFluxHitCounter = 0;
             nextLacewingSlot = 0;
+            silvaRecoveryAuraIndex = -1;
+            silvaRecoveryAuraFollowTime = 0;
         }
 
         public override void PreUpdate()
@@ -96,6 +103,9 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
         {
             if (SeedOfSilvaEquipped && Player.whoAmI == Main.myPlayer)
                 EnsureSilvaSeeds();
+
+            if (SilvaHarpEquipped && Player.whoAmI == Main.myPlayer)
+                EnsureSilvaHarpNotes();
 
             // 妖精舞：维持并驱动三只仙灵。虹灵舞不再继承这些仙灵，因此单独判断。
             if (FairyDanceEquipped)
@@ -123,20 +133,86 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
             }
         }
 
-        public override void UpdateLifeRegen()
+        internal void UpdateSilvaRecoveryAura()
         {
-            if (!SilvaHarpEquipped)
+            if (!SilvaHarpEquipped || Player.whoAmI != Main.myPlayer)
                 return;
 
-            Player.lifeRegen += 15;
-            if (Player.lifeRegen < 15)
-                Player.lifeRegen = 15;
+            Projectile aura = GetSilvaRecoveryAura();
+            if (aura is null)
+            {
+                silvaRecoveryAuraIndex = Projectile.NewProjectile(
+                    Player.GetSource_FromThis(),
+                    Player.Center,
+                    Vector2.Zero,
+                    ModContent.ProjectileType<AbsorberAura>(),
+                    0,
+                    0f,
+                    Player.whoAmI,
+                    0f,
+                    0f,
+                    SilvaRecoveryAuraTag);
+                silvaRecoveryAuraFollowTime = 0;
+                aura = GetSilvaRecoveryAura();
+            }
+
+            if (aura is null || silvaRecoveryAuraFollowTime >= 60)
+                return;
+
+            aura.Center = Player.Center;
+            aura.velocity = Vector2.Zero;
+            if (++silvaRecoveryAuraFollowTime == 60 || silvaRecoveryAuraFollowTime % 15 == 0)
+                aura.netUpdate = true;
         }
 
-        public override void OnHurt(Player.HurtInfo info)
+        private const float SilvaRecoveryAuraTag = 7391f;
+
+        private Projectile GetSilvaRecoveryAura()
         {
-            if (SilvaHarpEquipped)
-                Player.immuneTime += 90;
+            if (BFArrowCommon.InBounds(silvaRecoveryAuraIndex, Main.maxProjectiles))
+            {
+                Projectile cached = Main.projectile[silvaRecoveryAuraIndex];
+                if (cached.active && cached.owner == Player.whoAmI && cached.type == ModContent.ProjectileType<AbsorberAura>() && cached.ai[2] == SilvaRecoveryAuraTag)
+                    return cached;
+            }
+
+            foreach (Projectile projectile in Main.ActiveProjectiles)
+            {
+                if (projectile.owner == Player.whoAmI && projectile.type == ModContent.ProjectileType<AbsorberAura>() && projectile.ai[2] == SilvaRecoveryAuraTag)
+                {
+                    silvaRecoveryAuraIndex = projectile.whoAmI;
+                    return projectile;
+                }
+            }
+
+            silvaRecoveryAuraIndex = -1;
+            silvaRecoveryAuraFollowTime = 0;
+            return null;
+        }
+
+        private void EnsureSilvaHarpNotes()
+        {
+            bool[] existingSlots = new bool[SilvaHarpNote.NoteCount];
+            foreach (Projectile projectile in Main.ActiveProjectiles)
+            {
+                if (projectile.owner != Player.whoAmI || projectile.ModProjectile is not SilvaHarpNote note)
+                    continue;
+
+                int slot = note.Slot;
+                if (slot < 0 || slot >= existingSlots.Length || existingSlots[slot])
+                {
+                    projectile.Kill();
+                    continue;
+                }
+
+                existingSlots[slot] = true;
+            }
+
+            for (int i = 0; i < existingSlots.Length; i++)
+            {
+                if (!existingSlots[i])
+                    Projectile.NewProjectile(Player.GetSource_FromThis(), Player.Center, Vector2.Zero, ModContent.ProjectileType<SilvaHarpNote>(), 0, 0f, Player.whoAmI, i);
+            }
         }
 
         public void EquipQuiver(int tier)

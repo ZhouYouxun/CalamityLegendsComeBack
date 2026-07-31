@@ -21,8 +21,8 @@ namespace CalamityLegendsComeBack.Accssory.BF.SilvaHarp
 
         public override void UpdateAccessory(Player player, bool hideVisual)
         {
-            player.GetDamage(DamageClass.Ranged) += BFAccessoryPlayer.BadSeedRangedDamageBonus * 1.5f;
-            player.GetCritChance(DamageClass.Ranged) += BFAccessoryPlayer.BadSeedRangedCritBonus * 1.5f;
+            player.GetDamage(DamageClass.Ranged) += 0.15f;
+            player.GetCritChance(DamageClass.Ranged) += 5f;
             player.GetModPlayer<BFAccessoryPlayer>().SilvaHarpEquipped = true;
         }
 

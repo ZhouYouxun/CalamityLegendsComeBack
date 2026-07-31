@@ -139,9 +139,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
             Player.lifeRegen += stats.LifeRegen + GetMissingHealthRegenBonus(stats);
             Player.lifeRegenTime += stats.RegenTimePerTick;
 
-            if (stats.MovingRegenIgnoresPenalty && Player.velocity.LengthSquared() > 0.05f)
-                Player.runSlowdown = 1f;
-
             if (stats.HealthThresholdRegenTime && Player.statLifeMax2 > 0)
             {
                 float lifeRatio = Player.statLife / (float)Player.statLifeMax2;
@@ -152,6 +149,22 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
                 else if (lifeRatio <= 0.75f)
                     Player.lifeRegenTime = System.Math.Max(Player.lifeRegenTime, 900);
             }
+        }
+
+        public override void NaturalLifeRegen(ref float regen)
+        {
+            if (leafTimeLeft <= 0 || !IsHoldingRecoveryMode())
+                return;
+
+            BFRecoveryLeftStats stats = BFRecoveryLeftBalance.GetStats();
+            if (!stats.MovingRegenIgnoresPenalty)
+                return;
+
+            // 原版在玩家横向移动且未抓钩时先把自然回血乘以 0.5，
+            // NaturalLifeRegen 钩子位于这一步之后；乘回 2 正好只抵消移动惩罚，
+            // 不再错误改动 runSlowdown，也就不会把玩家的横向速度瞬间刹掉。
+            if (Player.velocity.X != 0f && Player.grappling[0] <= 0)
+                regen *= 2f;
         }
 
         public override void ModifyHurt(ref Player.HurtModifiers modifiers)

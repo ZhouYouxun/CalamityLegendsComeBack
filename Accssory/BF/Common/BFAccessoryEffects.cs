@@ -2,6 +2,7 @@ using CalamityLegendsComeBack.Accssory.BF.SeedOfSilva;
 using CalamityLegendsComeBack.Weapons.BlossomFlux;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick;
+using CalamityMod;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
@@ -159,6 +160,10 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
                 BFAccessoryPlayer accessoryPlayer = Main.player[projectile.owner].GetModPlayer<BFAccessoryPlayer>();
                 if (accessoryPlayer.HasBadSeedAttributes)
                     modifiers.FinalDamage *= 1f + BFAccessoryPlayer.BadSeedBlossomFluxDamageBonus * accessoryPlayer.BadSeedAttributeMultiplier;
+
+                BFArrow_CDetecEffect leafFlow = projectile.GetGlobalProjectile<BFArrow_CDetecEffect>();
+                if (accessoryPlayer.SilvaHarpEquipped && leafFlow.BlossomFluxLeftArrow && target.GetGlobalNPC<BFArrow_CDetecNPC>().IsInsideSilvaField(projectile.owner))
+                    modifiers.FinalDamage *= 1.05f;
             }
 
             if (sunflowerEmpowered && preset == BlossomFluxChloroplastPresetType.Chlo_ABreak)
@@ -175,6 +180,17 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
                 return;
 
             Main.player[projectile.owner].GetModPlayer<BFAccessoryPlayer>().RegisterBlossomFluxHit();
+
+            Player owner = Main.player[projectile.owner];
+            BFArrow_CDetecEffect leafFlow = projectile.GetGlobalProjectile<BFArrow_CDetecEffect>();
+            if (projectile.owner == Main.myPlayer && owner.GetModPlayer<BFAccessoryPlayer>().SilvaHarpEquipped && leafFlow.BlossomFluxLeftArrow && hit.Crit && Main.rand.NextFloat() < 0.05f)
+            {
+                // 复刻旧版始源林海套生命球：首段按伤害的 3% 回复，每次贯穿命中衰减 1.5%，上限 50，吸血冷却倍率为 3。
+                float healRatio = 0.03f - projectile.numHits * 0.015f;
+                int heal = System.Math.Min(50, (int)System.MathF.Round(damageDone * healRatio));
+                if (heal > 0)
+                    owner.SpawnLifeStealProjectile(target, projectile, ModContent.ProjectileType<CalamityMod.Projectiles.Healing.RoyalHeal>(), heal, 3f);
+            }
         }
 
     }

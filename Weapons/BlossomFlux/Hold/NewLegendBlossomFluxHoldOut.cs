@@ -71,6 +71,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         private int breakthroughQueuedShotIndex;
         private int breakthroughQueuedShotTimer;
         private int breakthroughQueuedDamage;
+        private int breakthroughQueuedSilvaDamage;
         private int breakthroughQueuedPenetrate;
         private int leftStarFlashTimer;
         // 左键每次开火时额外推进一点星芒角度，让核心更像 SHPC 那种“会转动的能量星”

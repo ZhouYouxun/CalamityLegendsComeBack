@@ -1,5 +1,6 @@
 using CalamityLegendsComeBack.Weapons.BlossomFlux;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;
+using CalamityLegendsComeBack.Accssory.BF.Common;
 using CalamityMod;
 using CalamityMod.Enums;
 using CalamityMod.Graphics.Primitives;
@@ -22,6 +23,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
     {
         private const int PriorityMarkDuration = 15 * 60;
         private const int MaxScannedTargets = 10;
+        private const int SilvaStickDuration = 15 * 60;
+        private const float SilvaFieldRadius = 160f;
 
         public new string LocalizationCategory => "Projectiles.BlossomFlux";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
@@ -35,6 +38,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         private int configuredEffectTier;
         private int scannedTargetCount;
         private readonly bool[] scannedTargets = new bool[Main.maxNPCs];
+        private int attachedNpcIndex = -1;
+        private int attachedTimer;
+        private Vector2 stickOffset;
 
         public override void SetStaticDefaults()
         {
@@ -71,6 +77,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             writer.Write(configuredMarkDuration);
             writer.Write(configuredAmpDuration);
             writer.Write(configuredEffectTier);
+            writer.Write(attachedNpcIndex);
+            writer.Write(attachedTimer);
+            writer.WriteVector2(stickOffset);
         }
 
         public override void ReceiveExtraAI(BinaryReader reader)
@@ -78,6 +87,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             configuredMarkDuration = reader.ReadInt32();
             configuredAmpDuration = reader.ReadInt32();
             configuredEffectTier = reader.ReadInt32();
+            attachedNpcIndex = reader.ReadInt32();
+            attachedTimer = reader.ReadInt32();
+            stickOffset = reader.ReadVector2();
         }
 
         public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
@@ -91,6 +103,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
 
         public override void AI()
         {
+            if (attachedNpcIndex >= 0)
+            {
+                UpdateSilvaAttachment();
+                return;
+            }
+
             FlightTimer++;
 
             Lighting.AddLight(Projectile.Center, BFArrowCommon.GetPresetColor(BlossomFluxChloroplastPresetType.Chlo_CDetec).ToVector3() * 0.52f);
@@ -133,6 +151,62 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
 
             SpawnPenetrationImpactFX(target.Center, 0.82f);
             SoundEngine.PlaySound(BlossomFluxSounds.RightReconProjHit, target.Center);
+
+            if (Main.player[Projectile.owner].GetModPlayer<BFAccessoryPlayer>().SilvaHarpEquipped)
+                AttachSilvaArrow(target);
+        }
+
+        public override bool? CanDamage() => attachedNpcIndex >= 0 ? false : null;
+
+        private void AttachSilvaArrow(NPC target)
+        {
+            attachedNpcIndex = target.whoAmI;
+            attachedTimer = 0;
+            stickOffset = Projectile.Center - target.Center;
+            Projectile.Center = target.Center + stickOffset;
+            Projectile.velocity = Vector2.Zero;
+            Projectile.friendly = false;
+            Projectile.extraUpdates = 0;
+            Projectile.timeLeft = SilvaStickDuration;
+            Projectile.netUpdate = true;
+        }
+
+        private void UpdateSilvaAttachment()
+        {
+            if (!BFArrowCommon.InBounds(attachedNpcIndex, Main.maxNPCs))
+            {
+                Projectile.Kill();
+                return;
+            }
+
+            NPC attachedNpc = Main.npc[attachedNpcIndex];
+            if (!attachedNpc.active || attachedNpc.friendly || attachedNpc.dontTakeDamage)
+            {
+                Projectile.Kill();
+                return;
+            }
+
+            Projectile.Center = attachedNpc.Center + stickOffset;
+            Projectile.gfxOffY = attachedNpc.gfxOffY;
+            Projectile.rotation += 0.025f;
+            Lighting.AddLight(Projectile.Center, new Vector3(0.05f, 0.24f, 0.42f));
+
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (!npc.friendly && !npc.dontTakeDamage && Vector2.DistanceSquared(npc.Center, Projectile.Center) <= SilvaFieldRadius * SilvaFieldRadius)
+                    npc.GetGlobalNPC<BFArrow_CDetecNPC>().ApplySilvaField(Projectile.owner, 2);
+            }
+
+            attachedTimer++;
+            if (attachedTimer % 60 == 0)
+            {
+                attachedNpc.GetGlobalNPC<BFArrow_CDetecNPC>().ApplyDamageAmpMark(Projectile.owner, configuredMarkDuration, configuredAmpDuration);
+                if (Main.netMode != NetmodeID.MultiplayerClient)
+                    attachedNpc.SimpleStrikeNPC(System.Math.Max(1, Projectile.damage), System.Math.Sign(attachedNpc.Center.X - Main.player[Projectile.owner].Center.X), false, 0f, DamageClass.Ranged, false, noPlayerInteraction: true);
+
+                SpawnPenetrationImpactFX(attachedNpc.Center, 0.48f);
+                Projectile.netUpdate = true;
+            }
         }
 
         public override bool OnTileCollide(Vector2 oldVelocity)
@@ -155,6 +229,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             Color edgeColor = new Color(78, 194, 255, 0) * Projectile.Opacity;
 
             Main.spriteBatch.SetBlendState(BlendState.Additive);
+            if (attachedNpcIndex >= 0)
+            {
+                Texture2D field = ModContent.Request<Texture2D>("CalamityMod/Particles/HighResHollowCircleHardEdge").Value;
+                float pulse = 0.95f + MathF.Sin(Main.GlobalTimeWrappedHourly * 4f) * 0.035f;
+                Main.EntitySpriteDraw(field, drawPosition, null, edgeColor * 0.28f, -Projectile.rotation * 0.35f, field.Size() * 0.5f, SilvaFieldRadius * 2f / field.Width * pulse, SpriteEffects.None, 0);
+                Main.EntitySpriteDraw(field, drawPosition, null, coreColor * 0.12f, Projectile.rotation * 0.22f, field.Size() * 0.5f, SilvaFieldRadius * 1.82f / field.Width, SpriteEffects.None, 0);
+            }
             Main.EntitySpriteDraw(bloom, drawPosition, null, edgeColor * 0.72f, 0f, bloom.Size() * 0.5f, 0.24f, SpriteEffects.None, 0);
             Main.EntitySpriteDraw(bloom, drawPosition, null, coreColor * 0.82f, 0f, bloom.Size() * 0.5f, 0.1f, SpriteEffects.None, 0);
             Main.EntitySpriteDraw(spark, drawPosition, null, coreColor, Projectile.rotation, spark.Size() * 0.5f, new Vector2(0.055f, 0.24f), SpriteEffects.None, 0);

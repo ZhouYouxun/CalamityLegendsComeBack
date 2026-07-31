@@ -682,10 +682,16 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                 return;
 
             int rainCount = Math.Max(4, (int)Math.Round(5f * skyRainMultiplier));
+            bool silvaRain = Main.player[Projectile.owner].GetModPlayer<BFAccessoryPlayer>().SilvaHarpEquipped;
             for (int i = 0; i < rainCount; i++)
             {
-                Vector2 spawnPosition = center + new Vector2(Main.rand.NextFloat(-260f, 260f), -940f - Main.rand.NextFloat(0f, 260f));
-                Vector2 targetPosition = center + Main.rand.NextVector2Circular(82f, 42f);
+                Vector2 targetOffset = silvaRain
+                    ? Main.rand.NextVector2Unit() * (80f * MathF.Sqrt(Main.rand.NextFloat()))
+                    : Main.rand.NextVector2Circular(82f, 42f);
+                Vector2 targetPosition = center + targetOffset;
+                Vector2 spawnPosition = silvaRain
+                    ? targetPosition - Vector2.UnitY * (940f + Main.rand.NextFloat(0f, 260f))
+                    : center + new Vector2(Main.rand.NextFloat(-260f, 260f), -940f - Main.rand.NextFloat(0f, 260f));
                 Vector2 velocity = (targetPosition - spawnPosition).SafeNormalize(Vector2.UnitY) * (storedAmmoSpeed * Main.rand.NextFloat(1.25f, 1.62f));
 
                 int projectileIndex = Projectile.NewProjectile(

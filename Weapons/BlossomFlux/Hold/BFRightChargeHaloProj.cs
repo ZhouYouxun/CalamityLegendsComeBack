@@ -10,27 +10,71 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 {
-    // 蓄力光环：每个实例是一个绕X轴斜过一个角度、再丢掉Z轴投影回屏幕的圆环弧段（3D→2D的“斜圆投影”），
-    // 只活很短一段时间，自己转、自己缓慢扩张、自己淡入淡出，靠不断新生成来维持持续的观感。
-    // 转速不是固定值：蓄力过程中读取武器当前的蓄力进度让转速持续加快，
-    // 一旦蓄满（ChargeReady），转速改为非线性地衰减回0，同时整体透明度慢慢淡出直至消失；
-    // 锚点每帧都重新读取武器当前位置和朝向，历史轨迹只存“相对武器锚点的偏移量”（相对运动而非绝对运动）。
-    //
-    // 相对旧的粒子版本：运动、生命周期、配色全部一字未改，只把“载体”从 DrawLineBetter 折线
-    // 换成了传统着色拖尾（CalamityMod:TrailStreak + SylvestaffStreak，参考 EndlessDevourJavOrbSmall），
-    // 配色仍用我们自己的 haloColor，宽度也保持本项目纤细口径。
+    // 五种战术各自的环绕轨迹风格。载体统一是着色拖尾，运动按风格分派，
+    // 具体的数量/半径/寿命/速度档/加减速全部由生成器(NewLegendBlossomFluxHoldOut.RightChargeLattice.cs)
+    // 通过 HaloSpawnParams 一次性喂进来，这里只负责“把参数跑成轨迹”。
+    internal enum BFHaloStyle
+    {
+        SlashStar,   // A 破甲：玫瑰线尖瓣星，快转 + 锐利半径脉冲，像刀光
+        RisingHelix, // B 恢复：慢转小圆 + 持续上浮 + 呼吸，柔和
+        GyroRing,    // C 侦测：斜圆投影，整环同倾角相位均分，匀速陀螺仪
+        EmberBurst,  // D 爆破：绝对坐标弹道余烬，高速外抛 + 强阻力减速
+        WobbleCloud, // E 瘟疫：慢转 + 垂直正弦抖动 + 半径缓扩，粘稠扩散
+    }
+
+    // 蓄力光环：无伤、纯客户端视觉、着色器驱动。历史轨迹只存“相对武器锚点的偏移量”，
+    // 锚点每帧重读武器当前位置与朝向，所以整团环绕会跟着枪走（相对运动而非绝对运动）。
     internal sealed class BFRightChargeHaloProj : ModProjectile, IPixelatedPrimitiveRenderer
     {
-        private const int TrailPointCount = 10;
-        private const float MinRotateSpeed = 0.08f;
-        private const float MaxRotateSpeed = 0.5f;
-        private const float ChargingFollowRate = 0.15f; // 蓄力中：转速比较灵敏地跟随蓄力进度
-        private const float ReadyDecelFollowRate = 0.05f; // 蓄满后：转速缓慢、非线性地衰减到0
-        private const float ReadyFadeDecay = 0.94f; // 蓄满后：透明度按指数衰减，慢慢消失
-        private const float AnchorForwardOffset = 16f;
+        // 生成器一次性传入的整套配置（每战术自己一份）。运动过程中会变的量另存为下面的可变字段。
+        public struct HaloSpawnParams
+        {
+            public BFHaloStyle Style;
+            public Color Color;
+            public float Charge;
 
-        // 图元的宽度函数返回的是“半宽”，这里的取值对应旧版折线 1.4~5.5px 的观感（着色器拖尾边缘更软，略放宽一点）。
-        private const float TrailHalfWidth = 3.6f;
+            // 锚点（武器局部：Forward 沿瞄准方向，Side 垂直方向）
+            public float AnchorForward;
+            public float AnchorSide;
+
+            // 生命周期与淡入淡出（帧、比例）
+            public float LifeSpan;
+            public float FadeInFraction;
+            public float FadeOutFraction;
+
+            // 环绕自转：转速随蓄力进度在 Min~Max 间插值；蓄满/松开后按 ReadyDecel 衰减到 0
+            public float StartRotation;
+            public float MinSpeed;
+            public float MaxSpeed;
+            public float ChargingFollow;
+            public float ReadyDecel;
+            public float FadeDecay;
+
+            // 半径与拖尾
+            public float Radius;
+            public float HalfWidth;
+            public int TrailPoints;
+
+            // —— 风格专属 ——
+            // SlashStar
+            public float Lobes;
+            public float Sharpness;
+            public float SpinPhase;
+            // GyroRing
+            public float TiltZ;
+            public float TiltEx;
+            // RisingHelix
+            public float RiseSpeed;
+            public float Squash;
+            // EmberBurst
+            public Vector2 EmberVelocity;
+            public float EmberDrag;
+            public float EmberGravity;
+            // WobbleCloud
+            public float ExpandSpeed;
+            public float WobbleAmp;
+            public float WobbleFreq;
+        }
 
         public GeneralDrawLayer LayerToRenderTo => GeneralDrawLayer.BeforeProjectiles;
         public new string LocalizationCategory => "Projectiles.BlossomFlux";
@@ -38,17 +82,18 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
         private Projectile weapon;
         private NewLegendBlossomFluxHoldOut holdout;
+        private HaloSpawnParams config;
+
+        // 运动过程中的可变状态
         private float spinRotation;
-        private float zRot;
-        private float exRot;
-        private float radius;
-        private float lifeSpanTicks;
-        private float trailAlpha;
         private float currentSpeed;
+        private float runtimeRadius;
+        private Vector2 emberOffset;
+        private Vector2 emberVel;
+        private float trailAlpha;
         private float postReadyFade = 1f;
         private bool enteredReadyPhase;
         private int time;
-        private Color haloColor;
         private Vector2[] relativeOffsets;
 
         private bool WeaponValid =>
@@ -56,7 +101,15 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             weapon.active &&
             weapon.type == ModContent.ProjectileType<NewLegendBlossomFluxHoldOut>();
 
-        private Vector2 Anchor => weapon.Center + weapon.rotation.ToRotationVector2() * AnchorForwardOffset;
+        private Vector2 Anchor
+        {
+            get
+            {
+                Vector2 forward = weapon.rotation.ToRotationVector2();
+                Vector2 side = forward.RotatedBy(MathHelper.PiOver2);
+                return weapon.Center + forward * config.AnchorForward + side * config.AnchorSide;
+            }
+        }
 
         public override void SetDefaults()
         {
@@ -75,13 +128,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
         public override bool PreDraw(ref Color lightColor) => false;
 
-        public static void Spawn(Projectile weaponProjectile, float radius, float startRot, float zRot, float exRot, Color color, float chargeCompletionAtSpawn)
+        public static void Spawn(Projectile weaponProjectile, in HaloSpawnParams config)
         {
             if (Main.dedServ || weaponProjectile is null)
                 return;
 
             // 纯客户端视觉：owner 传 Main.maxPlayers(255)，NewProjectile 就不会联网同步，
-            // 每个客户端各自生成自己的一份——和原来的粒子表现完全一致，也不会在多人里出现重影。
+            // 每个客户端各自生成自己的一份，多人里也不会出现重影。
             Projectile spawned = Projectile.NewProjectileDirect(
                 weaponProjectile.GetSource_FromThis(),
                 weaponProjectile.Center,
@@ -96,27 +149,36 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
             halo.weapon = weaponProjectile;
             halo.holdout = weaponProjectile.ModProjectile as NewLegendBlossomFluxHoldOut;
-            halo.radius = radius;
-            halo.spinRotation = startRot;
-            halo.zRot = zRot;
-            halo.exRot = exRot;
-            halo.haloColor = color;
-            halo.currentSpeed = MathHelper.Lerp(MinRotateSpeed, MaxRotateSpeed, MathHelper.Clamp(chargeCompletionAtSpawn, 0f, 1f));
-            halo.lifeSpanTicks = (Main.rand.NextFloat(3.6f, 5.2f) - startRot) / halo.currentSpeed;
-            halo.BuildInitialTrail();
+            halo.config = config;
+            halo.spinRotation = config.StartRotation;
+            halo.runtimeRadius = config.Radius;
+            halo.currentSpeed = MathHelper.Lerp(config.MinSpeed, config.MaxSpeed, MathHelper.Clamp(config.Charge, 0f, 1f));
+            halo.emberVel = config.EmberVelocity;
+            halo.SeedTrail();
             halo.SnapToAnchor();
         }
 
-        private void BuildInitialTrail()
+        // 初始化拖尾历史：环绕风格倒推几步自转，让一出生就有一段弧；余烬风格沿反速度方向铺一条短尾。
+        private void SeedTrail()
         {
-            relativeOffsets = new Vector2[TrailPointCount];
-            float r = spinRotation - TrailPointCount * currentSpeed;
+            int n = Math.Max(4, config.TrailPoints);
+            relativeOffsets = new Vector2[n];
 
-            for (int i = 0; i < TrailPointCount; i++)
+            if (config.Style == BFHaloStyle.EmberBurst)
             {
-                float length = TiltedCircleProjection(r, zRot, out float overrideAngle) * radius;
-                relativeOffsets[i] = (overrideAngle + exRot).ToRotationVector2() * length;
-                r += currentSpeed;
+                Vector2 tailDir = config.EmberVelocity.SafeNormalize(Vector2.UnitX);
+                for (int i = 0; i < n; i++)
+                    relativeOffsets[i] = -tailDir * ((n - 1 - i) * 1.5f);
+                emberOffset = Vector2.Zero;
+                return;
+            }
+
+            float step = MathHelper.Max(currentSpeed, 0.02f);
+            float spin = spinRotation - (n - 1) * step;
+            for (int i = 0; i < n; i++)
+            {
+                relativeOffsets[i] = ComputeStyleOffset(spin, 0f);
+                spin += step;
             }
         }
 
@@ -130,54 +192,124 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
             time++;
 
-            // 一旦观测到蓄满或右键停止蓄力，就永久进入“减速+淡出”阶段，不会再因为读数波动而反复横跳。
+            // 一旦观测到蓄满或右键停止蓄力，就永久进入“减速 + 淡出”阶段，不会因读数波动而反复横跳。
             if (!enteredReadyPhase && (holdout is null || !holdout.GetHaloRightChargeActive() || holdout.GetHaloChargeReady()))
                 enteredReadyPhase = true;
 
+            Vector2 head = config.Style == BFHaloStyle.EmberBurst ? UpdateEmber() : UpdateOrbit();
+
+            for (int i = 0; i < relativeOffsets.Length - 1; i++)
+                relativeOffsets[i] = relativeOffsets[i + 1];
+            relativeOffsets[^1] = head;
+
+            if (!UpdateLifetime())
+                return;
+
+            SnapToAnchor();
+        }
+
+        // 环绕类：转速随蓄力进度加速（蓄满后非线性减速回 0），再按风格算出当前头部偏移。
+        private Vector2 UpdateOrbit()
+        {
             float chargeCompletion = holdout?.GetChargeCompletion() ?? 0f;
             float targetSpeed = enteredReadyPhase
                 ? 0f
-                : MathHelper.Lerp(MinRotateSpeed, MaxRotateSpeed, MathHelper.Clamp(chargeCompletion, 0f, 1f));
-            float followRate = enteredReadyPhase ? ReadyDecelFollowRate : ChargingFollowRate;
+                : MathHelper.Lerp(config.MinSpeed, config.MaxSpeed, MathHelper.Clamp(chargeCompletion, 0f, 1f));
+            float followRate = enteredReadyPhase ? config.ReadyDecel : config.ChargingFollow;
 
             currentSpeed = MathHelper.Lerp(currentSpeed, targetSpeed, followRate);
             spinRotation += currentSpeed;
 
-            float length = TiltedCircleProjection(spinRotation, zRot, out float overrideAngle) * radius;
+            return ComputeStyleOffset(spinRotation, time);
+        }
 
-            for (int i = 0; i < relativeOffsets.Length - 1; i++)
-                relativeOffsets[i] = relativeOffsets[i + 1];
-            relativeOffsets[^1] = (overrideAngle + exRot).ToRotationVector2() * length;
+        // 余烬类：绝对坐标里的弹道积分——初速外抛、强阻力减速、微重力下坠，头部偏移就是积分位置。
+        private Vector2 UpdateEmber()
+        {
+            emberVel *= config.EmberDrag;
+            emberVel.Y += config.EmberGravity;
+            emberOffset += emberVel;
+            return emberOffset;
+        }
 
+        // 返回 false 表示本帧已 Kill。
+        private bool UpdateLifetime()
+        {
             if (enteredReadyPhase)
             {
-                postReadyFade *= ReadyFadeDecay;
+                postReadyFade *= config.FadeDecay;
                 trailAlpha = postReadyFade;
                 if (postReadyFade < 0.03f)
                 {
                     Projectile.Kill();
-                    return;
+                    return false;
                 }
+                return true;
             }
-            else
+
+            float life = MathHelper.Max(config.LifeSpan, 1f);
+            float fadeIn = life * config.FadeInFraction;
+            float fadeOutStart = life * (1f - config.FadeOutFraction);
+
+            trailAlpha = time < fadeIn ? time / MathHelper.Max(fadeIn, 1f) : 1f;
+
+            if (time > fadeOutStart)
             {
-                if (time < (int)(lifeSpanTicks * 0.4f))
-                    trailAlpha = time / (lifeSpanTicks * 0.4f);
-                else
-                    trailAlpha = 1f;
-
-                if (time > (int)(lifeSpanTicks * 0.9f))
+                float k = 1f - (time - fadeOutStart) / MathHelper.Max(life - fadeOutStart, 1f);
+                trailAlpha *= MathHelper.Clamp(k, 0f, 1f);
+                if (time >= life)
                 {
-                    trailAlpha *= 0.9f;
-                    if (trailAlpha < 0.02f)
-                    {
-                        Projectile.Kill();
-                        return;
-                    }
+                    Projectile.Kill();
+                    return false;
                 }
             }
 
-            SnapToAnchor();
+            return true;
+        }
+
+        // 各风格的核心：给定当前自转角与年龄，算出相对锚点的头部偏移。余烬风格不走这里。
+        private Vector2 ComputeStyleOffset(float spin, float age)
+        {
+            switch (config.Style)
+            {
+                case BFHaloStyle.SlashStar:
+                {
+                    // 玫瑰线：半径随角度做尖锐脉冲，形成旋转的尖瓣星（刀光感），Sharpness 越大越尖。
+                    float lobe = MathF.Pow(MathF.Abs(MathF.Sin(config.Lobes * spin + config.SpinPhase)), config.Sharpness);
+                    float r = config.Radius * (0.38f + 0.62f * lobe);
+                    return spin.ToRotationVector2() * r;
+                }
+
+                case BFHaloStyle.RisingHelix:
+                {
+                    // 慢转小圆 + 轻微竖椭圆 + 呼吸，整体随年龄向上漂，像治愈光点上浮。
+                    float breathe = 1f + 0.12f * MathF.Sin(age * 0.05f + config.SpinPhase);
+                    Vector2 c = spin.ToRotationVector2() * (config.Radius * breathe);
+                    c.Y *= config.Squash;
+                    return c - new Vector2(0f, config.RiseSpeed * age);
+                }
+
+                case BFHaloStyle.GyroRing:
+                {
+                    // 斜圆正交投影（保留旧版投影核心）：同一环的多枚共享 TiltZ/TiltEx，相位均分即成陀螺仪环。
+                    float len = TiltedCircleProjection(spin, config.TiltZ, out float overrideAngle) * config.Radius;
+                    return (overrideAngle + config.TiltEx).ToRotationVector2() * len;
+                }
+
+                case BFHaloStyle.WobbleCloud:
+                {
+                    // 慢转 + 半径随年龄缓扩 + 垂直方向叠层正弦抖动（伪噪声），粘稠地向外弥散。
+                    float rr = config.Radius + config.ExpandSpeed * age;
+                    Vector2 c = spin.ToRotationVector2() * rr;
+                    Vector2 normal = (spin + MathHelper.PiOver2).ToRotationVector2();
+                    float wob = MathF.Sin(age * config.WobbleFreq + config.SpinPhase) * config.WobbleAmp
+                              + MathF.Sin(age * config.WobbleFreq * 0.5f + config.SpinPhase * 1.7f) * config.WobbleAmp * 0.5f;
+                    return c + normal * wob;
+                }
+
+                default:
+                    return spin.ToRotationVector2() * config.Radius;
+            }
         }
 
         // 弹幕本体不参与绘制，但把位置贴到拖尾头部，光照/调试才对得上。
@@ -200,7 +332,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             return points;
         }
 
-        private float HaloWidthFunction(float completion, Vector2 _) => StreakWidth(completion, TrailHalfWidth);
+        private float HaloWidthFunction(float completion, Vector2 _) => StreakWidth(completion, config.HalfWidth);
 
         private static float StreakWidth(float completion, float maxBodyWidth)
         {
@@ -212,14 +344,14 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             return Utils.Remap(completion, curveRatio, 1f, maxBodyWidth, 0f);
         }
 
-        private Color HaloColorFunction(float completion, Vector2 _) => StreakColor(completion, haloColor);
+        private Color HaloColorFunction(float completion, Vector2 _) => StreakColor(completion, config.Color);
 
         private Color StreakColor(float completion, Color baseColor)
         {
             Color tipColor = Color.Lerp(baseColor, Color.Transparent, Utils.GetLerpValue(0.8f, 1f, completion, true));
             Color color = Color.Lerp(baseColor, tipColor, completion);
 
-            // 复刻旧版折线「越靠尾部越暗」的线性衰减，保持原本的明暗层次。
+            // 越靠尾部越暗的线性衰减，保持明暗层次。
             return color * (trailAlpha * MathHelper.Lerp(1f, 0.1f, completion));
         }
 
@@ -232,8 +364,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             if (trailPoints.Length < 4)
                 return;
 
-            // 传统着色拖尾：参考 EndlessDevourJavOrbSmall 的 TrailStreak + SylvestaffStreak 单层描边流，
-            // 配色仍用我们自己的 haloColor，宽度也保持本项目的纤细口径（不照搬参考里明显偏粗的宽度）。
+            // 传统着色拖尾：TrailStreak + SylvestaffStreak 单层描边流，配色用我们自己的 haloColor，
+            // 宽度保持本项目纤细口径。
             GameShaders.Misc["CalamityMod:TrailStreak"].SetShaderTexture(
                 ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/SylvestaffStreak"));
 
@@ -250,7 +382,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         }
 
         // 先在XY平面取一个正圆上的点，绕X轴转 zRot 把这个圆“斜过来”一个角度，
-        // 再直接丢掉Z轴做正交投影，圆就被压扁成椭圆弧——这就是整个效果的投影核心。
+        // 再直接丢掉Z轴做正交投影，圆就被压扁成椭圆弧——GyroRing 的投影核心。
         private static float TiltedCircleProjection(float rotation, float zRot, out float overrideAngle)
         {
             Vector3 circlePoint = new(MathF.Cos(rotation), MathF.Sin(rotation), 0f);

@@ -5,7 +5,7 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Accssory.BF.General
 {
-    // 调谐箭袋 — 由魔法箭袋直接升级。
+    // 调谐箭袋 — 由本模组的备用箭袋升级。
     public sealed class BFTunedQuiver : ModItem
     {
         public override string Texture => "CalamityLegendsComeBack/Accssory/BF/General/BFTunedQuiver";
@@ -29,7 +29,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.General
         public override void AddRecipes()
         {
             CreateRecipe()
-                .AddIngredient(ItemID.MagicQuiver)
+                .AddIngredient<BFSpareQuiver>()
                 .AddIngredient(ItemID.JungleSpores, 10)
                 .AddIngredient(ItemID.Vine, 5)
                 .AddTile(TileID.Anvils)
