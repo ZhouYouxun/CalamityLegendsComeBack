@@ -192,7 +192,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
             }
 
             if (AMRBalance.CriticalOverflowUnlocked && Projectile.CritChance > 100)
-                modifiers.CritDamage += (Projectile.CritChance - 100) / 100f;
+                modifiers.CritDamage += (Projectile.CritChance - 100) * 2 / 100f;
 
             if (AMRBalance.CoreRuptureUnlocked)
                 modifiers.CritDamage += IsAimedShot ? 0.75f : 0.5f;
