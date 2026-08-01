@@ -43,6 +43,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
         private ref float FlightTimer => ref Projectile.localAI[1];
         private ref float ReconWanderTimer => ref Projectile.ai[1];
         private ref float BombardExplosionsLeft => ref Projectile.ai[1];
+        // ai[2] 只给右键歼灭的天降叶使用；左键从不写入它，因此左键爆炸逻辑保持原样。
+        private int BombardImpactExplosionCount => Preset == BlossomFluxChloroplastPresetType.Chlo_DBomb
+            ? Math.Max(1, (int)Projectile.ai[2] + 1)
+            : 1;
         private ref float LastReconHitNpcIndex => ref Projectile.ai[2];
         private readonly bool[] ignoredReconTargets = new bool[Main.maxNPCs];
         private int bombardExplosionCooldown;
@@ -330,21 +334,30 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
 
             if (Projectile.owner == Main.myPlayer)
             {
-                int explosionDamage = enhanced
+                int baseExplosionDamage = enhanced
                     ? Math.Max(1, (int)(Projectile.damage * 1.18f))
                     : Math.Max(1, (int)(Projectile.damage * 0.65f));
-                float explosionSize = (enhanced ? 158f : 75f) * Projectile.scale;
+                float baseExplosionSize = (enhanced ? 158f : 75f) * Projectile.scale;
 
-                Projectile.NewProjectile(
-                    Projectile.GetSource_FromThis(),
-                    center,
-                    Vector2.Zero,
-                    ModContent.ProjectileType<BFLeafBombExplosion>(),
-                    explosionDamage,
-                    Projectile.knockBack * (enhanced ? 0.95f : 0.65f),
-                    Projectile.owner,
-                    explosionSize,
-                    enhanced ? 1f : 0f);
+                for (int explosionIndex = 0; explosionIndex < BombardImpactExplosionCount; explosionIndex++)
+                {
+                    bool additionalExplosion = explosionIndex > 0;
+                    int explosionDamage = additionalExplosion
+                        ? Math.Max(1, (int)(baseExplosionDamage * 0.7f))
+                        : baseExplosionDamage;
+                    float explosionSize = additionalExplosion ? baseExplosionSize * 0.82f : baseExplosionSize;
+
+                    Projectile.NewProjectile(
+                        Projectile.GetSource_FromThis(),
+                        center,
+                        Vector2.Zero,
+                        ModContent.ProjectileType<BFLeafBombExplosion>(),
+                        explosionDamage,
+                        Projectile.knockBack * (enhanced ? 0.95f : 0.65f),
+                        Projectile.owner,
+                        explosionSize,
+                        enhanced ? 1f : 0f);
+                }
             }
 
             SpawnLeafImpactFX(Projectile, center, BlossomFluxChloroplastPresetType.Chlo_DBomb, markedTarget ? 1.8f : 1.35f);

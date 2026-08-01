@@ -154,15 +154,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir
             return false;
         }
 
-        public override void AddRecipes()
-        {
-            CreateRecipe().
-                AddIngredient<CalamityMod.Items.Weapons.Melee.Nadir>().
-                AddIngredient<AuricBar>(5).
-                AddIngredient<DarksunFragment>(8).
-                AddIngredient<TwistingNether>(5).
-                AddTile<CosmicAnvil>().
-                Register();
-        }
+
     }
 }

@@ -20,6 +20,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.Skill.BFArrowRest
 
         public override void UpdateAccessory(Player player, bool hideVisual)
         {
+            player.GetDamage(DamageClass.Ranged) += BFAccessoryPlayer.ArrowRestRangedDamageBonus;
             player.GetModPlayer<BFAccessoryPlayer>().ArrowConversionEquipped = true;
         }
 

@@ -6,6 +6,7 @@ using CalamityMod;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
@@ -13,6 +14,15 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.LeftClick
     internal class BFRecoveryLeafBuff : ModBuff
     {
         public override string Texture => "CalamityLegendsComeBack/Weapons/BlossomFlux/贴图/复苏之叶";
+
+        public override LocalizedText Description
+        {
+            get
+            {
+                BFRecoveryLeftStats stats = BFRecoveryLeftBalance.GetStats();
+                return base.Description.WithFormatArgs(stats.LifeRegen / 2, stats.Defense);
+            }
+        }
 
         public override void SetStaticDefaults()
         {

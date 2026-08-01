@@ -61,6 +61,20 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
 
         public void ApplySupportingDebuffs(NPC npc) => ApplyStagedDiseaseDebuffs(npc);
 
+        internal static bool IsStagedDiseaseDebuff(int buffType)
+        {
+            return buffType == BuffID.Ichor ||
+                buffType == BuffID.Venom ||
+                buffType == BuffID.BetsysCurse ||
+                buffType == ModContent.BuffType<Irradiated>() ||
+                buffType == ModContent.BuffType<MarkedforDeath>() ||
+                buffType == ModContent.BuffType<AstralInfectionDebuff>() ||
+                buffType == ModContent.BuffType<Plague>() ||
+                buffType == ModContent.BuffType<WitherDebuff>() ||
+                buffType == ModContent.BuffType<WhisperingDeath>() ||
+                buffType == ModContent.BuffType<AbsorberAffliction>();
+        }
+
         public override void UpdateLifeRegen(NPC npc, ref int damage)
         {
             bool withered = npc.HasBuff(ModContent.BuffType<BFPlagueWitherBuff>());
@@ -153,17 +167,31 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
 
         private static void ApplyStagedDiseaseDebuffs(NPC npc)
         {
-            npc.AddBuff(BuffID.Venom, 180);
-            npc.AddBuff(BuffID.Poisoned, 180);
+            if (!BlossomFluxGrowthProgression.DownedAtLeast(BlossomFluxGrowthStage.Plantera))
+                return;
 
-            if (DownedBossSystem.downedPlaguebringer)
-                npc.AddBuff(ModContent.BuffType<Plague>(), 180);
-            if (DownedBossSystem.downedSignus)
-                npc.AddBuff(ModContent.BuffType<WhisperingDeath>(), 180);
-            if (DownedBossSystem.downedAquaticScourge)
-                npc.AddBuff(ModContent.BuffType<SulphuricPoisoning>(), 180);
-            if (DownedBossSystem.downedExoMechs)
-                npc.AddBuff(ModContent.BuffType<Irradiated>(), 180);
+            BFPlagueLeftStats stats = BFPlagueLeftBalance.GetStats();
+            int timeToAdd = stats.StackDuration;
+            int maxTime = stats.MaxDuration;
+
+            AddOrExtendBuff(npc, BuffID.Ichor, timeToAdd, maxTime);
+            AddOrExtendBuff(npc, BuffID.Venom, timeToAdd, maxTime);
+            AddOrExtendBuff(npc, ModContent.BuffType<Irradiated>(), timeToAdd, maxTime);
+            AddOrExtendBuff(npc, ModContent.BuffType<MarkedforDeath>(), timeToAdd, maxTime);
+
+            if (BlossomFluxGrowthProgression.DownedAtLeast(BlossomFluxGrowthStage.MoonLord))
+            {
+                AddOrExtendBuff(npc, ModContent.BuffType<AstralInfectionDebuff>(), timeToAdd, maxTime);
+                AddOrExtendBuff(npc, BuffID.BetsysCurse, timeToAdd, maxTime);
+                AddOrExtendBuff(npc, ModContent.BuffType<Plague>(), timeToAdd, maxTime);
+                AddOrExtendBuff(npc, ModContent.BuffType<WitherDebuff>(), timeToAdd, maxTime);
+            }
+
+            if (BlossomFluxGrowthProgression.DownedAtLeast(BlossomFluxGrowthStage.DevourerOfGods))
+            {
+                AddOrExtendBuff(npc, ModContent.BuffType<WhisperingDeath>(), timeToAdd, maxTime);
+                AddOrExtendBuff(npc, ModContent.BuffType<AbsorberAffliction>(), timeToAdd, maxTime);
+            }
         }
 
         private static void AddOrExtendBuff(NPC npc, int buffType, int timeToAdd, int maxTime)
@@ -183,11 +211,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         {
             int count = withered ? 1 : 0;
             count += npc.HasBuff(BuffID.Venom) ? 1 : 0;
-            count += npc.HasBuff(BuffID.Poisoned) ? 1 : 0;
+            count += npc.HasBuff(ModContent.BuffType<Irradiated>()) ? 1 : 0;
+            count += npc.HasBuff(ModContent.BuffType<AstralInfectionDebuff>()) ? 1 : 0;
             count += npc.HasBuff(ModContent.BuffType<Plague>()) ? 1 : 0;
             count += npc.HasBuff(ModContent.BuffType<WhisperingDeath>()) ? 1 : 0;
-            count += npc.HasBuff(ModContent.BuffType<SulphuricPoisoning>()) ? 1 : 0;
-            count += npc.HasBuff(ModContent.BuffType<Irradiated>()) ? 1 : 0;
+            count += npc.HasBuff(ModContent.BuffType<AbsorberAffliction>()) ? 1 : 0;
             return count;
         }
 

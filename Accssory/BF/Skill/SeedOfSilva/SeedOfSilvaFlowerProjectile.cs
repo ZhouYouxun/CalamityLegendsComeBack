@@ -16,6 +16,8 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
 
         private const float OrbitRadius = 222f;
         private const float OrbitSpeed = 0.018f;
+        private const int OrbitIntegrityCheckInterval = 30;
+        private const float OrbitIntegrityMaxError = 28f;
         private const float OutlineRadius = 2f;
         private const float BlossomTransitionStep = 1f / 18f;
 
@@ -32,6 +34,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
         public bool IsBlooming { get; private set; }
         protected float VisualBloomProgress { get; private set; }
         private float orbitAngle;
+        private int orbitIntegrityCheckTimer;
 
         // 环绕槽位（0..FlowerCount-1）由生成时的 ai[0] 决定，不再是每个子类的固定值——
         // 配合「所有花随当前战术转化为同一种花」的新设计，让同一种花沿不同槽位错开环绕。
@@ -60,6 +63,10 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
 
         public override bool? CanDamage() => IsBlooming && Projectile.damage > 0 ? null : false;
 
+        // The orbit position is assigned explicitly in AI. Do not let a stale velocity apply a
+        // second movement step after that assignment and shift all four flowers off the player.
+        public override bool ShouldUpdatePosition() => false;
+
         public override void AI()
         {
             Player owner = Main.player[Projectile.owner];
@@ -82,9 +89,25 @@ namespace CalamityLegendsComeBack.Accssory.BF.SeedOfSilva
                 orbitAngle -= MathHelper.TwoPi;
             float angle = orbitAngle + MathHelper.TwoPi * OrbitSlot / FlowerCount;
             float pulseRadius = OrbitRadius + (float)System.Math.Sin(Main.GlobalTimeWrappedHourly * 1.1f + OrbitSlot) * 5f;
-            Projectile.Center = owner.Center + angle.ToRotationVector2() * pulseRadius + new Vector2(0f, owner.gfxOffY - 8f);
+            Vector2 orbitCenter = owner.RotatedRelativePoint(owner.MountedCenter, true);
+            Vector2 desiredPosition = orbitCenter + angle.ToRotationVector2() * pulseRadius;
+            bool hasLargePositionError = Vector2.DistanceSquared(Projectile.Center, desiredPosition) > OrbitIntegrityMaxError * OrbitIntegrityMaxError;
+
+            Projectile.velocity = Vector2.Zero;
+            Projectile.Center = desiredPosition;
             Projectile.rotation = angle + MathHelper.PiOver2;
             Projectile.scale = MathHelper.Lerp(Projectile.scale, IsBlooming ? 1f : 0.92f, 0.16f);
+
+            // Re-anchor a genuinely displaced flower at low frequency and share that correction.
+            // Normal orbital motion is far below the threshold, so this does not produce network
+            // traffic or alter the normal rotation cadence.
+            orbitIntegrityCheckTimer++;
+            if (orbitIntegrityCheckTimer >= OrbitIntegrityCheckInterval)
+            {
+                orbitIntegrityCheckTimer = 0;
+                if (hasLargePositionError && Projectile.owner == Main.myPlayer)
+                    Projectile.netUpdate = true;
+            }
 
             Lighting.AddLight(Projectile.Center, FlowerColor.ToVector3() * MathHelper.Lerp(0.11f, 0.34f, VisualBloomProgress));
 

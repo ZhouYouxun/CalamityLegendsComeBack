@@ -46,6 +46,23 @@ namespace CalamityLegendsComeBack.QOL
             recipe.AddTile(TileID.WorkBenches);
             recipe.Register();
 
+            // 三色仙灵：虫网 + 对应颜色的宝石。
+            RegisterFairyCritterRecipe(ItemID.FairyCritterPink, ItemID.Ruby);
+            RegisterFairyCritterRecipe(ItemID.FairyCritterGreen, ItemID.Emerald);
+            RegisterFairyCritterRecipe(ItemID.FairyCritterBlue, ItemID.Sapphire);
+
+            // 七彩草蛉：5 生命碎片 + 每种标准宝石各 1。
+            Recipe empressButterflyRecipe = Recipe.Create(ItemID.EmpressButterfly);
+            empressButterflyRecipe.AddIngredient<LivingShard>(5);
+            empressButterflyRecipe.AddIngredient(ItemID.Amethyst);
+            empressButterflyRecipe.AddIngredient(ItemID.Topaz);
+            empressButterflyRecipe.AddIngredient(ItemID.Sapphire);
+            empressButterflyRecipe.AddIngredient(ItemID.Emerald);
+            empressButterflyRecipe.AddIngredient(ItemID.Ruby);
+            empressButterflyRecipe.AddIngredient(ItemID.Diamond);
+            empressButterflyRecipe.AddIngredient(ItemID.Amber);
+            empressButterflyRecipe.Register();
+
             // 酸雨泪 (Caustic Tear)
             // 1 Bottled Water (水瓶) @ Near Water (水旁)
             if (ModLoader.TryGetMod("CalamityMod", out Mod calamity))
@@ -156,6 +173,14 @@ namespace CalamityLegendsComeBack.QOL
             Recipe recipe = Recipe.Create(weapon.Type);
             recipe.AddIngredient(reaperTooth.Type, 5);
             recipe.AddIngredient(ruinousSoul.Type, 5);
+            recipe.Register();
+        }
+
+        private static void RegisterFairyCritterRecipe(int fairyType, int gemType)
+        {
+            Recipe recipe = Recipe.Create(fairyType);
+            recipe.AddIngredient(ItemID.BugNet);
+            recipe.AddIngredient(gemType);
             recipe.Register();
         }
 

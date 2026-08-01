@@ -337,6 +337,33 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
             Color accentColor = BFArrowCommon.GetPresetAccentColor(preset);
             Vector2 center = Player.Center;
 
+            if (preset == BlossomFluxChloroplastPresetType.Chlo_BRecov)
+            {
+                // The recovery field immediately follows with its own outward particle fan.
+                // Keep this leading cue small and moving, leaving the player's center readable.
+                const int particleCount = 10;
+                for (int i = 0; i < particleCount; i++)
+                {
+                    float angle = MathHelper.TwoPi * i / particleCount + Main.rand.NextFloat(-0.16f, 0.16f);
+                    Vector2 direction = angle.ToRotationVector2();
+                    Vector2 position = center + direction * Main.rand.NextFloat(4f, 14f);
+                    Vector2 velocity = direction * Main.rand.NextFloat(3.8f, 6.4f);
+
+                    GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                        position,
+                        velocity,
+                        false,
+                        Main.rand.Next(14, 21),
+                        Main.rand.NextFloat(0.2f, 0.34f),
+                        Color.Lerp(coreColor, Color.White, Main.rand.NextFloat(0.18f, 0.42f)),
+                        true,
+                        false,
+                        true));
+                }
+
+                return;
+            }
+
             GeneralParticleHandler.SpawnParticle(new StrongBloom(center, Vector2.Zero, Color.Lerp(coreColor, Color.White, 0.18f), 1.5f, 22));
             GeneralParticleHandler.SpawnParticle(new StrongBloom(center, Vector2.Zero, Color.White, 0.7f, 14));
             GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(center, Vector2.Zero, Color.Lerp(coreColor, Color.White, 0.22f), new Vector2(1.2f, 1.2f), 0f, 0.28f, 0.038f, 20));

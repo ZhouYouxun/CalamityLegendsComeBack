@@ -20,6 +20,8 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
         public const float BadSeedArrowSpeedBonus = 0.15f;
         public const float BadSeedBlossomFluxDamageBonus = 0.05f;
         public const float BadSeedBlossomFluxCritBonus = 8f;
+        public const float ArrowRestRangedDamageBonus = 0.05f;
+        public const float ArrowRestArrowSpeedBonus = 0.15f;
 
         public int QuiverTier;
         public bool DominationQuiverEquipped;

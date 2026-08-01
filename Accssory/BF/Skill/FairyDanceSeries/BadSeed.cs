@@ -49,8 +49,16 @@ namespace CalamityLegendsComeBack.Accssory.BF.FairyDanceSeries
         public override void ModifyShootStats(Item item, Player player, ref Vector2 position, ref Vector2 velocity, ref int type, ref int damage, ref float knockback)
         {
             BFAccessoryPlayer accessoryPlayer = player.GetModPlayer<BFAccessoryPlayer>();
-            if (item.useAmmo == AmmoID.Arrow && accessoryPlayer.HasBadSeedAttributes)
-                velocity *= 1f + BFAccessoryPlayer.BadSeedArrowSpeedBonus * accessoryPlayer.BadSeedAttributeMultiplier;
+            if (item.useAmmo != AmmoID.Arrow)
+                return;
+
+            float arrowSpeedMultiplier = 1f;
+            if (accessoryPlayer.HasBadSeedAttributes)
+                arrowSpeedMultiplier += BFAccessoryPlayer.BadSeedArrowSpeedBonus * accessoryPlayer.BadSeedAttributeMultiplier;
+            if (accessoryPlayer.ArrowConversionEquipped)
+                arrowSpeedMultiplier += BFAccessoryPlayer.ArrowRestArrowSpeedBonus;
+
+            velocity *= arrowSpeedMultiplier;
         }
     }
 }

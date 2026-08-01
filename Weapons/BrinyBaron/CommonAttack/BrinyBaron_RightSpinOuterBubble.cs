@@ -73,8 +73,32 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         {
             Texture2D texture = ModContent.Request<Texture2D>(Texture).Value;
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
+
+            // BloomCircle has an opaque dark RGB base. It must stay in additive blending or
+            // that base is written to the scene as a black disc while the contact point orbits.
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(
+                SpriteSortMode.Deferred,
+                BlendState.Additive,
+                SamplerState.PointClamp,
+                DepthStencilState.None,
+                Main.Rasterizer,
+                null,
+                Main.GameViewMatrix.TransformationMatrix);
+
             Main.EntitySpriteDraw(texture, drawPosition, null, new Color(100, 215, 255, 0) * 0.42f, Projectile.rotation, texture.Size() * 0.5f, 0.55f, SpriteEffects.None, 0f);
             Main.EntitySpriteDraw(texture, drawPosition, null, Color.White * 0.28f, -Projectile.rotation * 1.4f, texture.Size() * 0.5f, 0.28f, SpriteEffects.None, 0f);
+
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(
+                SpriteSortMode.Deferred,
+                BlendState.AlphaBlend,
+                SamplerState.PointClamp,
+                DepthStencilState.None,
+                Main.Rasterizer,
+                null,
+                Main.GameViewMatrix.TransformationMatrix);
+
             return false;
         }
     }

@@ -37,6 +37,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.Pa5
                 if (buffType <= 0 || buffType >= Main.debuff.Length || target.buffTime[i] <= 0 || !Main.debuff[buffType])
                     continue;
 
+                // The staged Plague package already adds exactly ten seconds per
+                // application. Skip it here so this general passive cannot double it.
+                if (BFPlaguePollutionNPC.IsStagedDiseaseDebuff(buffType))
+                    continue;
+
                 int cap = System.Math.Max(maxTime, target.buffTime[i]);
                 target.buffTime[i] = System.Math.Min(target.buffTime[i] + addTime, cap);
             }

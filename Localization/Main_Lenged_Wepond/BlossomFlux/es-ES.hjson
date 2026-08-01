@@ -178,9 +178,8 @@ Mods: {
 				// DisplayName: Lingering Remnant
 				/* Tooltip:
 					'''
-					Changes Breakthrough into a Phantasm-like mode: arrows are no longer converted and release strongly homing shards after hitting enemies.
-					Continuous fire gradually increases attack speed. Reaching the maximum tier plays an extra sound.
-					Recipe: Phantasm + 12 Luminite Bars + 5 Vortex Fragments @ Ancient Manipulator
+					Breakthrough fires the corresponding arrows directly.
+					Attack speed and damage increase the longer it is used.
 					''' */
 			}
 
@@ -215,7 +214,7 @@ Mods: {
 				// DisplayName: Silva Harp
 				/* Tooltip:
 					'''
-					15% increased ranged damage and 5% increased ranged critical strike chance.
+					+15% ranged damage, +5% ranged critical strike chance
 					Leaf Flow critical strikes have a 5% chance to create a life orb that heals the player.
 					Summons five Magical Harp notes that orbit the player horizontally like Titanium shards.
 					Breakthrough: Each loaded arrow adds two leaf arrows from behind the player, each dealing 1.5 times the Breakthrough panel damage.
@@ -280,9 +279,8 @@ Mods: {
 				// DisplayName: BFArrowRest
 				/* Tooltip:
 					'''
-					While equipped, BlossomFlux Breakthrough and Bombardment convert wooden arrows into their own projectiles; all other arrows fire normally.
-					Without this accessory, both modes always fire their own projectiles regardless of arrow type.
-					Recovery, Reconnaissance, and Plague are unaffected and always fire their custom projectiles.
+					+5% ranged damage, +15% arrow velocity
+					Downgrades all-arrow conversion for Breakthrough and Bombardment to wooden arrows only.
 					''' */
 			}
 		}
@@ -352,7 +350,7 @@ Mods: {
 		Buffs: {
 			BFRecoveryLeafBuff: {
 				// DisplayName: Recovery Leaf
-				// Description: The recovery branchflow is protecting and healing you.
+				// Description: Base effect: restores {0} life per second and grants {1} defense.
 			}
 
 			BFPlagueWitherBuff: {

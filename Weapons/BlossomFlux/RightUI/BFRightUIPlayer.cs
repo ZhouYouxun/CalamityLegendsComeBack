@@ -162,10 +162,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI
             return preset switch
             {
                 BlossomFluxChloroplastPresetType.Chlo_ABreak => true,
-                BlossomFluxChloroplastPresetType.Chlo_BRecov => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.EyeOfCthulhu),
-                BlossomFluxChloroplastPresetType.Chlo_CDetec => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.QueenBee),
-                BlossomFluxChloroplastPresetType.Chlo_DBomb => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.WallOfFlesh),
-                BlossomFluxChloroplastPresetType.Chlo_EPlague => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.MechBoss),
+                BlossomFluxChloroplastPresetType.Chlo_BRecov => true,
+                BlossomFluxChloroplastPresetType.Chlo_CDetec => BlossomFluxGrowthProgression.DownedAtLeast(BlossomFluxGrowthStage.EyeOfCthulhu),
+                BlossomFluxChloroplastPresetType.Chlo_DBomb => BlossomFluxGrowthProgression.DownedAtLeast(BlossomFluxGrowthStage.Hardmode),
+                BlossomFluxChloroplastPresetType.Chlo_EPlague => BlossomFluxGrowthProgression.DownedAtLeast(BlossomFluxGrowthStage.Plantera),
                 _ => false
             };
         }

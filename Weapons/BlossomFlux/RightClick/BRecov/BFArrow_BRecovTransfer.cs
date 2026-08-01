@@ -20,17 +20,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         internal const float LeftHitSpawnMode = 0f;
         internal const float ChargedReleaseSpawnMode = 1f;
 
-        private const int LeftScatterFrames = 10;
-        private const int ChargedScatterFrames = 18;
-        private const int LeftHoverFrames = 8;
-        private const int ChargedHoverFrames = 10;
         private const int MaxLifetimeFrames = 150;
         private const int NoTargetFlashFrames = 8;
         private const float BaseSearchRange = 3200f;
-        private const float ContactDistance = 20f;
 
         private bool healedTarget;
-        private bool holyLightHomingForm;
 
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
@@ -41,8 +35,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         private ref float StateTimer => ref Projectile.localAI[1];
 
         private bool FromChargedRelease => SpawnMode == ChargedReleaseSpawnMode;
-        private int ScatterFramesInUpdates => (FromChargedRelease ? ChargedScatterFrames : LeftScatterFrames) * Projectile.MaxUpdates;
-        private int HoverFramesInUpdates => (FromChargedRelease ? ChargedHoverFrames : LeftHoverFrames) * Projectile.MaxUpdates;
         private Player Owner => Main.player[Projectile.owner];
 
         public override void SetStaticDefaults()
@@ -88,87 +80,50 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
 
         public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
         {
-            StateTimer = ScatterFramesInUpdates + HoverFramesInUpdates;
+            StateTimer = NoTargetFlashFrames * Projectile.MaxUpdates;
             if (StoredHealAmount <= 0f)
                 StoredHealAmount = 3f;
 
-            if (Projectile.velocity.LengthSquared() < 0.01f)
-            {
-                Projectile.velocity = FromChargedRelease
-                    ? (-Vector2.UnitY * Owner.gravDir).RotatedByRandom(0.86f) * Main.rand.NextFloat(2.4f, 5.4f) * 0.8f
-                    : Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(2.4f, 5.6f);
-            }
-
-            if (FromChargedRelease)
-            {
-                Vector2 upward = -Vector2.UnitY * Owner.gravDir;
-                Projectile.velocity += upward * Main.rand.NextFloat(1.2f, 2.8f) * 0.8f;
-                Projectile.scale = Main.rand.NextFloat(1.04f, 1.18f);
-            }
-            else
-            {
-                Projectile.velocity = Projectile.velocity.RotatedByRandom(0.55f) * Main.rand.NextFloat(0.92f, 1.18f);
-                Projectile.scale = Main.rand.NextFloat(0.92f, 1.08f);
-            }
+            Projectile.velocity = Vector2.Zero;
+            Projectile.scale = FromChargedRelease
+                ? Main.rand.NextFloat(1.04f, 1.18f)
+                : Main.rand.NextFloat(0.92f, 1.08f);
+            Projectile.timeLeft = (NoTargetFlashFrames + 2) * Projectile.MaxUpdates;
 
             if (!HasValidHealTarget() && Projectile.owner == Main.myPlayer)
                 RefreshHealTarget();
-
-            if (!HasValidHealTarget())
-                StartNoTargetFlash();
         }
 
         public override void AI()
         {
             Timer++;
             bool finalUpdate = Projectile.FinalExtraUpdate();
-            Projectile.Opacity = Utils.GetLerpValue(0f, 8f * Projectile.MaxUpdates, Timer, true) *
-                Utils.GetLerpValue(0f, 18f * Projectile.MaxUpdates, Projectile.timeLeft, true);
+            Projectile.Opacity = Utils.GetLerpValue(0f, 4f * Projectile.MaxUpdates, Timer, true) *
+                Utils.GetLerpValue(0f, 4f * Projectile.MaxUpdates, Projectile.timeLeft, true);
+            Projectile.velocity = Vector2.Zero;
 
             Lighting.AddLight(Projectile.Center, new Color(105, 255, 145).ToVector3() * 0.58f * Projectile.Opacity);
 
-            if (finalUpdate && Projectile.owner == Main.myPlayer && (!HasValidHealTarget() || StateTimer <= HoverFramesInUpdates))
+            if (finalUpdate && Projectile.owner == Main.myPlayer && !HasValidHealTarget())
                 RefreshHealTarget();
 
-            if (!HasValidHealTarget() && Projectile.timeLeft > NoTargetFlashFrames * Projectile.MaxUpdates)
-                StartNoTargetFlash();
-
-            if (StateTimer > HoverFramesInUpdates)
+            if (StateTimer > 0f)
             {
                 StateTimer--;
-                ScatterBehavior();
+                EmitTransferTrail();
+                return;
             }
-            else if (StateTimer > 0f)
-            {
-                StateTimer--;
-                HoverBehavior();
-            }
-            else if (HasValidHealTarget())
-            {
-                Player target = Main.player[(int)TargetPlayerIndex];
-                StartHolyLightHomingForm(target);
-                HomeToTarget(target);
 
-                if (Projectile.Hitbox.Intersects(target.Hitbox) || Vector2.Distance(Projectile.Center, target.Center) <= ContactDistance)
-                {
-                    HealTarget(target);
-                    return;
-                }
-            }
+            if (HasValidHealTarget())
+                HealTarget(Main.player[(int)TargetPlayerIndex]);
             else
-            {
-                NoTargetFlashBehavior();
-            }
+                Projectile.Kill();
 
-            if (Projectile.velocity.LengthSquared() > 0.01f)
-                Projectile.rotation = Projectile.velocity.ToRotation();
-
-            EmitTransferTrail();
         }
 
         public override void OnKill(int timeLeft)
         {
-            SpawnTransferBurst(Projectile.Center, healedTarget ? 0.55f : 0.88f, healedTarget);
+            SpawnTransferBurst(Projectile.Center, healedTarget ? 1.15f : 0.88f, false);
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -218,21 +173,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                 0.082f,
                 SpriteEffects.None,
                 0f);
-
-            if (holyLightHomingForm)
-            {
-                Texture2D starTexture = ModContent.Request<Texture2D>("CalamityMod/Projectiles/StarProj").Value;
-                Main.EntitySpriteDraw(
-                    starTexture,
-                    drawCenter,
-                    null,
-                    accentColor * 0.9f,
-                    Projectile.rotation,
-                    starTexture.Size() * 0.5f,
-                    new Vector2(0.52f, 0.76f) * Projectile.scale * pulse,
-                    SpriteEffects.None,
-                    0f);
-            }
 
             Main.EntitySpriteDraw(
                 bloomTexture,
@@ -347,26 +287,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             Projectile.netUpdate = true;
         }
 
-        private void StartNoTargetFlash()
-        {
-            Projectile.velocity = Vector2.Zero;
-            StateTimer = 0f;
-
-            int flashTimeLeft = NoTargetFlashFrames * Projectile.MaxUpdates;
-            if (Projectile.timeLeft > flashTimeLeft)
-                Projectile.timeLeft = flashTimeLeft;
-
-            Projectile.netUpdate = true;
-
-            if (Projectile.FinalExtraUpdate())
-                SpawnTransferBurst(Projectile.Center, 0.9f, false);
-        }
-
-        private void NoTargetFlashBehavior()
-        {
-            Projectile.velocity = Vector2.Zero;
-        }
-
         private bool HasValidHealTarget()
         {
             if (!BFArrowCommon.InBounds(TargetPlayerIndex, Main.maxPlayers))
@@ -374,66 +294,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
 
             Player target = Main.player[(int)TargetPlayerIndex];
             return target.active && !target.dead;
-        }
-
-        private void ScatterBehavior()
-        {
-            Projectile.velocity *= FromChargedRelease ? 0.972f : 0.955f;
-            Projectile.velocity = Projectile.velocity.RotatedBy(MathF.Sin((Projectile.identity * 0.41f) + Timer * 0.028f) * (FromChargedRelease ? 0.011f : 0.007f));
-
-            if (FromChargedRelease)
-                Projectile.velocity += -Vector2.UnitY * Owner.gravDir * 0.026f;
-        }
-
-        private void HoverBehavior()
-        {
-            Projectile.velocity *= 0.88f;
-            Projectile.velocity.Y += (float)Math.Sin((Projectile.identity * 0.3f) + Timer * 0.06f) * 0.015f;
-            if (FromChargedRelease)
-                Projectile.velocity += -Vector2.UnitY * Owner.gravDir * 0.01f;
-        }
-
-        private void HomeToTarget(Player target)
-        {
-            Vector2 targetCenter = target.Center + target.velocity * 4f;
-            Vector2 playerVector = targetCenter - Projectile.Center;
-            float targetDistance = playerVector.Length();
-            float baseSpeed = (target.lifeMagnet ? 10.2f : 8.8f) * 0.8f;
-            float homeSpeed = MathHelper.Lerp(baseSpeed, baseSpeed + 3.2f * 0.8f, Utils.GetLerpValue(260f, 28f, targetDistance, true));
-            float steering = MathHelper.Lerp(0.18f, 0.42f, Utils.GetLerpValue(220f, 24f, targetDistance, true));
-            Vector2 desiredVelocity = playerVector.SafeNormalize(Vector2.UnitY) * homeSpeed;
-            Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, steering);
-
-            int minimumTimeLeft = 40 * Projectile.MaxUpdates;
-            if (Projectile.timeLeft < minimumTimeLeft)
-                Projectile.timeLeft = minimumTimeLeft;
-        }
-
-        // HolyLight 的关键不是命中爆散，而是取得目标、开始追踪时的 BlastCone 变身闪。
-        private void StartHolyLightHomingForm(Player target)
-        {
-            if (holyLightHomingForm)
-                return;
-
-            holyLightHomingForm = true;
-            if (Main.dedServ)
-                return;
-
-            Vector2 direction = (target.Center - Projectile.Center).SafeNormalize(Vector2.UnitY);
-            SoundStyle sound = SoundID.DD2_WitherBeastCrystalImpact with { MaxInstances = 10, Volume = 0.7f };
-            SoundEngine.PlaySound(sound, Projectile.Center);
-
-            Color holyGreen = new(54, 209, 54);
-            GeneralParticleHandler.SpawnParticle(new CustomPulse(
-                Projectile.Center,
-                Vector2.Zero,
-                holyGreen,
-                "CalamityMod/Particles/BlastCone",
-                new Vector2(Main.rand.NextFloat(4f, 7f), 1.5f),
-                direction.ToRotation(),
-                1f,
-                0f,
-                30));
         }
 
         private void HealTarget(Player target)
@@ -476,8 +336,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                 target.GetModPlayer<BFRecoveryEcologyPlayer>().AddRecoveryLeaf(BFRecoveryLeftBalance.GetStats().LeafTimePerFlash);
 
             healedTarget = restoredHealth || restoredShield;
-            SpawnTransferBurst(target.Center, 1.15f, true);
-            SoundEngine.PlaySound(BlossomFluxSounds.RightRecoveryTransfer, target.Center);
+            SoundEngine.PlaySound(BlossomFluxSounds.RightRecoveryTransfer, Projectile.Center);
             Projectile.Kill();
         }
 

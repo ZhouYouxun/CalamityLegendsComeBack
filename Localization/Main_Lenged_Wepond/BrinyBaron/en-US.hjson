@@ -96,7 +96,7 @@ Mods: {
 					'''
 					+12% melee damage
 					Increases Briny Baron's max tide to 8
-					Each tide stack grants +1% melee damage and melee attack speed
+					Each tide stack grants +1% melee damage and +1% melee attack speed
 					'''
 			}
 
@@ -106,8 +106,8 @@ Mods: {
 					'''
 					+15% melee damage
 					Increases Briny Baron's max tide to 10
-					Each tide stack grants +1% melee damage and melee attack speed; gain 1 tide every 12 seconds
-					Full tide grants +10 defense and 10% damage reduction
+					Each tide stack grants +1% melee damage and +1% melee attack speed; gain 1 tide every 12 seconds
+					Full tide grants +10 defense and +10% damage reduction
 					'''
 			}
 
@@ -117,9 +117,9 @@ Mods: {
 					'''
 					+15% melee damage
 					Increases Briny Baron's max tide to 10
-					Each tide stack grants +1% melee damage and attack speed
+					Each tide stack grants +1% melee damage and +1% melee attack speed
 					Gain 2 tide every 6 seconds
-					Full tide grants +10 defense, 10% DR, and 30% melee crit
+					Full tide grants +10 defense, +10% DR, and +30% melee critical strike chance
 					'''
 			}
 
@@ -138,7 +138,7 @@ Mods: {
 				Tooltip:
 					'''
 					+50 maximum mana and +15% melee damage
-					Each tide stack grants 1% melee critical strike chance
+					Each tide stack grants +1% melee critical strike chance
 					Tide clearing and non-boss decay take twice as long
 					Melee critical strikes have a 1% chance to grant 1 tide
 					The finisher consumes all mana to empower every strike
@@ -152,7 +152,7 @@ Mods: {
 					+6 defense, 6% damage reduction, and knockback immunity
 					Briny Baron right-click dash speed ×1.25; cooldown reduced to 2 seconds
 					A right-click hit grants a 100-health bubble shield
-					While shielded, gain 25 defense and 25% damage reduction
+					While shielded, gain +25 defense and +25% damage reduction
 					'''
 			}
 

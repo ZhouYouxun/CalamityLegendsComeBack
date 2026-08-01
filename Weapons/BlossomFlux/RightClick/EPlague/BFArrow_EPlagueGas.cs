@@ -11,11 +11,24 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
     // 散播箭的毒气子弹幕，主要承担滞留区域和持续伤害。
     internal class BFArrow_EPlagueGas : ModProjectile
     {
+        private const int BaseLifetime = 92;
+        private const int LargeSporeLifetime = 207;
+        private const float LargeSporeSpeedMultiplier = 1.66f;
+
         public new string LocalizationCategory => "Projectiles.BlossomFlux";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         private ref float Variant => ref Projectile.ai[0];
         private ref float MaxVisualScale => ref Projectile.ai[1];
+
+        internal void ConfigureFromLargeSpore()
+        {
+            // 92 帧基础寿命提高 125% 至 207 帧；初速同步校正为约 1.66 倍，
+            // 在既有阻尼下实际飞行距离约为原来的两倍。
+            Projectile.timeLeft = LargeSporeLifetime;
+            Projectile.velocity *= LargeSporeSpeedMultiplier;
+            Projectile.netUpdate = true;
+        }
 
         public override void SetDefaults()
         {
@@ -29,7 +42,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.penetrate = -1;
-            Projectile.timeLeft = 92;
+            Projectile.timeLeft = BaseLifetime;
             Projectile.alpha = 255;
             BFArrowCommon.ForceLocalNPCImmunity(Projectile, 12);
         }

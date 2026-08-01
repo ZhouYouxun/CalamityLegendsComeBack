@@ -40,7 +40,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.FairyDanceSeries
                 .AddIngredient(ItemID.FairyCritterBlue)
                 .AddIngredient(ItemID.PixieDust, 20)
                 .AddIngredient(ItemID.SoulofLight, 10)
-                .AddTile(TileID.MythrilAnvil)
+                .AddTile(TileID.Anvils)
                 .Register();
         }
     }

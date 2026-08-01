@@ -21,7 +21,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         public new string LocalizationCategory => "Projectiles.BlossomFlux";
 
         // 球本体不画贴图，看到的全是图元圆环和辉光。
-        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+        public override string Texture => "CalamityMod/Projectiles/Ranged/SporeBomb";
 
         // 画在 NPC 之前，让怪物压在环上，读起来才像一个「场」而不是贴片。
         public GeneralDrawLayer LayerToRenderTo => GeneralDrawLayer.BeforeNPCs;
@@ -35,6 +35,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         // 甩出后的飞行速度与总飞行时长。
         private const float LaunchSpeed = 34f;
         private const int FlightFrames = 52;
+        private const int HomingDelayFrames = 8;
+        private const float HomingRange = 960f;
+        private const float HomingResponsiveness = 0.11f;
+        private const int DirectGasCount = 5;
 
         // 命中敌人后强制引爆的倒计时，留几帧让收束动画走完。
         private const int HitDetonateDelay = 9;
@@ -76,7 +80,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
 
         public override void SetDefaults()
         {
-            Projectile.width = Projectile.height = 8;
+            Projectile.width = Projectile.height = 52;
             Projectile.friendly = true;
             Projectile.hostile = false;
             Projectile.DamageType = DamageClass.Ranged;
@@ -207,9 +211,49 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             else
             {
                 radius = MathHelper.Lerp(radius, MaxRadius * 0.92f, 0.08f);
+                HomeTowardsTarget();
             }
 
             Lighting.AddLight(Projectile.Center, PlagueMain.ToVector3() * 0.75f);
+        }
+
+        private void HomeTowardsTarget()
+        {
+            if (flightTimer < HomingDelayFrames)
+                return;
+
+            NPC target = FindHomingTarget();
+            if (target is null)
+                return;
+
+            float speed = Math.Max(Projectile.velocity.Length(), LaunchSpeed);
+            Vector2 desiredVelocity = (target.Center + target.velocity * 5f - Projectile.Center)
+                .SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitX)) * speed;
+            Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, HomingResponsiveness);
+        }
+
+        private NPC FindHomingTarget()
+        {
+            NPC bestTarget = null;
+            float bestDistance = HomingRange;
+
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (npc.friendly || npc.dontTakeDamage || npc.life <= 0)
+                    continue;
+
+                if (!Collision.CanHitLine(Projectile.Center, 1, 1, npc.Center, 1, 1))
+                    continue;
+
+                float distance = Vector2.Distance(Projectile.Center, npc.Center);
+                if (distance >= bestDistance)
+                    continue;
+
+                bestDistance = distance;
+                bestTarget = npc;
+            }
+
+            return bestTarget;
         }
 
         private void EmitFlightFX()
@@ -271,7 +315,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
 
             if (Main.myPlayer == Projectile.owner)
             {
-                SpawnArrowRings();
+                SpawnDirectGasBurst();
                 SpawnBooms();
             }
 
@@ -279,6 +323,34 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         }
 
         // 两圈瘟疫箭，内圈快外圈慢，内圈整体偏转半格，撒出去像一张网而不是一个星形。
+        private void SpawnDirectGasBurst()
+        {
+            int gasDamage = Math.Max(1, (int)(Projectile.damage * 0.38f));
+            float baseAngle = Main.rand.NextFloat(MathHelper.TwoPi);
+
+            for (int i = 0; i < DirectGasCount; i++)
+            {
+                float angle = baseAngle + MathHelper.TwoPi * i / DirectGasCount + Main.rand.NextFloat(-0.18f, 0.18f);
+                Vector2 velocity = angle.ToRotationVector2() * Main.rand.NextFloat(3.4f, 6f);
+                int index = Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    Projectile.Center + Main.rand.NextVector2Circular(12f, 12f),
+                    velocity,
+                    ModContent.ProjectileType<BFArrow_EPlagueGas>(),
+                    gasDamage,
+                    Projectile.knockBack * 0.45f,
+                    Projectile.owner,
+                    Main.rand.Next(3),
+                    Main.rand.NextFloat(1.35f, 1.75f));
+
+                if (BFArrowCommon.InBounds(index, Main.maxProjectiles) &&
+                    Main.projectile[index].ModProjectile is BFArrow_EPlagueGas gas)
+                {
+                    gas.ConfigureFromLargeSpore();
+                }
+            }
+        }
+
         private void SpawnArrowRings()
         {
             int ringCount = 2;
@@ -476,21 +548,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         // 圆环骨架来自狞桀，呼吸与双股的读感来自你们瘟疫箭的双螺旋。
         public void RenderPixelatedPrimitives(SpriteBatch spriteBatch, GeneralDrawLayer layer)
         {
-            if (radius < 6f)
-                return;
-
-            float glow = Charging ? MathHelper.Lerp(0.35f, 1f, MathHelper.Clamp(ChargePower, 0f, 1f)) : 1f;
-            float time = Main.GlobalTimeWrappedHourly;
-
-            GameShaders.Misc["CalamityMod:ImpFlameTrail"].SetShaderTexture(
-                ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/SylvestaffStreak"));
-
-            RenderRing(radius, 1f, glow, time * 2.3f, PlagueMain, PlagueAcid, 13f);
-
-            GameShaders.Misc["CalamityMod:ImpFlameTrail"].SetShaderTexture(
-                ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/Trails/ScarletDevilStreak"));
-
-            RenderRing(radius * 0.8f, -1f, glow, -time * 3.1f, PlagueAccent, PlagueMain, 6.5f);
+            // 蓄力主体已改为大型孢子贴图，不能再绘制环形图元。
         }
 
         private void RenderRing(float ringRadius, float spin, float glow, float phase, Color inner, Color outer, float baseWidth)
@@ -531,9 +589,16 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         {
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Texture2D star = ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar").Value;
+            Texture2D spore = ModContent.Request<Texture2D>(Texture).Value;
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
             float glow = Charging ? MathHelper.Lerp(0.3f, 1f, MathHelper.Clamp(ChargePower, 0f, 1f)) : 1f;
             float pulse = 0.92f + 0.08f * MathF.Sin(Main.GlobalTimeWrappedHourly * 7f);
+            float sporeScale = Charging
+                ? MathHelper.Lerp(1.3f, 3.2f, MathHelper.Clamp(ChargePower, 0f, 1f))
+                : MathHelper.Lerp(0.65f, 3.2f, Utils.GetLerpValue(0f, CollapseFrames, detonateCountdown, true));
+            float sporeRotation = Charging
+                ? Main.GlobalTimeWrappedHourly * 0.7f
+                : Projectile.velocity.ToRotation() + MathHelper.PiOver2;
 
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.PointClamp,
@@ -548,6 +613,14 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             Main.EntitySpriteDraw(bloom, drawPosition, null,
                 (Color.Lerp(PlagueAccent, Color.White, 0.4f) with { A = 0 }) * (0.55f * glow), 0f, bloom.Size() * 0.5f,
                 radius / bloom.Width * 0.7f * pulse, SpriteEffects.None, 0);
+
+            Main.EntitySpriteDraw(spore, drawPosition, null,
+                (Color.Lerp(PlagueMain, Color.White, 0.18f) with { A = 0 }) * glow,
+                sporeRotation,
+                spore.Size() * 0.5f,
+                sporeScale * pulse,
+                SpriteEffects.None,
+                0);
 
             // 中心旋转星芒，和你们右键箭矢的 DrawCentredRotatingStar 保持同一读感。
             for (int i = 0; i < 3; i++)

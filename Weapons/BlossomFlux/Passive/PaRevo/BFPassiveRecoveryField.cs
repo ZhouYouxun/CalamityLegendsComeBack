@@ -147,65 +147,38 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo
             Color coreColor = Color.Lerp(MainColor, Color.White, 0.2f);
             Color flashColor = Color.Lerp(AccentColor, Color.White, 0.34f);
 
-            GeneralParticleHandler.SpawnParticle(new StrongBloom(Projectile.Center, Vector2.Zero, flashColor, 0.95f, 22));
-            GeneralParticleHandler.SpawnParticle(new DetailedExplosion(Projectile.Center, Vector2.Zero, flashColor * 0.75f, Vector2.One, Main.rand.NextFloat(-0.2f, 0.2f), 0f, 0.26f, 18));
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Vector2.Zero, coreColor * 0.8f, new Vector2(0.55f, 5.6f), 0f, 0.22f, 0.032f, 24));
-            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(Projectile.Center, Vector2.Zero, coreColor * 0.8f, new Vector2(0.55f, 5.6f), MathHelper.PiOver2, 0.22f, 0.032f, 24));
-
-            Vector2[] cardinalDirections =
+            // Field activation should read as fresh energy dispersing through the area, not a
+            // stack of bloom, explosion, rings, and fixed cross chains at the player's feet.
+            // Give every light particle an immediate radial velocity so the center clears fast.
+            const int particleCount = 16;
+            for (int i = 0; i < particleCount; i++)
             {
-                Vector2.UnitX,
-                -Vector2.UnitX,
-                Vector2.UnitY,
-                -Vector2.UnitY
-            };
+                float angle = MathHelper.TwoPi * i / particleCount + Main.rand.NextFloat(-0.12f, 0.12f);
+                Vector2 direction = angle.ToRotationVector2();
+                Vector2 position = Projectile.Center + direction * Main.rand.NextFloat(3f, 16f);
+                Vector2 velocity = direction * Main.rand.NextFloat(4.4f, 7.4f);
+                Color particleColor = Color.Lerp(coreColor, flashColor, Main.rand.NextFloat());
 
-            foreach (Vector2 direction in cardinalDirections)
-            {
-                for (int i = 0; i < 10; i++)
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    position,
+                    velocity,
+                    false,
+                    Main.rand.Next(17, 25),
+                    Main.rand.NextFloat(0.2f, 0.34f),
+                    particleColor,
+                    true,
+                    false,
+                    true));
+
+                if (i % 2 == 0)
                 {
-                    float chainProgress = i / 9f;
-                    float speed = 2.6f + i * 1.15f;
-                    float scale = 0.36f + i * 0.08f;
-                    int life = 18 + i * 2;
-                    Vector2 position = Projectile.Center + direction * i * 6.5f;
-                    Vector2 velocity = direction * speed + direction.RotatedByRandom(0.08f) * Main.rand.NextFloat(0.12f, 0.35f);
-                    Color chainColor = Color.Lerp(coreColor, flashColor, chainProgress);
-
-                    GeneralParticleHandler.SpawnParticle(new SquishyLightParticle(
+                    GeneralParticleHandler.SpawnParticle(new SparkParticle(
                         position,
-                        velocity,
-                        scale,
-                        chainColor,
-                        life,
-                        1f,
-                        1.7f + i * 0.12f));
-
-                    if (i % 2 == 0)
-                    {
-                        GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
-                            position + Main.rand.NextVector2Circular(4f, 4f),
-                            direction * Main.rand.NextFloat(0.5f, 1.35f),
-                            false,
-                            10 + i,
-                            0.2f + chainProgress * 0.18f,
-                            Color.Lerp(MainColor, Color.White, 0.28f),
-                            true,
-                            false,
-                            true));
-                    }
-
-                    if (i % 3 == 0)
-                    {
-                        Dust crossDust = Dust.NewDustPerfect(
-                            position,
-                            DustID.TerraBlade,
-                            velocity * 0.3f,
-                            90,
-                            chainColor,
-                            1f + chainProgress * 0.3f);
-                        crossDust.noGravity = true;
-                    }
+                        velocity * Main.rand.NextFloat(0.72f, 1.08f),
+                        false,
+                        Main.rand.Next(14, 20),
+                        Main.rand.NextFloat(0.38f, 0.7f),
+                        Color.Lerp(particleColor, Color.White, 0.28f)));
                 }
             }
         }

@@ -44,6 +44,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
         private float storedAmmoKnockback = 2f;
         private float explosionSize = 190f;
         private float skyRainMultiplier = 1f;
+        private int rainImpactExplosionCount = 1;
         private Vector2 stickOffset;
         private Vector2 targetPoint;
         private Vector2 groundAnchorPoint;
@@ -101,12 +102,13 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             return new Vector2(horizontalSpeed, -verticalSpeed);
         }
 
-        public void ConfigureBombardTarget(Vector2 bombardTarget, float strikeExplosionSize = 190f, float rainMultiplier = 1f, int waveCount = DefaultBombardWaveCount)
+        public void ConfigureBombardTarget(Vector2 bombardTarget, float strikeExplosionSize = 190f, float rainMultiplier = 1f, int waveCount = DefaultBombardWaveCount, int impactExplosionCount = 1)
         {
             targetPoint = bombardTarget;
             explosionSize = MathHelper.Clamp(strikeExplosionSize, 96f, 720f);
             skyRainMultiplier = MathHelper.Clamp(rainMultiplier, 1f, 3f);
             bombardWaveCount = Utils.Clamp(waveCount, 1, 30);
+            rainImpactExplosionCount = Utils.Clamp(impactExplosionCount, 1, 2);
             float desiredSpeed = Projectile.velocity.Length();
             if (desiredSpeed <= 0.01f)
                 desiredSpeed = 18f;
@@ -141,6 +143,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             writer.Write(explosionSize);
             writer.Write(skyRainMultiplier);
             writer.Write(bombardWaveCount);
+            writer.Write(rainImpactExplosionCount);
             writer.Write(ReturnDelayTimer);
             writer.Write(passedBombardTarget);
             writer.Write(pendingBombardTeleport);
@@ -162,6 +165,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             explosionSize = reader.ReadSingle();
             skyRainMultiplier = reader.ReadSingle();
             bombardWaveCount = reader.ReadInt32();
+            rainImpactExplosionCount = reader.ReadInt32();
             ReturnDelayTimer = reader.ReadSingle();
             passedBombardTarget = reader.ReadBoolean();
             pendingBombardTeleport = reader.ReadBoolean();
@@ -712,6 +716,10 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                 rainArrow.hostile = false;
                 rainArrow.tileCollide = false;
                 rainArrow.noDropItem = true;
+                // 花后解锁的多重爆炸只改变每一根天降叶命中时的爆炸次数，
+                // 不改变这次天降本身生成的弹幕数量。
+                rainArrow.ai[2] = rainImpactExplosionCount - 1;
+                rainArrow.netUpdate = true;
             }
 
             SpawnBombardAuraFX(center, 0.92f);

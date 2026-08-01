@@ -32,37 +32,33 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             { "Exo Mechs and Supreme Calamitas",           777,   777,   777,  400,    777 }
         };
 
-        // Edit primary non-damage knobs here. Columns are:
+        // Edit primary non-damage knobs here. These values use the six growth
+        // nodes below and are intentionally independent from MainDamageTable.
+        // Columns are:
         // Stage,
         // Breakthrough left fire delay,
         // Breakthrough right max loaded arrows,
-        // Recovery right orb count,
+        // Breakthrough right frames per loaded arrow,
+        // Recovery right flash count,
+        // Recovery right healing per flash,
         // Recon left shots per trigger,
         // Recon left burst pause,
         // Recon right penetrate,
+        // Recon right mark duration in seconds,
         // Bombard left min arrows per trigger,
         // Bombard left max arrows per trigger,
         // Bombard left fire delay,
-        // Bombard right wave count.
+        // Bombard right wave count,
+        // Bombard right impact explosions per falling projectile.
         internal static readonly object[,] MainParamsTable =
         {
-            // Stage                                      BrkDelay BrkMax RecOrb RecShots RecPause RecPen BombMin BombMax BombDelay BombWaves
-            { "Initial",                                      15,     2,     4,       1,      90,     2,      3,      3,       10,        8 },
-            { "Eye of Cthulhu",                               10,     2,     4,       1,      85,     2,      3,      3,       10,        8 },
-            { "Evil Boss",                                    10,     2,     4,       1,      80,     2,      3,      3,       10,        8 },
-            { "Queen Bee",                                    10,     3,     4,       1,      75,     2,      3,      3,       10,        8 },
-            { "Skeletron",                                    10,     3,     4,       1,      70,     2,      3,      3,       10,        8 },
-            { "Hardmode",                                      6,     4,     4,       2,      60,     2,      3,      3,       10,        8 },
-            { "Any Mechanical Boss",                           6,     4,     4,       2,      55,     2,      3,      3,       10,        8 },
-            { "Plantera",                                      3,     5,     4,       3,      50,     2,      4,      4,       10,        8 },
-            { "Golem",                                         3,     5,     4,       3,      45,     2,      4,      4,       10,        8 },
-            { "Plaguebringer Goliath",                         3,     5,     4,       3,      40,     2,      5,      5,        8,        8 },
-            { "Moon Lord",                                     2,     6,     4,       3,      36,     2,      5,      6,        8,        8 },
-            { "Providence",                                    2,     6,     4,       3,      30,     2,      5,      6,        8,        8 },
-            { "Polterghast",                                   2,     6,     4,       3,      27,     2,      5,      6,        8,        8 },
-            { "Devourer of Gods",                              2,     7,     4,       3,      24,     2,      6,      6,        7,        8 },
-            { "Yharon",                                        2,     7,     4,       3,      18,     2,      6,      6,        7,        8 },
-            { "Exo Mechs and Supreme Calamitas",               2,     7,     4,       3,      12,     2,      6,      6,        7,        8 },
+            // Stage                       BrkDelay BrkMax BrkFrame RecFlash RecHeal RecShots RecPause RecPen RecMark BombMin BombMax BombDelay BombWaves BombImpact
+            { "Initial",                       15,     3,      30,       3,      5,       1,      90,     2,     15,      3,      3,       10,        8,          1 },
+            { "Eye of Cthulhu",                10,     3,      30,       3,     15,       1,      85,     2,     15,      3,      3,       10,        8,          1 },
+            { "Hardmode",                       6,     5,      20,       5,     15,       3,      60,     2,     25,      3,      3,       10,        8,          1 },
+            { "Plantera",                       3,     7,      15,       7,     15,       3,      50,     2,     25,      4,      4,       10,        8,          2 },
+            { "Moon Lord",                      2,     7,      15,       9,     15,       3,      36,     2,     25,      5,      5,        8,        8,          2 },
+            { "Devourer of Gods",               2,     7,      15,       9,     20,       3,      24,     2,     25,      5,      5,        7,        8,          2 },
         };
 
         private const string SourceFile = "Weapons/BlossomFlux/BalanceBlossomFlux.cs";
@@ -120,11 +116,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             return (int)MainParamsTable[stage, column];
         }
 
-        internal static bool Plague_BetsysCurse => false;
-        internal static bool Plague_AstralInfection => false;
-        internal static bool Plague_Wither => false;
-        internal static bool Plague_WhisperingDeath => false;
-        internal static bool Plague_AbsorberAffliction => false;
+        internal static bool Plague_BetsysCurse => BlossomFluxGrowthProgression.DownedAtLeast(BlossomFluxGrowthStage.MoonLord);
+        internal static bool Plague_AstralInfection => BlossomFluxGrowthProgression.DownedAtLeast(BlossomFluxGrowthStage.MoonLord);
+        internal static bool Plague_Wither => BlossomFluxGrowthProgression.DownedAtLeast(BlossomFluxGrowthStage.MoonLord);
+        internal static bool Plague_WhisperingDeath => BlossomFluxGrowthProgression.DownedAtLeast(BlossomFluxGrowthStage.DevourerOfGods);
+        internal static bool Plague_AbsorberAffliction => BlossomFluxGrowthProgression.DownedAtLeast(BlossomFluxGrowthStage.DevourerOfGods);
     }
 
     internal readonly struct BFBombardLeftStats
@@ -158,16 +154,16 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             float radius = 1f;
             float speed = 1f;
 
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.MoonLord))
+            if (BlossomFluxGrowthProgression.DownedAtLeast(BlossomFluxGrowthStage.MoonLord))
                 explosionLimit = 2;
 
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.Polterghast))
+            if (BlossomFluxGrowthProgression.DownedAtLeast(BlossomFluxGrowthStage.DevourerOfGods))
             {
                 radius = 1.25f;
                 speed = 1.18f;
             }
 
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.DevourerOfGods))
+            if (BlossomFluxGrowthProgression.DownedAtLeast(BlossomFluxGrowthStage.DevourerOfGods))
                 explosionLimit = 3;
 
             return new BFBombardLeftStats(minCount, maxCount, interval, explosionLimit, radius, speed);
@@ -182,13 +178,15 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         public readonly float ExplosionSize;
         public readonly float SkyRainMultiplier;
         public readonly int WaveCount;
+        public readonly int RainImpactExplosionCount;
 
-        public BFBombardRightStats(int chargeFrames, float explosionSize, float skyRainMultiplier, int waveCount)
+        public BFBombardRightStats(int chargeFrames, float explosionSize, float skyRainMultiplier, int waveCount, int rainImpactExplosionCount)
         {
             ChargeFrames = chargeFrames;
             ExplosionSize = explosionSize;
             SkyRainMultiplier = skyRainMultiplier;
             WaveCount = waveCount;
+            RainImpactExplosionCount = rainImpactExplosionCount;
         }
     }
 
@@ -200,7 +198,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 chargeFrames: 120,
                 explosionSize: 190f,
                 skyRainMultiplier: 1f,
-                waveCount: MathMax(1, BFBalanceTable.Get(BFStat.Bombard_Right_WaveCount)));
+                waveCount: MathMax(1, BFBalanceTable.Get(BFStat.Bombard_Right_WaveCount)),
+                rainImpactExplosionCount: MathMax(1, BFBalanceTable.Get(BFStat.Bombard_Right_RainImpactExplosionCount)));
         }
 
         private static int MathMax(int left, int right) => left > right ? left : right;
@@ -231,24 +230,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 useTime: useInterval,
                 useInterval: useInterval,
                 shotsPerSecond: 60f / useInterval,
-                projectileSpeedMultiplier: GetProjectileSpeedMultiplier());
-        }
-
-        private static float GetProjectileSpeedMultiplier()
-        {
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.DevourerOfGods))
-                return 3f;
-
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.Polterghast))
-                return 2f;
-
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.MoonLord))
-                return 1.66f;
-
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.PlaguebringerGoliath))
-                return 1.33f;
-
-            return 1f;
+                projectileSpeedMultiplier: 1f);
         }
 
         private static int MathMax(int left, int right) => left > right ? left : right;
@@ -285,7 +267,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         public static BFBreakthroughRightStats GetStats()
         {
             return new BFBreakthroughRightStats(
-                framesPerArrow: 15,
+                framesPerArrow: MathMax(1, BFBalanceTable.Get(BFStat.Breakthrough_Right_FramesPerArrow)),
                 maxLoadedArrows: MathMax(1, BFBalanceTable.Get(BFStat.Breakthrough_Right_MaxArrows)),
                 penetrate: 9,
                 ignorePenetrationDamageFalloff: false,
@@ -334,7 +316,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         {
             return new BFPlagueLeftStats(
                 initialDuration: 10 * 60,
-                stackDuration: 5 * 60,
+                stackDuration: 10 * 60,
                 maxDuration: 30 * 60,
                 inflictBetsysCurse: BalanceBlossomFlux.Plague_BetsysCurse,
                 inflictAstralInfection: BalanceBlossomFlux.Plague_AstralInfection,
@@ -402,7 +384,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         {
             return new BFReconRightStats(
                 chargeFrames: 90,
-                markDuration: 15 * 60,
+                markDuration: System.Math.Max(1, BFBalanceTable.Get(BFStat.Recon_Right_MarkDurationSeconds)) * 60,
                 damageAmpDuration: DamageAmpDuration,
                 effectTier: 0);
         }
@@ -480,16 +462,15 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
     {
         public static BFRecoveryLeftStats GetStats()
         {
-            int volleyPauseFrames = 60;
-
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.WallOfFlesh))
-                volleyPauseFrames = 40;
-
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.MechBoss))
-                volleyPauseFrames = 20;
-
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.Plantera))
-                volleyPauseFrames = 0;
+            int volleyPauseFrames = BlossomFluxGrowthProgression.StageIndex switch
+            {
+                (int)BlossomFluxGrowthStage.EyeOfCthulhu => 50,
+                (int)BlossomFluxGrowthStage.Hardmode => 40,
+                (int)BlossomFluxGrowthStage.Plantera => 40,
+                (int)BlossomFluxGrowthStage.MoonLord => 40,
+                (int)BlossomFluxGrowthStage.DevourerOfGods => 40,
+                _ => 60
+            };
 
             int heal = 5;
             int maxTime = 10 * 60;
@@ -506,58 +487,42 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             bool movingRegenIgnoresPenalty = false;
             bool healthThresholdRegenTime = false;
 
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.WallOfFlesh))
+            if (BlossomFluxGrowthProgression.DownedAtLeast(BlossomFluxGrowthStage.Hardmode))
             {
                 heal = 7;
                 maxTime = 15 * 60;
-                defense = 8;
-                regen = 3;
+                defense = 10;
+                regen = 4;
                 immunePoisonAndFire = true;
             }
 
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.MechBoss))
-            {
-                defense = 12;
-                regen = 4;
-                regenTime = 3;
-                damageReduction = 0.10f;
-            }
-
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.Plantera))
+            if (BlossomFluxGrowthProgression.DownedAtLeast(BlossomFluxGrowthStage.Plantera))
             {
                 heal = 10;
                 maxTime = 20 * 60;
                 defense = 15;
-                regen = 5;
+                regen = 6;
                 regenTime = 4;
                 damageReduction = 0.12f;
                 immuneAcidVenom = true;
                 debuffDamageMultiplier = 0.67f;
             }
 
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.PlaguebringerGoliath))
-                immunePlague = true;
-
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.MoonLord))
+            if (BlossomFluxGrowthProgression.DownedAtLeast(BlossomFluxGrowthStage.MoonLord))
             {
-                regen = 6;
+                defense = 20;
+                regen = 8;
+                immunePlague = true;
                 movingRegenIgnoresPenalty = true;
                 healthThresholdRegenTime = true;
             }
 
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.Polterghast))
+            if (BlossomFluxGrowthProgression.DownedAtLeast(BlossomFluxGrowthStage.DevourerOfGods))
             {
                 heal = 20;
-                maxTime = 25 * 60;
-                defense = 20;
-                damageReduction = 0.15f;
-            }
-
-            if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.DevourerOfGods))
-            {
                 maxTime = 30 * 60;
                 defense = 25;
-                regen = 8;
+                regen = 10;
                 regenTime = 5;
                 missingQuarterRegen = 2;
                 damageReduction = 0.20f;
@@ -614,11 +579,46 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             return new BFRecoveryRightStats(
                 chargeFrames: 5 * 60,
                 flashCount: MathMax(1, BFBalanceTable.Get(BFStat.Recovery_Right_OrbCount)),
-                healAmount: 25,
+                healAmount: MathMax(1, BFBalanceTable.Get(BFStat.Recovery_Right_HealAmount)),
                 chargeDamageReduction: 0f);
         }
 
         private static int MathMax(int left, int right) => left > right ? left : right;
+    }
+
+    internal enum BlossomFluxGrowthStage
+    {
+        Start = 0,
+        EyeOfCthulhu = 1,
+        Hardmode = 2,
+        Plantera = 3,
+        MoonLord = 4,
+        DevourerOfGods = 5
+    }
+
+    internal static class BlossomFluxGrowthProgression
+    {
+        public static int StageIndex => (int)GetDefeatedStage();
+
+        public static bool DownedAtLeast(BlossomFluxGrowthStage stage) => GetDefeatedStage() >= stage;
+
+        private static BlossomFluxGrowthStage GetDefeatedStage()
+        {
+            BlossomFluxGrowthStage stage = BlossomFluxGrowthStage.Start;
+
+            if (NPC.downedBoss1)
+                stage = BlossomFluxGrowthStage.EyeOfCthulhu;
+            if (Main.hardMode)
+                stage = BlossomFluxGrowthStage.Hardmode;
+            if (NPC.downedPlantBoss)
+                stage = BlossomFluxGrowthStage.Plantera;
+            if (NPC.downedMoonlord)
+                stage = BlossomFluxGrowthStage.MoonLord;
+            if (DownedBossSystem.downedDoG)
+                stage = BlossomFluxGrowthStage.DevourerOfGods;
+
+            return stage;
+        }
     }
 
     internal enum BlossomFluxProgressionStage
@@ -721,43 +721,53 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         Breakthrough_Left_Damage = 0,
         Breakthrough_Left_UseInterval = 1,
         Breakthrough_Right_MaxArrows = 2,
-        Breakthrough_Right_Damage = 3,
+        Breakthrough_Right_FramesPerArrow = 3,
+        Breakthrough_Right_Damage = 4,
 
-        Recovery_Left_Damage = 4,
-        Recovery_Right_OrbCount = 5,
+        Recovery_Left_Damage = 5,
+        Recovery_Right_OrbCount = 6,
+        Recovery_Right_HealAmount = 7,
 
-        Recon_Left_Damage = 6,
-        Recon_Left_BurstCooldown = 7,
-        Recon_Left_ShotsPerBurst = 8,
-        Recon_Right_Penetrate = 9,
-        Recon_Right_Damage = 10,
+        Recon_Left_Damage = 8,
+        Recon_Left_BurstCooldown = 9,
+        Recon_Left_ShotsPerBurst = 10,
+        Recon_Right_Penetrate = 11,
+        Recon_Right_MarkDurationSeconds = 12,
+        Recon_Right_Damage = 13,
 
-        Bombard_Left_MinArrows = 11,
-        Bombard_Left_MaxArrows = 12,
-        Bombard_Left_Interval = 13,
-        Bombard_Left_Damage = 14,
-        Bombard_Right_Damage = 15,
-        Bombard_Right_WaveCount = 16,
+        Bombard_Left_MinArrows = 14,
+        Bombard_Left_MaxArrows = 15,
+        Bombard_Left_Interval = 16,
+        Bombard_Left_Damage = 17,
+        Bombard_Right_Damage = 18,
+        Bombard_Right_WaveCount = 19,
+        Bombard_Right_RainImpactExplosionCount = 20,
 
-        Plague_Left_Damage = 17,
-        Plague_Right_Damage = 18,
+        Plague_Left_Damage = 21,
+        Plague_Right_Damage = 22,
 
-        StatCount = 19
+        StatCount = 23
     }
 
     internal static class BFBalanceTable
     {
         private const string SourceFile = "Weapons/BlossomFlux/BalanceBlossomFlux.cs";
-        public const int StageCount = 16;
+        public static int Get(BFStat stat)
+        {
+            if (TryGetMainDamageColumn(stat, out _))
+                return Get(stat, BlossomFluxProgression.StageIndex);
 
-        public static int Get(BFStat stat) => Get(stat, BlossomFluxProgression.StageIndex);
+            if (TryGetMainParamsColumn(stat, out _))
+                return Get(stat, BlossomFluxGrowthProgression.StageIndex);
+
+            return 0;
+        }
 
         public static int Get(BFStat stat, int stageIndex)
         {
-            int stage = Utils.Clamp(stageIndex, 0, StageCount - 1);
-
             if (TryGetMainDamageColumn(stat, out int damageColumn))
             {
+                int stage = Utils.Clamp(stageIndex, 0, BalanceBlossomFlux.MainDamageTable.GetLength(0) - 1);
                 int fallback = BalanceBlossomFlux.GetMainDamageFallback(stage, damageColumn);
                 int value = RuntimeBalanceData.GetSourceTableInt(SourceFile, nameof(BalanceBlossomFlux.MainDamageTable), stage, damageColumn, fallback);
                 return value < 1 ? 1 : value;
@@ -765,6 +775,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
             if (TryGetMainParamsColumn(stat, out int paramsColumn))
             {
+                int stage = Utils.Clamp(stageIndex, 0, BalanceBlossomFlux.MainParamsTable.GetLength(0) - 1);
                 int fallback = BalanceBlossomFlux.GetMainParamsFallback(stage, paramsColumn);
                 return RuntimeBalanceData.GetSourceTableInt(SourceFile, nameof(BalanceBlossomFlux.MainParamsTable), stage, paramsColumn, fallback);
             }
@@ -818,36 +829,52 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                     column = 2;
                     return true;
 
-                case BFStat.Recovery_Right_OrbCount:
+                case BFStat.Breakthrough_Right_FramesPerArrow:
                     column = 3;
                     return true;
 
-                case BFStat.Recon_Left_ShotsPerBurst:
+                case BFStat.Recovery_Right_OrbCount:
                     column = 4;
                     return true;
 
-                case BFStat.Recon_Left_BurstCooldown:
+                case BFStat.Recovery_Right_HealAmount:
                     column = 5;
                     return true;
 
-                case BFStat.Recon_Right_Penetrate:
+                case BFStat.Recon_Left_ShotsPerBurst:
                     column = 6;
                     return true;
 
-                case BFStat.Bombard_Left_MinArrows:
+                case BFStat.Recon_Left_BurstCooldown:
                     column = 7;
                     return true;
 
-                case BFStat.Bombard_Left_MaxArrows:
+                case BFStat.Recon_Right_Penetrate:
                     column = 8;
                     return true;
 
-                case BFStat.Bombard_Left_Interval:
+                case BFStat.Recon_Right_MarkDurationSeconds:
                     column = 9;
                     return true;
 
-                case BFStat.Bombard_Right_WaveCount:
+                case BFStat.Bombard_Left_MinArrows:
                     column = 10;
+                    return true;
+
+                case BFStat.Bombard_Left_MaxArrows:
+                    column = 11;
+                    return true;
+
+                case BFStat.Bombard_Left_Interval:
+                    column = 12;
+                    return true;
+
+                case BFStat.Bombard_Right_WaveCount:
+                    column = 13;
+                    return true;
+
+                case BFStat.Bombard_Right_RainImpactExplosionCount:
+                    column = 14;
                     return true;
 
                 default:
@@ -865,21 +892,21 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
     internal static class BFRecoveryNonNumerical
     {
-        public static bool ImmuneToFireAndPoison => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.WallOfFlesh);
-        public static bool ImmuneToAcidVenom => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.Plantera);
-        public static bool ImmuneToPlagueDebuffs => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.PlaguebringerGoliath);
-        public static bool ImmuneToMostPreDragonDebuffs => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.DevourerOfGods);
-        public static bool MovementRegenIgnoresPenalty => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.MoonLord);
-        public static float LowHealthBonusRegenThreshold => BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.MoonLord) ? 0.4f : 0f;
+        public static bool ImmuneToFireAndPoison => BlossomFluxGrowthProgression.DownedAtLeast(BlossomFluxGrowthStage.Hardmode);
+        public static bool ImmuneToAcidVenom => BlossomFluxGrowthProgression.DownedAtLeast(BlossomFluxGrowthStage.Plantera);
+        public static bool ImmuneToPlagueDebuffs => BlossomFluxGrowthProgression.DownedAtLeast(BlossomFluxGrowthStage.MoonLord);
+        public static bool ImmuneToMostPreDragonDebuffs => BlossomFluxGrowthProgression.DownedAtLeast(BlossomFluxGrowthStage.DevourerOfGods);
+        public static bool MovementRegenIgnoresPenalty => BlossomFluxGrowthProgression.DownedAtLeast(BlossomFluxGrowthStage.MoonLord);
+        public static float LowHealthBonusRegenThreshold => BlossomFluxGrowthProgression.DownedAtLeast(BlossomFluxGrowthStage.MoonLord) ? 0.4f : 0f;
 
         public static float DebuffDamageTakenMultiplier
         {
             get
             {
-                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.DevourerOfGods))
+                if (BlossomFluxGrowthProgression.DownedAtLeast(BlossomFluxGrowthStage.DevourerOfGods))
                     return 0.5f;
 
-                if (BlossomFluxProgression.DownedAtLeast(BlossomFluxProgressionStage.Plantera))
+                if (BlossomFluxGrowthProgression.DownedAtLeast(BlossomFluxGrowthStage.Plantera))
                     return 0.67f;
 
                 return 1f;

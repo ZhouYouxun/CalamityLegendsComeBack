@@ -285,11 +285,11 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         {
             float progress = count <= 1 ? 0f : index / (count - 1f);
             float smoothed = MathHelper.SmoothStep(0f, 1f, progress);
-            float height = MathHelper.Lerp(26f, 178f, progress);
-            float radius = MathHelper.Lerp(0f, 72f, smoothed);
-            float angle = -MathHelper.PiOver2 + index * 1.72f;
+            float height = MathHelper.Lerp(36f, 238f, progress);
+            float radius = MathHelper.Lerp(12f, 144f, smoothed);
+            float angle = -MathHelper.PiOver2 + index * 2.399963f;
             float lateral = MathF.Cos(angle) * radius;
-            float verticalCurl = MathF.Sin(angle) * radius * 0.16f;
+            float verticalCurl = MathF.Sin(angle) * radius * 0.24f;
 
             return upward * (height + verticalCurl) + side * lateral;
         }
@@ -438,7 +438,12 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 BFAccessoryPlayer acc = Owner.GetModPlayer<BFAccessoryPlayer>();
                 float explosionSize = stats.ExplosionSize + (acc.BombardExplosionBonus ? 60f : 0f);
                 float rainMult = acc.BombardRainDamageBonus ? 1.5f : stats.SkyRainMultiplier;
-                bombardArrow.ConfigureBombardTarget(bombardTarget, explosionSize, rainMult, stats.WaveCount);
+                bombardArrow.ConfigureBombardTarget(
+                    bombardTarget,
+                    explosionSize,
+                    rainMult,
+                    stats.WaveCount,
+                    stats.RainImpactExplosionCount);
             }
 
             Main.projectile[projectileIndex].netUpdate = true;
