@@ -88,18 +88,25 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
-            int stage = SS_Balance.GetLeftClickStage();
-            string keyText  = KeybindSystem.LegendarySkill.GetAssignedKeys().FirstOrDefault() ?? "Unbound";
-            string intro    = this.GetLocalizedValue("Intro");
-            string left     = this.GetLocalizedValue($"LeftClick_Stage{stage}");
-            string soul     = this.GetLocalizedValue("LeftClick_ReconSoul");
-            string right    = this.GetLocalizedValue("RightClick");
-            string passive  = this.GetLocalizedValue("Passive");
-            string ultimate = string.Format(this.GetLocalizedValue("Ultimate"), keyText);
-            bool   shifted  = Main.keyState.PressingShift();
+            // The player only ever sees the text for their CURRENT progression:
+            //  · left-click     → the 6-phase firing flow (GetLeftClickPhase)
+            //  · right-click / enemy pollution / player excitement → the 4 Acid-Rain tiers
+            //  · passive and ultimate are always shown.
+            int phase = SS_Balance.GetLeftClickPhase();
+            int tier  = SS_Balance.GetAcidRainTier();
+            string keyText = KeybindSystem.LegendarySkill.GetAssignedKeys().FirstOrDefault() ?? "Unbound";
+
+            string intro     = this.GetLocalizedValue("Intro");
+            string left      = this.GetLocalizedValue($"LeftClick_Phase{phase}");
+            string right     = this.GetLocalizedValue($"RightClick_Tier{tier}");
+            string enemyRad  = this.GetLocalizedValue($"EnemyRadiation_Tier{tier}");
+            string playerRad = this.GetLocalizedValue($"PlayerRadiation_Tier{tier}");
+            string passive   = this.GetLocalizedValue("Passive");
+            string ultimate  = string.Format(this.GetLocalizedValue("Ultimate"), keyText);
+            bool   shifted   = Main.keyState.PressingShift();
             string legendary = shifted ? this.GetLocalizedValue("LegendaryText") : this.GetLocalizedValue("LegendaryHint");
 
-            string finalText = intro + "\n" + left + "\n" + soul + "\n" + right + "\n" + passive + "\n" + ultimate + "\n";
+            string finalText = intro + "\n" + left + "\n" + right + "\n" + enemyRad + "\n" + playerRad + "\n" + passive + "\n" + ultimate + "\n";
 
             if (shifted)
                 tooltips.RemoveAll(t => t.Text == "[GFB]");

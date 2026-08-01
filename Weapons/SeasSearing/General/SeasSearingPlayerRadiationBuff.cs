@@ -17,7 +17,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
         public override void ModifyBuffText(ref string buffName, ref string tip, ref int rare)
         {
-            int level = Math.Clamp(Main.LocalPlayer.GetModPlayer<SeasSearingPlayer>().RadiationLevel, 1, 4);
+            int level = Math.Clamp(Main.LocalPlayer.GetModPlayer<SeasSearingPlayer>().EffectiveRadiationLevel, 1, 4);
             string key = "Mods.CalamityLegendsComeBack.Buffs.SeasSearingPlayerRadiationBuff";
             buffName = Language.GetTextValue($"{key}.DisplayName_Level{level}");
             tip = Language.GetTextValue($"{key}.Description_Level{level}");

@@ -15,9 +15,11 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         private static readonly Color CoreColor  = new(170, 255, 238);
         private static readonly Color TrailColor = new(26, 128, 190);
         // ai[0] = burst index (0-based, which shot in the current burst)
-        // ai[1] = left-click stage at fire time
-        private int BurstIndex => (int)Projectile.ai[0];
-        private int Stage      => (int)Projectile.ai[1];
+        // ai[1] = left-click phase at fire time (1-6)
+        // ai[2] = 1 if this round triggers the small nuke on hit
+        private int  BurstIndex   => (int)Projectile.ai[0];
+        private int  Phase        => (int)Projectile.ai[1];
+        private bool NukeEligible => Projectile.ai[2] >= 0.5f;
 
         public new string LocalizationCategory => "Projectiles.SeasSearing";
         public override string Texture          => "CalamityLegendsComeBack/Texture/Calamity/RangePROJ/PlagueTaintedProjectile";
@@ -38,7 +40,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             Projectile.ignoreWater    = true;
             Projectile.penetrate      = 2;
             Projectile.timeLeft       = 540;
-            Projectile.extraUpdates   = 6;
+            Projectile.extraUpdates   = 5;
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown  = 10;
             Projectile.ArmorPenetration     = 18;
@@ -50,16 +52,16 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
             if (Projectile.localAI[0] == 0f)
             {
-                int stage = Stage;
-                Projectile.penetrate = stage >= 3 ? 4 : (stage >= 1 ? 3 : 2);
+                int phase = Phase;
+                Projectile.penetrate = phase >= 4 ? 4 : (phase >= 2 ? 3 : 2);
                 Projectile.localAI[1] = Main.rand.NextFloat(0.82f, 1.38f);
                 Projectile.netUpdate  = true;
             }
 
             Projectile.spriteDirection = Projectile.direction;
 
-            int stage2 = Stage;
-            Lighting.AddLight(Projectile.Center, stage2 >= 3
+            int phase2 = Phase;
+            Lighting.AddLight(Projectile.Center, phase2 >= 4
                 ? new Vector3(0.09f, 0.28f, 0.14f)
                 : new Vector3(0.05f, 0.22f, 0.24f));
 
@@ -67,17 +69,17 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 return;
 
             Vector2 direction = Projectile.velocity.SafeNormalize(Vector2.UnitX);
-            bool emitDust = stage2 >= 2 ? Main.rand.NextBool() : Main.rand.NextBool(2);
+            bool emitDust = phase2 >= 3 ? Main.rand.NextBool() : Main.rand.NextBool(2);
             if (emitDust)
             {
                 Color dustColor;
                 int dustType;
-                if (stage2 >= 3)
+                if (phase2 >= 4)
                 {
                     dustColor = Color.Lerp(SeasSearingPalette.BiohazardLime, SeasSearingPalette.ToxicGreen, Main.rand.NextFloat());
                     dustType  = Main.rand.NextBool(3) ? DustID.Vortex : 89;
                 }
-                else if (stage2 == 2)
+                else if (phase2 == 3)
                 {
                     dustColor = Main.rand.NextBool() ? CoreColor : SeasSearingPalette.BiohazardLime;
                     dustType  = Main.rand.NextBool(3) ? DustID.Water : DustID.GemEmerald;
@@ -93,13 +95,13 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                     dustType,
                     -direction.RotatedByRandom(0.22f) * Main.rand.NextFloat(0.6f, 1.9f),
                     110, dustColor,
-                    Main.rand.NextFloat(0.45f, 0.78f + stage2 * 0.06f));
+                    Main.rand.NextFloat(0.45f, 0.78f + phase2 * 0.06f));
                 dust.noGravity = true;
             }
 
             if (!Main.dedServ && Projectile.localAI[1] > 1.18f && Main.rand.NextBool(5))
             {
-                Color sparkColor = stage2 >= 3 ? SeasSearingPalette.BiohazardLime : CoreColor;
+                Color sparkColor = phase2 >= 4 ? SeasSearingPalette.BiohazardLime : CoreColor;
                 Dust spark = Dust.NewDustPerfect(
                     Projectile.Center + Main.rand.NextVector2Circular(3.5f, 3.5f),
                     DustID.GemDiamond,
@@ -122,12 +124,12 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            int stage = Stage;
+            int phase = Phase;
 
             int stackAmount = hit.Crit ? 6 : 4;
             if (target.boss || target.realLife >= 0) stackAmount += 1;
-            if (stage >= 2) stackAmount += 1;
-            if (stage >= 3) stackAmount += 1;
+            if (phase >= 3) stackAmount += 1;
+            if (phase >= 4) stackAmount += 1;
 
             // 普通弹幕击中也积累玩家辐射
             if (Main.myPlayer == Projectile.owner)
@@ -140,8 +142,11 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
             if (Main.netMode != NetmodeID.Server && Main.myPlayer == Projectile.owner)
             {
-                // Stage 2+: spawn 2-4 pollution bubbles
-                if (stage >= 2)
+                // Phase 3+: mid-burst rounds scatter a few pollution bubbles on hit.
+                // In full-auto (phase 6) every round counts as a mid round.
+                int  burstTotal = SS_Balance.GetPhaseBurstCount(phase);
+                bool isMidRound = BurstIndex > 0 && BurstIndex < burstTotal - 1;
+                if (phase >= 6 || (phase >= 3 && isMidRound))
                 {
                     int bubbleCount = Main.rand.Next(2, 5);
                     for (int i = 0; i < bubbleCount; i++)
@@ -155,9 +160,9 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                     }
                 }
 
-                // Stage 4+: Nukesplosion on last-in-burst hit
-                bool isLastInBurst = BurstIndex >= SS_Balance.GetBurstCount(stage) - 1;
-                if (stage >= 4 && isLastInBurst)
+                // Small nuke on the rounds the holdout flagged as nuke-eligible
+                // (phase 5: last shot of every Nth burst; phase 6: every 30th round).
+                if (NukeEligible)
                 {
                     Projectile.NewProjectile(
                         Projectile.GetSource_OnHit(target), target.Center, Vector2.Zero,
@@ -182,9 +187,9 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             float     rawBoost  = Projectile.localAI[1];
             float     boost     = rawBoost > 0f ? MathHelper.Clamp(rawBoost, 0.82f, 1.38f) : 1f;
 
-            int   stage     = Stage;
-            Color headColor = stage >= 3 ? SeasSearingPalette.BiohazardLime : CoreColor;
-            Color tailColor = stage >= 2
+            int   phase     = Phase;
+            Color headColor = phase >= 4 ? SeasSearingPalette.BiohazardLime : CoreColor;
+            Color tailColor = phase >= 3
                 ? Color.Lerp(TrailColor, SeasSearingPalette.ToxicGreen, 0.55f)
                 : TrailColor;
 

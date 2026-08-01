@@ -81,26 +81,47 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             return stageIndex;
         }
 
-        // Left-click progression stage (0-5), based on Acid Rain & key bosses.
-        // Stage 5 = Aquatic Scourge Acid Rain beaten post-Moon Lord (T3 proxy).
-        // Each stage implies all previous stages are also met.
-        public static int GetLeftClickStage()
+        // ── Acid Rain progression (0-3) ──────────────────────────────────────
+        // Drives the enemy pollution grade cap, the player Radiation Excitement
+        // level cap, and the right-click tier.
+        //   0 = no acid rain cleared
+        //   1 = Eye of Cthulhu Acid Rain (T1)               DownedBossSystem.downedEoCAcidRain
+        //   2 = Aquatic Scourge Acid Rain (T2)              DownedBossSystem.downedAquaticScourgeAcidRain
+        //   3 = Aquatic Scourge Acid Rain + Polterghast     (T3 — NOT gated by the Moon Lord any more)
+        public static int GetAcidRainTier()
         {
-            if (DownedBossSystem.downedAquaticScourgeAcidRain && NPC.downedMoonlord) return 5;
-            if (NPC.downedMoonlord)                                                  return 4;
-            if (DownedBossSystem.downedAquaticScourgeAcidRain)                       return 3;
-            if (Main.hardMode)                                                       return 2;
-            if (DownedBossSystem.downedEoCAcidRain)                                  return 1;
+            if (DownedBossSystem.downedAquaticScourgeAcidRain && DownedBossSystem.downedPolterghast) return 3;
+            if (DownedBossSystem.downedAquaticScourgeAcidRain)                                        return 2;
+            if (DownedBossSystem.downedEoCAcidRain)                                                   return 1;
             return 0;
         }
 
-        // How many rounds in a normal left-click burst at this stage.
-        public static int GetBurstCount(int stage) => stage switch
+        // Left-click progression phase (1-6). Highest satisfied phase wins; every
+        // phase inherits the behaviours of the phases below it.
+        //   1 = start
+        //   2 = EoC Acid Rain (T1)
+        //   3 = Hardmode
+        //   4 = Aquatic Scourge Acid Rain (T2)
+        //   5 = post Moon Lord
+        //   6 = Acid Rain T3 (Aquatic Scourge Acid Rain + Polterghast) — full auto
+        public static int GetLeftClickPhase()
         {
-            0      => 1,
-            1 or 2 => 2,
-            3      => 3,
-            _      => 4   // stages 4-5
+            if (DownedBossSystem.downedAquaticScourgeAcidRain && DownedBossSystem.downedPolterghast) return 6;
+            if (NPC.downedMoonlord)                                                                   return 5;
+            if (DownedBossSystem.downedAquaticScourgeAcidRain)                                         return 4;
+            if (Main.hardMode)                                                                         return 3;
+            if (DownedBossSystem.downedEoCAcidRain)                                                    return 2;
+            return 1;
+        }
+
+        // Rounds per normal burst at each phase. Phase 6 is full-auto and is
+        // driven by a rolling counter instead of discrete bursts, but keeps the
+        // 5-round cadence value for any shared maths.
+        public static int GetPhaseBurstCount(int phase) => phase switch
+        {
+            1 => 3,
+            2 => 4,
+            _ => 5   // phases 3, 4, 5, 6
         };
 
         // Legacy helper used by SeasSearing.cs GetProgressionStage().

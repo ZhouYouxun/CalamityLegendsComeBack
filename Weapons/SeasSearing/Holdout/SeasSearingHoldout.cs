@@ -14,17 +14,22 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 {
     internal sealed class SeasSearingHoldout : ModProjectile, ILocalizedModType
     {
-        // ── Left-click burst ─────────────────────────────────────────────────
-        private const int VentBurstCount    = 4;   // enhanced burst during VentCooldown
-        private const int BurstShotSpacing  = 4;   // frames between shots in a burst
-        private const int TorpedoDelay      = 4;   // frames after last burst shot → fire torpedo
-        private const int VentLockoutExtra  = 24;  // extra lockout for VentCooldown bursts
-        private const int ReleaseSprayCount = 2;
-        private const int ReleaseSpraySpacing = 7;
-        private const int ReleaseSprayPellets = 12;
+        // ── Left-click cadence ───────────────────────────────────────────────
+        private const int BurstShotSpacing  = 4;   // frames between shots (burst & full-auto)
+        private const int BurstInterval     = 15;  // frames between bursts (phases 1-5)
+        private const int NukeBurstCadence  = 3;   // phase 5: nuke on last shot of every Nth burst
         private const int UltimateChargeFrames = 60;
 
-        // ── Right-click state thresholds (frames) ───────────────────────────
+        // ── Right-click charge ──────────────────────────────────────────────
+        private const int RightChargeFrames    = 55;  // hold-to-charge before the payload releases
+        private const int RightCooldownFrames  = 22;  // lockout after a payload before re-charging
+        private const int ShotgunPellets       = 12;  // pellets per shotgun volley (kept unchanged)
+        private const int ShotgunVolleyCount   = 2;   // volleys fired for a two-burst (T2+) release
+        private const int ShotgunVolleySpacing = 7;   // frames between the two T2+ volleys
+
+        // Legacy right-click visual thresholds — retained so the preserved charge /
+        // rupture / locked-orbit draw code keeps compiling even though the new flow
+        // no longer enters the Locked / Vent / Rupture states.
         private const int ChargeToLockedFrames  = 60;
         private const int LockedToRuptureFrames = 90;
         private const int VentCooldownFrames    = 80;
@@ -45,12 +50,16 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         private int burstShotsRemaining;
         private int burstShotTimer;
         private int burstLockoutTimer;
-        private int torpedoPendingTimer;
-        private int cachedBurstStage;
-        private int cachedBurstTotal;
-        private int companionPatternIndex;
-        private int releaseSpraysRemaining;
-        private int releaseSprayTimer;
+        private int burstCompletedCount;
+        private int heavyRotationIndex;
+        private int autoShotTimer;
+        private int autoRoundCount;
+
+        // ── Right-click shotgun volleys ──────────────────────────────────────
+        private int shotgunVolleysRemaining;
+        private int shotgunTotalVolleys;
+        private int shotgunVolleyTimer;
+        private int rightCooldownTimer;
 
         // ── Visual timers ────────────────────────────────────────────────────
         private int   muzzleFlashTimer;
@@ -129,25 +138,14 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
         private void HandleInputs()
         {
-            // Post-burst torpedo/rocket delay countdown
-            if (torpedoPendingTimer > 0)
+            // Pending second shotgun volley for a two-burst (T2+) right-click release.
+            if (shotgunVolleysRemaining > 0)
             {
-                torpedoPendingTimer--;
-                if (torpedoPendingTimer == 0)
-                {
-                    int st = cachedBurstStage;
-                    if (st >= 3)
-                        FirePostBurstWeapons(st);
-                }
-            }
+                if (shotgunVolleyTimer > 0)
+                    shotgunVolleyTimer--;
 
-            if (releaseSpraysRemaining > 0)
-            {
-                if (releaseSprayTimer > 0)
-                    releaseSprayTimer--;
-
-                if (releaseSprayTimer <= 0)
-                    FirePendingReleaseSpray();
+                if (shotgunVolleyTimer <= 0)
+                    FirePendingShotgunVolley();
             }
 
             bool valid     = SeasSearing.CanUseWorldInput(Owner);
@@ -166,16 +164,14 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
         private void HandleRightStateMachine(bool rightHeld)
         {
-            bool justPressed       =  rightHeld && !rightHeldLastFrame;
+            if (rightCooldownTimer > 0) rightCooldownTimer--;
+
+            bool justPressed = rightHeld && !rightHeldLastFrame;
 
             switch (rightState)
             {
-                case RightState.Idle:
-                    if (justPressed) EnterCharging();
-                    break;
-
                 case RightState.Charging:
-                    if (!rightHeld)
+                    if (!rightHeld)   // released before full charge → cancel
                     {
                         rightState      = RightState.Idle;
                         rightStateTimer = 0;
@@ -183,72 +179,63 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                         break;
                     }
                     rightStateTimer++;
-                    UpdateChargeVisuals(rightStateTimer / (float)ChargeToLockedFrames);
-                    if (rightStateTimer >= ChargeToLockedFrames) EnterLocked();
+                    UpdateChargeVisuals(MathHelper.Clamp(rightStateTimer / (float)RightChargeFrames, 0f, 1f));
+                    if (rightStateTimer >= RightChargeFrames)
+                        ReleaseRightPayload();
                     break;
 
-                case RightState.Locked:
-                    if (!rightHeld)
-                    {
-                        rightState      = RightState.Idle;
-                        rightStateTimer = 0;
-                        chargeGlow      = 0f;
-                        break;
-                    }
-                    rightStateTimer++;
-                    UpdateLockedVisuals();
-                    if (rightStateTimer >= LockedToRuptureFrames) TriggerFullChargeRelease();
-                    break;
-
-                case RightState.VentCooldown:
-                    rightStateTimer--;
-                    if (rightStateTimer <= 0) { rightState = RightState.Idle; rightStateTimer = 0; }
-                    if (justPressed) EnterCharging();
-                    break;
-
-                case RightState.AbyssalRupture:
-                    rightStateTimer--;
-                    if (rightStateTimer <= 0) { rightState = RightState.Idle; rightStateTimer = 0; ruptureHeat = 0f; }
+                default:
+                    // Idle (and any never-entered legacy state): begin charging on a fresh press.
+                    if (rightState != RightState.Idle) { rightState = RightState.Idle; rightStateTimer = 0; }
+                    if (justPressed && rightCooldownTimer <= 0)
+                        EnterCharging();
                     break;
             }
         }
 
         private void EnterCharging()
         {
-            rightState = RightState.Charging; rightStateTimer = 0;
+            rightState = RightState.Charging; rightStateTimer = 0; chargeGlow = 0.15f;
             SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.48f, Pitch = -0.55f }, GunTipPosition);
         }
 
-        private void EnterLocked()
+        // One charged release fires a payload scaled by the Acid Rain tier:
+        //   T0  一轮子弹                     one shotgun volley
+        //   T1  一轮子弹 + 鼠标三道光芒        + three geyser beams at the cursor
+        //   T2  两连喷 + 三道光芒             two shotgun volleys + beams
+        //   T3  两连喷 + 三道光芒 + 大型漩涡    + a large abyssal vortex at the cursor
+        private void ReleaseRightPayload()
         {
-            rightState = RightState.Locked; rightStateTimer = 0; chargeGlow = 1f;
-            SoundEngine.PlaySound(SoundID.Item92 with { Volume = 0.4f, Pitch = -0.35f }, GunTipPosition);
-        }
+            int tier = SS_Balance.GetAcidRainTier();
 
-        private void EnterVentCooldown()
-        {
-            rightState = RightState.VentCooldown; rightStateTimer = VentCooldownFrames; resonanceGlow = 1.2f;
-        }
+            shotgunTotalVolleys     = tier >= 2 ? ShotgunVolleyCount : 1;
+            shotgunVolleysRemaining = shotgunTotalVolleys;
+            shotgunVolleyTimer      = 0;
+            FirePendingShotgunVolley();
 
-        private void TriggerAbyssalRupture()
-        {
-            FireAbyssalGeyserColumn();
+            if (tier >= 1)
+                FireAbyssalGeyserColumn();
+
+            if (tier >= 3)
+                FireRightClickVortex();
+
+            // Abyssal fission: every charged release consumes all accumulated
+            // pollution and detonates it by stack count / enemy class.
             int detonated = SeasSearingPollutionNPC.DetonateAll(Owner, Projectile.damage, GunTipPosition);
-            float shake = MathHelper.Clamp(4f + detonated * 0.85f, 4f, 15f);
-            Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, shake);
-            ApplyRecoil(18f); TriggerMuzzleFlash(30);
-            SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.90f, Pitch = -0.58f }, GunTipPosition);
-            SoundEngine.PlaySound(SoundID.Item74 with { Volume = 0.65f, Pitch = -0.38f }, GunTipPosition);
-            SoundEngine.PlaySound(SoundID.Item92 with { Volume = 0.55f, Pitch = -0.5f  }, GunTipPosition);
-            rightState = RightState.AbyssalRupture; rightStateTimer = AbyssalRuptureFrames; ruptureHeat = 1f;
-            SeasSearingVisualUtility.SpawnAbyssDust(GunTipPosition, 40, 9f, 22f, 1.6f);
-            SeasSearingVisualUtility.SpawnPressureRing(GunTipPosition, 7f, 16f, 36, SeasSearingPalette.WarningOrange);
-        }
 
-        private void TriggerFullChargeRelease()
-        {
-            TriggerAbyssalRupture();
-            StartReleaseDoubleSpray();
+            ApplyRecoil(14f);
+            TriggerMuzzleFlash(24);
+            ruptureHeat   = 1f;
+            resonanceGlow = Math.Max(resonanceGlow, 1.1f);
+            float shake = MathHelper.Clamp((tier >= 3 ? 6f : 4f) + detonated * 0.85f, 4f, 15f);
+            Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, shake);
+            SoundEngine.PlaySound(SoundID.Item92 with { Volume = 0.7f,  Pitch = -0.4f }, GunTipPosition);
+            SoundEngine.PlaySound(SoundID.Item74 with { Volume = 0.5f,  Pitch = -0.3f }, GunTipPosition);
+
+            rightState        = RightState.Idle;
+            rightStateTimer   = 0;
+            chargeGlow        = 0f;
+            rightCooldownTimer = RightCooldownFrames;
         }
 
         // ── Left-click ───────────────────────────────────────────────────────
@@ -257,78 +244,141 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         {
             if (ultimateState != UltimateState.Idle)
             {
-                burstShotsRemaining = 0;
-                burstShotTimer = 0;
+                ResetBurst();
                 return;
             }
 
-            if (rightHeld || rightState == RightState.Charging || rightState == RightState.Locked)
+            // Right-click charging suppresses the main fire.
+            if (rightHeld || rightState == RightState.Charging)
             {
-                burstShotsRemaining = 0; burstShotTimer = 0;
+                ResetBurst();
                 return;
             }
 
-            bool enhanced   = rightState == RightState.VentCooldown;
-            int  stage      = SS_Balance.GetLeftClickStage();
-            int  burstCount = enhanced ? VentBurstCount : SS_Balance.GetBurstCount(stage);
+            int phase = SS_Balance.GetLeftClickPhase();
+
+            if (phase >= 6)
+            {
+                HandleFullAuto(leftHeld, phase);
+                return;
+            }
+
+            int burstCount = SS_Balance.GetPhaseBurstCount(phase);
 
             if (leftHeld && burstShotsRemaining <= 0 && burstLockoutTimer <= 0)
-                StartBurst(burstCount, stage, enhanced);
+                StartBurst(burstCount, phase);
 
             if (burstShotsRemaining > 0)
-                HandleBurstShots(stage, enhanced, burstCount);
+                HandleBurstShots(phase, burstCount);
         }
 
-        private void StartBurst(int count, int stage, bool enhanced)
+        private void ResetBurst()
         {
-            cachedBurstStage   = stage;
-            cachedBurstTotal   = count;
+            burstShotsRemaining = 0;
+            burstShotTimer      = 0;
+            autoShotTimer       = 0;
+            autoRoundCount      = 0;
+        }
+
+        private void StartBurst(int count, int phase)
+        {
             burstShotsRemaining = count;
-            burstShotTimer     = 0;
-            burstLockoutTimer  = CalculateLockout(count, stage, enhanced);
-            useAnimationTimer  = Math.Max(useAnimationTimer, BurstShotSpacing * (count - 1) + 8);
+            burstShotTimer      = 0;
+            burstLockoutTimer   = (count - 1) * BurstShotSpacing + BurstInterval;
+            useAnimationTimer   = Math.Max(useAnimationTimer, BurstShotSpacing * (count - 1) + 8);
         }
 
-        private int CalculateLockout(int count, int stage, bool enhanced)
-        {
-            if (enhanced) return (count - 1) * BurstShotSpacing + VentLockoutExtra;
-            int burstDuration = (count - 1) * BurstShotSpacing;
-            if (stage == 3 || stage == 4)
-                return burstDuration + TorpedoDelay + 15;
-            return burstDuration + 15;
-        }
-
-        private void HandleBurstShots(int stage, bool enhanced, int totalCount)
+        private void HandleBurstShots(int phase, int totalCount)
         {
             if (burstShotTimer > 0) { burstShotTimer--; return; }
 
-            int index = totalCount - burstShotsRemaining;
+            int  index   = totalCount - burstShotsRemaining;   // 0-based
+            bool isFirst = index == 0;
+            bool isLast  = index == totalCount - 1;
 
-            bool firedPollutionRound = false;
-            if (enhanced)
-                FireVentShot(index);
-            else
-                firedPollutionRound = FirePollutionRound(index, stage);
+            // Phase 5: the last shot of every Nth burst is nuke-eligible (fires the
+            // small nuke on hit). Earlier phases never mark a round eligible.
+            bool nukeEligible = phase >= 5 && isLast && (burstCompletedCount + 1) % NukeBurstCadence == 0;
 
-            // A full four-round burst vents accumulated waste after rounds two and four.
-            if (totalCount == 4 && firedPollutionRound && (index + 1) % 2 == 0)
+            FirePollutionRound(index, phase, nukeEligible);
+
+            // Phase 2+: a bile spray on both the first and the last shot of the burst.
+            if (phase >= 2 && (isFirst || isLast))
                 FirePollutionJuiceSpray(index);
+
+            // Phases 1-3 keep a dedicated rocket on the last shot; from phase 4 the
+            // rocket folds into the post-burst heavy-companion rotation instead.
+            if (isLast && phase <= 3)
+                FirePollutionRocket();
 
             burstShotsRemaining--;
             burstShotTimer = burstShotsRemaining > 0 ? BurstShotSpacing : 0;
 
-            if (burstShotsRemaining == 0 && stage >= 3 && !enhanced)
-                torpedoPendingTimer = TorpedoDelay;
+            if (burstShotsRemaining == 0)
+                OnBurstComplete(phase);
+        }
+
+        private void OnBurstComplete(int phase)
+        {
+            burstCompletedCount++;
+
+            // Phases 4+ deploy a rotating heavy companion group after each burst.
+            if (phase >= 4)
+                DeployHeavyCompanion(phase);
+        }
+
+        // Full-auto (phase 6): the between-burst gap is removed; one round every
+        // BurstShotSpacing frames while held, with rolling-count triggers.
+        private void HandleFullAuto(bool leftHeld, int phase)
+        {
+            if (!leftHeld)
+            {
+                autoShotTimer  = 0;
+                autoRoundCount = 0;
+                return;
+            }
+
+            if (autoShotTimer > 0) { autoShotTimer--; return; }
+            autoShotTimer = BurstShotSpacing;
+
+            autoRoundCount++;
+            int round = autoRoundCount;
+
+            bool nukeEligible = round % 30 == 0;              // small nuke on every 30th round's hit
+            FirePollutionRound(0, phase, nukeEligible);
+
+            if (round % 5 == 0)                               // bile spray every 5 rounds
+                FirePollutionJuiceSpray(0);
+
+            if (round % 40 == 0)                              // twin homing missiles every 40 rounds
+                FireMissile();
+            else if (round % 20 == 0)                         // heavy companion group every 20 rounds
+                DeployHeavyCompanion(phase);
+
+            useAnimationTimer = Math.Max(useAnimationTimer, 6);
+        }
+
+        // Rotating heavy companion. Phase 4 cycles rocket / twin torpedo; phases
+        // 5-6 also include the pressure depth charge.
+        private void DeployHeavyCompanion(int phase)
+        {
+            int options = phase >= 5 ? 3 : 2;
+            switch (heavyRotationIndex++ % options)
+            {
+                case 0:  FirePollutionRocket();     break;
+                case 1:  FireSkyfinTorpedo();       break;   // deploys the twin-torpedo pair
+                default: FirePressureDepthCharge(); break;
+            }
         }
 
         // ────────────────────────────────────────────────────────────────────
         // PROJECTILE FIRE METHODS
         // ────────────────────────────────────────────────────────────────────
 
-        private bool FirePollutionRound(int burstIndex, int stage)
+        private void FirePollutionRound(int burstIndex, int phase, bool nukeEligible)
         {
-            // 标准深渊污染弹幕
-            float   speed = (24f + Math.Clamp(stage, 0, 5) * 2f) * SS_Balance.PollutionRoundSpeedMultiplier;
+            // 标准深渊污染弹幕（主角）
+            float   speed = (24f + Math.Clamp(phase, 1, 6) * 2f) * SS_Balance.PollutionRoundSpeedMultiplier;
             Vector2 dir   = AimDirection;
             Vector2 vel   = dir.RotatedByRandom(MathHelper.ToRadians(0.65f + burstIndex * 0.22f)) * speed;
 
@@ -338,7 +388,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 vel,
                 ModContent.ProjectileType<SeasSearingPollutionRound>(),
                 Projectile.damage, Projectile.knockBack, Projectile.owner,
-                burstIndex, stage);
+                burstIndex, phase, nukeEligible ? 1f : 0f);
 
             if (Main.projectile.IndexInRange(idx))
             {
@@ -346,12 +396,12 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 Main.projectile[idx].ArmorPenetration += 18;
             }
 
-            FireReconSoul(dir, burstIndex, stage);
+            // Each main round carries a recon soul that hunts the nearest straggler.
+            FireReconSoul(dir, burstIndex, phase);
             ApplyRecoil(5.2f + burstIndex * 1.3f);
             TriggerMuzzleFlash(8);
             SpawnMuzzleBurst(dir, burstIndex, Color.Lerp(SeasSearingPalette.RadioactiveCyan, SeasSearingPalette.ToxicGreen, 0.3f));
             SeasSearingVisualUtility.PlayDeepShot(GunTipPosition, burstIndex * 0.06f);
-            return true;
         }
 
         private void FirePollutionJuiceSpray(int burstIndex)
@@ -383,42 +433,36 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             }, GunTipPosition);
         }
 
-        // Right-release double spray: same projectile family as a normal left-click round.
-        private void StartReleaseDoubleSpray()
+        // Right-click shotgun volley. Same projectile family as a left-click round;
+        // pellet count is kept unchanged. A T2+ release fires two of these in a row.
+        private void FirePendingShotgunVolley()
         {
-            releaseSpraysRemaining = ReleaseSprayCount;
-            releaseSprayTimer = 0;
-            FirePendingReleaseSpray();
-        }
-
-        private void FirePendingReleaseSpray()
-        {
-            if (releaseSpraysRemaining <= 0)
+            if (shotgunVolleysRemaining <= 0)
                 return;
 
-            int sprayIndex = ReleaseSprayCount - releaseSpraysRemaining;
-            FireReleaseSpray(sprayIndex);
-            releaseSpraysRemaining--;
-            releaseSprayTimer = releaseSpraysRemaining > 0 ? ReleaseSpraySpacing : 0;
+            int volleyIndex = shotgunTotalVolleys - shotgunVolleysRemaining;
+            FireShotgunVolley(volleyIndex);
+            shotgunVolleysRemaining--;
+            shotgunVolleyTimer = shotgunVolleysRemaining > 0 ? ShotgunVolleySpacing : 0;
         }
 
-        private void FireReleaseSpray(int sprayIndex)
+        private void FireShotgunVolley(int volleyIndex)
         {
-            int stage = SS_Balance.GetLeftClickStage();
+            int phase = SS_Balance.GetLeftClickPhase();
             Vector2 dir = AimDirection;
             Vector2 perpendicular = dir.RotatedBy(MathHelper.PiOver2);
-            float speed = (24f + Math.Clamp(stage, 0, 5) * 2f) * SS_Balance.PollutionRoundSpeedMultiplier;
+            float speed = (24f + Math.Clamp(phase, 1, 6) * 2f) * SS_Balance.PollutionRoundSpeedMultiplier;
             float arc = MathHelper.ToRadians(9.5f);
-            float centerBias = sprayIndex == 0 ? -0.35f : 0.35f;
+            float centerBias = volleyIndex == 0 ? -0.35f : 0.35f;
 
-            for (int i = 0; i < ReleaseSprayPellets; i++)
+            for (int i = 0; i < ShotgunPellets; i++)
             {
-                float completion = ReleaseSprayPellets == 1 ? 0.5f : i / (float)(ReleaseSprayPellets - 1);
+                float completion = ShotgunPellets == 1 ? 0.5f : i / (float)(ShotgunPellets - 1);
                 float angle = MathHelper.Lerp(-arc, arc, completion)
                     + MathHelper.ToRadians(Main.rand.NextFloat(-0.7f, 0.7f))
                     + MathHelper.ToRadians(centerBias);
                 Vector2 shotDir = dir.RotatedBy(angle);
-                Vector2 spawnOffset = perpendicular * ((i % 2 == 0 ? -1f : 1f) * (3.5f + sprayIndex * 1.2f))
+                Vector2 spawnOffset = perpendicular * ((i % 2 == 0 ? -1f : 1f) * (3.5f + volleyIndex * 1.2f))
                     + Main.rand.NextVector2Circular(1.6f, 1.6f);
 
                 int idx = Projectile.NewProjectile(
@@ -430,7 +474,8 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                     Projectile.knockBack,
                     Projectile.owner,
                     0f,
-                    stage);
+                    phase,
+                    0f);
 
                 if (Main.projectile.IndexInRange(idx))
                 {
@@ -439,58 +484,12 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 }
             }
 
-            ApplyRecoil(11.5f + sprayIndex * 3.2f);
-            TriggerMuzzleFlash(18 + sprayIndex * 4);
+            ApplyRecoil(11.5f + volleyIndex * 3.2f);
+            TriggerMuzzleFlash(18 + volleyIndex * 4);
             resonanceGlow = Math.Max(resonanceGlow, 1.1f);
-            Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, 3.6f + sprayIndex * 1.1f);
-            SpawnReleaseSprayVisuals(dir, sprayIndex);
-            SeasSearingVisualUtility.PlayDeepShot(GunTipPosition, -0.18f + sprayIndex * 0.08f);
-        }
-
-        // 辐射子弹的专属发射特效（辐射光环）
-        private void SpawnRadiationBulletAura(Vector2 direction, int burstIndex)
-        {
-            if (Main.dedServ) return;
-            Color radColor = Color.Lerp(SeasSearingPalette.RadioactiveCyan, SeasSearingPalette.BiohazardLime, 0.5f);
-            for (int i = 0; i < 8; i++)
-            {
-                float ang = MathHelper.TwoPi * i / 8f;
-                Vector2 vel = direction.RotatedBy(ang * 0.35f + Main.rand.NextFloat(-0.2f, 0.2f)) * Main.rand.NextFloat(1.5f, 4.5f);
-                Dust d = Dust.NewDustPerfect(
-                    GunTipPosition + Main.rand.NextVector2Circular(3f, 3f),
-                    DustID.GemEmerald, vel, 120,
-                    Color.Lerp(radColor, Color.White, Main.rand.NextFloat(0.1f, 0.4f)),
-                    Main.rand.NextFloat(0.65f, 1.1f));
-                d.noGravity = true;
-            }
-        }
-
-        private void FireVentShot(int burstIndex)
-        {
-            int     stage = SS_Balance.GetLeftClickStage();
-            float   speed = 28f + Math.Clamp(stage, 0, 5) * 2f;
-            Vector2 dir   = AimDirection;
-            Vector2 vel   = dir.RotatedByRandom(MathHelper.ToRadians(0.5f + burstIndex * 0.18f)) * speed;
-            int     damage = (int)(Projectile.damage * 1.22f);
-
-            int idx = Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(),
-                GunTipPosition + dir * 8f + Main.rand.NextVector2Circular(1.2f, 1.2f),
-                vel,
-                ModContent.ProjectileType<SeasSearingVentShot>(),
-                damage, Projectile.knockBack, Projectile.owner,
-                burstIndex, stage);
-
-            if (Main.projectile.IndexInRange(idx))
-                Main.projectile[idx].CritChance = Owner.GetWeaponCrit(Owner.HeldItem);
-
-            FireReconSoul(dir, burstIndex, stage);
-            ApplyRecoil(4.8f + burstIndex * 1.1f);
-            TriggerMuzzleFlash(13);
-            SpawnMuzzleBurst(dir, burstIndex, SeasSearingPalette.PressureBlue);
-            SeasSearingVisualUtility.PlayDeepShot(GunTipPosition, -0.08f + burstIndex * 0.06f);
-            if (!Main.dedServ)
-                SeasSearingVisualUtility.SpawnAbyssDust(GunTipPosition, 6, 3.5f, 8f, 0.9f);
+            Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, 3.6f + volleyIndex * 1.1f);
+            SpawnReleaseSprayVisuals(dir, volleyIndex);
+            SeasSearingVisualUtility.PlayDeepShot(GunTipPosition, -0.18f + volleyIndex * 0.08f);
         }
 
         private void FireReconSoul(Vector2 baseDirection, int burstIndex, int stage)
@@ -540,31 +539,6 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             return best;
         }
 
-        private void FirePressureBolt(bool strong)
-        {
-            Vector2 dir   = AimDirection;
-            float   speed = strong ? 28f : 22f;
-            int     damage = strong ? (int)(Projectile.damage * 2.5f) : (int)(Projectile.damage * 1.5f);
-
-            int idx = Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(),
-                GunTipPosition + dir * 14f, dir * speed,
-                ModContent.ProjectileType<SeasSearingPressureBolt>(),
-                damage, 8f, Projectile.owner, strong ? 1f : 0f);
-
-            if (Main.projectile.IndexInRange(idx))
-                Main.projectile[idx].CritChance = Owner.GetWeaponCrit(Owner.HeldItem);
-
-            Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, strong ? 4f : 2f);
-            ApplyRecoil(strong ? 16f : 10f); TriggerMuzzleFlash(strong ? 24 : 15);
-            chargeGlow    = strong ? 0.85f : 0.5f;
-            resonanceGlow = Math.Max(resonanceGlow, strong ? 1.0f : 0.6f);
-            SeasSearingVisualUtility.SpawnPressureRing(GunTipPosition, 6f, 12f, 24, SeasSearingPalette.PressureBlue);
-            SeasSearingVisualUtility.SpawnAbyssDust(GunTipPosition, strong ? 22 : 12, 4f, 10f, 1.1f);
-            SoundEngine.PlaySound(SoundID.Item92 with { Volume = strong ? 0.84f : 0.60f, Pitch = strong ? -0.44f : -0.22f }, GunTipPosition);
-            SoundEngine.PlaySound(SoundID.Item36 with { Volume = strong ? 0.58f : 0.36f, Pitch = -0.3f }, GunTipPosition);
-        }
-
         private void FireAbyssalGeyserColumn()
         {
             Vector2 target = GetMouseWorld();
@@ -580,76 +554,19 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             }
         }
 
-        // Fired after a completed left-click burst. Companion combinations rotate to avoid a fixed script.
-        private void FirePostBurstWeapons(int stage)
+        // Large abyssal vortex dropped at the cursor on a T3 right-click release.
+        private void FireRightClickVortex()
         {
-            int pattern = companionPatternIndex++ % 4;
-            switch (stage)
-            {
-                case 3:
-                    FireSingleCompanion(pattern % 3);
-                    break;
+            Vector2 target = GetMouseWorld();
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(), target, Vector2.Zero,
+                ModContent.ProjectileType<SSPollutionVortex>(),
+                Math.Max(1, (int)(Projectile.damage * 1.4f)), 4f, Projectile.owner,
+                40f, 5f);   // ai[0] pollution scaling, ai[1] grade → clamps to the max radius
 
-                case 4:
-                    FireStageFourCompanions(pattern % 3);
-                    break;
-
-                default:
-                    FireStageFiveCompanions(pattern);
-                    break;
-            }
-        }
-
-        private void FireSingleCompanion(int pattern)
-        {
-            switch (pattern)
-            {
-                case 0: FireSkyfinTorpedo(); break;
-                case 1: FirePollutionRocket(); break;
-                default: FirePressureDepthCharge(); break;
-            }
-        }
-
-        private void FireStageFourCompanions(int pattern)
-        {
-            switch (pattern)
-            {
-                case 0:
-                    FireSkyfinTorpedo();
-                    FirePollutionRocket();
-                    break;
-                case 1:
-                    FireSkyfinTorpedo();
-                    FirePressureDepthCharge();
-                    break;
-                default:
-                    FirePollutionRocket();
-                    FirePressureDepthCharge();
-                    break;
-            }
-        }
-
-        private void FireStageFiveCompanions(int pattern)
-        {
-            switch (pattern)
-            {
-                case 0:
-                    FireMissile();
-                    FireSkyfinTorpedo();
-                    break;
-                case 1:
-                    FireMissile();
-                    FirePressureDepthCharge();
-                    break;
-                case 2:
-                    FireSkyfinTorpedo();
-                    FirePollutionRocket();
-                    break;
-                default:
-                    FirePollutionRocket();
-                    FirePressureDepthCharge();
-                    break;
-            }
+            SeasSearingVisualUtility.SpawnPressureRing(target, 8f, 20f, 40, SeasSearingPalette.RadioactiveCyan);
+            SeasSearingVisualUtility.SpawnAbyssDust(target, 30, 7f, 24f, 1.4f);
+            SoundEngine.PlaySound(SoundID.Item74 with { Volume = 0.7f, Pitch = -0.5f }, target);
         }
 
         private void FireSkyfinTorpedo()
@@ -903,7 +820,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             switch (rightState)
             {
                 case RightState.Charging:
-                    rightChargeGlow = rightStateTimer / (float)ChargeToLockedFrames;
+                    rightChargeGlow = rightStateTimer / (float)RightChargeFrames;
                     break;
                 case RightState.Locked:
                     rightChargeGlow = 1f + (float)Math.Sin(Main.GlobalTimeWrappedHourly * 8f) * 0.1f;

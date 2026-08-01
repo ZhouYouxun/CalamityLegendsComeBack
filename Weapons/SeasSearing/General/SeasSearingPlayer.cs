@@ -23,8 +23,13 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
         // 玩家辐射系统（4级正面效果）
         public bool HasRadiationBuff    { get; set; }
-        public int  RadiationLevel      { get; private set; }   // 0-4
+        public int  RadiationLevel      { get; private set; }   // 0-4（原始积累等级）
         public int  RadiationAccumulator { get; private set; }  // 击中计数器
+
+        // 辐射兴奋等级同样受酸雨进度限制：进度 0/1/2/3 分别最高 1/2/3/4 级。
+        // 积累等级保持原始值，封顶只在实际生效与显示时应用，因此提升酸雨进度可立即解锁更高等级。
+        public int MaxRadiationLevel       => SS_Balance.GetAcidRainTier() + 1;
+        public int EffectiveRadiationLevel => Math.Min(RadiationLevel, MaxRadiationLevel);
 
         public override void ResetEffects()
         {
@@ -88,30 +93,31 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
         private void ApplyRadiationEffects()
         {
-            if (!HasRadiationBuff || RadiationLevel <= 0) return;
+            int level = EffectiveRadiationLevel;
+            if (!HasRadiationBuff || level <= 0) return;
 
-            // 每级辐射带来的正面效果
+            // 每级辐射带来的正面效果（远程伤害与远程穿透相较旧版本减半，移速与暴击不变）
             // Level 1: 轻微伤害加成
             // Level 2: 额外穿透
-            // Level 3: 移动速度和辐射范围
+            // Level 3: 移动速度
             // Level 4: 最强效果
-            switch (RadiationLevel)
+            switch (level)
             {
                 case 1:
-                    Player.GetDamage(DamageClass.Ranged) += 0.08f;
+                    Player.GetDamage(DamageClass.Ranged) += 0.04f;
                     break;
                 case 2:
-                    Player.GetDamage(DamageClass.Ranged) += 0.16f;
-                    Player.GetArmorPenetration(DamageClass.Ranged) += 8;
+                    Player.GetDamage(DamageClass.Ranged) += 0.08f;
+                    Player.GetArmorPenetration(DamageClass.Ranged) += 4;
                     break;
                 case 3:
-                    Player.GetDamage(DamageClass.Ranged) += 0.26f;
-                    Player.GetArmorPenetration(DamageClass.Ranged) += 16;
+                    Player.GetDamage(DamageClass.Ranged) += 0.13f;
+                    Player.GetArmorPenetration(DamageClass.Ranged) += 8;
                     Player.moveSpeed += 0.12f;
                     break;
                 case 4:
-                    Player.GetDamage(DamageClass.Ranged) += 0.38f;
-                    Player.GetArmorPenetration(DamageClass.Ranged) += 26;
+                    Player.GetDamage(DamageClass.Ranged) += 0.19f;
+                    Player.GetArmorPenetration(DamageClass.Ranged) += 13;
                     Player.moveSpeed += 0.20f;
                     Player.GetCritChance(DamageClass.Ranged) += 10f;
                     break;

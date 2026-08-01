@@ -31,14 +31,20 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         public int PollutionStacks => pollutionTimeLeft > 0 ? pollutionStacks : 0;
         public int PollutionOwner  => pollutionOwner;
 
+        // The reachable grade is capped by Acid Rain progress: tier 0/1/2/3 allow
+        // a maximum grade of 2/3/4/5 respectively. The stack thresholds themselves
+        // are unchanged, so the effort to stack pollution stays the same.
+        private static int MaxGradeForAcidRain() => SS_Balance.GetAcidRainTier() + 2;
+
         public int GetGrade()
         {
             int stacks = PollutionStacks;
             if (stacks <= 0) return 0;
             int[] thresholds = useHighThresholds ? BossThresholds : NormalThresholds;
+            int grade = 0;
             for (int i = thresholds.Length - 1; i >= 0; i--)
-                if (stacks >= thresholds[i]) return i + 1;
-            return 0;
+                if (stacks >= thresholds[i]) { grade = i + 1; break; }
+            return Math.Min(grade, MaxGradeForAcidRain());
         }
 
         public float GetGradeFillFraction()
@@ -47,8 +53,10 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             if (stacks <= 0) return 0f;
             int[] thresholds = useHighThresholds ? BossThresholds : NormalThresholds;
             int grade = GetGrade();
-            if (grade <= 0)                   return MathHelper.Clamp(stacks / (float)thresholds[0], 0f, 1f);
-            if (grade >= thresholds.Length)   return 1f;
+            // Once the Acid-Rain grade cap is reached the meter reads full.
+            if (grade >= MaxGradeForAcidRain())  return 1f;
+            if (grade <= 0)                       return MathHelper.Clamp(stacks / (float)thresholds[0], 0f, 1f);
+            if (grade >= thresholds.Length)       return 1f;
             int lower = thresholds[grade - 1];
             int upper = thresholds[grade];
             return MathHelper.Clamp((stacks - lower) / (float)(upper - lower), 0f, 1f);
