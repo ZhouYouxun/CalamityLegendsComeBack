@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using Terraria;
+using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -15,7 +16,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
     internal sealed class BrinyBaron_JazzTyphoon : ModProjectile, ILocalizedModType
     {
         public new string LocalizationCategory => "Projectiles.BrinyBaron";
-        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+        // The attached vortex uses the vanilla Razorblade Typhoon's three-frame sprite.
+        public override string Texture => $"Terraria/Images/Projectile_{ProjectileID.Typhoon}";
 
         private const float SingleSlot = -1f;
         private int Age => BB_Balance.JazzTyphoonLifetime - Projectile.timeLeft;
@@ -48,11 +50,16 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             Projectile.localNPCHitCooldown = 24;
         }
 
+        public override void SetStaticDefaults() => Main.projFrames[Type] = 3;
+
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
             => CalamityUtils.CircularHitboxCollision(Projectile.Center, 42f * VisualScale, targetHitbox);
 
         public override void AI()
         {
+            Projectile.frameCounter++;
+            Projectile.frame = Projectile.frameCounter / 5 % Main.projFrames[Type];
+
             NPC target = BoundTarget;
             if (!IsHelixVariant)
             {
@@ -124,6 +131,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             if (scale <= 0.01f)
                 return false;
 
+            Texture2D razorbladeTyphoon = TextureAssets.Projectile[Type].Value;
             Asset<Texture2D> water = ModContent.Request<Texture2D>("CalamityMod/Particles/WaterFlavored");
             Asset<Texture2D> bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle");
             Asset<Texture2D> soft = ModContent.Request<Texture2D>("CalamityMod/Particles/SmallBloom");
@@ -133,6 +141,18 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             Color whiteBlue = new(222, 251, 255, 0);
 
             Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
+
+            Rectangle typhoonFrame = razorbladeTyphoon.Frame(1, Main.projFrames[Type], 0, Projectile.frame);
+            Main.EntitySpriteDraw(
+                razorbladeTyphoon,
+                position,
+                typhoonFrame,
+                Color.White * (0.92f * scale),
+                Projectile.rotation,
+                typhoonFrame.Size() * 0.5f,
+                (IsHelixVariant ? 0.88f : 1.05f) * scale,
+                SpriteEffects.None,
+                0);
 
             for (int ring = 0; ring < 3; ring++)
             {

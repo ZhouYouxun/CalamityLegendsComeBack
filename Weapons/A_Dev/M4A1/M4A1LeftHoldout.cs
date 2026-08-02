@@ -5,7 +5,6 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using Terraria;
 using Terraria.Audio;
-using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -13,26 +12,28 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.M4A1
 {
     /// <summary>
     /// 左键持械：M4A1 自动步枪。长按持续射击并暖机（提升战术同步率 -> 阶段），
-    /// 时不时甩出火箭弹；阶段越高射速/弹速/精度越好、枪体发光随之升温。
+    /// 发射三种弹幕：特殊子弹（主流）、荧光绿能量弹（穿插）、火箭弹（间歇）。
+    /// 干净绘制（参考 OmniGun / ScorchedEarth），无后坐动画、无发光包边环。
     /// 松开左键后短暂放下并自动消失（非常态手持）。
     /// </summary>
     public class M4A1LeftHoldout : ModProjectile
     {
         public override string Texture => "CalamityLegendsComeBack/Weapons/A_Dev/M4A1/M4A1";
 
-        private const float ForwardOffset = 52f;
+        private const float DrawScale = 0.6f;      // 贴图整体 ×0.6（原来偏大）
+        private const float ForwardOffset = 46f;
         private const float VerticalOffset = 2f;
-        private const float MuzzleReach = 50f;
+        private const float MuzzleReach = 30f;
         private const int ReleaseLowerGrace = 8;
 
         private float shotAccumulator;
         private int consecutiveShots;
         private int rocketTimer;
+        private int orbTimer;
         private int notFiringTicks;
-        private float recoilOffset;
+        private int muzzleFlash;
         private float gunRotation;
         private int spriteDir = 1;
-        private int muzzleFlash;
 
         private Player Owner => Main.player[Projectile.owner];
         private InheritedCaseM4A1 Weapon => Owner.HeldItem.ModItem as InheritedCaseM4A1;
@@ -47,8 +48,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.M4A1
 
         public override void SetDefaults()
         {
-            Projectile.width = 60;
-            Projectile.height = 30;
+            Projectile.width = 40;
+            Projectile.height = 22;
             Projectile.friendly = false;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
@@ -62,23 +63,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.M4A1
 
         public override void AI()
         {
-            if (!Owner.active || Owner.dead || Weapon == null)
-            {
-                Projectile.Kill();
-                return;
-            }
-
-            // 右键重炮 / 大招进行中时让位
-            if (HasOtherHoldout(Owner))
+            if (!Owner.active || Owner.dead || Weapon == null || HasOtherHoldout(Owner))
             {
                 Projectile.Kill();
                 return;
             }
 
             UpdateTransform();
-
             if (muzzleFlash > 0) muzzleFlash--;
-            if (recoilOffset > 0f) recoilOffset = MathHelper.Lerp(recoilOffset, 0f, 0.3f);
 
             bool leftHeld = Projectile.owner == Main.myPlayer &&
                 Main.mouseLeft &&
@@ -89,7 +81,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.M4A1
                 consecutiveShots = 0;
                 shotAccumulator = 0f;
                 notFiringTicks++;
-                // 松开后短暂放下再消失
                 if (notFiringTicks > ReleaseLowerGrace)
                 {
                     Projectile.Kill();
@@ -102,10 +93,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.M4A1
             notFiringTicks = 0;
             KeepUseAnimation();
 
-            M4A1Player mp = M4A1Player.Get(Owner);
-            int stage = mp.SyncStage;
+            int stage = M4A1Player.Get(Owner).SyncStage;
 
-            // ===== 子弹节奏（RPM 累加器）=====
+            // ===== 特殊子弹（RPM 累加器）=====
             shotAccumulator += Math.Max(0.01f, BalanceM4A1.GetFireRateRpm(stage) / 3600f);
             int guard = 0;
             while (shotAccumulator >= 1f && guard < 3)
@@ -115,7 +105,16 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.M4A1
                 FireBullet(stage);
             }
 
-            // ===== 火箭弹节奏 =====
+            // ===== 荧光绿能量弹 =====
+            if (orbTimer > 0)
+                orbTimer--;
+            else
+            {
+                FireEnergyOrb(stage);
+                orbTimer = BalanceM4A1.GetEnergyOrbInterval(stage);
+            }
+
+            // ===== 火箭弹（频率保持不变）=====
             if (rocketTimer > 0)
                 rocketTimer--;
             else
@@ -147,7 +146,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.M4A1
             Projectile.velocity = aimDir;
             Projectile.rotation = gunRotation;
             Projectile.spriteDirection = spriteDir;
-            Projectile.Center = armPos + aimDir * (ForwardOffset - recoilOffset) + new Vector2(0f, VerticalOffset * Owner.gravDir);
+            Projectile.Center = armPos + aimDir * ForwardOffset + new Vector2(0f, VerticalOffset * Owner.gravDir);
 
             float armRotation = (gunRotation - MathHelper.PiOver2) * Owner.gravDir + (Owner.gravDir == -1f ? MathHelper.Pi : 0f);
             Owner.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, armRotation);
@@ -157,19 +156,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.M4A1
                 Projectile.netUpdate = true;
         }
 
-        private void KeepUseAnimation()
-        {
-            Owner.itemTime = Owner.itemAnimation = 2;
-        }
+        private void KeepUseAnimation() => Owner.itemTime = Owner.itemAnimation = 2;
 
         // ===================================================================
-        //  发射
+        //  发射三弹种
         // ===================================================================
         private void FireBullet(int stage)
         {
             Vector2 dir = AimDir;
-
-            // 持续射击收束：暖机让弹道逐渐稳定（叠加阶段基础散布）。
             float sustainedTighten = MathHelper.Lerp(1f, 0.35f, MathHelper.Clamp(consecutiveShots / 45f, 0f, 1f));
             float spread = BalanceM4A1.GetSpreadDegrees(stage) * sustainedTighten;
             consecutiveShots++;
@@ -178,101 +172,78 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.M4A1
                 (Owner.HeldItem.shootSpeed * BalanceM4A1.GetBulletSpeedMultiplier(stage));
 
             int damage = InheritedCaseM4A1.ScaledDamage(Owner, Owner.HeldItem, BalanceM4A1.GetBulletBaseDamage());
-            int index = Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(),
-                GunTip + Main.rand.NextVector2Circular(2f, 2f),
-                velocity,
-                ModContent.ProjectileType<M4A1Bullet>(),
-                damage,
-                Projectile.knockBack,
-                Projectile.owner);
+            SpawnShot(ModContent.ProjectileType<M4A1Bullet>(), GunTip + Main.rand.NextVector2Circular(2f, 2f), velocity, damage, Projectile.knockBack);
 
-            if (Main.projectile.IndexInRange(index))
-            {
-                Projectile shot = Main.projectile[index];
-                shot.DamageType = DamageClass.Ranged;
-                shot.CritChance = Owner.GetWeaponCrit(Owner.HeldItem);
-            }
+            muzzleFlash = 4;
+            SpawnMuzzleFlash(dir, false);
+        }
 
-            ApplyRecoil(2.5f);
-            SpawnMuzzleFlash(dir, stage, false);
+        private void FireEnergyOrb(int stage)
+        {
+            Vector2 dir = AimDir;
+            Vector2 velocity = dir.RotatedByRandom(MathHelper.ToRadians(2f)) * (Owner.HeldItem.shootSpeed * 0.72f);
+            int damage = InheritedCaseM4A1.ScaledDamage(Owner, Owner.HeldItem, (int)(BalanceM4A1.GetBulletBaseDamage() * 1.8f));
+            SpawnShot(ModContent.ProjectileType<M4A1EnergyOrb>(), GunTip, velocity, damage, Projectile.knockBack);
+
+            muzzleFlash = 5;
+            SpawnMuzzleFlash(dir, true);
+            SoundEngine.PlaySound(SoundID.Item157 with { Volume = 0.35f, Pitch = 0.35f, PitchVariance = 0.1f, MaxInstances = 4 }, GunTip);
         }
 
         private void FireRocket(int stage)
         {
             Vector2 dir = AimDir;
             Vector2 velocity = dir * (Owner.HeldItem.shootSpeed * 0.7f);
-
             int damage = InheritedCaseM4A1.ScaledDamage(Owner, Owner.HeldItem, BalanceM4A1.GetRocketBaseDamage());
-            int index = Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(),
-                GunTip,
-                velocity,
-                ModContent.ProjectileType<M4A1Rocket>(),
-                damage,
-                Projectile.knockBack * 1.6f,
-                Projectile.owner);
+            SpawnShot(ModContent.ProjectileType<M4A1Rocket>(), GunTip, velocity, damage, Projectile.knockBack * 1.6f);
 
+            muzzleFlash = 6;
+            SpawnMuzzleFlash(dir, true);
+            SoundEngine.PlaySound(SoundID.Item61 with { Volume = 0.5f, Pitch = -0.1f }, GunTip);
+        }
+
+        private void SpawnShot(int type, Vector2 pos, Vector2 velocity, int damage, float knockback)
+        {
+            int index = Projectile.NewProjectile(Projectile.GetSource_FromThis(), pos, velocity, type, damage, knockback, Projectile.owner);
             if (Main.projectile.IndexInRange(index))
             {
                 Projectile shot = Main.projectile[index];
                 shot.DamageType = DamageClass.Ranged;
                 shot.CritChance = Owner.GetWeaponCrit(Owner.HeldItem);
             }
-
-            ApplyRecoil(7f);
-            SpawnMuzzleFlash(dir, stage, true);
-            SoundEngine.PlaySound(SoundID.Item61 with { Volume = 0.5f, Pitch = -0.1f }, GunTip);
         }
 
-        private void ApplyRecoil(float power)
+        private void SpawnMuzzleFlash(Vector2 dir, bool heavy)
         {
-            recoilOffset = power;
-            muzzleFlash = 4;
-            Owner.velocity -= AimDir * (power * 0.02f);
-        }
-
-        private void SpawnMuzzleFlash(Vector2 dir, int stage, bool heavy)
-        {
-            SoundEngine.PlaySound(SoundID.Item41 with { Volume = heavy ? 0.6f : 0.32f, Pitch = heavy ? -0.2f : 0.25f, PitchVariance = 0.12f, MaxInstances = 5 }, GunTip);
+            SoundEngine.PlaySound(SoundID.Item41 with { Volume = heavy ? 0.5f : 0.3f, Pitch = heavy ? -0.1f : 0.3f, PitchVariance = 0.12f, MaxInstances = 5 }, GunTip);
 
             if (Main.dedServ || Projectile.owner != Main.myPlayer)
                 return;
 
-            Color theme = StageColor(stage);
-            int sparks = heavy ? 7 : 3;
+            int sparks = heavy ? 6 : 3;
             for (int i = 0; i < sparks; i++)
             {
-                Vector2 vel = dir.RotatedByRandom(0.18f) * Main.rand.NextFloat(3f, heavy ? 12f : 8f);
+                Vector2 vel = dir.RotatedByRandom(0.16f) * Main.rand.NextFloat(3f, heavy ? 11f : 7f);
                 GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
                     GunTip + dir * Main.rand.NextFloat(0f, 4f),
                     vel,
                     false,
-                    heavy ? 14 : 9,
-                    Main.rand.NextFloat(0.3f, heavy ? 0.75f : 0.5f),
-                    Color.Lerp(theme, Color.White, Main.rand.NextFloat(0.3f, 0.7f)),
+                    heavy ? 13 : 9,
+                    Main.rand.NextFloat(0.3f, heavy ? 0.7f : 0.5f),
+                    Color.Lerp(M4A1Visuals.NeonGreen, M4A1Visuals.NeonGreenBright, Main.rand.NextFloat(0.3f, 0.8f)),
                     true,
                     true));
             }
 
-            GeneralParticleHandler.SpawnParticle(new SquishyLightParticle(
-                GunTip,
-                dir * Main.rand.NextFloat(1.5f, 3f),
-                Main.rand.NextFloat(0.22f, heavy ? 0.5f : 0.34f),
-                Color.Lerp(theme, Color.White, 0.35f),
-                Main.rand.Next(8, 14)));
-
-            for (int i = 0; i < (heavy ? 5 : 2); i++)
+            for (int i = 0; i < (heavy ? 4 : 2); i++)
             {
-                Dust smoke = Dust.NewDustPerfect(GunTip, DustID.Smoke, -dir.RotatedByRandom(0.4f) * Main.rand.NextFloat(0.6f, 2f), 130, Color.Gray, Main.rand.NextFloat(0.6f, 1f));
+                Dust smoke = Dust.NewDustPerfect(GunTip, DustID.Smoke, -dir.RotatedByRandom(0.4f) * Main.rand.NextFloat(0.6f, 1.8f), 130, Color.Gray, Main.rand.NextFloat(0.6f, 1f));
                 smoke.noGravity = true;
             }
         }
 
-        private static Color StageColor(int stage) => M4A1Visuals.StageColor(stage);
-
         // ===================================================================
-        //  绘制：枪体 + 战术发光包边（随阶段升温）+ 枪口暴闪
+        //  绘制：干净的枪体（无包边环 / 无星芒 / 无后坐），加轻量绿枪口闪
         // ===================================================================
         public override bool PreDraw(ref Color lightColor)
         {
@@ -281,60 +252,29 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.M4A1
 
             Texture2D tex = ModContent.Request<Texture2D>(Texture).Value;
             Vector2 origin = tex.Size() * 0.5f;
-
-            int stage = M4A1Player.Get(Owner).SyncStage;
-            Color theme = StageColor(stage);
-
-            Vector2 aimDir = gunRotation.ToRotationVector2();
-            Vector2 drawCenter = Projectile.Center - aimDir * recoilOffset - Main.screenPosition;
+            Vector2 drawCenter = Projectile.Center - Main.screenPosition;
 
             SpriteEffects flip = spriteDir == -1 ? SpriteEffects.FlipVertically : SpriteEffects.None;
             if (Owner.gravDir == -1f)
                 flip ^= SpriteEffects.FlipVertically;
 
-            float idlePulse = 0.5f + 0.5f * (MathF.Sin(Main.GlobalTimeWrappedHourly * 3f + Projectile.identity) * 0.5f + 0.5f);
-            float stageIntensity = 0.25f + stage * 0.22f;
-            float flashPulse = MathHelper.Clamp(muzzleFlash / 4f, 0f, 1f);
-
-            Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
-
-            // 发光包边（14 方向外圈 + 8 方向内圈），强度随阶段与开火升温
-            Color outline = (Color.Lerp(theme, Color.White, 0.5f) with { A = 0 }) * (stageIntensity * (0.6f + idlePulse * 0.5f) + flashPulse * 0.7f);
-            float outlineDist = 1.6f + stage * 0.8f + flashPulse * 3.2f;
-            for (int i = 0; i < 14; i++)
+            // 枪口绿闪（非旋转、非贴图堆，只是一层加法光晕）
+            float flashPulse = MathHelper.Clamp(muzzleFlash / 6f, 0f, 1f);
+            if (flashPulse > 0f)
             {
-                Vector2 offset = (MathHelper.TwoPi * i / 14f).ToRotationVector2() * outlineDist;
-                Main.EntitySpriteDraw(tex, drawCenter + offset, null, outline, gunRotation, origin, Projectile.scale, flip, 0);
+                Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+                Vector2 muzzle = GunTip - Main.screenPosition;
+                Main.spriteBatch.End();
+                Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+                Main.EntitySpriteDraw(bloom, muzzle, null, (M4A1Visuals.NeonGreen with { A = 0 }) * (flashPulse * 0.9f), gunRotation, bloom.Size() * 0.5f, new Vector2(0.35f, 0.16f) * (0.6f + flashPulse), SpriteEffects.None, 0);
+                Main.EntitySpriteDraw(bloom, muzzle, null, (M4A1Visuals.NeonGreenBright with { A = 0 }) * (flashPulse * 0.8f), 0f, bloom.Size() * 0.5f, 0.12f * (0.6f + flashPulse), SpriteEffects.None, 0);
+                Main.spriteBatch.End();
+                Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
             }
 
-            // 枪体
-            Main.EntitySpriteDraw(tex, drawCenter, null, lightColor, gunRotation, origin, Projectile.scale, flip, 0);
-
-            // 枪口核心暴闪
-            if (flashPulse > 0f || stage >= 2)
-                DrawMuzzleCore(theme, aimDir, flashPulse, stage);
-
+            // 枪体本体（干净）
+            Main.EntitySpriteDraw(tex, drawCenter, null, Projectile.GetAlpha(lightColor), gunRotation, origin, DrawScale, flip, 0);
             return false;
-        }
-
-        private void DrawMuzzleCore(Color theme, Vector2 aimDir, float flashPulse, int stage)
-        {
-            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Texture2D sparkle = ModContent.Request<Texture2D>("CalamityMod/Particles/HalfStar").Value;
-
-            Vector2 corePos = GunTip - aimDir * recoilOffset - Main.screenPosition;
-            float power = Math.Max(flashPulse, stage >= 3 ? 0.28f : stage * 0.08f);
-
-            Main.EntitySpriteDraw(bloom, corePos, null, (Color.Lerp(theme, Color.White, 0.4f) with { A = 0 }) * (0.35f + power * 0.7f),
-                0f, bloom.Size() * 0.5f, new Vector2(0.9f, 0.5f) * (0.15f + power * 0.6f), SpriteEffects.None, 0);
-
-            for (int b = -1; b <= 1; b += 2)
-            {
-                Vector2 scale = new Vector2(0.28f, 0.9f * b) * (2.6f + power * 4f);
-                Main.EntitySpriteDraw(sparkle, corePos, null, (Color.Lerp(theme, Color.White, 0.5f) with { A = 0 }) * (0.4f + power * 0.6f),
-                    gunRotation + MathHelper.PiOver4 * b, sparkle.Size() * 0.5f, scale, SpriteEffects.None, 0);
-            }
         }
 
         private static bool HasOtherHoldout(Player owner)

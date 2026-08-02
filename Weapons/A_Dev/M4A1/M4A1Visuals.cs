@@ -15,8 +15,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.M4A1
             _ => new Color(255, 92, 70)    // 完全同步
         };
 
-        /// <summary>复仇印记的标志红。</summary>
+        /// <summary>伸冤者印记的标志红。</summary>
         public static readonly Color MarkColor = new(255, 64, 58);
+
+        /// <summary>左键弹幕的荧光绿主色 / 亮核。</summary>
+        public static readonly Color NeonGreen = new(140, 255, 70);
+        public static readonly Color NeonGreenBright = new(200, 255, 140);
 
         private static readonly string[] StageKeys =
         {

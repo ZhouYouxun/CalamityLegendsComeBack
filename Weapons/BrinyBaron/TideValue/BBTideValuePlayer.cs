@@ -14,20 +14,17 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.TideValue
         public const int TideChargeMax = 90 * 60;
         public const int TideDisplayMax = 90;
 
-        private const int TideBladeHitCooldown = 120;
         private const int BossAutoGainInterval = 300;
-        private const int NonBossDecayInterval = 330;
-        private const int NoAttackClearDelay = 330;
+        private const int NonBossDecayInterval = 300;
 
         public int TideValue;
         public int TideChargeValue;
         private bool wasTideReady;
         private bool wasTideChargeReady;
 
-        private int bladeHitTideCooldownTimer;
+        private int enhancedWaveHitCount;
         private int bossAutoGainTimer;
         private int nonBossDecayTimer;
-        private int noAttackTimer;
 
         public int CurrentTideMax => 4 + Player.GetModPlayer<BBAccessoryPlayer>().BonusTideMax;
         public bool TideFull => TideValue >= CurrentTideMax;
@@ -51,50 +48,32 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.TideValue
             if (TideValue > CurrentTideMax)
                 TideValue = CurrentTideMax;
 
-            if (bladeHitTideCooldownTimer > 0)
-                bladeHitTideCooldownTimer--;
-
-            noAttackTimer++;
-            int clearDelay = Player.GetModPlayer<BBAccessoryPlayer>().TideWiseHatEquipped ? NoAttackClearDelay * 2 : NoAttackClearDelay;
-            if (noAttackTimer >= clearDelay)
+            bool bossPresent = IsBossPresent();
+            if (bossPresent)
             {
-                if (!Player.GetModPlayer<Accssory.LegendaryUltimateTesterPlayer>().Equipped)
-                    TideValue = 0;
-                noAttackTimer = 0;
-                bossAutoGainTimer = 0;
                 nonBossDecayTimer = 0;
+                bossAutoGainTimer++;
+                if (bossAutoGainTimer >= BossAutoGainInterval)
+                {
+                    bossAutoGainTimer = 0;
+                    AddTide();
+                }
             }
             else
             {
-                bool bossPresent = IsBossPresent();
-                if (bossPresent)
+                bossAutoGainTimer = 0;
+                if (TideValue > 0)
                 {
-                    nonBossDecayTimer = 0;
-                    bossAutoGainTimer++;
-                    if (bossAutoGainTimer >= BossAutoGainInterval)
+                    nonBossDecayTimer++;
+                    int decayInterval = Player.GetModPlayer<BBAccessoryPlayer>().TideWiseHatEquipped ? NonBossDecayInterval * 2 : NonBossDecayInterval;
+                    if (nonBossDecayTimer >= decayInterval)
                     {
-                        bossAutoGainTimer = 0;
-                        AddTide();
+                        nonBossDecayTimer = 0;
+                        TideValue--;
                     }
                 }
                 else
-                {
-                    bossAutoGainTimer = 0;
-                    if (TideValue > 0)
-                    {
-                        nonBossDecayTimer++;
-                        int decayInterval = Player.GetModPlayer<BBAccessoryPlayer>().TideWiseHatEquipped ? NonBossDecayInterval * 2 : NonBossDecayInterval;
-                        if (nonBossDecayTimer >= decayInterval)
-                        {
-                            nonBossDecayTimer = 0;
-                            TideValue--;
-                        }
-                    }
-                    else
-                    {
-                        nonBossDecayTimer = 0;
-                    }
-                }
+                    nonBossDecayTimer = 0;
             }
 
             UpdateTideCharge();
@@ -104,8 +83,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.TideValue
 
         public override void OnHurt(Player.HurtInfo info)
         {
-            if (TideValue > 0)
-                TideValue--;
+            TideValue = Math.Max(0, TideValue - 5);
         }
 
         public void AddTide(int amount = 1)
@@ -124,15 +102,20 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.TideValue
             TideValue = Math.Min(cap, TideValue + amount);
         }
 
-        public bool TryAddTideFromBlade()
+        public void RegisterEnhancedWaveHit()
         {
-            if (bladeHitTideCooldownTimer > 0)
-                return false;
+            if (Player.GetModPlayer<BBAccessoryPlayer>().TideWiseHatEquipped)
+            {
+                AddTide();
+                return;
+            }
 
-            bladeHitTideCooldownTimer = TideBladeHitCooldown;
-            noAttackTimer = 0;
-            AddTide();
-            return true;
+            enhancedWaveHitCount++;
+            if (enhancedWaveHitCount >= 3)
+            {
+                enhancedWaveHitCount = 0;
+                AddTide();
+            }
         }
 
         public bool TryConsumeTide(int amount = 1)
@@ -153,10 +136,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.TideValue
         public void ResetTide()
         {
             TideValue = 0;
-            bladeHitTideCooldownTimer = 0;
+            enhancedWaveHitCount = 0;
             bossAutoGainTimer = 0;
             nonBossDecayTimer = 0;
-            noAttackTimer = 0;
         }
 
         public void ResetTideCharge()

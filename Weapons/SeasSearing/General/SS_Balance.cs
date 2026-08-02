@@ -115,13 +115,39 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         }
 
         // Rounds per normal burst at each phase. Phase 6 is full-auto and is
-        // driven by a rolling counter instead of discrete bursts, but keeps the
-        // 5-round cadence value for any shared maths.
+        // driven by a rolling counter instead of discrete bursts, but shares the
+        // final seven-round tier for any shared maths.
         public static int GetPhaseBurstCount(int phase) => phase switch
         {
             1 => 3,
             2 => 4,
-            _ => 5   // phases 3, 4, 5, 6
+            3 => 5,
+            4 => 6,
+            _ => 7   // phase 5; phase 6 is full-auto but shares the final cadence tier
+        };
+
+        // The actual frame distance between two main rounds. These values shrink at every
+        // milestone so the primary fire never loses pace when a new companion joins it.
+        public static int GetLeftClickShotIntervalFrames(int phase) => phase switch
+        {
+            1 => 8,
+            2 => 7,
+            3 => 6,
+            4 => 5,
+            5 => 4,
+            _ => 3
+        };
+
+        // Empty frames after a completed burst. Phase 6 has no burst recovery because it
+        // is continuous fire; the value is retained as zero for shared callers.
+        public static int GetLeftClickBurstRecoveryFrames(int phase) => phase switch
+        {
+            1 => 12,
+            2 => 10,
+            3 => 8,
+            4 => 6,
+            5 => 4,
+            _ => 0
         };
 
         // Legacy helper used by SeasSearing.cs GetProgressionStage().

@@ -1122,9 +1122,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         {
             SpawnBladeHitEffects(target);
             target.AddBuff(BuffID.Frostburn, 180);
-            if (Main.myPlayer == Projectile.owner)
-                Owner.GetModPlayer<BBTideValuePlayer>().TryAddTideFromBlade();
-
             if (!rightSpinActive)
             {
                 int growthStage = CurrentGrowthStage;

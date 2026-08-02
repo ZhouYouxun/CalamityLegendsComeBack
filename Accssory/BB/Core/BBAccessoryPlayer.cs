@@ -156,9 +156,6 @@ namespace CalamityLegendsComeBack.Accssory.BB
 
         public void RegisterBrinyBaronBladeHit(NPC target, NPC.HitInfo hit)
         {
-            if (TideWiseHatEquipped && hit.Crit && Main.myPlayer == Player.whoAmI && Main.rand.NextBool(100))
-                Player.GetModPlayer<BBTideValuePlayer>().AddTide();
-
             if (DrinkingFountainEquipped && Main.myPlayer == Player.whoAmI)
             {
                 Vector2 velocity = (Player.Center - target.Center).SafeNormalize(Vector2.UnitY) * 7.5f;

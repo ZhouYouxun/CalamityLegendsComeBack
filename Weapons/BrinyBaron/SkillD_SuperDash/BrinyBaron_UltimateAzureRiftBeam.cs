@@ -1,5 +1,5 @@
+using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
@@ -15,6 +15,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 
         private int Age => BB_Balance.UltimateAzureRiftBeamLifetime - Projectile.timeLeft;
         private float BeamAngle => Projectile.ai[0];
+        private bool IsFinalWaterBlade => Projectile.ai[1] > 0f;
         private Vector2 BeamStart => Projectile.Center + BeamAngle.ToRotationVector2() * BB_Balance.UltimateAzureRiftBeamLength;
         private Vector2 BeamDirection => BeamStart.DirectionTo(Projectile.Center);
         private bool CanDamageBeam => Age >= BB_Balance.UltimateAzureRiftBeamWindupFrames;
@@ -59,27 +60,85 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             }
 
             Lighting.AddLight(Projectile.Center, 0.10f, 0.56f, 0.92f);
+
+            if (!Main.dedServ && Age == BB_Balance.UltimateAzureRiftBeamWindupFrames)
+                SpawnWaterBladeParticles();
+
+            if (!Main.dedServ && IsFinalWaterBlade && Projectile.timeLeft == 1)
+                SpawnFinalDashSlashBurst();
         }
 
-        public override bool PreDraw(ref Color lightColor)
+        // The former solid beam is deliberately not drawn. Its full body is made from
+        // WaterFoamParticle and water dust, so every hit reads as a passing water blade.
+        public override bool PreDraw(ref Color lightColor) => false;
+
+        private void SpawnWaterBladeParticles()
         {
-            float windup = Utils.GetLerpValue(0f, BB_Balance.UltimateAzureRiftBeamWindupFrames, Age, true);
-            float fade = Utils.GetLerpValue(BB_Balance.UltimateAzureRiftBeamLifetime, BB_Balance.UltimateAzureRiftBeamLifetime - 5f, Age, true);
-            float opacity = windup * fade;
-            if (opacity <= 0f)
-                return false;
+            float scale = IsFinalWaterBlade ? 1.8f : 1f;
+            int particleCount = IsFinalWaterBlade ? 20 : 12;
+            Vector2 forward = BeamDirection.SafeNormalize(Vector2.UnitY);
+            Vector2 right = forward.RotatedBy(MathHelper.PiOver2);
 
-            Texture2D glowBeam = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomLineThick").Value;
-            Texture2D coreBeam = ModContent.Request<Texture2D>("CalamityMod/Particles/LineThick").Value;
-            Vector2 drawPosition = BeamStart - Main.screenPosition;
-            float rotation = BeamDirection.ToRotation() + MathHelper.PiOver2;
-            float beamScaleY = BB_Balance.UltimateAzureRiftBeamLength / 975f;
+            for (int i = 0; i < particleCount; i++)
+            {
+                float progress = (i + Main.rand.NextFloat(0.1f, 0.9f)) / particleCount;
+                Vector2 position = Vector2.Lerp(BeamStart, Projectile.Center, progress) +
+                    right * Main.rand.NextFloat(-18f, 18f) * scale;
+                Vector2 velocity = forward * Main.rand.NextFloat(7f, 13f) +
+                    right * Main.rand.NextFloat(-2.8f, 2.8f) * scale;
+                Color color = Color.Lerp(new Color(78, 195, 255), Color.White, Main.rand.NextFloat(0.2f, 0.72f));
 
-            Main.EntitySpriteDraw(glowBeam, drawPosition, null, new Color(25, 154, 255, 0) * (0.75f * opacity),
-                rotation, new Vector2(glowBeam.Width * 0.5f, glowBeam.Height), new Vector2(0.16f + 0.12f * windup, beamScaleY), SpriteEffects.None, 0);
-            Main.EntitySpriteDraw(coreBeam, drawPosition, null, Color.White * (0.82f * opacity),
-                rotation, new Vector2(coreBeam.Width * 0.5f, coreBeam.Height), new Vector2(0.045f + 0.045f * windup, beamScaleY), SpriteEffects.None, 0);
-            return false;
+                GeneralParticleHandler.SpawnParticle(new WaterFoamParticle(
+                    position,
+                    velocity,
+                    Main.rand.Next(16, 25),
+                    Main.rand.NextFloat(0.32f, 0.54f) * scale,
+                    color));
+
+                Dust water = Dust.NewDustPerfect(
+                    position,
+                    Main.rand.NextBool(3) ? DustID.Frost : DustID.Water,
+                    velocity * Main.rand.NextFloat(0.45f, 0.8f),
+                    80,
+                    color,
+                    Main.rand.NextFloat(0.8f, 1.2f) * scale);
+                water.noGravity = true;
+            }
+
+            if (!IsFinalWaterBlade)
+                return;
+
+            // Same three-point dash-slash rhythm as Supreme Catastrophe, translated
+            // into the finisher's water-blue palette rather than reusing its assets.
+            for (int i = -1; i <= 1; i++)
+            {
+                GeneralParticleHandler.SpawnParticle(new SparkParticle(
+                    Projectile.Center + forward * 54f * i,
+                    forward * 5f,
+                    false,
+                    25,
+                    5f * scale,
+                    Color.DeepSkyBlue * 0.35f));
+            }
+        }
+
+        private void SpawnFinalDashSlashBurst()
+        {
+            Vector2 forward = BeamDirection.SafeNormalize(Vector2.UnitY);
+            GeneralParticleHandler.SpawnParticle(new VoidSparkParticle(
+                Projectile.Center,
+                forward * 5f,
+                false,
+                9,
+                1.3f,
+                Color.Cyan * 0.7f));
+
+            for (int i = 0; i < 3; i++)
+            {
+                Vector2 velocity = Main.rand.NextVector2Circular(14f, 14f) * Main.rand.NextFloat(0.1f, 2.5f);
+                Dust water = Dust.NewDustPerfect(Projectile.Center + velocity * 2f, DustID.Water, velocity, 80, Color.DeepSkyBlue, Main.rand.NextFloat(1.2f, 1.8f));
+                water.noGravity = true;
+            }
         }
     }
 }

@@ -214,6 +214,7 @@ Mods: {
 				MalachiteFinaleDart.DisplayName: 孔雀翎飞刃
 				MalachiteFinaleImpactExplosion.DisplayName: 孔雀翎灯爆
 				MalachiteFinalePetal.DisplayName: 孔雀翎花瓣
+				// MalachiteFinaleHoldout.DisplayName: Malachite Finale Holdout
 			}
 		}
 

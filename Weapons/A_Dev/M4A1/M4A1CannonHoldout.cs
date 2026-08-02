@@ -203,10 +203,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.M4A1
 
             float pop = MathHelper.Clamp(timer / (float)DeployFrames, 0f, 1f);
             float ease = 1f - (1f - pop) * (1f - pop); // ease-out
-            float scale = MathHelper.Lerp(0.2f, 1.32f, ease);
-
-            int tierClamped = Math.Clamp(tier, 0, 3);
-            Color theme = M4A1Visuals.StageColor(tierClamped);
+            float scale = MathHelper.Lerp(0.12f, 0.79f, ease); // 贴图整体 ×0.6
 
             Vector2 aimDir = gunRotation.ToRotationVector2();
             Vector2 drawCenter = Projectile.Center - aimDir * recoil - Main.screenPosition;
@@ -214,20 +211,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.M4A1
             if (Owner.gravDir == -1f)
                 flip ^= SpriteEffects.FlipVertically;
 
-            float recoilPulse = MathHelper.Clamp(recoil / 12f, 0f, 1f);
-
-            Main.spriteBatch.End();
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
-
-            Color outline = (Color.Lerp(theme, Color.White, 0.5f) with { A = 0 }) * (0.5f + recoilPulse * 0.8f);
-            float outlineDist = 2f + tierClamped * 1.2f + recoilPulse * 4f;
-            for (int i = 0; i < 12; i++)
-            {
-                Vector2 offset = (MathHelper.TwoPi * i / 12f).ToRotationVector2() * outlineDist;
-                Main.EntitySpriteDraw(tex, drawCenter + offset, null, outline, gunRotation, origin, scale, flip, 0);
-            }
-
-            Main.EntitySpriteDraw(tex, drawCenter, null, lightColor, gunRotation, origin, scale, flip, 0);
+            // 干净绘制（无包边环），保留展开弹开缩放 + 重炮后坐位移
+            Main.EntitySpriteDraw(tex, drawCenter, null, Projectile.GetAlpha(lightColor), gunRotation, origin, scale, flip, 0);
 
             return false;
         }

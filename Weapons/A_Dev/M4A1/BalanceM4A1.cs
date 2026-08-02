@@ -59,22 +59,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.M4A1
             42, 60, 74, 96, 118, 142, 168, 190, 210, 232, 280, 320, 380, 505
         };
 
-        // 右键：便携重炮的普通炮弹。作为间歇重击，约子弹 6~7 倍。
-        private static readonly int[] ShellBaseDamage =
-        {
-            64, 92, 116, 150, 184, 222, 262, 296, 328, 360, 435, 500, 590, 780
-        };
-
-        // 右键：终结炮弹（30% 同步率以上追加）。约普通炮弹 1.8 倍。
-        private static readonly int[] FinisherShellBaseDamage =
-        {
-            118, 168, 212, 274, 336, 405, 478, 540, 598, 658, 795, 912, 1076, 1420
-        };
-
         public static int GetBulletBaseDamage() => GetValueForStage(BulletBaseDamage);
         public static int GetRocketBaseDamage() => GetValueForStage(RocketBaseDamage);
-        public static int GetShellBaseDamage() => GetValueForStage(ShellBaseDamage);
-        public static int GetFinisherShellBaseDamage() => GetValueForStage(FinisherShellBaseDamage);
+
+        // 右键便携重炮：普通炮弹伤害 = 左键子弹的 600%；终结炮弹再 ×1.6。
+        public const float RightClickDamageMultiplier = 6f;
+        public const float FinisherShellMultiplier = 1.6f;
+        public static int GetShellBaseDamage() => Math.Max(1, (int)Math.Round(GetBulletBaseDamage() * RightClickDamageMultiplier));
+        public static int GetFinisherShellBaseDamage() => Math.Max(1, (int)Math.Round(GetShellBaseDamage() * FinisherShellMultiplier));
 
         /// <summary>物品栏里 Item.damage 的展示基准 = 当前进度的子弹基础伤害。</summary>
         public static int GetInitialItemDamage() => BulletBaseDamage[0];
@@ -148,12 +140,22 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.M4A1
         }
 
         // 各阶段左键射速（RPM）与弹速倍率、精度（散布角度）
+        // 左键射速：基准 750 RPM（略低于现实 M4A1）；指挥接管起小幅提高射速。
         public static float GetFireRateRpm(int stage) => stage switch
         {
-            0 => 360f,   // 初始校准：普通自动
-            1 => 400f,   // 战术锁定
-            2 => 540f,   // 指挥接管：提高射速
-            _ => 620f    // 完全同步
+            0 => 750f,   // 初始校准
+            1 => 750f,   // 战术锁定
+            2 => 850f,   // 指挥接管：提高射速
+            _ => 920f    // 完全同步
+        };
+
+        // 荧光绿能量弹发射间隔（帧）：比火箭更频繁，穿插在子弹流中。
+        public static int GetEnergyOrbInterval(int stage) => stage switch
+        {
+            0 => 60,
+            1 => 54,
+            2 => 46,
+            _ => 38
         };
 
         public static float GetBulletSpeedMultiplier(int stage) => stage switch
