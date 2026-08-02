@@ -14,7 +14,11 @@ Mods: {
 					StealthLeftClick: "[c/B7A4FF:Stealth Left: Summons a rain of comets above cursor; dissipating comets burst into 3 Astral Energy Beams.]"
 					RightClick: "[c/8DEBFF:Right Click: Hold to charge a large meteor; Stealth Right sends a roaring Lion Head. Hits trigger Rogue Earthen Tides shockwaves.]"
 					UltimateSkill: "[c/FFE85A:Ultimate (Press {0}): Opens a gravity field that gathers a falling meteor storm. Requires full Ultimate Energy and Stealth.]"
-					Passives: "[c/BFAFFF:Kinetic Cycle: Reflected left-click comets accelerate, grow stronger, and return to orbit after their seventh reflection.]"
+					Passives:
+						'''
+						[c/BFAFFF:Kinetic Cycle: Reflected left-click comets accelerate, grow stronger, and return to orbit after their seventh reflection.]
+						[c/AA8CFF:Stellar Landing: Landing after falling at least 7 tiles creates a stellar shockwave. At 21 tiles, its damage and radius are doubled.]
+						'''
 					ConstellationStatus: "[c/FFE85A:Leo Starlight: {0} available | {1} spent | {2} earned | {3} to complete]"
 					ConstellationHint: "[c/B8A8FF:While holding this weapon, or hovering it in your inventory, press {0} to open the Leonid star chart.]"
 					LegendaryHint: "[c/BABABA:Hold Shift to read the legendary record]"
@@ -119,6 +123,7 @@ Mods: {
 				LeonidAstralEnergy.DisplayName: Astral Energy Beam
 				LeonidVoidSeeker.DisplayName: Leonid Void Seeker
 				LeonidPolarStar.DisplayName: Leonid Polar Star
+				LeonidLandingImpact.DisplayName: Stellar Landing
 			}
 		}
 

@@ -10,7 +10,7 @@ Mods: {
 					M4A1_RightClick: Right click to unfold the portable heavy cannon from the case, spending about 35 Sync Rate; shells deal 600% of left-click damage and the barrage grows with your Sync Rate
 					M4A1_Mark: Sustained hits on one foe brand it with the Avenger's Mark (up to 3): bonus damage, then armor break, then periodic tactical detonations
 					M4A1_Passive: Passive — Tactical Command Module: Tactical Sync Rate is displayed as a matrix bar above your head
-					M4A1_Ultimate: "Ultimate · Avenger's Mark: at full synchronization, press {0} to fully deploy the case, locking up to five targets near the cursor and unleashing a homing barrage"
+					M4A1_Ultimate: Ultimate · Avenger's Mark: at full synchronization, press {0} to fully deploy the case, locking up to five targets near the cursor and unleashing a homing barrage
 				}
 			}
 		}

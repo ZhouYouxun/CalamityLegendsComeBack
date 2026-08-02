@@ -14,7 +14,11 @@ Mods: {
 					StealthLeftClick: "[c/B7A4FF:潜伏左键：在鼠标斜上方召来一阵流星雨；消散时向周围散射3发星辉能量束。]"
 					RightClick: "[c/8DEBFF:右键：长按蓄力大流星；潜伏右键放出狮首。命中敌人时触发盗贼大地之潮冲击波。]"
 					UltimateSkill: "[c/FFE85A:终结技（按 {0}）：展开引力场，召来从天空落下的流星暴。需要满终结能量和潜伏值。]"
-					Passives: "[c/BFAFFF:动能循环：左键流星反射后会加速、增伤；第七次反射后会回到身边环绕。]"
+					Passives:
+						'''
+						[c/BFAFFF:动能循环：左键流星反射后会加速、增伤；第七次反射后会回到身边环绕。]
+						[c/AA8CFF:星空落地：下落至少7格后落地会引发星空震荡；达到21格时伤害和范围均翻倍。]
+						'''
 					ConstellationStatus: "[c/FFE85A:狮子座星辉：可用 {0} | 已消耗 {1} | 已获得 {2} | 全图需 {3}]"
 					ConstellationHint: "[c/B8A8FF:手持本武器，或在背包中悬停本武器时，按 {0} 展开狮源流星星图。]"
 					LegendaryHint: "[c/BABABA:按住 Shift 阅读传奇记录]"
@@ -119,6 +123,7 @@ Mods: {
 				LeonidAstralEnergy.DisplayName: 星辉能量束
 				// LeonidVoidSeeker.DisplayName: Leonid Void Seeker
 				// LeonidPolarStar.DisplayName: Leonid Polar Star
+				LeonidLandingImpact.DisplayName: 星空落地
 			}
 		}
 
