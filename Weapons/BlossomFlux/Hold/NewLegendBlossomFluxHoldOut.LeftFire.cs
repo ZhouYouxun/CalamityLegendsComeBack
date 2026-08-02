@@ -27,6 +27,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
     {
         private void HandleLeftClickInput()
         {
+            if (leftHardCooldown > 0)
+                leftHardCooldown--;
+
             bool validLeftInput =
                 Owner.HeldItem.type == AssociatedItemID &&
                 !Owner.noItems &&
@@ -52,33 +55,26 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 burstGroupsStarted = 0;
                 leftShotsFired = 0;
                 reconShotsFiredInBurst = 0;
-                leftBurstTimer = GetInitialLeftFireDelay();
-                if (leftBurstTimer > 0)
-                    return;
+                leftBurstTimer = 0;
             }
 
-            if (leftBurstTimer > 0 && --leftBurstTimer > 0)
+            if (leftHardCooldown > 0)
+            {
+                leftBurstTimer = leftHardCooldown;
                 return;
+            }
 
             if (!TryPickLeftAmmo(out int projectileType, out float speed, out int damage, out float knockback))
             {
-                leftBurstTimer = 4;
+                leftHardCooldown = 4;
+                leftBurstTimer = leftHardCooldown;
                 return;
             }
 
             FireCurrentPresetLeftAttack(Projectile.GetSource_FromThis(), projectileType, speed, damage, knockback);
             ScheduleNextLeftFire();
+            leftHardCooldown = Math.Max(1, leftBurstTimer);
         }
-
-        private int GetInitialLeftFireDelay() => CurrentPreset switch
-        {
-            BlossomFluxChloroplastPresetType.Chlo_ABreak => GetNextBreakthroughFireInterval(),
-            BlossomFluxChloroplastPresetType.Chlo_BRecov => RecoveryBurstInterval,
-            BlossomFluxChloroplastPresetType.Chlo_CDetec => ReconFireInterval,
-            BlossomFluxChloroplastPresetType.Chlo_DBomb => GetBombardAdjustedLeftFireDelay(),
-            BlossomFluxChloroplastPresetType.Chlo_EPlague => PlagueFireInterval,
-            _ => BreakthroughFireInterval
-        };
 
         private bool TryPickLeftAmmo(out int projectileType, out float speed, out int damage, out float knockback)
         {

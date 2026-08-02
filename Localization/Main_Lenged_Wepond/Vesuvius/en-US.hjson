@@ -7,22 +7,25 @@ Mods: {
 					Tooltip: "[GFB]"
 					LeftClick:
 						'''
-						[c/FF8A3D:Left Click: Hold to charge one of three mutually exclusive eruptions, then release to fire.]
-						[c/FF8A3D:Short taps release two weak molten meteors; later stages replace the meteor spread with a fast, straight thermal core.]
+						[c/FF8A3D:Left Click: Hold to build volcanic pressure, then release an explosive Volcanic Arc Orb.]
+						[c/FF8A3D:Hitting an enemy afflicted with Volcanic Calamity ejects damaging magma along the orb's original path.]
 						'''
-					ChargeStage1: "[c/FF8A3D:Unlocked charge: Stage I - a tight spread of three molten meteors.]"
-					ChargeStage2: "[c/FF9F45:Unlocked charge: Stage II - a fast thermal core that ruptures on impact.]"
-					ChargeStage3: "[c/FFE27E:Unlocked charge: Stage III - a cataclysmic core that tears open the crust.]"
-					ChargeStage4: "[c/FFF4BE:Unlocked charge: Stage IV - an ultimate thermal core that tears open the crust.]"
+					ChargeStage1: "[c/FF8A3D:Unlocked charge: Stage I pressure increases the orb's size, damage, and eruption.]"
+					ChargeStage2: "[c/FF9F45:Unlocked charge: Stage II pressure gains homing and tears through crowds.]"
+					ChargeStage3: "[c/FFE27E:Unlocked charge: Stage III pressure causes far more violent chained eruptions.]"
+					ChargeStage4: "[c/FFF4BE:Unlocked charge: Stage IV releases Vesuvius' complete thermal core.]"
 					RightClick:
 						'''
-						[c/FFB15C:Right Click: Hold to brace the staff like a javelin, then release to throw.]
-						[c/FFB15C:When it strikes terrain it becomes an active fault core; progression adds turret fire, pyroclastic flow, and a subduction zone.]
+						[c/FFB15C:Right Click: Drag the staff behind you with both hands and briefly charge a Super Flame that deals 250% damage.]
+						[c/FFB15C:Super Flame inflicts Volcanic Calamity for 17 seconds. For 90 frames, the next left click is instant, larger, and stronger, while the next right click calls down a lava meteor.]
 						'''
 					Passive:
 						'''
-						[c/CC9A6A:Passive: Volcanic ash falls around you while held.]
-						[c/CC9A6A:Landing after a fall causes a quake. Greater fall speed means greater range and damage.]
+						[c/CC9A6A:Mobile Volcano: If your maximum mana is below 100, gain 100 maximum mana. Become immune to fire blocks, lava, and burning. Nearby ash inflicts Volcanic Calamity.]
+						[c/AA8CFF:Landing after falling at least 7 tiles creates a stellar shockwave. At 21 tiles, its damage and radius are doubled.]
+						[c/D878FF:Ashen Soul: Vesuvius kills or every 400 mana spent creates one soul.]
+						[c/D878FF:At 6 souls, the next left click releases six 40%-damage soul flames orbiting the main orb.]
+						[c/FF7040:Volcanic Calamity: damage taken ×1.05; damage taken from Vesuvius is multiplied by an additional ×1.2.]
 						'''
 					EXHint:
 						'''
@@ -38,10 +41,17 @@ Mods: {
 						[c/FFB15C:The first Vesuvius understood volcanoes as meteors: fall from above, smash the target, then explode.]
 						[c/FF8A3D:That design was direct enough, but it only showed the surface fall of a volcano, not the disaster moving through the earth below.]
 						[c/FFB15C:After the rebuild, scattered ejecta are compressed into a single thermal core; a precise hit drives the eruption into the target.]
-						[c/D84BFF:Right click is no longer just another projectile. It pulls earthquakes, faults, and crust pressure into the fight.]
+						[c/D84BFF:Right click drags the staff behind you to compress the volcano, then tears through mid-range combat with a Super Flame.]
 						[c/FF4422:When the final eruption comes, what falls is no longer lava. It is an entire layer of earth finishing the volcano's declaration.]
 						'''
 				}
+			}
+		}
+
+		Buffs: {
+			VesuviusVolcanicCalamity: {
+				DisplayName: Volcanic Calamity
+				Description: Damage taken is increased by 5%, with a further 20% increase to damage from Vesuvius
 			}
 		}
 
@@ -51,6 +61,13 @@ Mods: {
 			Vesuvius: {
 				VesuviusLeftHoldout.DisplayName: Vesuvius
 				VesuviusArcOrb.DisplayName: Volcanic Arc Orb
+				VesuviusMagmaSpout.DisplayName: Ejected Magma
+				VesuviusAshSoulVisual.DisplayName: Ashen Soul
+				VesuviusAshSoulBolt.DisplayName: Ashen Soul Flame
+				VesuviusSuperFlameHoldout.DisplayName: Super Flame Charge
+				VesuviusSuperFlame.DisplayName: Super Flame
+				VesuviusFollowupMeteor.DisplayName: Lava Meteor
+				VesuviusFollowupMeteorBlast.DisplayName: Lava Meteor Eruption
 				VesuviusMoltenAsteroid.DisplayName: Molten Asteroid
 				VesuviusVolcanicAsh.DisplayName: Volcanic Ash
 				VesuviusVolcanicBomb.DisplayName: Volcanic Bomb

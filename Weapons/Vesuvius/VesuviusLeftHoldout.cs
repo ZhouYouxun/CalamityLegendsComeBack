@@ -10,6 +10,7 @@ using ReLogic.Utilities;
 using System;
 using Terraria;
 using Terraria.Audio;
+using Terraria.DataStructures;
 using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -33,6 +34,8 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
         private bool steamVentTriggered;
         private bool cooldownSteamTriggered;
         private bool aftershotCooldownApplied;
+        private bool instantEmpoweredShot;
+        private bool empoweredReleasedShot;
         private int releaseTimer;
         private int chargeFrames;
         private int currentStage;
@@ -40,11 +43,24 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
         private SlotId chargeLoopSlot;
 
         public new string LocalizationCategory => "Projectiles.Vesuvius";
-        public override string Texture => "CalamityLegendsComeBack/Weapons/Vesuvius/NewVesuvius";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/Vesuvius/Vesuvius2Flame";
 
         private Player Owner => Main.player[Projectile.owner];
         private Vector2 Direction => Projectile.velocity.SafeNormalize(Vector2.UnitX * Owner.direction);
-        private Vector2 GunTip => Projectile.Center + Direction * 48f;
+        private float RecoilFactor
+        {
+            get
+            {
+                if (!released)
+                    return 0f;
+
+                float kick = Utils.GetLerpValue(0f, 5f, releaseTimer, true);
+                float recovery = Utils.GetLerpValue(GetReleaseTime(releaseStage), 9f, releaseTimer, true);
+                return kick * recovery;
+            }
+        }
+        private Vector2 PoseDirection => Direction.RotatedBy(-Owner.direction * MathHelper.ToRadians(112f) * RecoilFactor);
+        private Vector2 GunTip => Projectile.Center + PoseDirection * 48f;
         private int FullChargeFrameTarget => Math.Max(1, VesuviusProgression.GetStageStartFrame(VesuviusProgression.GetMaxStage()));
         private bool FullyCharged => currentStage >= VesuviusProgression.GetMaxStage() && chargeFrames >= FullChargeFrameTarget;
         private float ChargeCompletion => released
@@ -68,6 +84,11 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
 
         public override bool ShouldUpdatePosition() => false;
 
+        public override void OnSpawn(IEntitySource source)
+        {
+            instantEmpoweredShot = Projectile.ai[0] > 0f;
+        }
+
         public override void AI()
         {
             if (!Owner.active || Owner.dead || Owner.HeldItem.ModItem is not NewVesuvius)
@@ -82,6 +103,16 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
             if (released)
             {
                 ReleaseAI();
+                return;
+            }
+
+            // 超级火焰留下的余热会把下一发左键直接推到满蓄力。
+            // 这里仍然经过同一个释放入口，后座、音效和魂火齐射都不会出现两套分叉逻辑。
+            if (instantEmpoweredShot)
+            {
+                chargeFrames = FullChargeFrameTarget;
+                currentStage = VesuviusProgression.GetMaxStage();
+                StartRelease();
                 return;
             }
 
@@ -112,10 +143,10 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
 
             Projectile.direction = Direction.X >= 0f ? 1 : -1;
             Projectile.spriteDirection = Projectile.direction;
-            Projectile.rotation = Direction.ToRotation();
+            Projectile.rotation = PoseDirection.ToRotation();
 
             float recoil = released ? MathHelper.Clamp(32f - releaseTimer * 1.1f, 0f, 32f) : 34f;
-            Projectile.Center = Owner.RotatedRelativePoint(Owner.MountedCenter, true) + Direction * recoil;
+            Projectile.Center = Owner.RotatedRelativePoint(Owner.MountedCenter, true) + PoseDirection * recoil;
         }
 
         private void ManipulateOwner()
@@ -124,8 +155,14 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
             Owner.heldProj = Projectile.whoAmI;
             Owner.itemTime = 2;
             Owner.itemAnimation = 2;
-            Owner.itemRotation = (Direction * Projectile.direction).ToRotation();
-            Owner.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, Direction.ToRotation() - MathHelper.PiOver2);
+            Owner.itemRotation = (PoseDirection * Projectile.direction).ToRotation();
+            float armRotation = PoseDirection.ToRotation() - MathHelper.PiOver2;
+            Owner.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, armRotation);
+
+            // 炮口抬起的一段同时让后手抓住杖身，112 度的上抬才会读成重型后座，
+            // 而不是整根法杖绕着角色中心自行旋转。
+            if (released)
+                Owner.SetCompositeArmBack(true, Player.CompositeArmStretchAmount.Full, armRotation - Owner.direction * 0.12f);
         }
 
         private bool IsStillCharging()
@@ -142,6 +179,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
         private void StartRelease()
         {
             released = true;
+            empoweredReleasedShot = instantEmpoweredShot;
             releaseStage = currentStage;
             releaseTimer = 0;
             steamVentTriggered = false;
@@ -218,15 +256,42 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
         private void FireReleasedPayload()
         {
             float speed = 26f + releaseStage * 4f;
-            Projectile.NewProjectile(
+            int payloadDamage = Math.Max(1, VesuviusProgression.GetLeftDamage(releaseStage, Projectile.damage));
+            if (empoweredReleasedShot)
+                payloadDamage = Math.Max(1, (int)(payloadDamage * 1.55f));
+
+            int payloadIndex = Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
                 GunTip + Direction * 10f,
                 Direction * speed,
                 ModContent.ProjectileType<VesuviusArcOrb>(),
-                Math.Max(1, VesuviusProgression.GetLeftDamage(releaseStage, Projectile.damage)),
+                payloadDamage,
                 Projectile.knockBack * (1f + releaseStage * 0.2f),
                 Projectile.owner,
-                releaseStage);
+                releaseStage,
+                empoweredReleasedShot ? 1f : 0f);
+
+            VesuviusPassivePlayer passivePlayer = Owner.GetModPlayer<VesuviusPassivePlayer>();
+            if (passivePlayer.TryConsumeAshVolley() && Main.projectile.IndexInRange(payloadIndex))
+            {
+                // 六颗魂火只拿主弹 40% 的面板，并以主火球为中心错相环绕；
+                // 主弹消失后它们才沿各自切线放开，避免六颗弹在枪口叠成一团。
+                int soulDamage = Math.Max(1, (int)(payloadDamage * 0.4f));
+                for (int slot = 0; slot < VesuviusPassivePlayer.MaxAshSouls; slot++)
+                {
+                    Projectile.NewProjectile(
+                        Projectile.GetSource_FromThis(),
+                        Main.projectile[payloadIndex].Center,
+                        Vector2.Zero,
+                        ModContent.ProjectileType<VesuviusAshSoulBolt>(),
+                        soulDamage,
+                        Projectile.knockBack * 0.45f,
+                        Projectile.owner,
+                        payloadIndex,
+                        slot,
+                        Main.projectile[payloadIndex].identity);
+                }
+            }
 
             SoundEngine.PlaySound(SoundID.Item20 with { Volume = releaseStage >= 3 ? 0.8f : 0.62f, Pitch = releaseStage >= 3 ? -0.42f : -0.3f }, GunTip);
         }
@@ -301,6 +366,28 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                     Main.rand.Next(12, 19),
                     Main.rand.NextFloat(0.36f, 0.62f),
                     fissureColor,
+                    true));
+            }
+
+            // 四股熔压沿椭圆轨道轮流卷向杖口：内收速度很快、单股密度很低，
+            // 既能表现火山内部受压，又保留维苏威阿斯原有的熔岩裂光和黑色火山灰质感。
+            if (!released && currentStage >= 2 && chargeFrames % 2 == 0)
+            {
+                int lane = chargeFrames / 2 % 4;
+                float phase = chargeFrames * 0.11f + lane * MathHelper.PiOver2;
+                Vector2 axis = Direction;
+                Vector2 normal = axis.RotatedBy(MathHelper.PiOver2);
+                float radius = 34f + chargePower * 42f;
+                Vector2 ellipse = axis * (float)Math.Cos(phase) * radius + normal * (float)Math.Sin(phase) * radius * 0.46f;
+                Vector2 tangent = axis * -(float)Math.Sin(phase) + normal * (float)Math.Cos(phase) * 0.46f;
+                Color pressureColor = Color.Lerp(stageColor, VesuviusProjectileVisuals.HotWhite, 0.35f + chargePower * 0.35f);
+                GeneralParticleHandler.SpawnParticle(new PointParticle(
+                    GunTip + ellipse,
+                    -ellipse * (0.065f + chargePower * 0.025f) + tangent * 0.8f,
+                    false,
+                    Main.rand.Next(10, 16),
+                    Main.rand.NextFloat(0.28f, 0.52f),
+                    pressureColor,
                     true));
             }
 
@@ -552,7 +639,10 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
             Texture2D moltenCoreGlow = ModContent.Request<Texture2D>("CalamityMod/Projectiles/Magic/AsteroidMoltenGlow3").Value;
 
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
-            Vector2 origin = texture.Size() * 0.5f;
+            int mouthFrame = FullyCharged || released ? 1 : 0;
+            Rectangle bodyFrame = texture.Frame(1, 2, 0, mouthFrame);
+            Vector2 origin = bodyFrame.Size() * 0.5f;
+            Vector2 glowOrigin = glow.Size() * 0.5f;
             SpriteEffects effects = Projectile.spriteDirection < 0 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
             float rotation = Projectile.rotation + (Projectile.spriteDirection < 0 ? MathHelper.Pi : 0f);
             float staffRotation = rotation + MathHelper.ToRadians(45f * Projectile.spriteDirection);
@@ -603,7 +693,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                 SpriteEffects.None);
             Main.spriteBatch.SetBlendState(BlendState.AlphaBlend);
 
-            Main.EntitySpriteDraw(texture, drawPosition, null, lightColor, staffRotation, origin, Projectile.scale, effects);
+            Main.EntitySpriteDraw(texture, drawPosition, bodyFrame, lightColor, staffRotation, origin, Projectile.scale, effects);
 
             if (chargeIntensity > 0.03f)
             {
@@ -619,7 +709,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
             }
 
             Main.spriteBatch.SetBlendState(BlendState.Additive);
-            Main.EntitySpriteDraw(glow, drawPosition, null, Color.White * (0.5f + pulse * 0.18f), staffRotation, origin, Projectile.scale, effects);
+            Main.EntitySpriteDraw(glow, drawPosition, null, Color.White * (0.5f + pulse * 0.18f), staffRotation, glowOrigin, Projectile.scale, effects);
             if (chargeIntensity > 0.03f)
             {
                 Main.EntitySpriteDraw(

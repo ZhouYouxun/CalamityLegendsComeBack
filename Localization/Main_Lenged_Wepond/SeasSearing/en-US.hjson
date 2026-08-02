@@ -6,29 +6,24 @@ Mods: {
 					DisplayName: Sea-Scorching Heaven - Sea's Searing
 					Tooltip: "[GFB]"
 					Intro: "[c/58FFDA:Abyssal radiation rifle. Pollution stacks, spreads, and collapses on command.]"
-
 					LeftClick_Phase1: "[c/9AEAFF:Left Click: 3-round burst of pollution rounds (4 frames between shots, 15 frames between bursts). Every main round carries a recon soul that hunts stragglers. The last shot of each burst fires a Pollution Rocket for long-range pursuit.]"
 					LeftClick_Phase2: "[c/9AEAFF:Left Click: 4-round burst. Keeps the last-shot Pollution Rocket; the first and last shot each vent one bile spray — front-line pressure with splashes at both ends.]"
 					LeftClick_Phase3: "[c/9AEAFF:Left Click: 5-round burst. Keeps the bile sprays and last-shot Rocket; mid-burst rounds scatter a few Pollution Bubbles on hit, forming a brief spreading pollution zone.]"
 					LeftClick_Phase4: "[c/9AEAFF:Left Click: 5-round burst. Keeps bile and bubbles; after each completed burst, alternately deploys a heavy companion — Pollution Rocket / twin Skyfin Torpedoes.]"
 					LeftClick_Phase5: "[c/9AEAFF:Left Click: 5-round burst. The heavy companion rotation expands to Pollution Rocket / twin Skyfin Torpedoes / Pressure Depth Charge; the last shot of every few bursts triggers a small nuke on hit.]"
 					LeftClick_Phase6: "[c/9AEAFF:Left Click: full-auto pollution rounds (one every 4 frames, no burst gap). Every 5 rounds vent a bile spray; every 20 rounds deploy a rotating heavy companion; every 40 rounds instead drop a pair of seeking missiles; every 30th round triggers a small nuke on hit.]"
-
 					RightClick_Tier0: "[c/6FE6B0:Right Click · Pressure Protocol: hold to charge, release for one shotgun volley.]"
 					RightClick_Tier1: "[c/6FE6B0:Right Click · Pressure Protocol: a charged release fires one shotgun volley and detonates three abyssal light columns at the cursor.]"
 					RightClick_Tier2: "[c/6FE6B0:Right Click · Pressure Protocol: a charged release fires two shotgun volleys and detonates three abyssal light columns at the cursor.]"
 					RightClick_Tier3: "[c/6FE6B0:Right Click · Pressure Protocol: a charged release fires two shotgun volleys + three abyssal light columns, and summons a large pollution vortex at the cursor.]"
-
 					EnemyRadiation_Tier0: "[c/B4E24C:Enemy · Radiation Pollution: hits stack pollution, up to grade 2 at this progress. Pollution slows enemies, weakens their defense, boosts your effective armor pen and suppresses life regen; spreads to nearby foes at 12+ stacks; the right-click fission consumes all pollution and detonates by stack count.]"
 					EnemyRadiation_Tier1: "[c/B4E24C:Enemy · Radiation Pollution: up to grade 3 at this progress. Slows, breaks defense, spreads and suppresses regen; at grade 3+ a right-click detonation also spawns pollution spikes.]"
 					EnemyRadiation_Tier2: "[c/B4E24C:Enemy · Radiation Pollution: up to grade 4 at this progress. Grade 3+ detonations spawn pollution spikes and grade 4+ also spawn a pollution vortex; bosses and worms have higher thresholds and blast scaling.]"
 					EnemyRadiation_Tier3: "[c/B4E24C:Enemy · Radiation Pollution: up to grade 5 at this progress (max). At full strength defense effectiveness is cut by up to 42% and effective armor pen rises by up to 8%; grades 1–5 apply -36 / -70 / -130 / -220 / -360 life regen.]"
-
 					PlayerRadiation_Tier0: "[c/FFC94C:Ally · Radiation Excitement: sustained hits build levels (15 / 40 / 80 / 140 cumulative hits unlock levels 1–4), capped at level 1 here — max: +4% ranged damage.]"
 					PlayerRadiation_Tier1: "[c/FFC94C:Ally · Radiation Excitement: capped at level 2 here — max: +8% ranged damage, +4 ranged armor pen.]"
 					PlayerRadiation_Tier2: "[c/FFC94C:Ally · Radiation Excitement: capped at level 3 here — max: +13% ranged damage, +8 ranged armor pen, +12% move speed.]"
 					PlayerRadiation_Tier3: "[c/FFC94C:Ally · Radiation Excitement: capped at level 4 here — max: +19% ranged damage, +13 ranged armor pen, +20% move speed, +10% ranged crit.]"
-
 					Passive: "[c/A0B4C0:Held: emits an abyssal pressure field that slows nearby enemies and slowly seeds pollution.]"
 					Ultimate: "[c/FF8A30:Ultimate (Air-to-Ground Nuclear Missile): Press] [[c/FF8A30:{0}]] [c/FF8A30: to charge for one second, then left-click to designate a target for a deep-sea thermonuclear strike. The blast heavily pollutes survivors.]"
 					LegendaryHint: "[c/BABABA:Hold Shift to access the disaster record]"

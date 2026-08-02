@@ -1,3 +1,4 @@
+using CalamityLegendsComeBack.Weapons.Vesuvius.Core;
 using CalamityMod;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
@@ -5,6 +6,8 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using Terraria;
 using Terraria.Audio;
+using Terraria.GameContent;
+using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -12,12 +15,20 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.Passive
 {
     public class VesuviusPassivePlayer : ModPlayer
     {
+        public const int MaxAshSouls = 6;
+        public const int AfterflameWindow = 90;
+        private const int ManaPerAshSoul = 400;
+
         public int LeftClickCooldown;
+        public int EmpoweredLeftTimer;
+        public int MeteorFollowupTimer;
+        public int AshSouls { get; private set; }
 
         private bool holdingVesuvius;
         private bool wasAirborne;
-        private float strongestFallSpeed;
+        private float fallPeakY;
         private int ashTimer;
+        private int spentMana;
 
         public override void ResetEffects()
         {
@@ -28,6 +39,10 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.Passive
         {
             if (LeftClickCooldown > 0)
                 LeftClickCooldown--;
+            if (EmpoweredLeftTimer > 0)
+                EmpoweredLeftTimer--;
+            if (MeteorFollowupTimer > 0)
+                MeteorFollowupTimer--;
 
             if (!holdingVesuvius)
             {
@@ -36,10 +51,28 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.Passive
                 return;
             }
 
+            // “移动火山”在玩家原本魔力不足 100 时额外补 100，而不是把任何角色都
+            // 强行改成同一个上限。火块、岩浆和常见燃烧也在手持期间一并免疫。
+            if (Player.statManaMax2 < 100)
+                Player.statManaMax2 += 100;
+            Player.fireWalk = true;
+            Player.lavaImmune = true;
+            Player.buffImmune[BuffID.OnFire] = true;
+            Player.buffImmune[BuffID.OnFire3] = true;
             Player.noFallDmg = true;
-            ImproveFallSpeed();
             SpawnAmbientAsh();
             TrackLanding(true);
+            MaintainAshSoulVisuals();
+        }
+
+        public override void UpdateDead()
+        {
+            LeftClickCooldown = 0;
+            EmpoweredLeftTimer = 0;
+            MeteorFollowupTimer = 0;
+            AshSouls = 0;
+            spentMana = 0;
+            wasAirborne = false;
         }
 
         public void SetHoldingVesuvius()
@@ -47,17 +80,74 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.Passive
             holdingVesuvius = true;
         }
 
-        private void ImproveFallSpeed()
+        public override void OnConsumeMana(Item item, int manaConsumed)
         {
-            float fallingVelocity = Player.velocity.Y * Player.gravDir;
-            if (fallingVelocity <= 0.2f)
+            if (item?.ModItem is not NewVesuvius || manaConsumed <= 0)
                 return;
 
-            Player.maxFallSpeed = Math.Max(Player.maxFallSpeed, Player.controlDown ? 40f : 24f);
-            Player.gravity = Math.Max(Player.gravity, Player.controlDown ? 1.16f : 0.66f);
+            spentMana += manaConsumed;
+            while (spentMana >= ManaPerAshSoul)
+            {
+                spentMana -= ManaPerAshSoul;
+                AddAshSoul();
+            }
+        }
 
-            if (Player.controlDown && !Player.controlJump)
-                Player.velocity.Y += Player.gravDir * 0.42f;
+        public void GrantAfterflameWindow()
+        {
+            EmpoweredLeftTimer = AfterflameWindow;
+            MeteorFollowupTimer = AfterflameWindow;
+        }
+
+        public bool TryConsumeEmpoweredLeft()
+        {
+            if (EmpoweredLeftTimer <= 0)
+                return false;
+
+            EmpoweredLeftTimer = 0;
+            return true;
+        }
+
+        public bool TryConsumeMeteorFollowup()
+        {
+            if (MeteorFollowupTimer <= 0)
+                return false;
+
+            MeteorFollowupTimer = 0;
+            return true;
+        }
+
+        public bool TryConsumeAshVolley()
+        {
+            if (AshSouls < MaxAshSouls)
+                return false;
+
+            AshSouls = 0;
+            return true;
+        }
+
+        public void AddAshSoul()
+        {
+            if (AshSouls >= MaxAshSouls)
+                return;
+
+            AshSouls++;
+            if (Main.dedServ || Player.whoAmI != Main.myPlayer)
+                return;
+
+            Color soulColor = Color.Lerp(new Color(255, 72, 28), new Color(193, 78, 255), 0.34f);
+            GeneralParticleHandler.SpawnParticle(new CustomPulse(
+                Player.Center,
+                Vector2.Zero,
+                soulColor,
+                "CalamityMod/Particles/SmallBloomRingLayered",
+                Vector2.One,
+                Main.rand.NextFloat(MathHelper.TwoPi),
+                0.08f,
+                0.72f,
+                18,
+                true));
+            SoundEngine.PlaySound(SoundID.Item103 with { Volume = 0.36f, Pitch = 0.18f + AshSouls * 0.035f }, Player.Center);
         }
 
         private void SpawnAmbientAsh()
@@ -66,7 +156,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.Passive
                 return;
 
             ashTimer++;
-            if (ashTimer < 6)
+            if (ashTimer < 11)
                 return;
 
             ashTimer = 0;
@@ -74,61 +164,92 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.Passive
             if (Player.HeldItem?.ModItem is NewVesuvius)
                 damage = Math.Max(1, (int)(Player.GetWeaponDamage(Player.HeldItem) * 0.12f));
 
-            for (int i = 0; i < 3; i++)
-            {
-                Vector2 spawnPosition = Player.Center + new Vector2(Main.rand.NextFloat(-520f, 520f), Main.rand.NextFloat(-260f, -100f));
-                Vector2 velocity = new Vector2(-Player.direction * Main.rand.NextFloat(0.55f, 1.35f), Main.rand.NextFloat(0.75f, 1.55f));
-                Projectile.NewProjectile(
-                    Player.GetSource_FromThis(),
-                    spawnPosition,
-                    velocity,
-                    ModContent.ProjectileType<VesuviusAshFall>(),
-                    damage,
-                    0f,
-                    Player.whoAmI,
-                    -Player.direction);
-            }
+            // 火山灰只在贴身范围缓慢飘落，既能让玩家主动贴近敌人上标记，
+            // 又不会像旧版那样覆盖半个屏幕并自动扫到远处目标。
+            Vector2 spawnPosition = Player.Center + new Vector2(Main.rand.NextFloat(-86f, 86f), Main.rand.NextFloat(-74f, -28f));
+            Vector2 velocity = new Vector2(Main.rand.NextFloat(-0.45f, 0.45f), Main.rand.NextFloat(0.45f, 1.05f));
+            Projectile.NewProjectile(
+                Player.GetSource_FromThis(),
+                spawnPosition,
+                velocity,
+                ModContent.ProjectileType<VesuviusAshFall>(),
+                damage,
+                0f,
+                Player.whoAmI,
+                Main.rand.NextFloatDirection());
         }
 
         private void TrackLanding(bool active)
         {
             bool airborne = Math.Abs(Player.velocity.Y) > 0.05f || Player.jump > 0 || Player.fallStart < (int)(Player.position.Y / 16f);
-            float fallSpeed = Player.velocity.Y * Player.gravDir;
-
-            if (active && airborne && fallSpeed > 0.5f)
+            if (active && airborne)
             {
+                if (!wasAirborne)
+                    fallPeakY = Player.Bottom.Y;
+
                 wasAirborne = true;
-                strongestFallSpeed = Math.Max(strongestFallSpeed, fallSpeed);
+                fallPeakY = Player.gravDir > 0f
+                    ? Math.Min(fallPeakY, Player.Bottom.Y)
+                    : Math.Max(fallPeakY, Player.Top.Y);
                 return;
             }
 
-            if (active && wasAirborne && Player.velocity.Y == 0f && strongestFallSpeed >= 4f && Player.whoAmI == Main.myPlayer)
-                SpawnLandingQuake(strongestFallSpeed);
+            if (active && wasAirborne && Player.velocity.Y == 0f && Player.whoAmI == Main.myPlayer)
+            {
+                float landingY = Player.gravDir > 0f ? Player.Bottom.Y : Player.Top.Y;
+                float fallTiles = Math.Abs(landingY - fallPeakY) / 16f;
+                if (fallTiles >= 7f)
+                    SpawnLandingQuake(fallTiles, fallTiles >= 21f);
+            }
 
             if (!airborne || !active)
             {
                 wasAirborne = false;
-                strongestFallSpeed = 0f;
+                fallPeakY = Player.Bottom.Y;
             }
         }
 
-        private void SpawnLandingQuake(float fallSpeed)
+        private void SpawnLandingQuake(float fallTiles, bool majorImpact)
         {
             int damage = 1;
             if (Player.HeldItem?.ModItem is NewVesuvius)
-                damage = Math.Max(1, (int)(Player.GetWeaponDamage(Player.HeldItem) * MathHelper.Clamp(0.35f + fallSpeed / 32f, 0.5f, 1.65f)));
+                damage = Math.Max(1, (int)(Player.GetWeaponDamage(Player.HeldItem) * (majorImpact ? 1.4f : 0.7f)));
 
-            float radius = MathHelper.Clamp(90f + fallSpeed * 13f, 110f, 330f);
+            float radius = majorImpact ? 300f : 150f;
             Projectile.NewProjectile(
                 Player.GetSource_FromThis(),
                 Player.Bottom,
                 Vector2.Zero,
                 ModContent.ProjectileType<VesuviusLandingQuake>(),
                 damage,
-                5f + fallSpeed * 0.12f,
+                majorImpact ? 9f : 5f,
                 Player.whoAmI,
                 radius,
-                fallSpeed);
+                fallTiles,
+                majorImpact ? 1f : 0f);
+        }
+
+        private void MaintainAshSoulVisuals()
+        {
+            if (Player.whoAmI != Main.myPlayer || AshSouls <= 0)
+                return;
+
+            int visualType = ModContent.ProjectileType<VesuviusAshSoulVisual>();
+            for (int slot = 0; slot < AshSouls; slot++)
+            {
+                bool exists = false;
+                foreach (Projectile projectile in Main.ActiveProjectiles)
+                {
+                    if (projectile.owner == Player.whoAmI && projectile.type == visualType && (int)projectile.ai[0] == slot)
+                    {
+                        exists = true;
+                        break;
+                    }
+                }
+
+                if (!exists)
+                    Projectile.NewProjectile(Player.GetSource_FromThis(), Player.Center, Vector2.Zero, visualType, 0, 0f, Player.whoAmI, slot);
+            }
         }
     }
 
@@ -190,7 +311,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.Passive
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            target.AddBuff(BuffID.OnFire3, 120);
+            VesuviusCombatSystem.ApplyVolcanicCalamity(target);
         }
 
         public override bool PreDraw(ref Color lightColor) => false;
@@ -202,6 +323,8 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.Passive
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         private float Radius => Projectile.ai[0] <= 0f ? 150f : Projectile.ai[0];
+        private float FallTiles => Math.Max(7f, Projectile.ai[1]);
+        private bool MajorImpact => Projectile.ai[2] > 0f;
 
         public override void SetDefaults()
         {
@@ -230,7 +353,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.Passive
                 Projectile.Resize((int)(Radius * 2f), (int)(Radius * 0.8f));
                 Projectile.Damage();
                 SoundEngine.PlaySound(SoundID.Item89 with { Volume = 0.85f, Pitch = -0.32f }, Projectile.Center);
-                ApplyScreenShake(Projectile.ai[1]);
+                ApplyScreenShake();
                 SpawnImpactParticles();
             }
         }
@@ -247,163 +370,83 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.Passive
             if (Main.dedServ)
                 return;
 
-            float fallSpeed = Projectile.ai[1];
+            Color deepSpace = new(43, 21, 92);
+            Color stellarViolet = new(176, 83, 255);
+            Color starCore = new(126, 226, 255);
+            float power = MajorImpact ? 2f : 1f;
 
-            // 1. Spawn flat transparent shockwaves as CustomPulse particles
-            // Foggy circle center shockwave
-            GeneralParticleHandler.SpawnParticle(new CustomPulse(
-                Projectile.Center,
-                Vector2.Zero,
-                new Color(255, 90, 20) * 0.7f,
-                "CalamityMod/Particles/HighResFoggyCircleHardEdge",
-                new Vector2(1f, 0.15f),
-                0f,
-                0.02f,
-                Radius * 2.2f / 2048f,
-                22,
-                true
-            ));
-
-            // Hollow circle ring shockwave
-            GeneralParticleHandler.SpawnParticle(new CustomPulse(
-                Projectile.Center,
-                Vector2.Zero,
-                new Color(255, 140, 30) * 0.8f,
-                "CalamityMod/Particles/HighResHollowCircleHardEdge",
-                new Vector2(1f, 0.12f),
-                0f,
-                0.01f,
-                Radius * 2.4f / 2048f,
-                26,
-                true
-            ));
-
-            // Central bloom flash
-            GeneralParticleHandler.SpawnParticle(new CustomPulse(
-                Projectile.Center,
-                Vector2.Zero,
-                new Color(255, 60, 10) * 0.5f,
-                "CalamityMod/Particles/BloomCircle",
-                new Vector2(1f, 0.25f),
-                0f,
-                0.05f,
-                Radius * 1.5f / 128f,
-                18,
-                true
-            ));
-
-            // 2. Spawn upward radiating burst particles (semi-circular)
-            int sparkCount = (int)MathHelper.Clamp(Radius * 0.16f, 16f, 50f);
-            for (int i = 0; i < sparkCount; i++)
+            // 保留 Leonid/星际践踏的“整片圆面被压亮”感，但地表喷出的东西改成星尘、
+            // 紫蓝碎光和少量暗烟，彻底移除旧版橙色火环。
+            int squareCount = MajorImpact ? 42 : 22;
+            for (int i = 0; i < squareCount; i++)
             {
-                float angle = Main.rand.NextFloat(-MathHelper.Pi, 0f);
-                Vector2 direction = angle.ToRotationVector2();
-                float speed = Main.rand.NextFloat(3f, 15f) * (0.6f + fallSpeed * 0.04f);
-                Vector2 velocity = direction * speed;
-
-                if (Main.rand.NextBool())
-                {
-                    Color sparkColor = Color.Lerp(new Color(255, 110, 24), new Color(255, 192, 72), Main.rand.NextFloat());
-                    Color bloomColor = new Color(255, 50, 10) * 0.5f;
-                    float scale = Main.rand.NextFloat(0.9f, 1.5f);
-                    int lifetime = Main.rand.Next(15, 26);
-                    GeneralParticleHandler.SpawnParticle(new CritSpark(
-                        Projectile.Center + Main.rand.NextVector2Circular(16f, 4f),
-                        velocity,
-                        sparkColor,
-                        bloomColor,
-                        scale,
-                        lifetime));
-                }
-                else
-                {
-                    Color sparkColor = Color.Lerp(new Color(255, 150, 30), new Color(255, 220, 60), Main.rand.NextFloat());
-                    float scale = Main.rand.NextFloat(0.8f, 1.4f);
-                    int lifetime = Main.rand.Next(12, 22);
-                    GeneralParticleHandler.SpawnParticle(new SparkParticle(
-                        Projectile.Center + Main.rand.NextVector2Circular(16f, 4f),
-                        velocity,
-                        false,
-                        lifetime,
-                        scale,
-                        sparkColor));
-                }
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 0.5f) * Main.rand.NextFloat(2.5f, 8f) * power;
+                GeneralParticleHandler.SpawnParticle(new SquareParticle(
+                    Projectile.Center + Main.rand.NextVector2Circular(Radius * 0.24f, 10f),
+                    velocity - Vector2.UnitY * Main.rand.NextFloat(0.5f, 3.4f),
+                    false,
+                    Main.rand.Next(34, 58),
+                    Main.rand.NextFloat(1.5f, 3.4f),
+                    Color.Lerp(stellarViolet, starCore, Main.rand.NextFloat(0.18f, 0.72f))));
             }
 
-            // 3. Spawn upward radiating ash and scoria smoke (semi-circular)
-            int smokeCount = (int)MathHelper.Clamp(Radius * 0.08f, 8f, 22f);
+            int sparkCount = MajorImpact ? 34 : 18;
+            for (int i = 0; i < sparkCount; i++)
+            {
+                float side = Main.rand.NextBool() ? -1f : 1f;
+                Vector2 velocity = new Vector2(side * Main.rand.NextFloat(3f, 14f) * power, -Main.rand.NextFloat(1.5f, 8f) * power);
+                GeneralParticleHandler.SpawnParticle(new CritSpark(
+                    Projectile.Center + Main.rand.NextVector2Circular(18f, 5f),
+                    velocity,
+                    Main.rand.NextBool(3) ? starCore : stellarViolet,
+                    deepSpace,
+                    Main.rand.NextFloat(0.75f, 1.35f),
+                    Main.rand.Next(16, 28)));
+            }
+
+            int smokeCount = MajorImpact ? 16 : 8;
             for (int i = 0; i < smokeCount; i++)
             {
-                float angle = Main.rand.NextFloat(-MathHelper.Pi * 0.85f, -MathHelper.Pi * 0.15f);
-                Vector2 direction = angle.ToRotationVector2();
-                float speed = Main.rand.NextFloat(2f, 7f) * (0.6f + fallSpeed * 0.04f);
-                Vector2 velocity = direction * speed;
-
-                Color smokeColor = Color.Lerp(new Color(74, 48, 40), new Color(88, 84, 80), Main.rand.NextFloat());
-                float scale = Main.rand.NextFloat(0.6f, 1.2f);
-                int lifetime = Main.rand.Next(20, 42);
                 GeneralParticleHandler.SpawnParticle(new HeavySmokeParticle(
-                    Projectile.Center + Main.rand.NextVector2Circular(24f, 6f),
-                    velocity,
-                    smokeColor,
-                    lifetime,
-                    scale,
-                    0.65f,
+                    Projectile.Center + Main.rand.NextVector2Circular(28f, 7f),
+                    new Vector2(Main.rand.NextFloatDirection() * 2.4f, -Main.rand.NextFloat(0.8f, 3.4f)) * power,
+                    Color.Lerp(deepSpace, new Color(68, 45, 92), Main.rand.NextFloat()),
+                    Main.rand.Next(24, 42),
+                    Main.rand.NextFloat(0.35f, 0.75f),
+                    0.62f,
                     Main.rand.NextFloat(-0.05f, 0.05f),
                     true,
                     required: false));
             }
-
-            // 4. Spawn upward radiating glow orbs
-            int orbCount = (int)MathHelper.Clamp(Radius * 0.04f, 4f, 12f);
-            for (int i = 0; i < orbCount; i++)
-            {
-                float angle = Main.rand.NextFloat(-MathHelper.Pi, 0f);
-                Vector2 direction = angle.ToRotationVector2();
-                float speed = Main.rand.NextFloat(2.5f, 9f) * (0.6f + fallSpeed * 0.04f);
-                Vector2 velocity = direction * speed;
-
-                Color orbColor = Color.Lerp(new Color(255, 88, 24), new Color(255, 242, 190), Main.rand.NextFloat(0f, 0.7f));
-                float scale = Main.rand.NextFloat(0.35f, 0.75f);
-                int lifetime = Main.rand.Next(14, 28);
-                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
-                    Projectile.Center + Main.rand.NextVector2Circular(12f, 4f),
-                    velocity,
-                    false,
-                    lifetime,
-                    scale,
-                    orbColor));
-            }
-
-            // 5. Spawn some localized ground-based debris/dust (no metaballs)
-            int dustCount = (int)MathHelper.Clamp(Radius * 0.12f, 12f, 36f);
-            for (int i = 0; i < dustCount; i++)
-            {
-                float offset = MathHelper.Lerp(-Radius, Radius, i / (float)Math.Max(1, dustCount - 1));
-                Vector2 position = Projectile.Center + Vector2.UnitX * offset + new Vector2(Main.rand.NextFloat(-6f, 6f), Main.rand.NextFloat(-4f, 4f));
-                
-                // Ground smoke/rock dust
-                Dust dust = Dust.NewDustPerfect(
-                    position, 
-                    Main.rand.NextBool(3) ? DustID.Torch : DustID.Smoke, 
-                    new Vector2(Math.Sign(offset) * Main.rand.NextFloat(0.5f, 3f), -Main.rand.NextFloat(1.5f, 5f)), 
-                    110, 
-                    Color.Lerp(Color.DarkGray, Color.OrangeRed, 0.2f), 
-                    Main.rand.NextFloat(0.8f, 1.6f));
-                dust.noGravity = Main.rand.NextBool();
-            }
         }
 
-        private void ApplyScreenShake(float fallSpeed)
+        private void ApplyScreenShake()
         {
             if (Main.dedServ)
                 return;
 
-            float shake = MathHelper.Clamp(3f + fallSpeed * 0.35f, 4f, 16f);
+            float shake = MajorImpact ? 14f : MathHelper.Clamp(4f + (FallTiles - 7f) * 0.32f, 4f, 8f);
             float distanceFactor = Utils.GetLerpValue(1800f, 180f, Vector2.Distance(Main.LocalPlayer.Center, Projectile.Center), true);
             Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(Main.LocalPlayer.Calamity().GeneralScreenShakePower, shake * distanceFactor);
         }
 
-        public override bool PreDraw(ref Color lightColor) => false;
+        public override bool PreDraw(ref Color lightColor)
+        {
+            Texture2D pixel = ModContent.Request<Texture2D>("CalamityMod/Projectiles/InvisibleProj").Value;
+            float opacity = Utils.GetLerpValue(0f, 22f, Projectile.timeLeft, true) * 0.78f;
+            float scale = Radius / 78f;
+
+            Main.spriteBatch.EnterShaderRegion();
+            GameShaders.Misc["CalamityMod:CircularGradientWithEdge"]
+                .UseOpacity(opacity)
+                .UseColor(Color.Lerp(new Color(73, 31, 138), new Color(112, 211, 255), MajorImpact ? 0.48f : 0.3f))
+                .UseSecondaryColor(new Color(224, 181, 255))
+                .UseSaturation(scale)
+                .Apply();
+            Main.EntitySpriteDraw(pixel, Projectile.Center - Main.screenPosition, null, Color.White,
+                0f, pixel.Size() * 0.5f, scale * 156f, SpriteEffects.None);
+            Main.spriteBatch.ExitShaderRegion();
+            return false;
+        }
     }
 }

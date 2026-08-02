@@ -61,16 +61,14 @@ namespace CalamityLegendsComeBack.Weapons.Malachite.EXSkill
             {
                 Projectile.localAI[1] = 1f;
                 SpawnReadyPetals(owner);
+                SpawnFinaleHoldout(owner);
             }
 
             owner.itemTime = Math.Max(owner.itemTime, 2);
             owner.itemAnimation = Math.Max(owner.itemAnimation, 2);
-            owner.ChangeDir(Projectile.velocity.X >= 0f ? 1 : -1);
 
             if (Projectile.localAI[0] < DetonateTime)
             {
-                owner.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, Projectile.velocity.ToRotation() - MathHelper.PiOver2);
-                owner.SetCompositeArmBack(true, Player.CompositeArmStretchAmount.ThreeQuarters, Projectile.velocity.ToRotation() - MathHelper.PiOver2);
                 SpawnChargeDust(owner);
                 if (Projectile.owner == Main.myPlayer && Projectile.localAI[0] % 4f == 0f)
                 {
@@ -82,6 +80,19 @@ namespace CalamityLegendsComeBack.Weapons.Malachite.EXSkill
 
             if (Projectile.localAI[0] == DetonateTime && Projectile.owner == Main.myPlayer)
                 ReleaseFinale(owner);
+        }
+
+        private void SpawnFinaleHoldout(Player owner)
+        {
+            Projectile.NewProjectile(
+                Projectile.GetSource_FromThis(),
+                owner.MountedCenter,
+                Projectile.velocity,
+                ModContent.ProjectileType<MalachiteFinaleHoldout>(),
+                Math.Max(1, (int)Projectile.ai[0]),
+                Projectile.knockBack,
+                Projectile.owner,
+                TotalTime);
         }
 
         private void SpawnReadyPetals(Player owner)
@@ -283,14 +294,12 @@ namespace CalamityLegendsComeBack.Weapons.Malachite.EXSkill
 
         public override bool PreDraw(ref Color lightColor)
         {
-            Texture2D texture = TextureAssets.Projectile[Type].Value;
-            Vector2 origin = texture.Size() * 0.5f;
             float timer = Projectile.localAI[0];
             float charge = Utils.GetLerpValue(0f, DetonateTime, timer, true);
             float flash = timer >= DetonateTime ? Utils.GetLerpValue(TotalTime, DetonateTime, timer, true) : charge;
             Vector2 playerScreen = Projectile.Center - Main.screenPosition;
             Player owner = Main.player[Projectile.owner];
-            DrawSpotlight(texture, origin, playerScreen, charge, flash);
+            DrawSpotlight(playerScreen, charge, flash);
             if (owner.active)
             {
                 List<NPC> targets = FindFinaleTargets(owner, TargetSearchRange);
@@ -302,11 +311,11 @@ namespace CalamityLegendsComeBack.Weapons.Malachite.EXSkill
                 }
             }
 
-            DrawPetals(texture, origin, charge, false, owner.direction);
+            DrawPetals(charge, false, owner.direction);
             return false;
         }
 
-        private static void DrawSpotlight(Texture2D texture, Vector2 origin, Vector2 playerScreen, float charge, float flash)
+        private static void DrawSpotlight(Vector2 playerScreen, float charge, float flash)
         {
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
             Texture2D star = ModContent.Request<Texture2D>("CalamityMod/Projectiles/StarProj").Value;
@@ -357,7 +366,6 @@ namespace CalamityLegendsComeBack.Weapons.Malachite.EXSkill
             Vector2 starScale = new(1.5f + charge * 1.3f, 2.5f + charge * 1.7f);
             Main.EntitySpriteDraw(star, playerScreen, null, starColor, MathHelper.PiOver4, starOrigin, starScale * starPulse, SpriteEffects.None);
             Main.EntitySpriteDraw(star, playerScreen, null, starColor * 0.65f, -MathHelper.PiOver4, starOrigin, starScale * starPulse * 0.68f, SpriteEffects.None);
-            Main.EntitySpriteDraw(texture, playerScreen, null, new Color(150, 255, 160, 0) * flash * 0.32f, Main.GlobalTimeWrappedHourly * 0.5f, origin, 1.8f + charge * 2.1f, SpriteEffects.None);
         }
 
         private static void DrawEnemySpotlight(Vector2 targetScreen, float charge, float flash, int index)
@@ -423,7 +431,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite.EXSkill
             }
         }
 
-        private static void DrawPetals(Texture2D texture, Vector2 origin, float charge, bool winded, int direction)
+        private static void DrawPetals(float charge, bool winded, int direction)
         {
             Texture2D petal1 = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/Malachite/EXSkill/MalachiteSPIT").Value;
             Texture2D petal2 = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Weapons/Malachite/EXSkill/MalachiteSPIT2").Value;

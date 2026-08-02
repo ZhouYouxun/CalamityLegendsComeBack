@@ -75,6 +75,31 @@ Mods: {
 								// Name: Subra — Forepaw Comet
 								// Description: A charged large meteor deals 20% more damage.
 							}
+
+							Algenubi: {
+								// Name: Algenubi — Lion's Eye
+								// Description: Normal left-click comets track prey gently from the moment they launch.
+							}
+
+							AlMinliar: {
+								// Name: Al Minliar — Lion's Muzzle
+								// Description: The Stealth Lion Head pounces faster and bites with a wider hitbox.
+							}
+
+							RLeonis: {
+								// Name: R Leonis — Pulsing Ember
+								// Description: While held, Ultimate Energy charges faster — one point every 0.75 seconds.
+							}
+
+							Wolf359: {
+								// Name: Wolf 359 — Flaring Dwarf
+								// Description: A dissipating small comet erupts into two stronger Astral Energy Beams instead of one.
+							}
+
+							Dingolay: {
+								// Name: Dingolay — Dancing Star
+								// Description: Each third-reflection milestone deals 24% more damage, up from 15%.
+							}
 						}
 					}
 				}

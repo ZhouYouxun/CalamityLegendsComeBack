@@ -56,6 +56,22 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.LeftClick
         // 当前瞬时快慢（1=最快 起手，0=最慢 收尾），用来调制抛出的特效强度
         private float SwingSpeedFactor => MathF.Pow(1f - SwingCompletion, 1.55f);
 
+        // 蓄→放的纯绘制尺寸律动（只作用于本体贴图，不改判定框/伤害/前探距离）：
+        // 起手把武器收拢蓄势，挥出瞬间三次方弹回满尺寸，收势再轻微回落——移植镀金长喙的"压缩→释放"手感。
+        // 全程 ≤1（绘制永不大于判定），所以没有"贴图比伤害框大"的违和。
+        private float SwingDrawScale
+        {
+            get
+            {
+                if (inStartup)
+                    return MathHelper.Lerp(1f, 0.82f, MathF.Pow(StartupCompletion, 1.4f));
+                if (inCooldown)
+                    return MathHelper.Lerp(1f, 0.94f, MathF.Pow(CooldownCompletion, 1.6f));
+                float release = MathHelper.Clamp(SwingCompletion / 0.22f, 0f, 1f);
+                return MathHelper.Lerp(0.82f, 1f, 1f - MathF.Pow(1f - release, 3f));
+            }
+        }
+
         private float StageDamageMult => stage switch
         {
             0 => UmbralNadirBalance.UpSlashDamageMult,
@@ -146,6 +162,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.LeftClick
             if (inSwing && Projectile.owner == Main.myPlayer)
                 FireSwingProjectiles(player);
 
+            // 每子步（含 extraUpdates）连续抛出被真实挥速拖出的挥砍拖尾——镀金长喙"连续质感"的关键：
+            // 不再逐真实帧盖一次贴图，而是让每个子步都续上一小段，连成一条被惯性拖出的连续裂缝。
+            if (inSwing)
+                EmitSwingTrail(player);
+
             // 记录矛尖世界坐标（每真实帧一次，让残像沿挥舞弧线铺开而不是挤成一团）
             if (Projectile.FinalExtraUpdate())
             {
@@ -164,7 +185,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.LeftClick
                         bladeRotationHistory.RemoveAt(bladeRotationHistory.Count - 1);
                     }
                     UpdateVoidSmear(player);
-                    SpawnSwingVoidEffects(player);
                 }
                 else
                 {
@@ -244,34 +264,56 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.LeftClick
             }
         }
 
-        /// <summary>挥砍抛出的特效：黑色撕裂条痕 + 稀疏绿色事件视界火花 + 被吸向刀尖的碎渊尘，全部随"先快后慢"节奏调制。</summary>
-        private void SpawnSwingVoidEffects(Player player)
+        /// <summary>
+        /// 每子步连续抛出的挥砍拖尾。核心与镀金长喙同理：粒子速度不再各自围绕刀尖乱飞，
+        /// 而是继承刀身"本子步相对玩家的真实位移"(oldPlayerOffset 差分)被拖出；配合 extraUpdates
+        /// 逐子步续接——于是读作"一条被高速惯性拖出来的连续裂缝"，而非若干真实帧上盖出的贴图。
+        /// 黑色撕裂丝带打底 + 被拖出的绿色事件视界拖丝 + 顶层亮绿边 + 稀疏吸向刀尖的碎渊尘，随"先快后慢"调制。
+        /// </summary>
+        private void EmitSwingTrail(Player player)
         {
-            float speed = SwingSpeedFactor;
-            Vector2 bladeDir = (Projectile.Center - player.MountedCenter).SafeNormalize(Vector2.UnitX * player.direction);
+            float speed = SwingSpeedFactor;                          // 1=起手最快，0=收尾最慢
+            Vector2 offset = Projectile.Center - player.MountedCenter;
+            Vector2 inertia = oldPlayerOffset - offset;             // 本子步刀身真实位移（指向拖尾方向，与镀金长喙同款）
+            float swirl = inertia.Length();
+            Vector2 drag = inertia.SafeNormalize(Vector2.Zero);
+            Vector2 bladeDir = offset.SafeNormalize(Vector2.UnitX * player.direction);
             Vector2 tangent = bladeDir.RotatedBy(MathHelper.PiOver2);
             Vector2 tip = Projectile.Center + bladeDir * 58f * Projectile.scale;
 
-            // 黑色撕裂条痕（像矛尖在划开空间）——越快越多越长
-            int rips = 1 + (int)(speed * 3f);
-            for (int i = 0; i < rips; i++)
+            // ① 黑色撕裂丝带：沿刀身铺开、被真实挥速拖出——逐子步一条，连成一条连续裂缝
+            Vector2 ripPos = Projectile.Center + bladeDir * Main.rand.NextFloat(20f, 92f) * Projectile.scale + tangent * Main.rand.NextFloat(-6f, 6f);
+            Vector2 ripVel = drag * (swirl * 0.5f + 1.5f) + tangent.RotatedByRandom(0.25f) * Main.rand.NextFloat(0.4f, 1.8f) * speed;
+            GeneralParticleHandler.SpawnParticle(new LineParticle(ripPos, ripVel, false, Main.rand.Next(9, 15),
+                Main.rand.NextFloat(0.5f, 0.95f) * (0.55f + speed), Color.Black));
+
+            // ② 被拖出的绿色事件视界拖丝（空气被刀尖撕开的余量，替代金色长喙的火焰尾焰）——快相更密
+            if (Main.rand.NextFloat() < 0.35f + speed * 0.55f)
             {
-                Vector2 pos = Projectile.Center + bladeDir * Main.rand.NextFloat(22f, 64f) * Projectile.scale + tangent * Main.rand.NextFloat(-8f, 8f);
-                Vector2 vel = tangent.RotatedByRandom(0.3f) * Main.rand.NextFloat(2f, 6f) * (0.5f + speed);
-                GeneralParticleHandler.SpawnParticle(new LineParticle(pos, vel, false, Main.rand.Next(9, 15), Main.rand.NextFloat(0.5f, 0.95f) * (0.6f + speed), Color.Black));
+                Vector2 streakPos = tip - drag * Main.rand.NextFloat(0f, 24f) * Projectile.scale + tangent * Main.rand.NextFloat(-9f, 9f);
+                Vector2 streakVel = drag * (swirl * 0.6f + 1f);
+                Color streakCol = Color.Lerp(UmbralNadirPalette.MeldGreenDeep, UmbralNadirPalette.MeldGreen, speed);
+                streakCol.A = 0;
+                GeneralParticleHandler.SpawnParticle(new CustomSpark(streakPos, streakVel, "CalamityMod/Particles/GlowSpark",
+                    false, Main.rand.Next(8, 13), Main.rand.NextFloat(0.018f, 0.03f), streakCol,
+                    new Vector2(0.5f, 1.5f), true, false), false, GeneralDrawLayer.AfterEverything);
             }
 
-            // 刀尖事件视界绿边火花（仅快相，稀疏，顶层加色）
-            if (speed > 0.35f && Main.rand.NextFloat() < speed)
-                GeneralParticleHandler.SpawnParticle(new CustomSpark(tip, tangent.RotatedByRandom(0.4f) * Main.rand.NextFloat(2f, 5f) * speed,
-                    "CalamityMod/Particles/GlowSpark", false, Main.rand.Next(10, 15), Main.rand.NextFloat(0.02f, 0.038f),
-                    UmbralNadirPalette.MeldGreen, new Vector2(0.6f, 1.3f), true, false), false, GeneralDrawLayer.AfterEverything);
+            // ③ 刀尖事件视界亮绿边火花（仅快相，稀疏，最顶层加色——给黑色运动一条能读出来的亮边）
+            if (speed > 0.4f && Main.rand.NextFloat() < speed * 0.5f)
+            {
+                Vector2 edgeVel = (drag * swirl * 0.4f + tangent.RotatedByRandom(0.35f) * Main.rand.NextFloat(1.5f, 3.5f)) * speed;
+                GeneralParticleHandler.SpawnParticle(new CustomSpark(tip, edgeVel, "CalamityMod/Particles/GlowSpark",
+                    false, Main.rand.Next(10, 15), Main.rand.NextFloat(0.022f, 0.04f),
+                    UmbralNadirPalette.MeldGreenBright with { A = 0 }, new Vector2(0.6f, 1.3f), true, false),
+                    false, GeneralDrawLayer.AfterEverything);
+            }
 
-            // 被吸向刀尖的碎渊尘（迷你黑洞感）
-            if (Main.rand.NextBool(2))
+            // ④ 被吸向刀尖的碎渊尘（迷你黑洞感，稀疏；吸入向量里混一份真实拖速，让它也随挥舞被带着走）
+            if (Main.rand.NextBool(6))
             {
                 Vector2 edge = tip + Main.rand.NextVector2Unit() * Main.rand.NextFloat(28f, 66f) * Projectile.scale;
-                Vector2 inward = (tip - edge).SafeNormalize(Vector2.Zero) * Main.rand.NextFloat(1.5f, 4.5f);
+                Vector2 inward = (tip - edge).SafeNormalize(Vector2.Zero) * Main.rand.NextFloat(1.5f, 4.5f) + drag * swirl * 0.3f;
                 Dust vd = Dust.NewDustPerfect(edge, ModContent.DustType<VoidDustInverted>(), inward, 0, UmbralNadirPalette.MeldGreen, Main.rand.NextFloat(0.7f, 1.2f));
                 vd.noGravity = true;
                 vd.color = UmbralNadirPalette.MeldGreen;
@@ -348,11 +390,12 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.LeftClick
                     afterRot, origin, Projectile.scale, SpriteEffects.None, 0);
             }
 
-            // 本体：纯黑剪影垫底（负光）+ 主体
+            // 本体：纯黑剪影垫底（负光）+ 主体；乘以蓄→放律动尺寸（仅绘制，不动判定框/伤害/前探）
             Vector2 drawPos = Projectile.Center - Main.screenPosition;
             float rot = SpearRotation(Projectile.Center);
-            Main.EntitySpriteDraw(tex, drawPos, null, Color.Black * 0.5f, rot, origin, Projectile.scale * 1.08f, SpriteEffects.None, 0);
-            Main.EntitySpriteDraw(tex, drawPos, null, lightColor, rot, origin, Projectile.scale, SpriteEffects.None, 0);
+            float coil = SwingDrawScale;
+            Main.EntitySpriteDraw(tex, drawPos, null, Color.Black * 0.5f, rot, origin, Projectile.scale * coil * 1.08f, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(tex, drawPos, null, lightColor, rot, origin, Projectile.scale * coil, SpriteEffects.None, 0);
 
             player.heldProj = Projectile.whoAmI;
             return false;

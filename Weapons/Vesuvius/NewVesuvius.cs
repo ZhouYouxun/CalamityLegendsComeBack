@@ -6,6 +6,7 @@ using CalamityMod;
 using CalamityMod.Items;
 using CalamityMod.Rarities;
 using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Terraria;
@@ -18,6 +19,8 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
 {
     public class NewVesuvius : ModItem, ILocalizedModType
     {
+        private bool suppressRightClickUntilRelease;
+
         public new string LocalizationCategory => "Items.Weapons";
 
         public override void SetStaticDefaults()
@@ -61,11 +64,11 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
 
             if (player.altFunctionUse == 2)
             {
-                Item.useTime = 28;
-                Item.useAnimation = 28;
+                Item.useTime = 30;
+                Item.useAnimation = 30;
                 Item.channel = true;
                 Item.noUseGraphic = true;
-                Item.shoot = ModContent.ProjectileType<VesuviusRightJavelinHoldout>();
+                Item.shoot = ModContent.ProjectileType<VesuviusSuperFlameHoldout>();
                 Item.shootSpeed = 1f;
                 Item.UseSound = null;
                 return false;
@@ -80,6 +83,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
             Item.UseSound = null;
 
             return vPlayer.LeftClickCooldown <= 0 &&
+                   player.ownedProjectileCounts[ModContent.ProjectileType<VesuviusSuperFlameHoldout>()] <= 0 &&
                    player.ownedProjectileCounts[ModContent.ProjectileType<VesuviusLeftHoldout>()] <= 0;
         }
 
@@ -88,22 +92,9 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
             Vector2 aimDirection = (player.Calamity().mouseWorld - player.MountedCenter).SafeNormalize(Vector2.UnitX * player.direction);
 
             if (player.altFunctionUse == 2)
-            {
-                Projectile.NewProjectile(
-                    source,
-                    player.MountedCenter + aimDirection * 26f,
-                    aimDirection * Item.shootSpeed,
-                    ModContent.ProjectileType<VesuviusFaultJavelin>(),
-                    VesuviusProgression.GetRightDamage(damage),
-                    knockback,
-                    player.whoAmI,
-                    0f,
-                    0f,
-                    VesuviusProgression.GetWorldPowerStage());
-
-                player.GetModPlayer<VesuviusEXPlayer>().GainEX(1);
                 return false;
-            }
+
+            bool empoweredShot = player.GetModPlayer<VesuviusPassivePlayer>().TryConsumeEmpoweredLeft();
 
             Projectile.NewProjectile(
                 source,
@@ -112,7 +103,8 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                 ModContent.ProjectileType<VesuviusLeftHoldout>(),
                 damage,
                 knockback,
-                player.whoAmI);
+                player.whoAmI,
+                empoweredShot ? 1f : 0f);
 
             return false;
         }
@@ -133,8 +125,26 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
             if (Main.myPlayer != player.whoAmI)
                 return;
 
-            if (CanStartRightClickHoldout(player))
-                StartRightClickHoldout(player);
+            bool rightHeld = player.Calamity().mouseRight;
+            if (!rightHeld)
+                suppressRightClickUntilRelease = false;
+            else if (!suppressRightClickUntilRelease && CanStartRightClickHoldout(player))
+            {
+                // 超级火焰之后必须先松开一次右键，下一次按下才会消费陨石窗口。
+                // 这样长按喷火不会在同一次输入里顺手把陨石也砸下来。
+                if (passivePlayer.MeteorFollowupTimer > 0)
+                {
+                    if (player.CheckMana(Item, Item.mana, false, false) && passivePlayer.TryConsumeMeteorFollowup())
+                    {
+                        player.CheckMana(Item, Item.mana, true, false);
+                        SpawnFollowupMeteor(player);
+                    }
+                }
+                else
+                    StartRightClickHoldout(player);
+
+                suppressRightClickUntilRelease = true;
+            }
 
             if (KeybindSystem.LegendarySkill.JustPressed &&
                 player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.LegendaryEmblemPlayer>().EXAccessoryEquipped &&
@@ -209,7 +219,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                    !player.mouseInterface &&
                    !player.noItems &&
                    !player.CCed &&
-                   player.ownedProjectileCounts[ModContent.ProjectileType<VesuviusRightJavelinHoldout>()] <= 0;
+                   player.ownedProjectileCounts[ModContent.ProjectileType<VesuviusSuperFlameHoldout>()] <= 0;
         }
 
         private void StartRightClickHoldout(Player player)
@@ -227,8 +237,8 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                 Item.GetSource_FromThis(),
                 player.MountedCenter,
                 aimDirection,
-                ModContent.ProjectileType<VesuviusRightJavelinHoldout>(),
-                VesuviusProgression.GetRightDamage(player.GetWeaponDamage(Item)),
+                ModContent.ProjectileType<VesuviusSuperFlameHoldout>(),
+                Math.Max(1, (int)(player.GetWeaponDamage(Item) * 2.5f)),
                 Item.knockBack,
                 player.whoAmI,
                 VesuviusProgression.GetWorldPowerStage());
@@ -237,15 +247,46 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                 Main.projectile[projIndex].CritChance = player.GetWeaponCrit(Item);
         }
 
+        private void SpawnFollowupMeteor(Player player)
+        {
+            int leftHoldoutType = ModContent.ProjectileType<VesuviusLeftHoldout>();
+            foreach (Projectile projectile in Main.ActiveProjectiles)
+            {
+                if (projectile.owner == player.whoAmI && projectile.type == leftHoldoutType)
+                    projectile.Kill();
+            }
+
+            Vector2 target = player.Calamity().mouseWorld;
+            Vector2 spawnPosition = target + new Vector2(Main.rand.NextFloat(-120f, 120f), -620f);
+            Vector2 velocity = (target - spawnPosition).SafeNormalize(Vector2.UnitY) * 20f;
+            int projIndex = Projectile.NewProjectile(
+                Item.GetSource_FromThis(),
+                spawnPosition,
+                velocity,
+                ModContent.ProjectileType<VesuviusFollowupMeteor>(),
+                Math.Max(1, (int)(player.GetWeaponDamage(Item) * 1.85f)),
+                Item.knockBack * 1.6f,
+                player.whoAmI,
+                target.X,
+                target.Y,
+                VesuviusProgression.GetWorldPowerStage());
+
+            if (Main.projectile.IndexInRange(projIndex))
+                Main.projectile[projIndex].CritChance = player.GetWeaponCrit(Item);
+
+            SoundEngine.PlaySound(SoundID.Item73 with { Volume = 0.72f, Pitch = -0.32f }, target);
+        }
+
         private static void KillOwnedVesuviusAttacks(Player player)
         {
             int leftHoldoutType = ModContent.ProjectileType<VesuviusLeftHoldout>();
             int rightHoldoutType = ModContent.ProjectileType<VesuviusRightJavelinHoldout>();
+            int flameHoldoutType = ModContent.ProjectileType<VesuviusSuperFlameHoldout>();
             for (int i = 0; i < Main.maxProjectiles; i++)
             {
                 Projectile projectile = Main.projectile[i];
                 if (projectile.active && projectile.owner == player.whoAmI &&
-                    (projectile.type == leftHoldoutType || projectile.type == rightHoldoutType))
+                    (projectile.type == leftHoldoutType || projectile.type == rightHoldoutType || projectile.type == flameHoldoutType))
                     projectile.Kill();
             }
         }

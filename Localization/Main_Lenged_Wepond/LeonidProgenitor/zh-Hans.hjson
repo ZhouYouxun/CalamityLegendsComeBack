@@ -75,6 +75,31 @@ Mods: {
 								Name: 轩辕六 前爪彗星
 								Description: 蓄力大流星伤害提高20%
 							}
+
+							Algenubi: {
+								Name: 轩辕九 狮目
+								Description: 普通左键小流星出膛即带柔和自动追踪
+							}
+
+							AlMinliar: {
+								Name: 狮吻 咆哮前唇
+								Description: 潜伏狮首扑击更迅猛，咬击判定范围更大
+							}
+
+							RLeonis: {
+								Name: 狮腹脉冲 R星
+								Description: 手持本武器时终结能量充能加快，每0.75秒回复一点
+							}
+
+							Wolf359: {
+								Name: 沃夫359 焰矮星
+								Description: 小流星消散时改为迸发两束更强的星辉能量束
+							}
+
+							Dingolay: {
+								Name: 丁格莱 旋舞星
+								Description: 每完成三次反射的里程碑增伤由15%提升至24%
+							}
 						}
 					}
 				}

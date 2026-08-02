@@ -704,6 +704,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.BossProgress
             Pre("King Slime", "史莱姆王", "史莱姆王-图标", () => NPC.downedSlimeKing, value => NPC.downedSlimeKing = value),
             Pre("Desert Scourge", "荒漠灾虫", "荒漠灾虫-图标", () => DownedBossSystem.downedDesertScourge, value => DownedBossSystem.downedDesertScourge = value),
             Pre("Eye of Cthulhu", "克苏鲁之眼", "克苏鲁之眼第一阶段-图标", () => NPC.downedBoss1, value => NPC.downedBoss1 = value),
+            Pre("Acid Rain Tier 1", "酸雨第一阶段", "克苏鲁之眼第一阶段-图标", () => DownedBossSystem.downedEoCAcidRain, value => DownedBossSystem.downedEoCAcidRain = value),
             Pre("Crabulon", "菌生蟹", "菌生蟹-图标", () => DownedBossSystem.downedCrabulon, value => DownedBossSystem.downedCrabulon = value),
             Pre("Eater of Worlds", "世界吞噬怪", "世界吞噬怪-图标", () => NPC.downedBoss2, value => NPC.downedBoss2 = value, "NPC.downedBoss2"),
             Pre("Brain of Cthulhu", "克苏鲁之脑", "克苏鲁之脑-图标", () => NPC.downedBoss2, value => NPC.downedBoss2 = value, "NPC.downedBoss2"),
@@ -717,6 +718,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.BossProgress
 
             Hard("Queen Slime", "史莱姆皇后", "史莱姆皇后-图标", () => NPC.downedQueenSlime, value => NPC.downedQueenSlime = value),
             Hard("Aquatic Scourge", "渊海灾虫", "渊海灾虫-图标", () => DownedBossSystem.downedAquaticScourge, value => DownedBossSystem.downedAquaticScourge = value),
+            Hard("Acid Rain Tier 2", "酸雨第二阶段", "渊海灾虫-图标", () => DownedBossSystem.downedAquaticScourgeAcidRain, value => DownedBossSystem.downedAquaticScourgeAcidRain = value),
             Hard("Brimstone Elemental", "硫磺火元素", "硫磺火元素-图标", () => DownedBossSystem.downedBrimstoneElemental, value => DownedBossSystem.downedBrimstoneElemental = value),
             Hard("Cryogen", "极地之灵", "极地之灵-图标", () => DownedBossSystem.downedCryogen, value => DownedBossSystem.downedCryogen = value),
             Hard("The Destroyer", "毁灭者", "毁灭者-图标", () => NPC.downedMechBoss1, value => NPC.downedMechBoss1 = value),

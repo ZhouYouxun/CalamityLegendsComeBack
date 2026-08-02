@@ -50,6 +50,9 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 TargetPosition = Main.MouseWorld;
             }
 
+            // Al Minliar (the lion's muzzle): the pounce lunges faster and the bite opens wider.
+            bool hasAlMinliar = Owner.GetModPlayer<LeonidConstellationPlayer>().IsUnlocked(LeonidStar.AlMinliar);
+
             Color themeColor = Color.Lerp(LeonidVisualUtils.GetReadyGold(Projectile.whoAmI * 0.2f), LeonidVisualUtils.MoonViolet, IsBiting ? 0.22f : 0.38f);
             Lighting.AddLight(Projectile.Center, themeColor.ToVector3() * (IsBiting ? 1.4f : 0.7f));
 
@@ -72,7 +75,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 {
                     // Fly towards target
                     Vector2 dir = toTarget.SafeNormalize(Vector2.UnitX * Owner.direction);
-                    Projectile.velocity = dir * 14f;
+                    Projectile.velocity = dir * (hasAlMinliar ? 18f : 14f);
                 }
 
                 // Travel dusts
@@ -153,9 +156,9 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                     }
                 }
 
-                // Shake and scale up
+                // Shake and scale up (Al Minliar widens the bite hitbox by peaking at a larger scale)
                 biteTimer--;
-                Projectile.scale = 1.0f + 1.6f * (float)Math.Sin((16 - biteTimer) / 16f * MathHelper.PiOver2);
+                Projectile.scale = 1.0f + (hasAlMinliar ? 2.2f : 1.6f) * (float)Math.Sin((16 - biteTimer) / 16f * MathHelper.PiOver2);
 
                 // Bite visual shockwave particles
                 if (Main.rand.NextBool())

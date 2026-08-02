@@ -13,8 +13,11 @@ using Terraria.ModLoader.IO;
 namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
 {
     /// <summary>
-    /// The nine principal stars used by the Leonid constellation matrix. Regulus is the
-    /// always-lit heart; the remaining eight stars deliberately cost 34 of the 42 boss stars.
+    /// The fourteen principal stars used by the Leonid constellation matrix. Regulus is the
+    /// always-lit heart; the remaining thirteen stars are freely choosable and together cost
+    /// 38 of the 42 boss stars, so the whole sky can still be completed by the very end while
+    /// leaving a small buffer. New entries are appended (never inserted) to keep the byte ids
+    /// stored in existing save files stable.
     /// </summary>
     public enum LeonidStar : byte
     {
@@ -26,7 +29,12 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
         Chertan,
         Denebola,
         Alterf,
-        Subra
+        Subra,
+        Algenubi,
+        AlMinliar,
+        RLeonis,
+        Wolf359,
+        Dingolay
     }
 
     public readonly struct LeonidConstellationNode
@@ -48,21 +56,30 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
     public static class LeonidConstellation
     {
         public const int TotalMajorBosses = 42;
-        public const int TotalCost = 34;
 
-        // A compact but recognisable Leo: the sickle is on the upper left, then the back and tail run rightward.
+        // A compact but recognisable Leo: the sickle (head) curls on the upper left, the body sits in the
+        // middle, and the hindquarters + tail run rightward. The extra stars fill the emptier regions so the
+        // expanded chart still reads as the lion rather than a random scatter of points.
         private static readonly LeonidConstellationNode[] nodes =
         {
-            new(LeonidStar.Regulus, 0, new Vector2(-30f, 45f), LeonidStar.Algieba, LeonidStar.Zosma, LeonidStar.Subra),
-            new(LeonidStar.Algieba, 4, new Vector2(-112f, -34f), LeonidStar.Adhafera, LeonidStar.Rasalas),
-            new(LeonidStar.Adhafera, 4, new Vector2(-205f, -118f), LeonidStar.Rasalas),
-            new(LeonidStar.Rasalas, 4, new Vector2(-98f, -190f)),
-            new(LeonidStar.Zosma, 4, new Vector2(92f, -18f), LeonidStar.Chertan),
-            new(LeonidStar.Chertan, 4, new Vector2(205f, 36f), LeonidStar.Denebola),
-            new(LeonidStar.Denebola, 5, new Vector2(326f, 120f)),
-            new(LeonidStar.Alterf, 5, new Vector2(74f, 126f), LeonidStar.Subra),
-            new(LeonidStar.Subra, 4, new Vector2(-70f, 164f))
+            new(LeonidStar.Regulus, 0, new Vector2(-30f, 45f), LeonidStar.Algieba, LeonidStar.Zosma, LeonidStar.Subra, LeonidStar.RLeonis),
+            new(LeonidStar.Algieba, 2, new Vector2(-112f, -34f), LeonidStar.Adhafera, LeonidStar.Rasalas),
+            new(LeonidStar.Adhafera, 3, new Vector2(-205f, -118f), LeonidStar.Rasalas, LeonidStar.Algenubi),
+            new(LeonidStar.Rasalas, 3, new Vector2(-98f, -190f)),
+            new(LeonidStar.Zosma, 3, new Vector2(92f, -18f), LeonidStar.Chertan, LeonidStar.Dingolay),
+            new(LeonidStar.Chertan, 2, new Vector2(205f, 36f), LeonidStar.Denebola),
+            new(LeonidStar.Denebola, 3, new Vector2(326f, 120f), LeonidStar.Wolf359),
+            new(LeonidStar.Alterf, 4, new Vector2(74f, 126f), LeonidStar.Subra, LeonidStar.AlMinliar),
+            new(LeonidStar.Subra, 3, new Vector2(-70f, 164f)),
+            new(LeonidStar.Algenubi, 3, new Vector2(-288f, -180f)),
+            new(LeonidStar.AlMinliar, 3, new Vector2(160f, 158f)),
+            new(LeonidStar.RLeonis, 3, new Vector2(0f, -60f), LeonidStar.Zosma),
+            new(LeonidStar.Wolf359, 3, new Vector2(250f, 132f)),
+            new(LeonidStar.Dingolay, 3, new Vector2(200f, -110f))
         };
+
+        // The whole sky costs the sum of every choosable star, derived so the value never drifts from the table.
+        public static int TotalCost => nodes.Sum(node => node.Cost);
 
         private static readonly IReadOnlyDictionary<LeonidStar, LeonidConstellationNode> nodesByStar = nodes.ToDictionary(node => node.Star);
 

@@ -382,8 +382,11 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
-            bool hasRasalas = Owner.GetModPlayer<LeonidConstellationPlayer>().IsUnlocked(LeonidStar.Rasalas);
-            float multiplier = 1f + BounceCount * (hasRasalas ? 0.06f : 0.04f) + (BounceCount / 3) * 0.15f;
+            LeonidConstellationPlayer constellation = Owner.GetModPlayer<LeonidConstellationPlayer>();
+            bool hasRasalas = constellation.IsUnlocked(LeonidStar.Rasalas);
+            // Dingolay ("to dance"): each third reflection milestone bites harder, +24% instead of +15%.
+            float milestoneBonus = constellation.IsUnlocked(LeonidStar.Dingolay) ? 0.24f : 0.15f;
+            float multiplier = 1f + BounceCount * (hasRasalas ? 0.06f : 0.04f) + (BounceCount / 3) * milestoneBonus;
             if (IsOrbiting)
             {
                 multiplier *= 0.5f;
@@ -417,11 +420,18 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             CLCBLightingBoltsSystem.Spawn_LeonidStarfieldMatrixBurst(Projectile.Center, FromStealthRain ? 1.8f : 1f);
 
             // Every small comet releases one delayed-damage energy wisp from its actual death point.
+            // Wolf 359 (the flaring dwarf): the death throw erupts into two brighter wisps instead of one.
             if (Projectile.owner == Main.myPlayer)
             {
-                Vector2 energyVelocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(7f, 10f);
-                Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, energyVelocity,
-                    ModContent.ProjectileType<LeonidAstralEnergy>(), (int)(Projectile.damage * 0.5f), 0f, Projectile.owner);
+                bool hasWolf359 = Owner.GetModPlayer<LeonidConstellationPlayer>().IsUnlocked(LeonidStar.Wolf359);
+                int wispCount = hasWolf359 ? 2 : 1;
+                int wispDamage = (int)(Projectile.damage * (hasWolf359 ? 0.8f : 0.5f));
+                for (int i = 0; i < wispCount; i++)
+                {
+                    Vector2 energyVelocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(7f, 10f);
+                    Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, energyVelocity,
+                        ModContent.ProjectileType<LeonidAstralEnergy>(), wispDamage, 0f, Projectile.owner);
+                }
             }
 
             LeonidStarlight.Burst(

@@ -263,8 +263,18 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
         private static int SpawnSmallComet(EntitySource_ItemUse_WithAmmo source, Player player, Vector2 spawnPosition, Vector2 velocity, int damage, float knockback)
         {
-            float speedMultiplier = player.GetModPlayer<LeonidConstellationPlayer>().IsUnlocked(LeonidStar.Algieba) ? 1.2f : 1f;
-            return Projectile.NewProjectile(source, spawnPosition, velocity * speedMultiplier, ModContent.ProjectileType<LeonidCometSmall>(), damage, knockback, player.whoAmI);
+            LeonidConstellationPlayer constellation = player.GetModPlayer<LeonidConstellationPlayer>();
+            float speedMultiplier = constellation.IsUnlocked(LeonidStar.Algieba) ? 1.2f : 1f;
+            int p = Projectile.NewProjectile(source, spawnPosition, velocity * speedMultiplier, ModContent.ProjectileType<LeonidCometSmall>(), damage, knockback, player.whoAmI);
+
+            // Algenubi (the lion's eye): normal left-click comets track prey gently from launch, before any bounce.
+            if (constellation.IsUnlocked(LeonidStar.Algenubi) && p.WithinBounds(Main.maxProjectiles)
+                && Main.projectile[p].ModProjectile is LeonidCometSmall comet)
+            {
+                comet.EnableSimpleHoming(0.035f, 640f);
+            }
+
+            return p;
         }
     }
 }

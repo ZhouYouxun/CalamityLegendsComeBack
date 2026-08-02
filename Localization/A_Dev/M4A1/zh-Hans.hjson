@@ -1,0 +1,43 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				InheritedCaseM4A1: {
+					DisplayName: 传承武器箱·M4A1
+					Tooltip: "[GFB]"
+					M4A1_Intro: 一只在战火中传承下来的武器箱——开局是迷你鲨，中期是巨兽玛瑙爆破鲨，后期是弑君之刃
+					M4A1_LeftClick: 长按左键暖机，射出一串子弹并时不时甩出火箭弹；战术同步率越高，射速、弹速与精度越好
+					M4A1_RightClick: 右键从武器箱中展开便携式重炮，消耗约 35 点战术同步率——同步率越高，齐射越完整
+					M4A1_Mark: 连续命中同一敌人为其烙上复仇印记（最多三层）：先追加伤害，再破甲，最后周期性引发战术爆破
+					M4A1_Passive: 被动·战术指挥模块：战术同步率以矩阵条显示在你的头顶
+					M4A1_Ultimate: 完全同步后，按 {0} 令武器箱完全展开：锁定光标附近至多五个目标，倾泻一轮复仇追踪齐射
+				}
+			}
+		}
+
+		Projectiles: {
+			M4A1LeftHoldout.DisplayName: M4A1
+			M4A1CannonHoldout.DisplayName: 便携式重炮
+			M4A1UltimateHoldout.DisplayName: 传承武器箱
+			M4A1Bullet.DisplayName: M4A1 子弹
+			M4A1Rocket.DisplayName: 战术火箭弹
+			M4A1Shell.DisplayName: 重炮炮弹
+			M4A1MarkDetonation.DisplayName: 战术爆破
+			M4A1LockOnBox.DisplayName: 锁定框
+			M4A1UltimateShell.DisplayName: 复仇炮弹
+			M4A1SyncBarProjectile.DisplayName: 战术同步率
+		}
+
+		M4A1: {
+			UI: {
+				SyncLabel: 战术同步率
+			}
+			Stage: {
+				Calibrating: 初始校准
+				TacticalLock: 战术锁定
+				CommandOverride: 指挥接管
+				FullSync: 完全同步
+			}
+		}
+	}
+}

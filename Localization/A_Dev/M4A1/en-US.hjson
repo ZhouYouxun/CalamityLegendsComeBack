@@ -1,0 +1,43 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			Weapons: {
+				InheritedCaseM4A1: {
+					DisplayName: Inherited Case, M4A1
+					Tooltip: "[GFB]"
+					M4A1_Intro: "A weapon case passed down through fire — a Mini Shark at dawn, a Megalodon onyx breacher at noon, a regicide blade at dusk"
+					M4A1_LeftClick: "Hold left click to warm up, spraying a stream of bullets and periodic rockets; higher Sync Rate raises fire rate, velocity and accuracy"
+					M4A1_RightClick: "Right click to unfold the portable heavy cannon from the case, spending about 35 Sync Rate — its barrage grows with your Sync Rate"
+					M4A1_Mark: "Sustained hits on one foe brand it with Vengeance Marks (up to 3): bonus damage, then armor break, then periodic tactical detonations"
+					M4A1_Passive: "Passive — Tactical Command Module: Tactical Sync Rate is displayed as a matrix bar above your head"
+					M4A1_Ultimate: "At full synchronization, press {0} to fully deploy the case: lock up to five targets near the cursor and unleash a homing vengeance barrage"
+				}
+			}
+		}
+
+		Projectiles: {
+			M4A1LeftHoldout.DisplayName: M4A1
+			M4A1CannonHoldout.DisplayName: Portable Heavy Cannon
+			M4A1UltimateHoldout.DisplayName: Inherited Case
+			M4A1Bullet.DisplayName: M4A1 Round
+			M4A1Rocket.DisplayName: Tactical Rocket
+			M4A1Shell.DisplayName: Heavy Cannon Shell
+			M4A1MarkDetonation.DisplayName: Tactical Detonation
+			M4A1LockOnBox.DisplayName: Lock-On Reticle
+			M4A1UltimateShell.DisplayName: Vengeance Shell
+			M4A1SyncBarProjectile.DisplayName: Tactical Sync Rate
+		}
+
+		M4A1: {
+			UI: {
+				SyncLabel: Tactical Sync Rate
+			}
+			Stage: {
+				Calibrating: Initial Calibration
+				TacticalLock: Tactical Lock
+				CommandOverride: Command Override
+				FullSync: Full Synchronization
+			}
+		}
+	}
+}

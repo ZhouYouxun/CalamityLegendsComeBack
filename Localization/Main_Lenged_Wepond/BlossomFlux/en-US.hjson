@@ -222,7 +222,6 @@ Mods: {
 					Recon: The right-click arrow sticks for up to 15 seconds, dealing damage and refreshing its mark once per second; enemies in its blue field take 5% more damage from Leaf Flow.
 					Bombard: Right-click arrow rain falls evenly within 80 pixels of the designated position.
 					Plague: Enemies Withered by right click lose an additional 0.01% of maximum life per second, with a minimum of 100 damage.
-					Recipe: 15 Effulgent Feathers + 2 Ascendant Spirit Essences + 5 Planty Mush + Magical Harp @ Cosmic Anvil
 					'''
 			}
 

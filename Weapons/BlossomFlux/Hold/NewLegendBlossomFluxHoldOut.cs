@@ -27,7 +27,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         private const int ReconTriangulationShotCount = 3;
         private const int BreakthroughFireInterval = 15;
         private const int RecoveryBurstInterval = 7;
-        private const int ReconBurstShotCount = 5;
+        private const int ReconBurstShotCount = 3;
         private const int ReconFireInterval = 5;
         private const int ReconCyclePause = 20;
         private const int BombardFireInterval = 2;
@@ -59,6 +59,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
         private int burstGroupsStarted;
         private int leftBurstTimer;
+        private int leftHardCooldown;
         private int leftShotsFired;
         private int reconShotsFiredInBurst;
         private bool leftHeldLastFrame;

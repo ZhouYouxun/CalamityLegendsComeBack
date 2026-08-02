@@ -28,6 +28,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         private int Tier => (int)MathHelper.Clamp(Projectile.ai[0], 0f, 4f);
+        private bool EmpoweredBySuperFlame => Projectile.ai[1] > 0f;
         private bool DirectHit { get => Projectile.localAI[1] > 0f; set => Projectile.localAI[1] = value ? 1f : 0f; }
 
         // How many enemies the orb has struck so far. Drives the escalating eruption ladder.
@@ -66,6 +67,8 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.LeftClick
                     3 => 1.7f,
                     _ => 2.05f
                 };
+                if (EmpoweredBySuperFlame)
+                    Projectile.scale *= 1.45f;
                 int size = (int)(30f * Projectile.scale);
                 Projectile.Resize(size, size);
             }

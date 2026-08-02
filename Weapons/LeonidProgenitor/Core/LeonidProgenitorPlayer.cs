@@ -55,8 +55,10 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
                 if (ModContent.TryFind<ModBuff>("CalamityMod", "DoGExtremeGravity", out var dogGrav))
                     Player.buffImmune[dogGrav.Type] = true;
 
+                // R Leonis (the pulsing star): its rhythm feeds the Ultimate faster, one charge every 0.75s.
+                int energyInterval = Player.GetModPlayer<LeonidConstellationPlayer>().IsUnlocked(LeonidStar.RLeonis) ? 45 : 60;
                 ultimateEnergyTimer++;
-                if (ultimateEnergyTimer >= 60)
+                if (ultimateEnergyTimer >= energyInterval)
                 {
                     ultimateEnergyTimer = 0;
                     AddUltimateEnergy(1);

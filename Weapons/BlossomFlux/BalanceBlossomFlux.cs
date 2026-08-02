@@ -55,7 +55,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             // Stage                       BrkDelay BrkMax BrkFrame RecFlash RecHeal RecShots RecPause RecPen RecMark BombMin BombMax BombDelay BombWaves BombImpact
             { "Initial",                       15,     3,      30,       3,      5,       1,      90,     2,     15,      3,      3,       10,        8,          1 },
             { "Eye of Cthulhu",                10,     3,      30,       3,     15,       1,      85,     2,     15,      3,      3,       10,        8,          1 },
-            { "Hardmode",                       6,     5,      20,       5,     15,       3,      60,     2,     25,      3,      3,       10,        8,          1 },
+            { "Hardmode",                       6,     5,      20,       5,     15,       2,      60,     2,     25,      3,      3,       10,        8,          1 },
             { "Plantera",                       3,     7,      15,       7,     15,       3,      50,     2,     25,      4,      4,       10,        8,          2 },
             { "Moon Lord",                      2,     7,      15,       9,     15,       3,      36,     2,     25,      5,      5,        8,        8,          2 },
             { "Devourer of Gods",               2,     7,      15,       9,     20,       3,      24,     2,     25,      5,      5,        7,        8,          2 },
@@ -473,7 +473,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             };
 
             int heal = 5;
-            int maxTime = 10 * 60;
             int defense = 5;
             int regen = 2;
             int missingQuarterRegen = 0;
@@ -490,7 +489,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             if (BlossomFluxGrowthProgression.DownedAtLeast(BlossomFluxGrowthStage.Hardmode))
             {
                 heal = 7;
-                maxTime = 15 * 60;
                 defense = 10;
                 regen = 4;
                 immunePoisonAndFire = true;
@@ -499,7 +497,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             if (BlossomFluxGrowthProgression.DownedAtLeast(BlossomFluxGrowthStage.Plantera))
             {
                 heal = 10;
-                maxTime = 20 * 60;
                 defense = 15;
                 regen = 6;
                 regenTime = 4;
@@ -520,7 +517,6 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             if (BlossomFluxGrowthProgression.DownedAtLeast(BlossomFluxGrowthStage.DevourerOfGods))
             {
                 heal = 20;
-                maxTime = 30 * 60;
                 defense = 25;
                 regen = 10;
                 regenTime = 5;
@@ -538,8 +534,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 75,
                 5 * 60,
                 2,
-                5 * 60,
-                maxTime,
+                6 * 60,
+                30 * 60,
                 volleyPauseFrames,
                 defense,
                 regen,

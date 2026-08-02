@@ -9,6 +9,7 @@ using CalamityMod.Items.Weapons.Rogue;
 using CalamityMod.Rarities;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Terraria;
@@ -261,6 +262,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
 
             Vector2 direction = (GetMouseWorld(player) - player.Center).SafeNormalize(Vector2.UnitX * player.direction);
             int finaleDamage = (int)player.GetTotalDamage(Item.DamageType).ApplyTo(MalachiteBalance.GetLeftClickBaseDamage() * MalachiteBalance.GetUltimateDamageMultiplier());
+            int holdoutDamage = Math.Max(1, (int)player.GetTotalDamage(Item.DamageType).ApplyTo(MalachiteBalance.GetLeftClickBaseDamage() * 0.1f));
 
             Projectile.NewProjectile(
                 player.GetSource_ItemUse(Item),
@@ -269,7 +271,8 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                 finaleType,
                 finaleDamage,
                 Item.knockBack,
-                player.whoAmI);
+                player.whoAmI,
+                holdoutDamage);
 
             StartFinaleCooldown(player);
             SoundEngine.PlaySound(SoundID.Item74 with { Volume = 0.95f, Pitch = -0.25f }, player.Center);
