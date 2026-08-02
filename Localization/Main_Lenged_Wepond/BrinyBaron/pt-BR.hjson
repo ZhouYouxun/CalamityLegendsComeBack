@@ -139,8 +139,8 @@ Mods: {
 					'''
 					+50 maximum mana and +15% melee damage
 					Each tide stack grants +1% melee critical strike chance
-					Tide clearing and non-boss decay take twice as long
-					Melee critical strikes have a 1% chance to grant 1 tide
+					Non-boss tide decay takes twice as long (10 seconds)
+					Enhanced tidal slashes grant 1 tide on every hit
 					The finisher consumes all mana to empower every strike
 					''' */
 			}

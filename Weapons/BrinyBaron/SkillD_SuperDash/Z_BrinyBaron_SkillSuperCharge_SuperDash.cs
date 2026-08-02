@@ -755,7 +755,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             impactTriggeredThisStrike = true;
             executionGlowIntensity = ExecutionGlowMax;
             SpawnImpactAfterimage(Owner, lockedDirection * FinalStrikeExitSpeed);
-            SpawnUltimateAzureRiftBeam(target);
+            SpawnUltimateAzureRiftBeam(target, finalWaterBlade: true);
             SpawnFinalMark(target);
             BBSD_Strike_Effects.SpawnFinalExecutionImpactEffects(Projectile, target.Center, lockedDirection);
 
@@ -897,7 +897,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             AdvanceAfterStrike(Owner, target);
         }
 
-        private void SpawnUltimateAzureRiftBeam(NPC target)
+        private void SpawnUltimateAzureRiftBeam(NPC target, bool finalWaterBlade = false)
         {
             if (Main.myPlayer != Projectile.owner)
                 return;
@@ -911,7 +911,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                 damage,
                 0f,
                 Projectile.owner,
-                Main.rand.NextFloat(MathHelper.TwoPi));
+                Main.rand.NextFloat(MathHelper.TwoPi),
+                finalWaterBlade ? 1f : 0f);
         }
 
         private void SpawnImpactAfterimage(Player owner, Vector2 driftVelocity)

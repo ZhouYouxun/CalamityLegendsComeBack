@@ -8,8 +8,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
         public const int JazzTyphoonLifetime = 150;
         public const int BaronHelixJazzTyphoonOrbitFrames = 90;
         public const float BaronHelixJazzTyphoonOrbitAngularVelocity = 0.21f;
-        public const float BaronHelixJazzTyphoonOrbitRadiusX = 76f;
-        public const float BaronHelixJazzTyphoonOrbitRadiusY = 30f;
+        public const float BaronHelixJazzTyphoonOrbitRadiusX = 240f;
+        public const float BaronHelixJazzTyphoonOrbitRadiusY = 240f;
         public const float BaronHelixJazzTyphoonHomingSpeed = 7.5f;
         public const float BaronHelixJazzTyphoonHomingInertia = 0.045f;
 

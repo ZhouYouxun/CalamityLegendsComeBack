@@ -5,26 +5,26 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using Terraria;
 using Terraria.Audio;
+using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.A_Dev.M4A1
 {
     /// <summary>
-    /// 左键暖机时不时甩出的火箭弹。命中/触地引爆，造成小范围战术爆破。
-    /// （印记增益——追踪 / 更大范围 / 强化爆炸——在 Phase 2/3 接线。）
+    /// 左键间歇火箭弹：沿用 AcidRocket 贴图，换成我们的荧光绿。轻微追踪，命中/触地引爆小范围战术爆破。
     /// </summary>
     public class M4A1Rocket : ModProjectile
     {
-        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+        public override string Texture => "CalamityMod/Projectiles/Ranged/AcidRocket";
 
         private const int BaseBlastRadius = 120;
         private bool exploding;
 
         public override void SetDefaults()
         {
-            Projectile.width = 12;
-            Projectile.height = 12;
+            Projectile.width = 18;
+            Projectile.height = 18;
             Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Ranged;
             Projectile.tileCollide = true;
@@ -37,27 +37,40 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.M4A1
 
         public override void AI()
         {
-            if (!exploding)
-            {
-                if (Projectile.velocity != Vector2.Zero)
-                    Projectile.rotation = Projectile.velocity.ToRotation();
-
-                // 火焰尾迹
-                for (int i = 0; i < 2; i++)
-                {
-                    Dust fire = Dust.NewDustPerfect(Projectile.Center - Projectile.velocity * 0.4f, DustID.Torch,
-                        -Projectile.velocity * 0.1f + Main.rand.NextVector2Circular(0.6f, 0.6f), 100, default, Main.rand.NextFloat(1.1f, 1.7f));
-                    fire.noGravity = true;
-                }
-                Dust smoke = Dust.NewDustPerfect(Projectile.Center, DustID.Smoke, -Projectile.velocity * 0.05f, 140, Color.Gray, 1f);
-                smoke.noGravity = true;
-
-                Lighting.AddLight(Projectile.Center, 0.7f, 0.35f, 0.1f);
-            }
-            else
+            if (exploding)
             {
                 Projectile.velocity *= 0.15f;
+                return;
             }
+
+            // 轻微追踪最近敌人
+            NPC target = FindNearestTarget(720f);
+            if (target != null)
+            {
+                Vector2 toTarget = (target.Center - Projectile.Center).SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitX));
+                float speed = Projectile.velocity.Length();
+                Projectile.velocity = Vector2.Lerp(Projectile.velocity.SafeNormalize(Vector2.UnitX), toTarget, 0.045f) * speed;
+            }
+
+            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
+
+            // 荧光绿尾迹
+            if (!Main.dedServ)
+            {
+                for (int i = 0; i < 2; i++)
+                {
+                    Dust fire = Dust.NewDustPerfect(Projectile.Center - Projectile.velocity * 0.4f, DustID.GreenTorch,
+                        -Projectile.velocity * 0.1f + Main.rand.NextVector2Circular(0.6f, 0.6f), 90, default, Main.rand.NextFloat(1.2f, 1.8f));
+                    fire.noGravity = true;
+                }
+                if (Main.rand.NextBool())
+                {
+                    Particle gas = new MediumMistParticle(Projectile.Center + Main.rand.NextVector2Circular(6f, 6f), -Projectile.velocity * 0.25f,
+                        M4A1Visuals.NeonGreen, new Color(120, 180, 90), Main.rand.NextFloat(0.4f, 0.8f), 150, 0.03f);
+                    GeneralParticleHandler.SpawnParticle(gas);
+                }
+            }
+            Lighting.AddLight(Projectile.Center, 0.3f, 0.7f, 0.12f);
         }
 
         public override bool OnTileCollide(Vector2 oldVelocity)
@@ -105,17 +118,55 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.M4A1
 
             for (int i = 0; i < 24; i++)
             {
-                Dust fire = Dust.NewDustPerfect(center, DustID.Torch, Main.rand.NextVector2Circular(6f, 6f), 90, default, Main.rand.NextFloat(1.4f, 2.4f));
+                Dust fire = Dust.NewDustPerfect(center, DustID.GreenTorch, Main.rand.NextVector2Circular(6f, 6f), 90, default, Main.rand.NextFloat(1.4f, 2.4f));
                 fire.noGravity = true;
             }
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 18; i++)
             {
-                Dust smoke = Dust.NewDustPerfect(center, DustID.Smoke, Main.rand.NextVector2Circular(3.5f, 3.5f), 120, Color.DarkGray, Main.rand.NextFloat(1.4f, 2.2f));
-                smoke.noGravity = true;
+                Color smokeColor = Main.rand.NextBool() ? M4A1Visuals.NeonGreen : new Color(90, 160, 70);
+                Particle smoke = new MediumMistParticle(center, Main.rand.NextVector2Circular(6f, 6f), smokeColor, Color.Black, Main.rand.NextFloat(1.2f, 2.6f), 180 - Main.rand.Next(50), 0.05f);
+                GeneralParticleHandler.SpawnParticle(smoke);
             }
 
-            GeneralParticleHandler.SpawnParticle(new GenericBloom(center, Vector2.Zero, new Color(255, 150, 70), 1.2f, 22, true));
-            GeneralParticleHandler.SpawnParticle(new GenericBloom(center, Vector2.Zero, new Color(255, 235, 180), 0.7f, 18, true));
+            GeneralParticleHandler.SpawnParticle(new GenericBloom(center, Vector2.Zero, M4A1Visuals.NeonGreen, 1.2f, 22, true));
+            GeneralParticleHandler.SpawnParticle(new GenericBloom(center, Vector2.Zero, M4A1Visuals.NeonGreenBright, 0.7f, 18, true));
+        }
+
+        private NPC FindNearestTarget(float range)
+        {
+            NPC best = null;
+            float bestDist = range * range;
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (!npc.CanBeChasedBy(Projectile))
+                    continue;
+                float d = Vector2.DistanceSquared(npc.Center, Projectile.Center);
+                if (d < bestDist)
+                {
+                    bestDist = d;
+                    best = npc;
+                }
+            }
+            return best;
+        }
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            Texture2D tex = TextureAssets.Projectile[Type].Value;
+            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+            Rectangle frame = tex.Frame(1, Main.projFrames[Type], 0, Projectile.frame);
+            Vector2 origin = frame.Size() * 0.5f;
+            Vector2 pos = Projectile.Center - Main.screenPosition;
+
+            // 单层绿色背光（非旋转贴图堆）
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.EntitySpriteDraw(bloom, pos, null, (M4A1Visuals.NeonGreen with { A = 0 }) * 0.65f, 0f, bloom.Size() * 0.5f, 0.32f, SpriteEffects.None, 0);
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+
+            Main.EntitySpriteDraw(tex, pos, frame, Projectile.GetAlpha(Color.Lerp(lightColor, M4A1Visuals.NeonGreenBright, 0.5f)), Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0);
+            return false;
         }
     }
 }

@@ -2,6 +2,7 @@ using CalamityMod;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Terraria;
 using Terraria.Audio;
@@ -15,9 +16,14 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
     internal sealed class SeasSearingHoldout : ModProjectile, ILocalizedModType
     {
         // ── Left-click cadence ───────────────────────────────────────────────
-        private const int BurstShotSpacing  = 4;   // frames between shots (burst & full-auto)
-        private const int BurstInterval     = 15;  // frames between bursts (phases 1-5)
-        private const int NukeBurstCadence  = 3;   // phase 5: nuke on last shot of every Nth burst
+        private const int NukeBurstCadence  = 4;   // phase 5: nuke on last shot of every Nth burst
+        private const int FullAutoBileCadence        = 3;
+        private const int FullAutoRocketCadence      = 7;
+        private const int FullAutoTorpedoCadence     = 12;
+        private const int FullAutoDepthChargeCadence = 18;
+        private const int FullAutoMissileCadence     = 24;
+        private const int FullAutoNukeCadence        = 30;
+        private const int PayloadStaggerFrames       = 2;
         private const int UltimateChargeFrames = 60;
 
         // ── Right-click charge ──────────────────────────────────────────────
@@ -51,9 +57,12 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         private int burstShotTimer;
         private int burstLockoutTimer;
         private int burstCompletedCount;
-        private int heavyRotationIndex;
         private int autoShotTimer;
         private int autoRoundCount;
+        private int payloadStaggerTimer;
+
+        private enum FullAutoPayload { Rocket, Torpedo, DepthCharge, Missile }
+        private readonly Queue<FullAutoPayload> pendingPayloads = new();
 
         // ── Right-click shotgun volleys ──────────────────────────────────────
         private int shotgunVolleysRemaining;
@@ -263,6 +272,8 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 return;
             }
 
+            ProcessPendingPayloads();
+
             int burstCount = SS_Balance.GetPhaseBurstCount(phase);
 
             if (leftHeld && burstShotsRemaining <= 0 && burstLockoutTimer <= 0)
@@ -276,16 +287,19 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         {
             burstShotsRemaining = 0;
             burstShotTimer      = 0;
+            burstLockoutTimer   = 0;
             autoShotTimer       = 0;
             autoRoundCount      = 0;
+            payloadStaggerTimer = 0;
+            pendingPayloads.Clear();
         }
 
         private void StartBurst(int count, int phase)
         {
             burstShotsRemaining = count;
             burstShotTimer      = 0;
-            burstLockoutTimer   = (count - 1) * BurstShotSpacing + BurstInterval;
-            useAnimationTimer   = Math.Max(useAnimationTimer, BurstShotSpacing * (count - 1) + 8);
+            int shotInterval = SS_Balance.GetLeftClickShotIntervalFrames(phase);
+            useAnimationTimer = Math.Max(useAnimationTimer, shotInterval * (count - 1) + 8);
         }
 
         private void HandleBurstShots(int phase, int totalCount)
@@ -302,17 +316,19 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
             FirePollutionRound(index, phase, nukeEligible);
 
-            // Phase 2+: a bile spray on both the first and the last shot of the burst.
-            if (phase >= 2 && (isFirst || isLast))
+            // Phase 2 starts with a pair of bile sprays. Later bursts tighten that
+            // pollution coverage by adding a centre spray without removing either end.
+            bool bileShot = phase >= 2 && (isFirst || isLast || (phase >= 4 && index == totalCount / 2));
+            if (bileShot)
                 FirePollutionJuiceSpray(index);
 
-            // Phases 1-3 keep a dedicated rocket on the last shot; from phase 4 the
-            // rocket folds into the post-burst heavy-companion rotation instead.
-            if (isLast && phase <= 3)
+            // A rocket remains the end punctuation of every burst at every normal phase.
+            if (isLast)
                 FirePollutionRocket();
 
             burstShotsRemaining--;
-            burstShotTimer = burstShotsRemaining > 0 ? BurstShotSpacing : 0;
+            int shotInterval = SS_Balance.GetLeftClickShotIntervalFrames(phase);
+            burstShotTimer = burstShotsRemaining > 0 ? shotInterval - 1 : 0;
 
             if (burstShotsRemaining == 0)
                 OnBurstComplete(phase);
@@ -321,14 +337,19 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         private void OnBurstComplete(int phase)
         {
             burstCompletedCount++;
+            burstLockoutTimer = SS_Balance.GetLeftClickBurstRecoveryFrames(phase) + 1;
 
-            // Phases 4+ deploy a rotating heavy companion group after each burst.
-            if (phase >= 4)
-                DeployHeavyCompanion(phase);
+            // These companion clocks are independent: later unlocks are additions, not
+            // replacements for an earlier rocket or torpedo deployment.
+            if (phase >= 4 && burstCompletedCount % 2 == 0)
+                QueuePayload(FullAutoPayload.Torpedo);
+
+            if (phase >= 5 && burstCompletedCount % 3 == 0)
+                QueuePayload(FullAutoPayload.DepthCharge);
         }
 
-        // Full-auto (phase 6): the between-burst gap is removed; one round every
-        // BurstShotSpacing frames while held, with rolling-count triggers.
+        // Full-auto (phase 6): main rounds never pause. Each payload keeps its own
+        // cadence and is queued instead of replacing another payload on shared counts.
         private void HandleFullAuto(bool leftHeld, int phase)
         {
             if (!leftHeld)
@@ -338,37 +359,59 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 return;
             }
 
+            ProcessPendingPayloads();
+
             if (autoShotTimer > 0) { autoShotTimer--; return; }
-            autoShotTimer = BurstShotSpacing;
+            autoShotTimer = SS_Balance.GetLeftClickShotIntervalFrames(phase) - 1;
 
             autoRoundCount++;
             int round = autoRoundCount;
 
-            bool nukeEligible = round % 30 == 0;              // small nuke on every 30th round's hit
-            FirePollutionRound(0, phase, nukeEligible);
+            bool nukeEligible = round % FullAutoNukeCadence == 0;
+            FirePollutionRound(round % 3, phase, nukeEligible);
 
-            if (round % 5 == 0)                               // bile spray every 5 rounds
+            if (round % FullAutoBileCadence == 0)
                 FirePollutionJuiceSpray(0);
 
-            if (round % 40 == 0)                              // twin homing missiles every 40 rounds
-                FireMissile();
-            else if (round % 20 == 0)                         // heavy companion group every 20 rounds
-                DeployHeavyCompanion(phase);
+            if (round % FullAutoRocketCadence == 0)
+                QueuePayload(FullAutoPayload.Rocket);
+            if (round % FullAutoTorpedoCadence == 0)
+                QueuePayload(FullAutoPayload.Torpedo);
+            if (round % FullAutoDepthChargeCadence == 0)
+                QueuePayload(FullAutoPayload.DepthCharge);
+            if (round % FullAutoMissileCadence == 0)
+                QueuePayload(FullAutoPayload.Missile);
 
             useAnimationTimer = Math.Max(useAnimationTimer, 6);
         }
 
-        // Rotating heavy companion. Phase 4 cycles rocket / twin torpedo; phases
-        // 5-6 also include the pressure depth charge.
-        private void DeployHeavyCompanion(int phase)
+        private void QueuePayload(FullAutoPayload payload)
         {
-            int options = phase >= 5 ? 3 : 2;
-            switch (heavyRotationIndex++ % options)
+            pendingPayloads.Enqueue(payload);
+            if (payloadStaggerTimer <= 0)
+                payloadStaggerTimer = PayloadStaggerFrames;
+        }
+
+        private void ProcessPendingPayloads()
+        {
+            if (pendingPayloads.Count <= 0)
+                return;
+
+            if (payloadStaggerTimer > 0)
             {
-                case 0:  FirePollutionRocket();     break;
-                case 1:  FireSkyfinTorpedo();       break;   // deploys the twin-torpedo pair
-                default: FirePressureDepthCharge(); break;
+                payloadStaggerTimer--;
+                return;
             }
+
+            switch (pendingPayloads.Dequeue())
+            {
+                case FullAutoPayload.Rocket:      FirePollutionRocket();     break;
+                case FullAutoPayload.Torpedo:     FireSkyfinTorpedo();       break;
+                case FullAutoPayload.DepthCharge: FirePressureDepthCharge(); break;
+                case FullAutoPayload.Missile:     FireMissile();             break;
+            }
+
+            payloadStaggerTimer = pendingPayloads.Count > 0 ? PayloadStaggerFrames : 0;
         }
 
         // ────────────────────────────────────────────────────────────────────

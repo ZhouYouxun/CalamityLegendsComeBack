@@ -22,7 +22,6 @@ Mods: {
 					Passive:
 						'''
 						[c/CC9A6A:被动【移动火山】若魔力上限少于100则额外增加100；免疫火块、岩浆与燃烧。身边火山灰会施加“火山灾祸”。]
-						[c/AA8CFF:下落至少7格后落地会引发星空震荡；达到21格时伤害和范围均翻倍。]
 						[c/D878FF:被动【灰烬之魂】维苏维阿斯击杀敌人或累计消耗400魔力会生成1枚魂火。]
 						[c/D878FF:魂火达到6枚后，下一次左键额外释放6颗围绕主火球飞行、伤害为40%的魂火。]
 						[c/FF7040:火山灾祸：受到的伤害×1.05，来自维苏维阿斯的伤害额外×1.2。]
@@ -85,7 +84,6 @@ Mods: {
 				VesuviusPyroclasticFlow.DisplayName: 火山碎屑流
 				VesuviusSubductionZone.DisplayName: 俯冲带
 				VesuviusAshFall.DisplayName: 火山灰
-				VesuviusLandingQuake.DisplayName: 地震落地
 				VesuviusEXWeapon.DisplayName: 火山喷发
 				VesuviusVolcanicGasCloud.DisplayName: 火山气云
 				VesuviusThermalCore.DisplayName: 维苏维阿斯热核

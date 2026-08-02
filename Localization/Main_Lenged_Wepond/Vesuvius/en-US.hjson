@@ -22,7 +22,6 @@ Mods: {
 					Passive:
 						'''
 						[c/CC9A6A:Mobile Volcano: If your maximum mana is below 100, gain 100 maximum mana. Become immune to fire blocks, lava, and burning. Nearby ash inflicts Volcanic Calamity.]
-						[c/AA8CFF:Landing after falling at least 7 tiles creates a stellar shockwave. At 21 tiles, its damage and radius are doubled.]
 						[c/D878FF:Ashen Soul: Vesuvius kills or every 400 mana spent creates one soul.]
 						[c/D878FF:At 6 souls, the next left click releases six 40%-damage soul flames orbiting the main orb.]
 						[c/FF7040:Volcanic Calamity: damage taken ×1.05; damage taken from Vesuvius is multiplied by an additional ×1.2.]
@@ -85,7 +84,6 @@ Mods: {
 				VesuviusPyroclasticFlow.DisplayName: Pyroclastic Flow
 				VesuviusSubductionZone.DisplayName: Subduction Zone
 				VesuviusAshFall.DisplayName: Volcanic Ash
-				VesuviusLandingQuake.DisplayName: Landing Quake
 				VesuviusEXWeapon.DisplayName: Volcanic Eruption
 				VesuviusVolcanicGasCloud.DisplayName: Vesuvius Volcanic Gas Cloud
 				VesuviusThermalCore.DisplayName: Vesuvius Thermal Core
