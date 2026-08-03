@@ -12,19 +12,19 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
         private static readonly object[,] DefaultStageTable =
         {
             //                                      Damage  Scale
-            { "Initial",                              24,   0.75f },
-            { "Eye of Cthulhu",                       30,   0.85f  },
-            { "Evil Boss",                            35,   0.95f },
-            { "Skeletron",                            48,   1.05f  },
+            { "Initial",                              19,   0.75f },
+            { "Eye of Cthulhu",                       24,   0.85f  },
+            { "Evil Boss",                            29,   0.95f },
+            { "Skeletron",                            37,   1.05f  },
             { "Hardmode",                             70,   1.15f  },
             { "Any Mechanical Boss",                  81,   1.25f },
-            { "Plantera",                             67,   1.35f  },
-            { "Golem",                                75,   1.45f },
-            { "Moon Lord",                           109,   1.55f },
-            { "Providence",                          137,   1.60f },
-            { "Polterghast",                         142,   1.75f },
-            { "Devourer of Gods",                    170,   1.8f  },
-            { "Yharon",                              250,   2.0f  },
+            { "Plantera",                             89,   1.35f  },
+            { "Golem",                                97,   1.45f },
+            { "Moon Lord",                           115,   1.55f },
+            { "Providence",                          144,   1.60f },
+            { "Polterghast",                         155,   1.75f },
+            { "Devourer of Gods",                    180,   1.8f  },
+            { "Yharon",                              325,   2.0f  },
             { "Exo Mechs and Supreme Calamitas",     799,   2.05f  }
         };
 

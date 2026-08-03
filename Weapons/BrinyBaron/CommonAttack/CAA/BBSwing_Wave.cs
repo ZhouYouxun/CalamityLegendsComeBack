@@ -298,7 +298,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 spawnPosition,
                 velocity,
                 ModContent.ProjectileType<BrinyBaron_HomingLightOrb>(),
-                Math.Max(1, (int)(Projectile.damage * 0.22f)),
+                Math.Max(1, (int)(Projectile.damage * 0.1f)),
                 Projectile.knockBack * 0.35f,
                 Projectile.owner);
         }
