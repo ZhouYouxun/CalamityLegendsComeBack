@@ -1,4 +1,5 @@
 using System.IO;
+using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.Audio;
@@ -74,7 +75,14 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash
                 destination = vortexTeleport.UseReturnAnchor(origin);
             else
             {
-                destination = FindSafeDestination(owner, Main.MouseWorld);
+                Vector2? safeDestination = FindSafeDestination(owner, Main.MouseWorld);
+                if (!safeDestination.HasValue)
+                {
+                    Projectile.Kill();
+                    return;
+                }
+
+                destination = safeDestination.Value;
                 vortexTeleport.BeginCycle(origin);
             }
 
@@ -85,26 +93,32 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash
             {
                 BrinyBaronVortexEyeTeleportEffects.SpawnDeparture(origin, direction);
                 BrinyBaronVortexEyeTeleportEffects.SpawnArrival(destination, direction);
-                SpawnPathCutters(origin, destination, direction);
-                SpawnTwinSlash(owner, direction);
+                SpawnForcedLeftClickDoubleSlash(owner, direction);
             }
 
             Projectile.netUpdate = true;
         }
 
-        private static Vector2 FindSafeDestination(Player owner, Vector2 desiredDestination)
+        // Keep the Normality Relocator's important rules: a destination must be inside
+        // the world borders and the whole player hitbox must fit without clipping tiles.
+        internal static bool IsSafeDestination(Player owner, Vector2 desiredDestination)
         {
             Vector2 topLeft = desiredDestination - owner.Size * 0.5f;
-            if (!Collision.SolidCollision(topLeft, owner.width, owner.height))
-                return desiredDestination;
+            bool insideWorld = topLeft.X > 50f && topLeft.X < Main.maxTilesX * 16f - 50f &&
+                               topLeft.Y > 50f && topLeft.Y < Main.maxTilesY * 16f - 50f;
+            return insideWorld && !Collision.SolidCollision(topLeft, owner.width, owner.height);
+        }
 
-            Vector2 fallbackDirection = (desiredDestination - owner.Center).SafeNormalize(Vector2.UnitX * owner.direction);
-            return owner.Center + fallbackDirection * 240f;
+        private static Vector2? FindSafeDestination(Player owner, Vector2 desiredDestination)
+        {
+            return IsSafeDestination(owner, desiredDestination) ? desiredDestination : null;
         }
 
         private static void TeleportOwner(Player owner, Vector2 target, Vector2 direction)
         {
-            owner.Center = target;
+            Vector2 destinationTopLeft = target - owner.Size * 0.5f;
+            owner.Teleport(destinationTopLeft, 4, 0);
+            NetMessage.SendData(MessageID.TeleportEntity, -1, -1, null, 0, owner.whoAmI, destinationTopLeft.X, destinationTopLeft.Y, 1, 0, 0);
             owner.velocity = Vector2.Zero;
             owner.fallStart = (int)(owner.position.Y / 16f);
             if (direction.X != 0f)
@@ -113,41 +127,20 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash
             SoundEngine.PlaySound(SoundID.Item6 with { Volume = 0.72f, Pitch = 0.2f }, target);
         }
 
-        private void SpawnTwinSlash(Player owner, Vector2 direction)
+        private void SpawnForcedLeftClickDoubleSlash(Player owner, Vector2 direction)
         {
-            // This holdout automatically chains its first slash into the second one.
+            // ai[0] tells the normal left-click holdout to play exactly two of its own
+            // stages without requiring held input. This deliberately does not reuse the
+            // passive slash-dash holdout, whose hit feel and follow-up effects differ.
             Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),
                 owner.MountedCenter,
                 direction,
-                ModContent.ProjectileType<BrinyBaron_SkillSlashDash_SlashDash>(),
+                ModContent.ProjectileType<BrinyBaron_LeftClick_Swing>(),
                 Projectile.damage,
                 Projectile.knockBack,
                 Projectile.owner,
-                0f,
-                direction.X < 0f ? -1f : 1f);
-        }
-
-        private void SpawnPathCutters(Vector2 start, Vector2 end, Vector2 direction)
-        {
-            float distance = Vector2.Distance(start, end);
-            int cutterCount = (int)MathHelper.Clamp(distance / 58f, 5f, 11f);
-            int damage = System.Math.Max(1, (int)(Projectile.damage * 0.28f));
-
-            for (int i = 0; i < cutterCount; i++)
-            {
-                float completion = (i + 0.25f) / cutterCount;
-                Vector2 position = Vector2.Lerp(start, end, completion);
-                Vector2 velocity = direction.RotatedBy(Main.rand.NextFloat(-0.09f, 0.09f)) * Main.rand.NextFloat(19f, 25f);
-                Projectile.NewProjectile(
-                    Projectile.GetSource_FromThis(),
-                    position,
-                    velocity,
-                    ModContent.ProjectileType<BrinyBaron_VortexEyePathCutter>(),
-                    damage,
-                    Projectile.knockBack * 0.25f,
-                    Projectile.owner);
-            }
+                1f);
         }
     }
 

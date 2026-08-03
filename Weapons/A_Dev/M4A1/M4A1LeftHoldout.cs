@@ -21,7 +21,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.M4A1
         public override string Texture => "CalamityLegendsComeBack/Weapons/A_Dev/M4A1/M4A1";
 
         private const float DrawScale = 0.6f;      // 贴图整体 ×0.6（原来偏大）
-        private const float ForwardOffset = 46f;
+        private const float ForwardOffset = 14f; // 往后挪 ~32px（枪更贴身）
         private const float VerticalOffset = 2f;
         private const float MuzzleReach = 30f;
         private const int ReleaseLowerGrace = 8;
@@ -32,6 +32,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.M4A1
         private int orbTimer;
         private int notFiringTicks;
         private int muzzleFlash;
+        private int muzzleVariant;
         private float gunRotation;
         private int spriteDir = 1;
 
@@ -215,31 +216,48 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.M4A1
 
         private void SpawnMuzzleFlash(Vector2 dir, bool heavy)
         {
-            SoundEngine.PlaySound(SoundID.Item41 with { Volume = heavy ? 0.5f : 0.3f, Pitch = heavy ? -0.1f : 0.3f, PitchVariance = 0.12f, MaxInstances = 5 }, GunTip);
+            muzzleVariant = Main.rand.Next(3);
+            SoundEngine.PlaySound(SoundID.Item41 with { Volume = heavy ? 0.6f : 0.4f, Pitch = heavy ? -0.15f : 0.25f, PitchVariance = 0.12f, MaxInstances = 5 }, GunTip);
 
             if (Main.dedServ || Projectile.owner != Main.myPlayer)
                 return;
 
-            int sparks = heavy ? 6 : 3;
+            // 冲击环（枪口爆发的猛劲）
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                GunTip, dir * (heavy ? 4f : 2.5f), M4A1Visuals.NeonGreen with { A = 0 },
+                new Vector2(0.35f, 1f), gunRotation, 0.12f, heavy ? 0.55f : 0.4f, heavy ? 16 : 12));
+
+            // 迸射的绿火花
+            int sparks = heavy ? 10 : 6;
             for (int i = 0; i < sparks; i++)
             {
-                Vector2 vel = dir.RotatedByRandom(0.16f) * Main.rand.NextFloat(3f, heavy ? 11f : 7f);
+                Vector2 vel = dir.RotatedByRandom(0.28f) * Main.rand.NextFloat(4f, heavy ? 16f : 11f);
                 GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
-                    GunTip + dir * Main.rand.NextFloat(0f, 4f),
+                    GunTip + dir * Main.rand.NextFloat(0f, 6f),
                     vel,
                     false,
-                    heavy ? 13 : 9,
-                    Main.rand.NextFloat(0.3f, heavy ? 0.7f : 0.5f),
-                    Color.Lerp(M4A1Visuals.NeonGreen, M4A1Visuals.NeonGreenBright, Main.rand.NextFloat(0.3f, 0.8f)),
+                    heavy ? 15 : 10,
+                    Main.rand.NextFloat(0.35f, heavy ? 0.85f : 0.6f),
+                    Color.Lerp(M4A1Visuals.NeonGreen, M4A1Visuals.NeonGreenBright, Main.rand.NextFloat(0.3f, 0.85f)),
                     true,
                     true));
             }
 
-            for (int i = 0; i < (heavy ? 4 : 2); i++)
+            // 尖锐火星（细长）
+            for (int i = 0; i < (heavy ? 5 : 3); i++)
             {
-                Dust smoke = Dust.NewDustPerfect(GunTip, DustID.Smoke, -dir.RotatedByRandom(0.4f) * Main.rand.NextFloat(0.6f, 1.8f), 130, Color.Gray, Main.rand.NextFloat(0.6f, 1f));
+                GeneralParticleHandler.SpawnParticle(new SparkParticle(
+                    GunTip, dir.RotatedByRandom(0.22f) * Main.rand.NextFloat(6f, heavy ? 20f : 13f),
+                    false, Main.rand.Next(9, 16), Main.rand.NextFloat(0.4f, 0.75f), M4A1Visuals.NeonGreenBright));
+            }
+
+            for (int i = 0; i < (heavy ? 5 : 3); i++)
+            {
+                Dust smoke = Dust.NewDustPerfect(GunTip, DustID.Smoke, -dir.RotatedByRandom(0.4f) * Main.rand.NextFloat(0.6f, 2f), 130, Color.Gray, Main.rand.NextFloat(0.7f, 1.2f));
                 smoke.noGravity = true;
             }
+
+            Lighting.AddLight(GunTip, 0.5f, 1.1f, 0.35f);
         }
 
         // ===================================================================
@@ -258,16 +276,24 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.M4A1
             if (Owner.gravDir == -1f)
                 flip ^= SpriteEffects.FlipVertically;
 
-            // 枪口绿闪（非旋转、非贴图堆，只是一层加法光晕）
+            // 枪口爆闪：绿枪口闪光贴图 + 加法光晕（无旋转贴图堆）
             float flashPulse = MathHelper.Clamp(muzzleFlash / 6f, 0f, 1f);
             if (flashPulse > 0f)
             {
                 Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
+                Texture2D flashTex = ModContent.Request<Texture2D>("CalamityMod/Projectiles/Ranged/M1GarandMuzzleFlash").Value;
+                Rectangle flashFrame = flashTex.Frame(1, 3, 0, muzzleVariant);
+                Vector2 aimDir = gunRotation.ToRotationVector2();
                 Vector2 muzzle = GunTip - Main.screenPosition;
+
                 Main.spriteBatch.End();
                 Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
-                Main.EntitySpriteDraw(bloom, muzzle, null, (M4A1Visuals.NeonGreen with { A = 0 }) * (flashPulse * 0.9f), gunRotation, bloom.Size() * 0.5f, new Vector2(0.35f, 0.16f) * (0.6f + flashPulse), SpriteEffects.None, 0);
-                Main.EntitySpriteDraw(bloom, muzzle, null, (M4A1Visuals.NeonGreenBright with { A = 0 }) * (flashPulse * 0.8f), 0f, bloom.Size() * 0.5f, 0.12f * (0.6f + flashPulse), SpriteEffects.None, 0);
+                // 光晕
+                Main.EntitySpriteDraw(bloom, muzzle, null, (M4A1Visuals.NeonGreen with { A = 0 }) * (flashPulse * 0.95f), gunRotation, bloom.Size() * 0.5f, new Vector2(0.42f, 0.2f) * (0.6f + flashPulse), SpriteEffects.None, 0);
+                Main.EntitySpriteDraw(bloom, muzzle, null, (M4A1Visuals.NeonGreenBright with { A = 0 }) * (flashPulse * 0.85f), 0f, bloom.Size() * 0.5f, 0.16f * (0.6f + flashPulse), SpriteEffects.None, 0);
+                // 枪口闪光贴图（染绿）
+                Color flashColor = (Color.Lerp(M4A1Visuals.NeonGreen, Color.White, 0.45f) with { A = 0 }) * flashPulse;
+                Main.EntitySpriteDraw(flashTex, muzzle + aimDir * 4f, flashFrame, flashColor, gunRotation, flashFrame.Size() * 0.5f, (0.42f + flashPulse * 0.4f), flip, 0);
                 Main.spriteBatch.End();
                 Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
             }

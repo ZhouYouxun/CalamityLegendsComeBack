@@ -96,6 +96,8 @@ Mods: {
 					// DisplayName: Legendary Supply Box
 					// Tooltip: Right click to open the legendary weapon showcase and choose one main-line legendary weapon.
 					// Title: LEGENDARY WEAPON SHOWCASE
+					// DirectSelectHint: Click the legendary weapon you want to claim.
+					// DirectSelectFooter: Click a weapon to claim it. Click outside to cancel.
 					// BrowseHint: Click any weapon to lock it in and begin the showcase.
 					// SpinningHint: Presenting your selected legendary weapon…
 					// ClaimHint: Target locked. Confirm to claim your weapon.

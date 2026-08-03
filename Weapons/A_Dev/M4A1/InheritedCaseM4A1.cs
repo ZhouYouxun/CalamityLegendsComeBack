@@ -50,7 +50,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.M4A1
             Item.knockBack = 4f;
             Item.UseSound = null;
             Item.shoot = LeftHoldoutType;
-            Item.shootSpeed = 16f;
+            Item.shootSpeed = 30f; // 更快的发射初速（弹速）
             Item.value = CalamityGlobalItem.RarityPinkBuyPrice;
             Item.rare = ModContent.RarityType<BurnishedAuric>();
         }

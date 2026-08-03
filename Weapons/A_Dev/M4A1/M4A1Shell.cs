@@ -47,13 +47,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.M4A1
             if (Projectile.velocity != Vector2.Zero)
                 Projectile.rotation = Projectile.velocity.ToRotation();
 
-            // 印记：略微追踪最近的被标记敌人
+            // 印记：略微追踪最近的被标记敌人（lerp 后重新归一化，保持速度不衰减）
             NPC target = FindNearestMarked(820f);
             if (target != null)
             {
-                Vector2 toTarget = (target.Center - Projectile.Center).SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitX));
+                Vector2 curDir = Projectile.velocity.SafeNormalize(Vector2.UnitX);
                 float speed = Projectile.velocity.Length();
-                Projectile.velocity = Vector2.Lerp(Projectile.velocity.SafeNormalize(Vector2.UnitX), toTarget, 0.05f) * speed;
+                Vector2 toTarget = (target.Center - Projectile.Center).SafeNormalize(curDir);
+                Projectile.velocity = Vector2.Lerp(curDir, toTarget, 0.05f).SafeNormalize(curDir) * speed;
             }
 
             // 火焰尾迹

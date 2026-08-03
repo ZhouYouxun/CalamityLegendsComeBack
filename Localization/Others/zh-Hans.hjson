@@ -97,6 +97,8 @@ Mods: {
 					DisplayName: 传奇补给包
 					Tooltip: 右键打开传奇武器展柜，从全部主线传奇武器中任选一把。
 					Title: 传奇武器展柜
+					DirectSelectHint: 直接点击你想领取的传奇武器。
+					DirectSelectFooter: 点击武器即可领取。点击面板外取消。
 					BrowseHint: 点击任意武器，锁定后开始开箱展示。
 					SpinningHint: 正在展示你选择的传奇武器……
 					ClaimHint: 目标已锁定，确认后领取武器。

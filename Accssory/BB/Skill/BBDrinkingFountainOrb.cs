@@ -1,5 +1,6 @@
 using CalamityMod;
 using CalamityMod.Particles;
+using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -14,7 +15,6 @@ namespace CalamityLegendsComeBack.Accssory.BB.Skill
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         private float Timer => Projectile.localAI[0];
-        private bool IsHealing => Owner.statLife < Owner.statLifeMax2;
         private Player Owner => Main.player[Projectile.owner];
 
         public override void SetStaticDefaults()
@@ -26,8 +26,7 @@ namespace CalamityLegendsComeBack.Accssory.BB.Skill
         public override void SetDefaults()
         {
             Projectile.width = Projectile.height = 18;
-            Projectile.friendly = true;
-            Projectile.DamageType = DamageClass.Melee;
+            Projectile.friendly = false;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.penetrate = 1;
@@ -35,7 +34,12 @@ namespace CalamityLegendsComeBack.Accssory.BB.Skill
             Projectile.extraUpdates = 1;
         }
 
-        public override bool? CanDamage() => IsHealing ? false : null;
+        public override bool? CanDamage() => false;
+
+        public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
+        {
+            SpawnRecoveryFlash(Projectile.Center, 1.05f);
+        }
 
         public override void AI()
         {
@@ -47,22 +51,16 @@ namespace CalamityLegendsComeBack.Accssory.BB.Skill
             }
 
             Vector2 destination = Owner.Center;
-            if (!IsHealing)
-            {
-                NPC target = Projectile.Center.ClosestNPCAt(760f);
-                if (target is not null)
-                    destination = target.Center;
-            }
 
             Vector2 desiredVelocity = Projectile.SafeDirectionTo(destination) * 13f;
             Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, 0.12f);
             Projectile.rotation += 0.22f;
             Lighting.AddLight(Projectile.Center, new Vector3(0.1f, 0.42f, 0.62f));
 
-            if (IsHealing && Projectile.Hitbox.Intersects(Owner.Hitbox))
+            if (Projectile.Hitbox.Intersects(Owner.Hitbox))
             {
-                if (Main.myPlayer == Projectile.owner)
-                    Owner.Heal(8);
+                if (Main.netMode != NetmodeID.MultiplayerClient)
+                    Owner.Heal(9);
                 Projectile.Kill();
                 return;
             }
@@ -80,8 +78,14 @@ namespace CalamityLegendsComeBack.Accssory.BB.Skill
         {
             Texture2D core = ModContent.Request<Texture2D>("CalamityMod/ExtraTextures/TinyGreyscaleCircle").Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Color paleBlue = new(126, 232, 255, 0);
+            Texture2D line = ModContent.Request<Texture2D>("CalamityMod/Particles/ThinEndedLine").Value;
+            Texture2D magic = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/magic_03").Value;
+            Texture2D circle = ModContent.Request<Texture2D>("CalamityLegendsComeBack/Texture/KsTexture/circle_04").Value;
+            Color paleBlue = new(88, 202, 255, 0);
+            Color whiteBlue = new(220, 247, 255, 0);
             Vector2 bloomOrigin = bloom.Size() * 0.5f;
+            Vector2 position = Projectile.Center - Main.screenPosition;
+            float pulse = 0.88f + 0.12f * MathF.Sin(Main.GlobalTimeWrappedHourly * 8.4f + Projectile.identity * 0.47f);
 
             Main.spriteBatch.EnterShaderRegion(BlendState.Additive);
             for (int i = Projectile.oldPos.Length - 1; i >= 0; i--)
@@ -95,13 +99,53 @@ namespace CalamityLegendsComeBack.Accssory.BB.Skill
                     bloomOrigin, 0.13f + opacity * 0.12f, SpriteEffects.None);
             }
 
-            Vector2 position = Projectile.Center - Main.screenPosition;
-            Main.EntitySpriteDraw(bloom, position, null, paleBlue * 0.52f, Projectile.rotation,
-                bloomOrigin, 0.30f, SpriteEffects.None);
+            Main.EntitySpriteDraw(line, position, null, paleBlue * 0.38f, Projectile.rotation + MathHelper.PiOver2,
+                line.Size() * 0.5f, new Vector2(0.035f, 0.13f), SpriteEffects.None);
+            Main.EntitySpriteDraw(bloom, position, null, paleBlue * 0.84f, Projectile.rotation,
+                bloomOrigin, 0.16f, SpriteEffects.None);
+            Main.EntitySpriteDraw(bloom, position, null, whiteBlue * 0.52f, Projectile.rotation,
+                bloomOrigin, 0.075f, SpriteEffects.None);
+            Main.EntitySpriteDraw(magic, position, null, paleBlue * 0.30f, -Projectile.rotation * 0.72f,
+                magic.Size() * 0.5f, 0.017f * pulse, SpriteEffects.None);
+            Main.EntitySpriteDraw(circle, position, null, whiteBlue * 0.22f, Projectile.rotation * 0.86f + MathHelper.PiOver4,
+                circle.Size() * 0.5f, 0.012f * (1.08f - 0.08f * pulse), SpriteEffects.None);
             Main.EntitySpriteDraw(core, position, null, Color.White with { A = 0 } * 0.86f, Projectile.rotation,
                 core.Size() * 0.5f, 0.68f, SpriteEffects.None);
             Main.spriteBatch.ExitShaderRegion();
             return false;
+        }
+
+        public override void OnKill(int timeLeft)
+        {
+            SpawnRecoveryFlash(Projectile.Center, 0.9f);
+        }
+
+        // This is the BRecov transfer flash copied into the fountain's blue palette:
+        // a pulse ring, vertical bloom line and compact core at both release and heal.
+        private static void SpawnRecoveryFlash(Vector2 center, float intensity)
+        {
+            if (Main.dedServ)
+                return;
+
+            Color mainColor = new(88, 202, 255);
+            Color accentColor = new(220, 247, 255);
+            GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                center, -Vector2.UnitY * 0.25f, Color.Lerp(mainColor, Color.White, 0.18f),
+                new Vector2(0.8f, 1.5f), -MathHelper.PiOver2, 0.15f * intensity, 0.038f, 14));
+            GeneralParticleHandler.SpawnParticle(new BloomLineVFX(
+                center + Vector2.UnitY * 18f, -Vector2.UnitY * 36f, 0.92f * intensity,
+                Color.Lerp(mainColor, accentColor, 0.52f), 12));
+            GeneralParticleHandler.SpawnParticle(new StrongBloom(
+                center, Vector2.Zero, Color.Lerp(mainColor, Color.White, 0.18f), 0.76f * intensity, 14));
+
+            for (int i = 0; i < 8; i++)
+            {
+                Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(1.8f, 4.2f);
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    center + Main.rand.NextVector2Circular(7f, 7f), velocity, false, Main.rand.Next(10, 16),
+                    Main.rand.NextFloat(0.18f, 0.34f) * intensity,
+                    Color.Lerp(mainColor, accentColor, Main.rand.NextFloat(0.2f, 0.65f)), true, false, true));
+            }
         }
     }
 }

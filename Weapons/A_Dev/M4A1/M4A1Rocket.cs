@@ -19,6 +19,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.M4A1
         public override string Texture => "CalamityMod/Projectiles/Ranged/AcidRocket";
 
         private const int BaseBlastRadius = 120;
+        private const float CruiseSpeed = 22f; // 恒定巡航速度：不再逐帧衰减
         private bool exploding;
 
         public override void SetDefaults()
@@ -31,6 +32,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.M4A1
             Projectile.ignoreWater = true;
             Projectile.penetrate = -1;
             Projectile.timeLeft = 240;
+            Projectile.extraUpdates = 1; // 更快、更猛
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = -1;
         }
@@ -43,14 +45,15 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.M4A1
                 return;
             }
 
-            // 轻微追踪最近敌人
+            // 轻微追踪最近敌人 —— lerp 后必须重新归一化，否则模长逐帧缩短会「越来越慢」
+            Vector2 dir = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             NPC target = FindNearestTarget(720f);
             if (target != null)
             {
-                Vector2 toTarget = (target.Center - Projectile.Center).SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitX));
-                float speed = Projectile.velocity.Length();
-                Projectile.velocity = Vector2.Lerp(Projectile.velocity.SafeNormalize(Vector2.UnitX), toTarget, 0.045f) * speed;
+                Vector2 toTarget = (target.Center - Projectile.Center).SafeNormalize(dir);
+                dir = Vector2.Lerp(dir, toTarget, 0.055f).SafeNormalize(dir);
             }
+            Projectile.velocity = dir * CruiseSpeed; // 恒定速度巡航
 
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
 

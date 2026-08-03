@@ -1,4 +1,5 @@
 using CalamityLegendsComeBack.Accssory.BB.Skill;
+using CalamityLegendsComeBack.Weapons.BrinyBaron;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.TideValue;
 using CalamityMod;
 using Microsoft.Xna.Framework;
@@ -29,8 +30,6 @@ namespace CalamityLegendsComeBack.Accssory.BB
 
         public float GeneralMeleeDamageBonus;
         public int BottleTideCapBonus;
-        public int BubbleShieldHealth;
-        public bool HasBubbleShield => BubbleShieldHealth > 0;
         public BBRightClickMode RightClickMode { get; private set; }
         public int BonusTideMax => BottleTideCapBonus;
 
@@ -79,20 +78,6 @@ namespace CalamityLegendsComeBack.Accssory.BB
             }
         }
 
-        public override void ModifyHurt(ref Player.HurtModifiers modifiers)
-        {
-            if (AbyssalBastionEquipped && HasBubbleShield)
-                modifiers.FinalDamage *= 0.75f;
-        }
-
-        public override void OnHurt(Player.HurtInfo info)
-        {
-            if (!AbyssalBastionEquipped || !HasBubbleShield)
-                return;
-
-            BubbleShieldHealth = Utils.Clamp(BubbleShieldHealth - info.Damage, 0, 100);
-        }
-
         public override void PostUpdateEquips()
         {
             Player.GetDamage(DamageClass.Melee) += GeneralMeleeDamageBonus;
@@ -138,11 +123,6 @@ namespace CalamityLegendsComeBack.Accssory.BB
                 Player.endurance += 0.06f;
                 Player.noKnockback = true;
 
-                if (HasBubbleShield)
-                {
-                    Player.statDefense += 25;
-                    Player.endurance += 0.25f;
-                }
             }
 
             if (BaronHelixEquipped)
@@ -156,24 +136,61 @@ namespace CalamityLegendsComeBack.Accssory.BB
 
         public void RegisterBrinyBaronBladeHit(NPC target, NPC.HitInfo hit)
         {
-            if (DrinkingFountainEquipped && Main.myPlayer == Player.whoAmI)
+            if (DrinkingFountainEquipped && Main.netMode != NetmodeID.MultiplayerClient)
             {
-                Vector2 velocity = (Player.Center - target.Center).SafeNormalize(Vector2.UnitY) * 7.5f;
-                Projectile.NewProjectile(
-                    Player.GetSource_FromThis(),
-                    target.Center,
-                    velocity,
-                    ModContent.ProjectileType<BBDrinkingFountainOrb>(),
-                    36,
-                    0f,
-                    Player.whoAmI);
+                const int maxWorldOrbs = 20;
+                int orbType = ModContent.ProjectileType<BBDrinkingFountainOrb>();
+                int availableSlots = maxWorldOrbs - CountActiveProjectiles(orbType);
+                int orbCount = System.Math.Min(Main.rand.Next(3, 6), System.Math.Max(0, availableSlots));
+
+                for (int i = 0; i < orbCount; i++)
+                {
+                    Vector2 velocity = (Player.Center - target.Center).SafeNormalize(Vector2.UnitY) *
+                                       Main.rand.NextFloat(6.5f, 9f) + Main.rand.NextVector2Circular(1.2f, 1.2f);
+                    Projectile.NewProjectile(
+                        Player.GetSource_FromThis(),
+                        target.Center + Main.rand.NextVector2Circular(10f, 10f),
+                        velocity,
+                        orbType,
+                        0,
+                        0f,
+                        Player.whoAmI);
+                }
             }
         }
 
         public void GrantBubbleShield()
         {
-            if (AbyssalBastionEquipped)
-                BubbleShieldHealth = 100;
+            if (!AbyssalBastionEquipped || Main.netMode == NetmodeID.MultiplayerClient)
+                return;
+
+            int shieldType = ModContent.ProjectileType<BrinyBaron_BubbleShield>();
+            BrinyBaronBubbleShieldPlayer shieldPlayer = Player.GetModPlayer<BrinyBaronBubbleShieldPlayer>();
+            if (!shieldPlayer.CanSpawnBubble || Player.ownedProjectileCounts[shieldType] > 0)
+                return;
+
+            Projectile.NewProjectile(
+                Player.GetSource_Misc("AbyssalBastionDashHit"),
+                Player.Center,
+                Vector2.Zero,
+                shieldType,
+                0,
+                0f,
+                Player.whoAmI);
+            shieldPlayer.StartCooldown();
+        }
+
+        private static int CountActiveProjectiles(int projectileType)
+        {
+            int count = 0;
+            for (int i = 0; i < Main.maxProjectiles; i++)
+            {
+                Projectile projectile = Main.projectile[i];
+                if (projectile.active && projectile.type == projectileType)
+                    count++;
+            }
+
+            return count;
         }
 
     }

@@ -104,22 +104,37 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
         private void EmitVortexParticles()
         {
-            if (Main.dedServ || Age % 6 != 0 || VisualScale <= 0.08f)
+            if (Main.dedServ || VisualScale <= 0.08f)
                 return;
 
-            float angle = Projectile.rotation + Main.rand.NextFloat(-0.6f, 0.6f);
-            Vector2 radial = angle.ToRotationVector2();
-            Vector2 position = Projectile.Center + radial * Main.rand.NextFloat(12f, 30f) * VisualScale;
-            Vector2 velocity = radial.RotatedBy(MathHelper.PiOver2) * Main.rand.NextFloat(0.45f, 1.15f) - radial * 0.18f;
-            Color glow = Color.Lerp(new Color(75, 210, 255), Color.White, Main.rand.NextFloat(0.25f, 0.65f));
+            int emissionInterval = IsHelixVariant ? 2 : 6;
+            if (Age % emissionInterval != 0)
+                return;
 
-            GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
-                position, velocity, false, Main.rand.Next(11, 17), Main.rand.NextFloat(0.18f, 0.30f) * VisualScale,
-                glow, true, false, true));
+            int orbCount = IsHelixVariant ? 3 : 1;
+            for (int i = 0; i < orbCount; i++)
+            {
+                float phase = Projectile.rotation + MathHelper.TwoPi * i / orbCount + Main.rand.NextFloat(-0.22f, 0.22f);
+                Vector2 radial = phase.ToRotationVector2();
+                Vector2 position = Projectile.Center + radial * Main.rand.NextFloat(15f, 38f) * VisualScale;
+                Vector2 velocity = radial.RotatedBy(MathHelper.PiOver2) * Main.rand.NextFloat(0.65f, 1.45f) - radial * 0.24f;
+                Color glow = Color.Lerp(new Color(75, 210, 255), Color.White, Main.rand.NextFloat(0.25f, 0.65f));
 
-            Dust dust = Dust.NewDustPerfect(position, Main.rand.NextBool() ? DustID.Frost : DustID.BlueTorch,
-                velocity * 0.8f, 70, glow, Main.rand.NextFloat(0.45f, 0.8f) * VisualScale);
-            dust.noGravity = true;
+                GeneralParticleHandler.SpawnParticle(new GlowOrbParticle(
+                    position, velocity, false, Main.rand.Next(12, 19), Main.rand.NextFloat(0.22f, 0.38f) * VisualScale,
+                    glow, true, false, true));
+
+                Dust dust = Dust.NewDustPerfect(position, Main.rand.NextBool() ? DustID.Frost : DustID.BlueTorch,
+                    velocity * 0.8f, 70, glow, Main.rand.NextFloat(0.52f, 0.92f) * VisualScale);
+                dust.noGravity = true;
+            }
+
+            if (IsHelixVariant && Age % 10 == 0)
+            {
+                GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(
+                    Projectile.Center, Vector2.Zero, new Color(126, 231, 255), new Vector2(1.2f, 1.2f),
+                    Projectile.rotation, 0.18f * VisualScale, 0.035f, 13));
+            }
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
@@ -154,7 +169,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 SpriteEffects.None,
                 0);
 
-            for (int ring = 0; ring < 3; ring++)
+            int ringCount = IsHelixVariant ? 5 : 3;
+            for (int ring = 0; ring < ringCount; ring++)
             {
                 float ringRotation = Projectile.rotation * (ring % 2 == 0 ? 0.76f : -0.54f) + ring * 0.9f;
                 float ringPulse = 0.88f + 0.12f * (float)System.Math.Sin(Age * 0.16f + ring * 1.7f);
@@ -162,7 +178,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                     ringRotation, bloom.Value.Size() * 0.5f, new Vector2(0.72f + ring * 0.17f, 0.38f + ring * 0.12f) * scale * ringPulse, SpriteEffects.None, 0);
             }
 
-            const int petals = 11;
+            int petals = IsHelixVariant ? 18 : 11;
             for (int i = 0; i < petals; i++)
             {
                 float phase = MathHelper.TwoPi * i / petals + Projectile.rotation;

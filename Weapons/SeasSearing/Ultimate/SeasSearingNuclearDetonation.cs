@@ -71,14 +71,12 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             float age        = Lifetime - Projectile.timeLeft;
             float shock      = MathHelper.Clamp(age / (42f * PhaseScale), 0f, 1f);
             float collapse   = MathHelper.Clamp((age - 42f * PhaseScale) / (38f * PhaseScale), 0f, 1f);
-            float fallout    = MathHelper.Clamp((age - 82f * PhaseScale) / (60f * PhaseScale), 0f, 1f);
             float fade       = MathHelper.Clamp(Projectile.timeLeft / (34f * PhaseScale), 0f, 1f);
             Vector2 center   = Projectile.Center - Main.screenPosition;
 
             Color white  = (Color.White  with { A = 0 }) * fade;
             Color cyan   = (SeasSearingPalette.RadioactiveCyan with { A = 0 }) * fade;
             Color deep   = (SeasSearingPalette.AbyssBlack      with { A = 0 }) * fade;
-            Color orange = (SeasSearingPalette.WarningOrange   with { A = 0 }) * fade;
 
             float baseScale = 1200f / bloom.Width;
             Main.EntitySpriteDraw(bloom, center, null, white * (1f - shock) * 1.8f, 0f, bloom.Size() * 0.5f, baseScale * (0.8f + shock * 1.3f), SpriteEffects.None, 0);
@@ -89,9 +87,6 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 Main.EntitySpriteDraw(bloom, center, null, deep  * collapse * 1.25f, 0f, bloom.Size() * 0.5f, baseScale * (0.32f + collapse * 0.28f), SpriteEffects.None, 0);
                 Main.EntitySpriteDraw(ring,  center, null, cyan  * collapse * 0.9f, -Main.GlobalTimeWrappedHourly * 3.6f, ring.Size() * 0.5f, 0.9f + collapse * 1.7f, SpriteEffects.None, 0);
             }
-
-            if (fallout > 0f)
-                Main.EntitySpriteDraw(bloom, center, null, Color.Lerp(orange, deep, 0.75f) * fallout * 0.7f, 0f, bloom.Size() * 0.5f, baseScale * (1.4f + fallout * 0.75f), SpriteEffects.None, 0);
 
             return false;
         }

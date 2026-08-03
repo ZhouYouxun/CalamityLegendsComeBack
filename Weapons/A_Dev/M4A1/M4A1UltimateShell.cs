@@ -53,9 +53,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.M4A1
                 NPC target = Main.npc[TargetIndex];
                 if (target.active && target.CanBeChasedBy(Projectile))
                 {
-                    Vector2 toTarget = (target.Center - Projectile.Center).SafeNormalize(Projectile.velocity.SafeNormalize(Vector2.UnitX));
+                    Vector2 curDir = Projectile.velocity.SafeNormalize(Vector2.UnitX);
                     float speed = Projectile.velocity.Length();
-                    Projectile.velocity = Vector2.Lerp(Projectile.velocity.SafeNormalize(Vector2.UnitX), toTarget, 0.08f) * speed;
+                    Vector2 toTarget = (target.Center - Projectile.Center).SafeNormalize(curDir);
+                    Projectile.velocity = Vector2.Lerp(curDir, toTarget, 0.08f).SafeNormalize(curDir) * speed;
                 }
             }
 

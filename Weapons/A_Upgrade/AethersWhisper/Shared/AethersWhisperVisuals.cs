@@ -18,20 +18,21 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.Shared
     /// </summary>
     internal static class AethersWhisperVisuals
     {
-        // ===== 主色（脉冲紫 × 电弧青 × 珠白）=====
-        public static readonly Color PearlWhite = new(246, 255, 255);
-        public static readonly Color ShimmerCyan = new(128, 243, 242);   // ≈ Arsenal 电弧青
-        public static readonly Color AetherPurple = new(170, 92, 255);   // ≈ Arsenal 脉冲紫
-        public static readonly Color VoidBlue = new(21, 21, 44);
+        // ===== 主色（粉紫色系：亮粉 × 以太紫 × 珠白）=====
+        // 用户要求全部特效走粉紫。字段名沿用旧名以免全项目改引用，但 ShimmerCyan 现在是「亮粉」。
+        public static readonly Color PearlWhite = new(255, 240, 252);
+        public static readonly Color ShimmerCyan = new(255, 120, 224);   // 亮粉（原冷青位）
+        public static readonly Color AetherPurple = new(178, 90, 255);   // 以太紫
+        public static readonly Color VoidBlue = new(30, 16, 40);
 
         /// <summary>按 0..1 在青↔紫之间取以太主色。</summary>
         public static Color Lerp(float t) => Color.Lerp(ShimmerCyan, AetherPurple, MathHelper.Clamp(t, 0f, 1f));
         /// <summary>向珠白偏移的高光色（军械库标志性「色→白」渐变）。</summary>
         public static Color ToWhite(Color c, float t) => Color.Lerp(c, PearlWhite, MathHelper.Clamp(t, 0f, 1f));
 
-        // ===== 军械库签名尘 =====
+        // ===== 军械库签名尘（全部走可染色/中性形状，统一染成粉紫）=====
         public static int PulseDust => ModContent.DustType<SquashDustHollow>();   // 脉冲：空心方尘
-        public static int ElectricDust => ModContent.DustType<UnstableDust>();     // 电弧：不稳定尘
+        public static int ElectricDust => 278;                                     // 可染色烟花尘（粉紫电弧感）
         public static int SquashDust => ModContent.DustType<CalamityMod.Dusts.SquashDust>(); // 军械库通用压扁尘
         public static int HardLightDust => ModContent.DustType<SquareDust>();      // 硬光方块（晶片碎屑）
         public const int ArsenalFireworkDust = 278;                                // 可染色烟花尘，军械库最常混用

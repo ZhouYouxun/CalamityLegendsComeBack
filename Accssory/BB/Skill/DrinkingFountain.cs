@@ -1,4 +1,5 @@
 using Terraria;
+using CalamityMod.Items.Weapons.Rogue;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -20,6 +21,16 @@ namespace CalamityLegendsComeBack.Accssory.BB.Skill
         public override void UpdateAccessory(Player player, bool hideVisual)
         {
             player.GetModPlayer<BBAccessoryPlayer>().DrinkingFountainEquipped = true;
+        }
+
+        public override void AddRecipes()
+        {
+            CreateRecipe()
+                .AddIngredient(ItemID.BottledWater, 100)
+                .AddIngredient(ItemID.WaterBolt)
+                .AddIngredient<Whitewater>()
+                .AddTile(TileID.Sinks)
+                .Register();
         }
     }
 }

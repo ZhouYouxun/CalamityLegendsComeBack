@@ -124,6 +124,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
                 {
                     BrinyBaronRightClickDashCooldownPlayer dashCooldown = player.GetModPlayer<BrinyBaronRightClickDashCooldownPlayer>();
                     bool returnToAnchor = dashCooldown.IsCoolingDown && player.GetModPlayer<BrinyBaronVortexEyeTeleportPlayer>().CanReturn;
+                    if (!returnToAnchor && !BrinyBaron_VortexEyeDash.IsSafeDestination(player, Main.MouseWorld))
+                        return false;
+
                     Projectile.NewProjectile(
                         source,
                         player.MountedCenter,

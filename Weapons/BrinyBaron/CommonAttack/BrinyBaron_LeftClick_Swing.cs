@@ -37,6 +37,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
         private const float RightSpinVisualReachScale = 1.005f;
         private int CurrentGrowthStage => BB_Balance.GetGrowthStage();
         private int ComboLength => BB_Balance.GetLeftClickComboSequence(CurrentGrowthStage).Length;
+        // Vortex Eye uses the exact normal left-click stages, but needs them to finish
+        // after two swings even though the player is not holding the normal attack key.
+        private bool IsVortexForcedDoubleSlash => Projectile.ai[0] == 1f;
         private const int StandardGapFrames = 0;
         private const int RightSpinTransitionFrames = 14;
         private const float RightSpinMaxEmpowerment = 180f;
@@ -201,7 +204,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             Owner.itemAnimation = Math.Max(Owner.itemAnimation, 2);
             Projectile.Center = Owner.MountedCenter;
 
-            if (!IsLeftHeld())
+            if (IsVortexForcedDoubleSlash)
+            {
+                releaseRequested = false;
+                Projectile.timeLeft = 2;
+            }
+            else if (!IsLeftHeld())
                 releaseRequested = true;
 
             if (!releaseRequested && (rightSpinActive || WantsRightSpin()))
@@ -345,6 +353,12 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             stageTimer = 0;
             comboIndex++;
             gapTimer = profile.GapFrames;
+
+            if (IsVortexForcedDoubleSlash && comboIndex >= 2)
+            {
+                Projectile.Kill();
+                return;
+            }
 
             if (releaseRequested)
                 Projectile.Kill();

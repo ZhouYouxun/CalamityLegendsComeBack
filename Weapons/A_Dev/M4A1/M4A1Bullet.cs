@@ -2,19 +2,24 @@ using CalamityMod;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
-using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.A_Dev.M4A1
 {
     /// <summary>
-    /// 左键特殊子弹：沿用 OmniGun 子弹贴图（OmniSniperShot），套一层荧光绿。
+    /// 左键特殊子弹：清爽的荧光绿曳光弹（流线拖尾 + 亮核，不用贴图、不糊大光斑）。
     /// 命中提升战术同步率并累积伸冤者印记；一层伤害 / 二层破甲。
     /// </summary>
     public class M4A1Bullet : ModProjectile
     {
-        public override string Texture => "CalamityMod/Projectiles/Ranged/OmniSniperShot";
+        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
+
+        public override void SetStaticDefaults()
+        {
+            ProjectileID.Sets.TrailingMode[Type] = 2;
+            ProjectileID.Sets.TrailCacheLength[Type] = 8;
+        }
 
         public override void SetDefaults()
         {
@@ -35,13 +40,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.M4A1
         {
             if (Projectile.velocity != Vector2.Zero)
                 Projectile.rotation = Projectile.velocity.ToRotation();
-
-            if (Main.rand.NextBool(2))
-            {
-                Dust d = Dust.NewDustPerfect(Projectile.Center, DustID.GreenTorch, Projectile.velocity * 0.05f, 120, default, 0.55f);
-                d.noGravity = true;
-            }
-            Lighting.AddLight(Projectile.Center, 0.2f, 0.5f, 0.12f);
+            Lighting.AddLight(Projectile.Center, 0.18f, 0.5f, 0.12f);
         }
 
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
@@ -66,17 +65,31 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.M4A1
 
         public override bool PreDraw(ref Color lightColor)
         {
-            Texture2D tex = TextureAssets.Projectile[Type].Value;
             Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Vector2 pos = Projectile.Center - Main.screenPosition;
-            Vector2 origin = tex.Size() * 0.5f;
+            Vector2 origin = bloom.Size() * 0.5f;
+            float rot = Projectile.rotation;
 
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
-            // 荧光绿光晕
-            Main.EntitySpriteDraw(bloom, pos, null, (M4A1Visuals.NeonGreen with { A = 0 }) * 0.85f, 0f, bloom.Size() * 0.5f, 0.10f, SpriteEffects.None, 0);
-            // 子弹本体（染绿）
-            Main.EntitySpriteDraw(tex, pos, null, M4A1Visuals.NeonGreenBright, Projectile.rotation, origin, Projectile.scale * 1.1f, SpriteEffects.None, 0);
+
+            // 拖尾残影（细、淡）
+            int trailLen = ProjectileID.Sets.TrailCacheLength[Type];
+            for (int i = 1; i < trailLen; i++)
+            {
+                if (Projectile.oldPos[i] == Vector2.Zero)
+                    continue;
+                float t = 1f - i / (float)trailLen;
+                Vector2 tp = Projectile.oldPos[i] + Projectile.Size * 0.5f - Main.screenPosition;
+                Main.EntitySpriteDraw(bloom, tp, null, (M4A1Visuals.NeonGreen with { A = 0 }) * (0.28f * t), rot, origin, new Vector2(0.2f, 0.06f) * t, SpriteEffects.None, 0);
+            }
+
+            Vector2 pos = Projectile.Center - Main.screenPosition;
+            // 流线拖尾（沿速度方向拉长的细光条）
+            Main.EntitySpriteDraw(bloom, pos, null, (M4A1Visuals.NeonGreen with { A = 0 }) * 0.85f, rot, origin, new Vector2(0.34f, 0.075f), SpriteEffects.None, 0);
+            // 亮核
+            Main.EntitySpriteDraw(bloom, pos, null, (M4A1Visuals.NeonGreenBright with { A = 0 }) * 0.95f, 0f, origin, 0.085f, SpriteEffects.None, 0);
+            Main.EntitySpriteDraw(bloom, pos, null, new Color(240, 255, 235, 0) * 0.9f, 0f, origin, 0.045f, SpriteEffects.None, 0);
+
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
             return false;

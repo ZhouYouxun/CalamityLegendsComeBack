@@ -124,7 +124,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
         {
             if (!Main.dedServ)
             {
-                for (int i = 0; i < 36; i++)
+                // Match Tidal Mechanics' shield break: a full 90-line blue burst,
+                // followed by its one-second immunity window.
+                for (int i = 0; i < 90; i++)
                 {
                     Vector2 velocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(5f, 15f);
                     GeneralParticleHandler.SpawnParticle(new LineParticle(Projectile.Center + velocity.SafeNormalize(Vector2.UnitX) * 20.5f, velocity, false, 30, 1.75f, Color.Blue));
