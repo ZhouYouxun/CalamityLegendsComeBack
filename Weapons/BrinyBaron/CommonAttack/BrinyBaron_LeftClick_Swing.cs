@@ -212,20 +212,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             else if (!IsLeftHeld())
                 releaseRequested = true;
 
-            if (!releaseRequested && (rightSpinActive || WantsRightSpin()))
-            {
-                DoRightSpin();
-                ApplyArmRotation();
-                return;
-            }
-
-            if (rightSpinActive)
-            {
-                EndRightSpin();
-                ApplyArmRotation();
-                return;
-            }
-
             if (!stageActive)
             {
                 CanHit = false;

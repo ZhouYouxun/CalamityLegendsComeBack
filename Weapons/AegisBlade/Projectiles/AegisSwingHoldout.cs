@@ -31,7 +31,9 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         private const int TrackingSoulBurstCount = 5;
         private const float TrackingSoulSpeed = 12f;
         private const float SpinAcceleration = 0.075f;
-        private const int ReleaseFadeFrames = 10;
+        private const int SpinTransitionFrames = 14;
+        private const float SpinMaxEmpowerment = 180f;
+        private const int ReleaseFadeFrames = 20;
         private const float DiscBrightness = 0.67f;
         private const float LoopSweepDegrees = 1080f;   // 每次挥动 3 圈，线性匀速
 
@@ -58,6 +60,8 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         private float scale = 1f;
         private float swingProgress;
         private float spinSpeedFactor;
+        private float spinEmpowerment;
+        private int spinTransitionTimer;
         private float visualOpacity = 1f;
         private float slashOpacity;
         private float outlineBaseOpacity;
@@ -178,10 +182,6 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 0.05f, 0.85f, 14));
         }
 
-        private bool isThrown;
-        private Vector2 throwTargetPos;
-        private float throwDistProgress;
-
         private void DoSwing()
         {
             if (stateTimer == 0)
@@ -192,29 +192,15 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 
             if (releaseEnding)
             {
-                if (!isThrown)
-                {
-                    isThrown = true;
-                    throwTargetPos = AegisBlade.GetMouseWorld(Owner);
-                    throwDistProgress = 0f;
-                    SoundEngine.PlaySound(SoundID.Item120 with { Volume = 0.75f, Pitch = -0.1f }, Projectile.Center);
-                    SpawnThrowLaunchBurst();
-                }
-
                 releaseTimer++;
-                throwDistProgress = MathHelper.Clamp(throwDistProgress + 0.05f, 0f, 1f);
-                float easeDist = MathF.Sin(throwDistProgress * MathHelper.PiOver2);
-
-                Vector2 targetCenter = Owner.MountedCenter + Owner.MountedCenter.DirectionTo(throwTargetPos).SafeNormalize(Vector2.UnitX * Owner.direction) * (520f * easeDist);
-                Projectile.Center = Vector2.Lerp(Projectile.Center, targetCenter, 0.25f);
-                currentAngle += 0.42f * swingDirection;
-
-                visualOpacity = 1f - MathHelper.Clamp((releaseTimer - 20) / (float)ReleaseFadeFrames, 0f, 1f);
+                // Remain in hand and let the holy-fire wheel wind down on release.
+                Projectile.Center = Owner.MountedCenter;
+                currentAngle += GetSpinRate() * 0.45f;
+                visualOpacity = 1f - MathHelper.Clamp(releaseTimer / (float)ReleaseFadeFrames, 0f, 1f);
                 TrackBladeTrail(false);
-                EmitThrownFlames();
                 stateTimer++;
 
-                if (releaseTimer >= ReleaseFadeFrames + 20)
+                if (releaseTimer >= ReleaseFadeFrames)
                     Projectile.Kill();
 
                 return;
@@ -227,7 +213,8 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 
             swingProgress = MathHelper.Clamp(swingProgress + spinSpeedFactor / SwingDuration, 0f, 1f);
             float progress = GetCurrentSwingProgress();
-            currentAngle = EvaluateSwingAngle(progress);
+            spinTransitionTimer = Math.Min(spinTransitionTimer + 1, SpinTransitionFrames);
+            currentAngle += GetSpinRate();
 
             // 每帧跟刀尖方向实时更新玩家朝向
             Owner.direction = MathF.Cos(currentAngle) >= 0f ? 1 : -1;
@@ -283,18 +270,6 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             AegisVisuals.Screenshake(Owner.Center, 2.4f, 900f);
         }
 
-        /// <summary>脱手甩出的瞬间：向瞄准方向劈出一道定向冲击。</summary>
-        private void SpawnThrowLaunchBurst()
-        {
-            if (Main.dedServ)
-                return;
-
-            Vector2 direction = Owner.MountedCenter.DirectionTo(throwTargetPos).SafeNormalize(Vector2.UnitX * Owner.direction);
-            AegisVisuals.DirectionalImpact(Owner.MountedCenter + direction * 30f, direction, 1.15f);
-            AegisVisuals.EmberJet(Owner.MountedCenter + direction * 24f, direction, 12, 1.2f, 0.28f);
-            AegisVisuals.Screenshake(Owner.Center, 1.8f, 700f);
-        }
-
         private float GetCurrentSwingProgress()
         {
             return MathHelper.Clamp(swingProgress, 0f, 1f);
@@ -304,6 +279,16 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         {
             // 线性匀速旋转，消除循环之间的加减速停顿感
             return startAngle + MathHelper.ToRadians(LoopSweepDegrees * swingDirection) * progress;
+        }
+
+        private float GetSpinRate()
+        {
+            float transitionProgress = spinTransitionTimer / (float)SpinTransitionFrames;
+            float transitionSpeed = MathHelper.SmoothStep(0.18f, 1f, transitionProgress);
+            float chargeRatio = MathHelper.Clamp(spinEmpowerment / SpinMaxEmpowerment, 0f, 1f);
+            float speedMultiplier = MathHelper.Lerp(1.2f, 2f, chargeRatio);
+            spinEmpowerment = Math.Min(spinEmpowerment + 1f, SpinMaxEmpowerment);
+            return speedMultiplier * MathHelper.PiOver4 * 0.2f * swingDirection * transitionSpeed;
         }
 
         private void SpawnBigFireballs()
@@ -625,7 +610,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             DrawBladeSpine(drawPosition, drawOpacity);
 
             // ⑤ 亵渎背光：本体下方的暗红/焦黑底光
-            AegisVisuals.ProfanedBackglow(swordTexture, isThrown ? bladePosition : drawPosition, null,
+            AegisVisuals.ProfanedBackglow(swordTexture, drawPosition, null,
                 drawRotation, origin, new Vector2(scale), drawOpacity, 5f * scale, 6);
 
             Main.spriteBatch.ExitShaderRegion();
@@ -633,11 +618,8 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             // ⑥ 刀光 primitive（原版写好了却从没被调用过，这次真正接上）
             DrawBladeTrail();
 
-            // ⑦ 圣火锁链（脱手飞行时把剑和玩家连起来）
-            DrawTetherChain(drawOpacity);
-
             // ⑧ 本体
-            Main.EntitySpriteDraw(swordTexture, isThrown ? bladePosition : drawPosition, null,
+            Main.EntitySpriteDraw(swordTexture, drawPosition, null,
                 lightColor * drawOpacity, drawRotation, origin, scale, SpriteEffects.None);
             return false;
         }
@@ -723,7 +705,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         {
             float ghostStrength = MathHelper.Clamp(outlineBaseOpacity * 1.4f + discRingOpacity * 0.5f, 0f, 1f)
                                   * discFadeIn * drawOpacity;
-            if (ghostStrength <= 0.01f || isThrown)
+            if (ghostStrength <= 0.01f)
                 return;
 
             for (int i = 0; i < BladeAfterimageCount; i++)
@@ -771,9 +753,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             Texture2D bloom = AegisVisuals.Tex(AegisVisuals.TexBloom);
 
             Vector2 forward = currentAngle.ToRotationVector2();
-            Vector2 anchor = isThrown
-                ? Projectile.Center - Main.screenPosition + new Vector2(0f, Owner.gfxOffY)
-                : drawPosition;
+            Vector2 anchor = drawPosition;
             Vector2 spineCenter = anchor + forward * BladeRadius * 0.52f;
             float spineRotation = currentAngle + MathHelper.PiOver2; // muzzle_04 是竖向的
 
@@ -865,7 +845,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         /// </summary>
         private void DrawTetherChain(float drawOpacity)
         {
-            if (!isThrown && !releaseEnding)
+            if (Vector2.DistanceSquared(Projectile.Center, Owner.MountedCenter) < 144f)
                 return;
 
             Vector2 start = Owner.MountedCenter;
