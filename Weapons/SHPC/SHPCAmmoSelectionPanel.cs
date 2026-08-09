@@ -376,7 +376,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 25 => "CalamityMod/Items/Materials/MeldBlob",
                 26 => "CalamityMod/Items/Materials/UnholyEssence",
                 28 => "CalamityMod/Items/Materials/DivineGeode",
-                29 => "CalamityMod/Items/Materials/BloodstoneCore",
+                29 => "CalamityMod/Items/Materials/Bloodstone",
                 30 => "CalamityMod/Items/Materials/RuinousSoul",
                 31 => "CalamityMod/Items/Materials/Necroplasm",
                 32 => "CalamityMod/Items/Materials/DarkPlasma",
