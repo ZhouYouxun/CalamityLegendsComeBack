@@ -114,6 +114,8 @@ Mods: {
 				// DiseasedPikeProj.DisplayName: Diseased Pike Proj
 				// BrinyBaron_HeavySlash.DisplayName: Briny Baron_ Heavy Slash
 			}
+
+			// SilvaHarpNote.DisplayName: Silva Harp Note
 		}
 
 		Cooldowns: {

@@ -128,20 +128,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty
             });
         }
 
-        public override void AddRecipes()
-        {
-            CreateRecipe()
-                .AddIngredient<RoverDrive>()
-                .AddIngredient<WulfrumDrill>()
-                .AddIngredient<WulfrumScrewdriver>()
-                .AddIngredient<WulfrumProsthesis>()
-                .AddIngredient<WulfrumHat>()
-                .AddIngredient<WulfrumJacket>()
-                .AddIngredient<WulfrumOveralls>()
-                .AddTile(TileID.LunarCraftingStation)
-                .Register();
-        }
-
         public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
         {
             Texture2D texture = ModContent.Request<Texture2D>("CalamityMod/Items/SummonItems/Invasion/MartianDistressRemote_Animated").Value;

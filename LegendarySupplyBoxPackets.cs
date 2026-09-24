@@ -8,6 +8,14 @@ namespace CalamityLegendsComeBack
 {
     internal static class LegendarySupplyBoxPackets
     {
+        public static void RequestRandomClaim()
+        {
+            ModPacket packet = ModContent.GetInstance<CalamityLegendsComeBack>().GetPacket();
+            packet.Write((byte)GamePacketType.LegendarySupplyBoxClaimRequest);
+            packet.Write(byte.MaxValue);
+            packet.Send();
+        }
+
         public static void RequestClaim(int selectionIndex)
         {
             if (Main.netMode == NetmodeID.SinglePlayer)
@@ -28,7 +36,10 @@ namespace CalamityLegendsComeBack
             if (Main.netMode != NetmodeID.Server || !Main.player.IndexInRange(whoAmI))
                 return;
 
-            LegendarySupplyBox.TryClaimWeapon(Main.player[whoAmI], selectionIndex);
+            if (selectionIndex == byte.MaxValue)
+                LegendarySupplyBox.TryClaimRandomWeapon(Main.player[whoAmI]);
+            else
+                LegendarySupplyBox.TryClaimWeapon(Main.player[whoAmI], selectionIndex);
         }
     }
 }

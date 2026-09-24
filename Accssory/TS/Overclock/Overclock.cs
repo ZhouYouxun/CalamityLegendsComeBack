@@ -29,7 +29,7 @@ namespace CalamityLegendsComeBack.Accssory.TS
             CreateRecipe()
                 .AddIngredient<CoreofCalamity>(3)
                 .AddIngredient<UnholyEssence>(10)
-                .AddIngredient<BloodstoneCore>(8)
+                .AddIngredient<Bloodstone>(8)
                 .AddTile(TileID.LunarCraftingStation)
                 .Register();
         }

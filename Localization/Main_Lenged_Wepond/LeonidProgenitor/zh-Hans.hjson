@@ -22,7 +22,13 @@ Mods: {
 					ConstellationStatus: "[c/FFE85A:狮子座星辉：可用 {0} | 已消耗 {1} | 已获得 {2} | 全图需 {3}]"
 					ConstellationHint: "[c/B8A8FF:手持本武器，或在背包中悬停本武器时，按 {0} 展开狮源流星星图。]"
 					LegendaryHint: "[c/BABABA:按住 Shift 阅读传奇记录]"
-					LegendaryText: "[c/66E6FF:狮子座流星雨不再从背包寻找金属。每一位被击败的大型 Boss，都会成为狮子天空中的一颗星辉。]"
+					LegendaryText:
+						'''
+						[c/66E6FF:流星雨不再从背包寻找金属。]
+						[c/78DFFF:每一位被击败的大型 Boss，都会化作星辉。]
+						[c/9BCBFF:这些星辉点亮狮子座的夜空。]
+						[c/C0B6FF:每一场流星雨，都是胜利留下的回响。]
+						'''
 
 					Constellation: {
 						Title: 狮子座流星雨星图

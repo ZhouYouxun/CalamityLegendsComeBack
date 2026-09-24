@@ -174,14 +174,9 @@ namespace CalamityLegendsComeBack.BossAI.ReBack.Prime2041
 
         public override void AddRecipes()
         {
-            AddVanillaRecipes();
-            Recipe.Create(Type)
-                .AddIngredient(VanillaItemType)
-                .AddTile(TileID.WorkBenches)
-                .Register();
+            // The one-to-one conversion back to the vanilla summon is registered in
+            // Mechs2041RecipeConversions. The extra crafting recipes are retired.
         }
-
-        protected abstract void AddVanillaRecipes();
 
         public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
         {

@@ -31,7 +31,7 @@ namespace CalamityLegendsComeBack.Accssory
                 return true;
 
             if (player.whoAmI == Main.myPlayer)
-                Main.NewText(Language.GetTextValue("Mods.CalamityLegendsComeBack.Items.LegendaryEmblem.AlreadyConsumed"));
+                Main.NewText(Language.GetTextValue("Mods.CalamityLegendsComeBack.Items.Accessories.LegendaryEmblem.AlreadyConsumed"));
 
             return false;
         }
@@ -54,7 +54,7 @@ namespace CalamityLegendsComeBack.Accssory
             Color statusColor = permanentUnlock ? new Color(255, 80, 80) : new Color(80, 220, 120);
 
             tooltips.Add(new TooltipLine(Mod, "LegendaryEmblemPermanentStatus",
-                Language.GetTextValue("Mods.CalamityLegendsComeBack.Items.LegendaryEmblem." + statusKey))
+                Language.GetTextValue("Mods.CalamityLegendsComeBack.Items.Accessories.LegendaryEmblem." + statusKey))
             {
                 OverrideColor = statusColor
             });

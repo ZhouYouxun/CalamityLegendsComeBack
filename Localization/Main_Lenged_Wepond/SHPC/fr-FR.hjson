@@ -3,7 +3,7 @@ Mods: {
 		Items: {
 			Weapons: {
 				NewLegendSHPC: {
-					// DisplayName: SHPC - Return of Legends
+					// DisplayName: Energy Overload-SHPC
 					// SHPC_LeftIntro: "[c/66CCFF:Left click fires energy orbs. By default, white orbs deal area damage.]"
 					// SHPC_LoadingUIHint: "[c/66CCFF:Open inventory and press] [[c/66CCFF:{0}]] [c/66CCFF:to open the loading UI. Load specific materials to change attack effects.]"
 					// SHPC_CurrentAmmoEffect: "[c/66CCFF:Current loaded effect: {0}]"

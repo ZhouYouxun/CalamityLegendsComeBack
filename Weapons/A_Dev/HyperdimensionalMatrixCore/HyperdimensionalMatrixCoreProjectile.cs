@@ -125,7 +125,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
             Projectile.minionSlots = Math.Max(1f, owner.maxMinions);
 
             if (Main.myPlayer == Projectile.owner && (Main.GameUpdateCount + Projectile.identity) % 30 == 0)
-                HyperdimensionalMatrixCore.RemoveOtherSlotConsumingMinions(owner, Type);
+                HyperdimensionalMatrixCoreRuntime.RemoveOtherSlotConsumingMinions(owner, Type);
 
             UpdatePosition(owner);
             UpdateDamage(owner);
@@ -196,7 +196,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore
         {
             int base_ = Projectile.originalDamage > 0
                 ? Projectile.originalDamage
-                : HyperdimensionalMatrixCore.BaseDamage;
+                : HyperdimensionalMatrixCoreRuntime.BaseDamage;
             Projectile.damage = Math.Max(1, (int)owner
                 .GetTotalDamage(DamageClass.Summon)
                 .ApplyTo(base_ * GetSlotDamageMultiplier(owner)));

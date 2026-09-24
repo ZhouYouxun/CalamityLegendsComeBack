@@ -151,7 +151,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
     // =====================================================================================================================
     public class AuroraBoltProj : ModProjectile
     {
-        public override string Texture => "CalamityMod/Projectiles/Magic/RancorFog";
+        public override string Texture => "CalamityMod/Particles/RancorFog";
 
         public override void SetDefaults()
         {

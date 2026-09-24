@@ -10,7 +10,6 @@ using Terraria.Audio;
 using Terraria.GameContent.ItemDropRules;
 using Terraria.ID;
 using Terraria.ModLoader;
-using HDMCWeaponItem = CalamityLegendsComeBack.Weapons.A_Dev.HyperdimensionalMatrixCore.HyperdimensionalMatrixCore;
 
 namespace CalamityLegendsComeBack.BossAI.HDMC
 {
@@ -461,11 +460,6 @@ namespace CalamityLegendsComeBack.BossAI.HDMC
                 HDMCUtil.ScreenShake(NPC.Center, 9f, 2000f);
                 SoundEngine.PlaySound(new SoundStyle(MatrixModuleNumbers.SndSingularity) { Volume = 0.9f }, NPC.Center);
             }
-        }
-
-        public override void ModifyNPCLoot(NPCLoot npcLoot)
-        {
-            npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<HDMCWeaponItem>()));
         }
 
         public override float SpawnChance(NPCSpawnInfo spawnInfo) => 0f;

@@ -13,6 +13,11 @@ Mods: {
 						'''
 				}
 			}
+
+			LegendaryEmblem: {
+				// DisplayName: Legendary Emblem
+				// Tooltip: ""
+			}
 		}
 
 		TheSpecialText: {

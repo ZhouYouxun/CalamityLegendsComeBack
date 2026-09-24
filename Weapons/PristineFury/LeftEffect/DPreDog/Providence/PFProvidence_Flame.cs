@@ -12,7 +12,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
     internal sealed class PFProvidence_Flame : ModProjectile, ILocalizedModType
     {
         public new string LocalizationCategory => "Projectiles.PristineFury";
-        public override string Texture => "CalamityMod/Projectiles/Magic/RancorFog";
+        public override string Texture => "CalamityMod/Particles/RancorFog";
 
         private const int PrimaryLife = 120;
         private const int SecondaryLife = 230;

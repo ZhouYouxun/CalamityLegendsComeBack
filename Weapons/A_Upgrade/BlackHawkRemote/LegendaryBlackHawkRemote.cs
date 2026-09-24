@@ -162,14 +162,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.BlackHawkRemote
             });
         }
 
-        public override void AddRecipes()
-        {
-            CreateRecipe()
-                .AddIngredient<CalamityMod.Items.Weapons.Summon.BlackHawkRemote>()
-                .AddIngredient(ItemID.HellstoneBar, 10)
-                .AddTile(TileID.Hellforge)
-                .Register();
-        }
     }
 
     public sealed class LegendaryBlackHawkBuff : ModBuff, ILocalizedModType

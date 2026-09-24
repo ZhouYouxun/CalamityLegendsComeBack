@@ -39,7 +39,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             SoundStyle style = new SoundStyle(path)
             {
-                Volume = zenith ? 0.804f : 0.67f,
+                Volume = zenith ? 0.55f : 0.45f,
                 Pitch = zenith ? 0.1f : 0f
             };
 
@@ -56,7 +56,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             SoundStyle style = new SoundStyle(path)
             {
-                Volume = zenith ? 0.804f : 0.67f,
+                Volume = zenith ? 0.55f : 0.45f,
                 Pitch = zenith ? 0.1f : 0f
             };
 

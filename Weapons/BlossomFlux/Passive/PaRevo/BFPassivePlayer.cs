@@ -7,7 +7,7 @@ using CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;
 using CalamityMod;
 using CalamityMod.CalPlayer.Dashes;
-using CalamityMod.Buffs.Cooldowns;
+using CalamityMod.Buffs.DamageOverTime;
 using CalamityMod.Cooldowns;
 using Terraria;
 using Terraria.Audio;

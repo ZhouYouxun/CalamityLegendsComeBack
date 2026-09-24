@@ -1810,17 +1810,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         #region ===== 克隆、存档与联机同步 =====
 
         #region ===== 合成表 =====
-        public override void AddRecipes()
-        {
-            CreateRecipe()
-                .AddIngredient<MysteriousCircuitry>(8)
-                .AddIngredient<DubiousPlating>(8)
-                .AddIngredient<PlasmaDriveCore>()
-                .AddIngredient(ItemID.SpaceGun)
-                .AddTile(TileID.Anvils)
-                .AddDecraftCondition(Condition.DownedEowOrBoc)
-                .Register();
-        }
         #endregion
 
         #region ===== 复制、存档与网络同步 =====

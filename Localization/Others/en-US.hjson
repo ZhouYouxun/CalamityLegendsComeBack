@@ -94,16 +94,7 @@ Mods: {
 			Consumables: {
 				LegendarySupplyBox: {
 					DisplayName: Legendary Supply Box
-					Tooltip: Right click to open the legendary weapon showcase and choose one main-line legendary weapon.
-					Title: LEGENDARY WEAPON SHOWCASE
-					DirectSelectHint: Click the legendary weapon you want to claim.
-					DirectSelectFooter: Click a weapon to claim it. Click outside to cancel.
-					BrowseHint: Click any weapon to lock it in and begin the showcase.
-					SpinningHint: Presenting your selected legendary weapon…
-					ClaimHint: Target locked. Confirm to claim your weapon.
-					Footer: CLICK A WEAPON TO CHOOSE // ARROWS TO BROWSE // CLICK OUTSIDE TO CANCEL
-					SpinFooter: SHOWCASE IN PROGRESS. PLEASE WAIT.
-					ClaimButton: CLAIM WEAPON
+					Tooltip: Right-click to receive a random main-line legendary weapon, or hand-craft a specific weapon using this box.
 				}
 
 				RetroGameConsoleSupplyBox: {
@@ -132,15 +123,19 @@ Mods: {
 				}
 			}
 
+			LegendaryUltimateTester: {
+				DisplayName: Legendary Ultimate Tester
+				Tooltip: Test accessory: SHPC ultimate fully recharges in 1 second
+			}
+		}
+
+		Accessories: {
 			LegendaryEmblem: {
 				DisplayName: Legendary Emblem
 				Tooltip: Permanently unlocks every legendary weapon ultimate for this character
 				AlreadyConsumed: This character has already received the Legendary Emblem's permanent boost.
-			}
-
-			LegendaryUltimateTester: {
-				DisplayName: Legendary Ultimate Tester
-				Tooltip: Test accessory: SHPC ultimate fully recharges in 1 second
+				UnconsumedStatus: Ultimate skills are locked
+				ConsumedStatus: Ultimate skills permanently unlocked
 			}
 		}
 

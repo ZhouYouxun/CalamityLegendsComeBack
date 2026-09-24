@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using CalamityLegendsComeBack.Weapons.AegisBlade;
 using CalamityLegendsComeBack.Weapons.BlossomFlux;
 using CalamityLegendsComeBack.Weapons.BrinyBaron;
@@ -12,6 +13,13 @@ using CalamityLegendsComeBack.Weapons.SeasSearing;
 using CalamityLegendsComeBack.Weapons.SHPC;
 using CalamityLegendsComeBack.Weapons.Vesuvius;
 using CalamityLegendsComeBack.Weapons.YharimsCrystal;
+using CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper;
+using CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle;
+using CalamityLegendsComeBack.Weapons.A_Upgrade.BlackHawkRemote;
+using CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty;
+using CalamityLegendsComeBack.Weapons.A_Upgrade.DragoonDrizzlefish;
+using CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir;
+using CalamityLegendsComeBack.Weapons.A_Upgrade.P90;
 using CalamityMod.Rarities;
 using Terraria;
 using Terraria.DataStructures;
@@ -37,13 +45,27 @@ namespace CalamityLegendsComeBack
 
         public override bool CanRightClick() => true;
 
-        // The box is consumed only after the player confirms a weapon in the showcase.
+        // Consumption and random selection are handled together by the owning side.
         public override bool ConsumeItem(Player player) => false;
 
         public override void RightClick(Player player)
         {
-            if (Main.netMode != NetmodeID.Server && player.whoAmI == Main.myPlayer)
-                LegendarySupplyBoxSelectionUI.Open();
+            if (player.whoAmI != Main.myPlayer)
+                return;
+
+            if (Main.netMode == NetmodeID.SinglePlayer)
+                TryClaimRandomWeapon(player);
+            else if (Main.netMode == NetmodeID.MultiplayerClient)
+                LegendarySupplyBoxPackets.RequestRandomClaim();
+        }
+
+        internal static bool TryClaimRandomWeapon(Player player)
+        {
+            int[] weapons = GetMainLegendaryWeapons();
+            if (weapons.Length == 0)
+                return false;
+
+            return TryClaimWeapon(player, Main.rand.Next(weapons.Length));
         }
 
         internal static int GetWeaponType(int selectionIndex)
@@ -71,6 +93,25 @@ namespace CalamityLegendsComeBack
                 ModContent.ItemType<NewLegendYharimsCrystal>(),
             };
         }
+
+        internal static int[] GetBoxRecipeWeapons()
+        {
+            List<int> weapons = new(GetMainLegendaryWeapons())
+            {
+                ModContent.ItemType<AethersWhisper>(),
+                ModContent.ItemType<NewLegendAntiMaterielRifle>(),
+                ModContent.ItemType<LegendaryBlackHawkRemote>(),
+                ModContent.ItemType<CallofDuty>(),
+                ModContent.ItemType<NewDragoonDrizzlefish>(),
+                ModContent.ItemType<UmbralNadir>(),
+                ModContent.ItemType<NewLegendP90>()
+            };
+
+            return weapons.ToArray();
+        }
+
+        internal static bool UsesSupplyBoxRecipe(int itemType) =>
+            Array.IndexOf(GetBoxRecipeWeapons(), itemType) >= 0;
 
         internal static bool TryClaimWeapon(Player player, int selectionIndex)
         {

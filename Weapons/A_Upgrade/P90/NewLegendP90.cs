@@ -111,17 +111,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.P90
             });
         }
 
-        public override void AddRecipes()
-        {
-            CreateRecipe()
-                .AddIngredient<CalamityMod.Items.Weapons.Ranged.P90>()
-                .AddIngredient(ItemID.IllegalGunParts)
-                .AddIngredient(ItemID.HallowedBar, 8)
-                .AddIngredient<EssenceofSunlight>(3)
-                .AddTile(TileID.MythrilAnvil)
-                .Register();
-        }
-
         internal static bool CanUseWorldInput(Player player)
         {
             if (player.noItems ||

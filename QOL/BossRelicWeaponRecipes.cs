@@ -144,6 +144,9 @@ namespace CalamityLegendsComeBack.QOL
                     if (!calamity.TryFind<ModItem>(weaponName, out ModItem weaponItem))
                         continue;
 
+                    if (LegendarySupplyBox.UsesSupplyBoxRecipe(weaponItem.Type))
+                        continue;
+
                     Recipe recipe = Recipe.Create(weaponItem.Type);
                     recipe.AddIngredient(relicItem.Type);
 

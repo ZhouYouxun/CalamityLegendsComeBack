@@ -115,15 +115,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.DragoonDrizzlefish
             return false;
         }
 
-        public override void AddRecipes()
-        {
-            CreateRecipe()
-                .AddIngredient(ModContent.ItemType<CalamityMod.Items.Fishing.BrimstoneCragCatches.DragoonDrizzlefish>())
-                .AddIngredient(ItemID.Gel, 50)
-                .AddTile(TileID.CookingPots)
-                .Register();
-        }
-
         private void SpawnFoodShot(Player player, IEntitySource source, Vector2 position, Vector2 velocity,
             int damage, float knockback, DragoonDrizzlefishPlayer foodPlayer)
         {

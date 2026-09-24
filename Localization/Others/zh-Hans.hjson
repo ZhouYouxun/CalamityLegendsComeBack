@@ -95,16 +95,11 @@ Mods: {
 			Consumables: {
 				LegendarySupplyBox: {
 					DisplayName: 传奇补给包
-					Tooltip: 右键打开传奇武器展柜，从全部主线传奇武器中任选一把。
-					Title: 传奇武器展柜
-					DirectSelectHint: 直接点击你想领取的传奇武器。
-					DirectSelectFooter: 点击武器即可领取。点击面板外取消。
-					BrowseHint: 点击任意武器，锁定后开始开箱展示。
-					SpinningHint: 正在展示你选择的传奇武器……
-					ClaimHint: 目标已锁定，确认后领取武器。
-					Footer: 点击武器选择 // 左右箭头浏览 // 点击面板外取消
-					SpinFooter: 展柜正在运行，请稍候。
-					ClaimButton: 确认领取
+					Tooltip:
+						'''
+						右键打开来获得一把随机传奇武器
+						或者直接合成指定的传奇武器
+						'''
 				}
 
 				RetroGameConsoleSupplyBox: {
@@ -133,15 +128,19 @@ Mods: {
 				}
 			}
 
+			LegendaryUltimateTester: {
+				DisplayName: 传奇大招测试器
+				Tooltip: 仅限测试用：SHPC大招会在1秒内充能完成
+			}
+		}
+
+		Accessories: {
 			LegendaryEmblem: {
 				DisplayName: 黄金饰章
 				Tooltip: 使用后永久解锁此角色手持所有传奇武器的大招
 				AlreadyConsumed: 这个角色已经获得了黄金饰章的永久强化。
-			}
-
-			LegendaryUltimateTester: {
-				DisplayName: 传奇大招测试器
-				Tooltip: 仅限测试用：SHPC大招会在1秒内充能完成
+				UnconsumedStatus: 尚未解锁大招
+				ConsumedStatus: 已永久解锁大招
 			}
 		}
 
@@ -228,9 +227,8 @@ Mods: {
 			CTRLBossBulkChanged: "{0}：已调整 {1} 个 Boss 进度。"
 			WelcomeMessage:
 				'''
-				欢迎游玩《灾厄-传奇》
-				本模组刚刚起步，正在持续发展
-				后续会重做每一把传奇武器，并加入更多新内容的，敬请期待
+				欢迎游玩《灾厄-传奇》当前已将所有传奇武器重做并可开局获取
+				因《灾厄》停更，本模组将暂停后续开发，但现阶段可玩内容不变
 				反馈与建议，欢迎加入群聊进行讨论：876728711
 				'''
 		}

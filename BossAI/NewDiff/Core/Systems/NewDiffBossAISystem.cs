@@ -1,6 +1,3 @@
-using CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossAIs.Common;
-using CalamityLegendsComeBack.BossAI.NewDiff.Content.UI;
-using CalamityMod.Systems;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.BossAI.NewDiff.Core.Systems
@@ -9,18 +6,20 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Core.Systems
     {
         public override void Load()
         {
-            DifficultyModeSystem.Difficulties.Add(new LegendsDifficulty());
-            DifficultyModeSystem.CalculateDifficultyData();
+            // Temporarily keep the custom mode out of Calamity's difficulty icon row.
+            // DifficultyModeSystem.Difficulties.Add(new LegendsDifficulty());
+            // DifficultyModeSystem.CalculateDifficultyData();
         }
 
         public override void PostSetupContent()
         {
-            LegendsBossAIRegistry.Load();
+            // Boss AI rebuilds are temporarily hidden during the final cleanup.
+            // LegendsBossAIRegistry.Load();
         }
 
         public override void Unload()
         {
-            LegendsBossAIRegistry.Unload();
+            // LegendsBossAIRegistry.Unload();
         }
     }
 }

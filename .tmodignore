@@ -1,6 +1,7 @@
 bin/
 obj/
 .vs/
+.agents/
 .codex-tools/
 *.zip
 

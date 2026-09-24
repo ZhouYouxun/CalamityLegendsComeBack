@@ -72,14 +72,5 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper
             }
         }
 
-        public override void AddRecipes()
-        {
-            CreateRecipe().
-                AddIngredient<CalamityMod.Items.Weapons.Magic.AethersWhisper>().
-                AddIngredient<AuricBar>(5).
-                AddIngredient<TwistingNether>(5).
-                AddTile<CosmicAnvil>().
-                Register();
-        }
     }
 }

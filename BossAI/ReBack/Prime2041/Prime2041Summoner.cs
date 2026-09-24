@@ -19,21 +19,5 @@ namespace CalamityLegendsComeBack.BossAI.ReBack.Prime2041
             Main.npc[npc].netUpdate = true;
         }
 
-        protected override void AddVanillaRecipes()
-        {
-            RegisterRecipe(ItemID.IronBar);
-            RegisterRecipe(ItemID.LeadBar);
-        }
-
-        private void RegisterRecipe(int barType)
-        {
-            Recipe.Create(Type)
-                .AddIngredient(ItemID.Bone, 30)
-                .AddIngredient(barType, 5)
-                .AddIngredient(ItemID.SoulofLight, 3)
-                .AddIngredient(ItemID.SoulofNight, 3)
-                .AddTile(TileID.MythrilAnvil)
-                .Register();
-        }
     }
 }
