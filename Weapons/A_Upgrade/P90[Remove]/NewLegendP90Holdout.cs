@@ -34,7 +34,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.P90
         private P90RangeMode currentMode;
 
         public new string LocalizationCategory => "Projectiles.P90";
-        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Upgrade/P90/NewLegendP90";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Upgrade/P90[Remove]/NewLegendP90";
 
         private Player Owner => Main.player[Projectile.owner];
         private NewLegendP90Player P90Player => Owner.GetModPlayer<NewLegendP90Player>();

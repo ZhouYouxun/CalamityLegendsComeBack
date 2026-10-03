@@ -40,6 +40,10 @@ Mods: {
 						'''
 					CosmicDischargePassive: "[c/B8F4FF:Rift Seal:] [c/DCD6C8:while held, any single hit that would exceed 20% of your max HP is capped at that value. When triggered, gain 5 seconds of Rift Revival (+20% damage). Cooldown: 60 seconds.]"
 					LegendaryHint: "[c/BABABA:Hold Shift to read the legendary record]"
+					GrowthBase: "[c/8DEBFF:Current growth: three base combos. The sword finisher gains rift bombs after Devourer of Gods.]"
+					GrowthDoG: "[c/8DEBFF:Current growth: the sword finisher fires two rift bombs. The chain finisher gains homing blades after Yharon.]"
+					GrowthYharon: "[c/8DEBFF:Current growth: the chain finisher fires two homing blades. Quick Draw gains a sword wave after both final bosses.]"
+					GrowthFinal: "[c/8DEBFF:Current growth: Quick Draw releases a sword wave; all form upgrades are unlocked.]"
 					LegendaryText:
 						'''
 						[c/8DEBFF:The first Cosmic Discharge felt like a compressed cosmic slash: open the rift and pour the energy straight out.]

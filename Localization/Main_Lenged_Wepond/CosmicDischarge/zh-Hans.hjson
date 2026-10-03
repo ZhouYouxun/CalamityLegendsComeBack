@@ -44,6 +44,10 @@ Mods: {
 						[c/DCD6C8:触发时获得5秒“裂隙复苏”（伤害、防御与移动速度提高20%），冷却60秒。]
 						'''
 					LegendaryHint: "[c/BABABA:按住Shift键以读取记录]"
+					GrowthBase: "[c/8DEBFF:当前成长：三形态基础连击；神吞后剑终结技追加裂隙弹。]"
+					GrowthDoG: "[c/8DEBFF:当前成长：剑终结技追加双裂隙弹；尧龙后链刃终结段追加追踪刃。]"
+					GrowthYharon: "[c/8DEBFF:当前成长：链刃终结段追加双追踪刃；终局双 Boss 后速拔追加剑波。]"
+					GrowthFinal: "[c/8DEBFF:当前成长：速拔追加剑波，三形态成长已完成。]"
 					LegendaryText:
 						'''
 						[c/8DEBFF:最初的裂宙弹刃更像一次被压缩的宇宙斩击：打开裂隙，将能量直接倾泻出去。]

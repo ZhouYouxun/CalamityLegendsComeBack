@@ -6,6 +6,9 @@ namespace CalamityLegendsComeBack.Accssory.MC.General
 {
     public sealed class WillowBlade : ModItem
     {
+        // Keep the implementation available in source without registering this item.
+        public override bool IsLoadingEnabled(Mod mod) => false;
+
         public override string Texture => "CalamityLegendsComeBack/Weapons/Malachite/Malachite";
         public override string LocalizationCategory => "Items.Accessories";
 

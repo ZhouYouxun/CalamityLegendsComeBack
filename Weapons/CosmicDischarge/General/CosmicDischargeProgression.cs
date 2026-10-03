@@ -10,6 +10,13 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         public static bool DownedMoonLord => NPC.downedMoonlord;
         public static bool DownedDoG => DownedBossSystem.downedDoG;
         public static bool DownedYharon => DownedBossSystem.downedYharon;
+        public static bool DownedFinalPair =>
+            DownedBossSystem.downedExoMechs && DownedBossSystem.downedCalamitas;
+
+        // 神吞前武器已有三形态；此后每一段流程各增加一种组合技。
+        public static bool SwordRiftFanUnlocked => DownedDoG;
+        public static bool ChainEchoUnlocked => DownedYharon;
+        public static bool QuickDrawWaveUnlocked => DownedFinalPair;
 
         public static int QuickDrawRiftBombCount
         {

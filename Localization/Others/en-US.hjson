@@ -69,7 +69,7 @@ Mods: {
 						[c/70E0A0:A custom Boss health bar and internal item names]
 						[c/70E0A0:Faster decryption and charging]
 						[c/70E0A0:Hostile projectile outlines and more]
-						[c/FFFFFF:Left-click to view the Legendary Guide]
+						[c/FFFFFF:The Legendary Guide interface is disabled]
 						'''
 				}
 
@@ -94,7 +94,11 @@ Mods: {
 			Consumables: {
 				LegendarySupplyBox: {
 					DisplayName: Legendary Supply Box
-					Tooltip: Right-click to receive a random main-line legendary weapon, or hand-craft a specific weapon using this box.
+					Tooltip:
+						'''
+						Right click to get a random legendary weapon, or use this box to craft a specific one.
+						Some weapons are still unbalanced. Try the balanced SHPC and Malachite first.
+						'''
 				}
 
 				RetroGameConsoleSupplyBox: {
@@ -121,11 +125,6 @@ Mods: {
 					DisplayName: Quick Start Box
 					Tooltip: ""
 				}
-			}
-
-			LegendaryUltimateTester: {
-				DisplayName: Legendary Ultimate Tester
-				Tooltip: Test accessory: SHPC ultimate fully recharges in 1 second
 			}
 		}
 

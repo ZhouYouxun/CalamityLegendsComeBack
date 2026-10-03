@@ -155,6 +155,8 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
                 CosmicDischargeCommon.SpawnQuickDrawFullBurst(Projectile.GetSource_FromThis(), Owner, burstCenter, Projectile.damage, Projectile.knockBack);
                 SpawnRiftExplosion(burstCenter, 180f, 0.72f);
+                if (CosmicDischargeProgression.QuickDrawWaveUnlocked)
+                    SpawnSwordWave(direction);
             }
 
             if (Time >= duration)

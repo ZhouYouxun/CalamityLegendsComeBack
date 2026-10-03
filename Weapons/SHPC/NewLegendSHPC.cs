@@ -1564,7 +1564,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                         this.GetLocalizedValue("SHPC_UnloadHint").TrimEnd('\r', '\n') + "\n" +
                         this.GetLocalizedValue("SHPC_Passive").TrimEnd('\r', '\n') + "\n" +
                         compactExHint.TrimEnd('\r', '\n') + "\n" +
-                        this.GetLocalizedValue("SHPC_Final").TrimEnd('\r', '\n') + "\n";
+                        this.GetLocalizedValue("SHPC_Final").TrimEnd('\r', '\n');
 
                     int placeholderIndex = tooltips.FindIndex(line => line.Text == "[GFB]");
                     if (placeholderIndex >= 0)
@@ -1608,7 +1608,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                     unloadHintText + "\n\n" +
                     passiveText + "\n\n" +
                     exHint + "\n\n" +
-                    finalLine + "\n";
+                    finalLine;
 
                 tooltips.FindAndReplace("[GFB]", finalText);
                 }

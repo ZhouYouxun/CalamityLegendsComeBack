@@ -13,14 +13,14 @@ Mods: {
 				}
 
 				Chat: {
-					Normal1: 传奇武器、BOSS召唤物、破译机套件——只要你付得起，我这儿都有。
+					Normal1: BOSS召唤物、破译机套件——只要你付得起，我这儿都有。
 					Normal2: 点下面的按钮切换货架，别嫌我货多。
-					Normal3: 那些传奇兵器？开局就卖，能不能驾驭就看你自己了。
+					Normal3: 传奇兵器不在我的货架上；想要它们，就去寻找对应的合成配方。
 					Normal4: 召唤物得看你打到哪儿了，进度不到我可不敢卖给你。
 				}
 
 				ShopButton: {
-					LegendWeapons: 传奇武器
+					// LegendWeapons: Legend Weapons
 					BossSummons: BOSS召唤物
 					Draedon: 破译机套件
 				}
@@ -28,7 +28,7 @@ Mods: {
 				SwitchShopButton: 切换货架
 
 				SwitchChat: {
-					LegendWeapons: 已切到【传奇武器】货架。
+					// LegendWeapons: Switched to the [Legend Weapons] shelf.
 					BossSummons: 已切到【BOSS召唤物】货架。
 					Draedon: 已切到【破译机套件】货架。
 				}

@@ -8,6 +8,7 @@ namespace CalamityLegendsComeBack.BossAI.HDMC
     // This layer is the explicit held-use counterpart to the inventory/world draw hooks.
     internal sealed class HDMCHeldCoreLayer : PlayerDrawLayer
     {
+        public override bool IsLoadingEnabled(Mod mod) => false;
         public override Position GetDefaultPosition() => new AfterParent(PlayerDrawLayers.HeldItem);
 
         public override bool GetDefaultVisibility(PlayerDrawSet drawInfo)

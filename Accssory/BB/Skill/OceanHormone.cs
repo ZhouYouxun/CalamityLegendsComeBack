@@ -7,6 +7,9 @@ namespace CalamityLegendsComeBack.Accssory.BB.Skill
 {
     public class OceanHormone : ModItem
     {
+        // Keep the implementation available in source without registering this item.
+        public override bool IsLoadingEnabled(Mod mod) => false;
+
         public override string Texture => "CalamityLegendsComeBack/Accssory/BB/贴图/海洋激素";
 
         public override void SetDefaults()

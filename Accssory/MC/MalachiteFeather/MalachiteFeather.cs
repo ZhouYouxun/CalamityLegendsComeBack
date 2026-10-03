@@ -6,6 +6,9 @@ namespace CalamityLegendsComeBack.Accssory.MC.MalachiteFeather
 {
     public sealed class MalachiteFeather : ModItem
     {
+        // Keep the implementation available in source without registering this item.
+        public override bool IsLoadingEnabled(Mod mod) => false;
+
         public override string LocalizationCategory => "Items.Accessories";
 
         public override void SetDefaults()

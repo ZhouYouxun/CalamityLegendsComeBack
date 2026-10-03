@@ -201,7 +201,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
                 var bbAcc = owner.GetModPlayer<BBAccessoryPlayer>();
                 var tidePlayer = owner.GetModPlayer<BBTideValuePlayer>();
 
-                if ((bbAcc.BottledBlackPearlEquipped || bbAcc.BottledAircraftCarrierEquipped) && tidePlayer.TideFull)
+                if ((bbAcc.BottledBlackPearlEquipped || bbAcc.BottledAircraftCarrierEquipped || bbAcc.PearlGrowthUnlocked) && tidePlayer.TideFull)
                 {
                     sizeMult = 1.5f;
                     Projectile.damage = (int)(Projectile.damage * 1.25f);

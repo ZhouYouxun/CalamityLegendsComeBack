@@ -7,7 +7,7 @@ Mods: {
 					// Tooltip: "[GFB]"
 					/* FunctionalTooltip:
 						'''
-						[c/FFD966:Left Click] [c/DCD6C8:Hold to swing the greatsword; while it spins, golden tracking souls continuously scatter around you]
+						[c/FFD966:Left Click] [c/DCD6C8:Hold to spin the greatsword; tracking souls and falling beams join the attack as you progress]
 						[c/8DB8FF:Right Click] [c/DCD6C8:Raise the 40-frame Aegis shield — the first 15 frames are the Perfect Parry window, then it can be charged]
 						[c/8DB8FF:Shield Bash] [c/DCD6C8:Release right-click to dash toward the cursor and ram enemies with the shield; longer charge means more distance and damage]
 						[c/8DB8FF:Full Charge] [c/DCD6C8:Unlocked after any Mechanical Boss; left-click to hurl down the Aegis Blade and raise 16-tile rapid barricades on both sides]
@@ -19,6 +19,11 @@ Mods: {
 						[c/FFD700:Legendary Skill (Golden Hand)] [c/DCD6C8:When energy is full, press the Legendary Skill key to summon a golden hand granting 10s of full invincibility]
 						''' */
 					// LegendaryHint: "[c/BABABA:Hold Shift to read the legendary record]"
+					// GrowthStage0: "[c/FFD966:Current growth: two fireballs. Tracking souls unlock in Hardmode; falling beams unlock after Moon Lord.]"
+					// GrowthStage4: "[c/FFD966:Current growth: tracking souls. Shield charge unlocks after a Mechanical Boss; fireballs upgrade after Plantera.]"
+					// GrowthStage6: "[c/FFD966:Current growth: four fireballs and stronger soul bursts. Falling beams unlock after Moon Lord.]"
+					// GrowthStage8: "[c/FFD966:Current growth: two falling beams per swing. Four unlock after Providence.]"
+					// GrowthStage9: "[c/FFD966:Current growth: four falling beams per swing; the full attack is unlocked.]"
 					/* LegendaryText:
 						'''
 						[c/FFD966:The first Aegis Blade was closer to a defensive relic: raise the shield, take the hit, then answer with the edge.]

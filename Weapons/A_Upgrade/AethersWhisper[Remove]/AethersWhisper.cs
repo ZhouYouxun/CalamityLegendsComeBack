@@ -22,6 +22,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper
     /// </summary>
     public class AethersWhisper : ModItem, ILocalizedModType
     {
+        // Keep the implementation available in source without registering this item.
+        public override bool IsLoadingEnabled(Mod mod) => false;
+
         public new string LocalizationCategory => "Items.Weapons.Magic";
         public override string Texture => "CalamityMod/Items/Weapons/Magic/AethersWhisper";
 

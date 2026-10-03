@@ -58,23 +58,16 @@ namespace CalamityLegendsComeBack
             Item.useStyle = ItemUseStyleID.HoldUp;
             Item.noMelee = true;
             Item.autoReuse = false;
-            Item.shoot = ModContent.ProjectileType<LegendaryCodexPanel>();
+            Item.shoot = ProjectileID.None;
             Item.shootSpeed = 0f;
             Item.UseSound = null;
         }
 
-        public override bool CanUseItem(Player player)
-        {
-            return Main.myPlayer == player.whoAmI &&
-                !Main.mapFullscreen &&
-                !Main.blockMouse &&
-                !player.mouseInterface &&
-                !(Main.playerInventory && Main.HoverItem.type == Type);
-        }
+        public override bool CanUseItem(Player player) => false;
 
         public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
         {
-            return LegendaryCodexPanel.OpenOrClose(player, source);
+            return false;
         }
 
         public override void OnSpawn(IEntitySource source)
@@ -402,6 +395,7 @@ namespace CalamityLegendsComeBack
 
     internal sealed class LegendaryCodexPanel : ModProjectile, ILocalizedModType, IScreenOverlayProjectile
     {
+        public override bool IsLoadingEnabled(Mod mod) => false;
         private const int PreferredPanelWidth = 900;
         private const int PreferredPanelHeight = 560;
         private const int ScreenMargin = 12;

@@ -150,6 +150,10 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
                 tooltips.FindAndReplace("[GFB]", this.GetLocalizedValue("FunctionalTooltip"));
 
             tooltips.Add(new TooltipLine(Mod, "AegisBladeHolyKnightLegendaryText", legendarySection));
+            int stage = BalanceAegisBlade.GetStageIndex();
+            string growthKey = stage >= 9 ? "GrowthStage9" : stage >= 8 ? "GrowthStage8" :
+                stage >= 6 ? "GrowthStage6" : stage >= 4 ? "GrowthStage4" : "GrowthStage0";
+            tooltips.Add(new TooltipLine(Mod, "AegisGrowthStage", this.GetLocalizedValue(growthKey)));
         }
 
         internal static Vector2 GetMouseWorld(Player player)

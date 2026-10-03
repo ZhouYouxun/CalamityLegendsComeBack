@@ -6,6 +6,9 @@ namespace CalamityLegendsComeBack.Accssory.BB
 {
     public abstract class BBMeleeBonusAccessory : ModItem
     {
+        // Keep the implementation available in source without registering this item.
+        public override bool IsLoadingEnabled(Mod mod) => false;
+
         public override string Texture => $"CalamityLegendsComeBack/Accssory/BB/贴图/{GetType().Name}";
 
         protected abstract float MeleeBonus { get; }

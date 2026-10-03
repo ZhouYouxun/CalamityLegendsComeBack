@@ -8,6 +8,9 @@ namespace CalamityLegendsComeBack.Accssory.BB.General
 {
     public class BottledAircraftCarrier : BBMeleeBonusAccessory
     {
+        // Keep the implementation available in source without registering this item.
+        public override bool IsLoadingEnabled(Mod mod) => false;
+
         protected override float MeleeBonus => 0.15f;
         protected override int TideCapBonus => 6;
         protected override int Rarity => ItemRarityID.Cyan;

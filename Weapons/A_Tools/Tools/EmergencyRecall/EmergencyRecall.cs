@@ -15,6 +15,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.Tools.EmergencyRecall
 {
     public class EmergencyRecall : ModItem, ILocalizedModType
     {
+        // Keep the implementation available in source without registering this item.
+        public override bool IsLoadingEnabled(Mod mod) => false;
+
         public new string LocalizationCategory => "Items.Weapons";
         public override string Texture => "Terraria/Images/Item_" + ItemID.PotionOfReturn;
 

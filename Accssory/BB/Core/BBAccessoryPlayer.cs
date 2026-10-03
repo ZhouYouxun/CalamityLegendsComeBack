@@ -31,7 +31,12 @@ namespace CalamityLegendsComeBack.Accssory.BB
         public float GeneralMeleeDamageBonus;
         public int BottleTideCapBonus;
         public BBRightClickMode RightClickMode { get; private set; }
-        public int BonusTideMax => BottleTideCapBonus;
+        private bool HoldingBrinyBaron => Player.HeldItem?.ModItem is NewLegendBrinyBaron;
+        private bool BoatGrowthUnlocked => HoldingBrinyBaron && Main.hardMode;
+        public bool PearlGrowthUnlocked => HoldingBrinyBaron && NPC.downedGolemBoss;
+        private bool CarrierGrowthUnlocked => HoldingBrinyBaron && DownedBossSystem.downedPolterghast;
+        public int BonusTideMax => System.Math.Max(BottleTideCapBonus,
+            PearlGrowthUnlocked ? 6 : BoatGrowthUnlocked ? 4 : 0);
 
         private int autoTideTimer;
 
@@ -54,7 +59,7 @@ namespace CalamityLegendsComeBack.Accssory.BB
 
         public override void PostUpdate()
         {
-            if (BottledAircraftCarrierEquipped)
+            if (BottledAircraftCarrierEquipped || CarrierGrowthUnlocked)
             {
                 autoTideTimer++;
                 if (autoTideTimer >= 360)
@@ -63,7 +68,7 @@ namespace CalamityLegendsComeBack.Accssory.BB
                     Player.GetModPlayer<BBTideValuePlayer>().AddTide(2);
                 }
             }
-            else if (BottledBlackPearlEquipped)
+            else if (BottledBlackPearlEquipped || PearlGrowthUnlocked)
             {
                 autoTideTimer++;
                 if (autoTideTimer >= 720)
@@ -81,10 +86,20 @@ namespace CalamityLegendsComeBack.Accssory.BB
         public override void PostUpdateEquips()
         {
             Player.GetDamage(DamageClass.Melee) += GeneralMeleeDamageBonus;
+            if (CarrierGrowthUnlocked)
+            {
+                Player.GetDamage(DamageClass.Melee) += 0.30f;
+                Player.GetAttackSpeed(DamageClass.Melee) += 0.15f;
+            }
+            else if (PearlGrowthUnlocked)
+                Player.GetDamage(DamageClass.Melee) += 0.15f;
+            else if (BoatGrowthUnlocked)
+                Player.GetDamage(DamageClass.Melee) += 0.12f;
+
             BBTideValuePlayer tidePlayer = Player.GetModPlayer<BBTideValuePlayer>();
             int currentTide = tidePlayer.TideValue;
 
-            if (BottledBoatEquipped || BottledBlackPearlEquipped || BottledAircraftCarrierEquipped)
+            if (BottledBoatEquipped || BottledBlackPearlEquipped || BottledAircraftCarrierEquipped || BoatGrowthUnlocked)
             {
                 Player.GetDamage(DamageClass.Melee) += currentTide * 0.01f;
                 Player.GetAttackSpeed(DamageClass.Melee) += currentTide * 0.01f;
@@ -92,13 +107,13 @@ namespace CalamityLegendsComeBack.Accssory.BB
 
             if (tidePlayer.TideFull)
             {
-                if (BottledBlackPearlEquipped || BottledAircraftCarrierEquipped)
+                if (BottledBlackPearlEquipped || BottledAircraftCarrierEquipped || PearlGrowthUnlocked)
                 {
                     Player.statDefense += 10;
                     Player.endurance += 0.10f;
                 }
 
-                if (BottledAircraftCarrierEquipped)
+                if (BottledAircraftCarrierEquipped || CarrierGrowthUnlocked)
                     Player.GetCritChance(DamageClass.Melee) += 30;
             }
 

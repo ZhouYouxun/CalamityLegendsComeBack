@@ -141,6 +141,9 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 // 缚囚之悼同款 3 链迅捷抽打
                 SetBlade(direction, targetReach, 0f, 42f);
 
+                if (Time == 10f && CosmicDischargeProgression.ChainEchoUnlocked)
+                    SpawnSwordHomingBolts(TipPosition, direction, 2, 0.20f);
+
                 if ((int)Time % 4 == 0)
                 {
                     SoundEngine.PlaySound(SoundID.Item71 with { Volume = 0.85f, Pitch = 0.15f }, Owner.Center);

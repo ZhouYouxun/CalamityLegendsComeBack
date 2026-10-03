@@ -121,6 +121,10 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             else
                 tooltips.FindAndReplace("[GFB]", text);
             tooltips.Add(new TooltipLine(Mod, "CosmicDischargeRiftVoidLegendaryText", legendarySection));
+            string growthKey = CosmicDischargeProgression.QuickDrawWaveUnlocked ? "GrowthFinal" :
+                CosmicDischargeProgression.ChainEchoUnlocked ? "GrowthYharon" :
+                CosmicDischargeProgression.SwordRiftFanUnlocked ? "GrowthDoG" : "GrowthBase";
+            tooltips.Add(new TooltipLine(Mod, "CosmicDischargeGrowthStage", this.GetLocalizedValue(growthKey)));
         }
 
         public override void AddRecipes()

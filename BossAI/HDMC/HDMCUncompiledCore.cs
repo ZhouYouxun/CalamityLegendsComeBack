@@ -17,6 +17,7 @@ namespace CalamityLegendsComeBack.BossAI.HDMC
     /// </summary>
     public sealed class HDMCUncompiledCore : ModItem
     {
+        public override bool IsLoadingEnabled(Mod mod) => false;
         private static readonly Vector3[] PrismVertices =
         {
             new Vector3(0f, -1f, -0.65f),

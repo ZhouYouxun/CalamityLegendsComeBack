@@ -14,6 +14,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.PreDrawLab
 {
     public sealed class PreDrawLabItem : ModItem, ILocalizedModType
     {
+        // Keep the implementation available in source without registering this item.
+        public override bool IsLoadingEnabled(Mod mod) => false;
+
         public static readonly string DemoTexture = "Terraria/Images/Item_" + ItemID.Paintbrush;
 
         private static int PanelType => ModContent.ProjectileType<PreDrawLabPanel>();

@@ -19,6 +19,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.StructureExtractor
 {
     public sealed class StructureExtractor : ModItem, ILocalizedModType
     {
+        // Keep the implementation available in source without registering this item.
+        public override bool IsLoadingEnabled(Mod mod) => false;
+
         private static int OverlayType => ModContent.ProjectileType<StructureExtractorOverlay>();
 
         public new string LocalizationCategory => "Items.Weapons";

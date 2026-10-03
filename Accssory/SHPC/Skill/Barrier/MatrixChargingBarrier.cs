@@ -1,4 +1,3 @@
-using CalamityMod.Items.Accessories;
 using CalamityMod.Items.Materials;
 using Terraria;
 using Terraria.ID;
@@ -26,12 +25,26 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.Barrier
 
         public override void AddRecipes()
         {
-            CreateRecipe()
-                .AddIngredient<MysteriousCircuitry>(4)
-                .AddIngredient<DubiousPlating>(8)
-                .AddIngredient<RoverDrive>()
-                .AddTile(TileID.Anvils)
-                .Register();
+            if (ModLoader.TryGetMod("CalamityMod", out Mod calamity) &&
+                calamity.TryFind<ModItem>("RoverDrive", out ModItem roverDrive))
+            {
+                CreateRecipe()
+                    .AddIngredient<MysteriousCircuitry>(4)
+                    .AddIngredient<DubiousPlating>(8)
+                    .AddIngredient(roverDrive.Type)
+                    .AddTile(TileID.Anvils)
+                    .Register();
+            }
+
+            if (ModLoader.HasMod("CalamityFables"))
+            {
+                CreateRecipe()
+                    .AddIngredient<MysteriousCircuitry>(4)
+                    .AddIngredient<DubiousPlating>(8)
+                    .AddIngredient<CL_RoverDrive>()
+                    .AddTile(TileID.Anvils)
+                    .Register();
+            }
         }
     }
 }

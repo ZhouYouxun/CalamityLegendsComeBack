@@ -17,6 +17,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.ParticleLab
 {
     public sealed class ParticleLabDebugItem : ModItem, ILocalizedModType
     {
+        // Keep the implementation available in source without registering this item.
+        public override bool IsLoadingEnabled(Mod mod) => false;
+
         public static readonly string DemoTexture = "Terraria/Images/Item_" + ItemID.CrystalSerpent;
 
         private static int PanelType => ModContent.ProjectileType<ParticleLabPanel>();

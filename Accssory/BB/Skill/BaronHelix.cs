@@ -7,6 +7,9 @@ namespace CalamityLegendsComeBack.Accssory.BB.Skill
 {
     public class BaronHelix : ModItem
     {
+        // Keep the implementation available in source without registering this item.
+        public override bool IsLoadingEnabled(Mod mod) => false;
+
         public override string Texture => "CalamityLegendsComeBack/Accssory/BB/贴图/爵士螺旋";
 
         public override void SetDefaults()

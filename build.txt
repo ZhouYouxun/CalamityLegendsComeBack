@@ -1,10 +1,11 @@
 displayName = CalamityLegendsComeBack [灾厄-传奇]
 author = 犽戎 & 剃刀刃台风 & 某不知名容器
-version = 2.0.0.2
+version = 2.0.0.3
 hideCode = false
 hideResources = false
 includeSource = true
 modReferences = CalamityMod
-sortAfter = CalamityMod
+weakReferences = CalamityFables
+sortAfter = CalamityMod, CalamityFables
 homepage = https://github.com/ZhouYouxun/CalamityLegendsComeBack
 buildIgnore = *.zip*

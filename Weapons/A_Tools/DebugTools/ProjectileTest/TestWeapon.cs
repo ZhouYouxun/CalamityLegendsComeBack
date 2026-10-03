@@ -10,6 +10,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.ProjectileTest
 {
     internal class TestWeapon : ModItem
     {
+        // Keep the implementation available in source without registering this item.
+        public override bool IsLoadingEnabled(Mod mod) => false;
+
         public override string Texture => "Terraria/Images/Item_14";
 
         public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame,

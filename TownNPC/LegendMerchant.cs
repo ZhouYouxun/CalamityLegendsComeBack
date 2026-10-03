@@ -1,22 +1,8 @@
 using System.Collections.Generic;
 using CalamityMod;
-// 传奇武器（第1商店）
-using CalamityLegendsComeBack.Weapons.AegisBlade;
-using CalamityLegendsComeBack.Weapons.BlossomFlux;
-using CalamityLegendsComeBack.Weapons.BrinyBaron;
-using CalamityLegendsComeBack.Weapons.CosmicDischarge;
-using CalamityLegendsComeBack.Weapons.GaelsGreatsword;
-using CalamityLegendsComeBack.Weapons.GlacialEmbrace;
-using CalamityLegendsComeBack.Weapons.LeonidProgenitor;
-using CalamityLegendsComeBack.Weapons.Malachite;
-using CalamityLegendsComeBack.Weapons.PristineFury;
-using CalamityLegendsComeBack.Weapons.SeasSearing;
-using CalamityLegendsComeBack.Weapons.SHPC;
-using CalamityLegendsComeBack.Weapons.Vesuvius;
-using CalamityLegendsComeBack.Weapons.YharimsCrystal;
-// BOSS召唤物（第2商店）
+// BOSS召唤物（第1商店）
 using CalamityMod.Items.SummonItems;
-// 密码破译机相关（第3商店）
+// 密码破译机相关（第2商店）
 using CalamityMod.Items.DraedonMisc;
 using CalamityMod.Items.Placeables.DraedonStructures;
 using Terraria;
@@ -28,18 +14,17 @@ using Terraria.ModLoader;
 namespace CalamityLegendsComeBack.TownNPC
 {
     // 临时性城镇NPC：直接借用灾厄“盗贼(Bandit)”的贴图与小地图头像。
-    // 三个商店：传奇武器 / BOSS召唤物 / 密码破译机套件。
+    // 两个商店：BOSS召唤物 / 密码破译机套件。
     public class LegendMerchant : ModNPC
     {
         // 借用灾厄盗贼的主贴图；[AutoloadHead] 会自动请求同路径的 _Head 小地图头像。
         public override string Texture => "CalamityMod/NPCs/TownNPCs/Bandit";
 
         // 商店内部名
-        private const string WeaponShopName = "LegendWeapons";
         private const string SummonShopName = "BossSummons";
         private const string DraedonShopName = "Draedon";
 
-        // 当前正在浏览的商店页（0=武器 1=召唤物 2=破译机）。单个商人足够用静态字段。
+        // 当前正在浏览的商店页（0=召唤物 1=破译机）。单个商人足够用静态字段。
         private static int shopPage;
 
         public override void SetStaticDefaults()
@@ -86,7 +71,7 @@ namespace CalamityLegendsComeBack.TownNPC
             });
         }
 
-        // 有可用房屋即可入住（开局就能买到传奇武器）。
+        // 有可用房屋即可入住。
         public override bool CanTownNPCSpawn(int numTownNPCs) => true;
 
         public override List<string> SetNPCNameList() => new List<string>()
@@ -117,9 +102,8 @@ namespace CalamityLegendsComeBack.TownNPC
             // 第一个按钮：打开当前页商店，标签随页码变化。
             button = shopPage switch
             {
-                1 => this.GetLocalizedValue("ShopButton.BossSummons"),
-                2 => this.GetLocalizedValue("ShopButton.Draedon"),
-                _ => this.GetLocalizedValue("ShopButton.LegendWeapons"),
+                0 => this.GetLocalizedValue("ShopButton.BossSummons"),
+                _ => this.GetLocalizedValue("ShopButton.Draedon"),
             };
             // 第二个按钮：切换到下一页。
             button2 = this.GetLocalizedValue("SwitchShopButton");
@@ -129,45 +113,22 @@ namespace CalamityLegendsComeBack.TownNPC
         {
             if (firstButton)
             {
-                shopName = shopPage switch
-                {
-                    1 => SummonShopName,
-                    2 => DraedonShopName,
-                    _ => WeaponShopName,
-                };
+                shopName = shopPage == 0 ? SummonShopName : DraedonShopName;
             }
             else
             {
-                shopPage = (shopPage + 1) % 3;
+                shopPage = (shopPage + 1) % 2;
                 Main.npcChatText = shopPage switch
                 {
-                    1 => this.GetLocalizedValue("SwitchChat.BossSummons"),
-                    2 => this.GetLocalizedValue("SwitchChat.Draedon"),
-                    _ => this.GetLocalizedValue("SwitchChat.LegendWeapons"),
+                    0 => this.GetLocalizedValue("SwitchChat.BossSummons"),
+                    _ => this.GetLocalizedValue("SwitchChat.Draedon"),
                 };
             }
         }
 
         public override void AddShops()
         {
-            // —— 第1商店：全部传奇武器，开局即可购买 ——
-            new NPCShop(Type, WeaponShopName)
-                .Add<AegisBlade>()
-                .Add<NewLegendBlossomFlux>()
-                .Add<NewLegendBrinyBaron>()
-                .Add<NewLegendCosmicDischarge>()
-                .Add<NewLegendGaelsGreatsword>()
-                .Add<GlacialEmbrace>()
-                .Add<LeonidProgenitor>()
-                .Add<Malachite>()
-                .Add<NewLegendPristineFury>()
-                .Add<SeasSearing>()
-                .Add<NewLegendSHPC>()
-                .Add<NewVesuvius>()
-                .Add<NewLegendYharimsCrystal>()
-                .Register();
-
-            // —— 第2商店：BOSS召唤物，随进度逐步解锁 ——
+            // —— 第1商店：BOSS召唤物，随进度逐步解锁 ——
             new NPCShop(Type, SummonShopName)
                 // 原版前期
                 .Add(ItemID.SlimeCrown)                                                // 史莱姆王冠（史莱姆王）
@@ -226,7 +187,7 @@ namespace CalamityLegendsComeBack.TownNPC
                 .Add<Terminus>(CalamityConditions.DownedYharon)                      // 终结（BOSS快速战）
                 .Register();
 
-            // —— 第3商店：密码破译机基站 + 消耗物 + 关键家具 ——
+            // —— 第2商店：密码破译机基站 + 消耗物 + 关键家具 ——
             new NPCShop(Type, DraedonShopName)
                 .Add<CodebreakerBase>()          // 密码破译机基站
                 .Add<DraedonPowerCell>()         // 供能电池（消耗物）

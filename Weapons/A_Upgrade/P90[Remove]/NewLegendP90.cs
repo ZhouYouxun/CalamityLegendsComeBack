@@ -12,6 +12,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.P90
 {
     public sealed class NewLegendP90 : ModItem, ILocalizedModType
     {
+        public override bool IsLoadingEnabled(Mod mod) => false;
         internal const int MagazineCapacity = 50;
         internal const int ReloadConsumeCount = 10;
         internal const int ReloadFrames = 20;
@@ -22,7 +23,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.P90
         private static int HoldoutType => ModContent.ProjectileType<NewLegendP90Holdout>();
 
         public new string LocalizationCategory => "Items.Weapons";
-        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Upgrade/P90/NewLegendP90";
+        public override string Texture => "CalamityLegendsComeBack/Weapons/A_Upgrade/P90[Remove]/NewLegendP90";
 
         public override void SetStaticDefaults()
         {
@@ -137,6 +138,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.P90
 
     internal sealed class NewLegendP90Shop : GlobalNPC
     {
+        public override bool IsLoadingEnabled(Mod mod) => false;
         public override void ModifyShop(NPCShop shop)
         {
             if (shop.NpcType == NPCID.ArmsDealer)

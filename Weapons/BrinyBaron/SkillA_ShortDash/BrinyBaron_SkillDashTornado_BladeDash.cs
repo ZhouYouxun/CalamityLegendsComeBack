@@ -319,6 +319,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
                 {
                     SpawnWaterPillarBurst(target.Center, GetReliableDashDirection());
                     SpawnJazzTyphoon(owner, target);
+                    SpawnImpactShurikenBurst(target.Center);
                 }
             }
 
@@ -544,14 +545,14 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
 
         private void TryFireDashProjectile(Player owner, Vector2 dashDirection)
         {
-            if (ReboundDashMode)
+            if (!ReboundDashMode || !Main.hardMode)
                 return;
 
             if (Main.myPlayer != Projectile.owner)
                 return;
 
             dashShotTimer++;
-            if (dashShotTimer < 7)
+            if (dashShotTimer < 5)
                 return;
 
             dashShotTimer = 0;
@@ -568,6 +569,24 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillA_ShortDash
                 Projectile.knockBack * 0.4f,
                 Projectile.owner,
                 0.25f);
+        }
+
+        private void SpawnImpactShurikenBurst(Vector2 impactCenter)
+        {
+            const int shurikenCount = 6;
+            for (int i = 0; i < shurikenCount; i++)
+            {
+                Vector2 direction = (MathHelper.TwoPi * i / shurikenCount).ToRotationVector2();
+                Projectile.NewProjectile(
+                    Projectile.GetSource_FromThis(),
+                    impactCenter + direction * 18f,
+                    direction * 12f,
+                    ModContent.ProjectileType<BrinyBaron_RightClick_Shuriken>(),
+                    Math.Max(1, (int)(Projectile.damage * 0.24f)),
+                    Projectile.knockBack * 0.35f,
+                    Projectile.owner,
+                    0.25f);
+            }
         }
 
         private void SpawnStartBurst()

@@ -13,13 +13,11 @@ using CalamityLegendsComeBack.Weapons.SeasSearing;
 using CalamityLegendsComeBack.Weapons.SHPC;
 using CalamityLegendsComeBack.Weapons.Vesuvius;
 using CalamityLegendsComeBack.Weapons.YharimsCrystal;
-using CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper;
 using CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle;
 using CalamityLegendsComeBack.Weapons.A_Upgrade.BlackHawkRemote;
 using CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty;
 using CalamityLegendsComeBack.Weapons.A_Upgrade.DragoonDrizzlefish;
 using CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir;
-using CalamityLegendsComeBack.Weapons.A_Upgrade.P90;
 using CalamityMod.Rarities;
 using Terraria;
 using Terraria.DataStructures;
@@ -98,13 +96,11 @@ namespace CalamityLegendsComeBack
         {
             List<int> weapons = new(GetMainLegendaryWeapons())
             {
-                ModContent.ItemType<AethersWhisper>(),
                 ModContent.ItemType<NewLegendAntiMaterielRifle>(),
                 ModContent.ItemType<LegendaryBlackHawkRemote>(),
                 ModContent.ItemType<CallofDuty>(),
                 ModContent.ItemType<NewDragoonDrizzlefish>(),
-                ModContent.ItemType<UmbralNadir>(),
-                ModContent.ItemType<NewLegendP90>()
+                ModContent.ItemType<UmbralNadir>()
             };
 
             return weapons.ToArray();

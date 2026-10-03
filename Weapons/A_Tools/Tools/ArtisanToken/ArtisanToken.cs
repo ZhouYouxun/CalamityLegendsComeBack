@@ -21,6 +21,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.Tools.ArtisanToken
 {
     public class ArtisanToken : ModItem, ILocalizedModType
     {
+        // Keep the implementation available in source without registering this item.
+        public override bool IsLoadingEnabled(Mod mod) => false;
+
         public new string LocalizationCategory => "Items.Weapons";
         public override string Texture => "Terraria/Images/Item_" + ItemID.TinkerersWorkshop;
 
@@ -78,6 +81,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.Tools.ArtisanToken
 
     internal class ArtisanTokenShop : GlobalNPC
     {
+        public override bool IsLoadingEnabled(Mod mod) => false;
         public override void ModifyShop(NPCShop shop)
         {
             if (shop.NpcType == NPCID.GoblinTinkerer)

@@ -28,7 +28,6 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         private const float SpinSpraySpriteScale = 0.3f;    // 线性粒子本体大小（独立于刀盘）
         private const int BladeTrailHistoryFrames = 16;
         private const int TrackingSoulInterval = 24;
-        private const int TrackingSoulBurstCount = 5;
         private const float TrackingSoulSpeed = 12f;
         private const float SpinAcceleration = 0.075f;
         private const int SpinTransitionFrames = 14;
@@ -219,13 +218,15 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
             // 每帧跟刀尖方向实时更新玩家朝向
             Owner.direction = MathF.Cos(currentAngle) >= 0f ? 1 : -1;
 
-            if (!releaseEnding && Main.myPlayer == Projectile.owner && stateTimer % TrackingSoulInterval == 0)
+            if (!releaseEnding && BalanceAegisBlade.TrackingSoulsUnlocked() &&
+                Main.myPlayer == Projectile.owner && stateTimer % TrackingSoulInterval == 0)
                 SpawnTrackingSouls();
 
             if (!releaseEnding && !fireballSpawned && progress >= FireballSpawnProgress && Main.myPlayer == Projectile.owner)
             {
                 SpawnBigFireballs();
-                SpawnOrbitalStrikes();
+                if (BalanceAegisBlade.OrbitalStrikesUnlocked())
+                    SpawnOrbitalStrikes();
                 fireballSpawned = true;
                 SoundEngine.PlaySound(SoundID.Item71 with { Volume = 0.82f, Pitch = Main.rand.NextFloat(-0.12f, 0.16f) }, Owner.Center);
                 SpawnDetonationPulse();
@@ -294,13 +295,18 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
         private void SpawnBigFireballs()
         {
             int fireballType = ModContent.ProjectileType<AegisBigFireball>();
-            int damage = Math.Max(1, (int)(Projectile.damage * 0.85f));
+            bool fourFireballs = BalanceAegisBlade.FourFireballsUnlocked();
+            int damage = Math.Max(1, (int)(Projectile.damage * (fourFireballs ? 0.56f : 0.85f)));
             Vector2 aimDir = lockedMouseDirection.SafeNormalize(Vector2.UnitX * Owner.direction);
 
-            // 向左右两侧75度角发射2个大火球
-            for (int i = -1; i <= 1; i += 2)
+            // 开局为左右两枚；世纪之花后增加较窄的一对，总伤害按数量分摊。
+            int count = fourFireballs ? 4 : 2;
+            for (int i = 0; i < count; i++)
             {
-                Vector2 shootVel = aimDir.RotatedBy(MathHelper.ToRadians(75f * i)) * 14f;
+                float angle = fourFireballs
+                    ? (i switch { 0 => -75f, 1 => -35f, 2 => 35f, _ => 75f })
+                    : (i == 0 ? -75f : 75f);
+                Vector2 shootVel = aimDir.RotatedBy(MathHelper.ToRadians(angle)) * 14f;
                 Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, shootVel,
                     fireballType, damage, Projectile.knockBack * 0.5f, Projectile.owner);
             }
@@ -315,7 +321,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
 
             SoundEngine.PlaySound(SoundID.Item73 with { Volume = 0.65f, Pitch = Main.rand.NextFloat(-0.1f, 0.2f) }, spawnPosition);
 
-            for (int i = 0; i < TrackingSoulBurstCount; i++)
+            for (int i = 0; i < BalanceAegisBlade.TrackingSoulBurstCount(); i++)
             {
                 // 模仿 Entropic Claymore：从挥刀方向爆发散射，速度与角度随机微调
                 Vector2 shootVel = baseDir.RotatedByRandom(0.48f) * Main.rand.NextFloat(0.75f, 1.25f) * TrackingSoulSpeed;
@@ -347,7 +353,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade.Projectiles
                 : AegisBlade.GetMouseWorld(Owner);
 
             // 从天空中左右 4 个不同位置发射 4 条天光弹幕，全部斜向穿过 destination 敌人焦点轰向地面
-            int beamCount = 4;
+            int beamCount = BalanceAegisBlade.OrbitalStrikeCount();
             for (int i = 0; i < beamCount; i++)
             {
                 float xOffset = MathHelper.Lerp(-450f, 450f, i / (float)(beamCount - 1)) + Main.rand.NextFloat(-40f, 40f);

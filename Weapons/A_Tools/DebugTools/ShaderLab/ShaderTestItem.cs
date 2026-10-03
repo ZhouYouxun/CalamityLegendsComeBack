@@ -19,6 +19,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.DebugTools.ShaderLab
 {
     public sealed class ShaderTestItem : ModItem, ILocalizedModType
     {
+        // Keep the implementation available in source without registering this item.
+        public override bool IsLoadingEnabled(Mod mod) => false;
+
         public static readonly string DemoTexture = "Terraria/Images/Item_" + ItemID.LastPrism;
 
         private static int PanelType => ModContent.ProjectileType<ShaderTestPanel>();

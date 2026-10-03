@@ -114,9 +114,23 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
         public static bool ChargeUnlocked()
             => GetStageIndex() >= 5;
 
+        /// <summary>进入困难模式后，旋转斩开始散射圣光灵魂。</summary>
+        public static bool TrackingSoulsUnlocked()
+            => GetStageIndex() >= 4;
+
         /// <summary>打败世纪之花后解锁4火球</summary>
         public static bool FourFireballsUnlocked()
             => GetStageIndex() >= 6;
+
+        /// <summary>月亮领主后，旋转斩才会引来天降光柱。</summary>
+        public static bool OrbitalStrikesUnlocked()
+            => GetStageIndex() >= 8;
+
+        public static int TrackingSoulBurstCount()
+            => GetStageIndex() >= 6 ? 5 : 3;
+
+        public static int OrbitalStrikeCount()
+            => GetStageIndex() >= 9 ? 4 : 2;
 
         // ── 公共接口 ──────────────────────────────────────────────────────
 

@@ -165,6 +165,8 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     SpawnSwordWave(direction);
                     EmitAirCrack(TipPosition, direction, 1.35f);
                     SpawnSwordHomingBolts(TipPosition, direction, 6, 0.52f);
+                    if (CosmicDischargeProgression.SwordRiftFanUnlocked)
+                        SpawnWhipRiftBombFan(direction, 2, 0.22f);
                 }
             }
             else

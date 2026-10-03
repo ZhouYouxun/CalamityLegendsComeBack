@@ -12,6 +12,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.ElementalCodex
 {
     public sealed class ElementalCodex : ModItem, ILocalizedModType
     {
+        // Keep the implementation available in source without registering this item.
+        public override bool IsLoadingEnabled(Mod mod) => false;
+
         public new string LocalizationCategory => "Items.Accessories";
         public override string Texture => "Terraria/Images/Item_" + ItemID.Book;
 
