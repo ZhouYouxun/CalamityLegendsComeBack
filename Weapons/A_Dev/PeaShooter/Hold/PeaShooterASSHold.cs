@@ -218,7 +218,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.PeaShooter
             float speed = balance.GetShootSpeed();
             Vector2 aim = Vector2.UnitX * Owner.direction;
             Vector2 muzzle = Projectile.Center + aim * MuzzleDistance + new Vector2(0f, -2f * Owner.gravDir);
-            int peaCount = Main.rand.Next(BalancePeaShooter.AdrenalineStormMinPeas, BalancePeaShooter.AdrenalineStormMaxPeas + 1);
+            int peaCount = Math.Max(1, (int)Math.Round(Main.rand.Next(BalancePeaShooter.AdrenalineStormMinPeas, BalancePeaShooter.AdrenalineStormMaxPeas + 1) * 0.4f));
 
             for (int i = 0; i < peaCount; i++)
             {
@@ -277,6 +277,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.PeaShooter
 
         public override bool PreDraw(ref Color lightColor)
         {
+            if (!Owner.GetModPlayer<PeaShooterPlayer>().AccessoryVisualEnabled)
+                return false;
+
             Texture2D texture = TextureAssets.Projectile[Type].Value;
             Vector2 drawPosition = Projectile.Center - Main.screenPosition;
             Vector2 origin = texture.Size() * 0.5f;

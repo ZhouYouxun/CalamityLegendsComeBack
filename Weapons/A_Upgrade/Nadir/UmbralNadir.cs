@@ -55,7 +55,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir
             Item.shoot = ModContent.ProjectileType<UmbralNadirHoldout>();
             Item.shootSpeed = 1f;
 
-            Item.value = CalamityGlobalItem.RarityVioletBuyPrice;
+            Item.value = CalamityGlobalItem.RarityPinkBuyPrice;
             Item.rare = ModContent.RarityType<BurnishedAuric>();
             Item.Calamity().donorItem = true;
         }

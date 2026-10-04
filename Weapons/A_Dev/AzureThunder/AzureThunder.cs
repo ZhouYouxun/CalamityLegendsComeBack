@@ -37,7 +37,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             Item.shootSpeed = 0f;
             Item.UseSound = null;
             Item.rare = ItemRarityID.Red;
-            Item.value = Item.sellPrice(0, 20);
+            Item.value = CalamityMod.Items.CalamityGlobalItem.RarityPinkBuyPrice;
         }
 
         public override bool AltFunctionUse(Player player) => true;

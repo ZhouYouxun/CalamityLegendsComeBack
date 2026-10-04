@@ -89,14 +89,14 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
             string merged =
                 string.Format(this.GetLocalizedValue("SHPB_CurrentSequence"), sequenceText) + "\n" +
                 this.GetLocalizedValue("SHPB_Left") + "\n" +
-                this.GetLocalizedValue("SHPB_StackHint") + "\n\n" +
-                this.GetLocalizedValue("SHPB_Right") + "\n\n" +
+                this.GetLocalizedValue("SHPB_StackHint") + "\n" +
+                this.GetLocalizedValue("SHPB_Right") + "\n" +
                 this.GetLocalizedValue("SHPB_Mode0") + "\n" +
                 this.GetLocalizedValue("SHPB_Mode1") + "\n" +
                 this.GetLocalizedValue("SHPB_Mode2") + "\n" +
-                this.GetLocalizedValue("SHPB_Mode3") + "\n\n" +
-                this.GetLocalizedValue("SHPB_EX") + "\n\n" +
-                this.GetLocalizedValue("SHPB_Final") + "\n";
+                this.GetLocalizedValue("SHPB_Mode3") + "\n" +
+                this.GetLocalizedValue("SHPB_EX") + "\n" +
+                this.GetLocalizedValue("SHPB_Final");
 
             tooltips.FindAndReplace("[GFB]", merged);
         }

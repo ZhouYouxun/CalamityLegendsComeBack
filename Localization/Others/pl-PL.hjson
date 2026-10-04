@@ -97,7 +97,7 @@ Mods: {
 					/* Tooltip:
 						'''
 						Right click to get a random legendary weapon, or use this box to craft a specific one.
-						Some weapons are still unbalanced. Try the balanced SHPC and Malachite first.
+						Some weapons are still unbalanced. Try the balanced SHPC, Briny Baron and Blossom Flux first.
 						''' */
 				}
 
@@ -226,6 +226,7 @@ Mods: {
 				Every legendary weapon will be reworked over time, with plenty more new content on the way -- stay tuned.
 				Feedback and suggestions are welcome -- please leave a rational comment in the review section.
 				''' */
+			CrossoverItem: Przedmiot crossover
 		}
 
 		Keybinds: {

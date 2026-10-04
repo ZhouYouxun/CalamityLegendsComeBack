@@ -39,10 +39,14 @@ namespace CalamityLegendsComeBack
         public bool AllowBossSummonShop;
 
         [BackgroundColor(20, 93, 160, 210)]
+        [DefaultValue(true)]
+        [ReloadRequired]
+        public bool AllowOtherNPCQuickShop;
+
+        [BackgroundColor(20, 93, 160, 210)]
         [DefaultValue(false)]
         public bool GiveQuickStartBoxOnSpawn;
 
-        [Header("DraedonTechnology")]
         [BackgroundColor(20, 93, 160, 210)]
         [DefaultValue(false)]
         public bool LightningDecryption;

@@ -65,7 +65,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty
             Item.UseSound = null;
             Item.shoot = ModContent.ProjectileType<CallofDutyHoldout>();
             Item.shootSpeed = 15f;
-            Item.value = CalamityGlobalItem.RarityRedBuyPrice;
+            Item.value = CalamityGlobalItem.RarityPinkBuyPrice;
             Item.rare = ItemRarityID.Red;
         }
 

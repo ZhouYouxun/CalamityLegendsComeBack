@@ -22,6 +22,10 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
 {
     public class NewLegendGaelsGreatsword : ModItem, ILocalizedModType
     {
+        // Keep the weapon and its supporting code in the mod source, but do not register
+        // an item type. This also makes it unavailable through cheat menus.
+        public override bool IsLoadingEnabled(Mod mod) => false;
+
         public new string LocalizationCategory => "Items.Weapons";
 
         private const int FollowupSlashWindow = 45;
@@ -57,7 +61,7 @@ namespace CalamityLegendsComeBack.Weapons.GaelsGreatsword
             Item.shootSpeed = 0f;
             Item.UseSound = null;
             Item.rare = ItemRarityID.Orange;
-            Item.value = Item.sellPrice(gold: 8);
+            Item.value = CalamityMod.Items.CalamityGlobalItem.RarityPinkBuyPrice;
         }
 
         public override bool AltFunctionUse(Player player) => true;

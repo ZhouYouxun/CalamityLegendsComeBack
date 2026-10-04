@@ -1,16 +1,14 @@
 Mods: {
 	CalamityLegendsComeBack: {
+		Conditions.AllSentinelsDefeated: 已击败无尽虚空、风暴编织者和西格纳斯
+
 		Configs: {
 			CalamityLegendsComeBackConfig: {
 				DisplayName: 传奇归来设置
-
-				Headers: {
-					RecipeSettings: 配方设置
-					DraedonTechnology: 嘉登科技
-				}
+				Headers.RecipeSettings: 配方设置
 
 				AllowWheelSlowdown: {
-					Label: 允许轮盘减速
+					Label: "[i:Stopwatch] 允许轮盘减速"
 					Tooltip: 开启后，单人模式中部分传奇武器呼出轮盘期间会将游戏速度放慢 50%。
 				}
 
@@ -32,6 +30,11 @@ Mods: {
 				AllowBossSummonShop: {
 					Label: "[i:GuideVoodooDoll] 允许动物学家出售Boss召唤物"
 					Tooltip: 动物学家会在对应进度出售Boss召唤物；少数会反向产出首杀材料的配方将被暂时禁用。
+				}
+
+				AllowOtherNPCQuickShop: {
+					Label: "[i:GoldCoin] 允许其他NPC出售快捷内容"
+					Tooltip: 巫师、哥布林工匠、爆破专家、军火商、动物学家和大法师按世界进度出售额外物品。
 				}
 
 				GiveQuickStartBoxOnSpawn: {

@@ -37,7 +37,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             Item.shoot = ModContent.ProjectileType<NewLegendBlossomFluxHoldOut>();
             Item.shootSpeed = 15f;
             Item.useAmmo = AmmoID.Arrow;
-            Item.value = Item.sellPrice(0, 9);
+            Item.value = CalamityMod.Items.CalamityGlobalItem.RarityPinkBuyPrice;
             Item.rare = ItemRarityID.Pink;
         }
 

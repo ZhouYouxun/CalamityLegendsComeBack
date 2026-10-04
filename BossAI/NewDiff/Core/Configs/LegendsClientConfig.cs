@@ -1,3 +1,5 @@
+// Legends mode is retired. Keep the former config source for reference without registering it.
+#if false
 using System.ComponentModel;
 using Terraria.ModLoader.Config;
 
@@ -18,3 +20,4 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Core.Configs
         }
     }
 }
+#endif

@@ -42,7 +42,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             Item.UseSound     = null;
             Item.shoot        = HoldoutType;
             Item.shootSpeed   = 34f;
-            Item.value        = CalamityGlobalItem.RarityTurquoiseBuyPrice;
+            Item.value        = CalamityGlobalItem.RarityPinkBuyPrice;
             Item.rare         = ModContent.RarityType<Turquoise>();
         }
 

@@ -45,7 +45,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             Item.shoot = HoldoutType;
             Item.shootSpeed = 32f;
             Item.useAmmo = AmmoID.Bullet;
-            Item.value = CalamityGlobalItem.RarityOrangeBuyPrice;
+            Item.value = CalamityGlobalItem.RarityPinkBuyPrice;
             Item.rare = ItemRarityID.Orange;
             Item.crit = 20;
         }

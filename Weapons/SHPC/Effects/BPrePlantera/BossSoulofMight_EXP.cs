@@ -1,10 +1,5 @@
-using CalamityMod.Buffs.StatDebuffs;
-using Microsoft.Xna.Framework;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -32,96 +27,46 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
         public override void AI()
         {
-            // ===== 1. 光照（保持不变逻辑，但写法更干净）=====
-            float lightFactor = Main.rand.NextFloat(0.9f, 1.1f) * Main.essScale;
-            Lighting.AddLight(Projectile.Center, 0.45f * lightFactor, 0.7f * lightFactor, 1.9f * lightFactor);
+            float light = Main.rand.Next(90, 111) * 0.01f * Main.essScale;
+            Lighting.AddLight(Projectile.Center, 5f * light, light, 4f * light);
 
-            // ===== 2. 生命周期控制 =====
-            float spawnCount = 14f;
-
+            float particleCount = 25f;
             if (Projectile.ai[0] > 180f)
-                spawnCount -= (Projectile.ai[0] - 180f) / 2f;
-
-            if (spawnCount <= 0f)
+                particleCount -= (Projectile.ai[0] - 180f) / 2f;
+            if (particleCount <= 0f)
             {
                 Projectile.Kill();
                 return;
             }
 
-            spawnCount *= 1.15f;
-
-            // Strong sustained lightning burst.
-            spawnCount *= 1.2f;
-
+            particleCount *= 0.7f;
             Projectile.ai[0] += 4f;
 
-            // ===== 3. 噪声种子（让每一帧有结构变化，而不是纯随机）=====
-            float noiseSeed = Projectile.identity * 0.137f + Projectile.ai[0] * 0.021f;
-
-            // ===== 4. 粒子生成 =====
-            int count = (int)spawnCount;
-            for (int i = 0; i < count; i++)
+            for (int i = 0; i < particleCount; i++)
             {
-                // ===== 噪声角度（核心）=====
-                float angleNoise = (float)Math.Sin(noiseSeed + i * 0.55f);
-                float angle = MathHelper.TwoPi * (i / (float)count) + angleNoise * 0.6f;
+                float x = Main.rand.Next(-40, 41);
+                float y = Main.rand.Next(-40, 41);
+                float length = (float)Math.Sqrt(x * x + y * y);
+                if (length == 0f)
+                    continue;
 
-                Vector2 dir = angle.ToRotationVector2();
-
-                // ===== 半径（保持原本范围，但带一点波动）=====
-                float radius = Main.rand.NextFloat(9f, 28f);
-
-                // ===== 速度（保持原有强度）=====
-                Vector2 velocity = dir * radius;
-
-                // ===== 粒子类型（不变）=====
-                int dustType = Main.rand.NextBool(3)
-                    ? DustID.UltraBrightTorch
-                    : DustID.Electric;
-
-                int dustIndex = Dust.NewDust(
-                    Projectile.Center,
-                    0,
-                    0,
-                    dustType,
-                    velocity.X,
-                    velocity.Y,
-                    100,
-                    default,
-                    2f
-                );
-
-                Dust dust = Main.dust[dustIndex];
-                dust.noGravity = true;
-                dust.color = Main.rand.NextBool(3)
-                    ? new Color(70, 130, 255)
-                    : new Color(170, 220, 255);
-                dust.scale *= Main.rand.NextFloat(0.82f, 1.22f);
-
-                // ===== 中心轻微扩散（保持原感觉，但更干净）=====
-                dust.position += Main.rand.NextVector2Circular(18f, 18f);
-            }
-
-            if (Projectile.ai[0] % 12f == 0f)
-            {
-                for (int i = 0; i < 6; i++)
+                float speed = Main.rand.Next(12, 36) / length;
+                int dustType = Main.rand.Next(3) switch
                 {
-                    Vector2 velocity = (MathHelper.TwoPi * i / 6f + Main.rand.NextFloat(-0.18f, 0.18f)).ToRotationVector2() * Main.rand.NextFloat(5f, 19f);
-                    Dust arcDust = Dust.NewDustPerfect(
-                        Projectile.Center + Main.rand.NextVector2Circular(24f, 24f),
-                        DustID.Electric,
-                        velocity,
-                        70,
-                        Main.rand.NextBool() ? Color.White : new Color(90, 170, 255),
-                        Main.rand.NextFloat(1.05f, 1.7f));
-                    arcDust.noGravity = true;
-                }
+                    0 => 246,
+                    1 => 73,
+                    _ => 187
+                };
+
+                int index = Dust.NewDust(Projectile.position, Projectile.width, Projectile.height,
+                    dustType, 0f, 0f, 100, default, 2f);
+                Dust dust = Main.dust[index];
+                dust.noGravity = true;
+                dust.position = Projectile.Center + new Vector2(Main.rand.Next(-10, 11), Main.rand.Next(-10, 11));
+                dust.velocity = new Vector2(x * speed, y * speed);
             }
         }
-        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
-        {
-            target.AddBuff(BuffID.Electrified, 300); // 原版的带电效果
-            //target.AddBuff(ModContent.BuffType<GalvanicCorrosion>(), 300); // 电偶腐蚀
-        }
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone) => target.AddBuff(BuffID.Electrified, 300);
     }
 }

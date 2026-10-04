@@ -7,18 +7,21 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.PeaShooter
     {
         public bool HoldingPeaShooter { get; private set; }
         public bool AccessoryEquipped { get; private set; }
+        public bool AccessoryVisualEnabled { get; private set; }
         public PeaShooterPeaType SelectedPea { get; private set; } = PeaShooterPeaType.Normal;
 
         public override void ResetEffects()
         {
             HoldingPeaShooter = false;
             AccessoryEquipped = false;
+            AccessoryVisualEnabled = false;
         }
 
         public override void UpdateDead()
         {
             HoldingPeaShooter = false;
             AccessoryEquipped = false;
+            AccessoryVisualEnabled = false;
         }
 
         public void SetHoldingPeaShooter()
@@ -26,9 +29,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.PeaShooter
             HoldingPeaShooter = true;
         }
 
-        public void SetPeaShooterAccessory()
+        public void SetPeaShooterAccessory(bool hideVisual)
         {
             AccessoryEquipped = true;
+            AccessoryVisualEnabled |= !hideVisual;
         }
 
         public void CycleSelectedPea()

@@ -42,7 +42,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             Item.shoot = ModContent.ProjectileType<NewLegendPristineFuryHoldOut>();
             Item.shootSpeed = 12f;
             Item.useAmmo = AmmoID.Gel;
-            Item.value = CalamityGlobalItem.RarityTurquoiseBuyPrice;
+            Item.value = CalamityGlobalItem.RarityPinkBuyPrice;
             Item.rare = ModContent.RarityType<Turquoise>();
         }
 

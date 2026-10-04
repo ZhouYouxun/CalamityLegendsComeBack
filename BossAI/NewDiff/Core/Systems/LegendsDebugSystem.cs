@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossAIs.Common;
-using CalamityLegendsComeBack.BossAI.NewDiff.Core.Configs;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Graphics;
@@ -15,6 +14,8 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Core.Systems
 {
     public class LegendsDebugSystem : ModSystem
     {
+        public override bool IsLoadingEnabled(Mod mod) => false;
+
         private static LegendsDebugInfo currentInfo;
 
         private static float currentDistance;
@@ -65,7 +66,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Core.Systems
 
         private static bool DrawDebugText()
         {
-            if (!LegendsWorldSystem.LegendsModeEnabled || Main.gameMenu || LegendsClientConfig.Instance?.ShowBossAIDebugText == false)
+            if (!LegendsWorldSystem.LegendsModeEnabled || Main.gameMenu)
                 return true;
 
             string text = currentInfo is null

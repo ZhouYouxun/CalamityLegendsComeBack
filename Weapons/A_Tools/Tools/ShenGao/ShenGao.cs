@@ -12,9 +12,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.Tools.ShenGao
 {
     public class ShenGao : ModItem, ILocalizedModType
     {
-        // Keep the implementation available in source without registering this item.
-        public override bool IsLoadingEnabled(Mod mod) => false;
-
         public new string LocalizationCategory => "Items.Weapons";
         public override string Texture => "CalamityLegendsComeBack/Weapons/A_Tools/Tools/ShenGao/神镐";
 

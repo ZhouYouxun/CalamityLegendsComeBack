@@ -40,7 +40,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
             Item.shoot        = SwingHoldoutType;
             Item.shootSpeed   = 0f;
             Item.UseSound     = null;
-            Item.value        = Item.sellPrice(0, 20);
+            Item.value        = CalamityMod.Items.CalamityGlobalItem.RarityPinkBuyPrice;
             Item.rare         = ItemRarityID.Red;
         }
 

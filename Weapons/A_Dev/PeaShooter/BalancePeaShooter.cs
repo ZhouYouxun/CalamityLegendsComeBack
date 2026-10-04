@@ -69,7 +69,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.PeaShooter
         public const int AdrenalineStormMinPeas = 5;
         public const int AdrenalineStormMaxPeas = 10;
         public const float AdrenalineStormSpreadDegrees = 15f;
-        public const float AdrenalineStormDamageMultiplier = 0.05f;
+        public const float AdrenalineStormDamageMultiplier = 0.035f;
         public const float AdrenalineStormMinSpeedMultiplier = 0.72f;
         public const float AdrenalineStormMaxSpeedMultiplier = 1.35f;
         public const float AdrenalineStormMinScale = 0.95f;

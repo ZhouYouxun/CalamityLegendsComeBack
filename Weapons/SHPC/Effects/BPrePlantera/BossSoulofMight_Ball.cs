@@ -1,12 +1,9 @@
+using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Terraria;
 using Terraria.Audio;
+using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -14,65 +11,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 {
     public class BossSoulofMight_Ball : ModProjectile, ILocalizedModType
     {
-        //public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
-        //public override string Texture => "Terraria/Images/Projectile_106";
-
         public new string LocalizationCategory => "Projectiles.SHPC";
 
-
-
-        // 定义初始速度、减速速度和减速时间
-        public const float InitialSpeed = 68f;
-        public const float SlowdownSpeed = 2f;
-        public const int SlowdownTime = 175;
-        public static readonly float SlowdownFactor = 0.99f;
-
-        // 使用 ai[0] 来记录时间
-        public ref float Time => ref Projectile.ai[0];
-        public override void SetStaticDefaults()
-        {
-            Main.projFrames[Type] = 5;
-            ProjectileID.Sets.TrailCacheLength[Projectile.type] = 8;
-            ProjectileID.Sets.TrailingMode[Projectile.type] = 2;
-        }
-
-        public override bool PreDraw(ref Color lightColor)
-        {
-            // 模仿SeraphimProjectile的PreDraw方法
-            Texture2D texture = Terraria.GameContent.TextureAssets.Projectile[Projectile.type].Value;
-            int frameHeight = texture.Height / Main.projFrames[Type];
-            Rectangle frame = new Rectangle(0, frameHeight * Projectile.frame, texture.Width, frameHeight);
-            Vector2 origin = frame.Size() * 0.5f;
-            Vector2 baseDrawPosition = Projectile.Center - Main.screenPosition;
-
-            // 逐渐消失的光效
-            float endFade = Utils.GetLerpValue(0f, 12f, Projectile.timeLeft, true);
-            Color coreBlue = new Color(120, 190, 255);
-            Color deepBlue = new Color(30, 70, 210);
-            Color mainColor = coreBlue * Projectile.Opacity * endFade * 0.92f;
-            mainColor.A = (byte)(255 - Projectile.alpha);
-
-            Color afterimageLightColor = Color.Lerp(deepBlue, coreBlue, 0.35f) * endFade * 0.62f;
-            afterimageLightColor.A = (byte)(255 - Projectile.alpha);
-
-            // 绘制多个逐渐淡出的光影
-            for (int i = 0; i < 18; i++)
-            {
-                Vector2 drawPosition = baseDrawPosition + (MathHelper.TwoPi * i / 18f).ToRotationVector2() * (1f - Projectile.Opacity) * 16f;
-                Main.EntitySpriteDraw(texture, drawPosition, frame, afterimageLightColor, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0);
-            }
-
-            // 绘制特殊的残影效果
-            for (int i = 0; i < 8; i++)
-            {
-                Vector2 drawPosition = baseDrawPosition - Projectile.velocity * i * 0.3f;
-                Color afterimageColor = mainColor * (1f - i / 8f);
-                Main.EntitySpriteDraw(texture, drawPosition, frame, afterimageColor, Projectile.rotation, origin, Projectile.scale, SpriteEffects.None, 0);
-            }
-
-            return false; // 不使用默认绘制
-
-        }
+        public override void SetStaticDefaults() => Main.projFrames[Type] = 5;
 
         public override void SetDefaults()
         {
@@ -81,71 +22,81 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
             Projectile.hostile = false;
             Projectile.DamageType = DamageClass.Magic;
             Projectile.penetrate = 1;
-            Projectile.light = 0.5f;
+            Projectile.alpha = 255;
             Projectile.ignoreWater = true;
-            Projectile.tileCollide = true; // 允许与方块碰撞
-            Projectile.extraUpdates = 1; // 额外更新次数
-            Projectile.usesLocalNPCImmunity = true; // 弹幕使用本地无敌帧
-            Projectile.localNPCHitCooldown = 14; // 无敌帧冷却时间为14帧
-            Projectile.timeLeft = 100;
-
+            Projectile.tileCollide = true;
+            Projectile.usesLocalNPCImmunity = true;
+            Projectile.localNPCHitCooldown = 14;
+            Projectile.timeLeft = 300;
         }
 
         public override void AI()
         {
+            float light = Main.rand.Next(90, 111) * 0.01f * Main.essScale;
+            Lighting.AddLight(Projectile.Center, light, 0.2f * light, 0.75f * light);
+            Projectile.alpha -= 2;
+
             Projectile.frameCounter++;
-            Projectile.frame = Projectile.frameCounter / 4 % Main.projFrames[Type];
-
-            // 保持弹幕旋转（对于倾斜走向的弹幕而言）
-            Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver4;
-
-            // Lighting - blue Soul of Might glow.
-            Lighting.AddLight(Projectile.Center, new Color(80, 150, 255).ToVector3() * 0.55f);
-
-            // Keep the scattered orb moving forward while slowly decelerating into light.
-            if (Time <= SlowdownTime)
+            if (Projectile.frameCounter > 4)
             {
-                Projectile.Opacity = (float)Math.Pow(1f - Time / SlowdownTime, 2D);
-                Projectile.velocity *= SlowdownFactor;
-
-                int lightDustCount = (int)MathHelper.Lerp(8f, 1f, Projectile.Opacity);
-                for (int i = 0; i < lightDustCount; i++)
-                {
-                    Vector2 dustSpawnPosition = Projectile.Center + Main.rand.NextVector2Unit() * (1f - Projectile.Opacity) * 45f;
-                    Dust light = Dust.NewDustPerfect(dustSpawnPosition, DustID.RainbowMk2);
-                    light.color = Color.Lerp(new Color(50, 95, 255), Color.White, Main.rand.NextFloat(0.35f, 0.9f));
-                    light.velocity = Main.rand.NextVector2Circular(10f, 10f);
-                    light.scale = MathHelper.Lerp(0.92f, 0.52f, Projectile.Opacity) * Main.rand.NextFloat(0.7f, 1f);
-                    light.noGravity = true;
-                }
-
+                Projectile.frame = (Projectile.frame + 1) % Main.projFrames[Type];
+                Projectile.frameCounter = 0;
             }
 
-            Time++;
+            if (Projectile.localAI[0] == 0f)
+            {
+                Projectile.scale += 0.05f;
+                if (Projectile.scale > 1.2f)
+                    Projectile.localAI[0] = 1f;
+            }
+            else
+            {
+                Projectile.scale -= 0.05f;
+                if (Projectile.scale < 0.8f)
+                    Projectile.localAI[0] = 0f;
+            }
 
+            Projectile.velocity *= 0.985f;
+
+            bool targetNearby = false;
+            foreach (NPC npc in Main.ActiveNPCs)
+            {
+                if (npc.CanBeChasedBy(Projectile) &&
+                    Collision.CanHit(Projectile.Center, 1, 1, npc.Center, 1, 1) &&
+                    Math.Abs(Projectile.Center.X - npc.Center.X) + Math.Abs(Projectile.Center.Y - npc.Center.Y) < 250f)
+                {
+                    targetNearby = true;
+                    break;
+                }
+            }
+
+            if (targetNearby && ++Projectile.ai[0] >= 120f)
+                Projectile.Kill();
         }
 
+        public override Color? GetAlpha(Color lightColor) => new Color(255, Main.DiscoG, 155, Projectile.alpha);
 
-
-        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        public override bool PreDraw(ref Color lightColor)
         {
-            target.AddBuff(BuffID.Electrified, 300); // 原版的带电效果
-            //target.AddBuff(ModContent.BuffType<GalvanicCorrosion>(), 300); // 电偶腐蚀
+            Texture2D texture = TextureAssets.Projectile[Type].Value;
+            int frameHeight = texture.Height / Main.projFrames[Type];
+            Rectangle frame = new Rectangle(0, frameHeight * Projectile.frame, texture.Width, frameHeight);
+            Main.EntitySpriteDraw(texture, Projectile.Center - Main.screenPosition + new Vector2(0f, Projectile.gfxOffY),
+                frame, Projectile.GetAlpha(lightColor), Projectile.rotation,
+                new Vector2(texture.Width / 2f, frameHeight / 2f), Projectile.scale, SpriteEffects.None, 0);
+            return false;
         }
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone) => target.AddBuff(BuffID.Electrified, 300);
+
         public override void OnKill(int timeLeft)
         {
-            SoundEngine.PlaySound(SoundID.DD2_DefenseTowerSpawn with { Volume = 0.55f }, Projectile.Center);
+            SoundEngine.PlaySound(SoundID.Item105, Projectile.Center);
             if (Projectile.owner != Main.myPlayer)
                 return;
 
-            int explosion = Projectile.NewProjectile(
-                Projectile.GetSource_FromThis(),
-                Projectile.Center,
-                Vector2.Zero,
-                ModContent.ProjectileType<BossSoulofMight_EXP>(),
-                Projectile.damage,
-                Projectile.knockBack,
-                Projectile.owner);
+            int explosion = Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, Vector2.Zero,
+                ModContent.ProjectileType<BossSoulofMight_EXP>(), Projectile.damage, Projectile.knockBack, Projectile.owner);
 
             if (Main.projectile.IndexInRange(explosion))
             {

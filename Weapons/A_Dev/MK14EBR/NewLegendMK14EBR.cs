@@ -56,7 +56,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
             Item.shoot = HoldoutType;
             Item.shootSpeed = 18f;
             Item.useAmmo = AmmoID.Bullet;
-            Item.value = CalamityGlobalItem.RarityTurquoiseBuyPrice;
+            Item.value = CalamityGlobalItem.RarityPinkBuyPrice;
             Item.rare = ModContent.RarityType<Turquoise>();
         }
 

@@ -51,20 +51,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.BPrePlantera
 
             Vector2 fallback = owner.direction == 0 ? Vector2.UnitX : new Vector2(owner.direction, 0f);
             Vector2 forward = projectile.velocity.SafeNormalize(fallback);
-            float speed = System.Math.Max(projectile.velocity.Length(), 16f);
-            float[] scatterAngles =
+            Vector2 baseVelocity = forward * 20f;
+            for (int i = 0; i < 3; i++)
             {
-                MathHelper.ToRadians(-10f),
-                0f,
-                MathHelper.ToRadians(10f)
-            };
-
-            foreach (float angle in scatterAngles)
-            {
+                Vector2 scatteredVelocity = baseVelocity + new Vector2(
+                    Main.rand.Next(-40, 41) * 0.05f,
+                    Main.rand.Next(-40, 41) * 0.05f);
                 Projectile.NewProjectile(
                     projectile.GetSource_FromThis(),
                     projectile.Center,
-                    forward.RotatedBy(angle) * speed,
+                    scatteredVelocity,
                     ModContent.ProjectileType<BossSoulofMight_Ball>(),
                     System.Math.Max(1, (int)(projectile.damage * 0.85f)),
                     projectile.knockBack,

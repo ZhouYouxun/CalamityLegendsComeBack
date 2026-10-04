@@ -47,7 +47,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
             Item.shoot = ModContent.ProjectileType<VesuviusLeftHoldout>();
             Item.shootSpeed = 18f;
             Item.UseSound = null;
-            Item.value = CalamityGlobalItem.RarityYellowBuyPrice;
+            Item.value = CalamityGlobalItem.RarityPinkBuyPrice;
             Item.rare = ModContent.RarityType<BurnishedAuric>();
         }
 

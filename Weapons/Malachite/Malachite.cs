@@ -53,7 +53,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             Item.autoReuse = true;
             Item.shoot = ModContent.ProjectileType<MalachiteKunai>();
             Item.shootSpeed = 18f;
-            Item.value = CalamityGlobalItem.RarityYellowBuyPrice;
+            Item.value = CalamityGlobalItem.RarityPinkBuyPrice;
             Item.rare = ModContent.RarityType<BurnishedAuric>();
         }
 

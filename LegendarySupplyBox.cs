@@ -81,7 +81,6 @@ namespace CalamityLegendsComeBack
                 ModContent.ItemType<NewLegendBlossomFlux>(),
                 ModContent.ItemType<NewLegendCosmicDischarge>(),
                 ModContent.ItemType<GlacialEmbrace>(),
-                ModContent.ItemType<NewLegendGaelsGreatsword>(),
                 ModContent.ItemType<LeonidProgenitor>(),
                 ModContent.ItemType<Malachite>(),
                 ModContent.ItemType<NewLegendPristineFury>(),

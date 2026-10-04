@@ -35,7 +35,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             Item.noMelee = true;
             Item.noUseGraphic = true;
             Item.UseSound = SoundID.Item61;
-            Item.value = Item.sellPrice(0, 10);
+            Item.value = CalamityMod.Items.CalamityGlobalItem.RarityPinkBuyPrice;
             Item.rare = ItemRarityID.Yellow;
             Item.channel = true;
         }

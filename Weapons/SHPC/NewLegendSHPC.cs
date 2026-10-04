@@ -67,7 +67,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         #region ===== 灌注与动画状态 =====
 
-        public const int BaseMagazineCount = 3;
+        public const int BaseMagazineCount = 4;
         public const int MagazineCount = BaseMagazineCount + 4;
         private const int BaseManaCost = 15;
         public const int MaxReservePerSlot = 9999;
@@ -1118,6 +1118,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
                 Vector2 dir = (player.Calamity().mouseWorld - player.Center).SafeNormalize(Vector2.UnitX * player.direction);
                 int exLaserDamage = GetCurrentLeftClickDamage(player, GetProjectileEffectIDForShot());
+                bool sharedAdrenalineKey = CalamityKeybinds.AdrenalineHotKey?.JustPressed == true &&
+                    KeybindSystem.LegendarySkill?.GetAssignedKeys()?.Any(key =>
+                        !string.IsNullOrWhiteSpace(key) &&
+                        !key.Equals("None", StringComparison.OrdinalIgnoreCase) &&
+                        CalamityKeybinds.AdrenalineHotKey.GetAssignedKeys().Any(adrenalineKey =>
+                            key.Equals(adrenalineKey, StringComparison.OrdinalIgnoreCase))) == true;
 
                 int exIndex = Projectile.NewProjectile(
                     Item.GetSource_FromThis(),
@@ -1126,7 +1132,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                     ModContent.ProjectileType<NL_SHPC_EXWeapon>(),
                     exLaserDamage,
                     Item.knockBack,
-                    player.whoAmI
+                    player.whoAmI,
+                    sharedAdrenalineKey ? 1f : 0f
                 );
 
                 if (Main.projectile.IndexInRange(exIndex))

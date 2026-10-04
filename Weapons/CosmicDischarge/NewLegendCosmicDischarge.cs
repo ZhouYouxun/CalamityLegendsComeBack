@@ -37,7 +37,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             Item.UseSound = null;
             Item.shootSpeed = 0f;
             Item.shoot = HoldoutType;
-            Item.value = CalamityGlobalItem.RarityDarkBlueBuyPrice;
+            Item.value = CalamityGlobalItem.RarityPinkBuyPrice;
             Item.rare = ModContent.RarityType<CosmicPurple>();
         }
 

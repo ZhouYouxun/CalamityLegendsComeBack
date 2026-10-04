@@ -44,6 +44,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             Item.useStyle = ItemUseStyleID.Swing;
             Item.shootSpeed = 0f;
             Item.rare = ItemRarityID.Pink;
+            Item.value = CalamityMod.Items.CalamityGlobalItem.RarityPinkBuyPrice;
             Item.UseSound = null;
         }
 

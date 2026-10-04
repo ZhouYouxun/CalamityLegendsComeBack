@@ -35,6 +35,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
         private int superLaserIndex = -1;
 
         private const int ChargeTime = 120; // 原180帧，蓄力时间-33%
+        private int CurrentChargeTime => Projectile.ai[0] > 0.5f ? ChargeTime / 4 : ChargeTime;
         private const int LaserTime = 60;
         private const int OverheatTime = 30;
 
@@ -125,12 +126,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
         private SlotId ChargeSoundSlot;
         private void ChargePhase()
         {
+            int chargeTime = CurrentChargeTime;
 
 
             // ================= 蓄力循环音 =================
             timer++; // ← 提前！！！
 
-            float chargeFactor = Utils.GetLerpValue(0f, ChargeTime, timer, true);
+            float chargeFactor = Utils.GetLerpValue(0f, chargeTime, timer, true);
 
             // 只在第一次创建
             if (ChargeSoundSlot == default)
@@ -158,9 +160,9 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             }
 
 
-            SpawnBurstEffect(timer / (float)ChargeTime);
+            SpawnBurstEffect(timer / (float)chargeTime);
 
-            if (timer < ChargeTime)
+            if (timer < chargeTime)
                 return;
 
             state = 1;
@@ -497,7 +499,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
             // ===== 白色叠加（蓄力阶段）=====
             if (state == 0)
             {
-                float chargeFactor = Utils.GetLerpValue(0f, ChargeTime, timer, true);
+                float chargeFactor = Utils.GetLerpValue(0f, CurrentChargeTime, timer, true);
 
                 // 强度：越蓄越猛
                 float intensity = chargeFactor;

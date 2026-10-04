@@ -21,9 +21,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.Tools.ArtisanToken
 {
     public class ArtisanToken : ModItem, ILocalizedModType
     {
-        // Keep the implementation available in source without registering this item.
-        public override bool IsLoadingEnabled(Mod mod) => false;
-
         public new string LocalizationCategory => "Items.Weapons";
         public override string Texture => "Terraria/Images/Item_" + ItemID.TinkerersWorkshop;
 
@@ -81,7 +78,6 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.Tools.ArtisanToken
 
     internal class ArtisanTokenShop : GlobalNPC
     {
-        public override bool IsLoadingEnabled(Mod mod) => false;
         public override void ModifyShop(NPCShop shop)
         {
             if (shop.NpcType == NPCID.GoblinTinkerer)
@@ -127,6 +123,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.Tools.ArtisanToken
         private bool panelInitialized;
         private readonly int[] clickFeedback = new int[10];
         private readonly bool[] hoveredLast = new bool[10];
+        private bool wasLeftDown;
 
         public new string LocalizationCategory => "Projectiles.A_Dev";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
@@ -190,7 +187,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.Tools.ArtisanToken
             Player owner = Main.player[Projectile.owner];
             Rectangle panelArea = new((int)panelTopLeft.X, (int)panelTopLeft.Y, PanelW, PanelH);
             bool mouseOverPanel = panelArea.Intersects(MouseRect);
-            bool leftClick = Main.mouseLeft && Main.mouseLeftRelease;
+            // The inventory layer may consume mouseLeftRelease before this overlay is drawn.
+            bool leftClick = Main.mouseLeft && !wasLeftDown;
+            wasLeftDown = Main.mouseLeft;
             bool rightClick = Main.mouseRight && Main.mouseRightRelease;
             float op = Projectile.Opacity;
             int clickedIndex = -1;
@@ -307,7 +306,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Tools.Tools.ArtisanToken
                     continue;
 
                 if (Main.netMode != NetmodeID.SinglePlayer)
-                    NetMessage.SendData(MessageID.SyncEquipment, -1, -1, null, player.whoAmI, i, equip.prefix);
+                    NetMessage.SendData(MessageID.SyncEquipment, -1, -1, null,
+                        player.whoAmI, player.inventory.Length + i);
                 applied++;
             }
             return applied;

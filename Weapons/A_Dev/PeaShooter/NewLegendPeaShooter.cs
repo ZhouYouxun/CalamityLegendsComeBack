@@ -43,7 +43,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.PeaShooter
             Item.UseSound = null;
             Item.shoot = HoldoutType;
             Item.shootSpeed = balance.GetShootSpeed();
-            Item.value = CalamityGlobalItem.RarityTurquoiseBuyPrice;
+            Item.value = CalamityGlobalItem.RarityPinkBuyPrice;
             Item.rare = ModContent.RarityType<Turquoise>();
             Item.accessory = true;
             Item.Calamity().devItem = true;
@@ -95,7 +95,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.PeaShooter
         public override void UpdateAccessory(Player player, bool hideVisual)
         {
             PeaShooterPlayer peaPlayer = player.GetModPlayer<PeaShooterPlayer>();
-            peaPlayer.SetPeaShooterAccessory();
+            peaPlayer.SetPeaShooterAccessory(hideVisual);
 
             if (player.dead || Main.myPlayer != player.whoAmI || player.ownedProjectileCounts[AccessoryHoldoutType] > 0)
                 return;

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder;
 using Terraria;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack
@@ -21,7 +22,8 @@ namespace CalamityLegendsComeBack
                 "CalamityLegendsComeBack.Accssory.TS", StringComparison.Ordinal) == true;
 
             if (isAzureThunder || isAzureThunderAccessory)
-                tooltips.Add(new TooltipLine(Mod, TooltipLineName, "联动武器"));
+                tooltips.Add(new TooltipLine(Mod, TooltipLineName,
+                    Language.GetTextValue("Mods.CalamityLegendsComeBack.TheSpecialText.CrossoverItem")));
         }
     }
 }

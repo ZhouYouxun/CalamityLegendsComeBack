@@ -1,16 +1,14 @@
 Mods: {
 	CalamityLegendsComeBack: {
+		// Conditions.AllSentinelsDefeated: Ceaseless Void, Storm Weaver and Signus have all been defeated
+
 		Configs: {
 			CalamityLegendsComeBackConfig: {
 				// DisplayName: Calamity Legends Come Back Settings
-
-				Headers: {
-					// RecipeSettings: Recipe Settings
-					// DraedonTechnology: Draedon Technology
-				}
+				// Headers.RecipeSettings: Recipe Settings
 
 				AllowWheelSlowdown: {
-					// Label: Allow Wheel Slowdown
+					// Label: "[i:Stopwatch] Allow Wheel Slowdown"
 					// Tooltip: If enabled, some legendary weapons will slow the game speed by 50% while their wheels are open in single player.
 				}
 
@@ -32,6 +30,11 @@ Mods: {
 				AllowBossSummonShop: {
 					// Label: "[i:GuideVoodooDoll] Allow Zoologist Boss Summons"
 					// Tooltip: The Zoologist sells Boss summons at the appropriate progression; a few recipes that would return pre-kill materials are temporarily disabled.
+				}
+
+				AllowOtherNPCQuickShop: {
+					// Label: "[i:GoldCoin] Allow Other NPC Convenience Shops"
+					// Tooltip: The Wizard, Goblin Tinkerer, Demolitionist, Arms Dealer, Zoologist and Archmage sell additional items as the world progresses.
 				}
 
 				GiveQuickStartBoxOnSpawn: {
