@@ -3,8 +3,8 @@ Mods: {
 		Items: {
 			Weapons: {
 				ShenGao: {
-					DisplayName: Божественная кирка
-					Tooltip: Кирка, которая улучшается по мере прохождения игры
+					// DisplayName: Divine Pickaxe
+					// Tooltip: A pickaxe that improves as the game progresses
 				}
 			}
 		}

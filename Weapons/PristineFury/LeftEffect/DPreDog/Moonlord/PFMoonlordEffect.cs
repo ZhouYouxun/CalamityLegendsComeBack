@@ -99,7 +99,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             holdout.ApplyRecoil(28f);
             holdout.TriggerMuzzleFlash(30);
             holdout.SpawnMuzzleBurst(PristineFuryMarkHelper.GetColor(holdout.CurrentMark), 2.8f);
-            holdout.Owner.Calamity().GeneralScreenShakePower = Math.Max(holdout.Owner.Calamity().GeneralScreenShakePower, 12f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(holdout.Owner, holdout.GunTipPosition, 12f);
             SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/SubsumingVortexExplosion") { Volume = 0.82f, Pitch = -0.15f }, holdout.GunTipPosition);
             holdout.LeftBurstIndex = 0;
         }

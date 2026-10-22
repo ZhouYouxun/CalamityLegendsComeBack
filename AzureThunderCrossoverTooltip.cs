@@ -23,7 +23,9 @@ namespace CalamityLegendsComeBack
 
             if (isAzureThunder || isAzureThunderAccessory)
                 tooltips.Add(new TooltipLine(Mod, TooltipLineName,
-                    Language.GetTextValue("Mods.CalamityLegendsComeBack.TheSpecialText.CrossoverItem")));
+                    Language.GetTextValue(isAzureThunder
+                        ? "Mods.CalamityLegendsComeBack.TheSpecialText.CrossoverItemDiscontinued"
+                        : "Mods.CalamityLegendsComeBack.TheSpecialText.CrossoverItem")));
         }
     }
 }

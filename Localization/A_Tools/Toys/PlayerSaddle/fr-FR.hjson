@@ -3,27 +3,22 @@ Mods: {
 		Items: {
 			Weapons: {
 				PlayerSaddleItem: {
-					DisplayName: Selle de joueur
-					Tooltip:
+					// DisplayName: Player Saddle
+					/* Tooltip:
 						'''
-						Faites un clic gauche sur un joueur proche pour le chevaucher.
-						Pendant que vous le chevauchez, vous ne pouvez pas bouger, mais vous pouvez toujours attaquer et interagir normalement.
-						Vous descendez automatiquement si votre monture meurt.
-						Faites à nouveau un clic gauche pour descendre, ou un clic droit pour éjecter votre propre cavalier.
-						'''
+						Left-click on a nearby player to mount them.
+						While riding, you cannot move but can still attack and interact normally.
+						Auto-dismounts if your mount dies.
+						Left-click again to dismount, or right-click to throw off your own rider.
+						''' */
 				}
-			}
-
-			LegendaryEmblem: {
-				// DisplayName: Legendary Emblem
-				// Tooltip: ""
 			}
 		}
 
 		TheSpecialText: {
-			PlayerSaddleNoTarget: Aucun joueur proche à chevaucher n'a été trouvé.
-			PlayerSaddleOccupied: Ce joueur a déjà un cavalier.
-			PlayerSaddleMounted: "{0} chevauche maintenant {1} !"
+			// PlayerSaddleNoTarget: No nearby player found to mount.
+			// PlayerSaddleOccupied: That player already has a rider.
+			// PlayerSaddleMounted: "{0} is now riding {1}!"
 		}
 	}
 }

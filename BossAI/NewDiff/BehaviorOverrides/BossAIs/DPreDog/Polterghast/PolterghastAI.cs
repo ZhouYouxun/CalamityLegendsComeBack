@@ -454,7 +454,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             {
                 wallSlamOffset = MathHelper.Lerp(0f, 300f, (slamTimer - 60f) / 12f); // the slam itself is FAST
                 if (slamTimer == 71 && Main.netMode != NetmodeID.Server)
-                    Main.LocalPlayer.Calamity().GeneralScreenShakePower = 5f;
+                    global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(Main.LocalPlayer, npc.Center, 5f);
             }
             else if (slamTimer < 192)
             {
@@ -615,7 +615,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 SoundEngine.PlaySound(SoundID.Zombie40 with { Volume = 0.9f, Pitch = -0.5f }, npc.Center);
                 GhastFx.Burst(npc.Center, 7f, 30);
                 if (Main.netMode != NetmodeID.Server)
-                    Main.LocalPlayer.Calamity().GeneralScreenShakePower = 9f;
+                    global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(Main.LocalPlayer, npc.Center, 9f);
             }
         }
         #endregion
@@ -1247,7 +1247,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             if (timer == 1)
             {
                 SoundEngine.PlaySound(SoundID.NPCDeath10, npc.Center);
-                target.Calamity().GeneralScreenShakePower = 9f;
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(target, npc.Center, 9f);
             }
 
             // Stone shards spall off the collapsing ghost-armor
@@ -1365,7 +1365,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 {
                     SoundEngine.PlaySound(SoundID.Zombie39 with { Volume = 1.1f, Pitch = -0.4f }, npc.Center);
                     SoundEngine.PlaySound(SoundID.NPCDeath4, npc.Center);
-                    target.Calamity().GeneralScreenShakePower = 13f;
+                    global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(target, npc.Center, 13f);
                     GhastFx.Burst(npc.Center, 8f, 40);
                     GhastFx.Burst(npc.Center, 5f, 24, DustID.BlueTorch);
                 }

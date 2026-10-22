@@ -212,7 +212,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     // Recovery flare — the goddess reignites
                     SoundEngine.PlaySound(SoundID.Item74 with { Volume = 0.9f }, npc.Center);
                     ProvFx.Burst(npc.Center, 8f, 30);
-                    target.Calamity().GeneralScreenShakePower = 6f;
+                    global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(target, npc.Center, 6f);
                 }
             }
             else
@@ -475,7 +475,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 ProvFx.Burst(npc.Center, 7f, 30);
                 ProvFx.Burst(npc.Center, 4f, 16, DustID.CrimsonTorch);
                 if (Main.netMode != NetmodeID.Server)
-                    Main.LocalPlayer.Calamity().GeneralScreenShakePower = 10f;
+                    global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(Main.LocalPlayer, npc.Center, 10f);
             }
         }
         #endregion
@@ -1293,7 +1293,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             if (timer == 1)
             {
                 SoundEngine.PlaySound(SoundID.NPCDeath10, npc.Center);
-                target.Calamity().GeneralScreenShakePower = 9f;
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(target, npc.Center, 9f);
             }
 
             // Molten armor sloughing off in embers throughout the reveal
@@ -1413,7 +1413,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     npc.velocity = Vector2.Zero;
                     SoundEngine.PlaySound(SoundID.Item74 with { Volume = 1.2f, Pitch = -0.2f }, npc.Center);
                     SoundEngine.PlaySound(SoundID.NPCDeath4, npc.Center);
-                    target.Calamity().GeneralScreenShakePower = 14f;
+                    global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(target, npc.Center, 14f);
                     ProvFx.Burst(npc.Center, 9f, 46);
                     ProvFx.Burst(npc.Center, 6f, 26, DustID.CrimsonTorch);
                 }

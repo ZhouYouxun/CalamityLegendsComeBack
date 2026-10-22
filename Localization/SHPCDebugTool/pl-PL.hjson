@@ -1,0 +1,16 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			SHPCDebugTool: {
+				Tooltip:
+					'''
+					Działa tylko na ciebie, gdy jest oznaczone jako ulubione w ekwipunku
+					Powiększa koło trzymanej SHPC niemal do wysokości ekranu i odblokowuje wszystkie materiały z nieograniczoną amunicją testową
+					Usunięcie lub odznaczenie kasuje wszystkie załadowane materiały i zapasy bez zwrotu
+					Dostępne wyłącznie przez oszustwa
+					'''
+				DisplayName: Narzędzie debugowania SHPC
+			}
+		}
+	}
+}

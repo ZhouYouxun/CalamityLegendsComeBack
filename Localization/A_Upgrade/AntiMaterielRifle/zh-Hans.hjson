@@ -3,6 +3,7 @@ Mods: {
 		Items: {
 			Weapons: {
 				NewLegendAntiMaterielRifle: {
+					EquipEffect: 装备效果：允许射手类武器进行类似盗贼职业的潜伏攻击
 					DisplayName: 势如破竹-反器材狙击步枪
 					Tooltip: "[GFB]"
 					LeftClick: 发射极具破坏力的.408口径狙击弹
@@ -26,7 +27,7 @@ Mods: {
 						统御万械！配备嘉登科技玛瑙爆炸弹夹，标记弹粘附目标或物块
 						引爆弹触发200%攻击力的玛瑙爆炸
 						'''
-					LegendaryText: 惨绝人寰，片甲不留
+					LegendaryText: 即便是再精密的防护也能被击碎
 				}
 			}
 		}

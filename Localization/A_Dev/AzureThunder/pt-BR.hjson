@@ -19,8 +19,8 @@ Mods: {
 						''' */
 					/* AzureThunderUltimate:
 						'''
-						[c/FFE85A:Ultimate: at 120 ultimate energy, press] [[c/FFE85A:{0}]] [c/FFE85A: to gain Empyrean of Truth for 25 seconds.]
-						[c/FFE85A:Empyrean of Truth: empowers SunderBlade's left click, right click, and final strikes.]
+						[c/FFE85A:Ultimate [Thunder of Heaven]: Press [{0}] to enter Empyrean of Truth.]
+						[c/FFE85A:For 25 seconds, SunderBlade's left and right attacks are empowered.]
 						''' */
 					// AzureThunderPassiveHeavenEarth0: "[c/B8F4FF:Force of Nature:] [c/DCD6C8:unlocked by default. Desert Scourge will improve it.]"
 					// AzureThunderPassiveHeavenEarth1: "[c/B8F4FF:Force of Nature:] [c/DCD6C8:+1 mana regeneration for each active SunderBlade sword.]"

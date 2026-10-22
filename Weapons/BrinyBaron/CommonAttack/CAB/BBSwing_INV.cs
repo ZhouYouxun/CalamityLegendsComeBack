@@ -47,7 +47,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
             {
                 Player owner = Main.player[Projectile.owner];
                 owner.GetModPlayer<BBTideValuePlayer>().AddTide();
-                owner.Calamity().GeneralScreenShakePower = Math.Max(owner.Calamity().GeneralScreenShakePower, 10f);
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(owner, Projectile.Center, 10f);
             }
 
             Vector2 slashVelocity = SlashAngle.ToRotationVector2();

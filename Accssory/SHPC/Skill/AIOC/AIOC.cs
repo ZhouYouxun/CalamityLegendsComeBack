@@ -12,6 +12,7 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.AIOC
 {
+    [Autoload(false)]
     public class AIOC : ModItem
     {
         public override void SetDefaults()
@@ -40,8 +41,6 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.AIOC
             player.GetCritChance(DamageClass.Generic) += 7f;
 
             BarrierPlayer barrierPlayer = player.GetModPlayer<BarrierPlayer>();
-            barrierPlayer.BarrierEquipped = true;
-            barrierPlayer.BarrierVisible = !hideVisual;
             barrierPlayer.AIOCBarrierBoost = true;
 
             // 飞升芯片：加速度/移速/跳跃恒定生效
@@ -76,10 +75,26 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.AIOC
                 .AddIngredient(ItemID.FragmentStardust, 10)
                 .AddIngredient<FlyChip.FlyChip>()
                 .AddIngredient(ItemID.FragmentNebula, 10)
-                .AddIngredient<MatrixChargingBarrier>()
                 .AddIngredient(ItemID.LunarBar, 5)
                 .AddTile(TileID.LunarCraftingStation)
                 .Register();
+        }
+    }
+
+    // Only the assembled chipset conflicts with its ingredients; individual chips remain compatible.
+    [Autoload(false)]
+    internal sealed class AIOCIngredientConflict : GlobalItem
+    {
+        public override bool CanAccessoryBeEquippedWith(Item equippedItem, Item incomingItem, Player player)
+        {
+            int chipsetType = ModContent.ItemType<AIOC>();
+            int ingredientType = equippedItem.type == chipsetType ? incomingItem.type :
+                                 incomingItem.type == chipsetType ? equippedItem.type : -1;
+
+            return ingredientType != ModContent.ItemType<FastChip.FastChip>() &&
+                   ingredientType != ModContent.ItemType<CtrlChip.CtrlChip>() &&
+                   ingredientType != ModContent.ItemType<DiffuChip.DiffuChip>() &&
+                   ingredientType != ModContent.ItemType<FlyChip.FlyChip>();
         }
     }
 }

@@ -33,7 +33,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         // Ultimate ("劫火重燃") energy meter. Charges only while marks are queued, spent in full on activation.
         internal const int UltimateEnergyMax = 3600;
         internal int UltimateEnergy;
-        internal bool UltimateReady => UltimateEnergy >= UltimateEnergyMax;
+        internal bool UltimateReady => Main.hardMode && UltimateEnergy >= UltimateEnergyMax;
 
         public override void ResetEffects()
         {

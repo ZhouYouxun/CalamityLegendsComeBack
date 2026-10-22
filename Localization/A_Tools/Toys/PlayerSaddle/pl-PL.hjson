@@ -3,27 +3,22 @@ Mods: {
 		Items: {
 			Weapons: {
 				PlayerSaddleItem: {
-					DisplayName: Siodło dla gracza
-					Tooltip:
+					// DisplayName: Player Saddle
+					/* Tooltip:
 						'''
-						Kliknij lewym przyciskiem pobliskiego gracza, aby na nim jechać.
-						Podczas jazdy nie możesz się poruszać, ale nadal możesz normalnie atakować i wchodzić w interakcje.
-						Automatycznie zsiadasz, jeśli twój wierzchowiec zginie.
-						Ponownie kliknij lewym przyciskiem, aby zsiąść, lub prawym, aby zrzucić własnego jeźdźca.
-						'''
+						Left-click on a nearby player to mount them.
+						While riding, you cannot move but can still attack and interact normally.
+						Auto-dismounts if your mount dies.
+						Left-click again to dismount, or right-click to throw off your own rider.
+						''' */
 				}
-			}
-
-			LegendaryEmblem: {
-				// DisplayName: Legendary Emblem
-				// Tooltip: ""
 			}
 		}
 
 		TheSpecialText: {
-			PlayerSaddleNoTarget: Nie znaleziono pobliskiego gracza, na którym można jechać.
-			PlayerSaddleOccupied: Ten gracz ma już jeźdźca.
-			PlayerSaddleMounted: "{0} jedzie teraz na {1}!"
+			// PlayerSaddleNoTarget: No nearby player found to mount.
+			// PlayerSaddleOccupied: That player already has a rider.
+			// PlayerSaddleMounted: "{0} is now riding {1}!"
 		}
 	}
 }

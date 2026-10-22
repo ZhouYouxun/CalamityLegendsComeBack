@@ -84,6 +84,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite.EXSkill
                 Vector2 mouseWorld = owner.Calamity().mouseWorld;
                 if (mouseWorld == Vector2.Zero)
                     mouseWorld = Main.MouseWorld;
+                mouseWorld = global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(owner, mouseWorld);
 
                 aim = (mouseWorld - owner.MountedCenter).SafeNormalize(aim);
                 if (Vector2.Dot(aim, Projectile.velocity.SafeNormalize(aim)) < 0.9995f)

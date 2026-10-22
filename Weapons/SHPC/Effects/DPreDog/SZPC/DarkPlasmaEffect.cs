@@ -807,7 +807,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
             int explosionSize = MultiStarCollisionSize + 80 * count;
             float damageMultiplier = MultiStarExplosionDamagePerBlackHole * count;
 
-            owner.SetScreenshake(8.5f + 2f * count);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(owner, projectile.Center, 8.5f + 2f * count);
             SpawnDarkPlasmaAccretionDeath(projectile, owner, center, power);
             SpawnDarkPlasmaDeathDamage(projectile, center, damageMultiplier, explosionSize, explosionSize);
             SpawnDarkPlasmaDeathOrbs(projectile, center, 10 + count * 8, 0.36f + count * 0.06f);
@@ -821,7 +821,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog.SZPC
 
         private static void SpawnDarkPlasmaAccretionDeath(Projectile projectile, Player owner, Vector2 center, float power)
         {
-            owner.SetScreenshake(8.5f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(owner, projectile.Center, 8.5f);
             float diskRotation = projectile.velocity.SafeNormalize(Vector2.UnitX).ToRotation() + Main.rand.NextFloat(-0.35f, 0.35f);
 
             for (int i = 0; i < 55; i++)

@@ -27,13 +27,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.AshesofCala
         private const float FreeFlightDamping = 0.996f;
         private const float NoTargetDamping = 0.992f;
         private const float WanderingTurnStrength = 0.006f;
-        private const float NonHomingTurnStrength = 0.011f;
 
         public new string LocalizationCategory => "Projectiles.SHPC";
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
         private ref float Timer => ref Projectile.localAI[0];
-        private int ShotIndex => (int)Projectile.ai[1];
         private bool IsPiercingShot => Projectile.ai[0] > 0f;
 
         public override void SetStaticDefaults()
@@ -68,26 +66,23 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.AshesofCala
                 return;
 
             Projectile.penetrate = -1;
-            Projectile.extraUpdates = 0;
-            Projectile.timeLeft = 720;
+            Projectile.extraUpdates = 2;
+            Projectile.timeLeft = 2160;
             Projectile.localNPCHitCooldown = 8;
             Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitX) * BaseSpeed;
         }
 
         public override void AI()
         {
-            // Projectile.extraUpdates = 1 会让 AI 一帧跑多次。
+            // extraUpdates 会让 AI 一帧跑多次。
             // 这里只在每个真实游戏帧的最后一次更新时计时，避免延迟被 extraUpdates 缩短。
             if (Projectile.numUpdates == 0)
                 Timer++;
 
             Vector2 currentDirection = Projectile.velocity.SafeNormalize(Vector2.UnitX);
 
-            if (IsPiercingShot)
-            {
-                UpdatePiercingFlight(currentDirection);
-            }
-            else if (Timer >= HomingStartFrames)
+            // 穿透弹保持出生时的速度和方向，直线飞行。
+            if (!IsPiercingShot && Timer >= HomingStartFrames)
             {
                 NPC target = FindNearestTarget(HomingRange);
                 if (target is not null)
@@ -95,7 +90,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.AshesofCala
                 else
                     FreeDrift(NoTargetDamping);
             }
-            else
+            else if (!IsPiercingShot)
             {
                 // 前几个真实游戏帧不找目标，只保持柔和游移。
                 FreeDrift(FreeFlightDamping);
@@ -142,14 +137,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.AshesofCala
         {
             float wander = (float)Math.Sin((Timer + Projectile.identity * 5f) * 0.08f) * WanderingTurnStrength;
             Projectile.velocity = Projectile.velocity.RotatedBy(wander) * damping;
-        }
-
-        private void UpdatePiercingFlight(Vector2 currentDirection)
-        {
-            float wander = (float)Math.Sin((Timer + Projectile.identity * 5f) * 0.08f) * NonHomingTurnStrength;
-            wander += (float)Math.Sin((Timer + ShotIndex * 19f) * 0.047f) * 0.004f;
-            float speed = MathHelper.Lerp(Projectile.velocity.Length(), BaseSpeed, 0.08f);
-            Projectile.velocity = currentDirection.RotatedBy(wander) * speed;
         }
 
         private NPC FindNearestTarget(float range)

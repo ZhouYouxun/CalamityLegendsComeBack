@@ -688,7 +688,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             if (timer == 1)
             {
                 SoundEngine.PlaySound(SoundID.NPCDeath10, npc.Center);
-                target.Calamity().GeneralScreenShakePower = 10f;
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(target, npc.Center, 10f);
             }
 
             if (timer == 45 && Main.netMode != NetmodeID.MultiplayerClient)
@@ -799,7 +799,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     npc.velocity = Vector2.Zero;
                     SoundEngine.PlaySound(SoundID.Item14 with { Volume = 1.1f, Pitch = 0f }, npc.Center);
                     SoundEngine.PlaySound(SoundID.NPCDeath4, npc.Center);
-                    target.Calamity().GeneralScreenShakePower = 13f;
+                    global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(target, npc.Center, 13f);
                     DeusFx.Burst(npc.Center, 8f, 40);
                     DeusFx.Burst(npc.Center, 5f, 24, DustID.GoldFlame);
                 }

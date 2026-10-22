@@ -3,27 +3,22 @@ Mods: {
 		Items: {
 			Weapons: {
 				PlayerSaddleItem: {
-					DisplayName: Silla de montar para jugadores
-					Tooltip:
+					// DisplayName: Player Saddle
+					/* Tooltip:
 						'''
-						Haz clic izquierdo en un jugador cercano para montarlo.
-						Mientras cabalgas, no puedes moverte, pero puedes seguir atacando e interactuando con normalidad.
-						Te desmonta automáticamente si tu montura muere.
-						Haz clic izquierdo de nuevo para desmontar o clic derecho para echar de tu montura a quien te está montando.
-						'''
+						Left-click on a nearby player to mount them.
+						While riding, you cannot move but can still attack and interact normally.
+						Auto-dismounts if your mount dies.
+						Left-click again to dismount, or right-click to throw off your own rider.
+						''' */
 				}
-			}
-
-			LegendaryEmblem: {
-				// DisplayName: Legendary Emblem
-				// Tooltip: ""
 			}
 		}
 
 		TheSpecialText: {
-			PlayerSaddleNoTarget: No se encontró ningún jugador cercano para montar.
-			PlayerSaddleOccupied: Ese jugador ya tiene un jinete.
-			PlayerSaddleMounted: ¡{0} ahora monta a {1}!
+			// PlayerSaddleNoTarget: No nearby player found to mount.
+			// PlayerSaddleOccupied: That player already has a rider.
+			// PlayerSaddleMounted: "{0} is now riding {1}!"
 		}
 	}
 }

@@ -1,6 +1,4 @@
 using CalamityMod;
-using CalamityMod.Items.Fishing.BrimstoneCragCatches;
-using CalamityMod.Items.Fishing.SunkenSeaCatches;
 using CalamityMod.Items.Placeables.Crags;
 using CalamityMod.Items.Weapons.DraedonsArsenal;
 using CalamityMod.Items.Weapons.Magic;
@@ -28,10 +26,6 @@ namespace CalamityLegendsComeBack.QOL
 
             switch (shop.NpcType)
             {
-                case NPCID.Wizard:
-                    shop.AddWithCustomValue(ItemID.RodofDiscord, Item.buyPrice(platinum: 1), Condition.Hardmode);
-                    break;
-
                 case NPCID.GoblinTinkerer:
                     shop.AddWithCustomValue(ItemID.NightKey, Item.buyPrice(gold: 5), Condition.Hardmode)
                         .AddWithCustomValue(ItemID.LightKey, Item.buyPrice(gold: 5), Condition.Hardmode)
@@ -55,11 +49,6 @@ namespace CalamityLegendsComeBack.QOL
                         .Add<BlightSpewer>(CalamityConditions.DownedPlaguebringer)
                         .Add<Shredder>(Condition.DownedMoonLord)
                         .Add<TheAnomalysNanogun>(CalamityConditions.DownedDevourerOfGods);
-                    break;
-
-                case NPCID.BestiaryGirl:
-                    shop.AddWithCustomValue<DragoonDrizzlefish>(Item.buyPrice(gold: 50))
-                        .AddWithCustomValue<SparklingEmpress>(Item.buyPrice(gold: 50));
                     break;
 
                 default:

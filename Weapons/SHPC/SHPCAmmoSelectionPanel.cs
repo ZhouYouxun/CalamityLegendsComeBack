@@ -14,7 +14,7 @@ using CalamityLegendsComeBack.Systems;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC
 {
-    internal sealed class SHPCAmmoSelectionPanel : ModProjectile, ILocalizedModType, IScreenOverlayProjectile
+    internal sealed class SHPCAmmoSelectionPanel : ModProjectile, ILocalizedModType, IScreenOverlayProjectile, IUnscaledScreenOverlayProjectile
     {
         private const int MaxCandidates = NewLegendSHPC.MagazineCount;
         private const int SlotSize = 56;
@@ -23,8 +23,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         private const float MaxIconDrawSize = 40f;
         private const float DeadZone = 14f;
 
-        private readonly int[] clickFeedbackTimers = new int[MaxCandidates];
-        private readonly bool[] hoveredLastFrame = new bool[MaxCandidates];
+        private int[] clickFeedbackTimers = new int[MaxCandidates];
+        private bool[] hoveredLastFrame = new bool[MaxCandidates];
+        private bool debugWheel;
+        public bool UseUnscaledOverlay => Main.player[Projectile.owner].HeldItem.ModItem is NewLegendSHPC { DebugModeActive: true };
+        private float DebugRadius => Math.Max(30f, Math.Min(Main.screenWidth, Main.screenHeight) * 0.5f - 36f);
 
         private Vector2 screenCenter;
         private bool positionInitialized;
@@ -71,6 +74,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
             if (owner.HeldItem.ModItem is not NewLegendSHPC)
                 FadeOut = true;
+            debugWheel = owner.HeldItem.ModItem is NewLegendSHPC { DebugModeActive: true };
+            if (debugWheel)
+            {
+                screenCenter = Main.ScreenSize.ToVector2() * 0.5f;
+                positionInitialized = true;
+            }
 
             if (Main.myPlayer == Projectile.owner &&
                 KeybindSystem.LegendaryWeaponFormSwitch?.Current != true &&
@@ -105,6 +114,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 return false;
 
             int activeSlotCount = weapon.GetActiveMagazineCount(owner);
+            debugWheel = weapon.DebugModeActive;
+            if (debugWheel)
+                screenCenter = Main.ScreenSize.ToVector2() * 0.5f;
+            if (clickFeedbackTimers.Length != activeSlotCount)
+            {
+                Array.Resize(ref clickFeedbackTimers, activeSlotCount);
+                Array.Resize(ref hoveredLastFrame, activeSlotCount);
+            }
             NewLegendSHPC.SHPCMagazineSlot[] slots = new NewLegendSHPC.SHPCMagazineSlot[activeSlotCount];
             for (int i = 0; i < activeSlotCount; i++)
                 slots[i] = weapon.GetMagazineSlot(i, owner);
@@ -193,11 +210,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         private Rectangle GetSlotArea(int index, int count)
         {
             Vector2 center = screenCenter + GetSlotOffset(index, count);
-            return Utils.CenteredRectangle(center, new Vector2(SlotSize));
+            float size = debugWheel ? Math.Min(SlotSize, MathHelper.TwoPi * DebugRadius / count / 1.5f) : SlotSize;
+            return Utils.CenteredRectangle(center, new Vector2(size));
         }
 
-        private static Vector2 GetSlotOffset(int index, int count)
+        private Vector2 GetSlotOffset(int index, int count)
         {
+            if (debugWheel)
+                return (-MathHelper.PiOver2 + MathHelper.TwoPi * index / count).ToRotationVector2() * DebugRadius;
             if (count <= 1)
                 return new Vector2(0f, -58f);
 
@@ -233,7 +253,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 return;
 
             Color lineColor = new Color(132, 190, 240, 0) * (0.26f * Projectile.Opacity);
-            float radius = 86f;
+            float radius = debugWheel ? DebugRadius : 86f;
             for (int i = 0; i < candidateCount; i++)
             {
                 Vector2 current = GetSlotOffset(i, candidateCount).SafeNormalize(-Vector2.UnitY);
@@ -270,7 +290,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             DrawRectangle(slotArea, slotBack * (opacity * 0.92f));
             DrawBorder(slotArea, slotBorder * opacity, BorderThickness);
 
-            Rectangle innerArea = Utils.CenteredRectangle(slotArea.Center.ToVector2(), new Vector2(InnerFrameSize));
+            Rectangle innerArea = Utils.CenteredRectangle(slotArea.Center.ToVector2(), new Vector2(Math.Min(InnerFrameSize, slotArea.Width - 8)));
             DrawRectangle(innerArea, Color.Lerp(new Color(10, 12, 18), effectColor, 0.08f) * (opacity * 0.82f));
             DrawBorder(innerArea, slotBorder * (opacity * 0.68f), 1);
 
@@ -294,7 +314,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             Rectangle source = GetCurrentFrame(texture, GetFrameCount(slot.EffectID));
             Vector2 iconCenter = slotArea.Center.ToVector2();
             Vector2 sourceSize = source.Size();
-            float fitScale = Math.Min(MaxIconDrawSize / Math.Max(1f, sourceSize.X), MaxIconDrawSize / Math.Max(1f, sourceSize.Y));
+            float iconSize = Math.Min(MaxIconDrawSize, slotArea.Width - 12f);
+            float fitScale = Math.Min(iconSize / Math.Max(1f, sourceSize.X), iconSize / Math.Max(1f, sourceSize.Y));
             float hoverScale = hovered ? 1.1f : 1f;
             float clickScale = clickTimer > 0 ? 1.08f : 1f;
             float bob = 1f + (hovered ? 0.025f * (float)Math.Sin(Main.GlobalTimeWrappedHourly * 10f) : 0f);

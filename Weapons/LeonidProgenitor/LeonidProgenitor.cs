@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core;
+using CalamityLegendsComeBack.LegendaryTooltipEffects;
 using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects;
 using CalamityMod;
 using CalamityMod.Items.Weapons.Rogue;
@@ -26,6 +27,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             Item.width = 32;
             Item.height = 48;
             Item.damage = LP_Balance.GetInitialLeftClickBaseDamage();
+            Item.DamageType = ModContent.GetInstance<RogueDamageClass>();
             Item.knockBack = 4f;
             Item.useAnimation = Item.useTime = 20;
             Item.autoReuse = true;
@@ -38,21 +40,50 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             Item.value = CalamityMod.Items.CalamityGlobalItem.RarityPinkBuyPrice;
             Item.rare = ItemRarityID.Yellow;
             Item.channel = true;
+            Item.accessory = true;
         }
 
-        public override float StealthDamageMultiplier => 1.2f;
+        public override void UpdateAccessory(Player player, bool hideVisual)
+        {
+            ModContent.GetInstance<CalamityMod.Items.Accessories.InterstellarStompers>().UpdateAccessory(player, hideVisual);
+            player.GetModPlayer<LeonidProgenitorPlayer>().SetAccessoryMeteorRain(Item);
+        }
+
+        // Each button has its own multiplier below; do not apply the old shared 1.2x twice.
+        public override float StealthDamageMultiplier => 1f;
+
+        public override void ModifyStatsExtra(Player player, ref Vector2 position, ref Vector2 velocity, ref int type, ref int damage, ref float knockback)
+        {
+            if (player.Calamity().StealthStrikeAvailable())
+                damage = (int)(damage * LP_Balance.GetStealthDamageMultiplier(player.altFunctionUse == 2));
+        }
 
         public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
         {
-            damage.Base += LP_Balance.GetLeftClickBaseDamage() - Item.damage;
+            int baseDamage = LP_Balance.GetLeftClickBaseDamage();
+            damage.Base += baseDamage - Item.damage;
         }
 
         public override bool AltFunctionUse(Player player) => true;
 
         public override bool CanUseItem(Player player)
         {
+            if (player.ownedProjectileCounts[ModContent.ProjectileType<LeonidRightClickHoldout>()] > 0)
+                return false;
+
             if (player.altFunctionUse != 2)
                 return base.CanUseItem(player);
+
+            if (!player.GetModPlayer<LeonidConstellationPlayer>().IsUnlocked(LeonidStar.Zosma))
+                return false;
+
+            // Accessories allowing early stealth strikes do not bypass this full-stealth requirement.
+            var calamityPlayer = player.Calamity();
+            if (calamityPlayer.rogueStealthMax <= 0f || calamityPlayer.rogueStealth < calamityPlayer.rogueStealthMax)
+            {
+                player.GetModPlayer<LeonidProgenitorPlayer>().ShowRightClickStealthFeedback();
+                return false;
+            }
 
             LeonidProgenitorPlayer leonidPlayer = player.GetModPlayer<LeonidProgenitorPlayer>();
             if (leonidPlayer.CanUseRightClick)
@@ -64,43 +95,20 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
         public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
         {
+            Vector2 aimPoint = global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(player, Main.MouseWorld);
             bool stealthStrike = player.Calamity().StealthStrikeAvailable();
             LeonidConstellationPlayer constellation = player.GetModPlayer<LeonidConstellationPlayer>();
 
             if (player.altFunctionUse == 2)
             {
                 player.GetModPlayer<LeonidProgenitorPlayer>().StartRightClickCooldown();
-                // Right Click
-                if (stealthStrike)
-                {
-                    // Right Click Stealth Strike: Lion Head
-                    int p = Projectile.NewProjectile(
-                        source,
-                        player.Center,
-                        (Main.MouseWorld - player.Center).SafeNormalize(Vector2.UnitX * player.direction) * 12f,
-                        ModContent.ProjectileType<LeonidLionHead>(),
-                        damage * 3, // High damage
-                        knockback * 1.5f,
-                        player.whoAmI);
-
-                    if (constellation.IsUnlocked(LeonidStar.Alterf) && p.WithinBounds(Main.maxProjectiles))
-                        Main.projectile[p].damage = (int)(Main.projectile[p].damage * 1.25f);
-                    
-                    if (p.WithinBounds(Main.maxProjectiles))
-                        Main.projectile[p].Calamity().stealthStrike = true;
-                }
-                else
-                {
-                    // Right Click Charge: LeonidRightClickHoldout
-                    Projectile.NewProjectile(
-                        source,
-                        player.Center,
-                        Vector2.Zero,
-                        ModContent.ProjectileType<LeonidRightClickHoldout>(),
-                        damage,
-                        knockback,
-                        player.whoAmI);
-                }
+                // Pay the discounted stealth cost once when charging begins; release uses this damage snapshot.
+                int p = Projectile.NewProjectile(source, player.Center,
+                    (aimPoint - player.Center).SafeNormalize(Vector2.UnitX * player.direction),
+                    ModContent.ProjectileType<LeonidRightClickHoldout>(), damage, knockback, player.whoAmI,
+                    0f, aimPoint.X, aimPoint.Y);
+                if (p.WithinBounds(Main.maxProjectiles))
+                    Main.projectile[p].Calamity().stealthStrike = true;
             }
             else
             {
@@ -111,7 +119,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                     // (every 5 ticks, from ~50 tiles above the cursor)
                     Projectile.NewProjectile(
                         source,
-                        Main.MouseWorld,
+                        aimPoint,
                         Vector2.Zero,
                         ModContent.ProjectileType<LeonidStealthRainSpawner>(),
                         damage,
@@ -122,21 +130,14 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 else
                 {
                     // Left Click Normal: 2 small comets with launch delay
-                    Vector2 targetVelocity = (Main.MouseWorld - player.Center).SafeNormalize(Vector2.UnitY) * 14f;
+                    Vector2 targetVelocity = (aimPoint - player.Center).SafeNormalize(Vector2.UnitY) * 14f;
                     
                     // Spawn at left and right sides of the player
                     Vector2 offset1 = new Vector2(-36f * player.direction, -20f);
                     Vector2 offset2 = new Vector2(36f * player.direction, -20f);
 
-                    int p1 = SpawnSmallComet(source, player, player.Center + offset1, targetVelocity, damage, knockback);
-                    int p2 = SpawnSmallComet(source, player, player.Center + offset2, targetVelocity, damage, knockback);
-
-                    int p3 = -1;
-                    if (constellation.IsUnlocked(LeonidStar.Adhafera))
-                    {
-                        Vector2 centerOffset = new Vector2(0f, -48f);
-                        p3 = SpawnSmallComet(source, player, player.Center + centerOffset, targetVelocity, damage, knockback);
-                    }
+                    int p1 = SpawnSmallComet(source, player, player.Center + offset1, targetVelocity, damage, knockback, aimPoint);
+                    int p2 = SpawnSmallComet(source, player, player.Center + offset2, targetVelocity, damage, knockback, aimPoint);
 
                     if (p1.WithinBounds(Main.maxProjectiles))
                     {
@@ -146,17 +147,23 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                     {
                         Main.projectile[p2].localAI[1] = 24f; // launch delay 24 ticks
                     }
-                    if (p3.WithinBounds(Main.maxProjectiles))
-                    {
-                        Main.projectile[p3].localAI[1] = 18f;
-                    }
+
                 }
             }
 
             // Shoot is fully custom, so RogueWeapon's normal stealth-consumption path is
             // bypassed. Consume once after either mouse button has produced its stealth attack.
             if (stealthStrike)
-                player.Calamity().ConsumeStealthByAttacking();
+            {
+                var calamity = player.Calamity();
+                float before = calamity.rogueStealth;
+                calamity.ConsumeStealthByAttacking();
+                float costFactor = player.altFunctionUse == 2
+                    ? (constellation.IsUnlocked(LeonidStar.Denebola) ? 0.75f : 1f)
+                    : (constellation.IsUnlocked(LeonidStar.Algenubi) ? 0.5f : 1f);
+                // Multiply the actual accessory-adjusted cost, including flat cost reductions.
+                calamity.rogueStealth = MathHelper.Clamp(before - (before - calamity.rogueStealth) * costFactor, 0f, calamity.rogueStealthMax);
+            }
 
             return false;
         }
@@ -179,7 +186,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 var modPlayer = player.GetModPlayer<LeonidProgenitorPlayer>();
                 var calamityPlayer = player.Calamity();
 
-                bool ultimateReady = modPlayer.UltimateEnergy >= 100 && calamityPlayer.rogueStealth >= calamityPlayer.rogueStealthMax * 0.999f;
+                bool ultimateReady = Main.hardMode && modPlayer.UltimateEnergy >= 100 && calamityPlayer.rogueStealth >= calamityPlayer.rogueStealthMax * 0.999f;
                 if (KeybindSystem.LegendarySkill.JustPressed && ultimateReady)
                 {
                     // Trigger ultimate!
@@ -189,13 +196,13 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
                     // Spawn the Gravity Field projectile
                     Vector2 spawnPos = Main.MouseWorld;
-                    int damage = (int)player.GetTotalDamage(Item.DamageType).ApplyTo(LP_Balance.GetLeftClickBaseDamage() * LP_Balance.GetUltimateDamageMultiplier());
+                    int damage = (int)player.GetTotalDamage(Item.DamageType).ApplyTo(LP_Balance.GetLeftClickBaseDamage());
                     Projectile.NewProjectile(Item.GetSource_FromThis(), spawnPos, Vector2.Zero, ModContent.ProjectileType<LeonidGravityField>(), damage, Item.knockBack, player.whoAmI);
 
                     // Sound and Visual effects
                     SoundEngine.PlaySound(SoundID.Item74 with { Volume = 1.0f, Pitch = -0.5f }, player.Center);
                     SoundEngine.PlaySound(SoundID.Item117 with { Volume = 0.85f, Pitch = -0.2f }, player.Center);
-                    calamityPlayer.GeneralScreenShakePower = Math.Max(calamityPlayer.GeneralScreenShakePower, 12f);
+                    global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(player, player.Center, 12f);
 
                     // 起手：星辉先从玩家身上炸开，再朝引力场展开的方向拉出一道星轨，
                     // 把"从我这里发动 → 落到那边"这条动线连起来。
@@ -218,11 +225,15 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             LeonidConstellationPlayer constellation = Main.LocalPlayer.GetModPlayer<LeonidConstellationPlayer>();
             string leftClick = this.GetLocalizedValue("LeftClick");
             string stealthClick = this.GetLocalizedValue("StealthLeftClick");
-            string rightClick = this.GetLocalizedValue("RightClick");
+            string rightClick = !constellation.IsUnlocked(LeonidStar.Zosma)
+                ? this.GetLocalizedValue("RightClickLocked")
+                : this.GetLocalizedValue("RightClick") + "\n" + this.GetLocalizedValue(
+                    constellation.IsUnlocked(LeonidStar.RLeonis) ? "RightClickImpact" : "RightClickImpactLocked");
 
             string ultimateKey = KeybindSystem.LegendarySkill.GetAssignedKeys().FirstOrDefault() ?? "Unbound";
-            string ultimateClick = string.Format(this.GetLocalizedValue("UltimateSkill"), ultimateKey);
+            string ultimateClick = string.Format(this.GetLocalizedValue("UltimateSkill"), ultimateKey, constellation.IsUnlocked(LeonidStar.Wolf359) ? 10 : 3);
             string passives = this.GetLocalizedValue("Passives");
+            string constellationTitle = this.GetLocalizedValue("ConstellationTitle");
 
             string constellationStatus = string.Format(
                 this.GetLocalizedValue("ConstellationStatus"),
@@ -235,25 +246,23 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 InventoryActivationInput.GetDisplayKeyOrDefault(
                     KeybindSystem.LeonidConstellationChart,
                     Language.ActiveCulture.Name.StartsWith("zh") ? "左 Ctrl" : "Left Ctrl"));
-            string legendaryBody = this.GetLocalizedValue("LegendaryText");
-            string legendaryHint = this.GetLocalizedValue("LegendaryHint");
-            bool shiftPressed = Main.keyState.PressingShift();
-            string legendarySection = shiftPressed ? legendaryBody : legendaryHint;
 
-            string merged =
-                leftClick + "\n" +
-                stealthClick + "\n" +
-                rightClick + "\n" +
-                ultimateClick + "\n" +
-                passives + "\n\n" +
-                constellationStatus + "\n" +
-                constellationHint;
+            string merged = string.Join("\n", new[]
+            {
+                leftClick,
+                stealthClick,
+                rightClick,
+                passives,
+                string.Format(this.GetLocalizedValue("EquipEffect"), Lang.GetItemNameValue(ModContent.ItemType<CalamityMod.Items.Accessories.InterstellarStompers>())),
+                ultimateClick,
+                constellationTitle,
+                constellationHint,
+                constellationStatus,
+            }.Select(text => text.TrimEnd('\r', '\n')));
 
-            if (shiftPressed)
-                tooltips.RemoveAll(t => t.Text == "[GFB]");
-            else
-                tooltips.FindAndReplace("[GFB]", merged);
-            tooltips.Add(new TooltipLine(Mod, "LeonidProgenitorMeteorRainLegendaryText", legendarySection));
+            tooltips.FindAndReplace("[GFB]", merged);
+            tooltips.Add(new TooltipLine(Mod, LeonidProgenitorMeteorRainLegendaryTooltip.TooltipLineName,
+                this.GetLocalizedValue("LegendaryText")));
         }
 
         public override void PostDrawInWorld(SpriteBatch spriteBatch, Color lightColor, Color alphaColor, float rotation, float scale, int whoAmI)
@@ -261,17 +270,17 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             Item.DrawItemGlowmaskSingleFrame(spriteBatch, rotation, ModContent.Request<Texture2D>("CalamityMod/Items/Weapons/Rogue/LeonidProgenitorGlow").Value);
         }
 
-        private static int SpawnSmallComet(EntitySource_ItemUse_WithAmmo source, Player player, Vector2 spawnPosition, Vector2 velocity, int damage, float knockback)
+        private static int SpawnSmallComet(EntitySource_ItemUse_WithAmmo source, Player player, Vector2 spawnPosition, Vector2 velocity, int damage, float knockback, Vector2 aimPoint)
         {
             LeonidConstellationPlayer constellation = player.GetModPlayer<LeonidConstellationPlayer>();
             float speedMultiplier = constellation.IsUnlocked(LeonidStar.Algieba) ? 1.2f : 1f;
             int p = Projectile.NewProjectile(source, spawnPosition, velocity * speedMultiplier, ModContent.ProjectileType<LeonidCometSmall>(), damage, knockback, player.whoAmI);
-
-            // Algenubi (the lion's eye): normal left-click comets track prey gently from launch, before any bounce.
-            if (constellation.IsUnlocked(LeonidStar.Algenubi) && p.WithinBounds(Main.maxProjectiles)
-                && Main.projectile[p].ModProjectile is LeonidCometSmall comet)
+            var fireControl = player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer>();
+            if (fireControl.CtrlChipEquipped && fireControl.ReticleHasTarget &&
+                p.WithinBounds(Main.maxProjectiles) && Main.projectile[p].ModProjectile is LeonidCometSmall small)
             {
-                comet.EnableSimpleHoming(0.035f, 640f);
+                small.SetLaunchAim(aimPoint, velocity.Length() * speedMultiplier);
+                Main.projectile[p].netUpdate = true;
             }
 
             return p;

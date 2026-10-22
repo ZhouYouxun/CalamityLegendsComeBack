@@ -1,4 +1,5 @@
 using CalamityLegendsComeBack.Accssory;
+using CalamityLegendsComeBack.LegendaryTooltipEffects;
 using CalamityLegendsComeBack.Accssory.MC.General;
 using CalamityLegendsComeBack.Weapons.Malachite.EXSkill;
 using CalamityLegendsComeBack.Weapons;
@@ -55,6 +56,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             Item.shootSpeed = 18f;
             Item.value = CalamityGlobalItem.RarityPinkBuyPrice;
             Item.rare = ModContent.RarityType<BurnishedAuric>();
+            Item.accessory = true;
         }
 
         public override bool AltFunctionUse(Player player) => true;
@@ -197,13 +199,14 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             TryUseFinale(player);
         }
 
+        public override void UpdateAccessory(Player player, bool hideVisual)
+        {
+            player.GetModPlayer<MalachitePlayer>().SetMalachiteAccessory(Item);
+        }
+
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
             string keyText = KeybindSystem.LegendarySkill.GetAssignedKeys().FirstOrDefault() ?? "Unbound";
-            bool shiftPressed = Main.keyState.PressingShift();
-            string legendarySection = shiftPressed
-                ? this.GetLocalizedValue("LegendaryText")
-                : this.GetLocalizedValue("LegendaryHint");
             bool legendaryEmblemEquipped = Main.LocalPlayer.GetModPlayer<LegendaryEmblemPlayer>().EXAccessoryEquipped;
             string finaleText = legendaryEmblemEquipped
                 ? string.Format(this.GetLocalizedValue("Finale"), keyText)
@@ -214,13 +217,11 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                 this.GetLocalizedValue($"RightClick{MalachiteBalance.GetRightClickTooltipTier()}") + "\n" +
                 this.GetLocalizedValue($"StealthStrike{MalachiteBalance.GetStealthTooltipTier()}") + "\n" +
                 this.GetLocalizedValue("Passive") + "\n" +
-                finaleText + "\n";
+                finaleText.TrimEnd('\r', '\n');
 
-            if (shiftPressed)
-                tooltips.RemoveAll(t => t.Text == "[GFB]");
-            else
-                tooltips.FindAndReplace("[GFB]", finalText);
-            tooltips.Add(new TooltipLine(Mod, "MalachiteShadowPeacockLegendaryText", legendarySection));
+            tooltips.FindAndReplace("[GFB]", finalText);
+            tooltips.Add(new TooltipLine(Mod, MalachiteShadowPeacockLegendaryTooltip.TooltipLineName,
+                this.GetLocalizedValue("LegendaryText")));
         }
 
         public override void PostDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
@@ -233,7 +234,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                 return;
 
             Texture2D barBackground = TextureAssets.MagicPixel.Value;
-            float completion = MathHelper.Clamp(storedFeathers / (float)MalachiteBalance.RightFeatherMaxCount, 0f, 1f);
+            float completion = MathHelper.Clamp(storedFeathers / (float)Math.Max(1, MalachiteBalance.RightFeatherMaxCount), 0f, 1f);
             Vector2 barPosition = position + new Vector2(-18f, frame.Height * 0.55f) * scale;
             Rectangle back = new((int)barPosition.X, (int)barPosition.Y, (int)(36f * scale), (int)(4f * scale));
             Rectangle front = new(back.X, back.Y, (int)(back.Width * completion), back.Height);
@@ -360,7 +361,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         private static Vector2 GetMouseWorld(Player player)
         {
             Vector2 mouseWorld = player.Calamity().mouseWorld;
-            return mouseWorld == Vector2.Zero ? Main.MouseWorld : mouseWorld;
+            return global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(player, mouseWorld == Vector2.Zero ? Main.MouseWorld : mouseWorld);
         }
 
         private static void ClearStoredRightFeathers(Player player)

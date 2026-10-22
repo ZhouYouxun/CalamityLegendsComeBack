@@ -1,4 +1,4 @@
-Mods: {
+﻿Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
 			Weapons: {
@@ -8,101 +8,110 @@ Mods: {
 					LeftClick:
 						'''
 						[c/74D8FF:Left Click: Spawns two small comets near you that launch toward the cursor, releasing homing Astral Energy Beams on hit.]
-						[c/99CCFF:Comets bounce on reflective meteors, gain damage, and redirect through the battlefield.]
-						[c/9AD8FF:Light the Leo constellation to permanently reshape the meteor rain.]
+						[c/74D8FF:Comets bounce on reflective meteors, gain damage, and redirect through the battlefield.]
 						'''
-					StealthLeftClick: "[c/B7A4FF:Stealth Left: Summons a rain of comets above cursor; dissipating comets burst into 3 Astral Energy Beams.]"
-					RightClick: "[c/8DEBFF:Right Click: Hold to charge a large meteor; Stealth Right sends a roaring Lion Head. Hits trigger Rogue Earthen Tides shockwaves.]"
-					UltimateSkill: "[c/FFE85A:Ultimate (Press {0}): Opens a gravity field that gathers a falling meteor storm. Requires full Ultimate Energy and Stealth.]"
-					Passives:
+					StealthLeftClick: "[c/B7A4FF:Stealth left-click marks the enemy nearest the cursor and summons strongly homing meteors. Hits cause a small explosion; fading meteors release Astral Energy Beams.]"
+					RightClickLocked: "[c/888888:Light Zosma in the star chart to unlock right-click attacks]"
+					RightClickRequiresStealth: Stealth required
+					RightClickImpact: "[c/8DEBFF:The fast meteor creates a shockwave and many charged meteors on impact, dealing follow-up damage]"
+					RightClickImpactLocked:
 						'''
-						[c/BFAFFF:Kinetic Cycle: Reflected left-click comets accelerate, grow stronger, and return to orbit after their seventh reflection.]
-						[c/AA8CFF:Stellar Landing: Landing after falling at least 7 tiles creates a stellar shockwave. At 21 tiles, its damage and radius are doubled.]
+						[c/8DEBFF:The fast meteor releases many charged meteors on impact, dealing follow-up damage]
+						[c/888888:Light R Leonis in the star chart to unlock the shockwave]
 						'''
+					RightClick:
+						'''
+						[c/8DEBFF:Right Click: Stealth strikes only]
+						[c/8DEBFF:Hold to absorb nearby meteors and charge; release to fire a fast meteor]
+						'''
+					Passives: "[c/AA8CFF:Passive — Kinetic Impact: Landing at sufficient speed or from sufficient height causes a shockwave.]"
+					EquipEffect: "[c/66CCFF:Equip effect: Grants all effects of {0}; meteors occasionally fall from the sky]"
+					UltimateSkill: "[c/FFE85A:Ultimate (Meteor Shower): Press {0} to summon many meteors from the sky for {1} seconds.]"
+					ConstellationTitle: "[c/FFE85A:Leo's principal star has been lit]"
 					ConstellationStatus: "[c/FFE85A:Leo Starlight: {0} available | {1} spent | {2} earned | {3} to complete]"
-					ConstellationHint: "[c/B8A8FF:While holding this weapon, or hovering it in your inventory, press {0} to open the Leonid star chart.]"
-					LegendaryHint: "[c/BABABA:Hold Shift to read the legendary record]"
-					LegendaryText: "[c/66E6FF:Meteorfall no longer searches your inventory for metal. Each major foe overcome becomes a starlight in the Lion's sky.]"
+					ConstellationHint: "[c/B8A8FF:Hold {0} while holding this weapon or hovering it in your inventory to open the star chart.]"
+					LegendaryText: Whenever I look up at the stars, I remember what happened.
 
 					Constellation: {
 						Title: THE LEONID SKY
-						Subtitle: Regulus is the heart. Any principal star may be awakened from it.
+						Subtitle: Unlock stars along paths from Regulus. You may advance multiple paths.
 						Status: Available {0}    Spent {1}    Earned {2}    Full map {3}
 						HoverHint: Hover a principal star to read its celestial imprint.
 						Reset: Reset constellation (Free)
 						Heart: Heart star — always lit
 						Unlocked: Awakened
 						Cost: Cost: {0} starlight
+						Requires: Requires: {0}
 
 						Nodes: {
 							Regulus: {
 								Name: Regulus — Lion Heart
-								Description: The fixed heart of Leo. It anchors every unlocked star.
+								Description: The always-lit center; grants no additional combat bonus.
 							}
 
 							Algieba: {
 								Name: Algieba — Twin Mane
-								Description: Small comets launch 20% faster.
+								Description: Left-click meteors fly 20% faster.
 							}
 
 							Adhafera: {
 								Name: Adhafera — Crown Thread
-								Description: Normal left-click releases a third small comet.
+								Description: Doubles the starlight beams released by left-click meteors.
 							}
 
 							Rasalas: {
 								Name: Rasalas — Sickle Turn
-								Description: Every reflection grants 12% speed and 6% damage, instead of 5% and 4%.
+								Description: Left-click meteors ignore gravity.
 							}
 
 							Zosma: {
-								Name: Zosma — Falling Flank
-								Description: Stealth meteor rain gains two additional comets.
+								Name: Zosma — West Upper Minister
+								Description: Unlocks right-click attacks.
 							}
 
 							Chertan: {
-								Name: Chertan — Hunting Line
-								Description: A fully reflected comet restores 4 Ultimate Energy instead of 3.
+								Name: Chertan — West Second Minister
+								Description: Removes the damage penalty for firing a right-click attack without charging.
 							}
 
 							Denebola: {
 								Name: Denebola — Tail of Dawn
-								Description: The Ultimate gravity field lasts 2 seconds longer.
+								Description: Right-click attacks consume only 75% of their stealth cost.
 							}
 
 							Alterf: {
 								Name: Alterf — Roaring Crown
-								Description: Stealth Lion Head damage increases by 25% and releases 18 reflective meteors.
+								Description: Increases flight time by 50% while holding this weapon.
 							}
 
 							Subra: {
-								Name: Subra — Forepaw Comet
-								Description: A charged large meteor deals 20% more damage.
+								Name: Subra — Xuanyuan XV
+								Description: Negates reduced space gravity while holding this weapon.
 							}
 
 							Algenubi: {
 								Name: Algenubi — Lion's Eye
-								Description: Normal left-click comets track prey gently from the moment they launch.
+								Description: Left-click stealth strikes consume only half their stealth cost.
 							}
 
 							AlMinliar: {
-								Name: Al Minliar — Lion's Muzzle
-								Description: The Stealth Lion Head pounces faster and bites with a wider hitbox.
+								Name: Al Minliar al Asad — Xuanyuan VII
+								Description: Doubles passive shockwave damage.
 							}
 
 							RLeonis: {
 								Name: R Leonis — Pulsing Ember
-								Description: While held, Ultimate Energy charges faster — one point every 0.75 seconds.
+								Description: Right-click meteor explosions release a shockwave.
 							}
 
 							Wolf359: {
 								Name: Wolf 359 — Flaring Dwarf
-								Description: A dissipating small comet erupts into two stronger Astral Energy Beams instead of one.
+								Description: Extends the Meteor Shower ultimate to 10 seconds.
 							}
 
 							Dingolay: {
 								Name: Dingolay — Dancing Star
-								Description: Each third-reflection milestone deals 24% more damage, up from 15%.
+								Description: Right-click attacks deal more damage at night.
 							}
 						}
 					}
@@ -115,7 +124,7 @@ Mods: {
 				LeonidCometSmall.DisplayName: Small Meteor
 				LeonidReflectiveMeteor.DisplayName: Reflective Meteor
 				LeonidCometLarge.DisplayName: Large Meteor
-				LeonidLionHead.DisplayName: Roaring Lion Head
+				LeonidLionHead.DisplayName: Leonid Impact Burst
 				LeonidGravityField.DisplayName: Leonid Echo Gravity Field
 				LeonidUltimateUI.DisplayName: Ultimate Energy Bar
 				LeonidRightClickHoldout.DisplayName: Leonid Right Click Holdout

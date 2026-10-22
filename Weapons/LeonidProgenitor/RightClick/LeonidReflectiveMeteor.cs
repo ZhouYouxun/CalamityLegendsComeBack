@@ -7,6 +7,7 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core;
 using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects;
+using CalamityMod;
 
 namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 {
@@ -28,7 +29,8 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             set => Projectile.ai[0] = value ? 1f : 0f;
         }
 
-        public bool IsStealthFloater => Projectile.ai[2] == StealthFloaterFlag;
+        // ai[2] also carries the synced Comet Quasher appearance (1, 2 or 3).
+        public bool IsStealthFloater => Projectile.ai[2] >= StealthFloaterFlag && Projectile.ai[2] < StealthFloaterFlag + 3f;
 
         public int TimesBounced;
         public int decelerateTimer;
@@ -45,6 +47,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             Projectile.width = 28;
             Projectile.height = 28;
             Projectile.friendly = true;
+            Projectile.DamageType = ModContent.GetInstance<RogueDamageClass>();
             Projectile.ignoreWater = true;
             Projectile.tileCollide = false;
             Projectile.penetrate = -1;
@@ -184,6 +187,16 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             }
         }
 
+        public override bool? CanDamage() => IsReturning ? false : null;
+
+        public void StopReturning()
+        {
+            IsReturning = false;
+            orbitInitialized = false;
+            Projectile.ai[1] = 0f;
+            Projectile.netUpdate = true;
+        }
+
         public override void OnKill(int timeLeft)
         {
             CLCBLightingBoltsSystem.Spawn_LeonidStarfieldMatrixBurst(Projectile.Center, 1f);
@@ -214,7 +227,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 LeonidPolarStarBurst.Spawn(Projectile.Center, Projectile.oldVelocity,
                     Color.Lerp(LeonidVisualUtils.StratusBlue, LeonidVisualUtils.MoonWhite, 0.35f), 0.85f);
 
-                if (Projectile.owner == Main.myPlayer)
+                if (!IsReturning && Projectile.owner == Main.myPlayer)
                     ReleaseStealthPayload();
             }
 
@@ -270,8 +283,13 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
         public override bool PreDraw(ref Color lightColor)
         {
-            Texture2D texture = ModContent.Request<Texture2D>(Texture).Value;
-            Texture2D glow = ModContent.Request<Texture2D>("CalamityMod/Items/Weapons/Rogue/LeonidProgenitorGlow").Value;
+            string spritePath = IsStealthFloater
+                ? "CalamityMod/Projectiles/Melee/CometQuasherMeteor" + ((int)Projectile.ai[2] == 1 ? "" : ((int)Projectile.ai[2]).ToString())
+                : Texture;
+            Texture2D texture = ModContent.Request<Texture2D>(spritePath).Value;
+            Texture2D glow = IsStealthFloater
+                ? texture
+                : ModContent.Request<Texture2D>("CalamityMod/Items/Weapons/Rogue/LeonidProgenitorGlow").Value;
             
             float opacity = 1f - Projectile.alpha / 255f;
             Color drawColor = Color.Lerp(LeonidVisualUtils.StratusBlue, LeonidVisualUtils.MoonViolet, 0.38f) * opacity;
@@ -322,7 +340,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             Main.EntitySpriteDraw(bloom, drawPosition, null, drawColor * 0.25f, 0f, bloom.Size() * 0.5f, Projectile.scale * 0.35f, SpriteEffects.None, 0f);
             LeonidVisualUtils.DrawCelestialHead(Projectile.Center, starryColor, opacity, Projectile.scale * 0.9f, Projectile.rotation);
             LeonidVisualUtils.DrawSparkle(Projectile.Center, LeonidVisualUtils.MoonWhite, 0.28f * opacity, 0.28f * Projectile.scale, Projectile.rotation);
-            Main.EntitySpriteDraw(glow, drawPosition, null, Color.White * opacity, Projectile.rotation, glow.Size() * 0.5f, Projectile.scale * 0.8f, SpriteEffects.None, 0f);
+            Main.EntitySpriteDraw(glow, drawPosition, null, Color.White * opacity * (IsStealthFloater ? 0.28f : 1f), Projectile.rotation, glow.Size() * 0.5f, Projectile.scale * 0.8f, SpriteEffects.None, 0f);
             // 星空色包边：流动渐变色描边，随呼吸脉冲微微涨缩
             float outlineRadius = 3.2f + 0.6f * magicPulse;
             for (int i = 0; i < 8; i++)

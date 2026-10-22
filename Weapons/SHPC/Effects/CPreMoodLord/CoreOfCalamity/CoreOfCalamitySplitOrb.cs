@@ -131,7 +131,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
 
             Projectile.netUpdate = true;
             if (Projectile.owner == Main.myPlayer)
-                owner.SetScreenshake(3.5f);
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(owner, Projectile.Center, 3.5f);
 
             Projectile.numHits = 0;
             Projectile.velocity = direction * FireSpeed;

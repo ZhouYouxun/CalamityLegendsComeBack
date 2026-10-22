@@ -54,7 +54,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty
         private bool wasRoverDriveBoosted;
         private bool capturedBoostedShieldHit;
 
-        public bool UltimateReady => UltimateCharge >= UltimateCooldownFrames;
+        public bool UltimateReady => Main.hardMode && UltimateCharge >= UltimateCooldownFrames;
         public float UltimateCompletion => MathHelper.Clamp(UltimateCharge / (float)UltimateCooldownFrames, 0f, 1f);
 
         public override void Initialize()

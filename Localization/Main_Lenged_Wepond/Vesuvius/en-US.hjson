@@ -7,42 +7,31 @@ Mods: {
 					Tooltip: "[GFB]"
 					LeftClick:
 						'''
-						[c/FF8A3D:Left Click: Hold to build volcanic pressure, then release an explosive Volcanic Arc Orb.]
-						[c/FF8A3D:Hitting an enemy afflicted with Volcanic Calamity ejects damaging magma along the orb's original path.]
+						[c/FF8A3D:Left Click: Build volcanic pressure, then release an erupting arc orb.]
+						[c/FF8A3D:When it strikes an enemy afflicted with Volcanic Calamity, more magma erupts.]
 						'''
-					ChargeStage1: "[c/FF8A3D:Unlocked charge: Stage I pressure increases the orb's size, damage, and eruption.]"
-					ChargeStage2: "[c/FF9F45:Unlocked charge: Stage II pressure gains homing and tears through crowds.]"
-					ChargeStage3: "[c/FFE27E:Unlocked charge: Stage III pressure causes far more violent chained eruptions.]"
-					ChargeStage4: "[c/FFF4BE:Unlocked charge: Stage IV releases Vesuvius' complete thermal core.]"
+					ChargeStage1: "[c/FF8A3D:Pressure swells the orb and strengthens its eruption.]"
+					ChargeStage2: "[c/FF8A3D:Pressure sends the orb hunting through enemies.]"
+					ChargeStage3: "[c/FF8A3D:Pressure makes the orb erupt repeatedly on impact.]"
+					ChargeStage4: "[c/FF8A3D:Pressure condenses into a thermal core that erupts on impact.]"
 					RightClick:
 						'''
-						[c/FFB15C:Right Click: Drag the staff behind you with both hands and briefly charge a Super Flame that deals 250% damage.]
-						[c/FFB15C:Super Flame inflicts Volcanic Calamity for 17 seconds. For 90 frames, the next left click is instant, larger, and stronger, while the next right click calls down a lava meteor.]
+						[c/FFB15C:Right Click: Charge a super flame that afflicts enemies with Volcanic Calamity.]
+						[c/FFB15C:Afterward, left click instantly releases a stronger arc orb; right click calls down a lava meteor.]
 						'''
 					Passive:
 						'''
-						[c/CC9A6A:Mobile Volcano: If your maximum mana is below 100, gain 100 maximum mana. Become immune to fire blocks, lava, and burning. Nearby ash inflicts Volcanic Calamity.]
-						[c/D878FF:Ashen Soul: Vesuvius kills or every 400 mana spent creates one soul.]
-						[c/D878FF:At 6 souls, the next left click releases six 40%-damage soul flames orbiting the main orb.]
-						[c/FF7040:Volcanic Calamity: damage taken ×1.05; damage taken from Vesuvius is multiplied by an additional ×1.2.]
+						[c/CC9A6A:Passive [Mobile Volcano]: Ash around you afflicts enemies with Volcanic Calamity.]
+						[c/D878FF:Passive [Ashen Soul]: Defeating enemies or spending mana gathers soul flames.]
+						[c/D878FF:Once gathered, they circle the next left-click orb and fly with it.]
 						'''
 					EXHint:
 						'''
-						[c/FFD86B:While held, Vesuvius charges ultimate energy up to 60.]
-						[c/FFD86B:At full energy, press] [[c/FFD86B:{0}]] [c/FFD86B: to raise the staff overhead and charge Volcanic Eruption.]
-						[c/FFD86B:After the ready sound, left click to unleash five seconds of ash, magma, meteors, fireballs, and obsidian shards.]
+						[c/FFD86B:Ultimate [Volcanic Eruption]: Press [{0}] to raise the staff and erupt.]
+						[c/FFD86B:Ash, lava, and obsidian shards rain down.]
 						'''
-					EXDisabledHint: "[c/9A9A9A:Golden Emblem is not equipped. The ultimate is disabled.]"
+					EXDisabledHint: "[c/9A9A9A:The ultimate unlocks automatically in Hardmode.]"
 					Final: "[c/FFB15C:The crust splits, ash shuts out the sky, and the pyroclastic flow sweeps the battlefield.]"
-					LegendaryHint: "[c/BABABA:Hold Shift to access the record]"
-					LegendaryText:
-						'''
-						[c/FFB15C:The first Vesuvius understood volcanoes as meteors: fall from above, smash the target, then explode.]
-						[c/FF8A3D:That design was direct enough, but it only showed the surface fall of a volcano, not the disaster moving through the earth below.]
-						[c/FFB15C:After the rebuild, scattered ejecta are compressed into a single thermal core; a precise hit drives the eruption into the target.]
-						[c/D84BFF:Right click drags the staff behind you to compress the volcano, then tears through mid-range combat with a Super Flame.]
-						[c/FF4422:When the final eruption comes, what falls is no longer lava. It is an entire layer of earth finishing the volcano's declaration.]
-						'''
 				}
 			}
 		}

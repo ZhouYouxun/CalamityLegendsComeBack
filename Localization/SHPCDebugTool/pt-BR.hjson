@@ -1,0 +1,16 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			SHPCDebugTool: {
+				Tooltip:
+					'''
+					Ativa apenas para você enquanto estiver favoritada no inventário
+					Amplia a roda da SHPC empunhada para quase a altura da tela e libera todos os materiais com munição de teste ilimitada
+					Remover ou desfavoritar apaga todos os materiais carregados e reservas, sem devolver os originais
+					Obtida apenas com trapaças
+					'''
+				DisplayName: Ferramenta de depuração SHPC
+			}
+		}
+	}
+}

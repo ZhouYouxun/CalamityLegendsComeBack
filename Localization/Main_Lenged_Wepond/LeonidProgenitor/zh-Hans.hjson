@@ -1,4 +1,4 @@
-Mods: {
+﻿Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
 			Weapons: {
@@ -8,107 +8,110 @@ Mods: {
 					LeftClick:
 						'''
 						[c/74D8FF:左键：在身边生成两颗小流星，短暂停留后飞向鼠标，命中时释放追击的星辉能量束。]
-						[c/99CCFF:小流星会撞击反射陨星，增伤、加速并改变轨道。]
-						[c/9AD8FF:点亮狮子座主星，永久改变你的流星雨。]
+						[c/74D8FF:小流星会撞击反射陨星，增伤、加速并改变轨道。]
 						'''
-					StealthLeftClick: "[c/B7A4FF:潜伏左键：在鼠标斜上方召来一阵流星雨；消散时向周围散射3发星辉能量束。]"
-					RightClick: "[c/8DEBFF:右键：长按蓄力大流星；潜伏右键放出狮首。命中敌人时触发盗贼大地之潮冲击波。]"
-					UltimateSkill: "[c/FFE85A:终结技（按 {0}）：展开引力场，召来从天空落下的流星暴。需要满终结能量和潜伏值。]"
-					Passives:
+					StealthLeftClick: "[c/B7A4FF:左键潜伏攻击标记鼠标附近最近的敌人，召来强力追踪的流星雨；命中产生小范围爆炸，消失时释放星辉能量束。]"
+					RightClickLocked: "[c/888888:点亮星图中的太微右垣五来解锁右键攻击]"
+					RightClickRequiresStealth: 需要潜行值
+					RightClickImpact: "[c/8DEBFF:高速流星命中后会产生震荡波，及大量充能陨石，造成二次伤害]"
+					RightClickImpactLocked:
 						'''
-						[c/BFAFFF:动能循环：左键流星反射后会加速、增伤；第七次反射后会回到身边环绕。]
-						[c/AA8CFF:星空落地：下落至少7格后落地会引发星空震荡；达到21格时伤害和范围均翻倍。]
+						[c/8DEBFF:高速流星命中后会产生大量充能陨石，造成二次伤害]
+						[c/888888:点亮星图中的狮腹脉冲来解锁震荡波]
 						'''
+					RightClick:
+						'''
+						[c/8DEBFF:右键：只允许潜行攻击]
+						[c/8DEBFF:长按吸收周围流星并蓄力，松手时发射一颗高速流星]
+						'''
+					Passives: "[c/AA8CFF:【被动】动能冲击：以一定速度或高度踩踏地面时会引发震荡。]"
+					EquipEffect: "[c/66CCFF:装备效果：获得引力靴的全部效果，时不时天降流星]"
+					UltimateSkill: "[c/FFE85A:大招【流星雨】：按下【{0}】可从天空召唤大量陨石，持续{1}秒。]"
+					ConstellationTitle: "[c/FFE85A:狮子座主星已被点亮]"
 					ConstellationStatus: "[c/FFE85A:狮子座星辉：可用 {0} | 已消耗 {1} | 已获得 {2} | 全图需 {3}]"
-					ConstellationHint: "[c/B8A8FF:手持本武器，或在背包中悬停本武器时，按 {0} 展开狮源流星星图。]"
-					LegendaryHint: "[c/BABABA:按住 Shift 阅读传奇记录]"
-					LegendaryText:
-						'''
-						[c/66E6FF:流星雨不再从背包寻找金属。]
-						[c/78DFFF:每一位被击败的大型 Boss，都会化作星辉。]
-						[c/9BCBFF:这些星辉点亮狮子座的夜空。]
-						[c/C0B6FF:每一场流星雨，都是胜利留下的回响。]
-						'''
+					ConstellationHint: "[c/B8A8FF:手持本武器或在背包中悬停本武器时，按住【{0}】展开星图。]"
+					LegendaryText: 每当我仰望星空时，都能回忆起那件事
 
 					Constellation: {
 						Title: 狮子座流星雨星图
-						Subtitle: 轩辕十四为狮心；可任选一颗主星点亮。
+						Subtitle: 从轩辕十四沿连线逐颗点亮，可自由推进多条路线。
 						Status: 可用 {0}    已消耗 {1}    已获得 {2}    全图需 {3}
 						HoverHint: 悬停主星查看星辉印记
 						Reset: 重置星图（免费）
 						Heart: 狮心主星 — 恒常点亮
 						Unlocked: 已点亮
 						Cost: 消耗：{0} 星辉
+						Requires: 需先点亮：{0}
 
 						Nodes: {
 							Regulus: {
 								Name: 轩辕十四 狮心
-								Description: 狮子座的固定心脏 锚定所有已点亮主星
+								Description: 固定点亮的星图中心，不提供额外战斗加成。
 							}
 
 							Algieba: {
 								Name: 轩辕十二 双鬃
-								Description: 小流星初始飞行速度提高20%
+								Description: 左键流星飞行速度提高20%。
 							}
 
 							Adhafera: {
 								Name: 轩辕十一 冠冕丝线
-								Description: 普通左键额外释放一颗小流星
+								Description: 左键流星产生的星辉数量翻倍。
 							}
 
 							Rasalas: {
 								Name: 轩辕十 镰刃折转
-								Description: 每次反射获得12%速度与6%伤害
+								Description: 左键流星无视重力。
 							}
 
 							Zosma: {
-								Name: 轩辕十五 落星侧翼
-								Description: 潜伏流星雨额外增加两颗小流星
+								Name: 太微右垣五 西上相
+								Description: 解锁右键攻击。
 							}
 
 							Chertan: {
-								Name: 轩辕十三 狩猎轨迹
-								Description: 完全反射的小流星回复4点终结能量
+								Name: 太微右垣四 西次相
+								Description: 取消右键攻击的未蓄力惩罚。
 							}
 
 							Denebola: {
 								Name: 五帝座一 尾星曙光
-								Description: 终结技引力场额外持续2秒
+								Description: 右键攻击仅消耗75%的潜行值。
 							}
 
 							Alterf: {
 								Name: 轩辕八 咆哮冠冕
-								Description: 潜伏狮首伤害提高25%，并放出18颗流星
+								Description: 手持武器时提高50%的飞行时间。
 							}
 
 							Subra: {
-								Name: 轩辕六 前爪彗星
-								Description: 蓄力大流星伤害提高20%
+								Name: 轩辕十五 前爪彗星
+								Description: 手持武器时不再受太空失重影响。
 							}
 
 							Algenubi: {
 								Name: 轩辕九 狮目
-								Description: 普通左键小流星出膛即带柔和自动追踪
+								Description: 左键潜行攻击仅消耗一半的潜行值。
 							}
 
 							AlMinliar: {
-								Name: 狮吻 咆哮前唇
-								Description: 潜伏狮首扑击更迅猛，咬击判定范围更大
+								Name: 轩辕七 狮吻
+								Description: 被动冲击波伤害翻倍。
 							}
 
 							RLeonis: {
 								Name: 狮腹脉冲 R星
-								Description: 手持本武器时终结能量充能加快，每0.75秒回复一点
+								Description: 右键流星爆炸后释放冲击波。
 							}
 
 							Wolf359: {
 								Name: 沃夫359 焰矮星
-								Description: 小流星消散时改为迸发两束更强的星辉能量束
+								Description: 将大招“流星雨”的持续时间提升至10秒。
 							}
 
 							Dingolay: {
 								Name: 丁格莱 旋舞星
-								Description: 每完成三次反射的里程碑增伤由15%提升至24%
+								Description: 右键攻击在夜晚造成更高伤害。
 							}
 						}
 					}
@@ -121,7 +124,7 @@ Mods: {
 				LeonidCometSmall.DisplayName: 小流星
 				LeonidReflectiveMeteor.DisplayName: 反射流星
 				LeonidCometLarge.DisplayName: 大流星
-				LeonidLionHead.DisplayName: 咆哮狮首
+				LeonidLionHead.DisplayName: 狮源冲击爆发
 				LeonidGravityField.DisplayName: 狮子座引力场
 				LeonidUltimateUI.DisplayName: 终结能量
 				LeonidRightClickHoldout.DisplayName: 流星蓄力

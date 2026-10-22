@@ -1,272 +1,125 @@
+using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core;
+using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects;
+using CalamityMod;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
-using CalamityMod;
-using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core;
-using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects;
 
 namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 {
+    // The former lion-head attack is now only the stationary impact stage of the charged meteor.
     public class LeonidLionHead : ModProjectile, ILocalizedModType
     {
-        public override string Texture => "CalamityMod/Items/Weapons/Rogue/LeonidProgenitor";
+        private const int Duration = 16;
+        private bool initialized;
+        private float BurstScale => 2.6f;
+
+        public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
         public new string LocalizationCategory => "Projectiles.LeonidProgenitor";
-
-        public Player Owner => Main.player[Projectile.owner];
-
-        public Vector2 TargetPosition;
-        public bool IsBiting;
-        private int biteTimer;
-        private bool spawnedSubProjectiles;
-
-        public override void SetStaticDefaults()
-        {
-            ProjectileID.Sets.TrailCacheLength[Type] = 8;
-            ProjectileID.Sets.TrailingMode[Type] = 2;
-        }
 
         public override void SetDefaults()
         {
-            Projectile.width = 40;
-            Projectile.height = 40;
-            Projectile.friendly = false; // only damage when biting
-            Projectile.ignoreWater = true;
+            Projectile.width = Projectile.height = 104;
+            Projectile.friendly = true;
+            Projectile.DamageType = ModContent.GetInstance<RogueDamageClass>();
             Projectile.tileCollide = false;
+            Projectile.ignoreWater = true;
             Projectile.penetrate = -1;
-            Projectile.timeLeft = 300;
+            Projectile.timeLeft = Duration;
+            Projectile.usesLocalNPCImmunity = true;
+            Projectile.localNPCHitCooldown = -1;
         }
 
-        public override bool? CanDamage() => IsBiting;
+        public override bool ShouldUpdatePosition() => false;
+
+        // One brief area strike; the rest of the lifespan is the original burst's visual tail.
+        public override bool? CanDamage() => Projectile.timeLeft >= Duration - 2 ? null : false;
 
         public override void AI()
         {
-            // Set TargetPosition to mouse if uninitialized (failsafe)
-            if (TargetPosition == Vector2.Zero)
+            float progress = 1f - Projectile.timeLeft / (float)Duration;
+            Projectile.scale = MathHelper.Lerp(1f, BurstScale, progress);
+            Color gold = LeonidVisualUtils.GetReadyGold(Projectile.whoAmI * 0.3f);
+            Lighting.AddLight(Projectile.Center, gold.ToVector3() * (1f - progress));
+
+            if (initialized)
+                return;
+            initialized = true;
+            Vector2 center = Projectile.Center;
+            Projectile.width = Projectile.height = (int)(40f * BurstScale);
+            Projectile.Center = center;
+
+            if (!Main.dedServ)
             {
-                TargetPosition = Main.MouseWorld;
+                SoundEngine.PlaySound(SoundID.Zombie88 with { Volume = 0.95f, Pitch = -0.3f }, center);
+                SoundEngine.PlaySound(SoundID.Item62 with { Volume = 0.9f, Pitch = -0.2f }, center);
+                if (Projectile.owner == Main.myPlayer)
+                    global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Main.LocalPlayer, center, 6f);
+
+                LeonidStarlight.Ellipse(center, 14, 92f, 58f, gold, LeonidStarlightShape.Shard,
+                    speed: 9f, scale: 1.15f, hoverTime: 22, lifetime: 175, lanceSpeed: 21f);
+                LeonidStarlight.Ellipse(center, 12, 62f, 38f, Color.Lerp(gold, LeonidVisualUtils.MoonWhite, 0.4f),
+                    LeonidStarlightShape.Mote, speed: 5f, scale: 1f, hoverTime: 30, lifetime: 160,
+                    lanceSpeed: 18f, angleOffset: MathHelper.Pi / 12f);
+                LeonidStarlight.Spawn(center, Vector2.Zero, gold,
+                    LeonidStarlightShape.Halo, 1.6f, 10, 74, 11f, linksToSiblings: false);
             }
 
-            // Al Minliar (the lion's muzzle): the pounce lunges faster and the bite opens wider.
-            bool hasAlMinliar = Owner.GetModPlayer<LeonidConstellationPlayer>().IsUnlocked(LeonidStar.AlMinliar);
+            if (Projectile.owner != Main.myPlayer)
+                return;
 
-            Color themeColor = Color.Lerp(LeonidVisualUtils.GetReadyGold(Projectile.whoAmI * 0.2f), LeonidVisualUtils.MoonViolet, IsBiting ? 0.22f : 0.38f);
-            Lighting.AddLight(Projectile.Center, themeColor.ToVector3() * (IsBiting ? 1.4f : 0.7f));
-
-            if (!IsBiting)
+            // A single shockwave at impact, including tile impacts. Never multiply it by NPC count.
+            if (Main.player[Projectile.owner].GetModPlayer<LeonidConstellationPlayer>().IsUnlocked(LeonidStar.RLeonis))
             {
-                // Move to target
-                Vector2 toTarget = TargetPosition - Projectile.Center;
-                float distance = toTarget.Length();
-
-                if (distance < 16f || Projectile.timeLeft < 10)
-                {
-                    // Start Biting!
-                    IsBiting = true;
-                    biteTimer = 16;
-                    Projectile.velocity = Vector2.Zero;
-                    Projectile.friendly = true;
-                    Projectile.netUpdate = true;
-                }
-                else
-                {
-                    // Fly towards target
-                    Vector2 dir = toTarget.SafeNormalize(Vector2.UnitX * Owner.direction);
-                    Projectile.velocity = dir * (hasAlMinliar ? 18f : 14f);
-                }
-
-                // Travel dusts
-                if (Main.rand.NextBool(2))
-                {
-                    Dust d = Dust.NewDustPerfect(
-                        Projectile.Center + Main.rand.NextVector2Circular(16f, 16f),
-                        DustID.TintableDustLighted,
-                        -Projectile.velocity * 0.2f,
-                        100,
-                        Color.Lerp(LeonidVisualUtils.StratusBlue, LeonidVisualUtils.MoonViolet, 0.45f),
-                        Main.rand.NextFloat(0.8f, 1.2f));
-                    d.noGravity = true;
-                }
-
-                // 扑击途中从鬃毛里甩出针状星光，方向沿飞行轴向后拖。
-                if (Main.rand.NextBool(5))
-                {
-                    LeonidStarlight.Shed(
-                        Projectile.Center + Main.rand.NextVector2Circular(18f, 18f),
-                        Projectile.velocity,
-                        Color.Lerp(LeonidVisualUtils.GetReadyGold(Projectile.whoAmI * 0.2f), LeonidVisualUtils.MoonViolet, 0.35f),
-                        LeonidStarlightShape.Needle,
-                        0.9f,
-                        hoverTime: 22,
-                        lifetime: 130);
-                }
-
-                Projectile.rotation = Projectile.velocity.ToRotation() + (Owner.direction == -1 ? MathHelper.Pi : 0f);
-            }
-            else
-            {
-                // Biting state: trigger roar/damage/splits on first frame
-                if (biteTimer == 16)
-                {
-                    // Sound effects
-                    SoundEngine.PlaySound(SoundID.Zombie88 with { Volume = 0.95f, Pitch = -0.3f }, Projectile.Center);
-                    SoundEngine.PlaySound(SoundID.Item62 with { Volume = 0.9f, Pitch = -0.2f }, Projectile.Center);
-                    Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, 6f);
-
-                    // 咆哮那一帧炸出双层星鬃：外圈金色大星环 + 内圈细密星屑，
-                    // 中心再压一枚耀斑做闪光核心。双环仅留一颗锁敌，其余旋转外扩。
-                    Color maneGold = LeonidVisualUtils.GetReadyGold(Projectile.whoAmI * 0.3f);
-                    LeonidStarlight.Ring(Projectile.Center, 14, 46f, maneGold, LeonidStarlightShape.Shard,
-                        speed: 9f, scale: 1.15f, hoverTime: 22, lifetime: 175, lanceSpeed: 21f);
-                    LeonidStarlight.Ring(Projectile.Center, 12, 22f, Color.Lerp(maneGold, LeonidVisualUtils.MoonWhite, 0.4f),
-                        LeonidStarlightShape.Needle, speed: 5f, scale: 1f, hoverTime: 30, lifetime: 160,
-                        lanceSpeed: 18f, angleOffset: MathHelper.Pi / 12f);
-                    LeonidStarlight.Spawn(Projectile.Center, Vector2.Zero, maneGold,
-                        LeonidStarlightShape.Halo, 1.6f, 10, 74, 11f, linksToSiblings: false);
-
-                    // Spawn 14 reflective meteors radially
-                    if (Main.myPlayer == Projectile.owner && !spawnedSubProjectiles)
-                    {
-                        spawnedSubProjectiles = true;
-                        int reflectiveType = ModContent.ProjectileType<LeonidReflectiveMeteor>();
-                        int splitDamage = (int)(Projectile.damage * 0.45f);
-
-                        int meteorCount = Owner.GetModPlayer<LeonidConstellationPlayer>().IsUnlocked(LeonidStar.Alterf) ? 18 : 14;
-                        for (int i = 0; i < meteorCount; i++)
-                        {
-                            float angle = i * MathHelper.TwoPi / meteorCount;
-                            float speed = Main.rand.NextFloat(11.5f, 17f);
-                            Vector2 splitVel = angle.ToRotationVector2() * speed;
-
-                            Projectile.NewProjectile(
-                                Projectile.GetSource_FromThis(),
-                                Projectile.Center,
-                                splitVel,
-                                reflectiveType,
-                                splitDamage,
-                                Projectile.knockBack * 0.4f,
-                                Projectile.owner,
-                                0f,
-                                0f,
-                                LeonidReflectiveMeteor.StealthFloaterFlag);
-                        }
-                    }
-                }
-
-                // Shake and scale up (Al Minliar widens the bite hitbox by peaking at a larger scale)
-                biteTimer--;
-                Projectile.scale = 1.0f + (hasAlMinliar ? 2.2f : 1.6f) * (float)Math.Sin((16 - biteTimer) / 16f * MathHelper.PiOver2);
-
-                // Bite visual shockwave particles
-                if (Main.rand.NextBool())
-                {
-                    Dust d = Dust.NewDustPerfect(
-                        Projectile.Center + Main.rand.NextVector2Circular(48f * Projectile.scale, 48f * Projectile.scale),
-                        DustID.TintableDustLighted,
-                        Main.rand.NextVector2Circular(2f, 2f),
-                        100,
-                        LeonidVisualUtils.GetReadyGold(Projectile.whoAmI * 0.3f),
-                        Main.rand.NextFloat(0.9f, 1.3f));
-                    d.noGravity = true;
-                }
-
-                if (biteTimer <= 0)
-                {
-                    Projectile.Kill();
-                }
-            }
-        }
-
-        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
-        {
-            if (Projectile.owner == Main.myPlayer)
-            {
-                int shockwaveIndex = Projectile.NewProjectile(
-                    Projectile.GetSource_OnHit(target),
-                    target.Center,
-                    Vector2.Zero,
+                int shockwave = Projectile.NewProjectile(Projectile.GetSource_FromThis(), center, Vector2.Zero,
                     ModContent.ProjectileType<CalamityMod.Projectiles.Melee.EarthenTidesShockwave>(),
-                    (int)(Projectile.damage * 0.75f),
-                    0f,
-                    Projectile.owner,
-                    1.5f
-                );
-
-                if (shockwaveIndex.WithinBounds(Main.maxProjectiles))
+                    (int)(Projectile.damage * 0.75f), 0f, Projectile.owner, 1.5f);
+                if (shockwave.WithinBounds(Main.maxProjectiles))
                 {
-                    Main.projectile[shockwaveIndex].DamageType = ModContent.GetInstance<RogueDamageClass>();
-                    Main.projectile[shockwaveIndex].friendly = true;
-                    Main.projectile[shockwaveIndex].hostile = false;
+                    Main.projectile[shockwave].DamageType = ModContent.GetInstance<RogueDamageClass>();
+                    Main.projectile[shockwave].friendly = true;
+                    Main.projectile[shockwave].hostile = false;
                 }
+            }
+
+            // Thirteen orbiting nodes surround Regulus in the constellation chart.
+            int count = LeonidConstellation.Nodes.Count - 1;
+            int splitDamage = (int)(Projectile.damage * 0.45f);
+            for (int i = 0; i < count; i++)
+            {
+                Vector2 velocity = (i * MathHelper.TwoPi / count).ToRotationVector2() * Main.rand.NextFloat(11.5f, 17f);
+                Projectile.NewProjectile(Projectile.GetSource_FromThis(), center, velocity,
+                    ModContent.ProjectileType<LeonidReflectiveMeteor>(), splitDamage,
+                    Projectile.knockBack * 0.4f, Projectile.owner, 0f, 0f, LeonidReflectiveMeteor.StealthFloaterFlag + Main.rand.Next(3));
             }
         }
 
         public override void OnKill(int timeLeft)
         {
-            Color themeColor = LeonidVisualUtils.GetReadyGold(Projectile.whoAmI * 0.3f);
-            LeonidVisualUtils.SpawnDustBurst(Projectile.Center, themeColor, 28, 8f, 1.3f);
-            LeonidVisualUtils.SpawnBloomBurst(Projectile.Center, themeColor * 0.5f, 0.9f, 18);
-            LeonidVisualUtils.SpawnCelestialPulse(Projectile.Center, Projectile.oldVelocity, themeColor, 1.45f, 24);
+            if (Main.dedServ)
+                return;
+            Color color = LeonidVisualUtils.GetReadyGold(Projectile.whoAmI * 0.3f);
+            LeonidVisualUtils.SpawnDustBurst(Projectile.Center, color, 28, 8f, 1.3f);
+            LeonidVisualUtils.SpawnBloomBurst(Projectile.Center, color * 0.5f, 0.9f, 18);
+            LeonidVisualUtils.SpawnCelestialPulse(Projectile.Center, Vector2.UnitY, color, 1.45f, 24);
         }
 
         public override bool PreDraw(ref Color lightColor)
         {
-            Texture2D texture = ModContent.Request<Texture2D>(Texture).Value;
-            Texture2D glow = ModContent.Request<Texture2D>("CalamityMod/Items/Weapons/Rogue/LeonidProgenitorGlow").Value;
-            float opacity = 1f - Projectile.alpha / 255f;
-            Color drawColor = Color.Lerp(LeonidVisualUtils.GetReadyGold(Projectile.whoAmI * 0.3f), LeonidVisualUtils.MoonViolet, IsBiting ? 0.16f : 0.34f) * opacity;
-            Vector2 origin = texture.Size() * 0.5f;
-            Vector2 drawPosition = Projectile.Center - Main.screenPosition;
-
+            float fade = Projectile.timeLeft / (float)Duration;
+            Color gold = LeonidVisualUtils.GetReadyGold(Projectile.whoAmI * 0.3f);
             LeonidVisualUtils.BeginAdditiveSpriteBatch();
-            Main.EntitySpriteDraw(glow, drawPosition, null, Color.White * opacity, Projectile.rotation, glow.Size() * 0.5f, Projectile.scale, Owner.direction == -1 ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 0f);
-
-            if (IsBiting)
-            {
-                Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-                Main.EntitySpriteDraw(bloom, drawPosition, null, drawColor * 0.4f, 0f, bloom.Size() * 0.5f, Projectile.scale * 0.75f, SpriteEffects.None, 0f);
-                Main.EntitySpriteDraw(bloom, drawPosition, null, Color.White * 0.25f, 0f, bloom.Size() * 0.5f, Projectile.scale * 0.4f, SpriteEffects.None, 0f);
-                LeonidVisualUtils.DrawSparkle(Projectile.Center, LeonidVisualUtils.MoonWhite, 0.46f * opacity, 0.54f * Projectile.scale, -Projectile.rotation);
-            }
-
+            LeonidVisualUtils.DrawBloom(Projectile.Center, gold * fade, Projectile.scale * 0.5f);
+            LeonidVisualUtils.DrawSparkle(Projectile.Center, LeonidVisualUtils.MoonWhite,
+                0.46f * fade, 0.54f * Projectile.scale, Main.GlobalTimeWrappedHourly);
             LeonidVisualUtils.BeginAlphaBlendSpriteBatch();
-
-            SpriteEffects effects = Owner.direction == -1 ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
-            float rotation = Projectile.rotation;
-
-            Main.EntitySpriteDraw(texture, drawPosition, null, drawColor, rotation, origin, Projectile.scale, effects, 0f);
-
-            Color starGold = LeonidVisualUtils.GetReadyGold(Projectile.whoAmI * 0.3f);
-
-            if (!IsBiting)
-            {
-                float approach = 1f - MathHelper.Clamp(Vector2.Distance(Projectile.Center, TargetPosition) / 420f, 0f, 1f);
-                LeonidStarlight.DrawReticle(
-                    TargetPosition,
-                    Color.Lerp(LeonidVisualUtils.StratusBlue, starGold, approach),
-                    0.2f + 0.45f * approach,
-                    MathHelper.Lerp(0.42f, 0.16f, approach),
-                    -Main.GlobalTimeWrappedHourly * 1.4f);
-
-                LeonidStarlight.DrawStarTrail(
-                    Projectile.oldPos,
-                    Projectile.Size,
-                    Color.Lerp(starGold, LeonidVisualUtils.MoonWhite, 0.4f),
-                    Color.Lerp(starGold, LeonidVisualUtils.MoonViolet, 0.5f),
-                    0.5f,
-                    0.09f * Projectile.scale,
-                    Projectile.rotation);
-            }
-            else
-            {
-                float bite = Projectile.scale / 2.6f;
-                LeonidStarlight.DrawSunburst(Projectile.Center, starGold, 0.5f * (1f - bite * 0.5f), 0.07f * Projectile.scale, Main.GlobalTimeWrappedHourly * 0.9f);
-                LeonidStarlight.DrawFlare(Projectile.Center, LeonidVisualUtils.MoonWhite, 0.7f, 0.2f * Projectile.scale, -Main.GlobalTimeWrappedHourly * 2f);
-            }
-
+            LeonidStarlight.DrawSunburst(Projectile.Center, gold, 0.5f * fade,
+                0.07f * Projectile.scale, Main.GlobalTimeWrappedHourly * 0.9f);
+            LeonidStarlight.DrawFlare(Projectile.Center, LeonidVisualUtils.MoonWhite,
+                0.7f * fade, 0.2f * Projectile.scale, -Main.GlobalTimeWrappedHourly * 2f);
             return false;
         }
     }

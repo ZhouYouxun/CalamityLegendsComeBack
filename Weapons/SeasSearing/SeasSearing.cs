@@ -1,4 +1,5 @@
 using CalamityLegendsComeBack.Accssory;
+using CalamityLegendsComeBack.LegendaryTooltipEffects;
 using CalamityMod;
 using CalamityMod.Items;
 using CalamityMod.Items.Materials;
@@ -44,6 +45,12 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             Item.shootSpeed   = 34f;
             Item.value        = CalamityGlobalItem.RarityPinkBuyPrice;
             Item.rare         = ModContent.RarityType<Turquoise>();
+            Item.accessory    = true;
+        }
+
+        public override void UpdateAccessory(Player player, bool hideVisual)
+        {
+            player.GetModPlayer<SeasSearingPlayer>().SetEquippedSeasSearing(Item, hideVisual);
         }
 
         public override bool AltFunctionUse(Player player) => true;
@@ -96,23 +103,25 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             int tier  = SS_Balance.GetAcidRainTier();
             string keyText = KeybindSystem.LegendarySkill.GetAssignedKeys().FirstOrDefault() ?? "Unbound";
 
-            string intro     = this.GetLocalizedValue("Intro");
             string left      = this.GetLocalizedValue($"LeftClick_Phase{phase}");
             string right     = this.GetLocalizedValue($"RightClick_Tier{tier}");
             string enemyRad  = this.GetLocalizedValue($"EnemyRadiation_Tier{tier}");
             string playerRad = this.GetLocalizedValue($"PlayerRadiation_Tier{tier}");
             string passive   = this.GetLocalizedValue("Passive");
             string ultimate  = string.Format(this.GetLocalizedValue("Ultimate"), keyText);
-            bool   shifted   = Main.keyState.PressingShift();
-            string legendary = shifted ? this.GetLocalizedValue("LegendaryText") : this.GetLocalizedValue("LegendaryHint");
 
-            string finalText = intro + "\n" + left + "\n" + right + "\n" + enemyRad + "\n" + playerRad + "\n" + passive + "\n" + ultimate + "\n";
+            string finalText =
+                left.TrimEnd('\r', '\n') + "\n" +
+                right.TrimEnd('\r', '\n') + "\n" +
+                enemyRad.TrimEnd('\r', '\n') + "\n" +
+                playerRad.TrimEnd('\r', '\n') + "\n" +
+                passive.TrimEnd('\r', '\n') + "\n" +
+                this.GetLocalizedValue("EquipScaling").TrimEnd('\r', '\n') + "\n" +
+                ultimate.TrimEnd('\r', '\n');
 
-            if (shifted)
-                tooltips.RemoveAll(t => t.Text == "[GFB]");
-            else
-                tooltips.FindAndReplace("[GFB]", finalText);
-            tooltips.Add(new TooltipLine(Mod, "SeasSearingAbyssalPollutionLegendaryText", legendary));
+            tooltips.FindAndReplace("[GFB]", finalText);
+            tooltips.Add(new TooltipLine(Mod, SeasSearingAbyssalPollutionLegendaryTooltip.TooltipLineName,
+                this.GetLocalizedValue("LegendaryText")));
         }
 
 
@@ -128,7 +137,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         internal static Vector2 GetMouseWorld(Player player)
         {
             Vector2 mouseWorld = player.Calamity().mouseWorld;
-            return mouseWorld == Vector2.Zero ? Main.MouseWorld : mouseWorld;
+            return global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(player, mouseWorld == Vector2.Zero ? Main.MouseWorld : mouseWorld);
         }
 
         private static bool HasActiveHoldout(Player player)

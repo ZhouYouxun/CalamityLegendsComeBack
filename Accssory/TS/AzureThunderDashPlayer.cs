@@ -300,7 +300,7 @@ namespace CalamityLegendsComeBack.Accssory.TS
             Player.immuneTime = Math.Max(Player.immuneTime, dashFramesRemaining);
             Player.noKnockback = true;
             Player.direction = dashDirection.X >= 0f ? 1 : -1;
-            Player.Calamity().GeneralScreenShakePower = Math.Max(Player.Calamity().GeneralScreenShakePower, 2.5f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Player, Player.Center, 2.5f);
             SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.7f, Pitch = 0.22f }, Player.Center);
         }
 

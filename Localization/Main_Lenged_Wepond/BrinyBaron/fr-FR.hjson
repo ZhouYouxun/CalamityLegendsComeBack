@@ -1,8 +1,9 @@
-Mods: {
+﻿Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
 			Weapons: {
 				NewLegendBrinyBaron: {
+					EquipEffect: "[c/66CCFF:Effet équipé : Accorde la même entaille rapide que lorsque cette arme est tenue]"
 					// DisplayName: Scion of the Tides - Briny Baron
 					// Tooltip: "[GFB]"
 					/* BB_Left_1:
@@ -16,7 +17,7 @@ Mods: {
 						[c/66CCFF:Left Click: perform a three-swing chain and fire seafoam blades, sea spirits, and waves.]
 						[c/66CCFF:Seafoam blades scatter into larger water blades and pierce more enemies.]
 						[c/66CCFF:Sea spirits home in faster and inflict Riptide.]
-						[c/66CCFF:Waves surge forward as wide tidal slashes.]
+						[c/66CCFF:Waves can pierce multiple enemies.]
 						''' */
 					/* BB_Left_3:
 						'''
@@ -24,7 +25,7 @@ Mods: {
 						[c/66CCFF:Seafoam blades fire in parallel, pierce enemies, and burst into splashing water.]
 						[c/66CCFF:Sea spirits swarm toward enemies and inflict Riptide.]
 						[c/66CCFF:Shurikens fan outward, cut enemies, and release seafoam on hit.]
-						[c/66CCFF:Waves surge forward; the finisher releases a larger tidal slash.]
+						[c/66CCFF:Waves can pierce multiple enemies.]
 						''' */
 					/* BB_Left_4:
 						'''
@@ -32,20 +33,18 @@ Mods: {
 						[c/66CCFF:Seafoam blades fire in parallel, pierce enemies, and burst into splashing water.]
 						[c/66CCFF:Sea spirits swarm toward enemies and inflict Riptide.]
 						[c/66CCFF:Shurikens fan outward, cut enemies, and release seafoam on hit.]
-						[c/66CCFF:Waves surge forward; the finisher releases a larger tidal slash.]
+						[c/66CCFF:Waves can pierce multiple enemies.]
 						[c/66CCFF:True blade hits add a burst of sea spirits.]
 						''' */
 					/* BB_Right_DefaultShuriken:
 						'''
-						[c/FFB347:Right Click: perform a tide short dash.]
-						[c/FFB347:You are immune during the dash and return; striking the first enemy rebounds you once.]
-						[c/FFB347:After entering Hardmode, an impact releases a blue Jazz Typhoon beneath the enemy.]
+						[c/FFB347:Right Click: dash forward at high speed.]
+						[c/FFB347:Rebound after striking an enemy and leave a typhoon on them.]
 						''' */
-					// BB_Right_Spin_Locked: "[c/DDA0FF:Hold Left Click, then hold Right Click: Whirl Cleave is locked until Stage II.]"
-					/* BB_Right_Spin_Unlocked:
+					/* BB_Right_VortexEye:
 						'''
-						[c/DDA0FF:Hold both buttons to keep swinging the greatsword; it gradually accelerates as it spins.]
-						[c/DDA0FF:At maximum speed, it deals maximum damage and releases shurikens at a measured pace.]
+						[c/FFB347:Right Click: teleport to a safe point at the cursor and strike twice.]
+						[c/FFB347:A return anchor remains; right-click again to move between the two points.]
 						''' */
 					// BB_Tide: "[c/4FAEFF:Current tide value: ]"
 					// BB_Tide_Desc_NoAccessory: "[c/4FAEFF:Current tide effects: 【increases damage】【increases movement speed】【adds extra damage at full tide】]"
@@ -58,26 +57,23 @@ Mods: {
 					// Dash3_Lock: "[c/99CCFF:Locked: Defeat the Wall of Flesh to unlock it.]"
 					/* BB_Passive:
 						'''
-						[c/9AEF9E:Dash reinforcement follows the current shield device. State: ]{0}[c/9AEF9E:; right-click in inventory to toggle.]
-						{1}
+						[c/9AEF9E:Passive Quick Slash: current state {0}.]
+						[c/9AEF9E:Right-click this weapon in your inventory to toggle the passive.]
+						[c/9AEF9E:Dashing also triggers Quick Slash, cutting enemies and releasing tidal blades.]
 						''' */
-					// PassiveStateOn: "[c/7BFFB7:On]"
-					// PassiveStateOff: "[c/F0D070:Off]"
+					// PassiveStateOn: On
+					// PassiveStateOff: Off
 					// PassiveDevice_None: "[c/7F8FA6:No dash capability detected.]"
 					// PassiveDevice_Any: "[c/99CCFF:Dash capability detected; dashing triggers quick slash combo and fires tidal blades to both sides every 7 frames.]"
 					// Dash4_Unlock: "[c/66FFAA:Unlocked: EX Skill「Tidal Jail Execution」]"
-					// Dash4_Lock: "[c/FFB347:EX Skill「Tidal Jail Execution」locked (Equip Legendary Emblem to unlock)]"
-					// BB_Final: "[c/9FD8A2:At full tide, press the Legendary Skill key to mark prey; left click confirms the execution.]"
-					// UltimateOutOfRange: Out of Range
-					// LegendaryHint: "[c/6C8EFF:Hold Shift to read the record]"
-					/* LegendaryText:
+					// Dash4_Lock: "[c/FFB347:EX Skill「Tidal Jail Execution」locked (Automatically unlocked in Hardmode)]"
+					/* BB_Final:
 						'''
-						[c/66CCFF:The first Briny Baron kept only the most direct way to fight: swing the blade, raise a typhoon, then throw a homing shuriken.]
-						[c/66CCFF:That design was clean enough, but it could not carry the tide rhythm a legendary weapon deserves.]
-						[c/99CCFF:After the rebuild, slashes no longer wait only for a hit. They build tide step by step, unfolding seafoam, sea spirits, shuriken, and waves through the combo.]
-						[c/FFB347:Right click is no longer locked to throwing. Different devices can rewrite it into dashes, rebounds, teleports, or more aggressive pursuit.]
-						[c/DDA0FF:When the tide is pushed to its limit, every path, lock, and lingering mark is gathered into one final execution.]
+						[c/9FD8A2:Ultimate [Tidal Burial]: Press [{0}] to consume all Tide.]
+						[c/9FD8A2:Mark one target and continuously strike it down.]
 						''' */
+					// UltimateOutOfRange: Out of Range
+					// LegendaryText: The road that brought you here now keeps silent pace behind you.
 				}
 			}
 

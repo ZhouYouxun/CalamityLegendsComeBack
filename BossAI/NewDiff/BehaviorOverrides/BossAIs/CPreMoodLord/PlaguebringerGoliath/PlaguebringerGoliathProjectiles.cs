@@ -492,7 +492,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             SoundEngine.PlaySound(SoundID.Item62 with { Volume = 0.9f }, Projectile.Center);
             Player p = Main.player[Player.FindClosest(Projectile.Center, 1, 1)];
             if (p.active)
-                p.Calamity().GeneralScreenShakePower = 8f;
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(p, Projectile.Center, 8f);
             PlagueFx.Burst(Projectile.Center, 6f, 30);
             if (Main.netMode == NetmodeID.MultiplayerClient)
                 return;

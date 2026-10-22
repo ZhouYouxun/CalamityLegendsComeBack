@@ -9,7 +9,11 @@ Mods: {
 					// SHPC_CurrentAmmoEffect: "[c/66CCFF:Current loaded effect: {0}]"
 					// SHPC_DefaultAmmoEffect: No special material loaded; fires default white orbs that deal area damage.
 					// SHPC_UnloadHint: "[c/CFCFCF:Right-click in inventory: unload the current magazine's material; Shift+Right-click: unload all magazines.]"
-					// SHPC_Passive: "[c/B8FF9E:Passive (Extra Preparation): increases maximum mana and mana potion restoration, and shortens Mana Sickness duration.]"
+					SHPC_Passive: "[c/B8FF9E:Pasiva I-【Preparación adicional】: Al sostenerla, aumenta el maná máximo y su eficiencia; recupera maná rápidamente al dejar de disparar.]"
+					SHPC_PassiveII: "[c/B8FF9E:Pasiva II-【Grupo de torretas】: Lanza torretas durante el combate en la superficie, hasta tres a la vez]"
+					SHPC_PassiveIILocked: "[c/999999:Pasiva II-【Grupo de torretas】: Sin desbloquear]"
+					SHPC_EquipEffect: "[c/66CCFF:Efecto al equipar: Otorga un escudo de barrera adicional que protege al jugador.]"
+					SHPC_NeverOverheats: "[c/FF4040:La ráfaga láser nunca se sobrecalienta.]"
 					/* SHPC_RightIntro1:
 						'''
 						[c/FFB347:Right click fires a laser barrage. Barrage fire builds heat; at full heat the weapon overheats and shuts down. Heat dissipates after you stop attacking.]
@@ -40,35 +44,21 @@ Mods: {
 						''' */
 					/* SHPC_RightIntro5:
 						'''
-						[c/FFB347:Right click fires a laser barrage. Barrage fire builds heat; before heat level V is unlocked, full heat overheats and shuts the weapon down. Heat dissipates after you stop attacking.]
+						[c/FFB347:Right click fires a laser barrage. Barrage fire builds heat; heat dissipates after you stop attacking.]
 						[c/FFB347:As progression advances, full heat can enter higher levels. Each heat level multiplicatively increases right-click damage by 5% and adds special effects.]
-						[c/FFB347:Current heat cap: V. Effect: infinite pierce. At full heat, the weapon no longer shuts down, but holding right click rapidly burns your own life.]
+						[c/FFB347:Current heat cap: V. Effect: infinite pierce. At full heat, the weapon keeps firing without burning your life.]
 						[c/FFB347:Left click during barrage consumes one heat level to immediately fire three energy orbs.]
 						''' */
 					// SHPC_Final: "[c/99B3FF:The system is still evolving......]"
 					/* SHPC_EXHint:
 						'''
-						[c/66CCFF:EX Skill (Super Laser): When enemies are nearby, each left-click shot grants 1 ultimate energy, up to 60.]
-						[c/66CCFF:Once fully charged, press] [[c/66CCFF:{0}]] [c/66CCFF:to activate the ultimate mode.]
-						[c/66CCFF:After a brief charge, unleash a colossal laser that pierces through everything.]
+						[c/66CCFF:Ultimate [Super Laser]: Press [{0}] to gather vast energy at the muzzle.]
+						[c/66CCFF:Then fire a super laser that pierces through everything.]
 						''' */
-					// SHPC_EXDisabledHint: "[c/9A9A9A:Golden Emblem is not equipped. The ultimate is disabled.]"
+					// SHPC_EXDisabledHint: "[c/9A9A9A:The ultimate unlocks automatically in Hardmode.]"
 					// SHPC_AmmoWheelHint: "[c/F7D87C:Close inventory and press] [[c/F7D87C:{0}]] [c/F7D87C:to open the selection wheel and switch loaded ammo.]"
 					// Tooltip: "[GFB]"
 					// TooltipGFB: Have you finally arrived here?
-					// LegendaryHint: "[c/BABABA:Hold Shift to access the record]"
-					/* LegendaryText:
-						'''
-						[c/66E6FF:The initial design relied too heavily on a single energy source, and was ultimately deemed unstable.]
-						[c/66E6FF:The revised system no longer depends on souls; any material with sufficient energy density is now viable.]
-						[c/66E6FF:Different inputs produce drastically varied responses, with some combinations exhibiting anomalous amplification.]
-						[c/66E6FF:The control system was redesigned accordingly, forcing premature release before full containment.]
-						[c/66E6FF:In theory, this device is no longer limited by ammunition type, yet its true limits remain unknown.]
-						[c/66E6FF:In barrage mode, all prior reliance on soul-based energy has been eliminated, replaced by a more primitive thermal drive.]
-						[c/66E6FF:To stabilize output, the cooling system was redefined, giving rise to new thermal instability effects.]
-						[c/66E6FF:With continued operation, the system will inevitably enter an overheat state, trading safety for greater output efficiency.]
-						[c/66E6FF:Without timely intervention, this optimization will ultimately consume the operator.]
-						''' */
 				}
 
 				SHPCBook: {
@@ -128,20 +118,16 @@ Mods: {
 					''' */
 			}
 
-			MatrixChargingBarrier: {
-				// DisplayName: Matrix Charging Barrier
-				// Tooltip: While holding SHPC, charges a shield equal to 25% of maximum life. After a full shield takes damage, it waits 10 seconds and then fully recharges over 5 seconds; damage does not interrupt either stage. While active, it reduces pre-defense damage by 10%. Does not conflict with other barriers
-			}
-
 			CtrlChip: {
-				// DisplayName: Control Chip
-				/* Tooltip:
+				DisplayName: Chip de control de fuego
+				Tooltip:
 					'''
-					Increases critical strike chance by 7%
-					A targeting reticle appears while holding SHPC
-					The reticle can latch onto, track, and auto-aim at targets
-					Hiding the accessory's visuals also hides the reticle
-					''' */
+					Crea una mira de control de fuego que se fija automáticamente en los enemigos
+					y proporciona apuntado automático
+					El apuntado automático funciona con todas las armas
+					Ofrece guiado adicional a los láseres de SHPC
+					Oculta los efectos del accesorio para ocultar la mira
+					'''
 			}
 
 			FlyChip: {
@@ -155,15 +141,14 @@ Mods: {
 			}
 
 			HeatModule: {
-				// DisplayName: Heat Sensor
-				/* Tooltip:
+				DisplayName: Sistema de sobrecalentamiento de corriente rápida
+				Tooltip:
 					'''
-					Laser barrage heat builds much faster
-					Heat levels grant a larger damage boost
-					When the weapon overheats, it burns nearby enemies for heavy damage
-					At Heat V, overheat keeps burning nearby enemies
-					Overheat shutdown time is halved
-					''' */
+					El calor del láser de SHPC aumenta mucho más rápido
+					Cada nivel de calor otorga una mayor bonificación de daño
+					Quema a los enemigos cercanos al alcanzar el calor máximo
+					El sobrecalentamiento no provoca una parada
+					'''
 			}
 
 			AIOC: {
@@ -171,9 +156,9 @@ Mods: {
 				// Tooltip: "[GFB]"
 				/* TooltipCompact:
 					'''
-					Has all the effects of all 4 chips and the Matrix Charging Barrier
-					Hold Shift to show the effects provided by each chip and the barrier
-					Matrix Charging Barrier shield health +50%
+					Has all the effects of all 4 chips and strengthens the barrier provided by equipped SHPC
+					Hold Shift to show each chip effect and the barrier enhancement
+					Shield health of the barrier provided by equipped SHPC +50%
 					No longer inherits any chip's drawbacks
 					"Hello, World"
 					''' */
@@ -183,26 +168,21 @@ Mods: {
 					Diffusion Chip: +7% magic damage and magic critical strike chance; empowered heat attacks become more focused
 					Control Chip: +7% critical strike chance; while holding SHPC, gain a reticle that latches, tracks, and auto-aims
 					Ascension Chip: while holding SHPC, +70% flight time and improved movement speed, jump speed, and acceleration
-					Matrix Charging Barrier: while holding SHPC, gain its charging shield with 50% more shield health; does not conflict with other barriers
+					Barrier enhancement: while SHPC is equipped, its shield has 50% more health; does not conflict with other barriers
 					No longer inherits any chip's drawbacks
 					"Hello, World"
 					''' */
 			}
 
 			ProjectilePossessionModule: {
-				// DisplayName: Gun Body Upgrade - Absorption
-				/* Tooltip:
+				DisplayName: Modificación del arma - Absorción
+				Tooltip:
 					'''
-					While holding SHPC, right click switches to projectile possession mode
-					Hold right click to capture clones of nearby hostile projectiles in a vacuum cone, up to 15 stored
-					The original hostile projectile keeps existing, but its velocity and damage are permanently reduced by 20%
-					The clone is pulled to the player and becomes friendly
-					Release right click to fire the stored friendly clones forward in a straight burst
-					Projectiles spawned by those clones remain friendly; if they have no damage type, they count as magic damage
-					Projectiles with more than 3600 damage or more than 3600 time left cannot be absorbed
-					Some persistent beams and blacklisted projectiles are ignored
-					"Sprite, DMG, SPD, Size, I-Frames, Yoink!"
-					''' */
+					Sustituye el clic derecho de SHPC por el modo de absorción al empuñarla
+					Absorbe hasta 15 proyectiles hostiles
+					Destruye los proyectiles capturados y atrae copias aliadas a tu alrededor
+					Suelta el clic derecho para disparar los proyectiles almacenados hacia delante en secuencia
+					'''
 			}
 
 			KarasawaModule: {
@@ -214,54 +194,6 @@ Mods: {
 					KARASAWA cannon... what an excellent weapon...
 					Unfortunately, it has gathered dust in storage for far too long
 					No matter what, it must see the light of day again
-					''' */
-			}
-
-			WastelandEnergyCore: {
-				// DisplayName: Wasteland Energy Core
-				/* Tooltip:
-					'''
-					+7% SHPC damage
-					SHPC left-click mana cost -8%; right-click mana cost -12%
-					Adds an energy orb canister; ammo capacity +10%
-					While holding SHPC, cease fire to rapidly restore mana
-					Grants Mana Flower automatic mana potion use
-					''' */
-			}
-
-			EverfrostEnergyCore: {
-				// DisplayName: Everfrost Energy Core
-				/* Tooltip:
-					'''
-					+15% SHPC damage
-					SHPC left-click mana cost -10%; right-click mana cost -20%; left click has a 20% chance not to consume ammo
-					Adds energy orb canisters; ammo capacity +25%
-					While holding SHPC, cease fire to rapidly restore mana
-					Grants Mana Flower automatic mana potion use
-					Shortens right-click startup
-					''' */
-			}
-
-			EvolutionEnergyCore: {
-				// DisplayName: Evolution Energy Core
-				/* Tooltip:
-					'''
-					+15% SHPC damage, +5% critical strike chance, allows laser barrage to crit, and shortens laser barrage startup
-					Energy orb mana cost -15%; laser barrage energy cost -30%; firing energy orbs has a 20% chance not to consume ammo
-					Adds energy orb canisters; ammo capacity +50%
-					While holding SHPC, cease fire to rapidly restore mana
-					Grants Mana Flower automatic mana potion use
-					''' */
-			}
-
-			ExoEnergyCore: {
-				// DisplayName: Exo Energy Core
-				/* Tooltip:
-					'''
-					+20% SHPC damage, +10% critical strike chance, allows laser barrage to crit, and shortens laser barrage startup
-					While holding SHPC, gain infinite mana; firing energy orbs has a 50% chance not to consume ammo
-					Right-click laser barrage never overheats
-					Adds energy orb canisters; ammo capacity +100%
 					''' */
 			}
 		}

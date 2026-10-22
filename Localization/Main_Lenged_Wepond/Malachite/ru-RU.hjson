@@ -1,107 +1,80 @@
-Mods: {
+﻿Mods: {
 	CalamityLegendsComeBack: {
 		Items: {
 			Weapons: {
 				Malachite: {
 					// DisplayName: Silent as Night - Peacock Plume
 					// Tooltip: "[GFB]"
-					/* LeftClick0:
-						'''
-						[c/7DFF9A:Left: throw one peacock kunai.]
-						[c/7DFF9A:Hits leave short parallel green cuts.]
-						''' */
-					/* LeftClick1:
-						'''
-						[c/7DFF9A:Left: kunai are no longer pulled by gravity.]
-						[c/7DFF9A:Stored stealth kunai still fire first.]
-						''' */
-					/* LeftClick2:
-						'''
-						[c/7DFF9A:Left: throw two kunai per attack.]
-						[c/7DFF9A:Stored stealth fan shots also fire two at a time.]
-						''' */
-					/* LeftClick3:
-						'''
-						[c/7DFF9A:Left: every 9th attack triggers a double scatter.]
-						[c/7DFF9A:The scatter releases 5×2 kunai.]
-						''' */
-					/* LeftClick4:
-						'''
-						[c/7DFF9A:Left: throw three kunai per attack.]
-						[c/7DFF9A:The 9th-attack scatter upgrades to 7×2.]
-						''' */
-					/* RightClick0:
-						'''
-						[c/6D6D6D:Right: hidden until King Slime is defeated.]
-						[c/6D6D6D:The real move stays concealed before then.]
-						''' */
+					// LeftClick0: "[c/7DFF9A:Left: throw one peacock kunai; hits leave short parallel green cuts.]"
+					// LeftClick1: "[c/7DFF9A:Left: kunai are no longer pulled by gravity; stored stealth kunai still fire first.]"
+					// LeftClick2: "[c/7DFF9A:Left: throw two kunai per attack, including stored stealth fan shots.]"
+					// LeftClick3: "[c/7DFF9A:Left: every 9th attack triggers a double scatter of 5×2 kunai.]"
+					// LeftClick4: "[c/7DFF9A:Left: throw three kunai per attack; the 9th-attack scatter upgrades to 7×2.]"
+					// RightClick0: "[c/6D6D6D:Right: hidden until King Slime is defeated.]"
 					/* RightClick1:
 						'''
-						[c/80FFC8:Right: store and pour out right feathers.]
-						[c/80FFC8:Stealth right feathers burst on hit.]
+						[c/80FFC8:Right: instantly activate and release all feathers mounted behind you.]
+						[c/80FFC8:Holding the weapon generates feathers behind you, separate from the left-click feathers.]
 						''' */
 					/* RightClick2:
 						'''
-						[c/80FFC8:Right: releasing feathers grants 3s of agility.]
-						[c/80FFC8:Move speed and jump power rise by 15%.]
+						[c/80FFC8:Right: instantly activate and release all feathers mounted behind you.]
+						[c/80FFC8:Holding the weapon generates feathers behind you, separate from the left-click feathers.]
 						''' */
 					/* RightClick3:
 						'''
-						[c/80FFC8:Right: triggering an attack empowers left for 1s.]
-						[c/80FFC8:Left-click attack speed is doubled.]
+						[c/80FFC8:Right: instantly activate and release all feathers mounted behind you.]
+						[c/80FFC8:Holding the weapon generates feathers behind you, separate from the left-click feathers.]
 						''' */
 					/* RightClick4:
 						'''
-						[c/80FFC8:Right: triggering an attack empowers left for 1s.]
-						[c/80FFC8:Stealth right attacks cost no stealth.]
+						[c/80FFC8:Right: instantly activate and release all feathers mounted behind you.]
+						[c/80FFC8:Holding the weapon generates feathers behind you, separate from the left-click feathers.]
 						''' */
 					/* StealthStrike0:
 						'''
-						[c/B5FF74:Stealth attack: create 15 hidden darts.]
-						[c/B5FF74:Left and right share this stealth fan.]
+						[c/B5FF74:Stealth attacks create a ring of blade-fan darts behind you.]
+						[c/B5FF74:If a fan is already present, the attack activates and throws it instead.]
+						[c/B5FF74:The darts track enemies and activate automatically when you switch weapons.]
 						''' */
 					/* StealthStrike1:
 						'''
-						[c/B5FF74:Stealth attack: dart count rises to 17.]
-						[c/B5FF74:The center ace kunai now appears.]
+						[c/B5FF74:Stealth attacks create a ring of blade-fan darts behind you.]
+						[c/B5FF74:If a fan is already present, the attack activates and throws it instead.]
+						[c/B5FF74:The darts track enemies and activate automatically when you switch weapons.]
 						''' */
 					/* StealthStrike2:
 						'''
-						[c/B5FF74:Stealth attack: dart count rises to 19.]
-						[c/B5FF74:The ace remains at the center of the fan.]
+						[c/B5FF74:Stealth attacks create a ring of blade-fan darts behind you.]
+						[c/B5FF74:If a fan is already present, the attack activates and throws it instead.]
+						[c/B5FF74:The darts track enemies and activate automatically when you switch weapons.]
 						''' */
 					/* StealthStrike3:
 						'''
-						[c/B5FF74:Stealth attack: dart count rises to 21.]
-						[c/B5FF74:Right bursts now feed left-click haste.]
+						[c/B5FF74:Stealth attacks create a ring of blade-fan darts behind you.]
+						[c/B5FF74:If a fan is already present, the attack activates and throws it instead.]
+						[c/B5FF74:The darts track enemies and activate automatically when you switch weapons.]
 						''' */
 					/* StealthStrike4:
 						'''
-						[c/B5FF74:Stealth attack: dart count rises to 23.]
-						[c/B5FF74:The peacock fan is fully unfolded.]
+						[c/B5FF74:Stealth attacks create a ring of blade-fan darts behind you.]
+						[c/B5FF74:If a fan is already present, the attack activates and throws it instead.]
+						[c/B5FF74:The darts track enemies and activate automatically when you switch weapons.]
 						''' */
 					/* Finale:
 						'''
-						[c/D6FF9A:Ultimate (Grand Finale): At full stealth and off cooldown, press] [[c/D6FF9A:{0}]] [c/D6FF9A:.]
-						[c/D6FF9A:Charges in 30s; stealth attacks advance it by 5s.]
-						[c/D6FF9A:Petals turn into swift homing kunai.]
+						[c/D6FF9A:Ultimate [Grand Finale]: Press [{0}] to scatter petals across the screen.]
+						[c/D6FF9A:Requires full Stealth to cast; the airborne petals gradually become powerful homing explosive kunai.]
 						''' */
-					/* Passive:
+					// FinaleLocked: "[c/9A9A9A:Ultimate Grand Finale is locked; enter Hardmode to unlock it automatically.]"
+					// LegendaryText: This failure taught me more than any success ever could.
+					Passive:
 						'''
-						[c/9AFFC8:Passive while held:]
-						[c/9AFFC8:Into Shadow: stealth attacks spend only half stealth.]
-						[c/9AFFC8:They immediately restore 15 stealth points.]
+						[c/9AFFC8:Into Shadow: while held, stealth attacks spend only half stealth.]
 						[c/9AFFC8:Above half stealth, gain 15% movement speed.]
-						''' */
-					// LegendaryHint: "[c/BABABA:Hold Shift to read the record]"
-					/* LegendaryText:
+						[c/9AFFC8:Эффект экипировки: Можно носить в слоте аксессуара, чтобы получить способность этой пушки, вызываемую правой кнопкой мыши.]
+						[c/9AFFC8:В экипировке, но не в руках, перья заряжаются с 40% обычной скорости; при заполнении они автоматически стреляют с уроном этого оружия на текущем этапе игры.]
 						'''
-						[c/B5FF74:The first Malachite was clean: throw the kunai, open the blade fan, then let stealth strikes add denser tracking.]
-						[c/7DFF9A:That gave it a clear hidden-weapon feel, but it had not truly stitched plague, hive technology, and peacock display together.]
-						[c/80FFC8:After the rebuild, the first kunai is in no hurry to show off. The later blade shadows open like feathers under pressure.]
-						[c/D6FF9A:Right click and stealth strikes turn quiet throws into sheets of marks, tracking, and retrieval.]
-						[c/BABABA:It does not exist to show its feathers. The moment the edge leaves your hand, the display is already over.]
-						''' */
 				}
 			}
 

@@ -5,6 +5,7 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Accssory.BF.FairyDanceSeries
 {
+    [Autoload(false)]
     public sealed class RainbowSpiritDance : ModItem
     {
         public override string Texture => "CalamityLegendsComeBack/Accssory/BF/Skill/FairyDanceSeries/虹灵";

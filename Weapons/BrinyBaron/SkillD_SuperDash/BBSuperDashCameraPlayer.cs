@@ -73,12 +73,13 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
             impactShakePower = 0f;
         }
 
-        public void AddImpactShake(float power)
+        public void AddImpactShake(Vector2 source, float power)
         {
             if (Player.whoAmI != Main.myPlayer)
                 return;
 
-            impactShakePower = MathHelper.Max(impactShakePower, power);
+            float attenuated = power * global::CalamityLegendsComeBack.Systems.ModScreenShake.Factor(Player, source);
+            impactShakePower = MathHelper.Max(impactShakePower, attenuated);
         }
 
         private bool HasActiveSuperDashProjectile()

@@ -3,8 +3,8 @@ Mods: {
 		Items: {
 			Weapons: {
 				ShenGao: {
-					DisplayName: Pioche divine
-					Tooltip: Une pioche qui s'améliore au fil de la progression
+					// DisplayName: Divine Pickaxe
+					// Tooltip: A pickaxe that improves as the game progresses
 				}
 			}
 		}

@@ -311,7 +311,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             SpawnDetonationVisuals();
             BlossomFluxSounds.PlayRightPlagueProjExplode(Projectile.Center);
             SoundEngine.PlaySound(BlossomFluxSounds.RightPlagueProjHit3, Projectile.Center);
-            Main.player[Projectile.owner].SetScreenshake(7.5f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Main.player[Projectile.owner], Projectile.Center, 7.5f);
 
             if (Main.myPlayer == Projectile.owner)
             {

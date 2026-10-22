@@ -62,7 +62,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.Combo
             if (!initialized)
             {
                 initialized = true;
-                Vector2 aim = (Main.MouseWorld - Owner.MountedCenter).SafeNormalize(Vector2.UnitX * Owner.direction);
+                Vector2 aimPoint = global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(Owner, Main.MouseWorld);
+                Vector2 aim = (aimPoint - Owner.MountedCenter).SafeNormalize(Vector2.UnitX * Owner.direction);
                 spinDir = aim.X >= 0f ? 1 : -1;
                 spinAngle = aim.ToRotation();
                 if (Scale <= 0f)

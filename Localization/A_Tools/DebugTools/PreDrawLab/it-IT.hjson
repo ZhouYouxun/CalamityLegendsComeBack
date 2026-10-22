@@ -3,16 +3,16 @@ Mods: {
 		Items: {
 			Weapons: {
 				PreDrawLabItem: {
-					DisplayName: Laboratorio PreDraw
-					Tooltip: Il clic sinistro spara un proiettile di prova con pennello. Il clic destro apre il pannello di prova PreDraw.
+					// DisplayName: PreDraw Lab
+					// Tooltip: Left-click fires a paintbrush test projectile. Right-click opens the PreDraw testing panel.
 				}
 			}
 		}
 
 		Projectiles: {
 			A_Dev: {
-				PreDrawLabProjectile.DisplayName: Proiettile di prova PreDraw
-				PreDrawLabPanel.DisplayName: Pannello del laboratorio PreDraw
+				// PreDrawLabProjectile.DisplayName: PreDraw Lab Test Projectile
+				// PreDrawLabPanel.DisplayName: PreDraw Lab Panel
 			}
 		}
 	}

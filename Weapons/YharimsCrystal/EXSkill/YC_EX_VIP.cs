@@ -105,7 +105,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
                 SpawnCircularFirePillars(owner);
                 SpawnSpiralEssenceFlames(owner);
 
-                owner.Calamity().GeneralScreenShakePower = Math.Max(owner.Calamity().GeneralScreenShakePower, 15f);
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(owner, Projectile.Center, 15f);
             }
 
             if (Timer > BladeChargeTime + BladeCleanupTime)
@@ -123,7 +123,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill
             {
                 SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/Providence/ProvidenceHolyRay") { Volume = 0.9f, Pitch = -0.12f }, owner.Center);
                 SoundEngine.PlaySound(SoundID.Item162 with { Volume = 0.72f, Pitch = 0.1f }, owner.Center);
-                owner.Calamity().GeneralScreenShakePower = Math.Max(owner.Calamity().GeneralScreenShakePower, 10f);
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(owner, Projectile.Center, 10f);
 
                 // Fire elliptical ring of C-class lasers (double size/thickness, single-target instant lock)
                 SpawnEllipticalLaserRing(owner, aim);

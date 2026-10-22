@@ -19,6 +19,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
         public Player Owner => Main.player[Projectile.owner];
 
         private int timer;
+        private int RainDuration => Projectile.ai[1] > 0f ? (int)Projectile.ai[1] : 180;
 
         public override void SetDefaults()
         {
@@ -35,8 +36,8 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
         public override void OnSpawn(Terraria.DataStructures.IEntitySource source)
         {
-            if (Owner.GetModPlayer<LeonidConstellationPlayer>().IsUnlocked(LeonidStar.Denebola))
-                Projectile.timeLeft = 480;
+            Projectile.ai[1] = Owner.GetModPlayer<LeonidConstellationPlayer>().IsUnlocked(LeonidStar.Wolf359) ? 600 : 180;
+            Projectile.timeLeft = RainDuration + 180;
         }
 
         public override bool? CanDamage() => timer >= 180; // only deal field damage when meteors start falling
@@ -62,7 +63,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
             // 流星暴期间同步下星雨。星光落进场里会被引力加速，
             // 悬停时又彼此连成星网——整片天空是活的。
-            if (timer <= 210 && timer % 7 == 0)
+            if (timer <= RainDuration + 30 && timer % 7 == 0)
             {
                 LeonidStarlight.Rain(Projectile.Center, 540f, 640f, 3,
                     shape: Main.rand.NextBool(4) ? LeonidStarlightShape.Shard : LeonidStarlightShape.Mote,
@@ -120,8 +121,8 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 }
             }
 
-            // Continuously spawn comets in the sky during the first 3 seconds (180 frames)
-            if (timer <= 180 && timer % 6 == 0 && Main.myPlayer == Projectile.owner)
+            // Continuously spawn comets in the sky throughout the 3/10-second rain window
+            if (timer <= RainDuration && timer % 6 == 0 && Main.myPlayer == Projectile.owner)
             {
                 // Random position in the sky above the field
                 float rx = Main.rand.Next(-500, 500);
@@ -145,7 +146,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                     Projectile meteor = Main.projectile[p];
                     int meteorIndex = timer / 6;
                     // Sequentially launch comets after 180 ticks (3 seconds)
-                    float delay = (180 - timer) + meteorIndex * 4;
+                    float delay = timer <= 180 ? (180 - timer) + meteorIndex * 4 : 0f;
 
                     meteor.localAI[1] = delay;
 

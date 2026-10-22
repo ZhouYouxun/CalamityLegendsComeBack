@@ -3,12 +3,12 @@ Mods: {
 		Items: {
 			Weapons: {
 				AutoLighting: {
-					DisplayName: Encendedor automático
-					Tooltip:
+					// DisplayName: Auto Lighter
+					/* Tooltip:
 						'''
-						Mientras esté marcado como favorito, coloca automáticamente la antorcha superior de tu inventario en zonas oscuras.
-						Bajo el agua lanza una barra luminosa en su lugar.
-						'''
+						While favorited, automatically places the topmost torch from your inventory in dark areas.
+						Throws a glowstick instead when underwater.
+						''' */
 				}
 			}
 		}

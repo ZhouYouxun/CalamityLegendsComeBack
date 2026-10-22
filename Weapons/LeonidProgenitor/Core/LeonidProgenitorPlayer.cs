@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
@@ -18,24 +19,79 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
         public int PalladiumHealCooldown;
         public int RightClickCooldownTimer;
         private int rightClickCooldownFeedbackTimer;
+        private int rightClickStealthFeedbackTimer;
         public float TitaniumShieldCharge;
         public int TitaniumStompersTimer;
 
         public int UltimateEnergy;
         public int ultimateEnergyTimer;
         private bool wasUltimateReady;
+        private Item accessoryLeonid;
+        private int accessoryMeteorCooldown;
 
         public bool IsHoldingLeonid => Player.HeldItem != null && !Player.HeldItem.IsAir && Player.HeldItem.type == ModContent.ItemType<LeonidProgenitor>();
 
         public override void ResetEffects()
         {
+            accessoryLeonid = null;
+        }
+
+        public void SetAccessoryMeteorRain(Item item) => accessoryLeonid = item;
+
+        private void UpdateAccessoryMeteorRain()
+        {
+            if (accessoryLeonid == null || Player.dead || !Player.active)
+            {
+                accessoryMeteorCooldown = 0;
+                return;
+            }
+            // Only the owning client creates the damaging meteor; normal projectile sync
+            // distributes it. Neither the ultimate meter nor its unlock gates are involved.
+            if (Player.whoAmI != Main.myPlayer)
+                return;
+
+            if (accessoryMeteorCooldown <= 0)
+                accessoryMeteorCooldown = Math.Max(1, (int)Math.Round(Main.rand.Next(60, 73) / LeonidAccessoryMeteorTargeting.AttackSpeedMultiplier));
+            if (--accessoryMeteorCooldown > 0)
+                return;
+
+            NPC target = LeonidAccessoryMeteorTargeting.Find(Player);
+            if (target == null)
+                return;
+
+            Vector2 spawnPosition = target.Center + new Vector2(Main.rand.Next(-160, 161), -650f + Main.rand.Next(-60, 61));
+            Vector2 velocity = (target.Center - spawnPosition).SafeNormalize(Vector2.UnitY) * 16f;
+            // The same progression-scaled ultimate baseline, with the accessory's +20%.
+            int damage = Math.Max(1, (int)Player.GetTotalDamage(accessoryLeonid.DamageType).ApplyTo(
+                LP_Balance.GetLeftClickBaseDamage() * LeonidAccessoryMeteorTargeting.DamageMultiplier));
+            Projectile.NewProjectile(Player.GetSource_ItemUse(accessoryLeonid), spawnPosition, velocity,
+                ModContent.ProjectileType<LeonidCometSmall>(), damage, accessoryLeonid.knockBack,
+                Player.whoAmI, target.whoAmI + 1f, 0f, LeonidCometSmall.GravityFieldFlag | LeonidCometSmall.AccessoryRainFlag);
+        }
+
+        public override void PostUpdateEquips()
+        {
+            if (!IsHoldingLeonid)
+                return;
+            // Calamity stores 100 displayed stealth points as 1.0 internally.
+            var calamity = Player.Calamity();
+            calamity.rogueStealthMax += 0.1f;
+            calamity.wearingRogueArmor = true;
+            var stars = Player.GetModPlayer<LeonidConstellationPlayer>();
+            if (stars.IsUnlocked(LeonidStar.Subra))
+                Player.Calamity().gravityNormalizer = true;
+            if (stars.IsUnlocked(LeonidStar.Alterf))
+                Player.wingTimeMax = (int)(Player.wingTimeMax * 1.5f);
         }
 
         public override void UpdateDead()
         {
+            accessoryLeonid = null;
+            accessoryMeteorCooldown = 0;
             PalladiumHealCooldown = 0;
             RightClickCooldownTimer = 0;
             rightClickCooldownFeedbackTimer = 0;
+            rightClickStealthFeedbackTimer = 0;
             TitaniumShieldCharge = 0f;
             TitaniumStompersTimer = 0;
             UltimateEnergy = 0;
@@ -45,6 +101,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
 
         public override void PostUpdate()
         {
+            UpdateAccessoryMeteorRain();
             if (IsHoldingLeonid)
             {
                 Player.gravControl = true;
@@ -55,8 +112,8 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
                 if (ModContent.TryFind<ModBuff>("CalamityMod", "DoGExtremeGravity", out var dogGrav))
                     Player.buffImmune[dogGrav.Type] = true;
 
-                // R Leonis (the pulsing star): its rhythm feeds the Ultimate faster, one charge every 0.75s.
-                int energyInterval = Player.GetModPlayer<LeonidConstellationPlayer>().IsUnlocked(LeonidStar.RLeonis) ? 45 : 60;
+                // Baseline passive energy recovery.
+                int energyInterval = 60;
                 ultimateEnergyTimer++;
                 if (ultimateEnergyTimer >= energyInterval)
                 {
@@ -75,6 +132,8 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
                 RightClickCooldownTimer--;
             if (rightClickCooldownFeedbackTimer > 0)
                 rightClickCooldownFeedbackTimer--;
+            if (rightClickStealthFeedbackTimer > 0)
+                rightClickStealthFeedbackTimer--;
 
             if (TitaniumStompersTimer > 0)
             {
@@ -120,6 +179,16 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
         }
 
         public bool CanUseRightClick => RightClickCooldownTimer <= 0;
+
+        public void ShowRightClickStealthFeedback()
+        {
+            if (Player.whoAmI != Main.myPlayer || Main.dedServ || rightClickStealthFeedbackTimer > 0)
+                return;
+
+            rightClickStealthFeedbackTimer = 60;
+            CombatText.NewText(Player.getRect(), new Color(116, 209, 255),
+                Language.GetTextValue("Mods.CalamityLegendsComeBack.Items.Weapons.LeonidProgenitor.RightClickRequiresStealth"));
+        }
 
         public void StartRightClickCooldown()
         {
@@ -220,7 +289,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core
             UltimateEnergy = Math.Clamp(UltimateEnergy + amount, 0, 100);
             
             // Ultimate is ready if energy is 100 AND player stealth is at 100%.
-            bool ready = UltimateEnergy >= 100 && Player.Calamity().rogueStealth >= Player.Calamity().rogueStealthMax * 0.999f;
+            bool ready = Main.hardMode && UltimateEnergy >= 100 && Player.Calamity().rogueStealth >= Player.Calamity().rogueStealthMax * 0.999f;
             LegendaryUltimateReadySound.PlayIfReadyTransition(Player, ref wasUltimateReady, ready);
         }
     }

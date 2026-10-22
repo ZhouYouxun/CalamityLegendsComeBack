@@ -1,0 +1,8 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		ArchivedWeaponTooltip: {
+			Warning: Cette arme est inachevée et sa maintenance a cessé
+			ShiftHint: Maintenez Maj pour afficher la dernière version
+		}
+	}
+}

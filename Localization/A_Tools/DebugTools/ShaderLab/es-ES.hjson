@@ -3,16 +3,16 @@ Mods: {
 		Items: {
 			Weapons: {
 				ShaderTestItem: {
-					DisplayName: Probador de shaders
-					Tooltip: Haz clic derecho para abrir la matriz de shaders. Haz clic izquierdo para ejecutar el shader seleccionado. Soltar el objeto o morir desactiva los efectos de pantalla.
+					// DisplayName: Shader Tester
+					// Tooltip: Right click opens the shader matrix. Left click runs the selected shader. Releasing the item or dying disables screen effects.
 				}
 			}
 		}
 
 		Projectiles: {
 			A_Dev: {
-				ShaderTestProjectile.DisplayName: Proyectil de prueba de shaders
-				ShaderTestPanel.DisplayName: Matriz de selección de shaders
+				// ShaderTestProjectile.DisplayName: Shader Test Projectile
+				// ShaderTestPanel.DisplayName: Shader Selection Matrix
 			}
 		}
 	}

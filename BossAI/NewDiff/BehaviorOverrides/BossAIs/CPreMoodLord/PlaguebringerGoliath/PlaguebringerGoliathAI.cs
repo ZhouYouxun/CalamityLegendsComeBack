@@ -446,7 +446,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 {
                     int dmg = npc.damage / 3;
                     SoundEngine.PlaySound(SoundID.Item34, target.Center);
-                    target.Calamity().GeneralScreenShakePower = 5f;
+                    global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(target, npc.Center, 5f);
 
                     if (activeSteamAxis == 0 || activeSteamAxis == 2)
                     {
@@ -502,7 +502,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     SoundEngine.PlaySound(ShieldBreakSound, npc.Center);
                     Player t = Main.player[npc.target];
                     if (t.active)
-                        t.Calamity().GeneralScreenShakePower = 8f;
+                        global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(t, npc.Center, 8f);
                     PlagueFx.Burst(npc.Center, 6f, 30);
                 }
             }
@@ -1145,7 +1145,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             if (timer == shellStrip)
             {
                 SoundEngine.PlaySound(SoundID.NPCDeath10, npc.Center);
-                target.Calamity().GeneralScreenShakePower = 8f;
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(target, npc.Center, 8f);
                 PlagueFx.Burst(npc.Center, 6f, 30);
 
                 int droneType = ModContent.Find<ModNPC>("CalamityMod/PlagueChargerLarge").Type;
@@ -1159,7 +1159,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             if (timer == coreReveal)
             {
                 SoundEngine.PlaySound(SoundID.Item62 with { Volume = 0.7f }, npc.Center);
-                target.Calamity().GeneralScreenShakePower = 12f;
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(target, npc.Center, 12f);
                 PlagueFx.Burst(npc.Center, 8f, 40);
             }
 
@@ -1252,7 +1252,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     npc.velocity = Vector2.Zero;
                     SoundEngine.PlaySound(SoundID.Item62 with { Volume = 1.2f, Pitch = -0.2f }, npc.Center);
                     SoundEngine.PlaySound(SoundID.NPCDeath4, npc.Center);
-                    target.Calamity().GeneralScreenShakePower = 13f;
+                    global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(target, npc.Center, 13f);
                     PlagueFx.Burst(npc.Center, 8f, 40);
                     PlagueFx.Burst(npc.Center, 5f, 24);
                 }

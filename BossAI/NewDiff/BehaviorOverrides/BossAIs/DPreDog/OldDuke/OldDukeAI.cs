@@ -325,8 +325,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             if (!Main.dedServ && Main.LocalPlayer.active)
             {
                 float shake = MathHelper.Clamp(speed * 0.22f, 3.5f, 6f);
-                Main.LocalPlayer.Calamity().GeneralScreenShakePower =
-                    Math.Max(Main.LocalPlayer.Calamity().GeneralScreenShakePower, shake);
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Main.LocalPlayer, npc.Center, shake);
             }
 
             // Exhaust trail along the dash lane; the trail self-ignites into a firewall 45 frames later.
@@ -504,7 +503,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     SoundEngine.PlaySound(SoundID.NPCHit13 with { Volume = 0.8f, Pitch = -0.5f }, npc.Center);
                     ScourgeFx.Burst(npc.Center, 7f, 30, DustID.ToxicBubble);
                     if (Main.LocalPlayer.active)
-                        Main.LocalPlayer.Calamity().GeneralScreenShakePower = 8f;
+                        global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(Main.LocalPlayer, npc.Center, 8f);
                 }
             }
             else if (!allDead)
@@ -1058,7 +1057,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     SoundEngine.PlaySound(SoundID.Item14, npc.Center);
                     Projectile.NewProjectile(npc.GetSource_FromAI(), npc.Center, Vector2.Zero, ModContent.ProjectileType<ExpandingRingProj>(), npc.defDamage / 2, 0f, Main.myPlayer, 200f, 18f);
                     if (Main.netMode != NetmodeID.Server)
-                        Main.LocalPlayer.Calamity().GeneralScreenShakePower = 5f;
+                        global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(Main.LocalPlayer, npc.Center, 5f);
                 }
                 if (timer > 56)
                     DashRecoveryArc(npc, target);
@@ -1231,7 +1230,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 // 屏震要打在本地玩家上（各客户端抖各自的屏）。这个文件里 393/930 行本来就是这么写的，
                 // 只有这里和死亡演出两处漏了 —— 统一过来。
                 if (!Main.dedServ && Main.LocalPlayer.active)
-                    Main.LocalPlayer.Calamity().GeneralScreenShakePower = 9f;
+                    global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(Main.LocalPlayer, npc.Center, 9f);
             }
 
             // Five overload dashes as the exhaust cage collapses down to its phase-2 size (design doc: 恒定5次).
@@ -1350,7 +1349,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     SoundEngine.PlaySound(SoundID.Item14 with { Volume = 1.1f, Pitch = -0.3f }, npc.Center);
                     SoundEngine.PlaySound(SoundID.NPCDeath4, npc.Center);
                     if (!Main.dedServ && Main.LocalPlayer.active)
-                        Main.LocalPlayer.Calamity().GeneralScreenShakePower = 14f;
+                        global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(Main.LocalPlayer, npc.Center, 14f);
                     ScourgeFx.Burst(npc.Center, 8f, 40, DustID.GoldFlame);
                     ScourgeFx.Burst(npc.Center, 5f, 30, DustID.ToxicBubble);
                 }

@@ -9,7 +9,10 @@ Mods: {
 			}
 		}
 
-		Projectiles.A_Dev.PlayerLockerPanel.DisplayName: 玩家背包掠夺面板
+		Projectiles: {
+			A_Dev.PlayerLockerPanel.DisplayName: 玩家背包掠夺面板
+			// BFFairyTrackerLaser.DisplayName: B F Fairy Tracker Laser
+		}
 
 		TheSpecialText: {
 			PlayerLockerTitle: 正在掠夺 {0} 的背包

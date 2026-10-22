@@ -27,14 +27,9 @@ Mods: {
 					Tooltip: 启用大量改善流程体验的配方
 				}
 
-				AllowBossSummonShop: {
-					Label: "[i:GuideVoodooDoll] 允许动物学家出售Boss召唤物"
-					Tooltip: 动物学家会在对应进度出售Boss召唤物；少数会反向产出首杀材料的配方将被暂时禁用。
-				}
-
 				AllowOtherNPCQuickShop: {
 					Label: "[i:GoldCoin] 允许其他NPC出售快捷内容"
-					Tooltip: 巫师、哥布林工匠、爆破专家、军火商、动物学家和大法师按世界进度出售额外物品。
+					Tooltip: 哥布林工匠、爆破专家、军火商和大法师按世界进度出售额外物品。
 				}
 
 				GiveQuickStartBoxOnSpawn: {

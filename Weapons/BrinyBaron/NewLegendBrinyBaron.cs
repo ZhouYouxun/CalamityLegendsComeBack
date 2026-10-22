@@ -1,4 +1,5 @@
 using CalamityLegendsComeBack.Accssory.BB;
+using CalamityLegendsComeBack.LegendaryTooltipEffects;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack.ForShuriken;
 using CalamityLegendsComeBack.Weapons.BrinyBaron.TideValue;
@@ -9,6 +10,7 @@ using CalamityMod;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
@@ -46,7 +48,11 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
             Item.rare = ItemRarityID.Pink;
             Item.value = CalamityMod.Items.CalamityGlobalItem.RarityPinkBuyPrice;
             Item.UseSound = null;
+            Item.accessory = true;
         }
+
+        public override void UpdateAccessory(Player player, bool hideVisual) =>
+            player.GetModPlayer<Dash_Trigger>().EquippedBrinyBaron = Item;
 
         public override bool AltFunctionUse(Player player) => true;
 
@@ -293,10 +299,6 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
 
             int growthStage = BB_Balance.GetGrowthStage();
             string left = this.GetLocalizedValue("BB_Left_" + Math.Min(growthStage, 4));
-            if (growthStage >= 2)
-            {
-                left = left.Trim() + "\n" + this.GetLocalizedValue("BB_Right_Spin_Unlocked").Trim();
-            }
 
             BBRightClickMode rightClickMode = player.GetModPlayer<BBAccessoryPlayer>().RightClickMode;
             string rightDesc = rightClickMode switch
@@ -313,36 +315,25 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
                 : this.GetLocalizedValue("BB_Tide_Desc_NoAccessory");
 
             string passiveState = this.GetLocalizedValue(dashPlayer.DashEnabled ? "PassiveStateOn" : "PassiveStateOff");
-            string passiveDevice = this.GetLocalizedValue(dashPlayer.EquippedDashDeviceLocalizationKey);
-            string passive = string.Format(this.GetLocalizedValue("BB_Passive"), passiveState, passiveDevice);
+            string passive = string.Format(this.GetLocalizedValue("BB_Passive"), passiveState);
 
             bool exUnlocked = player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.LegendaryEmblemPlayer>().EXAccessoryEquipped;
+            string ultimateKeyText = KeybindSystem.LegendarySkill.GetAssignedKeys().FirstOrDefault() ?? "Unbound";
             string final = exUnlocked
-                ? this.GetLocalizedValue("BB_Final")
+                ? string.Format(this.GetLocalizedValue("BB_Final"), ultimateKeyText)
                 : this.GetLocalizedValue("Dash4_Lock");
 
-            string legendaryText = this.GetLocalizedValue("LegendaryText");
-            string shiftHint = this.GetLocalizedValue("LegendaryHint");
-            bool shiftPressed = Main.keyState.PressingShift();
-            string legendarySection = shiftPressed ? legendaryText : shiftHint;
-
-            if (shiftPressed)
-            {
-                tooltips.RemoveAll(t => t.Text == "[GFB]");
-            }
-            else
-            {
-                string finalText =
+            string finalText =
                    left.TrimEnd('\r', '\n') + "\n" +
                    rightSection.TrimEnd('\r', '\n') + "\n" +
                    tideDesc.TrimEnd('\r', '\n') + "\n" +
                    passive.TrimEnd('\r', '\n') + "\n" +
-                   final.TrimEnd('\r', '\n') + "\n";
+                   this.GetLocalizedValue("EquipEffect") + "\n" +
+                   final.TrimEnd('\r', '\n');
 
-                tooltips.FindAndReplace("[GFB]", finalText);
-            }
-
-            tooltips.Add(new TooltipLine(Mod, "BrinyBaronOceanLegendaryText", legendarySection));
+            tooltips.FindAndReplace("[GFB]", finalText);
+            tooltips.Add(new TooltipLine(Mod, BrinyBaronOceanLegendaryTooltip.TooltipLineName,
+                this.GetLocalizedValue("LegendaryText")));
         }
 
         public override bool CanRightClick()

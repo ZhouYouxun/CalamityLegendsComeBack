@@ -140,7 +140,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             if (fromSporeBomb)
             {
                 // 疫球子箭：只保留一层轻量演出，重头戏归疫球自己的引爆。
-                Main.player[Projectile.owner].SetScreenshake(1.8f);
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Main.player[Projectile.owner], Projectile.Center, 1.8f);
                 SpawnPlagueCollapseBurst(target.Center, 0.5f);
                 SpawnPlagueAnchorFX(target.Center, 0.7f);
                 if (Main.rand.NextBool(3))
@@ -148,7 +148,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
                 return;
             }
 
-            Main.player[Projectile.owner].SetScreenshake(6.5f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Main.player[Projectile.owner], Projectile.Center, 6.5f);
             SpawnPlagueCollapseBurst(target.Center, 1.25f);
             SpawnSporeGasBurst(target.Center, System.Math.Max(1, (int)(storedGasDamage * 0.22f)), Main.rand.Next(2, 4), 1.2f);
             BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_EPlague, 12, 0.9f, 3f, 0.85f, 1.15f);

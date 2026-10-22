@@ -7,6 +7,7 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.MilitaryCaller
 {
+    [Autoload(false)]
     public sealed class MilitaryCaller : ModItem
     {
         //public override string Texture => "CalamityLegendsComeBack/Accssory/SHPC/备用贴图/定位模块";

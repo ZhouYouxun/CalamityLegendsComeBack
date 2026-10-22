@@ -206,8 +206,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
 
             float shakePower = 20f;
             float distanceInterpolant = Utils.GetLerpValue(1000f, 0f, Projectile.Distance(Main.LocalPlayer.Center), true);
-            Main.LocalPlayer.Calamity().GeneralScreenShakePower =
-                Math.Max(Main.LocalPlayer.Calamity().GeneralScreenShakePower, shakePower * distanceInterpolant);
+            Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(Main.LocalPlayer.Calamity().GeneralScreenShakePower, shakePower * distanceInterpolant);
         }
 
         #endregion

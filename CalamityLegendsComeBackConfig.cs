@@ -34,10 +34,6 @@ namespace CalamityLegendsComeBack
         [ReloadRequired]
         public bool AllowOtherRecipes;
 
-        [DefaultValue(true)]
-        [ReloadRequired]
-        public bool AllowBossSummonShop;
-
         [BackgroundColor(20, 93, 160, 210)]
         [DefaultValue(true)]
         [ReloadRequired]

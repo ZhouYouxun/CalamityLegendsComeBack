@@ -1,4 +1,4 @@
-using CalamityLegendsComeBack.Accssory.BF.Common;
+﻿using CalamityLegendsComeBack.Accssory.BF.Common;
 using CalamityLegendsComeBack.Weapons.BlossomFlux;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.RightUI;
 using CalamityMod.Buffs.DamageOverTime;
@@ -18,10 +18,6 @@ namespace CalamityLegendsComeBack.Accssory.BF.FairyDanceSeries
         internal const int FairyCount = 3;
         // 每只仙灵两次突进之间的节拍；三只仙灵按 1/3 周期错开，形成连续的“舞”。
         internal const int AttackCadence = 24;
-        private const float DashSpeed = 21f;
-        private const float MaxDashDistance = 640f;
-        // 单次突进的最长帧数，略短于 AttackCadence，确保突进结束后仙灵能赶上下一拍。
-        private const int MaxDashFrames = 22;
 
         // Vanilla resources: Terraria/Images/NPC_583, NPC_584 and NPC_585.
         private static readonly string[] FairyTextures =
@@ -35,7 +31,6 @@ namespace CalamityLegendsComeBack.Accssory.BF.FairyDanceSeries
         private ref float StateValue => ref Projectile.ai[1];
         private int Variant => Utils.Clamp((int)VariantValue, 0, FairyCount - 1);
         private int State { get => (int)StateValue; set => StateValue = value; }
-        private int dashTimer;
 
         public override string Texture => "CalamityMod/Projectiles/InvisibleProj";
 
@@ -54,7 +49,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.FairyDanceSeries
             Projectile.ArmorPenetration = 10;
         }
 
-        public override bool? CanDamage() => State == 1 ? null : false;
+        public override bool? CanDamage() => false;
 
         public override void AI()
         {
@@ -84,37 +79,45 @@ namespace CalamityLegendsComeBack.Accssory.BF.FairyDanceSeries
 
             SpawnFairySparkles();
 
-            switch (State)
-            {
-                case 1:
-                    UpdateDash(owner);
-                    break;
-                default:
-                    UpdateOrbit(owner);
-                    break;
-            }
+            State = 0;
+            UpdateOrbit(owner);
 
             Projectile.rotation = Projectile.velocity.X * 0.1f;
         }
 
         internal void TriggerDash(Vector2 target, int baseDamage)
         {
-            // The charged right-click release must recall and relaunch all three fairies
-            // even if a normal 20/30-damage contact dash is still in progress.
-            if (State == 1 && baseDamage < 120)
-                return;
-
-            Player owner = Main.player[Projectile.owner];
-            Vector2 direction = (target - Projectile.Center).SafeNormalize(Vector2.UnitX * owner.direction);
-            Projectile.velocity = direction * DashSpeed;
-            Projectile.damage = Math.Max(1, (int)owner.GetTotalDamage(DamageClass.Ranged).ApplyTo(baseDamage));
-            Projectile.CritChance = 0;
-            dashTimer = 0;
-            State = 1;
-            Projectile.netUpdate = true;
-
-            SpawnDashBurst(direction);
+            FireFairyLaser(target, baseDamage);
+            return;
         }
+
+        private void FireFairyLaser(Vector2 aim, int baseDamage)
+        {
+            if (Projectile.owner != Main.myPlayer)
+                return;
+            NPC target = null;
+            float best = 1000f * 1000f;
+            foreach (NPC enemy in Main.ActiveNPCs)
+            {
+                float distance = Vector2.DistanceSquared(enemy.Center, aim);
+                if (enemy.CanBeChasedBy() && Vector2.DistanceSquared(enemy.Center, Projectile.Center) <= 1200f * 1200f && distance < best)
+                {
+                    target = enemy;
+                    best = distance;
+                }
+            }
+            if (target == null)
+                return;
+            Player owner = Main.player[Projectile.owner];
+            int damage = Math.Max(1, (int)owner.GetTotalDamage(DamageClass.Ranged).ApplyTo(baseDamage));
+            int index = Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, Vector2.Zero,
+                ModContent.ProjectileType<BFFairyTrackerLaser>(), damage, 0f, Projectile.owner,
+                Variant, Projectile.whoAmI, target.whoAmI);
+            if (index >= 0 && index < Main.maxProjectiles)
+                Main.projectile[index].netUpdate = true;
+        }
+
+
 
         private void UpdateOrbit(Player owner)
         {
@@ -124,18 +127,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.FairyDanceSeries
             Projectile.damage = 0;
         }
 
-        private void UpdateDash(Player owner)
-        {
-            dashTimer++;
-            if (dashTimer >= MaxDashFrames || Vector2.DistanceSquared(Projectile.Center, owner.Center) >= MaxDashDistance * MaxDashDistance)
-            {
-                // 突进结束直接回到环绕态：惯性会把它往玩家方向带一点，但不再强制先飞回玩家身边——
-                // 下一拍会从半途重新突进，配合三只仙灵错开的节拍形成连续攻击。
-                State = 0;
-                Projectile.damage = 0;
-                Projectile.netUpdate = true;
-            }
-        }
+
 
         private void MoveTowards(Vector2 destination, float inertia, float maxSpeed)
         {
@@ -335,6 +327,23 @@ namespace CalamityLegendsComeBack.Accssory.BF.FairyDanceSeries
 
             bool localOwner = Projectile.owner == Main.myPlayer;
             BFRightUIPlayer input = owner.GetModPlayer<BFRightUIPlayer>();
+            if (Projectile.ai[2] == 1f)
+            {
+                bool charging = false;
+                foreach (Projectile holdout in Main.ActiveProjectiles)
+                    if (holdout.owner == Projectile.owner && holdout.ModProjectile is NewLegendBlossomFluxHoldOut bow && bow.IsChargingBreakthrough)
+                        charging = true;
+                if (!charging)
+                {
+                    Projectile.Kill();
+                    return;
+                }
+                float fastAngle = Main.GameUpdateCount * 0.17f + MathHelper.TwoPi * (int)Projectile.ai[0] / MaximumCount;
+                Vector2 destination = owner.Center + new Vector2(82f, 0f).RotatedBy(fastAngle);
+                Projectile.velocity = (destination - Projectile.Center) * 0.35f;
+                Projectile.damage = 0;
+                return;
+            }
             bool rightHeld = localOwner && accessoryPlayer.HoldingBlossomFlux && input.RightMouseHeld;
             float orbitSpeed = rightHeld ? 0.17f : 0.035f;
             float angle = Main.GameUpdateCount * orbitSpeed + MathHelper.TwoPi * ((int)Projectile.ai[0] % MaximumCount) / MaximumCount;
@@ -375,8 +384,15 @@ namespace CalamityLegendsComeBack.Accssory.BF.FairyDanceSeries
         private void ReleaseTowards(Vector2 target)
         {
             Player owner = Main.player[Projectile.owner];
+            int damage = Math.Max(1, (int)owner.GetTotalDamage(DamageClass.Ranged).ApplyTo(1600f));
+            ReleaseChargedTowards(target, damage);
+        }
+
+        internal void ReleaseChargedTowards(Vector2 target, int damage)
+        {
+            Player owner = Main.player[Projectile.owner];
             Projectile.velocity = (target - Projectile.Center).SafeNormalize(Vector2.UnitX * owner.direction) * DashSpeed;
-            Projectile.damage = Math.Max(1, (int)owner.GetTotalDamage(DamageClass.Ranged).ApplyTo(1600f));
+            Projectile.damage = damage;
             Projectile.penetrate = 1;
             State = 1;
             Projectile.netUpdate = true;
@@ -509,7 +525,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.FairyDanceSeries
 
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
-            if (State == 1)
+            if (State == 1 && Projectile.ai[2] != 1f)
                 modifiers.SetCrit();
         }
 

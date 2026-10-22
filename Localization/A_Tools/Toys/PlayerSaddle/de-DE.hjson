@@ -3,27 +3,22 @@ Mods: {
 		Items: {
 			Weapons: {
 				PlayerSaddleItem: {
-					DisplayName: Spielersattel
-					Tooltip:
+					// DisplayName: Player Saddle
+					/* Tooltip:
 						'''
-						Linksklick auf einen Spieler in der Nähe, um auf ihm zu reiten.
-						Während du reitest, kannst du dich nicht bewegen, aber weiterhin normal angreifen und interagieren.
-						Steigt automatisch ab, wenn dein Reittier stirbt.
-						Linksklick erneut zum Absteigen oder Rechtsklick, um deinen eigenen Reiter abzuwerfen.
-						'''
+						Left-click on a nearby player to mount them.
+						While riding, you cannot move but can still attack and interact normally.
+						Auto-dismounts if your mount dies.
+						Left-click again to dismount, or right-click to throw off your own rider.
+						''' */
 				}
-			}
-
-			LegendaryEmblem: {
-				// DisplayName: Legendary Emblem
-				// Tooltip: ""
 			}
 		}
 
 		TheSpecialText: {
-			PlayerSaddleNoTarget: Kein Spieler in der Nähe zum Aufsitzen gefunden.
-			PlayerSaddleOccupied: Dieser Spieler hat bereits einen Reiter.
-			PlayerSaddleMounted: "{0} reitet nun auf {1}!"
+			// PlayerSaddleNoTarget: No nearby player found to mount.
+			// PlayerSaddleOccupied: That player already has a rider.
+			// PlayerSaddleMounted: "{0} is now riding {1}!"
 		}
 	}
 }

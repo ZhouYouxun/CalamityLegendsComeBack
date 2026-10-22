@@ -15,6 +15,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash
 
         public bool IsUsingSlashDash;
         public bool DashEnabled = true;
+        internal Item EquippedBrinyBaron;
 
         public bool HasDashCapability => CanPlayerDash(Player);
 
@@ -24,6 +25,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash
         public override void ResetEffects()
         {
             IsUsingSlashDash = false;
+            EquippedBrinyBaron = null;
         }
 
         public override void UpdateDead()
@@ -66,6 +68,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash
             if (!HasDashCapability)
                 return false;
 
+            if (EquippedBrinyBaron != null)
+                return true;
+
             // 正常情况：手持海爵剑
             if (Player.HeldItem != null && !Player.HeldItem.IsAir &&
                 Player.HeldItem.type == ModContent.ItemType<NewLegendBrinyBaron>())
@@ -83,6 +88,19 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash
             }
 
             return false;
+        }
+
+        internal Item GetPassiveWeapon()
+        {
+            int type = ModContent.ItemType<NewLegendBrinyBaron>();
+            if (Player.HeldItem.type == type)
+                return Player.HeldItem;
+            if (EquippedBrinyBaron != null)
+                return EquippedBrinyBaron;
+            foreach (Item item in Player.inventory)
+                if (item.type == type)
+                    return item;
+            return Player.HeldItem;
         }
 
         private bool IsPlayerDashing()

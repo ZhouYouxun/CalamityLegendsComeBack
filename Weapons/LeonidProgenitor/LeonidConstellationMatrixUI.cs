@@ -170,7 +170,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             {
                 Vector2 position = constellationCenter + node.Position;
                 bool unlocked = progress.IsUnlocked(node.Star);
-                bool affordable = !unlocked && progress.AvailablePoints >= node.Cost;
+                bool affordable = progress.CanUnlock(node.Star);
                 bool hovered = Vector2.DistanceSquared(new Vector2(Main.mouseX, Main.mouseY), position) <= (NodeRadius + 7f) * (NodeRadius + 7f);
                 if (hovered)
                     hoveredNode = node;
@@ -233,7 +233,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             foreach (LeonidConstellationNode node in LeonidConstellation.Nodes)
             {
                 bool unlocked = progress.IsUnlocked(node.Star);
-                bool affordable = !unlocked && progress.AvailablePoints >= node.Cost;
+                bool affordable = progress.CanUnlock(node.Star);
                 Vector2 position = center + node.Position;
                 bool hovered = Vector2.DistanceSquared(new Vector2(Main.mouseX, Main.mouseY), position) <= (NodeRadius + 7f) * (NodeRadius + 7f);
                 Color starColor = unlocked ? Color.White : affordable ? new Color(224, 213, 255) : new Color(125, 142, 206);
@@ -308,11 +308,18 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                     ? Language.GetTextValue("Mods.CalamityLegendsComeBack.Items.Weapons.LeonidProgenitor.Constellation.Unlocked")
                     : string.Format(Language.GetTextValue("Mods.CalamityLegendsComeBack.Items.Weapons.LeonidProgenitor.Constellation.Cost"), node.Cost);
 
+            if (!progress.IsUnlocked(node.Star) && !progress.IsUnlocked(LeonidConstellation.Prerequisite(node.Star)))
+            {
+                string parent = Language.GetTextValue("Mods.CalamityLegendsComeBack.Items.Weapons.LeonidProgenitor.Constellation.Nodes."
+                    + LeonidConstellation.LocalizationKey(LeonidConstellation.Prerequisite(node.Star)) + ".Name");
+                description += "\n" + Language.GetTextValue("Mods.CalamityLegendsComeBack.Items.Weapons.LeonidProgenitor.Constellation.Requires", parent);
+            }
+
             Vector2 detailOrigin = new(panel.X + 30f, panel.Bottom - 158f);
             Vector2 stateSize = FontAssets.MouseText.Value.MeasureString(state) * 0.55f;
             Utils.DrawBorderString(spriteBatch, $"✦ {name}", detailOrigin, Lit, 0.74f);
             Utils.DrawBorderString(spriteBatch, state, detailOrigin + new Vector2(304f - stateSize.X, 3f), Color.White, 0.55f);
-            Utils.DrawBorderString(spriteBatch, description, detailOrigin + new Vector2(0f, 35f), new Color(219, 228, 255), 0.52f, 0f, 0f, -1);
+            Utils.DrawBorderString(spriteBatch, description, detailOrigin + new Vector2(0f, 35f), new Color(219, 228, 255), 0.78f, 0f, 0f, -1);
         }
 
         private static void HandleInteractions(Player player, LeonidConstellationPlayer progress, Rectangle panel)
@@ -333,7 +340,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 if (Vector2.DistanceSquared(new Vector2(Main.mouseX, Main.mouseY), constellationCenter + node.Position) > (NodeRadius + 7f) * (NodeRadius + 7f))
                     continue;
 
-                if (node.Star != LeonidStar.Regulus && !progress.IsUnlocked(node.Star) && progress.AvailablePoints >= node.Cost)
+                if (progress.CanUnlock(node.Star))
                 {
                     LeonidConstellationPackets.RequestUnlock(node.Star);
                     SoundEngine.PlaySound(SoundID.MenuTick with { Pitch = 0.14f, Volume = 0.78f });

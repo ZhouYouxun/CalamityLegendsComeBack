@@ -816,7 +816,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
             }
 
             SoundEngine.PlaySound(SoundID.Item62 with { Volume = 0.8f, Pitch = 0.15f }, position);
-            player.Calamity().GeneralScreenShakePower = Math.Max(player.Calamity().GeneralScreenShakePower, shake);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(player, position, shake);
         }
 
         private void HandleUltimateAssembly(Player player)

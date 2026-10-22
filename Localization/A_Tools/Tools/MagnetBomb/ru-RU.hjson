@@ -3,16 +3,16 @@ Mods: {
 		Items: {
 			Weapons: {
 				MagnetBombItem: {
-					DisplayName: Магнитная бомба
-					Tooltip:
+					// DisplayName: Magnet Bomb
+					/* Tooltip:
 						'''
-						Щелчок левой кнопкой бросает липкую бомбу, которая прилипает к поверхностям.
-						Щелчок правой кнопкой одновременно подрывает все установленные бомбы.
-						'''
+						Left click to throw a sticky bomb that adheres to surfaces.
+						Right click to detonate all deployed bombs simultaneously.
+						''' */
 				}
 			}
 		}
 
-		Projectiles.A_Tools.MagnetBombProj.DisplayName: Магнитная бомба
+		// Projectiles.A_Tools.MagnetBombProj.DisplayName: Magnet Bomb
 	}
 }

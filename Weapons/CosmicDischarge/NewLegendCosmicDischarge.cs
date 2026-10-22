@@ -106,25 +106,12 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 ? string.Format(this.GetLocalizedValue("CosmicDischargeUltimate"), keyText)
                 : this.GetLocalizedValue("CosmicDischargeUltimateLocked");
             string text =
-                this.GetLocalizedValue("CosmicDischargeLeft") + "\n" +
-                this.GetLocalizedValue("CosmicDischargeRight") + "\n" +
-                this.GetLocalizedValue("CosmicDischargePassive") + "\n" +
-                ultimateText;
+                this.GetLocalizedValue("CosmicDischargeLeft").TrimEnd('\r', '\n') + "\n" +
+                this.GetLocalizedValue("CosmicDischargeRight").TrimEnd('\r', '\n') + "\n" +
+                this.GetLocalizedValue("CosmicDischargePassive").TrimEnd('\r', '\n') + "\n" +
+                ultimateText.TrimEnd('\r', '\n');
 
-            bool shiftPressed = Main.keyState.PressingShift();
-            string legendarySection = shiftPressed
-                ? this.GetLocalizedValue("LegendaryText")
-                : this.GetLocalizedValue("LegendaryHint");
-
-            if (shiftPressed)
-                tooltips.RemoveAll(t => t.Text == "[GFB]");
-            else
-                tooltips.FindAndReplace("[GFB]", text);
-            tooltips.Add(new TooltipLine(Mod, "CosmicDischargeRiftVoidLegendaryText", legendarySection));
-            string growthKey = CosmicDischargeProgression.QuickDrawWaveUnlocked ? "GrowthFinal" :
-                CosmicDischargeProgression.ChainEchoUnlocked ? "GrowthYharon" :
-                CosmicDischargeProgression.SwordRiftFanUnlocked ? "GrowthDoG" : "GrowthBase";
-            tooltips.Add(new TooltipLine(Mod, "CosmicDischargeGrowthStage", this.GetLocalizedValue(growthKey)));
+            tooltips.FindAndReplace("[GFB]", text);
         }
 
         public override void AddRecipes()

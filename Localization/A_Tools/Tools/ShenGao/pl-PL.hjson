@@ -3,8 +3,8 @@ Mods: {
 		Items: {
 			Weapons: {
 				ShenGao: {
-					DisplayName: Boski kilof
-					Tooltip: Kilof, który ulepsza się wraz z postępem w grze
+					// DisplayName: Divine Pickaxe
+					// Tooltip: A pickaxe that improves as the game progresses
 				}
 			}
 		}

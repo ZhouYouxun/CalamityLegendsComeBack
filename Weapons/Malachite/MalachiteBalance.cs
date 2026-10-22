@@ -5,112 +5,49 @@ using Terraria;
 
 namespace CalamityLegendsComeBack.Weapons.Malachite
 {
-    internal enum MalachiteProgressionStage
-    {
-        Initial                  = 0,
-        KingSlime                = 1,
-        EyeOfCthulhu             = 2,
-        EvilBoss                 = 3,
-        Skeletron                = 4,
-        QueenBee                 = 5,
-        WallOfFlesh              = 6,
-        AnyMechanicalBoss        = 7,
-        Plantera                 = 8,
-        Golem                    = 9,
-        PlaguebringerGoliath     = 10,
-        MoonLord                 = 11,
-        Providence               = 12,
-        Polterghast              = 13,
-        OldDuke                  = 14,
-        DevourerOfGods           = 15,
-        Yharon                   = 16,
-        ExoMechsAndCalamitas     = 17
-    }
-
-    internal enum MalachiteStageSwitch
-    {
-        LeftNoGravity            = 1,
-        LeftMultiThrow           = 2,
-        LeftScatterBurst         = 3,
-        LeftOldDukeUpgrade       = 4,
-        RightUnlocked            = 5,
-        RightMoveBoost           = 6,
-        RightLeftHaste           = 7,
-        RightNoStealthCost       = 8,
-        StealthAceKunai          = 9,
-        StealthPlusWall          = 10,
-        StealthPlusPlantera      = 11,
-        StealthPlusPlaguebringer = 12,
-        StealthPlusMoonLord      = 13
-    }
-
     internal static class MalachiteBalance
     {
-        private const string SourceFile = "Weapons/Malachite/MalachiteBalance.cs";
-        private const int DamageLeftColumn = 1;
-        private const int DamageRightColumn = 2;
-
-        // Main edit table. Columns: stage, left-click base damage, right-click base damage.
-        private static readonly object[,] DefaultDamageTable =
+        // 【核心数值】每行对应一个游戏时期；从左到右：共用基础伤害、左键潜伏刀扇数量、右键羽毛储存上限、每根右键羽毛的生成帧数。
+        // 右键羽毛上限为 0 时，右键尚未解锁。左键、刀扇与右键都读取第一列作为基础伤害。
+        // 手持或佩戴本武器时使用第四列；仅佩戴未手持时充能速度为手持的40%。
+        // 仅由孔雀匣生成时仍为60帧，孔雀卷轴会使生成时间减半。
+        private static readonly int[,] DefaultCoreStatsTable =
         {
-            //                                          Left   Right
-            { "Initial",                                  12,      8 },
-            { "King Slime",                               14,     10 },
-            { "Eye of Cthulhu",                           18,     12 },
-            { "Evil Boss",                                28,     18 },
-            { "Skeletron",                                38,     24 },
-            { "Queen Bee",                                44,     29 },
-            { "Hardmode",                                 48,     32 },
-            { "Any Mechanical Boss",                      85,     60 },
-            { "Plantera",                                130,     95 },
-            { "Golem",                                   155,    110 },
-            { "Plaguebringer Goliath",                   230,    165 },
-            { "Moon Lord",                               480,    360 },
-            { "Providence",                              490,    370 },
-            { "Polterghast",                             520,    390 },
-            { "Old Duke",                                620,    460 },
-            { "Devourer of Gods",                       1280,    980 },
-            { "Yharon",                                  1380,   1060 },
-            { "Exo Mechs and Supreme Calamitas",        2000,  1750 }
+            // 伤害  潜伏刀扇  右键羽毛  生成帧数
+            {    12,       15,        0,       36 }, // 初始
+            {    14,       15,        5,       36 }, // 击败史莱姆王
+            {    18,       15,        6,       36 }, // 击败克苏鲁之眼
+            {    28,       15,        7,       36 }, // 击败邪恶生物群系 Boss
+            {    38,       15,        8,       36 }, // 击败骷髅王
+            {    44,       15,        9,       36 }, // 击败蜂后
+            {    48,       17,       10,       36 }, // 进入困难模式
+            {    85,       17,       11,       36 }, // 击败任意机械 Boss
+            {   130,       19,       12,       36 }, // 击败世纪之花
+            {   155,       19,       13,       36 }, // 击败石巨人
+            {   230,       21,       15,       36 }, // 击败瘟疫使者歌莉娅
+            {   480,       23,       17,       36 }, // 击败月亮领主
+            {   490,       23,       18,       36 }, // 击败亵渎天神
+            {   520,       23,       19,       36 }, // 击败幽花
+            {   620,       23,       20,       36 }, // 击败老公爵
+            {  1280,       23,       21,       36 }, // 击败神明吞噬者
+            {  1380,       23,       22,       36 }, // 击败犽戎
+            {  2000,       23,       23,       36 }  // 击败星流巨械与至尊灾厄
         };
 
-        // Stage switches. Any later row should include earlier unlocked behavior.
-        private static readonly object[,] DefaultStageSwitches =
-        {
-            //                                      NoGrav  Multi  Scatter OldDuke Right  Move   Haste  FreeSS Ace    +WoF   +Plan  +PBG   +ML
-            { "Initial",                            false,  false,  false,  false,  false, false, false, false, false, false, false, false, false },
-            { "King Slime",                         false,  false,  false,  false,  true,  false, false, false, false, false, false, false, false },
-            { "Eye of Cthulhu",                     false,  false,  false,  false,  true,  false, false, false, false, false, false, false, false },
-            { "Evil Boss",                          false,  false,  false,  false,  true,  false, false, false, false, false, false, false, false },
-            { "Skeletron",                          false,  false,  false,  false,  true,  false, false, false, false, false, false, false, false },
-            { "Queen Bee",                          true,   false,  false,  false,  true,  true,  false, false, false, false, false, false, false },
-            { "Hardmode",                           true,   true,   false,  false,  true,  true,  false, false, true,  true,  false, false, false },
-            { "Any Mechanical Boss",                true,   true,   false,  false,  true,  true,  false, false, true,  true,  false, false, false },
-            { "Plantera",                           true,   true,   false,  false,  true,  true,  false, false, true,  true,  true,  false, false },
-            { "Golem",                              true,   true,   false,  false,  true,  true,  false, false, true,  true,  true,  false, false },
-            { "Plaguebringer Goliath",              true,   true,   true,   false,  true,  true,  true,  false, true,  true,  true,  true,  false },
-            { "Moon Lord",                          true,   true,   true,   false,  true,  true,  true,  false, true,  true,  true,  true,  true  },
-            { "Providence",                         true,   true,   true,   false,  true,  true,  true,  false, true,  true,  true,  true,  true  },
-            { "Polterghast",                        true,   true,   true,   false,  true,  true,  true,  false, true,  true,  true,  true,  true  },
-            { "Old Duke",                           true,   true,   true,   true,   true,  true,  true,  true,  true,  true,  true,  true,  true  },
-            { "Devourer of Gods",                   true,   true,   true,   true,   true,  true,  true,  true,  true,  true,  true,  true,  true  },
-            { "Yharon",                             true,   true,   true,   true,   true,  true,  true,  true,  true,  true,  true,  true,  true  },
-            { "Exo Mechs and Supreme Calamitas",    true,   true,   true,   true,   true,  true,  true,  true,  true,  true,  true,  true,  true  }
-        };
-
-        // Columns: left-click projectile speed, right-click projectile speed.
+        // 【弹幕速度】从左到右：左键苦无速度、右键羽毛速度。
         private static readonly float[,] DefaultProjectileVelocities =
         {
-            //    Left  Right
-            {     18f,   24f }, // Pre-hardmode
-            {     22f,   30f }, // Hardmode to Plantera
-            {     26f,   36f }, // Plantera to Moon Lord
-            {     30f,   42f }  // Post-Moon Lord
+            // 左键  右键
+            {  18f,  24f }, // 肉山前
+            {  22f,  30f }, // 肉山后，世纪之花前
+            {  26f,  36f }, // 世纪之花后，月亮领主前
+            {  30f,  42f }  // 月亮领主后
         };
 
+        private const string SourceFile = "Weapons/Malachite/MalachiteBalance.cs";
+        private const int DamageColumn = 0;
+
         public const int DepletionBurstKunaiCount = 7;
-        public const int RightFeatherMaxCount = 23;
-        public const int RightFeatherGenerationFrames = 36;
         public const int PeacockBoxFeatherGenerationFrames = 60;
         public const int RightFeatherReleaseSpacingFrames = 2;
         public const int LeftClickScatterInterval = 9;
@@ -129,7 +66,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             StageSwitch(MalachiteStageSwitch.LeftNoGravity) ||
             player.GetModPlayer<MCGeneralPlayer>().NormalKunaiIgnoresGravity;
 
-        public static bool RightClickUnlocked => StageSwitch(MalachiteStageSwitch.RightUnlocked);
+        public static bool RightClickUnlocked => RightFeatherMaxCount > 0;
         public static bool RightClickMoveBoostUnlocked => StageSwitch(MalachiteStageSwitch.RightMoveBoost);
         public static bool RightClickLeftHasteUnlocked => StageSwitch(MalachiteStageSwitch.RightLeftHaste);
         public static bool RightClickConsumesNoStealth => StageSwitch(MalachiteStageSwitch.RightNoStealthCost);
@@ -149,23 +86,9 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         public static int LeftClickScatterKunaiPerWave =>
             StageSwitch(MalachiteStageSwitch.LeftOldDukeUpgrade) ? 7 : 5;
 
-        public static int StealthKunaiCount
-        {
-            get
-            {
-                int count = 15;
-                if (StageSwitch(MalachiteStageSwitch.StealthPlusWall))
-                    count += 2;
-                if (StageSwitch(MalachiteStageSwitch.StealthPlusPlantera))
-                    count += 2;
-                if (StageSwitch(MalachiteStageSwitch.StealthPlusPlaguebringer))
-                    count += 2;
-                if (StageSwitch(MalachiteStageSwitch.StealthPlusMoonLord))
-                    count += 2;
-
-                return Utils.Clamp(count, 15, RightFeatherMaxCount);
-            }
-        }
+        public static int StealthKunaiCount => Utils.Clamp(GetCoreStat(1), 1, 100);
+        public static int RightFeatherMaxCount => Utils.Clamp(GetCoreStat(2), 0, 100);
+        public static int RightFeatherGenerationFrames => Utils.Clamp(GetCoreStat(3), 1, 3600);
 
         public static int GetCompletedStageIndex()
         {
@@ -221,15 +144,10 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         public static float GetUltimateDamageMultiplier() =>
             UltimateDamageTier.Resolve(SourceFile, nameof(UltimateDamageMultipliers), UltimateDamageMultipliers);
 
-        public static int GetLeftClickBaseDamage() => GetDamage(DamageLeftColumn);
-
-        public static int GetRightClickBaseDamage() => GetDamage(DamageRightColumn);
-
-        public static int GetInitialLeftClickBaseDamage()
-        {
-            int fallback = (int)DefaultDamageTable[0, DamageLeftColumn];
-            return RuntimeBalanceData.GetSourceTableInt(SourceFile, nameof(DefaultDamageTable), 0, DamageLeftColumn, fallback);
-        }
+        public static int GetBaseDamage() => System.Math.Max(1, GetCoreStat(DamageColumn));
+        public static int GetLeftClickBaseDamage() => GetBaseDamage();
+        public static int GetRightClickBaseDamage() => GetBaseDamage();
+        public static int GetInitialLeftClickBaseDamage() => System.Math.Max(1, GetCoreStat(DamageColumn, 0));
 
         public static int GetLeftClickTooltipTier()
         {
@@ -252,20 +170,20 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                 return 3;
             if (StageSwitch(MalachiteStageSwitch.RightMoveBoost))
                 return 2;
-            if (StageSwitch(MalachiteStageSwitch.RightUnlocked))
+            if (RightClickUnlocked)
                 return 1;
             return 0;
         }
 
         public static int GetStealthTooltipTier()
         {
-            if (StageSwitch(MalachiteStageSwitch.StealthPlusMoonLord))
+            if (StageIndex >= (int)MalachiteProgressionStage.MoonLord)
                 return 4;
-            if (StageSwitch(MalachiteStageSwitch.StealthPlusPlaguebringer))
+            if (StageIndex >= (int)MalachiteProgressionStage.PlaguebringerGoliath)
                 return 3;
-            if (StageSwitch(MalachiteStageSwitch.StealthPlusPlantera))
+            if (StageIndex >= (int)MalachiteProgressionStage.Plantera)
                 return 2;
-            if (StageSwitch(MalachiteStageSwitch.StealthPlusWall))
+            if (StageIndex >= (int)MalachiteProgressionStage.WallOfFlesh)
                 return 1;
             return 0;
         }
@@ -295,12 +213,36 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             return RuntimeBalanceData.GetSourceFloatTableColumn(SourceFile, nameof(DefaultProjectileVelocities), stage, 1, fallback);
         }
 
-        private static int GetDamage(int column)
+        private static int GetCoreStat(int column, int stage = -1)
         {
-            int stageIndex = Utils.Clamp(StageIndex, 0, DefaultDamageTable.GetLength(0) - 1);
-            int fallback = (int)DefaultDamageTable[stageIndex, column];
-            return System.Math.Max(1, RuntimeBalanceData.GetSourceTableInt(SourceFile, nameof(DefaultDamageTable), stageIndex, column, fallback));
+            int stageIndex = Utils.Clamp(stage < 0 ? StageIndex : stage, 0, DefaultCoreStatsTable.GetLength(0) - 1);
+            int fallback = DefaultCoreStatsTable[stageIndex, column];
+            return RuntimeBalanceData.GetSourceTableInt(SourceFile, nameof(DefaultCoreStatsTable), stageIndex, column, fallback);
         }
+
+        // 以下为功能解锁开关，日常调整伤害、刀扇数和羽毛上限时无需修改。
+        private static readonly object[,] DefaultStageSwitches =
+        {
+            //                                      NoGrav  Multi  Scatter OldDuke Move   Haste  FreeSS Ace
+            { "Initial",                            false,  false,  false,  false, false, false, false, false },
+            { "King Slime",                         false,  false,  false,  false,  false, false, false, false },
+            { "Eye of Cthulhu",                     false,  false,  false,  false,  false, false, false, false },
+            { "Evil Boss",                          false,  false,  false,  false,  false, false, false, false },
+            { "Skeletron",                          false,  false,  false,  false,  false, false, false, false },
+            { "Queen Bee",                          true,   false,  false,  false,  true,  false, false, false },
+            { "Hardmode",                           true,   true,   false,  false,  true,  false, false, true },
+            { "Any Mechanical Boss",                true,   true,   false,  false,  true,  false, false, true },
+            { "Plantera",                           true,   true,   false,  false,  true,  false, false, true },
+            { "Golem",                              true,   true,   false,  false,  true,  false, false, true },
+            { "Plaguebringer Goliath",              true,   true,   true,   false,  true,  true,  false, true },
+            { "Moon Lord",                          true,   true,   true,   false,  true,  true,  false, true },
+            { "Providence",                         true,   true,   true,   false,  true,  true,  false, true },
+            { "Polterghast",                        true,   true,   true,   false,  true,  true,  false, true },
+            { "Old Duke",                           true,   true,   true,   true,  true,  true,  true,  true },
+            { "Devourer of Gods",                   true,   true,   true,   true,  true,  true,  true,  true },
+            { "Yharon",                             true,   true,   true,   true,  true,  true,  true,  true },
+            { "Exo Mechs and Supreme Calamitas",    true,   true,   true,   true,  true,  true,  true,  true }
+        };
 
         private static bool StageSwitch(MalachiteStageSwitch column)
         {
@@ -308,5 +250,39 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             bool fallback = (bool)DefaultStageSwitches[stageIndex, (int)column];
             return RuntimeBalanceData.GetSourceTableBool(SourceFile, nameof(DefaultStageSwitches), stageIndex, (int)column, fallback);
         }
+    }
+
+    internal enum MalachiteProgressionStage
+    {
+        Initial                  = 0,
+        KingSlime                = 1,
+        EyeOfCthulhu             = 2,
+        EvilBoss                 = 3,
+        Skeletron                = 4,
+        QueenBee                 = 5,
+        WallOfFlesh              = 6,
+        AnyMechanicalBoss        = 7,
+        Plantera                 = 8,
+        Golem                    = 9,
+        PlaguebringerGoliath     = 10,
+        MoonLord                 = 11,
+        Providence               = 12,
+        Polterghast              = 13,
+        OldDuke                  = 14,
+        DevourerOfGods           = 15,
+        Yharon                   = 16,
+        ExoMechsAndCalamitas     = 17
+    }
+
+    internal enum MalachiteStageSwitch
+    {
+        LeftNoGravity            = 1,
+        LeftMultiThrow           = 2,
+        LeftScatterBurst         = 3,
+        LeftOldDukeUpgrade       = 4,
+        RightMoveBoost           = 5,
+        RightLeftHaste           = 6,
+        RightNoStealthCost       = 7,
+        StealthAceKunai          = 8
     }
 }

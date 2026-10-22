@@ -155,7 +155,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickMortar
             }
 
             SoundEngine.PlaySound(NewLegendSHPC.MortarSentryShot, GunTipPosition);
-            Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, 5f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Owner, Projectile.Center, 5f);
             OffsetLengthFromArm -= 23f;
             muzzleFlashTimer = 16;
             SpawnMuzzleBurst(direction);

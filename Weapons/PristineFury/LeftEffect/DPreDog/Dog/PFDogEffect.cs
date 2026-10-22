@@ -69,7 +69,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             holdout.LeftBurstIndex += ScatterCount;
             holdout.ApplyRecoil(Recoil);
             holdout.Owner.velocity -= direction * 7.5f;
-            holdout.Owner.Calamity().GeneralScreenShakePower = System.Math.Max(holdout.Owner.Calamity().GeneralScreenShakePower, 9f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(holdout.Owner, holdout.GunTipPosition, 9f);
             holdout.TriggerMuzzleFlash(30);
             holdout.SpawnMuzzleBurst(PristineFuryMarkHelper.GetColor(holdout.CurrentMark), 1.55f);
 

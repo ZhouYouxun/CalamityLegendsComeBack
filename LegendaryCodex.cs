@@ -279,7 +279,7 @@ namespace CalamityLegendsComeBack
             SoundEngine.PlaySound(SoundID.DD2_ExplosiveTrapExplode with { Volume = 0.34f, Pitch = 0.35f }, Item.Center);
 
             if (Main.LocalPlayer.Distance(Item.Center) < 900f)
-                Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(Main.LocalPlayer.Calamity().GeneralScreenShakePower, 3.8f);
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Main.LocalPlayer, Main.LocalPlayer.Center, 3.8f);
 
             for (int i = 0; i < 34; i++)
             {
@@ -417,7 +417,7 @@ namespace CalamityLegendsComeBack
         private int lastHoveredControl = -1;
 
         public new string LocalizationCategory => "Projectiles";
-        public override string Texture => "CalamityLegendsComeBack/LegendarySupplyBox";
+        public override string Texture => "CalamityLegendsComeBack/QOL/QuickStart/QuickStartBox";
 
         private bool FadeOut
         {

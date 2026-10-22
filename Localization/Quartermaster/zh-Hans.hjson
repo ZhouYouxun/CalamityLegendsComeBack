@@ -1,0 +1,84 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		NPCs: {
+			Quartermaster: {
+				DisplayName: 物资官
+
+				Name: {
+					Erin: 艾琳
+					Vera: 维拉
+					Mira: 米拉
+					Nora: 诺拉
+					Lena: 莱娜
+					Celine: 塞琳
+				}
+
+				TownNPCMood: {
+					Content: ...
+					NoHome: ...
+					FarFromHome: ...
+					LoveSpace: ...
+					DislikeCrowded: ...
+					HateCrowded: ...
+					LikeBiome: ...
+					DislikeBiome: ...
+					LikeNPC: ...
+					DislikeNPC: ...
+					LikeNPC_Mechanic: ...
+					LikeNPC_Merchant: ...
+					DislikeNPC_Demolitionist: ...
+					DislikeNPC_Angler: ...
+					// LikeNPC_Princess: ...
+					// Princess_LovesNPC: ...
+				}
+
+				// Census.SpawnCondition: Conditions unknown
+			}
+		}
+
+		Quartermaster: {
+			Bestiary: ...
+			Chat: ...
+			NextPage: 下一页
+
+			Categories: {
+				BossSummons: Boss召唤物
+				Codebreaker: 密码破译机
+				VanillaOres: 原版矿石与宝石
+				CalamityOres: 灾厄矿石
+				CraftedBlocks: 合成方块
+				Materials: 合成材料
+				Valuables: 高价值物品
+				Supplies: 补给包
+			}
+
+			Conditions: {
+				Goblins: 击退哥布林入侵
+				GoblinsOrPreHardmodeBoss: 击退哥布林军队，或击败任意一个困难模式前的Boss
+				VisitedUnderworld: 这个角色至少去过一次地狱
+				VisitedJungle: 这个角色至少去过一次丛林
+				VisitedAnySea: 这个角色至少去过一次海边、硫磺海或深渊
+				VisitedCaverns: 这个角色至少去过一次洞穴层
+				VisitedSunkenSea: 这个角色至少去过一次沉沦之海
+				VisitedAstralInHardmode: 这个角色在困难模式期间至少去过一次星辉瘟疫地形
+				BeforeHardmode: 尚未进入困难模式
+				BeforePlantera: 尚未击败世纪之花
+				BeforeYharon: 尚未击败丛林龙，犽戎
+				BeforeMoonLord: 尚未击败月亮领主
+				AllSentinels: 击败无尽虚空、风暴编织者和神之使徒
+				TierTwoOre: 困难模式；启用灾厄肉后进度重做时，需击败至少一个机械Boss
+				TierThreeOre: 困难模式；启用灾厄肉后进度重做时，需击败至少两个机械Boss
+				StarterBundle: 击败世界吞噬怪或克苏鲁之脑，并击退哥布林军队
+				HardmodeBundle: 困难模式；击败至少一个机械Boss，且已解锁精金与钛金
+				PlanteraBundle: 击败世纪之花和灾厄之影
+				Pirates: 困难模式下击退海盗入侵
+				BothFinalBosses: 击败星流巨械和至尊灾厄
+				Solar: 击败日耀柱
+				Vortex: 击败星旋柱
+				Nebula: 击败星云柱
+				Stardust: 击败星尘柱
+				Cultist: 击败拜月教邪教徒
+			}
+		}
+	}
+}

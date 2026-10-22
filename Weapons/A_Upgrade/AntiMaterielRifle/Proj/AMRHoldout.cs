@@ -259,7 +259,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
             muzzleFlashTimer = rightShot ? 10 : 7;
             useAnimationTimer = rightShot ? 12 : 8;
             Owner.velocity -= direction * (rightShot ? 0.75f : 0.42f);
-            Owner.Calamity().GeneralScreenShakePower = rightShot ? 8f : 5f;
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(Owner, Projectile.Center, rightShot ? 8f : 5f);
             SpawnMuzzleBurst(direction, rightShot);
             EjectSpentCasing(direction, rightShot);
 

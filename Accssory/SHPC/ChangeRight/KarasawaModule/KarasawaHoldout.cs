@@ -155,7 +155,7 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.KarasawaModule
             if (Charge > WarningChargeFrames)
             {
                 float shake = MathHelper.Clamp((Charge - WarningChargeFrames) * 0.01f, 0f, 3.6f);
-                Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, shake);
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Owner, Projectile.Center, shake);
             }
 
             Projectile.netUpdate = true;
@@ -210,9 +210,7 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.KarasawaModule
 
             Vector2 pushback = direction * MathHelper.Clamp(-Charge / 75f, -6f, -4f);
             Owner.velocity += pushback;
-            Owner.Calamity().GeneralScreenShakePower = Math.Max(
-                Owner.Calamity().GeneralScreenShakePower,
-                MathHelper.Clamp(Charge * 0.1f, 30f, 45f));
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Owner, Projectile.Center, MathHelper.Clamp(Charge * 0.1f, 30f, 45f));
 
             StopChargeSounds();
             Owner.GetModPlayer<SHPCRight_Player>().SetAttackLockout(FireRecoveryFrames + 10);

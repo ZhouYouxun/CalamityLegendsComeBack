@@ -80,6 +80,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         // 炮台模式倍率
         private static readonly int[] TurretRightClickBaseDamage =
         {
+            60, // Initial (passive remains locked)
+            60, // Eye of Cthulhu (locked)
+            60, // Evil Boss (locked)
+            60, // Skeletron (locked)
+            100, // Hardmode
+            130, // Any Mechanical Boss
+            160, // Plantera
             188, // Golem / 石巨人
             210, // Moon Lord / 月亮领主
             225, // Providence / 亵渎天神
@@ -156,6 +163,57 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         public const int ForcedShutdownTime = 120;
         public const int NormalHeatDecayTime = 90;
         public const int ManualCoolingExtraLockout = 30;
+
+        // 内置能源成长：独立于上方基础伤害表，同档效果覆盖前一档，不叠加。
+        // 初始 / 极地冰灵后 / 瘟疫使者后 / 神明吞噬者后。
+        public static int EnergyUpgradeTier => DownedBossSystem.downedDoG ? 4 :
+            DownedBossSystem.downedPlaguebringer ? 3 : DownedBossSystem.downedCryogen ? 2 : 1;
+
+        public static float EnergyDamageMultiplier => EnergyUpgradeTier switch
+        {
+            1 => 1.07f,
+            2 or 3 => 1.15f,
+            _ => 1.20f
+        };
+
+        public static float EnergyAmmoCapacityMultiplier => EnergyUpgradeTier switch
+        {
+            1 => 1.10f,
+            2 => 1.25f,
+            3 => 1.50f,
+            _ => 2f
+        };
+
+        public static int EnergyBonusMagazineCount => System.Math.Min(EnergyUpgradeTier, 3);
+        public static float EnergyLeftManaCostMultiplier => EnergyUpgradeTier switch
+        {
+            1 => 0.92f,
+            2 => 0.90f,
+            3 => 0.85f,
+            _ => 0f
+        };
+        public static float EnergyRightManaCostMultiplier => EnergyUpgradeTier switch
+        {
+            1 => 0.88f,
+            2 => 0.80f,
+            3 => 0.70f,
+            _ => 0f
+        };
+        public static float EnergyLeftAmmoSaveChance => EnergyUpgradeTier switch
+        {
+            1 => 0f,
+            2 or 3 => 0.20f,
+            _ => 0.50f
+        };
+        public static float EnergyCritBonus => EnergyUpgradeTier switch
+        {
+            3 => 5f,
+            4 => 10f,
+            _ => 0f
+        };
+        public static bool EnergyAllowsRightClickCrit => EnergyUpgradeTier >= 3;
+        public static bool HasInfiniteSHPCMana => EnergyUpgradeTier >= 4;
+        public static bool LaserNeverOverheats => DownedBossSystem.downedDoG;
 
         public static int GetCompletedStageIndex()
         {
@@ -248,7 +306,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         public int GetTurretRightClickBaseDamage()
         {
-            return GetValueForStage(GetTurretRightClickBaseDamageValues(), GetCompletedStageIndex(), 7);
+            return GetValueForStage(GetTurretRightClickBaseDamageValues(), GetCompletedStageIndex());
         }
 
         public int GetRightClickMaxHeatLevel()

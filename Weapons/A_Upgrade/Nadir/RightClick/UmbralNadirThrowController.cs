@@ -63,7 +63,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.Nadir.RightClick
             }
 
             // 维持投掷持握姿态
-            Vector2 aim = (Main.MouseWorld - owner.MountedCenter).SafeNormalize(Vector2.UnitX * owner.direction);
+            Vector2 aimPoint = global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(owner, Main.MouseWorld);
+            Vector2 aim = (aimPoint - owner.MountedCenter).SafeNormalize(Vector2.UnitX * owner.direction);
             owner.heldProj = Projectile.whoAmI;
             owner.itemTime = 2;
             owner.itemAnimation = 2;

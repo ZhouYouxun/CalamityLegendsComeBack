@@ -108,30 +108,17 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             string right = this.GetLocalizedValue("RightClick");
             string hook = this.GetLocalizedValue("Hook");
             string passive = this.GetLocalizedValue("Passive").TrimEnd('\r', '\n');
-            string ultimate = this.GetLocalizedValue("Ultimate");
-            bool shiftPressed = Main.keyState.PressingShift();
-            string legendarySection = shiftPressed
-                ? this.GetLocalizedValue("LegendaryText")
-                : this.GetLocalizedValue("LegendaryHint");
+            string ultimateKeyText = KeybindSystem.LegendarySkill.GetAssignedKeys().FirstOrDefault() ?? "Unbound";
+            string ultimate = string.Format(this.GetLocalizedValue("Ultimate"), ultimateKeyText);
+            string finalText =
+                intro.TrimEnd('\r', '\n') + "\n" +
+                left.TrimEnd('\r', '\n') + "\n" +
+                right.TrimEnd('\r', '\n') + "\n" +
+                hook.TrimEnd('\r', '\n') + "\n" +
+                passive.TrimEnd('\r', '\n') + "\n" +
+                ultimate.TrimEnd('\r', '\n');
 
-            if (shiftPressed)
-            {
-                tooltips.RemoveAll(t => t.Text == "[GFB]");
-            }
-            else
-            {
-                string finalText =
-                    intro.TrimEnd('\r', '\n') + "\n" +
-                    left.TrimEnd('\r', '\n') + "\n" +
-                    right.TrimEnd('\r', '\n') + "\n" +
-                    hook.TrimEnd('\r', '\n') + "\n" +
-                    passive.TrimEnd('\r', '\n') + "\n" +
-                    ultimate.TrimEnd('\r', '\n') + "\n";
-
-                tooltips.FindAndReplace("[GFB]", finalText);
-            }
-
-            tooltips.Add(new TooltipLine(Mod, "PristineFuryHolyFireLegendaryText", legendarySection));
+            tooltips.FindAndReplace("[GFB]", finalText);
         }
 
         public override bool CanRightClick() => false;
@@ -141,7 +128,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         private static Vector2 GetMouseWorld(Player player)
         {
             Vector2 mouseWorld = player.Calamity().mouseWorld;
-            return mouseWorld == Vector2.Zero ? Main.MouseWorld : mouseWorld;
+            return global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(player, mouseWorld == Vector2.Zero ? Main.MouseWorld : mouseWorld);
         }
 
         public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frameI, Color drawColor, Color itemColor, Vector2 origin, float scale)

@@ -1,0 +1,31 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			LowEndMurasama: {
+				DisplayName: 鬼妖村正-低端复制品
+				Tooltip:
+					'''
+					鬼妖村正的粗劣仿制品，不要指望它太好用
+					但总好过没有
+					'''
+			}
+
+			ShrineModel: {
+				DisplayName: 神龛模型
+				Tooltip:
+					'''
+					装备时获得以下饰品的效果：
+					[c/FFD36A:卢克索的礼物]、[c/8EDCFF:冰立方]
+					[c/E79B74:气功念珠]、[c/98D9AF:钨钢屏障生成仪]
+					[c/799EFF:不稳定花岗岩核心]、[c/E8C25C:角斗士金锁]
+					[c/C9A5E8:真菌共生体]、[c/EE6375:恶毒秘药]、[c/A1DB72:邪秽秘药]
+					[c/60D5FF:伊尔梅里斯电火花石]、[c/D7BD8C:远古化石]
+					[c/B69FE7:黑璃手镯]、[c/DDB885:弹簧凳]、[c/FF667F:指向器]
+					指向器：[POINTER]
+					弹簧凳：[STOOL]
+					“因为每一个都很好，所以我全都要”
+					'''
+			}
+		}
+	}
+}

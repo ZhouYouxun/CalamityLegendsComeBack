@@ -92,7 +92,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                     hitTicker = 0;
                     // Trigger damage on the target
                     Projectile.localNPCImmunity[target.whoAmI] = 0;
-                    Player.Calamity().GeneralScreenShakePower = Math.Max(Player.Calamity().GeneralScreenShakePower, 1.8f);
+                    global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Player, Projectile.Center, 1.8f);
                     
                     if (Main.myPlayer == Projectile.owner)
                     {

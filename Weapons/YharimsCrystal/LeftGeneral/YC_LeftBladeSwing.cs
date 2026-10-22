@@ -98,7 +98,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
         private Vector2 GetMouseWorld()
         {
             Vector2 mouseWorld = Owner.Calamity().mouseWorld;
-            return mouseWorld == Vector2.Zero ? Main.MouseWorld : mouseWorld;
+            return global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(Owner, mouseWorld == Vector2.Zero ? Main.MouseWorld : mouseWorld);
         }
 
         private float GetRawMouseTargetAngle()
@@ -738,7 +738,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                 Main.projectile[thrown].rotation = bladeAngle;
             }
 
-            Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, 10f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Owner, Projectile.Center, 10f);
             SoundEngine.PlaySound(SoundID.Item84 with { Volume = 1f, Pitch = -0.35f }, Owner.Center);
             SoundEngine.PlaySound(SoundID.Item74 with { Volume = 0.6f, Pitch = 0.12f }, Owner.Center);
 
@@ -798,7 +798,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                 Main.projectile[wave].CritChance = Projectile.CritChance;
             }
 
-            Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, 4.5f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Owner, Projectile.Center, 4.5f);
             SoundEngine.PlaySound(SoundID.Item74 with { Volume = 0.72f, Pitch = -0.16f }, spawnPosition);
             if (!Main.dedServ)
                 GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(spawnPosition, Vector2.Zero, BladeGold, Vector2.One, waveDirection.ToRotation(), 0.08f, 1.7f, 18));
@@ -806,7 +806,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, 3.2f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Owner, Projectile.Center, 3.2f);
             SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/FinalDawnSlash") { Volume = 0.62f, Pitch = Main.rand.NextFloat(0.08f, 0.24f) }, target.Center);
 
             if (Projectile.owner == Main.myPlayer &&

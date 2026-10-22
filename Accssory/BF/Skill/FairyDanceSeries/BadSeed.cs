@@ -6,6 +6,7 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Accssory.BF.FairyDanceSeries
 {
+    [Autoload(false)]
     public sealed class BadSeed : ModItem
     {
         public override string Texture => "CalamityLegendsComeBack/Accssory/BF/Skill/FairyDanceSeries/坏种";

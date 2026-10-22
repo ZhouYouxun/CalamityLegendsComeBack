@@ -1,0 +1,84 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		NPCs: {
+			Quartermaster: {
+				// DisplayName: Quartermaster
+
+				Name: {
+					// Erin: Erin
+					// Vera: Vera
+					// Mira: Mira
+					// Nora: Nora
+					// Lena: Lena
+					// Celine: Celine
+				}
+
+				TownNPCMood: {
+					// Content: ...
+					// NoHome: ...
+					// FarFromHome: ...
+					// LoveSpace: ...
+					// DislikeCrowded: ...
+					// HateCrowded: ...
+					// LikeBiome: ...
+					// DislikeBiome: ...
+					// LikeNPC: ...
+					// DislikeNPC: ...
+					// LikeNPC_Mechanic: ...
+					// LikeNPC_Merchant: ...
+					// DislikeNPC_Demolitionist: ...
+					// DislikeNPC_Angler: ...
+					// LikeNPC_Princess: ...
+					// Princess_LovesNPC: ...
+				}
+
+				// Census.SpawnCondition: Conditions unknown
+			}
+		}
+
+		Quartermaster: {
+			// Bestiary: ...
+			// Chat: ...
+			// NextPage: Next page
+
+			Categories: {
+				// BossSummons: Boss summons
+				// Codebreaker: Codebreaker
+				// VanillaOres: Vanilla ores and gems
+				// CalamityOres: Calamity ores
+				CraftedBlocks: Bloques fabricados
+				// Materials: Crafting materials
+				// Valuables: Valuables
+				// Supplies: Supply bundles
+			}
+
+			Conditions: {
+				Goblins: Derrota al ejército de duendes
+				// GoblinsOrPreHardmodeBoss: Defeat the Goblin Army or any pre-Hardmode boss
+				// VisitedUnderworld: Visit the Underworld at least once with this character
+				VisitedJungle: Este personaje ha visitado la selva
+				VisitedAnySea: Este personaje ha visitado un océano, el Mar Sulfuroso o el Abismo
+				VisitedCaverns: Este personaje ha visitado la capa de cavernas
+				VisitedSunkenSea: Este personaje ha visitado el Mar Hundido
+				VisitedAstralInHardmode: Este personaje ha visitado la Infección Astral en modo difícil
+				BeforeHardmode: Antes del modo difícil
+				BeforePlantera: Antes de derrotar a Plantera
+				BeforeYharon: Antes de derrotar a Yharon
+				BeforeMoonLord: Antes de derrotar al Señor de la Luna
+				AllSentinels: Derrota a Ceaseless Void, Storm Weaver y Signus
+				// TierTwoOre: Hardmode; defeat one mechanical boss if Calamity's progression rework is enabled
+				// TierThreeOre: Hardmode; defeat two mechanical bosses if Calamity's progression rework is enabled
+				// StarterBundle: Defeat the Eater of Worlds or Brain of Cthulhu and a Goblin Army
+				// HardmodeBundle: Hardmode; defeat a mechanical boss and unlock Adamantite / Titanium
+				// PlanteraBundle: Defeat Plantera and Calamitas Clone
+				// Pirates: Defeat a Pirate Invasion in Hardmode
+				// BothFinalBosses: Defeat both the Exo Mechs and Supreme Calamitas
+				// Solar: Defeat the Solar Pillar
+				// Vortex: Defeat the Vortex Pillar
+				// Nebula: Defeat the Nebula Pillar
+				// Stardust: Defeat the Stardust Pillar
+				// Cultist: Defeat the Lunatic Cultist
+			}
+		}
+	}
+}

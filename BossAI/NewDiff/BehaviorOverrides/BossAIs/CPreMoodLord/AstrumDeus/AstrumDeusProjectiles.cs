@@ -654,7 +654,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             {
                 SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.7f }, Projectile.Center);
                 Player p = Main.player[Player.FindClosest(Projectile.Center, 1, 1)];
-                if (p.active) p.Calamity().GeneralScreenShakePower = 8f;
+                if (p.active) global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(p, Projectile.Center, 8f);
             }
         }
 

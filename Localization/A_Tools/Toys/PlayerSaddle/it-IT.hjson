@@ -3,27 +3,22 @@ Mods: {
 		Items: {
 			Weapons: {
 				PlayerSaddleItem: {
-					DisplayName: Sella per giocatori
-					Tooltip:
+					// DisplayName: Player Saddle
+					/* Tooltip:
 						'''
-						Fai clic sinistro su un giocatore vicino per cavalcarlo.
-						Mentre cavalchi non puoi muoverti, ma puoi ancora attaccare e interagire normalmente.
-						Scendi automaticamente se la tua cavalcatura muore.
-						Fai di nuovo clic sinistro per scendere, oppure clic destro per scaraventare giù chi ti sta cavalcando.
-						'''
+						Left-click on a nearby player to mount them.
+						While riding, you cannot move but can still attack and interact normally.
+						Auto-dismounts if your mount dies.
+						Left-click again to dismount, or right-click to throw off your own rider.
+						''' */
 				}
-			}
-
-			LegendaryEmblem: {
-				// DisplayName: Legendary Emblem
-				// Tooltip: ""
 			}
 		}
 
 		TheSpecialText: {
-			PlayerSaddleNoTarget: Nessun giocatore vicino da cavalcare.
-			PlayerSaddleOccupied: Quel giocatore ha già un cavaliere.
-			PlayerSaddleMounted: "{0} ora cavalca {1}!"
+			// PlayerSaddleNoTarget: No nearby player found to mount.
+			// PlayerSaddleOccupied: That player already has a rider.
+			// PlayerSaddleMounted: "{0} is now riding {1}!"
 		}
 	}
 }

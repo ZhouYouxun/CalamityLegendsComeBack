@@ -22,7 +22,6 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         private int   pollutionStacks;
         private int   pollutionOwner = -1;
         private int   spreadCooldown;
-        private int   pressureExposureTimer;
         private float visualPulse;
         private bool  useHighThresholds;
 
@@ -74,15 +73,6 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 pollutionTimeLeft = Math.Max(pollutionTimeLeft, Math.Min(duration, 60));
                 visualPulse       = Math.Max(visualPulse, 0.55f);
             }
-        }
-
-        public void ExposeToPressure(NPC npc, int owner, float proximity)
-        {
-            pressureExposureTimer++;
-            if (pressureExposureTimer < 44) return;
-            pressureExposureTimer = 0;
-            int amount = proximity > 0.72f ? 2 : 1;
-            ApplyPollution(npc, owner, amount, 7 * 60, fromSpread: true);
         }
 
         public static int CountPollutionForOwner(int owner)
@@ -437,7 +427,6 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             pollutionStacks       = 0;
             pollutionTimeLeft     = 0;
             spreadCooldown        = 0;
-            pressureExposureTimer = 0;
             visualPulse           = 0f;
             pollutionOwner        = -1;
 

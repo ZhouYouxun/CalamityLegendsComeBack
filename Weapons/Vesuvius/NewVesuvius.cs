@@ -89,7 +89,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
 
         public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
         {
-            Vector2 aimDirection = (player.Calamity().mouseWorld - player.MountedCenter).SafeNormalize(Vector2.UnitX * player.direction);
+            Vector2 aimDirection = (global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(player, player.Calamity().mouseWorld) - player.MountedCenter).SafeNormalize(Vector2.UnitX * player.direction);
 
             if (player.altFunctionUse == 2)
                 return false;
@@ -180,20 +180,13 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                 : this.GetLocalizedValue("EXDisabledHint");
 
             string finalText =
-                this.GetLocalizedValue("LeftClick").TrimEnd('\n') + "\n" +
+                this.GetLocalizedValue("LeftClick").TrimEnd('\r', '\n') + "\n" +
                 this.GetLocalizedValue($"ChargeStage{VesuviusProgression.GetMaxStage()}") + "\n" +
-                this.GetLocalizedValue("RightClick").TrimEnd('\n') + "\n" +
-                this.GetLocalizedValue("Passive").TrimEnd('\n') + "\n" +
-                exText.TrimEnd('\n') + "\n" +
-                this.GetLocalizedValue("Final") + "\n";
+                this.GetLocalizedValue("RightClick").TrimEnd('\r', '\n') + "\n" +
+                this.GetLocalizedValue("Passive").TrimEnd('\r', '\n') + "\n" +
+                exText.TrimEnd('\r', '\n');
 
-            bool shiftPressed = Main.keyState.PressingShift();
-            if (shiftPressed)
-                tooltips.RemoveAll(t => t.Text == "[GFB]");
-            else
-                tooltips.FindAndReplace("[GFB]", finalText);
-            string legendarySection = shiftPressed ? this.GetLocalizedValue("LegendaryText") : this.GetLocalizedValue("LegendaryHint");
-            tooltips.Add(new TooltipLine(Mod, "VesuviusVolcanoLegendaryText", legendarySection));
+            tooltips.FindAndReplace("[GFB]", finalText);
         }
 
         private static void SyncCooldownDisplay(Player player, VesuviusEXPlayer exPlayer)
@@ -232,7 +225,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                     projectile.Kill();
             }
 
-            Vector2 aimDirection = (player.Calamity().mouseWorld - player.MountedCenter).SafeNormalize(Vector2.UnitX * player.direction);
+            Vector2 aimDirection = (global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(player, player.Calamity().mouseWorld) - player.MountedCenter).SafeNormalize(Vector2.UnitX * player.direction);
             int projIndex = Projectile.NewProjectile(
                 Item.GetSource_FromThis(),
                 player.MountedCenter,
@@ -256,7 +249,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
                     projectile.Kill();
             }
 
-            Vector2 target = player.Calamity().mouseWorld;
+            Vector2 target = global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(player, player.Calamity().mouseWorld);
             Vector2 spawnPosition = target + new Vector2(Main.rand.NextFloat(-120f, 120f), -620f);
             Vector2 velocity = (target - spawnPosition).SafeNormalize(Vector2.UnitY) * 20f;
             int projIndex = Projectile.NewProjectile(

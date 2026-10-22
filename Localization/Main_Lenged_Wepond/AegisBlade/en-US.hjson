@@ -7,31 +7,21 @@ Mods: {
 					Tooltip: "[GFB]"
 					FunctionalTooltip:
 						'''
-						[c/FFD966:Left Click] [c/DCD6C8:Hold to spin the greatsword; tracking souls and falling beams join the attack as you progress]
-						[c/8DB8FF:Right Click] [c/DCD6C8:Raise the 40-frame Aegis shield — the first 15 frames are the Perfect Parry window, then it can be charged]
-						[c/8DB8FF:Shield Bash] [c/DCD6C8:Release right-click to dash toward the cursor and ram enemies with the shield; longer charge means more distance and damage]
-						[c/8DB8FF:Full Charge] [c/DCD6C8:Unlocked after any Mechanical Boss; left-click to hurl down the Aegis Blade and raise 16-tile rapid barricades on both sides]
-						[c/DCD6C8:Barricades last 60 seconds, or 10 seconds during boss fights]
-						[c/8DB8FF:Perfect Parry] [c/DCD6C8:Absorbs all damage, grants 35 iframes and 8 energy; your next shield bash is empowered]
-						[c/8DB8FF:Shield Raised] [c/DCD6C8:+20 defense and knockback immunity]
-						[c/7FE886:Aegis] [c/DCD6C8:Gain 6–15 bonus defense based on movement speed; maximized while standing still]
-						[c/7FE886:Bulwark] [c/DCD6C8:Without damage-over-time debuffs, contact damage reduced by 20%, doubled while stationary]
-						[c/FFD700:Legendary Skill (Golden Hand)] [c/DCD6C8:When energy is full, press the Legendary Skill key to summon a golden hand granting 10s of full invincibility]
+						[c/FFD966:Left Click: Spin the Aegis Blade to strike nearby enemies.]
+						[c/FFD966:Holy fire erupts as it swings; souls and falling beams join the attack as the weapon grows.]
+						[c/FFD966:Release left click to throw the spinning blade, still linked to you by holy light.]
+						[c/8DB8FF:Right Click: Raise the shield to guard; a perfect parry empowers the next shield bash.]
+						[c/8DB8FF:Release right click to dash toward the cursor and strike with the shield.]
+						[c/8DB8FF:Hold both buttons to charge and raise an Aegis barricade at the cursor.]
+						[c/7FE886:Passive [Aegis]: Slower movement strengthens your defense.]
+						[c/7FE886:Passive [Bulwark]: Without lingering harm, you better withstand close-range blows.]
+						[c/FFD700:Ultimate [Golden Hand]: Press [{0}] to summon the Golden Hand and shelter yourself from attacks.]
 						'''
-					LegendaryHint: "[c/BABABA:Hold Shift to read the legendary record]"
 					GrowthStage0: "[c/FFD966:Current growth: two fireballs. Tracking souls unlock in Hardmode; falling beams unlock after Moon Lord.]"
 					GrowthStage4: "[c/FFD966:Current growth: tracking souls. Shield charge unlocks after a Mechanical Boss; fireballs upgrade after Plantera.]"
 					GrowthStage6: "[c/FFD966:Current growth: four fireballs and stronger soul bursts. Falling beams unlock after Moon Lord.]"
 					GrowthStage8: "[c/FFD966:Current growth: two falling beams per swing. Four unlock after Providence.]"
 					GrowthStage9: "[c/FFD966:Current growth: four falling beams per swing; the full attack is unlocked.]"
-					LegendaryText:
-						'''
-						[c/FFD966:The first Aegis Blade was closer to a defensive relic: raise the shield, take the hit, then answer with the edge.]
-						[c/FFD966:That direction was clear enough, but it made "protection" too easy to reduce to damage cuts and standing still.]
-						[c/FFD966:After the rebuild, it no longer rewards only holding your ground. Speed, position, and guard timing are all part of the line.]
-						[c/FFD966:A perfect guard briefly resets that defensive logic, making hesitation, retreat, and counterattack parts of the same judgment.]
-						[c/FFD966:What it truly protects is not the wielder from harm, but the rule that every incoming hit must pass through sword and shield first.]
-						'''
 				}
 
 				Summon: {
@@ -40,11 +30,6 @@ Mods: {
 						Tooltip: ""
 					}
 				}
-			}
-
-			NewLegendGaelsGreatsword: {
-				DisplayName: New Legend Gaels Greatsword
-				Tooltip: ""
 			}
 		}
 
@@ -68,6 +53,18 @@ Mods: {
 			LeonidUltimateUI.DisplayName: Leonid Ultimate U I
 			IceShardProj.DisplayName: Ice Shard Proj
 			Magic.AnodizedWulfrumShard.DisplayName: Anodized Wulfrum Shard
+			GaelGreatswordBloodEcho.DisplayName: Gael Greatsword Blood Echo
+			GaelGreatswordBrimstoneDart.DisplayName: Gael Greatsword Brimstone Dart
+			GaelGreatswordCapeFinisher.DisplayName: Gael Greatsword Cape Finisher
+			GaelGreatswordCatastropheSlash.DisplayName: Gael Greatsword Catastrophe Slash
+			GaelGreatswordCondemnationArrow.DisplayName: Gael Greatsword Condemnation Arrow
+			GaelGreatswordDarkSoul.DisplayName: Gael Greatsword Dark Soul
+			GaelGreatswordEmberUI.DisplayName: Gael Greatsword Ember U I
+			GaelGreatswordGuardHoldout.DisplayName: Gael Greatsword Guard Holdout
+			GaelGreatswordPlungeHoldout.DisplayName: Gael Greatsword Plunge Holdout
+			GaelGreatswordSwingHoldout.DisplayName: Gael Greatsword Swing Holdout
+			GaelGreatswordVengefulSoul.DisplayName: Gael Greatsword Vengeful Soul
+			LeonidStealthImpact.DisplayName: Leonid Stealth Impact
 		}
 
 		Cooldowns.AegisEX: Golden Hand

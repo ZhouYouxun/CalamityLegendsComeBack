@@ -18,11 +18,15 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
         public Player Owner => Main.player[Projectile.owner];
 
-        // Charge progress stored in localAI[0] (0 to 100)
+        private Vector2 AimPosition => new Vector2(Projectile.ai[1], Projectile.ai[2]);
+        private Vector2 AimDirection => (AimPosition - Owner.Center).SafeNormalize(Vector2.UnitX * Owner.direction);
+        private int syncTimer;
+
+        // Charge and cursor position are synchronized for remote players.
         public float ChargeProgress
         {
-            get => Projectile.localAI[0];
-            set => Projectile.localAI[0] = MathHelper.Clamp(value, 0f, 100f);
+            get => Projectile.ai[0];
+            set => Projectile.ai[0] = MathHelper.Clamp(value, 0f, 100f);
         }
 
         public override void SetDefaults()
@@ -31,6 +35,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             Projectile.height = 30;
             Projectile.tileCollide = false;
             Projectile.friendly = false;
+            Projectile.DamageType = ModContent.GetInstance<RogueDamageClass>();
             Projectile.penetrate = -1;
             Projectile.timeLeft = 2;
             Projectile.ignoreWater = true;
@@ -41,28 +46,34 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
         public override void AI()
         {
-            if (!Owner.active || Owner.dead || Owner.HeldItem.type != ModContent.ItemType<LeonidProgenitor>())
+            if (!Owner.active || Owner.dead || Owner.noItems || Owner.CCed || Owner.HeldItem.type != ModContent.ItemType<LeonidProgenitor>())
             {
                 Projectile.Kill();
                 return;
             }
 
-            // Keep holdout alive as long as right click is pressed
-            if (Owner.controlUseTile)
+            Projectile.timeLeft = 2;
+            if (Projectile.owner == Main.myPlayer)
             {
-                Projectile.timeLeft = 2;
-            }
-            else
-            {
-                // Release and fire!
-                LaunchMeteor();
-                Projectile.Kill();
-                return;
+                Vector2 aimPoint = global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(Owner, Main.MouseWorld);
+                Projectile.ai[1] = aimPoint.X;
+                Projectile.ai[2] = aimPoint.Y;
+                if (!Owner.controlUseTile)
+                {
+                    LaunchMeteor();
+                    Projectile.Kill();
+                    return;
+                }
+                if (++syncTimer >= 6)
+                {
+                    syncTimer = 0;
+                    Projectile.netUpdate = true;
+                }
             }
 
             // Align owner and set held projection
-            Owner.ChangeDir(Math.Sign(Main.MouseWorld.X - Owner.Center.X));
-            Owner.itemRotation = (Main.MouseWorld - Owner.Center).ToRotation();
+            Owner.ChangeDir(AimDirection.X >= 0f ? 1 : -1);
+            Owner.itemRotation = AimDirection.ToRotation();
             if (Owner.direction == -1)
                 Owner.itemRotation += MathHelper.Pi;
 
@@ -70,16 +81,16 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             Owner.heldProj = Projectile.whoAmI;
 
             // Positioning in front of the player
-            Vector2 aimDir = (Main.MouseWorld - Owner.Center).SafeNormalize(Vector2.UnitX * Owner.direction);
+            Vector2 aimDir = AimDirection;
             Projectile.Center = Owner.MountedCenter + aimDir * 28f;
 
-            // Slow down player speed slightly
-            Owner.velocity.X *= 0.9f;
+            // Charging no longer reduces horizontal movement speed.
             if (Owner.velocity.Y * Owner.gravDir < 0f)
                 Owner.velocity.Y *= 0.9f;
 
             // Increment charge progress naturally
-            ChargeProgress += 1.4f;
+            if (Projectile.owner == Main.myPlayer)
+                ChargeProgress += 1.4f;
 
             // Search and recycle active reflective comets
             int reflectiveType = ModContent.ProjectileType<LeonidReflectiveMeteor>();
@@ -88,16 +99,21 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 Projectile p = Main.projectile[i];
                 if (p.active && p.type == reflectiveType && p.ModProjectile is LeonidReflectiveMeteor reflective)
                 {
-                    if (p.owner == Projectile.owner && Vector2.Distance(Projectile.Center, p.Center) < 1200f)
+                    if (Projectile.owner == Main.myPlayer && p.owner == Projectile.owner && Vector2.Distance(Projectile.Center, p.Center) < 1200f)
                     {
                         // Put it into returning state
-                        reflective.IsReturning = true;
+                        if (!reflective.IsReturning)
+                        {
+                            reflective.IsReturning = true;
+                            p.netUpdate = true;
+                        }
 
                         // Merge if it gets very close
                         if (Vector2.Distance(Projectile.Center, p.Center) < 36f)
                         {
                             // Add 4% progress instantly
                             ChargeProgress += 4f;
+                            Projectile.netUpdate = true;
 
                             // Spawn merge sparks
                             for (int j = 0; j < 6; j++)
@@ -178,13 +194,16 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             if (Main.myPlayer != Projectile.owner)
                 return;
 
-            Vector2 launchVel = (Main.MouseWorld - Projectile.Center).SafeNormalize(Vector2.UnitX * Owner.direction) * 20f;
+            LeonidConstellationPlayer constellation = Owner.GetModPlayer<LeonidConstellationPlayer>();
+            float speed = 20f;
+            Vector2 launchVel = (AimPosition - Projectile.Center).SafeNormalize(Vector2.UnitX * Owner.direction) * speed;
             float prog = ChargeProgress / 100f;
             
-            // Damage scales from 60% to 150% based on charge progress
-            int damage = (int)(Projectile.damage * (0.6f + 0.9f * prog));
-            if (Owner.GetModPlayer<LeonidConstellationPlayer>().IsUnlocked(LeonidStar.Subra))
-                damage = (int)(damage * 1.2f);
+            // Charge scales damage linearly from 60% to 100%; Chertan removes the uncharged penalty.
+            float chargeDamageFactor = constellation.IsUnlocked(LeonidStar.Chertan) ? 1f : 0.6f + 0.4f * prog;
+            int damage = (int)(Projectile.damage * chargeDamageFactor);
+            if (constellation.IsUnlocked(LeonidStar.Dingolay) && !Main.dayTime)
+                damage = (int)(damage * 1.1f);
             
             int largeCometType = ModContent.ProjectileType<LeonidCometLarge>();
             int p = Projectile.NewProjectile(
@@ -201,6 +220,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
             if (p.WithinBounds(Main.maxProjectiles))
             {
+                Main.projectile[p].Calamity().stealthStrike = true;
                 Main.projectile[p].netUpdate = true;
             }
 
@@ -221,6 +241,16 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 lanceSpeed: 18f);
         }
 
+        public override void OnKill(int timeLeft)
+        {
+            if (Main.myPlayer != Projectile.owner)
+                return;
+            foreach (Projectile meteor in Main.ActiveProjectiles)
+                if (meteor.owner == Projectile.owner && meteor.ModProjectile is LeonidReflectiveMeteor reflective
+                    && reflective.IsReturning)
+                    reflective.StopReturning();
+        }
+
         public override bool PreDraw(ref Color lightColor)
         {
             float prog = ChargeProgress / 100f;
@@ -231,7 +261,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             Texture2D sparkle = ModContent.Request<Texture2D>("CalamityMod/Particles/Sparkle").Value;
             Color coreColor = Color.Lerp(LeonidVisualUtils.GetCelestialColor(prog, Projectile.whoAmI * 0.09f), LeonidVisualUtils.GetReadyGold(), prog * 0.24f);
             Vector2 drawPos = Projectile.Center - Main.screenPosition;
-            Vector2 aimDir = (Main.MouseWorld - Owner.Center).SafeNormalize(Vector2.UnitX * Owner.direction);
+            Vector2 aimDir = AimDirection;
 
             // The charge core is a pure light effect and must not render BloomCircle's black base.
             LeonidVisualUtils.BeginAdditiveSpriteBatch();

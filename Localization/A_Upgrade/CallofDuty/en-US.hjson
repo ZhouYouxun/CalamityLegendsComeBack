@@ -11,9 +11,9 @@ Mods: {
 						[c/8FDFFF:Right-click [Redial]: Pops a 3x4 LCD keypad over connected target to unleash keycap blasts (2.5s CD)]
 						[c/8FDFFF:Hold Left+Right [Speed Dial]: Charge for 0.5s to fire a main signal, tagging target as VIP]
 						[c/6FA8FF:Held in main inventory, grants a Rover Drive-equivalent shield; worn Rover Drive boosts shield layers]
-						[c/C2FF43:Legendary skill ({0}): Everyone, get over here]
-						[c/C2FF43:Drops an Amplifier that locks down, then calls 16 Wulfrum squad machines]
-						[c/C2FF43:The army and cooldown both last 60 seconds; defeating a real boss immediately resets cooldown]
+						[c/C2FF43:Ultimate [Everyone, Get Over Here]: Press [{0}] to drop a Wulfrum Amplifier.]
+						[c/C2FF43:After it lands, summon sixteen Wulfrum machines; the army and cooldown last 60 seconds.]
+						[c/C2FF43:Defeating a real boss immediately resets the cooldown.]
 						'''
 					DetailsHint: "[c/97ADB8:Hold Shift for attack modes and squad details]"
 					Details:

@@ -3,6 +3,9 @@ Mods: {
 		Items: {
 			Weapons: {
 				NewLegendBlossomFlux: {
+					ArrowConversionHint: Kliknij tę broń prawym przyciskiem w ekwipunku, aby przełączyć konwersję strzał
+					InnateFairies: "[c/9AFFC8:Trzy krążące wróżki wystrzeliwują podczas ataku lasery w swoich kolorach]"
+					InnateRainbow: "[c/FFAAFF:Ładowanie prawego ataku Przełamania zbiera motyle; po puszczeniu wszystkie szarżują, zadając 25% obrażeń strzały tego strzału]"
 					// DisplayName: Luxuriant Growth - BlossomFlux
 					// Tooltip: "[GFB]"
 					/* BF_Intro:
@@ -104,74 +107,14 @@ Mods: {
 					// PassiveStateLocked: "[c/9A9A9A:Unlocked in Hardmode]"
 					/* BF_EXHint:
 						'''
-						[c/8EF5A8:Ultimate: holding fire and right-click attacks charge vernal energy.]
-						[c/8EF5A8:At full energy, press] [[c/8EF5A8:{0}]] [c/8EF5A8:to release the verdant barrage.]
+						[c/8EF5A8:Ultimate [Vernal Energy]: Press [{0}] to charge briefly.]
+						[c/8EF5A8:Then unleash a verdant barrage at the nearest locked enemy.]
 						''' */
-					// BF_EXDisabledHint: "[c/9A9A9A:Golden Emblem is not equipped. The ultimate is disabled.]"
+					// BF_EXDisabledHint: "[c/9A9A9A:The ultimate unlocks automatically in Hardmode.]"
 					// BF_FormWheelHint: "[c/F7D87C:Hold] [[c/F7D87C:{0}]] [c/F7D87C:to open the doctrine wheel; release over a sector to switch.]"
+					// LegendaryText: May justice be served for all.
 					// BF_Final: "[c/9FD8A2:The bowstring hums, and the forest answers.]"
-					// LegendaryHint: "[c/BABABA:Hold Shift to read the legendary record]"
-					/* LegendaryText:
-						'''
-						[c/66E6FF:I once believed that, if the bowstring rang swiftly enough, the forest could bar every invader from its bounds.]
-						[c/66E6FF:But a thousand leaves without guidance are only blades scattered to the wind. True guardianship cannot have only one answer.]
-						[c/66E6FF:Floral beast, gather the power strewn throughout this canopy, and let every drawn string carry a purpose.]
-						[c/66E6FF:Let Breakthrough pierce the way ahead; let Recovery preserve the living; let Recon find the most dangerous foe; let Bombardment call down a rain of arrows; let Plague leave every sown affliction to linger.]
-						[c/66E6FF:With a common draw, let the five branches fulfill their duties. When the bowstring is drawn taut, awaken the deeper power within each.]
-						[c/66E6FF:Should the bowbearer stand at death's threshold, raise the Final Stand and turn aside that last step; when Bloom Energy overflows, let the whole canopy answer their call as a hail of arrows.]
-						[c/66E6FF:From this day forward, no Godseeker, whatever their station, may cross the boundary the forest has drawn.]
-						[c/66E6FF:Guard this land, still remembered by its people, until the last light leaves the boughs.]
-						''' */
 				}
-			}
-
-			BFSpareQuiver: {
-				// DisplayName: Spare Quiver
-				/* Tooltip:
-					'''
-					+8% ranged damage, +4 defense
-					All BlossomFlux right-click charge times reduced by 10%
-					Recovery: right-click healing flashes +1.
-					Reconnaissance: right-click mark duration slightly increased.
-					''' */
-			}
-
-			BFTunedQuiver: {
-				// DisplayName: Tuned Quiver
-				/* Tooltip:
-					'''
-					+11% ranged damage, +6% ranged critical strike chance
-					All BlossomFlux right-click charge times reduced by 20%
-					Recovery: right-click healing flashes +2.
-					Reconnaissance: right-click mark duration increased.
-					Bombardment: right-click explosion radius increased.
-					''' */
-			}
-
-			BFResonatingQuiver: {
-				// DisplayName: Resonating Quiver
-				/* Tooltip:
-					'''
-					+14% ranged damage, +12 ranged armor penetration
-					All BlossomFlux right-click charge times reduced by 35%
-					Recovery: right-click healing flashes +3.
-					Reconnaissance: right-click mark duration greatly increased.
-					Bombardment: right-click barrage damage increased.
-					Plague: unlocks the first set of advanced debuffs.
-					''' */
-			}
-
-			BFDominationQuiver: {
-				// DisplayName: Domination Quiver
-				/* Tooltip:
-					'''
-					+18% ranged damage, +8% ranged critical strike chance
-					All BlossomFlux right-click charge times reduced by 50%
-					Recovery: right-click healing flashes +4.
-					Reconnaissance: right-click mark duration reaches its maximum.
-					Bombardment: right-click barrage damage and radius increased.
-					Plague: unlocks all advanced debuffs.
-					''' */
 			}
 
 			PastLingering: {
@@ -360,6 +303,11 @@ Mods: {
 			BFPlagueDeathBuff: {
 				// DisplayName: Deathblight
 				// Description: Takes 10% more damage and loses 140 life per second, plus 40 for each Plague disease.
+			}
+
+			GaelGreatswordBlackBlood: {
+				// DisplayName: Gael Greatsword Black Blood
+				// Description: Mods.CalamityLegendsComeBack.Buffs.GaelGreatswordBlackBlood.Description
 			}
 		}
 	}

@@ -36,6 +36,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickTurret
 
         public override void AI()
         {
+            // Automatic calls carry their validated ground height in ai[2]. Pass roofs
+            // on the way down so the pod lands at that reserved deployment site.
+            if (Projectile.ai[2] > 0f)
+            {
+                Projectile.tileCollide = false;
+                if (Projectile.Bottom.Y >= Projectile.ai[2])
+                {
+                    Projectile.Bottom = new Vector2(Projectile.Center.X, Projectile.ai[2]);
+                    Projectile.Kill();
+                    return;
+                }
+            }
             Projectile.velocity.X *= 0.98f;
             Projectile.velocity.Y = MathHelper.Clamp(Projectile.velocity.Y + Gravity, -MaxFallSpeed, MaxFallSpeed);
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2;
@@ -66,6 +78,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickTurret
             Player owner = Main.player[Projectile.owner];
             Vector2 restingPoint = MilitaryTurretUtility.FindRestingPoint(Projectile.Center);
 
+            if (Projectile.ai[2] > 0f)
+            {
+                restingPoint = new Vector2(Projectile.Center.X, Projectile.ai[2]);
+                Rectangle body = new((int)restingPoint.X - 27, (int)restingPoint.Y - 36, 54, 36);
+                Rectangle playerSpace = owner.Hitbox;
+                playerSpace.Inflate(48, 32);
+                if (body.Intersects(playerSpace) || Collision.SolidCollision(body.TopLeft(), 54, 36))
+                    return;
+            }
+
             if (!MilitaryTurretUtility.CanDeployTurret(owner, restingPoint, out string failureReason))
             {
                 MilitaryTurretUtility.NotifyFailure(owner, failureReason, restingPoint);
@@ -94,7 +116,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickTurret
                 }
             }
 
-            SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.82f, Pitch = -0.12f }, restingPoint);
+            SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.41f, Pitch = -0.12f }, restingPoint);
             SpawnImpactBurst(restingPoint, MilitaryTurretUtility.GetStats(Kind).ThemeColor);
         }
 

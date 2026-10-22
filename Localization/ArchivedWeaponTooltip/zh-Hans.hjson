@@ -1,0 +1,8 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		ArchivedWeaponTooltip: {
+			Warning: 武器尚未制作完成，现已停止维护
+			ShiftHint: 按住Shift键显示最后一版
+		}
+	}
+}

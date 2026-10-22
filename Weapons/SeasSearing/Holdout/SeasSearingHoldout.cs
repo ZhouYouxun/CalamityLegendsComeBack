@@ -237,7 +237,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             ruptureHeat   = 1f;
             resonanceGlow = Math.Max(resonanceGlow, 1.1f);
             float shake = MathHelper.Clamp((tier >= 3 ? 6f : 4f) + detonated * 0.85f, 4f, 15f);
-            Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, shake);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Owner, Projectile.Center, shake);
             SoundEngine.PlaySound(SoundID.Item92 with { Volume = 0.7f,  Pitch = -0.4f }, GunTipPosition);
             SoundEngine.PlaySound(SoundID.Item74 with { Volume = 0.5f,  Pitch = -0.3f }, GunTipPosition);
 
@@ -530,7 +530,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             ApplyRecoil(11.5f + volleyIndex * 3.2f);
             TriggerMuzzleFlash(18 + volleyIndex * 4);
             resonanceGlow = Math.Max(resonanceGlow, 1.1f);
-            Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, 3.6f + volleyIndex * 1.1f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Owner, Projectile.Center, 3.6f + volleyIndex * 1.1f);
             SpawnReleaseSprayVisuals(dir, volleyIndex);
             SeasSearingVisualUtility.PlayDeepShot(GunTipPosition, -0.18f + volleyIndex * 0.08f);
         }
@@ -786,7 +786,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             ssPlayer.StartUltimateCooldown();
             useAnimationTimer = Math.Max(useAnimationTimer, 16);
             ApplyRecoil(18f); TriggerMuzzleFlash(26);
-            Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, 3.2f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Owner, Projectile.Center, 3.2f);
             SoundEngine.PlaySound(SoundID.Item33 with { Volume = 0.74f, Pitch = -0.42f }, GunTipPosition);
         }
 
@@ -873,6 +873,12 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                     break;
             }
             chargeGlow = Math.Max(rightChargeGlow, ultimateChargeVisual);
+
+            Owner.GetModPlayer<SeasSearingPlayer>().PressureFieldColor = rightState == RightState.AbyssalRupture
+                ? Color.Lerp(SeasSearingPalette.WarningOrange, SeasSearingPalette.RadioactiveCyan, 1f - ruptureHeat * 0.6f)
+                : rightState == RightState.Locked
+                    ? SeasSearingPalette.PressureBlue
+                    : SeasSearingPalette.RadioactiveCyan;
 
             if (!Main.dedServ)
                 Lighting.AddLight(Owner.Center, new Vector3(0.02f, 0.12f, 0.18f) * Owner.GetModPlayer<SeasSearingPlayer>().PressureVisualPower);
@@ -1044,7 +1050,6 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
         public override bool PreDraw(ref Color lightColor)
         {
-            DrawPressureField();
 
             Texture2D texture = TextureAssets.Projectile[Type].Value;
             Vector2   drawPos = Projectile.Center - Main.screenPosition;
@@ -1182,37 +1187,6 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             }
         }
 
-        private void DrawPressureField()
-        {
-            SeasSearingPlayer ssPlayer = Owner.GetModPlayer<SeasSearingPlayer>();
-            float power = ssPlayer.PressureVisualPower;
-            if (power <= 0.02f || Main.dedServ) return;
 
-            Texture2D ring  = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomRing").Value;
-            Texture2D bloom = ModContent.Request<Texture2D>("CalamityMod/Particles/BloomCircle").Value;
-            Vector2   center = Owner.Center - Main.screenPosition;
-
-            Color fieldColor = rightState == RightState.AbyssalRupture
-                ? Color.Lerp(SeasSearingPalette.WarningOrange, SeasSearingPalette.RadioactiveCyan, 1f - ruptureHeat * 0.6f)
-                : rightState == RightState.Locked
-                    ? SeasSearingPalette.PressureBlue
-                    : SeasSearingPalette.RadioactiveCyan;
-
-            const float fieldOpacity = 0.5f;
-            Color cyan  = (fieldColor with { A = 0 }) * ((0.12f + power * 0.22f) * fieldOpacity);
-            Color deep  = (SeasSearingPalette.DeepBlue with { A = 0 }) * ((0.1f + power * 0.18f) * fieldOpacity);
-
-            Main.EntitySpriteDraw(bloom, center, null, deep * 0.55f, 0f, bloom.Size() * 0.5f,
-                new Vector2(1.9f, 1.25f) * power * 0.72f, SpriteEffects.None, 0);
-
-            for (int i = 0; i < 3; i++)
-            {
-                float local    = i / 3f;
-                float rotation = Main.GlobalTimeWrappedHourly * (0.28f + local * 0.14f);
-                float scale    = 1.65f + local * 0.74f + power * 0.35f;
-                Main.EntitySpriteDraw(ring, center, null, (i == 0 ? cyan : deep) * (1f - local * 0.22f),
-                    rotation, ring.Size() * 0.5f, scale, SpriteEffects.None, 0);
-            }
-        }
     }
 }

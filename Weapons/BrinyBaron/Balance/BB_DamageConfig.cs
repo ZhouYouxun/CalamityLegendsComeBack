@@ -12,20 +12,20 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron
         private static readonly object[,] DefaultStageTable =
         {
             //                                      Damage  Scale
-            { "Initial",                              19,   0.75f },
-            { "Eye of Cthulhu",                       24,   0.85f  },
-            { "Evil Boss",                            29,   0.95f },
-            { "Skeletron",                            37,   1.05f  },
-            { "Hardmode",                             70,   1.15f  },
-            { "Any Mechanical Boss",                  81,   1.25f },
-            { "Plantera",                             89,   1.35f  },
-            { "Golem",                                97,   1.45f },
-            { "Moon Lord",                           115,   1.55f },
-            { "Providence",                          144,   1.60f },
-            { "Polterghast",                         155,   1.75f },
-            { "Devourer of Gods",                    180,   1.8f  },
-            { "Yharon",                              325,   2.0f  },
-            { "Exo Mechs and Supreme Calamitas",     799,   2.05f  }
+            { "Initial",                              24,   0.75f },
+            { "Eye of Cthulhu",                       32,   0.85f  },
+            { "Evil Boss",                            37,   0.95f },
+            { "Skeletron",                            50,   1.05f  },
+            { "Hardmode",                             92,   1.15f  },
+            { "Any Mechanical Boss",                 110,   1.25f },
+            { "Plantera",                            122,   1.35f  },
+            { "Golem",                               142,   1.45f },
+            { "Moon Lord",                           163,   1.55f },
+            { "Providence",                          223,   1.60f },
+            { "Polterghast",                         252,   1.75f },
+            { "Devourer of Gods",                    306,   1.8f  },
+            { "Yharon",                              584,   2.0f  },
+            { "Exo Mechs and Supreme Calamitas",    1300,   2.05f  }
         };
 
         // =========================================================================

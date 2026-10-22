@@ -3,13 +3,13 @@ Mods: {
 		Items: {
 			Weapons: {
 				EmergencyRecall: {
-					DisplayName: Retorno de emergencia
-					Tooltip:
+					// DisplayName: Emergency Recall
+					/* Tooltip:
 						'''
-						Se activa al estar en el inventario y marcado como favorito.
-						Al recibir daño mortal sin un jefe activo, usa automáticamente un objeto de regreso para volver a casa.
-						Prioridad de consumo: Poción de regreso > Poción de retirada > Espejo mágico (los espejos no se consumen)
-						'''
+						Triggers when placed in inventory and marked as favorited
+						When receiving fatal damage with no boss active, automatically uses a recall item to return home
+						Consumption Priority: Potion of Return > Recall Potion > Magic Mirror (Mirrors are not consumed)
+						''' */
 				}
 			}
 		}

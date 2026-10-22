@@ -1,8 +1,10 @@
 using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core;
 using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects;
+using CalamityMod;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.IO;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
@@ -12,19 +14,65 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 {
     public class LeonidCometSmall : ModProjectile, ILocalizedModType
     {
+        private const float LeftClickStarParticleScale = 0.7f;
+
+        // Stochastic rounding keeps a true 30% average reduction for small groups.
+        private static int ReducedStarCount(int originalCount)
+        {
+            float desired = originalCount * LeftClickStarParticleScale;
+            int count = (int)desired;
+            return count + (Main.rand.NextFloat() < desired - count ? 1 : 0);
+        }
+
         public const int FromStealthFlag = 1;
         public const int SilverSplitFlag = 2;
         public const int SpectreCloneFlag = 4;
         public const int GravityFieldFlag = 8;
+        public const int AccessoryRainFlag = 16;
 
         public override string Texture => "CalamityMod/Items/Weapons/Rogue/LeonidProgenitor";
         public new string LocalizationCategory => "Projectiles.LeonidProgenitor";
 
         private bool initialized;
         private Vector2 playerOffset;
+        private Vector2? launchAim;
+        private float launchSpeed;
+
+        public void SetLaunchAim(Vector2 target, float speed)
+        {
+            launchAim = target;
+            launchSpeed = speed;
+            Projectile.velocity = Vector2.Zero;
+        }
+
+        public override void SendExtraAI(BinaryWriter writer)
+        {
+            writer.Write(launchAim.HasValue);
+            if (launchAim is Vector2 target)
+            {
+                writer.Write(target.X);
+                writer.Write(target.Y);
+                writer.Write(launchSpeed);
+                writer.Write(Projectile.localAI[1]);
+            }
+        }
+
+        public override void ReceiveExtraAI(BinaryReader reader)
+        {
+            bool wasQueued = launchAim.HasValue;
+            launchAim = reader.ReadBoolean() ? new Vector2(reader.ReadSingle(), reader.ReadSingle()) : null;
+            if (launchAim.HasValue)
+            {
+                launchSpeed = reader.ReadSingle();
+                Projectile.localAI[1] = reader.ReadSingle();
+            }
+            else if (wasQueued)
+                Projectile.localAI[1] = 0f;
+        }
 
         public int SpawnFlags => (int)Projectile.ai[2];
         public bool FromStealthRain => (SpawnFlags & FromStealthFlag) != 0;
+        private bool FromAccessoryRain => (SpawnFlags & AccessoryRainFlag) != 0;
         public Player Owner => Main.player[Projectile.owner];
         public Vector2 InitialCenter { get; private set; }
         public Color MeteorColor { get; private set; }
@@ -51,6 +99,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             Projectile.width = 28;
             Projectile.height = 28;
             Projectile.friendly = true;
+            Projectile.DamageType = ModContent.GetInstance<RogueDamageClass>();
             Projectile.ignoreWater = true;
             Projectile.penetrate = 1;
             Projectile.timeLeft = 300;
@@ -65,10 +114,11 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             if (!initialized)
             {
                 InitialCenter = Projectile.Center;
+                if ((SpawnFlags & GravityFieldFlag) == 0 && Owner.GetModPlayer<LeonidConstellationPlayer>().IsUnlocked(LeonidStar.Rasalas))
+                    IgnoreGravity = true;
                 MeteorColor = FromStealthRain
                     ? Color.Lerp(LeonidVisualUtils.StratusBlue, LeonidVisualUtils.MoonWhite, 0.35f)
                     : LeonidVisualUtils.GetCelestialColor((float)Projectile.whoAmI % 1f);
-                Projectile.DamageType = Owner.HeldItem.DamageType;
                 initialized = true;
             }
 
@@ -90,10 +140,17 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                 if (playerOffset == Vector2.Zero)
                     playerOffset = Projectile.Center - Owner.Center;
 
-                Projectile.Center = Owner.Center + playerOffset;
+                if ((SpawnFlags & GravityFieldFlag) == 0)
+                    Projectile.Center = Owner.Center + playerOffset;
 
                 if (Projectile.localAI[1] <= 0f)
                 {
+                    if (launchAim is Vector2 target)
+                    {
+                        Projectile.velocity = (target - Projectile.Center).SafeNormalize(Vector2.UnitY) * launchSpeed;
+                        launchAim = null;
+                        Projectile.netUpdate = true;
+                    }
                     SpawnNormalLaunchVFX();
                     SoundEngine.PlaySound(SoundID.Item61 with { Volume = 0.55f, Pitch = 0.1f }, Projectile.Center);
                 }
@@ -103,6 +160,10 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             // Decrement bounce cooldown
             if (bounceCooldown > 0)
                 bounceCooldown--;
+
+            NPC markedTarget = FromAccessoryRain ? GetAccessoryRainTarget() : FromStealthRain ? GetRainTarget() : null;
+            if (FromAccessoryRain)
+                Projectile.tileCollide = false;
 
             // Orbit state AI logic
             if (IsOrbiting)
@@ -186,7 +247,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             }
 
             // Collide and bounce check with right-click reflective meteors
-            if (BounceCount < 7 && bounceCooldown <= 0)
+            if (!FromAccessoryRain && markedTarget == null && BounceCount < 7 && bounceCooldown <= 0)
             {
                 int reflectiveType = ModContent.ProjectileType<LeonidReflectiveMeteor>();
                 for (int i = 0; i < Main.maxProjectiles; i++)
@@ -204,8 +265,8 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
                             p.velocity = moveDir * 5f;
                             reflective.decelerateTimer = 15;
 
-                            bool hasRasalas = Owner.GetModPlayer<LeonidConstellationPlayer>().IsUnlocked(LeonidStar.Rasalas);
-                            float speed = Projectile.velocity.Length() * (hasRasalas ? 1.12f : 1.05f);
+
+                            float speed = Projectile.velocity.Length() * 1.05f;
 
                             SoundEngine.PlaySound(SoundID.Item10 with { Volume = 0.7f, Pitch = 0.3f }, Projectile.Center);
 
@@ -250,7 +311,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             }
 
             // Gravity effect
-            if (!IgnoreGravity && orbitTransitionTimer <= 0)
+            if (markedTarget == null && !IgnoreGravity && orbitTransitionTimer <= 0)
             {
                 Projectile.localAI[0]++;
                 if (Projectile.localAI[0] >= 14f)
@@ -262,27 +323,21 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             }
 
             // Homing check
-            if (EnableHoming || FromStealthRain || (BounceCount > 0 && BounceCount < 7))
+            if (markedTarget != null)
             {
-                if (FromStealthRain && BounceCount < 7)
-                {
-                    Projectile targetProj = FindClosestReflectiveMeteor(600f);
-                    if (targetProj != null)
-                    {
-                        Vector2 desiredVelocity = (targetProj.Center - Projectile.Center).SafeNormalize(Vector2.UnitY) * Projectile.velocity.Length();
-                        Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, 0.08f);
-                    }
-                    else
-                    {
-                        NPC targetNPC = FindClosestNPC(HomingRange);
-                        if (targetNPC != null)
-                        {
-                            Vector2 desiredVelocity = (targetNPC.Center - Projectile.Center).SafeNormalize(Vector2.UnitY) * Projectile.velocity.Length();
-                            Projectile.velocity = Vector2.Lerp(Projectile.velocity, desiredVelocity, 0.06f);
-                        }
-                    }
-                }
-                else if (BounceCount > 0 && BounceCount < 7)
+                // Fast turning and a short lead keep the rain on its marked enemy, even at close range.
+                float distance = Vector2.Distance(Projectile.Center, markedTarget.Center);
+                float speedBonus = Owner.GetModPlayer<LeonidConstellationPlayer>().IsUnlocked(LeonidStar.Algieba) ? 1.2f : 1f;
+                float speed = distance < 80f ? MathHelper.Clamp(distance * 0.5f, 8f * speedBonus, 24f * speedBonus)
+                    : MathHelper.Clamp(Projectile.velocity.Length() + 0.15f * speedBonus, 16f * speedBonus, 24f * speedBonus);
+                Vector2 aim = markedTarget.Center + markedTarget.velocity * Math.Min(distance / (speed * 2f), 6f);
+                float turn = distance < 120f ? 0.7f : 0.24f;
+                float angle = Projectile.velocity.ToRotation().AngleTowards((aim - Projectile.Center).ToRotation(), turn);
+                Projectile.velocity = angle.ToRotationVector2() * speed;
+            }
+            else if (EnableHoming || (BounceCount > 0 && BounceCount < 7))
+            {
+                if (BounceCount > 0 && BounceCount < 7)
                 {
                     Projectile targetProj = FindClosestReflectiveMeteor(800f);
                     if (targetProj != null)
@@ -382,11 +437,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
-            LeonidConstellationPlayer constellation = Owner.GetModPlayer<LeonidConstellationPlayer>();
-            bool hasRasalas = constellation.IsUnlocked(LeonidStar.Rasalas);
-            // Dingolay ("to dance"): each third reflection milestone bites harder, +24% instead of +15%.
-            float milestoneBonus = constellation.IsUnlocked(LeonidStar.Dingolay) ? 0.24f : 0.15f;
-            float multiplier = 1f + BounceCount * (hasRasalas ? 0.06f : 0.04f) + (BounceCount / 3) * milestoneBonus;
+            float multiplier = 1f + BounceCount * 0.04f + (BounceCount / 3) * 0.15f;
             if (IsOrbiting)
             {
                 multiplier *= 0.5f;
@@ -396,9 +447,16 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
+            if (FromStealthRain && Projectile.owner == Main.myPlayer)
+            {
+                int explosionDamage = System.Math.Max(1, (int)(Projectile.damage * 0.5f));
+                Projectile.NewProjectile(Projectile.GetSource_FromThis(), target.Center, Vector2.Zero,
+                    ModContent.ProjectileType<LeonidStealthImpact>(), explosionDamage, 0f, Projectile.owner);
+            }
+
             if (BounceCount >= 7)
             {
-                int energy = Owner.GetModPlayer<LeonidConstellationPlayer>().IsUnlocked(LeonidStar.Chertan) ? 4 : 3;
+                int energy = 3;
                 Owner.GetModPlayer<LeonidProgenitorPlayer>().AddUltimateEnergy(energy);
             }
 
@@ -420,12 +478,12 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             CLCBLightingBoltsSystem.Spawn_LeonidStarfieldMatrixBurst(Projectile.Center, FromStealthRain ? 1.8f : 1f);
 
             // Every small comet releases one delayed-damage energy wisp from its actual death point.
-            // Wolf 359 (the flaring dwarf): the death throw erupts into two brighter wisps instead of one.
+            // Adhafera doubles left-click wisps without changing their individual damage.
             if (Projectile.owner == Main.myPlayer)
             {
-                bool hasWolf359 = Owner.GetModPlayer<LeonidConstellationPlayer>().IsUnlocked(LeonidStar.Wolf359);
-                int wispCount = hasWolf359 ? 2 : 1;
-                int wispDamage = (int)(Projectile.damage * (hasWolf359 ? 0.8f : 0.5f));
+                bool doubleWisps = (SpawnFlags & GravityFieldFlag) == 0 && Owner.GetModPlayer<LeonidConstellationPlayer>().IsUnlocked(LeonidStar.Adhafera);
+                int wispCount = doubleWisps ? 2 : 1;
+                int wispDamage = (int)(Projectile.damage * 0.5f);
                 for (int i = 0; i < wispCount; i++)
                 {
                     Vector2 energyVelocity = Main.rand.NextVector2CircularEdge(1f, 1f) * Main.rand.NextFloat(7f, 10f);
@@ -436,29 +494,29 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
             LeonidStarlight.Burst(
                 Projectile.Center,
-                FromStealthRain ? 4 : 3,
+                ReducedStarCount(FromStealthRain ? 4 : 3),
                 MeteorColor,
                 LeonidStarlightShape.Shard,
                 speed: FromStealthRain ? 7.5f : 5.5f,
                 scale: FromStealthRain ? 1.05f : 0.8f,
                 hoverTime: 24,
-                lifetime: 150,
+                lifetime: 105,
                 lanceSpeed: FromStealthRain ? 20f : 16f);
 
             LeonidStarlight.Burst(
                 Projectile.Center,
-                FromStealthRain ? 3 : 2,
+                ReducedStarCount(FromStealthRain ? 3 : 2),
                 Color.Lerp(MeteorColor, LeonidVisualUtils.MoonWhite, 0.4f),
                 LeonidStarlightShape.Mote,
                 speed: 4f,
                 scale: 0.75f,
                 hoverTime: 32,
-                lifetime: 160);
+                lifetime: 112);
 
-            if (FromStealthRain)
+            if (FromStealthRain && Main.rand.NextFloat() < LeftClickStarParticleScale)
             {
                 LeonidStarlight.Spawn(Projectile.Center, Vector2.Zero, LeonidVisualUtils.StarGold,
-                    LeonidStarlightShape.Halo, 0.9f, 12, 80, 12f, linksToSiblings: false);
+                    LeonidStarlightShape.Halo, 0.9f, 12, 56, 12f, linksToSiblings: false);
             }
 
             LeonidPolarStarBurst.Spawn(Projectile.Center, Projectile.oldVelocity, MeteorColor, FromStealthRain ? 1.15f : 0.9f);
@@ -583,8 +641,8 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             LeonidVisualUtils.SpawnBloomBurst(Projectile.Center, MeteorColor, 0.68f, 16);
             LeonidVisualUtils.SpawnCelestialPulse(Projectile.Center, direction, MeteorColor, 0.72f, 16);
 
-            LeonidStarlight.Spray(Projectile.Center, -direction, 5, MeteorColor, LeonidStarlightShape.Mote,
-                speed: 5.5f, spread: 0.9f, scale: 0.85f, hoverTime: 20, lifetime: 130, lanceSpeed: 15f);
+            LeonidStarlight.Spray(Projectile.Center, -direction, ReducedStarCount(5), MeteorColor, LeonidStarlightShape.Mote,
+                speed: 5.5f, spread: 0.9f, scale: 0.85f, hoverTime: 20, lifetime: 91, lanceSpeed: 15f);
 
             for (int i = 0; i < 7; i++)
             {
@@ -631,6 +689,63 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             }
 
             return target;
+        }
+
+        public override bool? CanHitNPC(NPC target)
+        {
+            if (!FromAccessoryRain)
+                return null;
+            NPC lockedTarget = GetAccessoryRainTarget();
+            return lockedTarget != null && target.whoAmI == lockedTarget.whoAmI;
+        }
+
+        private NPC GetAccessoryRainTarget()
+        {
+            int index = (int)Projectile.ai[0] - 1;
+            NPC target = index >= 0 && index < Main.maxNPCs ? Main.npc[index] : null;
+            if (target != null && target.CanBeChasedBy(Projectile))
+                return target;
+
+            // Keep the selected enemy until it is gone; then acquire the highest-priority
+            // nearby replacement from the player's position rather than the meteor's.
+            target = LeonidAccessoryMeteorTargeting.Find(Owner);
+            if (Projectile.owner == Main.myPlayer)
+            {
+                float nextIndex = target == null ? 0f : target.whoAmI + 1f;
+                if (Projectile.ai[0] != nextIndex)
+                {
+                    Projectile.ai[0] = nextIndex;
+                    Projectile.netUpdate = true;
+                }
+            }
+            return target;
+        }
+
+        private NPC GetRainTarget()
+        {
+            bool hasMarker = false;
+            float targetIndex = Projectile.ai[0];
+            foreach (Projectile marker in Main.ActiveProjectiles)
+            {
+                if (marker.owner == Projectile.owner && marker.identity + 1 == Projectile.ai[1]
+                    && marker.ModProjectile is LeonidStealthRainSpawner)
+                {
+                    targetIndex = marker.ai[1];
+                    hasMarker = true;
+                    break;
+                }
+            }
+
+            if (!hasMarker && LeonidStealthRainSpawner.GetTarget(targetIndex, Projectile) == null
+                && Projectile.owner == Main.myPlayer)
+                targetIndex = LeonidStealthRainSpawner.FindTarget(Projectile.Center, 900f, Projectile);
+
+            if (Projectile.owner == Main.myPlayer && Projectile.ai[0] != targetIndex)
+            {
+                Projectile.ai[0] = targetIndex;
+                Projectile.netUpdate = true;
+            }
+            return LeonidStealthRainSpawner.GetTarget(targetIndex, Projectile);
         }
     }
 }

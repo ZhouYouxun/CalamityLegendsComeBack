@@ -1450,7 +1450,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         private static Vector2 GetMouseWorld(Player player)
         {
             Vector2 mouseWorld = player.Calamity().mouseWorld;
-            return mouseWorld == Vector2.Zero ? Main.MouseWorld : mouseWorld;
+            return global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(player, mouseWorld == Vector2.Zero ? Main.MouseWorld : mouseWorld);
         }
     }
 

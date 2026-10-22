@@ -136,7 +136,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius
         {
             if (Main.myPlayer == Projectile.owner && !released)
             {
-                Vector2 targetDirection = (Owner.Calamity().mouseWorld - Owner.MountedCenter).SafeNormalize(Vector2.UnitX * Owner.direction);
+                Vector2 targetDirection = (global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(Owner, Owner.Calamity().mouseWorld) - Owner.MountedCenter).SafeNormalize(Vector2.UnitX * Owner.direction);
                 Projectile.velocity = Vector2.Lerp(Projectile.velocity, targetDirection, 0.42f).SafeNormalize(Vector2.UnitX * Owner.direction);
                 Projectile.netUpdate = true;
             }

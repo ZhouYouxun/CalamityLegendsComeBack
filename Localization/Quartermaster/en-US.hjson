@@ -1,0 +1,84 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		NPCs: {
+			Quartermaster: {
+				DisplayName: Quartermaster
+
+				Name: {
+					Erin: Erin
+					Vera: Vera
+					Mira: Mira
+					Nora: Nora
+					Lena: Lena
+					Celine: Celine
+				}
+
+				TownNPCMood: {
+					Content: ...
+					NoHome: ...
+					FarFromHome: ...
+					LoveSpace: ...
+					DislikeCrowded: ...
+					HateCrowded: ...
+					LikeBiome: ...
+					DislikeBiome: ...
+					LikeNPC: ...
+					DislikeNPC: ...
+					LikeNPC_Mechanic: ...
+					LikeNPC_Merchant: ...
+					DislikeNPC_Demolitionist: ...
+					DislikeNPC_Angler: ...
+					LikeNPC_Princess: ...
+					Princess_LovesNPC: ...
+				}
+
+				Census.SpawnCondition: Conditions unknown
+			}
+		}
+
+		Quartermaster: {
+			Bestiary: ...
+			Chat: ...
+			NextPage: Next page
+
+			Categories: {
+				BossSummons: Boss summons
+				Codebreaker: Codebreaker
+				VanillaOres: Vanilla ores and gems
+				CalamityOres: Calamity ores
+				CraftedBlocks: Crafted blocks
+				Materials: Crafting materials
+				Valuables: Valuables
+				Supplies: Supply bundles
+			}
+
+			Conditions: {
+				Goblins: Defeat the Goblin Army
+				GoblinsOrPreHardmodeBoss: Defeat the Goblin Army or any pre-Hardmode boss
+				VisitedUnderworld: Visit the Underworld at least once with this character
+				VisitedJungle: This character has visited the Jungle
+				VisitedAnySea: This character has visited an Ocean, the Sulphurous Sea, or the Abyss
+				VisitedCaverns: This character has visited the Cavern layer
+				VisitedSunkenSea: This character has visited the Sunken Sea
+				VisitedAstralInHardmode: This character has visited the Astral Infection during Hardmode
+				BeforeHardmode: Before Hardmode
+				BeforePlantera: Before defeating Plantera
+				BeforeYharon: Before defeating Yharon
+				BeforeMoonLord: Before defeating the Moon Lord
+				AllSentinels: Defeat Ceaseless Void, Storm Weaver, and Signus
+				TierTwoOre: Hardmode; defeat one mechanical boss if Calamity's progression rework is enabled
+				TierThreeOre: Hardmode; defeat two mechanical bosses if Calamity's progression rework is enabled
+				StarterBundle: Defeat the Eater of Worlds or Brain of Cthulhu and a Goblin Army
+				HardmodeBundle: Hardmode; defeat a mechanical boss and unlock Adamantite / Titanium
+				PlanteraBundle: Defeat Plantera and Calamitas Clone
+				Pirates: Defeat a Pirate Invasion in Hardmode
+				BothFinalBosses: Defeat both the Exo Mechs and Supreme Calamitas
+				Solar: Defeat the Solar Pillar
+				Vortex: Defeat the Vortex Pillar
+				Nebula: Defeat the Nebula Pillar
+				Stardust: Defeat the Stardust Pillar
+				Cultist: Defeat the Lunatic Cultist
+			}
+		}
+	}
+}

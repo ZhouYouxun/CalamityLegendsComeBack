@@ -363,7 +363,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                         head.velocity = Vector2.Zero;
                         SoundEngine.PlaySound(SoundID.NPCHit53, head.Center);
                         if (Main.netMode != NetmodeID.Server)
-                            Main.LocalPlayer.Calamity().GeneralScreenShakePower = 8f;
+                            global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(Main.LocalPlayer, npc.Center, 8f);
                     }
                 }
                 break;
@@ -385,7 +385,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             {
                 tideTimer = 0;
                 SoundEngine.PlaySound(TideRiseSound, target.Center);
-                target.Calamity().GeneralScreenShakePower = Math.Max(target.Calamity().GeneralScreenShakePower, 5f);
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(target, npc.Center, 5f);
                 if (Main.netMode != NetmodeID.MultiplayerClient)
                 {
                     float sign = Main.rand.NextBool() ? 1f : -1f;
@@ -740,7 +740,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     npc.velocity = Vector2.Zero;
                     SoundEngine.PlaySound(SoundID.Item14 with { Volume = 1.1f, Pitch = -0.1f }, npc.Center);
                     SoundEngine.PlaySound(SoundID.NPCDeath4, npc.Center);
-                    target.Calamity().GeneralScreenShakePower = 13f;
+                    global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(target, npc.Center, 13f);
                     ScourgeFx.Burst(npc.Center, 8f, 40, DustID.ToxicBubble);
                 }
 

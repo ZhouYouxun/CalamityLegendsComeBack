@@ -3,6 +3,9 @@ Mods: {
 		Items: {
 			Weapons: {
 				NewLegendBlossomFlux: {
+					ArrowConversionHint: 背包内右击此武器可切换转化箭
+					InnateFairies: "[c/9AFFC8:三只仙灵环绕玩家，在攻击时发射对应颜色的射线]"
+					InnateRainbow: "[c/FFAAFF:突击战术右键蓄力时积攒蝴蝶，松手后一起冲击，造成该次右键箭25%的伤害]"
 					DisplayName: 繁茂丛生-叶流
 					Tooltip: "[GFB]"
 					BF_Intro:
@@ -18,28 +21,27 @@ Mods: {
 					PresetLeft0:
 						'''
 						[c/8BE89A:左键 - 突击：将木箭转化为快速叶枝箭。]
-						[c/8BE89A:直线穿透射击，适合持续压制。]
+						[c/8BE89A:直线穿透射击。]
 						'''
 					PresetLeft1:
 						'''
-						[c/70E0D0:左键 - 复苏：发射双链交错的叶弹。]
-						[c/70E0D0:命中可治疗玩家，并准备绿叶防护。]
+						[c/8BE89A:左键 - 复苏：发射双链交错的叶弹。]
+						[c/8BE89A:命中可治疗玩家，并准备绿叶防护。]
 						'''
 					PresetLeft2:
 						'''
-						[c/66CCFF:左键 - 侦察：发射追踪侦察箭齐射。]
-						[c/66CCFF:侦察箭会重读目标，并在飞行中加速。]
+						[c/8BE89A:左键 - 侦察：发射追踪侦察箭齐射。]
+						[c/8BE89A:侦察箭会重读目标，并在飞行中加速。]
 						'''
 					PresetLeft3:
 						'''
-						[c/FFA07A:左键 - 歼灭：将木箭转化为坠落箭雨。]
-						[c/FFA07A:转化箭命中爆炸，其他箭矢正常发射。]
+						[c/8BE89A:左键 - 歼灭：将木箭转化为坠落箭雨。]
+						[c/8BE89A:转化箭命中爆炸，其他箭矢正常发射。]
 						'''
 					PresetLeft4:
 						'''
-						[c/DDA0FF:左键 - 侵染：施加 4 秒凋萎；重复命中可叠加持续时间。]
-						[c/DDA0FF:凋萎会削弱防御并持续造成伤害。]
-								
+						[c/8BE89A:左键 - 侵染：施加 4 秒凋萎；重复命中可叠加持续时间。]
+						[c/8BE89A:凋萎会削弱防御并持续造成伤害。]
 						'''
 					PresetRight0:
 						'''
@@ -49,8 +51,7 @@ Mods: {
 					PresetRight1:
 						'''
 						[c/FFB347:右键 - 复苏：按住凝聚大范围复苏闪光。]
-						[c/FFB347:松手释放复苏光粒，治疗玩家并转化为无限持续的复苏矩阵护盾。]
-						[c/FFB347:护盾享受玩家自身防御，被攻击时优先抵扣；重复释放可刷新护盾值，无法叠加。]
+						[c/FFB347:松手释放复苏光粒，治疗玩家并生成无限持续的护盾；护盾享受自身防御、优先抵扣伤害，重复释放刷新护盾值但不叠加。]
 						'''
 					PresetRight2:
 						'''
@@ -66,7 +67,6 @@ Mods: {
 						'''
 						[c/FFB347:右键 - 侵染：按住发射大型孢子云。]
 						[c/FFB347:孢子云会施加 60 秒凋亡，并强化叶流命中。]
-								
 						'''
 					PresetPassive0:
 						'''
@@ -98,80 +98,24 @@ Mods: {
 						[c/9AEF9E:被动【终末防线】手持时抵消一次致命伤害。]
 						[c/9AEF9E:触发后立即恢复 100 点生命，随后开始充能。当前：{0}]
 						'''
-					PassiveStateReady: "[c/7BFFB7:已就绪]"
-					PassiveStateActive: "[c/FF9B8B:终末防线中]"
-					PassiveStateCooldown: "[c/F0D070:充能 {0}/{1} 秒]"
-					PassiveStateLocked: "[c/9A9A9A:困难模式后解锁]"
+					PassiveStateReady: 已就绪
+					PassiveStateActive: 终末防线中
+					PassiveStateCooldown: 充能 {0}/{1} 秒
+					PassiveStateLocked: 困难模式后解锁
 					BF_EXHint:
 						'''
-						[c/8EF5A8:大招【森绿能量】手持开火与右键攻击会积蓄森绿能量。]
-						[c/8EF5A8:充满后按下] [[c/8EF5A8:{0}]] [c/8EF5A8:释放森绿箭幕。]
+						[c/8EF5A8:大招【森绿能量】：按下【{0}】即可进行短暂蓄力]
+						[c/8EF5A8:随后对最近锁定的敌人释放大量森绿弹幕]
 						'''
-					BF_EXDisabledHint: "[c/9A9A9A:大招【森绿能量】当前大招未解锁。]"
-					BF_FormWheelHint: "[c/F7D87C:按住] [[c/F7D87C:{0}]] [c/F7D87C:打开战术轮盘，松手切换。]"
+					BF_EXDisabledHint:
+						'''
+						[c/9A9A9A:大招【森绿能量】尚未解锁。]
+						[c/9A9A9A:击败血肉之墙进入困难模式后自动解锁。]
+						'''
+					BF_FormWheelHint: "[c/F7D87C:按住【{0}】打开战术轮盘，松手切换。]"
+					LegendaryText: 愿所有的正义都能得到伸张
 					// BF_Final: "[c/9FD8A2:The bowstring hums, and the forest answers.]"
-					LegendaryHint: "[c/BABABA:按住 Shift 阅读完整传奇记录]"
-					LegendaryText:
-						'''
-						[c/66E6FF:我曾以为，只要弓弦足够迅疾，森林便能将一切来犯者拒之门外。]
-						[c/66E6FF:可未经引导的万千枝叶，不过是随风散落的锋芒。真正的守护，不应只有一种回答。]
-						[c/66E6FF:花苞，收拢这片林冠中流散的力量，让每一次松弦都承载明确的意志。]
-						[c/66E6FF:以突击贯穿前路，以复苏挽留生命，以侦察寻出最危险的敌人，以歼灭召来天穹箭雨，以侵染让已经种下的苦痛久久不散。]
-						[c/66E6FF:寻常开弓时，让五条枝流各司其职；弓弦蓄满之时，则唤醒它们更深的权能。]
-						[c/66E6FF:若持弓者已经行至死亡之前，便张开终末防线，替他拦下最后一步；待森绿能量充盈，便使整片林冠化作箭幕，回应他的召唤。]
-						[c/66E6FF:从今往后，无论来犯的寻神者居于何等位置，都不得越过森林划下的界限。]
-						[c/66E6FF:守住这片仍被人铭记的土地，直到最后一缕日光从枝梢消逝。]
-						'''
 				}
-			}
-
-			BFSpareQuiver: {
-				DisplayName: 备用箭袋
-				Tooltip:
-					'''
-					远程伤害 +8%，防御力 +4
-					所有叶流右键蓄力时间缩短 10%
-					复苏：右键治疗闪光 +1。
-					侦察：右键标记时间小幅提高。
-					'''
-			}
-
-			BFTunedQuiver: {
-				DisplayName: 同调箭袋
-				Tooltip:
-					'''
-					远程伤害 +11%，远程暴击率 +6%
-					所有叶流右键蓄力时间缩短 20%
-					复苏：右键治疗闪光 +2。
-					侦察：右键标记时间提高。
-					歼灭：右键爆炸范围提高。
-					'''
-			}
-
-			BFResonatingQuiver: {
-				DisplayName: 共鸣箭袋
-				Tooltip:
-					'''
-					远程伤害 +14%，远程护甲穿透 +12
-					所有叶流右键蓄力时间缩短 35%
-					复苏：右键治疗闪光 +3。
-					侦察：右键标记时间大幅提高。
-					歼灭：右键弹幕伤害提高。
-					侵染：解锁第一批高级 Debuff。
-					'''
-			}
-
-			BFDominationQuiver: {
-				DisplayName: 主宰箭袋
-				Tooltip:
-					'''
-					远程伤害 +18%，远程暴击率 +8%
-					所有叶流右键蓄力时间缩短 50%
-					复苏：右键治疗闪光 +4。
-					侦察：右键标记时间达到最高。
-					歼灭：右键弹幕伤害与范围提高。
-					侵染：解锁全部高级 Debuff。
-					'''
 			}
 
 			PastLingering: {
@@ -358,6 +302,11 @@ Mods: {
 			BFPlagueDeathBuff: {
 				DisplayName: 凋亡
 				Description: 受到的伤害增加 10%，每秒失去 140 点生命；每种疫病系减益额外失去 40 点生命。
+			}
+
+			GaelGreatswordBlackBlood: {
+				// DisplayName: Gael Greatsword Black Blood
+				// Description: Mods.CalamityLegendsComeBack.Buffs.GaelGreatswordBlackBlood.Description
 			}
 		}
 	}

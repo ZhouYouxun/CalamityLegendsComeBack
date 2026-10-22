@@ -24,9 +24,6 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.Barrier
         private float shieldHitPoints;
         private bool spongeShieldDeferred;
 
-        public bool HoldingSHPC =>
-            Player.HeldItem?.ModItem is NewLegendSHPC;
-
         public int ShieldMaxHitPoints
         {
             get
@@ -49,7 +46,6 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.Barrier
 
         public bool ShieldActive =>
             BarrierEquipped &&
-            HoldingSHPC &&
             shieldHitPoints > 0f &&
             !Player.dead;
 
@@ -112,7 +108,7 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.Barrier
             if (Player.ownedProjectileCounts[ModContent.ProjectileType<BarrierShieldVisual>()] <= 0)
             {
                 Projectile.NewProjectile(
-                    Player.GetSource_Accessory(Player.HeldItem),
+                    Player.GetSource_FromThis(),
                     Player.Center,
                     Vector2.Zero,
                     ModContent.ProjectileType<BarrierShieldVisual>(),
@@ -124,7 +120,7 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.Barrier
 
         public override void ModifyHurt(ref Player.HurtModifiers modifiers)
         {
-            if (!BarrierEquipped || !HoldingSHPC)
+            if (!BarrierEquipped)
                 return;
 
             CalamityPlayer calamityPlayer = Player.Calamity();
@@ -205,7 +201,7 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.Barrier
                 {
                     calamityPlayer.SpongeShieldDurability = 0;
                     SoundEngine.PlaySound(TheSponge.BreakSound, Player.Center);
-                    calamityPlayer.GeneralScreenShakePower += 2f;
+                    global::CalamityLegendsComeBack.Systems.ModScreenShake.Add(Player, Player.Center, 2f);
                 }
 
                 if (fullyAbsorbedByShield)

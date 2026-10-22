@@ -229,7 +229,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
             if (charged)
             {
                 Owner.velocity -= aim * (4.4f + BowPlayer.SequenceLength * 0.5f);
-                Owner.SetScreenshake(5.5f);
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Owner, Projectile.Center, 5.5f);
                 SoundEngine.PlaySound(SoundID.Item92 with { Volume = 0.95f, Pitch = -0.18f }, Projectile.Center);
                 SoundEngine.PlaySound(SoundID.Item72 with { Volume = 0.65f, Pitch = 0.05f }, Projectile.Center);
             }
@@ -425,6 +425,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.SHPBow
             Vector2 mouseWorld = Owner.Calamity().mouseWorld;
             if (mouseWorld == Vector2.Zero)
                 mouseWorld = Main.MouseWorld;
+            mouseWorld = global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(Owner, mouseWorld);
 
             return mouseWorld;
         }

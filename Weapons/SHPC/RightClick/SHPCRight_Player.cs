@@ -89,8 +89,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         public bool CanSustainMaximumHeat()
         {
-            return HeatMaxStage >= 5 && HeatStage >= 5;
+            return Player.GetModPlayer<HeatModulePlayer>().HeatModuleEquipped || BalanceSHPC.LaserNeverOverheats || (HeatMaxStage >= 5 && HeatStage >= 5);
         }
+
+        // HeatStage counts completed levels; the heat UI is full on entering the maximum.
+        public bool IsMaximumHeatFilled() => HeatMaxStage > 0 && HeatStage >= HeatMaxStage;
 
         public void StartForcedShutdownCooling(int frames, int maxHeatStage)
         {

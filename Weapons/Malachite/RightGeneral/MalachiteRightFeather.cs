@@ -21,7 +21,8 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
     internal enum MalachiteRightFeatherState
     {
         Stored,
-        Released
+        Released,
+        Fading
     }
 
     public sealed class MalachiteRightFeather : ModProjectile, ILocalizedModType
@@ -68,12 +69,50 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         public override bool ShouldUpdatePosition() => State == MalachiteRightFeatherState.Released && Timer > 0f;
 
         public override bool? CanDamage() => State == MalachiteRightFeatherState.Released && Timer > 0f;
+
+        public static void FadeAllRightFeathers(Player player)
+        {
+            if (player.whoAmI != Main.myPlayer)
+                return;
+
+            int type = ModContent.ProjectileType<MalachiteRightFeather>();
+            foreach (Projectile feather in Main.ActiveProjectiles)
+            {
+                if (feather.owner != player.whoAmI || feather.type != type ||
+                    (MalachiteRightFeatherState)(int)feather.ai[0] == MalachiteRightFeatherState.Fading)
+                    continue;
+
+                // Remove eligibility for release immediately, before generation/auto-fire.
+                feather.ai[0] = (float)MalachiteRightFeatherState.Fading;
+                feather.friendly = false;
+                feather.hostile = false;
+                feather.damage = feather.originalDamage = 0;
+                feather.velocity = Vector2.Zero;
+                feather.extraUpdates = 0;
+                feather.tileCollide = false;
+                feather.timeLeft = 30;
+                feather.netUpdate = true;
+            }
+        }
+
         public override void AI()
         {
             Player owner = Main.player[Projectile.owner];
             if (!owner.active || owner.dead)
             {
                 Projectile.Kill();
+                return;
+            }
+
+            if (State == MalachiteRightFeatherState.Fading)
+            {
+                Projectile.friendly = false;
+                Projectile.damage = 0;
+                Projectile.velocity = Vector2.Zero;
+                Projectile.extraUpdates = 0;
+                Projectile.alpha = Math.Min(255, Projectile.alpha + 9);
+                if (Projectile.alpha >= 255)
+                    Projectile.Kill();
                 return;
             }
 

@@ -20,8 +20,7 @@ namespace CalamityLegendsComeBack.LegendaryTooltipEffects
         {
             if (item.type != ModContent.ItemType<SeasSearingItem>() ||
                 line.Mod != Mod.Name ||
-                line.Name != TooltipLineName ||
-                !Main.keyState.PressingShift())
+                line.Name != TooltipLineName)
             {
                 return true;
             }

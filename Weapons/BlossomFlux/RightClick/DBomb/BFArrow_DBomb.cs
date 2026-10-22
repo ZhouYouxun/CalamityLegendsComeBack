@@ -495,7 +495,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.RightClick
             BFArrowCommon.EmitPresetBurst(Projectile, BlossomFluxChloroplastPresetType.Chlo_DBomb, 18, 1.35f, 5.4f, 1f, 1.55f);
             SpawnBombardImpactFX(center, MathHelper.Clamp(explosionSize / 180f, 1.35f, 2.8f));
             SpawnBombardAuraFX(center, 1.35f);
-            Main.player[Projectile.owner].SetScreenshake(MathHelper.Clamp(explosionSize / 24f, 8f, 22f));
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Main.player[Projectile.owner], Projectile.Center, MathHelper.Clamp(explosionSize / 24f, 8f, 22f));
             SoundEngine.PlaySound(BlossomFluxSounds.RightBombardImpact1, center);
             SoundEngine.PlaySound(BlossomFluxSounds.RightBombardImpact2, center);
         }

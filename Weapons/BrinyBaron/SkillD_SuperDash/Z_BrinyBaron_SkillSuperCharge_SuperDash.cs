@@ -213,6 +213,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 
             Projectile.timeLeft = 2;
 
+            BBSuperDashInvulnerabilityPlayer.MaintainImmunity(owner);
+
             if (!initialized)
                 Initialize(owner);
 
@@ -765,7 +767,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                 28f * distanceFactor);
 
             if (Main.myPlayer == Projectile.owner)
-                Owner.GetModPlayer<BBSuperDashCameraPlayer>().AddImpactShake(28f);
+                Owner.GetModPlayer<BBSuperDashCameraPlayer>().AddImpactShake(target.Center, 28f);
 
             SoundEngine.PlaySound(SoundID.Item84 with
             {
@@ -881,7 +883,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
                 shakePower * distanceFactor);
 
             if (Main.myPlayer == Projectile.owner)
-                Owner.GetModPlayer<BBSuperDashCameraPlayer>().AddImpactShake(shakePower);
+                Owner.GetModPlayer<BBSuperDashCameraPlayer>().AddImpactShake(target.Center, shakePower);
 
             SoundEngine.PlaySound(SoundID.Item84 with
             {
@@ -1023,7 +1025,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.SkillD_SuperDash
 
             // Charging should communicate weight without obscuring target tracking.
             float shakePower = MathHelper.Lerp(0.6f, 5f, chargeCompletion);
-            owner.Calamity().GeneralScreenShakePower = Math.Max(owner.Calamity().GeneralScreenShakePower, shakePower);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(owner, Projectile.Center, shakePower);
         }
 
         private void RotateHeldDirectionToward(Vector2 targetDirection, float maxTurn)

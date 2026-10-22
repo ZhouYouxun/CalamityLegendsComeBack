@@ -33,6 +33,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             }
 
             rightChargeActive = true;
+            rainbowChargeTimer = 0;
             reloadTimer = ReloadFrames;
             chargeTimer = 0;
             breakthroughLoadedArrows = 0;
@@ -54,6 +55,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             SpawnPlagueSporeOrb();
         }
 
+        private int rainbowChargeTimer;
+
         private void UpdateRightChargeState(BFRightUIPlayer rightUIPlayer)
         {
             if (!rightChargeActive)
@@ -61,12 +64,18 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
             if (rightUIPlayer.LongHoldReleasedThisFrame)
             {
+                if (BreakthroughChargeActive)
+                    ReleaseRainbowChargeButterflies();
                 if (ChargeReady)
                     HandleRelease();
 
                 CancelRightCharge();
                 return;
             }
+
+            if (BreakthroughChargeActive && BFAccessories.RainbowSpiritDanceEquipped && Projectile.owner == Main.myPlayer &&
+                ++rainbowChargeTimer % 15 == 0)
+                SpawnRainbowChargeButterfly();
 
             UpdateBombardReticle();
             UpdateRecoveryChargeBuff();
@@ -314,7 +323,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         {
             int baseDamage = damageBalance.GetRightClickBaseDamage(CurrentPreset);
             DamageClass damageType = Owner.HeldItem?.DamageType ?? DamageClass.Ranged;
-            return (int)Owner.GetTotalDamage(damageType).ApplyTo(baseDamage);
+            StatModifier damage = Owner.GetTotalDamage(damageType);
+            damage += BalanceBlossomFlux.InnateQuiverDamageBonus;
+            return (int)damage.ApplyTo(baseDamage);
         }
 
         private void FireBreakthroughSpecialArrows()
@@ -322,8 +333,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             BFBreakthroughRightStats stats = BFBreakthroughRightBalance.GetStats();
             int arrowCount = Math.Max(1, breakthroughLoadedArrows);
             float speed = 21.6f * 1.22f * stats.ProjectileSpeedMultiplier * GetAccessoryArrowSpeedMultiplier(BlossomFluxChloroplastPresetType.Chlo_ABreak) * 0.8f;
-            int damage = (int)(GetCurrentRightClickDamage() * RightClickBaseDamageMultiplier * 1.35f * 1.12f);
-            damage = (int)(damage * (1f + arrowCount * stats.DamagePerChargeStack));
+            int damage = GetBreakthroughShotDamage();
             float knockback = Projectile.knockBack * 1.15f;
 
             breakthroughQueuedShotCount = arrowCount;
@@ -335,6 +345,41 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             breakthroughQueuedSpeed = speed;
             breakthroughQueuedKnockback = knockback;
             breakthroughQueuedNoFalloff = 1f;
+        }
+
+        private int GetBreakthroughShotDamage()
+        {
+            var stats = BFBreakthroughRightBalance.GetStats();
+            int damage = (int)(GetCurrentRightClickDamage() * RightClickBaseDamageMultiplier * 1.35f * 1.12f);
+            return (int)(damage * (1f + Math.Max(1, breakthroughLoadedArrows) * stats.DamagePerChargeStack));
+        }
+
+        private void SpawnRainbowChargeButterfly()
+        {
+            int type = ModContent.ProjectileType<global::CalamityLegendsComeBack.Accssory.BF.FairyDanceSeries.RainbowSpiritLacewing>();
+            int count = 0;
+            foreach (Projectile butterfly in Main.ActiveProjectiles)
+                if (butterfly.owner == Projectile.owner && butterfly.type == type && butterfly.ai[1] == 0f)
+                    count++;
+            if (count >= 7)
+                return;
+            Projectile.NewProjectile(Projectile.GetSource_FromThis(), Owner.Center, Vector2.Zero,
+                type, 0, 0f, Projectile.owner, count, 0f, 1f);
+        }
+
+        private void ReleaseRainbowChargeButterflies()
+        {
+            if (Projectile.owner != Main.myPlayer)
+                return;
+            int damage = Math.Max(1, (int)(GetBreakthroughShotDamage() * 0.25f));
+            foreach (Projectile butterfly in Main.ActiveProjectiles)
+                if (butterfly.owner == Projectile.owner && butterfly.ModProjectile is
+                    global::CalamityLegendsComeBack.Accssory.BF.FairyDanceSeries.RainbowSpiritLacewing lacewing &&
+                    butterfly.ai[1] == 0f)
+                {
+                    butterfly.ai[2] = 1f;
+                    lacewing.ReleaseChargedTowards(GetCurrentMouseWorld(), damage);
+                }
         }
 
         private void UpdateBreakthroughQueuedShots()

@@ -9,7 +9,10 @@ Mods: {
 			}
 		}
 
-		Projectiles.A_Dev.PlayerLockerPanel.DisplayName: Player Inventory Looter Panel
+		Projectiles: {
+			A_Dev.PlayerLockerPanel.DisplayName: Player Inventory Looter Panel
+			BFFairyTrackerLaser.DisplayName: B F Fairy Tracker Laser
+		}
 
 		TheSpecialText: {
 			PlayerLockerTitle: Looting {0}'s inventory

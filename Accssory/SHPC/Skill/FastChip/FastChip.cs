@@ -9,6 +9,7 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.FastChip
 {
+    [Autoload(false)]
     public class FastChip : ModItem
     {
         public override void SetDefaults()

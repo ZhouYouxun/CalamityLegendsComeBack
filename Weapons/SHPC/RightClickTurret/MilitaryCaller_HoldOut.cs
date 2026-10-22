@@ -122,7 +122,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickTurret
 
             MilitaryTurretStats stats = MilitaryTurretUtility.GetStats(kind);
             SoundEngine.PlaySound(SoundID.Item92 with { Volume = 0.56f, Pitch = 0.24f }, GunTipPosition);
-            Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, 2.8f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Owner, Projectile.Center, 2.8f);
             OffsetLengthFromArm -= 18f;
             muzzleFlashTimer = 13;
             SpawnMuzzleBurst(direction, stats.ThemeColor);

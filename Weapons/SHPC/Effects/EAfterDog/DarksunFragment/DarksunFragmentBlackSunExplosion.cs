@@ -42,7 +42,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.EAfterDog.DarksunFragment
                 return;
 
             Player owner = Main.player[Projectile.owner];
-            owner.SetScreenshake(10f + Level * 1.5f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(owner, Projectile.Center, 10f + Level * 1.5f);
             SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/DeadSunExplosion")
             {
                 Volume = 1f,

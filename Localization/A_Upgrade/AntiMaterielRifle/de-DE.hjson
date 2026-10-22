@@ -3,6 +3,7 @@ Mods: {
 		Items: {
 			Weapons: {
 				NewLegendAntiMaterielRifle: {
+					EquipEffect: Ausrüstungseffekt: Ermöglicht Fernkampfwaffen schurkenartige Tarnangriffe
 					// DisplayName: Little Legend - Anti-materiel Rifle
 					// Tooltip: "[GFB]"
 					// LeftClick: Fires highly destructive .408 anti-materiel rounds
@@ -26,7 +27,7 @@ Mods: {
 						Draedon Onyx Explosive Mag! Marker rounds stick to targets or tiles
 						Detonator rounds trigger 200% weapon damage Onyx explosions
 						''' */
-					// LegendaryText: Atrocity without remainder.
+					// LegendaryText: Even the most intricate defenses can be shattered.
 				}
 			}
 		}

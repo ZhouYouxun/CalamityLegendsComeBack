@@ -3,31 +3,31 @@ Mods: {
 		Items: {
 			Weapons: {
 				StructureExtractor: {
-					DisplayName: Извлекатель структур
-					Tooltip: Удерживайте этот предмет, выделите область перетаскиванием левой кнопкой мыши и подтвердите экспорт файла структуры Calamity .csch.
+					// DisplayName: Structure Extractor
+					// Tooltip: Hold this item, drag with left click to select an area, then confirm to export a Calamity .csch structure file.
 				}
 			}
 		}
 
-		Projectiles.A_Dev.StructureExtractorOverlay.DisplayName: Матрица извлечения структур
+		// Projectiles.A_Dev.StructureExtractorOverlay.DisplayName: Structure Extraction Matrix
 
 		TheSpecialText: {
-			StructureExtractorSelectionLabel: "{0}x{1} | начало {2}, {3} | {4} блоков"
-			StructureExtractorConfirmTitle: Подтвердить экспорт структуры
-			StructureExtractorConfirmBody:
+			// StructureExtractorSelectionLabel: "{0}x{1} | origin {2}, {3} | {4} tiles"
+			// StructureExtractorConfirmTitle: Confirm Structure Export
+			/* StructureExtractorConfirmBody:
 				'''
-				Верхний левый угол: {0}, {1}
-				Размер: {2} x {3}
-				Всего блоков: {4}
-				Папка сохранения: {5}
-				'''
-			StructureExtractorCancel: Отмена
-			StructureExtractorConfirm: Экспортировать
-			StructureExtractorCanceled: Извлечение структуры отменено.
-			StructureExtractorExportSaved: Файл структуры сохранён в: {0}
-			StructureExtractorExportDetails: Выделение: верхний левый угол {0}, {1}; размер {2}x{3}; {4} блоков.
-			StructureExtractorExportFailed: Не удалось экспортировать структуру: {0}
-			StructureExtractorExportError: Ошибка экспорта структуры: {0}
+				Top-left: {0}, {1}
+				Size: {2} x {3}
+				Total tiles: {4}
+				Save folder: {5}
+				''' */
+			// StructureExtractorCancel: Cancel
+			// StructureExtractorConfirm: Export
+			// StructureExtractorCanceled: Structure extraction cancelled.
+			// StructureExtractorExportSaved: Structure file saved to: {0}
+			// StructureExtractorExportDetails: Selection: top-left {0}, {1}; size {2}x{3}; {4} tiles.
+			// StructureExtractorExportFailed: Structure export failed: {0}
+			// StructureExtractorExportError: Structure export error: {0}
 		}
 	}
 }

@@ -3,16 +3,16 @@ Mods: {
 		Items: {
 			Weapons: {
 				ParticleLabDebugItem: {
-					DisplayName: Laboratorio particellare
-					Tooltip: Il clic destro apre la matrice delle particelle. Il clic sinistro attiva l'effetto particellare singolo selezionato.
+					// DisplayName: Particle Lab
+					// Tooltip: Right click opens the particle matrix. Left click releases the selected single particle effect.
 				}
 			}
 		}
 
 		Projectiles: {
 			A_Dev: {
-				ParticleLabProjectile.DisplayName: Proiettile di prova del laboratorio particellare
-				ParticleLabPanel.DisplayName: Matrice delle particelle
+				// ParticleLabProjectile.DisplayName: Particle Lab Test Projectile
+				// ParticleLabPanel.DisplayName: Particle Lab Matrix
 			}
 		}
 	}

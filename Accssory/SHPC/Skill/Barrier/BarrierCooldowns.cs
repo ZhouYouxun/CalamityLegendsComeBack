@@ -22,7 +22,6 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.Barrier
         public override bool PersistsThroughDeath => false;
         public override bool ShouldDisplay =>
             BarrierPlayer.BarrierEquipped &&
-            BarrierPlayer.HoldingSHPC &&
             BarrierPlayer.ShieldCurrentHitPoints > 0;
 
         public override LocalizedText DisplayName =>
@@ -101,7 +100,6 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.Barrier
         public override bool PersistsThroughDeath => false;
         public override bool ShouldDisplay =>
             BarrierPlayer.BarrierEquipped &&
-            BarrierPlayer.HoldingSHPC &&
             BarrierPlayer.RechargeDelayRemainingFrames > 0;
 
         public override LocalizedText DisplayName =>

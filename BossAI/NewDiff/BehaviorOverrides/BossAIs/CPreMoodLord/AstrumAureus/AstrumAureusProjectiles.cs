@@ -488,7 +488,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 {
                     SoundEngine.PlaySound(SoundID.Item70 with { Volume = 0.8f, Pitch = -0.2f }, Projectile.Center);
                     Player p = Main.player[Player.FindClosest(Projectile.Center, 1, 1)];
-                    if (p.active) p.Calamity().GeneralScreenShakePower = 7f;
+                    if (p.active) global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(p, Projectile.Center, 7f);
                     AureusFx.Burst(Projectile.Center, 6f, 18);
                 }
                 Projectile.velocity.Y = MathHelper.Lerp(Projectile.velocity.Y, -22f, 0.3f);
@@ -549,7 +549,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             {
                 SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.8f }, Projectile.Center);
                 Player p = Main.player[Player.FindClosest(Projectile.Center, 1, 1)];
-                if (p.active) p.Calamity().GeneralScreenShakePower = 8f;
+                if (p.active) global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(p, Projectile.Center, 8f);
             }
             if (Projectile.localAI[0] >= ChargeTime && Main.netMode != NetmodeID.MultiplayerClient && Main.rand.NextBool(3))
             {

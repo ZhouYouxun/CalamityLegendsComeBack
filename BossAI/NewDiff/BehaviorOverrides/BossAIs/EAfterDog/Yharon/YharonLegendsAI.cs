@@ -251,7 +251,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             {
                 SoundEngine.PlaySound(RoarSound, npc.Center);
                 SpawnExplosionDust(npc.Center, 80, 15f, DustID.SolarFlare);
-                SetLocalScreenShake(18f);
+                SetLocalScreenShake(npc.Center, 18f);
                 npc.netUpdate = true;
             }
 
@@ -632,7 +632,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 // Camera shake during laser fire
                 if (Main.netMode != NetmodeID.Server)
                 {
-                    SetLocalScreenShake(3f);
+                    SetLocalScreenShake(npc.Center, 3f);
                 }
             }
 
@@ -977,10 +977,10 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             solarArenaHurtCooldown = 0;
         }
 
-        private static void SetLocalScreenShake(float power)
+        private static void SetLocalScreenShake(Vector2 source, float power)
         {
             if (Main.netMode != NetmodeID.Server && Main.LocalPlayer.active)
-                Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(Main.LocalPlayer.Calamity().GeneralScreenShakePower, power);
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Main.LocalPlayer, source, power);
         }
 
         // A fight-wide visual bed gives every attack the same solar identity. It intentionally stays
@@ -1084,7 +1084,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 if ((int)timer % 12 == 0)
                 {
                     SoundEngine.PlaySound(SoundID.Item74 with { Volume = 0.72f, Pitch = -0.45f }, npc.Center);
-                    SetLocalScreenShake(5f);
+                    SetLocalScreenShake(npc.Center, 5f);
                 }
             }
             else
@@ -1093,7 +1093,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 {
                     SoundEngine.PlaySound(SoundID.NPCDeath10 with { Volume = 1.25f, Pitch = -0.15f }, npc.Center);
                     SpawnExplosionDust(npc.Center, 64, 18f, DustID.SolarFlare);
-                    SetLocalScreenShake(18f);
+                    SetLocalScreenShake(npc.Center, 18f);
                 }
 
                 if (timer >= 145f)

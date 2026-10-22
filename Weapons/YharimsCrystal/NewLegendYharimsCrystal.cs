@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using CalamityLegendsComeBack.Accssory.YC;
 using CalamityLegendsComeBack.Weapons.YharimsCrystal.EXSkill;
 using CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral;
@@ -181,15 +182,9 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
 
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
-            string bodyInfo = this.GetLocalizedValue("TooltipBody");
-            bool shiftPressed = Main.keyState.PressingShift();
-            if (shiftPressed)
-                tooltips.RemoveAll(t => t.Text == "[GFB]");
-            else
-                tooltips.FindAndReplace("[GFB]", bodyInfo);
-
-            string legendarySection = shiftPressed ? this.GetLocalizedValue("LegendaryText") : this.GetLocalizedValue("LegendaryHint");
-            tooltips.Add(new TooltipLine(Mod, "YharimsCrystalGoldenTechLegendaryText", legendarySection));
+            string ultimateKeyText = KeybindSystem.LegendarySkill.GetAssignedKeys().FirstOrDefault() ?? "Unbound";
+            string bodyInfo = string.Format(this.GetLocalizedValue("TooltipBody"), ultimateKeyText);
+            tooltips.FindAndReplace("[GFB]", bodyInfo);
         }
 
         internal int GetScaledDamage(Player player, int baseDamage)
@@ -210,7 +205,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal
         internal static Vector2 GetMouseWorld(Player player)
         {
             Vector2 mouseWorld = player.Calamity().mouseWorld;
-            return mouseWorld == Vector2.Zero ? Main.MouseWorld : mouseWorld;
+            return global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(player, mouseWorld == Vector2.Zero ? Main.MouseWorld : mouseWorld);
         }
 
         private static bool HasActivePrimaryAttack(Player player)

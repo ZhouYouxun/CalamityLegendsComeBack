@@ -108,6 +108,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         private BFAccessoryPlayer BFAccessories => Owner.GetModPlayer<BFAccessoryPlayer>();
         private bool PastLingeringAssaultActive => CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_ABreak && BFAccessories.PastLingeringEquipped;
         private bool BreakthroughChargeActive => rightChargeActive && CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_ABreak;
+        internal bool IsChargingBreakthrough => BreakthroughChargeActive;
         private int BreakthroughMaxLoadedArrows => Math.Max(1, BFBalanceTable.Get(BFStat.Breakthrough_Right_MaxArrows));
         private int BreakthroughFramesPerArrow => GetScaledRightChargeFrames(BFBreakthroughRightBalance.GetStats().FramesPerArrow);
         private float BreakthroughCurrentArrowCompletion => MathHelper.Clamp(chargeTimer / (float)BreakthroughFramesPerArrow, 0f, 1f);
@@ -290,6 +291,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             }
 
             Projectile.damage = Owner.GetWeaponDamage(Owner.HeldItem);
+            Projectile.CritChance = (int)Owner.GetWeaponCrit(Owner.HeldItem);
+            Projectile.ArmorPenetration = (int)Owner.GetTotalArmorPenetration(Owner.HeldItem.DamageType) + Owner.HeldItem.ArmorPenetration;
             Projectile.knockBack = Owner.HeldItem.knockBack;
 
             UpdateOutlinePulseTimers();
@@ -531,6 +534,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             Vector2 aimTarget = Owner.Calamity().mouseWorld;
             if (aimTarget == Vector2.Zero)
                 aimTarget = Main.MouseWorld;
+            aimTarget = global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(Owner, aimTarget);
 
             return aimTarget;
         }

@@ -622,7 +622,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
         public static Vector2 GetAimDirection(Player player, Vector2 fallback)
         {
-            Vector2 mouse = player.Calamity().mouseWorld;
+            Vector2 mouse = global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(player, player.Calamity().mouseWorld);
             Vector2 direction = mouse - player.MountedCenter;
             if (direction.LengthSquared() < 0.001f)
                 direction = fallback;

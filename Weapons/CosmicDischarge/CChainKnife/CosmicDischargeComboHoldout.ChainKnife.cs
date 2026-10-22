@@ -130,7 +130,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             if (Time <= arcWindup)
                 AimAngle = CosmicDischargeCommon.GetAimDirection(Owner, AimDirection).ToRotation();
 
-            Vector2 desired = Owner.Calamity().mouseWorld - Owner.MountedCenter;
+            Vector2 desired = global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(Owner, Owner.Calamity().mouseWorld) - Owner.MountedCenter;
             if (desired.LengthSquared() < 0.001f)
                 desired = AimDirection;
             Vector2 direction = desired.SafeNormalize(AimDirection);

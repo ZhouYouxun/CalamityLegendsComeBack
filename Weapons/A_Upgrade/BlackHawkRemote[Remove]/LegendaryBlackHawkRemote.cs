@@ -18,6 +18,9 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.BlackHawkRemote
 {
     public sealed class LegendaryBlackHawkRemote : ModItem, ILocalizedModType
     {
+        // Retire only the item; retain its projectiles, loadout UI, and support logic.
+        public override bool IsLoadingEnabled(Mod mod) => false;
+
         internal const int BaseDamage = 25;
 
         private sbyte selectedLoadout = (sbyte)BlackHawkLoadout.Auto;

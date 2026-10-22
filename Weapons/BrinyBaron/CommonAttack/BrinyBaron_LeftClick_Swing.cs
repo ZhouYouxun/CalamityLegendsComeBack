@@ -970,7 +970,7 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.CommonAttack
 
         private void UpdateLockedAimFromMouse()
         {
-            lockedMouseWorld = Owner.Calamity().mouseWorld;
+            lockedMouseWorld = global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(Owner, Owner.Calamity().mouseWorld);
             if (lockedMouseWorld == Vector2.Zero)
                 lockedMouseWorld = Main.MouseWorld;
 

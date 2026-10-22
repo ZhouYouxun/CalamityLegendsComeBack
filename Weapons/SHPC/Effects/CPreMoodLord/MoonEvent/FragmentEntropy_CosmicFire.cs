@@ -337,7 +337,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.MoonEvent
                 dust.color = InnerColor;
             }
 
-            Main.player[Projectile.owner].SetScreenshake(9f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Main.player[Projectile.owner], Projectile.Center, 9f);
             SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/MeldExplosion") { Volume = 0.95f, Pitch = -0.12f }, center);
             SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.75f, Pitch = -0.25f }, center);
         }

@@ -466,7 +466,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
 
         private void TriggerSlamImpact(Player owner, NPC target)
         {
-            owner.Calamity().GeneralScreenShakePower = Math.Max(owner.Calamity().GeneralScreenShakePower, 9f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(owner, Projectile.Center, 9f);
             SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.9f, Pitch = -0.15f }, Projectile.Center);
             SoundEngine.PlaySound(SoundID.Item70 with { Volume = 0.8f, Pitch = -0.3f }, Projectile.Center);
 
@@ -525,7 +525,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                 return;
             hasExploded = true;
 
-            owner.Calamity().GeneralScreenShakePower = Math.Max(owner.Calamity().GeneralScreenShakePower, 7f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(owner, Projectile.Center, 7f);
             SoundEngine.PlaySound(SoundID.Item62 with { Volume = 0.85f, Pitch = -0.1f }, Projectile.Center);
             SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/DeadSunExplosion") { Volume = 0.6f, Pitch = -0.15f }, Projectile.Center);
 
@@ -810,7 +810,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
 
             // 三板斧：天降时强烈屏幕震动
             Player owner = Main.player[Projectile.owner];
-            owner.Calamity().GeneralScreenShakePower = Math.Max(owner.Calamity().GeneralScreenShakePower, 6f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(owner, Projectile.Center, 6f);
 
             // 三板斧：召唤时大爆炸粒子效果
             if (!Main.dedServ)
@@ -884,7 +884,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                 Projectile.netUpdate = true;
 
                 Player owner = Main.player[Projectile.owner];
-                owner.Calamity().GeneralScreenShakePower = Math.Max(owner.Calamity().GeneralScreenShakePower, 3.5f);
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(owner, Projectile.Center, 3.5f);
                 if (!Main.dedServ)
                 {
                     GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(target.Center, Vector2.Zero, new Color(255, 210, 80), Vector2.One, Projectile.rotation, 0.1f, 2.2f, 20));
@@ -921,7 +921,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.LeftGeneral
                     Projectile.localAI[1]++;
                 }
 
-                owner.Calamity().GeneralScreenShakePower = Math.Max(owner.Calamity().GeneralScreenShakePower, 2.2f);
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(owner, Projectile.Center, 2.2f);
                 if (!Main.dedServ)
                 {
                     for (int k = 0; k < 8; k++)

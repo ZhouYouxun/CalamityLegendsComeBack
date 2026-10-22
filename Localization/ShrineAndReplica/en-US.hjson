@@ -1,0 +1,30 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			LowEndMurasama: {
+				DisplayName: Murasama - Low-End Replica
+				Tooltip:
+					'''
+					A crude imitation of the Murasama. Don't expect much from it
+					Still better than nothing
+					'''
+			}
+
+			ShrineModel: {
+				DisplayName: Shrine Model
+				Tooltip:
+					'''
+					Grants the effects of these accessories while equipped:
+					[c/FFD36A:{0}], [c/8EDCFF:{1}]
+					[c/E79B74:{3}], [c/98D9AF:{2}]
+					[c/799EFF:{5}], [c/E8C25C:{4}]
+					[c/C9A5E8:{6}], [c/EE6375:{9}], [c/A1DB72:{10}]
+					[c/60D5FF:{12}], [c/D7BD8C:{13}]
+					[c/B69FE7:{11}], [c/DDB885:{8}], [c/FF667F:{7}]
+					Pointer: [POINTER]
+					Spring Stool: [STOOL]
+					'''
+			}
+		}
+	}
+}

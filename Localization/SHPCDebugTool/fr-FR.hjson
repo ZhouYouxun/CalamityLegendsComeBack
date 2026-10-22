@@ -1,0 +1,16 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			SHPCDebugTool: {
+				Tooltip:
+					'''
+					Actif uniquement pour vous lorsqu’il est en favori dans votre inventaire
+					Agrandit la roue de la SHPC tenue à presque toute la hauteur de l’écran et débloque tous les matériaux avec des munitions de test illimitées
+					Le retirer ou enlever le favori efface tous les matériaux chargés et les réserves, sans remboursement
+					Disponible uniquement par triche
+					'''
+				DisplayName: Outil de débogage SHPC
+			}
+		}
+	}
+}

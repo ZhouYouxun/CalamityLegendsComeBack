@@ -7,6 +7,8 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.HeatModule
 {
     public sealed class HeatModule : ModItem
     {
+        public override string Texture => "CalamityLegendsComeBack/Accssory/SHPC/Skill/DiffuChip/DiffuChip";
+
         public override void SetDefaults()
         {
             Item.width = 32;
@@ -28,8 +30,8 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.HeatModule
                 .AddIngredient<DubiousPlating>(10)
                 .AddIngredient(ItemID.SoulofFright, 7)
                 .AddIngredient<EssenceofHavoc>(7)
-                .AddIngredient(ItemID.LavaBucket)
-                .AddRecipeGroup("AnySilverBar", 5)
+                .AddIngredient(ItemID.LavaBucket, 7)
+                .AddIngredient(ItemID.HallowedBar, 7)
                 .AddTile(TileID.MythrilAnvil)
                 .Register();
         }

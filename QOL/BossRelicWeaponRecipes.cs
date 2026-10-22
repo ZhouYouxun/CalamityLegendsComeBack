@@ -144,7 +144,7 @@ namespace CalamityLegendsComeBack.QOL
                     if (!calamity.TryFind<ModItem>(weaponName, out ModItem weaponItem))
                         continue;
 
-                    if (LegendarySupplyBox.UsesSupplyBoxRecipe(weaponItem.Type))
+                    if (LongLostWeaponBlueprints.UsesBlueprintRecipe(weaponItem.Type))
                         continue;
 
                     Recipe recipe = Recipe.Create(weaponItem.Type);

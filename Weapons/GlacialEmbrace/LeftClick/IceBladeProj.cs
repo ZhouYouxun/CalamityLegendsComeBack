@@ -75,7 +75,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
                 if (attackTimer == PrepareDelay)
                 {
                     SoundEngine.PlaySound(SoundID.Item71 with { Pitch = -0.1f, Volume = 1f }, Projectile.Center);
-                    player.Calamity().GeneralScreenShakePower = Math.Max(player.Calamity().GeneralScreenShakePower, 2.2f);
+                    global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(player, Projectile.Center, 2.2f);
                 }
 
                 float progress = (float)(attackTimer - PrepareDelay) / SpinDuration;

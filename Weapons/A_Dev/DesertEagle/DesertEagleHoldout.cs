@@ -1,4 +1,4 @@
-﻿using CalamityLegendsComeBack.Weapons.SHPC.RightClick;
+using CalamityLegendsComeBack.Weapons.SHPC.RightClick;
 using CalamityMod;
 using CalamityMod.Particles;
 using CalamityMod.Projectiles.BaseProjectiles;
@@ -99,7 +99,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
             playerState.SetHoldingDesertEagle();
             playerState.ProcessRightClickState();
 
-            Vector2 aimDirection = (Owner.Calamity().mouseWorld - Owner.MountedCenter).SafeNormalize(Vector2.UnitX * Owner.direction);
+            Vector2 aimDirection = (global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(Owner, Owner.Calamity().mouseWorld) - Owner.MountedCenter).SafeNormalize(Vector2.UnitX * Owner.direction);
             Projectile.velocity = aimDirection;
             Projectile.rotation = aimDirection.ToRotation();
             Owner.ChangeDir(Projectile.velocity.X >= 0f ? 1 : -1);
@@ -227,7 +227,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
 
             OffsetLengthFromArm -= 35f;
             Owner.velocity -= shotDirection * 12f;
-            Owner.SetScreenshake(10f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Owner, Projectile.Center, 10f);
 
             if (Main.myPlayer == Projectile.owner)
             {

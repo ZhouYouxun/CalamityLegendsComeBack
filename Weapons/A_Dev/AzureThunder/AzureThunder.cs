@@ -159,7 +159,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             thunderPlayer.RestoreManaForOwnedSwords();
             thunderPlayer.RestoreLifeFromFourSymbols();
-            player.Calamity().GeneralScreenShakePower = System.Math.Max(player.Calamity().GeneralScreenShakePower, harmony ? 7f : 5f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(player, player.Center, harmony ? 7f : 5f);
 
             // 右键命中序列优先锁定鼠标附近目标；没有目标时只完成召剑和消耗。
             NPC target = AzureThunderPlayer.FindMouseNearestTarget(player);

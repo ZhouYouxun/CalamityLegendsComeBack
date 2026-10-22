@@ -1,6 +1,5 @@
 using CalamityLegendsComeBack.Accssory.SHPC.ChangeRight;
 using CalamityMod.Items.Materials;
-using CalamityMod.Items.Weapons.Melee;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -38,8 +37,11 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.ProjectilePossession
                 .AddIngredient<DubiousPlating>(10)
                 .AddIngredient(ItemID.SoulofNight, 5)
                 .AddIngredient(ItemID.SoulofSight, 5)
-                .AddIngredient<MirrorBlade>()
-                .AddTile(TileID.LunarCraftingStation)
+                .AddIngredient(ItemID.SoulofMight, 5)
+                .AddIngredient(ItemID.SoulofFright, 5)
+                .AddCondition(Condition.Hardmode)
+                .AddCondition(Condition.DownedMechBossAll)
+                .AddTile(TileID.MythrilAnvil)
                 .Register();
         }
     }

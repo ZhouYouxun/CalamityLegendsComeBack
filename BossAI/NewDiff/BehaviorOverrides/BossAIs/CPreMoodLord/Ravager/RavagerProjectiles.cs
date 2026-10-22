@@ -736,7 +736,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             {
                 SoundEngine.PlaySound(SoundID.Item62 with { Volume = 0.8f }, Projectile.Center);
                 Player p = Main.player[Player.FindClosest(Projectile.Center, 1, 1)];
-                if (p.active) p.Calamity().GeneralScreenShakePower = 8f;
+                if (p.active) global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(p, Projectile.Center, 8f);
                 RavagerFx.Burst(Projectile.Center, 6f, 24);
             }
             if (Main.rand.NextBool(2))

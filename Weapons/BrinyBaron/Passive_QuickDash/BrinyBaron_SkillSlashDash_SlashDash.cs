@@ -61,7 +61,8 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash
 
             // 这里不能直接信 itemAnimationMax，一些技能型弹幕生成时它可能不稳定
             int baseUseTime = BaseItem.useTime;
-            int animMax = player.itemAnimationMax > 0 ? player.itemAnimationMax : baseUseTime;
+            int animMax = player.HeldItem.type == ModContent.ItemType<NewLegendBrinyBaron>() && player.itemAnimationMax > 0
+                ? player.itemAnimationMax : baseUseTime;
 
             StartupTime = (int)(StandardStartupTime * (float)animMax / baseUseTime);
             CooldownTime = (int)(StandardSwingTime * (float)animMax / baseUseTime);

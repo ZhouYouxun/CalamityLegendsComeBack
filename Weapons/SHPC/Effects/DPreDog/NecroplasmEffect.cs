@@ -119,7 +119,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.DPreDog
 
         public override void OnKill(Projectile projectile, Player owner, int timeLeft)
         {
-            owner.SetScreenshake(3.5f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(owner, projectile.Center, 3.5f);
             float power = 0.58f;
 
             SpawnNecroplasmCollapseDust(projectile, owner, power);

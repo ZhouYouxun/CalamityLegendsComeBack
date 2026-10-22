@@ -7,7 +7,7 @@ namespace CalamityLegendsComeBack.QOL.QuickStart
 {
     public class QuickStartBox : ModItem, ILocalizedModType
     {
-        public override string Texture => "CalamityLegendsComeBack/LegendarySupplyBox";
+        public override string Texture => "CalamityLegendsComeBack/QOL/QuickStart/QuickStartBox";
         public new string LocalizationCategory => "Items.Consumables";
 
         public override void SetDefaults()

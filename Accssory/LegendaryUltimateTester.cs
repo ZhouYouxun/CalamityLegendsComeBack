@@ -30,7 +30,6 @@ namespace CalamityLegendsComeBack.Accssory
         public override bool IsLoadingEnabled(Mod mod) => false;
 
         public new string LocalizationCategory => "Items.Accessories";
-        //public override string Texture => "CalamityLegendsComeBack/Accssory/LegendaryEmblem";
 
         public override void SetDefaults()
         {

@@ -11,7 +11,7 @@ namespace CalamityLegendsComeBack.LegendaryTooltipEffects
 {
     public sealed class GlacialEmbraceAuroraFrostLegendaryTooltip : GlobalItem
     {
-        public const string TooltipLineName = "GlacialEmbraceAuroraFrostLegendaryText";
+        public const string TooltipLineName = "GlacialEmbraceRhythmDescription";
 
         private static readonly string[] FrostGlyphs = { "❄", "◇", "✦", "°", "◈", "·", "✧" };
 
@@ -19,8 +19,7 @@ namespace CalamityLegendsComeBack.LegendaryTooltipEffects
         {
             if (item.type != ModContent.ItemType<GlacialEmbraceItem>() ||
                 line.Mod != Mod.Name ||
-                line.Name != TooltipLineName ||
-                !Main.keyState.PressingShift())
+                line.Name != TooltipLineName)
             {
                 return true;
             }
@@ -53,6 +52,7 @@ namespace CalamityLegendsComeBack.LegendaryTooltipEffects
             DrawAuroraBackdrop(area, time);
             DrawDriftingIceCrystals(line, area, time);
             DrawLegendaryLines(line, textLines, basePosition, lineHeight, time);
+            DrawBeatMarkers(area, lineHeight, textLines.Length, time);
             DrawAuroraForeground(area, time);
         }
 
@@ -111,13 +111,13 @@ namespace CalamityLegendsComeBack.LegendaryTooltipEffects
             for (int row = 0; row < textLines.Length; row++)
             {
                 string text = textLines[row];
-                float sway = MathF.Sin(time * 1.4f - row * 0.55f) * 2.8f;
+                float sway = MathF.Sin(time * 2.4f - row * 0.7f) * 1.5f;
                 Vector2 position = basePosition + Vector2.UnitY * row * lineHeight + Vector2.UnitX * sway;
 
-                float hue = (time * 0.15f + row * 0.12f) % 1f;
+                float hue = (time * 0.18f + row * 0.105f) % 1f;
                 Color glowBase = HueToColor(hue, 0.3f);
-                Color glowColor = new Color(glowBase.R, glowBase.G, glowBase.B, 0) * 0.26f;
-                float glowRadius = 1.4f + MathF.Sin(time * 2.5f - row * 0.4f) * 0.8f;
+                Color glowColor = new Color(glowBase.R, glowBase.G, glowBase.B, 0) * 0.19f;
+                float glowRadius = 1.2f + MathF.Sin(time * 3f - row * 0.5f) * 0.5f;
                 for (int draw = 0; draw < 6; draw++)
                 {
                     Vector2 glowOffset = (MathHelper.TwoPi * draw / 6f).ToRotationVector2() * glowRadius;
@@ -127,11 +127,22 @@ namespace CalamityLegendsComeBack.LegendaryTooltipEffects
                 DrawText(line, text, position + new Vector2(1f, 2f), new Color(2, 6, 15, 225));
 
                 float colorT = (MathF.Sin(time * 2f - row * 0.6f) + 1f) * 0.5f;
-                Color auroraA = HueToColor((time * 0.15f + row * 0.14f) % 1f, 0.7f);
-                Color auroraB = HueToColor((time * 0.15f + row * 0.14f + 0.2f) % 1f, 0.7f);
+                Color auroraA = HueToColor((time * 0.18f + row * 0.105f) % 1f, 1f);
+                Color auroraB = HueToColor((time * 0.18f + row * 0.105f + 0.16f) % 1f, 1f);
                 Color textColor = Color.Lerp(auroraA, auroraB, colorT);
-                textColor = Color.Lerp(textColor, Color.White, 0.35f);
+                textColor = Color.Lerp(textColor, Color.White, 0.42f);
                 DrawText(line, text, position, textColor);
+            }
+        }
+
+        private static void DrawBeatMarkers(Rectangle area, float lineHeight, int lineCount, float time)
+        {
+            for (int row = 0; row < lineCount; row++)
+            {
+                float beat = 0.5f + 0.5f * MathF.Sin(time * 5f - row * 0.85f);
+                Color tint = HueToColor((time * 0.18f + row * 0.105f) % 1f, 1f);
+                int markerY = area.Y + 5 + (int)(row * lineHeight) + (int)(lineHeight * 0.4f);
+                DrawRectangle(new Rectangle(area.X + 2, markerY, 2 + (int)(beat * 4f), 2), tint * (0.4f + beat * 0.5f));
             }
         }
 

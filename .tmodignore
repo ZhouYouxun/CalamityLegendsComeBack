@@ -3,6 +3,8 @@ obj/
 .vs/
 .agents/
 .codex-tools/
+Publish-CalamityLegendsComeBack.cmd
+Publish-CalamityLegendsComeBack.ps1
 *.zip
 
 # Archived source and assets retained only as reference.

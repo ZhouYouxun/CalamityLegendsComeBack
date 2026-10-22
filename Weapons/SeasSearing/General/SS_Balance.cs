@@ -8,6 +8,10 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
     {
         private const string SourceFile = "Weapons/SeasSearing/General/SS_Balance.cs";
 
+        // Equipment aura follows the held weapon, with a minimum per-target hit interval.
+        public const float AccessoryAuraDamageRatio = 0.20f;
+        public const int AccessoryAuraMinimumHitInterval = 10;
+
         // 14 damage stages: Initial, EoC, Evil, Skeletron, Hardmode, Mech, Plantera, Golem,
         // MoonLord, Providence, Polterghast, DoG, Yharon, Exo+SC
         private static readonly int[] DefaultBaseDamage =

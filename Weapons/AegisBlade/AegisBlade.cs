@@ -139,27 +139,14 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
 
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
-            bool shiftPressed = Main.keyState.PressingShift();
-            string legendarySection = shiftPressed
-                ? this.GetLocalizedValue("LegendaryText")
-                : this.GetLocalizedValue("LegendaryHint");
-
-            if (shiftPressed)
-                tooltips.RemoveAll(t => t.Text == "[GFB]");
-            else
-                tooltips.FindAndReplace("[GFB]", this.GetLocalizedValue("FunctionalTooltip"));
-
-            tooltips.Add(new TooltipLine(Mod, "AegisBladeHolyKnightLegendaryText", legendarySection));
-            int stage = BalanceAegisBlade.GetStageIndex();
-            string growthKey = stage >= 9 ? "GrowthStage9" : stage >= 8 ? "GrowthStage8" :
-                stage >= 6 ? "GrowthStage6" : stage >= 4 ? "GrowthStage4" : "GrowthStage0";
-            tooltips.Add(new TooltipLine(Mod, "AegisGrowthStage", this.GetLocalizedValue(growthKey)));
+            string ultimateKeyText = KeybindSystem.LegendarySkill.GetAssignedKeys().FirstOrDefault() ?? "Unbound";
+            tooltips.FindAndReplace("[GFB]", string.Format(this.GetLocalizedValue("FunctionalTooltip"), ultimateKeyText));
         }
 
         internal static Vector2 GetMouseWorld(Player player)
         {
             Vector2 mouseWorld = player.Calamity().mouseWorld;
-            return mouseWorld == Vector2.Zero ? Main.MouseWorld : mouseWorld;
+            return global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(player, mouseWorld == Vector2.Zero ? Main.MouseWorld : mouseWorld);
         }
     }
 }

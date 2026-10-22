@@ -6,6 +6,7 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Accssory.BF.SilvaHarp
 {
+    [Autoload(false)]
     public sealed class SilvaHarp : ModItem
     {
         public override string Texture => "CalamityLegendsComeBack/Accssory/BF/Skill/SilvaHarp/SilvaHarp";

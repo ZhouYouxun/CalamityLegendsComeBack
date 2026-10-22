@@ -1,4 +1,5 @@
 using System;
+using CalamityLegendsComeBack.Weapons.LeonidProgenitor.Core;
 using CalamityMod;
 using CalamityMod.Particles;
 using Microsoft.Xna.Framework;
@@ -65,7 +66,8 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
         private void SpawnLandingImpact(float fallTiles, bool majorImpact)
         {
-            int damage = Math.Max(1, (int)(Player.GetWeaponDamage(Player.HeldItem) * (majorImpact ? 1.4f : 0.7f)));
+            bool enhanced = Player.GetModPlayer<LeonidConstellationPlayer>().IsUnlocked(LeonidStar.AlMinliar);
+            int damage = Math.Max(1, (int)(Player.GetWeaponDamage(Player.HeldItem) * (enhanced ? 6f : 3f)));
             float radius = majorImpact ? 300f : 150f;
             Projectile.NewProjectile(
                 Player.GetSource_FromThis(),
@@ -107,16 +109,17 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
         public override bool ShouldUpdatePosition() => false;
 
-        public override bool? CanDamage() => Projectile.timeLeft >= 20;
+        // Damage() is called once on the first AI tick; the lingering shockwave is visual only.
+        public override bool? CanDamage() => Projectile.localAI[0] == 0f ? null : false;
 
         public override void AI()
         {
             if (Projectile.localAI[0] != 0f)
                 return;
 
-            Projectile.localAI[0] = 1f;
             Projectile.Resize((int)(Radius * 2f), (int)(Radius * 0.8f));
             Projectile.Damage();
+            Projectile.localAI[0] = 1f;
             SoundEngine.PlaySound(SoundID.Item89 with { Volume = 0.85f, Pitch = -0.32f }, Projectile.Center);
             ApplyScreenShake();
             SpawnImpactParticles();
@@ -189,7 +192,7 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
             float shake = MajorImpact ? 14f : MathHelper.Clamp(4f + (FallTiles - 7f) * 0.32f, 4f, 8f);
             float distanceFactor = Utils.GetLerpValue(1800f, 180f, Vector2.Distance(Main.LocalPlayer.Center, Projectile.Center), true);
-            Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(Main.LocalPlayer.Calamity().GeneralScreenShakePower, shake * distanceFactor);
+            Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(Main.LocalPlayer.Calamity().GeneralScreenShakePower, shake * 0.6f * distanceFactor);
         }
 
         public override bool PreDraw(ref Color lightColor)

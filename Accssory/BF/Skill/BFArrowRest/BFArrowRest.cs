@@ -5,6 +5,7 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Accssory.BF.Skill.BFArrowRest
 {
+    [Autoload(false)]
     public sealed class BFArrowRest : ModItem
     {
         public override string Texture => "CalamityLegendsComeBack/Accssory/BF/Skill/BFArrowRest/BFArrowRest";

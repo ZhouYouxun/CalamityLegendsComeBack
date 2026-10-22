@@ -34,14 +34,15 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash.DashEffec
             if (direction == 0)
                 direction = player.direction == 0 ? 1 : player.direction;
 
-            int damage = Math.Max(1, (int)(player.GetWeaponDamage(player.HeldItem) * 0.95f));
+            Item weapon = player.GetModPlayer<Dash_Trigger>().GetPassiveWeapon();
+            int damage = Math.Max(1, (int)(player.GetWeaponDamage(weapon) * 0.95f));
             Projectile.NewProjectile(
                 player.GetSource_FromThis(),
                 player.Center,
                 Vector2.UnitX * direction,
                 ModContent.ProjectileType<BrinyBaron_SkillSlashDash_SlashDash>(),
                 damage,
-                player.GetWeaponKnockback(player.HeldItem),
+                player.GetWeaponKnockback(weapon),
                 player.whoAmI,
                 0f,
                 direction);
@@ -66,8 +67,9 @@ namespace CalamityLegendsComeBack.Weapons.BrinyBaron.Passive_QuickDash.DashEffec
 
             Vector2 forward = player.velocity.SafeNormalize(Vector2.UnitX * player.direction);
             Vector2 side = forward.RotatedBy(MathHelper.PiOver2);
-            int damage = Math.Max(1, (int)(player.GetWeaponDamage(player.HeldItem) * 0.36f));
-            float knockback = player.GetWeaponKnockback(player.HeldItem) * 0.35f;
+            Item weapon = player.GetModPlayer<Dash_Trigger>().GetPassiveWeapon();
+            int damage = Math.Max(1, (int)(player.GetWeaponDamage(weapon) * 0.36f));
+            float knockback = player.GetWeaponKnockback(weapon) * 0.35f;
 
             SpawnOneSideShuriken(player, side, damage, knockback);
             SpawnOneSideShuriken(player, -side, damage, knockback);

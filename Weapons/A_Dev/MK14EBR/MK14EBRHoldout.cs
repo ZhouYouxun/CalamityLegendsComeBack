@@ -251,7 +251,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
 
             if (Main.myPlayer == Owner.whoAmI && weapon?.Barrel == MK14Barrel.SniperHeavy)
             {
-                Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, 1.1f);
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Owner, Projectile.Center, 1.1f);
             }
 
             SpawnMuzzleDust(direction);

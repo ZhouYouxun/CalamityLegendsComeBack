@@ -206,6 +206,41 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor.Effects
             }
         }
 
+        // A radial burst arranged on an ellipse. The particles keep Ring's motion and
+        // lifetime behavior; only their starting positions change.
+        public static void Ellipse(
+            Vector2 center,
+            int count,
+            float horizontalRadius,
+            float verticalRadius,
+            Color? color = null,
+            LeonidStarlightShape shape = LeonidStarlightShape.Mote,
+            float speed = 4f,
+            float scale = 1f,
+            int hoverTime = 30,
+            int lifetime = 160,
+            float lanceSpeed = 17f,
+            float angleOffset = 0f)
+        {
+            count = ReducedCount(count);
+            if (count <= 0 || !CanSpawn(count))
+                return;
+
+            int trackerIndex = TryReserveTracker(center) ? Main.rand.Next(count) : -1;
+            for (int i = 0; i < count; i++)
+            {
+                float angle = angleOffset + i * MathHelper.TwoPi / count;
+                Vector2 offset = new(MathF.Cos(angle) * horizontalRadius, MathF.Sin(angle) * verticalRadius);
+                Vector2 direction = offset.SafeNormalize(Vector2.UnitY);
+                Color tint = color ?? DefaultColor(i * 0.29f);
+
+                SpawnCore(center + offset, direction * speed, tint, shape, scale,
+                    hoverTime + Main.rand.Next(-4, 9), lifetime, lanceSpeed, 760f, true,
+                    i == trackerIndex ? LeonidStarlightMotion.Homing : LeonidStarlightMotion.RadialSpiral,
+                    angle);
+            }
+        }
+
         // 锥形喷射：沿着某个方向甩出去，用在发射/挥击的瞬间。
         public static void Spray(
             Vector2 center,

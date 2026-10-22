@@ -28,6 +28,8 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         private int leftClickHasteTimer;
         private int leftClickScatterCounter;
         private bool rightMouseHeldLastFrame;
+        private Item accessoryMalachite;
+        private bool wasMalachiteAccessoryEquipped;
 
         public bool DepletionBurstActive => depletionBurstTimer > 0;
         public bool LeftClickHasteActive => leftClickHasteTimer > 0;
@@ -35,6 +37,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         public override void ResetEffects()
         {
             holdingMalachite = false;
+            accessoryMalachite = null;
         }
 
         public override void UpdateDead()
@@ -47,6 +50,8 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             leftClickHasteTimer = 0;
             leftClickScatterCounter = 0;
             rightMouseHeldLastFrame = false;
+            accessoryMalachite = null;
+            wasMalachiteAccessoryEquipped = false;
         }
 
         public override void PostUpdateEquips()
@@ -55,10 +60,20 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                 return;
 
             SetHoldingMalachite();
+            // Calamity's internal 0.1 is ten displayed points, added once per frame.
+            Player.Calamity().rogueStealthMax += 0.1f;
         }
 
         public override void PostUpdate()
         {
+            bool accessoryEquipped = accessoryMalachite != null;
+            if (wasMalachiteAccessoryEquipped && !accessoryEquipped)
+            {
+                rightFeatherGenerationTimer = 0;
+                MalachiteRightFeather.FadeAllRightFeathers(Player);
+            }
+            wasMalachiteAccessoryEquipped = accessoryEquipped;
+
             if (depletionBurstTimer > 0)
                 depletionBurstTimer--;
             if (leftClickHasteTimer > 0)
@@ -97,10 +112,12 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             holdingMalachite = true;
 
             CalamityPlayer calamity = Player.Calamity();
-            if (calamity.rogueStealthMax < 1f)
-                calamity.rogueStealthMax = 1f;
-
             calamity.wearingRogueArmor = true;
+        }
+
+        public void SetMalachiteAccessory(Item item)
+        {
+            accessoryMalachite = item;
         }
 
         private void TryReleaseRightClickDuringLeftHold(bool currentlyHolding)
@@ -124,7 +141,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
 
             CalamityPlayer calamity = Player.Calamity();
             bool stealthStrike = calamity.StealthStrikeAvailable();
-            Vector2 mouseWorld = calamity.mouseWorld == Vector2.Zero ? Main.MouseWorld : calamity.mouseWorld;
+            Vector2 mouseWorld = global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(Player, calamity.mouseWorld == Vector2.Zero ? Main.MouseWorld : calamity.mouseWorld);
             int damage = Math.Max(1, (int)Player.GetTotalDamage(Player.HeldItem.DamageType).ApplyTo(MalachiteBalance.GetRightClickBaseDamage()));
             Malachite.TryReleaseRightClickAttack(
                 Player,
@@ -135,18 +152,12 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                 stealthStrike);
         }
 
-        public void RestoreStealthPoints(float points)
-        {
-            AddStealthPoints(points);
-        }
-
         public void ConsumeHalfStealthAndRestore(CalamityPlayer calamity)
         {
             float previousStealth = calamity.rogueStealth;
             calamity.ConsumeStealthByAttacking();
             float bonusRestore = previousStealth * Player.GetModPlayer<MCGeneralPlayer>().StealthRestoreOnStealthStrike;
             calamity.rogueStealth = MathHelper.Clamp(calamity.rogueStealth + previousStealth * 0.5f + bonusRestore, 0f, calamity.rogueStealthMax);
-            AddStealthPoints(15f);
             AdvanceFinaleCooldownFromStealthAttack();
         }
 
@@ -243,8 +254,11 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
 
             bool peacockBoxEquipped = Player.GetModPlayer<PeacockBoxPlayer>().PeacockBoxEquipped;
             bool peacockScrollEquipped = Player.GetModPlayer<PeacockScrollPlayer>().PeacockScrollEquipped;
+            bool malachiteAccessoryEquipped = accessoryMalachite != null;
             Item malachiteItem = FindMalachiteItem(out bool isHeld);
-            if (malachiteItem == null || (!isHeld && !peacockBoxEquipped && !peacockScrollEquipped))
+            if (malachiteAccessoryEquipped && !isHeld)
+                malachiteItem = accessoryMalachite;
+            if (malachiteItem == null || (!isHeld && !peacockBoxEquipped && !peacockScrollEquipped && !malachiteAccessoryEquipped))
             {
                 rightFeatherGenerationTimer = 0;
                 return;
@@ -254,19 +268,21 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             if (currentFeathers >= MalachiteBalance.RightFeatherMaxCount)
             {
                 rightFeatherGenerationTimer = 0;
-                if (peacockBoxEquipped)
-                    TryAutoReleaseStoredRightFeathers(malachiteItem);
+                if (peacockBoxEquipped || malachiteAccessoryEquipped)
+                    TryAutoReleaseStoredRightFeathers(malachiteItem, malachiteAccessoryEquipped);
 
                 return;
             }
 
-            int baseDelay = (isHeld || peacockScrollEquipped)
+            // The equipped weapon uses the same progression table, but charges at 40%
+            // speed when not held. Keep integer fifths so toggling modes retains progress.
+            int baseDelay = (isHeld || peacockScrollEquipped || malachiteAccessoryEquipped)
                 ? MalachiteBalance.RightFeatherGenerationFrames
                 : MalachiteBalance.PeacockBoxFeatherGenerationFrames;
             int targetDelay = peacockScrollEquipped ? baseDelay / 2 : baseDelay;
 
-            rightFeatherGenerationTimer++;
-            if (rightFeatherGenerationTimer < targetDelay)
+            rightFeatherGenerationTimer += malachiteAccessoryEquipped && !isHeld ? 2 : 5;
+            if (rightFeatherGenerationTimer < targetDelay * 5)
                 return;
 
             rightFeatherGenerationTimer = 0;
@@ -278,10 +294,10 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                 damage,
                 malachiteItem.knockBack);
 
-            if (peacockBoxEquipped &&
+            if ((peacockBoxEquipped || malachiteAccessoryEquipped) &&
                 MalachiteRightFeather.CountStoredRightFeathers(Player) >= MalachiteBalance.RightFeatherMaxCount)
             {
-                TryAutoReleaseStoredRightFeathers(malachiteItem);
+                TryAutoReleaseStoredRightFeathers(malachiteItem, malachiteAccessoryEquipped);
             }
         }
 
@@ -301,12 +317,16 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             return null;
         }
 
-        private void TryAutoReleaseStoredRightFeathers(Item malachiteItem)
+        private void TryAutoReleaseStoredRightFeathers(Item malachiteItem, bool accessoryDamage)
         {
             if (MalachiteRightFeather.CountStoredRightFeathers(Player) < MalachiteBalance.RightFeatherMaxCount)
                 return;
 
-            Vector2 target = FindNearestAutoReleaseTarget(1600f) ?? GetMouseWorld();
+            Vector2? nearestTarget = FindNearestAutoReleaseTarget(1600f);
+            if (accessoryDamage && nearestTarget == null)
+                return;
+
+            Vector2 target = nearestTarget ?? GetMouseWorld();
             int damage = Player.GetWeaponDamage(malachiteItem);
             if (!MalachiteRightFeather.ReleaseStoredRightFeathers(
                 Player,
@@ -347,19 +367,9 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
         private Vector2 GetMouseWorld()
         {
             Vector2 mouseWorld = Player.Calamity().mouseWorld;
-            return mouseWorld == Vector2.Zero
+            return global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(Player, mouseWorld == Vector2.Zero
                 ? Main.MouseWorld
-                : mouseWorld;
-        }
-
-        private void AddStealthPoints(float points)
-        {
-            CalamityPlayer calamity = Player.Calamity();
-            if (calamity.rogueStealthMax <= 0f)
-                calamity.rogueStealthMax = 1f;
-
-            float amount = calamity.rogueStealthMax * points / 100f;
-            calamity.rogueStealth = MathHelper.Clamp(calamity.rogueStealth + amount, 0f, calamity.rogueStealthMax);
+                : mouseWorld);
         }
 
         private void OnSwitchToMalachite()
@@ -378,7 +388,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
                 var source = Player.GetSource_FromThis();
                 int damage = Player.GetWeaponDamage(Player.HeldItem);
                 float knockback = Player.HeldItem.knockBack;
-                Vector2 mouseWorld = calamity.mouseWorld == Vector2.Zero ? Main.MouseWorld : calamity.mouseWorld;
+                Vector2 mouseWorld = global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(Player, calamity.mouseWorld == Vector2.Zero ? Main.MouseWorld : calamity.mouseWorld);
 
                 if (MalachiteRightFeather.ReleaseStoredRightFeathers(Player, source, mouseWorld, damage, knockback, stealthStrike))
                 {
@@ -408,7 +418,7 @@ namespace CalamityLegendsComeBack.Weapons.Malachite
             if (MalachiteKunai.CountStoredPeacockKunai(Player) > 0)
             {
                 CalamityPlayer calamity = Player.Calamity();
-                Vector2 mouseWorld = calamity.mouseWorld == Vector2.Zero ? Main.MouseWorld : calamity.mouseWorld;
+                Vector2 mouseWorld = global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(Player, calamity.mouseWorld == Vector2.Zero ? Main.MouseWorld : calamity.mouseWorld);
                 Item malachiteItem = FindMalachiteItem(out _);
                 int damage = malachiteItem != null ? Player.GetWeaponDamage(malachiteItem) : -1;
                 float knockback = malachiteItem?.knockBack ?? 0f;

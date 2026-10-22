@@ -90,7 +90,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 {
                     SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DevourerRiftOpen") { Volume = 0.8f, Pitch = -0.08f }, Player.Center);
                     SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DevourerSpawn") { Volume = 0.58f, Pitch = 0.18f }, Player.Center);
-                    Player.Calamity().GeneralScreenShakePower = System.Math.Max(Player.Calamity().GeneralScreenShakePower, 20f);
+                    global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Player, Player.Center, 20f);
                     CombatText.NewText(Player.getRect(), CosmicDischargeCommon.DoGWhiteColor, "Devourer Ascension!", true, true);
                 }
             }
@@ -250,7 +250,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
                 return;
 
             UltimateEnergy = Utils.Clamp(UltimateEnergy + amount, 0, UltimateEnergyMax);
-            LegendaryUltimateReadySound.PlayIfReadyTransition(Player, ref wasUltimateReady, UltimateEnergy >= UltimateEnergyMax);
+            LegendaryUltimateReadySound.PlayIfReadyTransition(Player, ref wasUltimateReady, Main.hardMode && UltimateEnergy >= UltimateEnergyMax);
             SyncCooldownDisplays();
         }
 
@@ -272,7 +272,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
         private void HandleUltimateInput()
         {
-            if (Main.myPlayer != Player.whoAmI || !KeybindSystem.LegendarySkill.JustPressed)
+            if (!Main.hardMode || Main.myPlayer != Player.whoAmI || !KeybindSystem.LegendarySkill.JustPressed)
                 return;
 
             if (UltimateEnergy < UltimateEnergyMax || UltimateFieldActive)
@@ -297,7 +297,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
 
             if (Player.whoAmI == Main.myPlayer)
             {
-                Player.Calamity().GeneralScreenShakePower = System.Math.Max(Player.Calamity().GeneralScreenShakePower, 15f);
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Player, Player.Center, 15f);
                 string activeText = Terraria.Localization.Language.GetTextValue("Mods.CalamityLegendsComeBack.Items.Weapons.NewLegendCosmicDischarge.UltimateActiveText");
                 CombatText.NewText(Player.getRect(), CosmicDischargeCommon.DoGSpecialColor, activeText, true, true);
             }

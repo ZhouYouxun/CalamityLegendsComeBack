@@ -6,6 +6,7 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.FlyChip
 {
+    [Autoload(false)]
     public class FlyChip : ModItem
     {
         public override void SetDefaults()

@@ -338,7 +338,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 SignusFx.Burst(npc.Center, 6f, 30);
                 SignusFx.Burst(npc.Center, 3f, 12, DustID.Shadowflame);
                 if (Main.netMode != NetmodeID.Server)
-                    Main.LocalPlayer.Calamity().GeneralScreenShakePower = 6f;
+                    global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(Main.LocalPlayer, npc.Center, 6f);
                 npc.velocity = Vector2.Zero;
                 npc.netUpdate = true;
             }
@@ -828,7 +828,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             SoundEngine.PlaySound(SoundID.Item71 with { Volume = 0.9f, Pitch = -0.3f }, npc.Center);
             SignusFx.Burst(npc.Center, 6f, 18);
             if (Main.netMode != NetmodeID.Server)
-                Main.LocalPlayer.Calamity().GeneralScreenShakePower = 4f;
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(Main.LocalPlayer, npc.Center, 4f);
             if (Main.netMode != NetmodeID.MultiplayerClient)
                 Projectile.NewProjectile(npc.GetSource_FromAI(), npc.Center, dashVel * 0.55f, ModContent.ProjectileType<DeathsAscensionScytheProj>(), npc.defDamage / 3, 0f, Main.myPlayer);
         }
@@ -1162,7 +1162,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             if (timer == 1)
             {
                 SoundEngine.PlaySound(SoundID.NPCDeath10, npc.Center);
-                target.Calamity().GeneralScreenShakePower = 9f;
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(target, npc.Center, 9f);
             }
 
             // Hood fragments spiraling off during the reveal
@@ -1282,7 +1282,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     npc.velocity = Vector2.Zero;
                     SoundEngine.PlaySound(SoundID.Item122 with { Volume = 1.1f, Pitch = -0.3f }, npc.Center);
                     SoundEngine.PlaySound(SoundID.NPCDeath4, npc.Center);
-                    target.Calamity().GeneralScreenShakePower = 13f;
+                    global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(target, npc.Center, 13f);
                     SignusFx.Burst(npc.Center, 8f, 40);
                     SignusFx.Burst(npc.Center, 5f, 24, DustID.Shadowflame);
                 }

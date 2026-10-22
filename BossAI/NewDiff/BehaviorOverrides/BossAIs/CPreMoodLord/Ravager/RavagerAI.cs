@@ -907,7 +907,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 int dmg = npc.damage / 3;
                 SoundEngine.PlaySound(SoundID.Item14 with { Pitch = -0.15f }, npc.Center);
                 Player t = target;
-                if (t.active) t.Calamity().GeneralScreenShakePower = 8f;
+                if (t.active) global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(t, npc.Center, 8f);
                 RavagerFx.Burst(npc.Center, 6f, 24);
                 Projectile.NewProjectile(npc.GetSource_FromAI(), npc.Center, new Vector2(-14f, 0f), ModContent.ProjectileType<BloodsoakedWaveProj>(), dmg, 0f, Main.myPlayer);
                 Projectile.NewProjectile(npc.GetSource_FromAI(), npc.Center, new Vector2(14f, 0f), ModContent.ProjectileType<BloodsoakedWaveProj>(), dmg, 0f, Main.myPlayer);
@@ -932,7 +932,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             if (timer == 1)
             {
                 SoundEngine.PlaySound(SoundID.NPCDeath10, npc.Center);
-                target.Calamity().GeneralScreenShakePower = 8f;
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(target, npc.Center, 8f);
 
                 int totemType = ModContent.Find<ModNPC>("CalamityMod/FleshTotem").Type;
                 for (int i = 0; i < Main.maxNPCs; i++)
@@ -945,7 +945,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             if (timer == coreReveal)
             {
                 SoundEngine.PlaySound(SoundID.Item62 with { Volume = 0.7f }, npc.Center);
-                target.Calamity().GeneralScreenShakePower = 12f;
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(target, npc.Center, 12f);
                 RavagerFx.Burst(npc.Center, 8f, 40);
             }
 
@@ -1041,7 +1041,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     npc.velocity = Vector2.Zero;
                     SoundEngine.PlaySound(SoundID.Item62 with { Volume = 1.2f, Pitch = -0.4f }, npc.Center);
                     SoundEngine.PlaySound(SoundID.NPCDeath4, npc.Center);
-                    target.Calamity().GeneralScreenShakePower = 13f;
+                    global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(target, npc.Center, 13f);
                     RavagerFx.Burst(npc.Center, 8f, 40);
                 }
 

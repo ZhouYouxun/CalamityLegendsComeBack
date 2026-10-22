@@ -167,7 +167,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.EXSkill
                     SoundEngine.PlaySound(SoundID.Item122 with { Pitch = -0.1f, Volume = 1f }, Projectile.Center);
                     
                     // 屏幕震动
-                    player.Calamity().GeneralScreenShakePower = Math.Max(player.Calamity().GeneralScreenShakePower, 6.0f);
+                    global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(player, Projectile.Center, 6.0f);
                     
                     // 推出爆发粒子
                     for (int i = 0; i < 25; i++)
@@ -257,7 +257,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.EXSkill
             SoundEngine.PlaySound(SoundID.Item62 with { Pitch = -0.5f, Volume = 1.2f }, Projectile.Center);
 
             // 增加强烈屏幕震动
-            player.Calamity().GeneralScreenShakePower = Math.Max(player.Calamity().GeneralScreenShakePower, 10.0f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(player, Projectile.Center, 10.0f);
 
             // 1. 造成大范围终结技爆碎巨额伤害 (高频伤害的6倍)
             var source = player.GetSource_ItemUse(player.HeldItem);

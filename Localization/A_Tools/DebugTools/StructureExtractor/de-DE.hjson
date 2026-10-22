@@ -3,31 +3,31 @@ Mods: {
 		Items: {
 			Weapons: {
 				StructureExtractor: {
-					DisplayName: Struktur-Extraktor
-					Tooltip: Halte diesen Gegenstand, ziehe mit Linksklick einen Bereich auf und bestätige dann den Export einer Calamity-.csch-Strukturdatei.
+					// DisplayName: Structure Extractor
+					// Tooltip: Hold this item, drag with left click to select an area, then confirm to export a Calamity .csch structure file.
 				}
 			}
 		}
 
-		Projectiles.A_Dev.StructureExtractorOverlay.DisplayName: Struktur-Extraktionsmatrix
+		// Projectiles.A_Dev.StructureExtractorOverlay.DisplayName: Structure Extraction Matrix
 
 		TheSpecialText: {
-			StructureExtractorSelectionLabel: "{0}x{1} | Ursprung {2}, {3} | {4} Kacheln"
-			StructureExtractorConfirmTitle: Strukturexport bestätigen
-			StructureExtractorConfirmBody:
+			// StructureExtractorSelectionLabel: "{0}x{1} | origin {2}, {3} | {4} tiles"
+			// StructureExtractorConfirmTitle: Confirm Structure Export
+			/* StructureExtractorConfirmBody:
 				'''
-				Oben links: {0}, {1}
-				Größe: {2} x {3}
-				Kacheln insgesamt: {4}
-				Speicherordner: {5}
-				'''
-			StructureExtractorCancel: Abbrechen
-			StructureExtractorConfirm: Exportieren
-			StructureExtractorCanceled: Strukturextraktion abgebrochen.
-			StructureExtractorExportSaved: Strukturdatei gespeichert unter: {0}
-			StructureExtractorExportDetails: Auswahl: oben links {0}, {1}; Größe {2}x{3}; {4} Kacheln.
-			StructureExtractorExportFailed: Strukturexport fehlgeschlagen: {0}
-			StructureExtractorExportError: Fehler beim Strukturexport: {0}
+				Top-left: {0}, {1}
+				Size: {2} x {3}
+				Total tiles: {4}
+				Save folder: {5}
+				''' */
+			// StructureExtractorCancel: Cancel
+			// StructureExtractorConfirm: Export
+			// StructureExtractorCanceled: Structure extraction cancelled.
+			// StructureExtractorExportSaved: Structure file saved to: {0}
+			// StructureExtractorExportDetails: Selection: top-left {0}, {1}; size {2}x{3}; {4} tiles.
+			// StructureExtractorExportFailed: Structure export failed: {0}
+			// StructureExtractorExportError: Structure export error: {0}
 		}
 	}
 }

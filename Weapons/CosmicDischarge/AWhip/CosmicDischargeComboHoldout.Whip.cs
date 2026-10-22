@@ -149,7 +149,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             if (quickDraw && !quickDrawBurstPlayed && Time >= QuickDrawWindup)
             {
                 quickDrawBurstPlayed = true;
-                Vector2 burstCenter = Owner.Calamity().mouseWorld;
+                Vector2 burstCenter = global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(Owner, Owner.Calamity().mouseWorld);
                 if (Vector2.DistanceSquared(burstCenter, Owner.Center) < 32f * 32f)
                     burstCenter = TipPosition;
 

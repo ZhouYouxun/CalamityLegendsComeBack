@@ -18,8 +18,12 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         private const int RadiationBuffDuration = 10 * 60; // 10秒内不攻击才会失效
 
         public bool  HoldingSeasSearing  { get; private set; }
+        public bool EquippedSeasSearing { get; private set; }
+        public bool HidePressureVisuals { get; private set; }
+        private Item equippedSeasSearing;
         public int   UltimateCooldown    { get; private set; }
         public float PressureVisualPower { get; private set; }
+        internal Color PressureFieldColor = SeasSearingPalette.RadioactiveCyan;
 
         // 玩家辐射系统（4级正面效果）
         public bool HasRadiationBuff    { get; set; }
@@ -34,6 +38,10 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         public override void ResetEffects()
         {
             HoldingSeasSearing = false;
+            EquippedSeasSearing = false;
+            HidePressureVisuals = false;
+            PressureFieldColor = SeasSearingPalette.RadioactiveCyan;
+            equippedSeasSearing = null;
             HasRadiationBuff   = false;
         }
 
@@ -44,7 +52,7 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
             UpdateRadiationBuff();
 
-            if (!HoldingSeasSearing)
+            if (!EquippedSeasSearing || Player.dead)
             {
                 PressureVisualPower = MathHelper.Clamp(PressureVisualPower - 0.04f, 0f, 1f);
                 return;
@@ -54,14 +62,25 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
             float pollutionFactor = MathHelper.Clamp(totalPollution / 200f, 0f, 1f);
             PressureVisualPower   = MathHelper.Lerp(PressureVisualPower, 0.32f + pollutionFactor * 0.68f, 0.08f);
 
-            ApplyPressureField(pollutionFactor);
-            EmitPressureAtmosphere(pollutionFactor);
+            if (Main.netMode != NetmodeID.MultiplayerClient)
+                ApplyPressureField(pollutionFactor);
+
+            if (Player.whoAmI == Main.myPlayer &&
+                Player.ownedProjectileCounts[ModContent.ProjectileType<SeasSearingAccessoryAura>()] == 0)
+            {
+                Projectile.NewProjectile(Player.GetSource_Accessory(equippedSeasSearing),
+                    Player.Center, Vector2.Zero, ModContent.ProjectileType<SeasSearingAccessoryAura>(),
+                    0, 0f, Player.whoAmI);
+            }
+
+            if (!HidePressureVisuals)
+                EmitPressureAtmosphere(pollutionFactor);
         }
 
         // 玩家击中敌人时调用，增加辐射积累
         public void OnHitWithSeasSearing()
         {
-            if (!HoldingSeasSearing) return;
+            if (!HoldingSeasSearing && !EquippedSeasSearing) return;
             RadiationAccumulator++;
             int newLevel = 0;
             for (int i = RadiationThresholds.Length - 1; i >= 0; i--)
@@ -73,9 +92,8 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
         private void UpdateRadiationBuff()
         {
-            // 未持有武器时不能获得新积累，但积累值保留（buff也保留）
-            // 持有时buff被 HasRadiationBuff=true 一直维持
-            if (HasRadiationBuff && HoldingSeasSearing && RadiationLevel > 0)
+            // 持有武器或装备光环均可维持辐射兴奋；卸下后沿用原有持续时间。
+            if (HasRadiationBuff && (HoldingSeasSearing || EquippedSeasSearing) && RadiationLevel > 0)
                 Player.AddBuff(ModContent.BuffType<SeasSearingPlayerRadiationBuff>(), 2);
 
             // 没有buff时重置等级和积累（玩家主动取消buff后生效）
@@ -126,7 +144,17 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
 
         public void SetHoldingSeasSearing() => HoldingSeasSearing = true;
 
-        public bool CanUseUltimate => UltimateCooldown <= 0;
+        public void SetEquippedSeasSearing(Item item, bool hideVisual)
+        {
+            EquippedSeasSearing = true;
+            HidePressureVisuals = hideVisual;
+            equippedSeasSearing = item;
+        }
+
+        internal float PressureRadius => BasePressureRadius + MaxPressureRadiusBonus * MathHelper.Clamp(
+            SeasSearingPollutionNPC.CountPollutionForOwner(Player.whoAmI) / 200f, 0f, 1f);
+
+        public bool CanUseUltimate => Main.hardMode && UltimateCooldown <= 0;
 
         public void StartUltimateCooldown() => UltimateCooldown = UltimateCooldownFrames;
 
@@ -155,7 +183,6 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
         {
             float radius        = BasePressureRadius + MaxPressureRadiusBonus * pollutionFactor;
             float radiusSquared = radius * radius;
-            int   owner         = Player.whoAmI;
 
             for (int i = 0; i < Main.maxNPCs; i++)
             {
@@ -172,8 +199,6 @@ namespace CalamityLegendsComeBack.Weapons.SeasSearing
                 npc.position -= npc.velocity * slowPower;
                 npc.velocity *= 1f - slowPower * 0.35f;
 
-                SeasSearingPollutionNPC pollution = npc.GetGlobalNPC<SeasSearingPollutionNPC>();
-                pollution.ExposeToPressure(npc, owner, proximity);
             }
         }
 

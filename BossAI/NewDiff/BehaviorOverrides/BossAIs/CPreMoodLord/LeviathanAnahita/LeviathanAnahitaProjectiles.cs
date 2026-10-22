@@ -124,7 +124,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
         {
             SoundEngine.PlaySound(SoundID.Item54 with { Volume = 0.7f, Pitch = -0.2f }, Projectile.Center);
             Player p = Main.player[Player.FindClosest(Projectile.Center, 1, 1)];
-            if (p.active) p.Calamity().GeneralScreenShakePower = 6f;
+            if (p.active) global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(p, Projectile.Center, 6f);
             LeviathanFx.Burst(Projectile.Center, 5f, 20);
             if (Main.netMode == NetmodeID.MultiplayerClient)
                 return;
@@ -279,7 +279,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             {
                 SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.5f }, Projectile.Center);
                 Player p = Main.player[Player.FindClosest(Projectile.Center, 1, 1)];
-                if (p.active) p.Calamity().GeneralScreenShakePower = 6f;
+                if (p.active) global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(p, Projectile.Center, 6f);
             }
             if (Main.rand.NextBool(2))
             {

@@ -120,7 +120,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
             holdout.ApplyRecoil(22f);
             holdout.TriggerMuzzleFlash(26);
             holdout.SpawnMuzzleBurst(PristineFuryMarkHelper.GetColor(holdout.CurrentMark), 1.45f);
-            holdout.Owner.SetScreenshake(6f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(holdout.Owner, holdout.GunTipPosition, 6f);
             SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/CalamitasClone/CalClone_BigFireballBit" + Main.rand.Next(1, 5)) { Volume = 0.85f, PitchVariance = 0.12f }, muzzle);
         }
 

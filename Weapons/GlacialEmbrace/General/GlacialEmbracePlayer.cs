@@ -229,7 +229,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.General
             UpdateSealStates();
 
             // 终结技释放
-            if (holdingWeapon && KeybindSystem.LegendarySkill?.JustPressed == true && UltimateCharge >= MaxUltimateCharge)
+            if (Main.hardMode && holdingWeapon && KeybindSystem.LegendarySkill?.JustPressed == true && UltimateCharge >= MaxUltimateCharge)
                 TriggerUltimateAbility();
         }
 
@@ -249,7 +249,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.General
             }
             if (activeSpikes.Count == 0) return;
 
-            Vector2 dir   = (Player.Calamity().mouseWorld - Player.Center).SafeNormalize(Vector2.UnitX * Player.direction);
+            Vector2 dir   = (global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(Player, Player.Calamity().mouseWorld) - Player.Center).SafeNormalize(Vector2.UnitX * Player.direction);
             Vector2 ortho = new Vector2(-dir.Y, dir.X);
             for (int i = 0; i < activeSpikes.Count; i++)
                 (activeSpikes[i].ModProjectile as IceSpikeMinion)?.AlignForStrike(dir, ortho, i, activeSpikes.Count);

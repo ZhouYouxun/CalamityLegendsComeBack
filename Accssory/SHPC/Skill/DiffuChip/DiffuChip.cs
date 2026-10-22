@@ -5,6 +5,7 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.DiffuChip
 {
+    [Autoload(false)]
     public class DiffuChip : ModItem
     {
         public override void SetDefaults()

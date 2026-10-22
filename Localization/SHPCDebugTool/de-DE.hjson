@@ -1,0 +1,16 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			SHPCDebugTool: {
+				Tooltip:
+					'''
+					Nur für dich aktiv, solange im Inventar als Favorit markiert
+					Vergrößert das Materialrad der gehaltenen SHPC auf nahezu Bildschirmhöhe und schaltet alle Materialien mit unbegrenzter Testmunition frei
+					Entfernen oder Entfavorisieren löscht alle geladenen Materialien und Reserven ohne Rückerstattung
+					Nur durch Cheats erhältlich
+					'''
+				DisplayName: SHPC-Debugwerkzeug
+			}
+		}
+	}
+}

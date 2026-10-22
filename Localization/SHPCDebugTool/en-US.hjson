@@ -1,0 +1,16 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			SHPCDebugTool: {
+				Tooltip:
+					'''
+					Activates only for you while favorited in your inventory
+					Expands the held SHPC material wheel to nearly screen height, unlocking all materials with unlimited debug ammunition
+					Unfavoriting or removing it clears all loaded SHPC materials and reserves; original materials are not refunded
+					Obtainable only through cheats
+					'''
+				DisplayName: SHPC Debug Tool
+			}
+		}
+	}
+}

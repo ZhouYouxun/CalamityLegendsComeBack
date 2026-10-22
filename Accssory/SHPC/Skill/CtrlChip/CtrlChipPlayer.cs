@@ -75,13 +75,23 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip
             return fallback != Vector2.Zero ? fallback : Main.MouseWorld;
         }
 
+        // Aim assistance chooses an attack point. It never steers an existing projectile.
+        public static Vector2 GetFireAimWorld(Player player, Vector2 fallback)
+        {
+            if (player == null || player.whoAmI != Main.myPlayer)
+                return fallback;
+            CtrlChipPlayer state = player.GetModPlayer<CtrlChipPlayer>();
+            NPC target = state.CtrlChipEquipped ? state.ReticleTarget : null;
+            return target?.Center ?? fallback;
+        }
+
         private void UpdateReticlePosition()
         {
             Vector2 mouseWorld = Main.MouseWorld;
             if (ReticleWorld == Vector2.Zero)
                 ReticleWorld = Player.Center;
 
-            NPC target = PlayerIsHoldingSHPC() ? FindTargetNearMouse(mouseWorld) : null;
+            NPC target = FindTargetNearMouse(mouseWorld);
             if (target != null)
             {
                 ReticleTargetIndex = target.whoAmI;
@@ -145,11 +155,6 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip
                 return target;
 
             return current + offset / distance * step;
-        }
-
-        private bool PlayerIsHoldingSHPC()
-        {
-            return Player.HeldItem?.type == ModContent.ItemType<NewLegendSHPC>();
         }
 
         private void EnsureNewReticleVisual()

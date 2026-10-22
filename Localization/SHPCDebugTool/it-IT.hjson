@@ -1,0 +1,16 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			SHPCDebugTool: {
+				Tooltip:
+					'''
+					Si attiva solo per te quando è tra i preferiti nel tuo inventario
+					Ingrandisce la ruota della SHPC impugnata quasi all’altezza dello schermo e sblocca tutti i materiali con munizioni di prova illimitate
+					Rimuoverlo o togliere il preferito elimina tutti i materiali caricati e le riserve senza restituirli
+					Ottenibile solo con trucchi
+					'''
+				DisplayName: Strumento di debug SHPC
+			}
+		}
+	}
+}

@@ -3,16 +3,16 @@ Mods: {
 		Items: {
 			Weapons: {
 				MagnetBombItem: {
-					DisplayName: Bombe magnétique
-					Tooltip:
+					// DisplayName: Magnet Bomb
+					/* Tooltip:
 						'''
-						Un clic gauche lance une bombe collante qui adhère aux surfaces.
-						Un clic droit fait exploser toutes les bombes posées simultanément.
-						'''
+						Left click to throw a sticky bomb that adheres to surfaces.
+						Right click to detonate all deployed bombs simultaneously.
+						''' */
 				}
 			}
 		}
 
-		Projectiles.A_Tools.MagnetBombProj.DisplayName: Bombe magnétique
+		// Projectiles.A_Tools.MagnetBombProj.DisplayName: Magnet Bomb
 	}
 }

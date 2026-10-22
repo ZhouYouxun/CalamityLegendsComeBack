@@ -819,7 +819,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 Vector2 dir = SafeNormalize(target.Center - npc.Center, Vector2.UnitY);
                 npc.velocity = dir * 27f;
                 SoundEngine.PlaySound(SoundID.NPCDeath10, npc.Center);
-                target.Calamity().GeneralScreenShakePower = 12f;
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(target, npc.Center, 12f);
             }
             else if (timer > 45 && timer < 100)
             {
@@ -829,7 +829,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             {
                 int dmg = npc.damage / 3;
                 SoundEngine.PlaySound(SoundID.Item62 with { Volume = 0.8f }, npc.Center);
-                target.Calamity().GeneralScreenShakePower = 10f;
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(target, npc.Center, 10f);
                 LeviathanFx.Burst(npc.Center, 6f, 30);
                 foreach (float dir in new float[] { -1f, 1f })
                 {
@@ -852,7 +852,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             if (timer == 1)
             {
                 SoundEngine.PlaySound(SoundID.NPCDeath10, npc.Center);
-                target.Calamity().GeneralScreenShakePower = 10f;
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(target, npc.Center, 10f);
                 shieldActive = true;
                 shieldHitsRemaining = 45;
                 shieldStunTimer = 0;
@@ -969,7 +969,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 {
                     npc.velocity = Vector2.Zero;
                     SoundEngine.PlaySound(SoundID.NPCDeath4, npc.Center);
-                    target.Calamity().GeneralScreenShakePower = 12f;
+                    global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(target, npc.Center, 12f);
                     LeviathanFx.Burst(npc.Center, 7f, 36, themeDust);
                 }
 

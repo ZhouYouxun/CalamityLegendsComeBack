@@ -1,0 +1,16 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			SHPCDebugTool: {
+				Tooltip:
+					'''
+					放在背包中并标记为收藏时启用，仅对自己这个玩家有效
+					将手持SHPC的材料轮盘放大至接近屏幕高度，解锁全部材料并提供无限调试弹药
+					取消收藏或移出背包后，清空SHPC全部已装填材料与储备，原有材料不会返还
+					仅限作弊获取
+					'''
+				DisplayName: SHPC调试工具
+			}
+		}
+	}
+}

@@ -47,7 +47,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.Passive
                 d.noGravity = true;
             }
             Player owner = Main.player[Projectile.owner];
-            owner.Calamity().GeneralScreenShakePower = Math.Max(owner.Calamity().GeneralScreenShakePower, 5.5f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(owner, Projectile.Center, 5.5f);
         }
 
         public override void AI()

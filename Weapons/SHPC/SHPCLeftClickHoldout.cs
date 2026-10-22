@@ -99,12 +99,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         private void UpdateTransform(Player owner)
         {
-            Vector2 aimWorld = Projectile.owner == Main.myPlayer
-                ? Main.MouseWorld
-                : owner.Calamity().mouseWorld;
-
             Vector2 armPos = owner.RotatedRelativePoint(owner.MountedCenter, true);
-            Vector2 aimDir = (aimWorld - armPos).SafeNormalize(Vector2.UnitX * owner.direction);
+            Vector2 aimDir = Projectile.owner == Main.myPlayer
+                ? NewLegendSHPC.GetLeftClickAimDirection(owner, Main.MouseWorld)
+                : Projectile.velocity.SafeNormalize(Vector2.UnitX * owner.direction);
 
             gunRotation = aimDir.ToRotation();
             spriteDir = Math.Sign(aimDir.X);

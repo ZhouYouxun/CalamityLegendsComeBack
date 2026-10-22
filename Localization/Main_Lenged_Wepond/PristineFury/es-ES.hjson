@@ -57,20 +57,20 @@ Mods: {
 				NewLegendPristineFury: {
 					// DisplayName: Scorch All Things - Pristine Fury
 					// PristineFuryIntro: "[c/FF9340:Current imprint: {0}.]"
-					// RightClick: "[c/FFB066:Right Click: charge and release a pristine nova shot.]"
-					// Hook: "[c/9AEAFF:Hold Left + Right to launch the extraction hook; valid bosses grant imprints.]"
-					// Left_Idle: "[c/FFE05C:Left Click: fire slow gravity sparks in a compact spreader rhythm.]"
+					// RightClick: "[c/FFB066:Right Click: charge and fire a pristine nova.]"
+					// Hook: "[c/9AEAFF:Hold both buttons to launch an extraction hook and claim an imprint from a powerful foe.]"
+					// Left_Idle: "[c/FFE05C:Left Click: fire slowly drifting gravity sparks.]"
 					// Left_DesertScourge: "[c/FFE05C:Left Click: fire glass blocks that shatter into cutting fragments.]"
-					// Left_EyeOfCthulhu: "[c/FFE05C:Left Click: fire restrained deathstare beams that lean toward enemies.]"
+					// Left_EyeOfCthulhu: "[c/FFE05C:Left Click: fire a deathstare beam that bends toward enemies.]"
 					// Left_Skeletron: "[c/FFE05C:Left Click: launch bonefire skull sparks that curve and burst.]"
 					// Left_EvilT2: "[c/FFE05C:Left Click: launch magic-drawn yellow worms that repeatedly rush nearby targets.]"
-					// Left_SlimeGod: "[c/FFE05C:Left Click: fire overloaded slime globes built for ricochet and late homing.]"
+					// Left_SlimeGod: "[c/FFE05C:Left Click: fire bouncing overloaded slime balls that then seek enemies.]"
 					// Left_HardMode: "[c/FFE05C:Left Click: launch heavy fireballs that leave fragments and ground fire.]"
 					// Left_Prime: "[c/FFE05C:Left Click: spray gear-toothed golden fire with mechanical spark teeth.]"
 					// Left_BrimstoneElemental: "[c/FFE05C:Left Click: fire brimstone rays that seed homing barrages.]"
 					// Left_FakeCalamity: "[c/FFE05C:Left Click: charge a yellow nova orb that detonates for burst damage.]"
-					// Left_Plantera: "[c/FFE05C:Left Click: prime visual beams before a splitting green lightning strike.]"
-					// Left_Golem: "[c/FFE05C:Left Click: channel a solar welding ray with a lethal endpoint.]"
+					// Left_Plantera: "[c/FFE05C:Left Click: briefly charge, then release splitting green lightning.]"
+					// Left_Golem: "[c/FFE05C:Left Click: channel a sunbeam that erupts in light at its tip.]"
 					// Left_Goliath: "[c/FFE05C:Left Click: charge briefly, then release a forward swarm of reaper drones.]"
 					// Left_Empress: "[c/FFE05C:Left Click: sustain a rainbow fire-lance that brightens as it ramps.]"
 					// Left_Moonlord: "[c/FFE05C:Left Click: warm up lunar bolts before an instant massive laser.]"
@@ -84,31 +84,18 @@ Mods: {
 					// Left_Dragon: "[c/FFE05C:Left Click: ramp dragon-breath volleys into short frenzy cycles.]"
 					/* Passive:
 						'''
-						[c/FF7733:Passive: three fire tails fight behind the player.]
-						[c/FF7733:They inherit weapon damage and strike rapidly with a short per-target cooldown.]
-						[c/FF7733:Tail hits restore a small amount of wing flight time.]
-						[c/BB55FF:Passive: a holy crystal hovers above the player's head while holding Pristine Fury.]
-						[c/BB55FF:Left Click: crystal fires rapid homing shards toward the nearest enemy.]
-						[c/BB55FF:Right Click (charging): crystal unleashes two slowly rotating scissor lasers.]
+						[c/FF7733:Passive [Flame Tails]: Fire tails pursue enemies behind you.]
+						[c/FF7733:Their hits restore a little wing flight time.]
+						[c/BB55FF:Passive [Profaned Crystal]: A holy crystal hovers above you while this weapon is held.]
+						[c/BB55FF:During left-click attacks, it fires rainbow shards that seek enemies.]
+						[c/BB55FF:During right-click charging, it releases intertwining lasers.]
 						''' */
 					/* Ultimate:
 						'''
-						[c/FF9340:Ultimate (P): channel to anchor the current]
-						[c/FF9340:imprint queue, then click to unleash Rekindled Calamity.]
-						[c/FF9340:Every anchored imprint detonates in sequence as]
-						[c/FF9340:a pillar of holy fire, maxing out purification on hit.]
-						[c/FF9340:All pillars then converge into one closing supernova.]
+						[c/FF9340:Ultimate [Rekindled Calamity]: Press [{0}] to gather holy fire.]
+						[c/FF9340:After charging, press left click to call down holy-fire pillars that converge into a supernova.]
 						''' */
 					// Tooltip: "[GFB]"
-					// LegendaryHint: "[c/BABABA:Hold Shift to access the record]"
-					/* LegendaryText:
-						'''
-						[c/FF9340:The first Pristine Fury was still a weapon that breathed holy flame, holding back nearby enemies with sustained burning.]
-						[c/FFB066:That fire was pure enough, but it could not carry the pressure left by defeated bosses beyond Providence.]
-						[c/9AEAFF:After the rebuild, the hook is no longer only a hit tool. It extracts, records, and preserves the marks of different enemies.]
-						[c/FFB066:Each mark returns to the barrel, letting the flame carry malice, divinity, plague, hunger, or a more distant echo.]
-						[c/FF7733:When the final fire burns again, Pristine Fury exhales more than flame. It exhales the legends it once anchored.]
-						''' */
 				}
 			}
 		}

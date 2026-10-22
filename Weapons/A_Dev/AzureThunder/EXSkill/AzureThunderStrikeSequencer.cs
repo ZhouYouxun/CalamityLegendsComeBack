@@ -260,7 +260,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             if (Main.projectile.IndexInRange(judgement))
                 AzureThunderPlayer.ApplyProjectileGrowth(Main.projectile[judgement]);
 
-            Main.player[Projectile.owner].Calamity().GeneralScreenShakePower = Math.Max(Main.player[Projectile.owner].Calamity().GeneralScreenShakePower, 9f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Main.player[Projectile.owner], Projectile.Center, 9f);
         }
 
         private void SpawnHarmonyAoe(Vector2 strikePoint, bool finalStrike)

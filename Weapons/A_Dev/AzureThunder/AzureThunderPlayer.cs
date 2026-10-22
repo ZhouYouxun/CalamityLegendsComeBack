@@ -280,7 +280,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
                 return;
 
             UltimateEnergy = Utils.Clamp(UltimateEnergy + amount, 0, UltimateEnergyMax);
-            LegendaryUltimateReadySound.PlayIfReadyTransition(Player, ref wasUltimateReady, UltimateEnergy >= UltimateEnergyMax);
+            LegendaryUltimateReadySound.PlayIfReadyTransition(Player, ref wasUltimateReady, Main.hardMode && UltimateEnergy >= UltimateEnergyMax);
         }
         public void TryGainThunderChargeFromTarget(NPC target)
         {
@@ -349,7 +349,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         private void HandleUltimateInput()
         {
             // 终极键只由本地玩家读取，且必须满能量。
-            if (Main.myPlayer != Player.whoAmI || !KeybindSystem.LegendarySkill.JustPressed)
+            if (!Main.hardMode || Main.myPlayer != Player.whoAmI || !KeybindSystem.LegendarySkill.JustPressed)
                 return;
 
             if (UltimateEnergy < UltimateEnergyMax)
@@ -615,7 +615,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
         {
             // 所有青霆输入统一通过此方法取鼠标，保持多人和灾厄监听一致。
             Vector2 mouseWorld = player.Calamity().mouseWorld;
-            return mouseWorld == Vector2.Zero ? Main.MouseWorld : mouseWorld;
+            return global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(player, mouseWorld == Vector2.Zero ? Main.MouseWorld : mouseWorld);
         }
 
         public static void SpawnGroundSword(Player player, Vector2 position, int damage, float knockback)

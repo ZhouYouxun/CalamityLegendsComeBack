@@ -261,7 +261,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 invincibilityTimer = 90; // Invulnerable state transition
                 desperationCenter = target.Center;
                 SoundEngine.PlaySound(RoarSound, npc.Center);
-                Main.LocalPlayer.Calamity().GeneralScreenShakePower = 15f;
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(Main.LocalPlayer, npc.Center, 15f);
             }
 
             // Update custom sub-entities
@@ -474,7 +474,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             if (timer == 1)
             {
                 SoundEngine.PlaySound(RoarSound, npc.Center);
-                Main.LocalPlayer.Calamity().GeneralScreenShakePower = 12f;
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(Main.LocalPlayer, npc.Center, 12f);
                 EmitShadowFlameBurst(npc.Center, 15f, 32);
             }
 
@@ -801,7 +801,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             {
                 SoundEngine.PlaySound(RoarSound, npc.Center);
                 SoundEngine.PlaySound(EaterScreamSound, npc.Center);
-                Main.LocalPlayer.Calamity().GeneralScreenShakePower = 8f;
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(Main.LocalPlayer, npc.Center, 8f);
             }
 
             // Spawn Eater wall segments
@@ -990,7 +990,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             if (timer == 20)
             {
                 SoundEngine.PlaySound(RoarSound, npc.Center);
-                Main.LocalPlayer.Calamity().GeneralScreenShakePower = 10f;
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(Main.LocalPlayer, npc.Center, 10f);
                 EmitShadowFlameBurst(npc.Center, 12f, 24);
             }
 
@@ -1089,7 +1089,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             if (timer == 1)
             {
                 SoundEngine.PlaySound(RoarSound, npc.Center);
-                Main.LocalPlayer.Calamity().GeneralScreenShakePower = 25f;
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(Main.LocalPlayer, npc.Center, 25f);
                 EmitShadowFlameBurst(npc.Center, 22f, 48);
             }
 

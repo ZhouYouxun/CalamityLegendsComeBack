@@ -45,7 +45,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.General
 
             player.itemAnimation = 2;
             player.itemTime = 2;
-            player.ChangeDir(player.Calamity().mouseWorld.X > player.Center.X ? 1 : -1);
+            player.ChangeDir(global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(player, player.Calamity().mouseWorld).X > player.Center.X ? 1 : -1);
 
             if (Projectile.ai[0] < MaxCharge)
             {
@@ -75,14 +75,14 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.General
                 SoundEngine.PlaySound(SoundID.Item30 with { Pitch = 0.6f, Volume = 0.85f }, player.Center);
 
             var source = player.GetSource_ItemUse(player.HeldItem);
-            Vector2 targetDir = (player.Calamity().mouseWorld - player.Center)
+            Vector2 targetDir = (global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(player, player.Calamity().mouseWorld) - player.Center)
                 .SafeNormalize(Vector2.UnitX * player.direction);
 
             switch (modPlayer.CurrentMode)
             {
                 case 0:
                 {
-                    Vector2 mouseOffset = player.Calamity().mouseWorld - player.Center;
+                    Vector2 mouseOffset = global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(player, player.Calamity().mouseWorld) - player.Center;
                     Vector2 bladeDir = mouseOffset.SafeNormalize(Vector2.UnitX * player.direction);
                     float bladeRadius = MathHelper.Clamp(mouseOffset.Length(), 100f, 260f);
                     Projectile.NewProjectile(source, player.Center + bladeDir * bladeRadius, Vector2.Zero,
@@ -121,7 +121,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.General
             // ── 形态蓄力视觉效果 ──
             if (modPlayer.CurrentMode == 0)
             {
-                Vector2 mousePos = player.Calamity().mouseWorld - Main.screenPosition;
+                Vector2 mousePos = global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(player, player.Calamity().mouseWorld) - Main.screenPosition;
                 Color bladeCol = new Color(0, 195, 255, 0) * progress * 0.55f;
                 float ringRad = (1f - progress) * 70f + 10f;
                 Main.spriteBatch.Draw(bloom, mousePos, null, bladeCol * 0.4f, 0f,
@@ -149,7 +149,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.General
             else
             {
                 Vector2 frontPos = player.Center
-                    + (player.Calamity().mouseWorld - player.Center)
+                    + (global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(player, player.Calamity().mouseWorld) - player.Center)
                         .SafeNormalize(Vector2.UnitX * player.direction) * 40f
                     - Main.screenPosition;
                 Color pillarCol = Color.Lerp(Color.Cyan, Color.OrangeRed,

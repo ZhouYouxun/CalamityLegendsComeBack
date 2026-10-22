@@ -412,7 +412,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             if (timer == 1)
             {
                 SoundEngine.PlaySound(SoundID.NPCDeath52 with { Pitch = -0.4f, Volume = 0.9f }, npc.Center);
-                Main.LocalPlayer.Calamity().GeneralScreenShakePower = 6f;
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(Main.LocalPlayer, npc.Center, 6f);
             }
 
             if (timer < 42)
@@ -430,7 +430,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             else if (timer == 42)
             {
                 SoundEngine.PlaySound(SoundID.Item14 with { Pitch = -0.5f }, npc.Center);
-                Main.LocalPlayer.Calamity().GeneralScreenShakePower = 18f;
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(Main.LocalPlayer, npc.Center, 18f);
                 BrimstoneFx.Burst(npc.Center, 14f, 60);
             }
             // 第三拍：连锁爆燃，一圈比一圈大
@@ -443,7 +443,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     SoundEngine.PlaySound(SoundID.Item14 with { Pitch = 0.2f + ring * 0.4f, Volume = 0.8f }, npc.Center);
                     Vector2 at = npc.Center + Main.rand.NextVector2Circular(70f, 70f);
                     BrimstoneFx.Burst(at, 5f + ring * 9f, 18 + (int)(ring * 26f));
-                    Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(Main.LocalPlayer.Calamity().GeneralScreenShakePower, 8f + ring * 6f);
+                    global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Main.LocalPlayer, npc.Center, 8f + ring * 6f);
                 }
             }
             // 第四拍：白热定格 —— 炸开前最后半秒，一切都亮起来
@@ -461,7 +461,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             {
                 SoundEngine.PlaySound(SoundID.NPCDeath14 with { Pitch = -0.3f }, npc.Center);
                 BrimstoneFx.Burst(npc.Center, 20f, 120);
-                Main.LocalPlayer.Calamity().GeneralScreenShakePower = 22f;
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(Main.LocalPlayer, npc.Center, 22f);
 
                 // 走 StrikeInstantKill 而不是 npc.active = false —— 后者会把掉落/死亡音效/gore 一起吃掉。
                 npc.dontTakeDamage = false;
@@ -592,7 +592,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     npc.velocity = Vector2.Zero;
                     Player t = Main.player[npc.target];
                     if (t.active)
-                        t.Calamity().GeneralScreenShakePower = 7f;
+                        global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(t, npc.Center, 7f);
                     BrimstoneFx.Burst(npc.Center, 6f, 30);
                     SoundEngine.PlaySound(SoundID.NPCDeath52, npc.Center);
                 }
@@ -1038,7 +1038,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             {
                 BeginBlink(npc, arenaCenter, 20);
                 SoundEngine.PlaySound(SoundID.Item62 with { Volume = 0.8f }, npc.Center);
-                target.Calamity().GeneralScreenShakePower = 10f;
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(target, npc.Center, 10f);
                 BrimstoneFx.Burst(npc.Center, 7f, 40);
             }
 
@@ -1111,7 +1111,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             if (timer == 45)
             {
                 SoundEngine.PlaySound(SoundID.NPCDeath10, npc.Center);
-                target.Calamity().GeneralScreenShakePower = 8f;
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(target, npc.Center, 8f);
                 BrimstoneFx.Burst(npc.Center, 6f, 30);
                 if (Main.netMode != NetmodeID.MultiplayerClient)
                 {

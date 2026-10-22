@@ -255,7 +255,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 invincibilityTimer = 90; // Invulnerable state transition
                 desperationCenter = target.Center;
                 SoundEngine.PlaySound(RoarSound, npc.Center);
-                Main.LocalPlayer.Calamity().GeneralScreenShakePower = 15f;
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(Main.LocalPlayer, npc.Center, 15f);
             }
 
             // Update custom sub-entities
@@ -463,7 +463,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             if (timer == 1)
             {
                 SoundEngine.PlaySound(RoarSound, npc.Center);
-                Main.LocalPlayer.Calamity().GeneralScreenShakePower = 12f;
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(Main.LocalPlayer, npc.Center, 12f);
                 EmitBloodBurst(npc.Center, 15f, 32);
             }
 
@@ -690,7 +690,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 int wormType = GetCalamityNPC("SmallPerforatorHead", NPCID.GiantWormHead);
                 MakeWormEruptFromHive(npc, eruptDir, 1f, wormType);
                 SoundEngine.PlaySound(WormEruptSound, npc.Center);
-                Main.LocalPlayer.Calamity().GeneralScreenShakePower = 14f;
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(Main.LocalPlayer, npc.Center, 14f);
             }
 
             // Wait for worm spawn sequence to finish
@@ -752,7 +752,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 int wormType = GetCalamityNPC("MediumPerforatorHead", NPCID.GiantWormHead);
                 MakeWormEruptFromHive(npc, eruptDir, 1.2f, wormType);
                 SoundEngine.PlaySound(WormEruptSound, npc.Center);
-                Main.LocalPlayer.Calamity().GeneralScreenShakePower = 16f;
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(Main.LocalPlayer, npc.Center, 16f);
             }
 
             if (timer >= 100)
@@ -832,7 +832,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 int wormType = GetCalamityNPC("LargePerforatorHead", NPCID.GiantWormHead);
                 MakeWormEruptFromHive(npc, eruptDir, 1.4f, wormType);
                 SoundEngine.PlaySound(WormEruptSound, npc.Center);
-                Main.LocalPlayer.Calamity().GeneralScreenShakePower = 18f;
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(Main.LocalPlayer, npc.Center, 18f);
             }
 
             if (timer >= 110)
@@ -976,7 +976,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             if (timer == 1)
             {
                 SoundEngine.PlaySound(RoarSound, npc.Center);
-                Main.LocalPlayer.Calamity().GeneralScreenShakePower = 25f;
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(Main.LocalPlayer, npc.Center, 25f);
                 EmitBloodBurst(npc.Center, 22f, 48);
             }
 

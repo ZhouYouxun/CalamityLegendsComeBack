@@ -76,8 +76,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickTurret
 
     internal static class MilitaryTurretUtility
     {
-        public const int MaxTurrets = 8;
-        public const int MinSpacingTiles = 18;
+        public const int MaxTurrets = 3;
+        public const float OwnerRecallDistance = 200f * 16f;
+        public const int OwnerRecallDelay = 10 * 60;
+        public const int MinSpacingTiles = 10;
         public const float MinSpacing = MinSpacingTiles * 16f;
         public const int TurretLifetime = 5 * 60 * 60;
         public const int ManaPerCall = 40;

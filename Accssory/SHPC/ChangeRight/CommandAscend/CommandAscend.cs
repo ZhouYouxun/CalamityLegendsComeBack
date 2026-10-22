@@ -33,6 +33,9 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.CommandAscend
             CreateRecipe()
                 .AddIngredient<MysteriousCircuitry>(4)
                 .AddIngredient<DubiousPlating>(8)
+                .AddIngredient<UelibloomBar>(5)
+                .AddIngredient<DivineGeode>(5)
+                .AddIngredient(ItemID.LunarBar, 5)
                 .AddIngredient(ModContent.Find<ModItem>("CalamityMod/Blissful" + "Bomb" + "ardier").Type)
                 .AddTile(TileID.LunarCraftingStation)
                 .Register();

@@ -3,16 +3,16 @@ Mods: {
 		Items: {
 			Weapons: {
 				PreDrawLabItem: {
-					DisplayName: Лаборатория PreDraw
-					Tooltip: Щелчок левой кнопкой выпускает тестовый снаряд-кисть. Щелчок правой кнопкой открывает панель тестирования PreDraw.
+					// DisplayName: PreDraw Lab
+					// Tooltip: Left-click fires a paintbrush test projectile. Right-click opens the PreDraw testing panel.
 				}
 			}
 		}
 
 		Projectiles: {
 			A_Dev: {
-				PreDrawLabProjectile.DisplayName: Тестовый снаряд PreDraw
-				PreDrawLabPanel.DisplayName: Панель лаборатории PreDraw
+				// PreDrawLabProjectile.DisplayName: PreDraw Lab Test Projectile
+				// PreDrawLabPanel.DisplayName: PreDraw Lab Panel
 			}
 		}
 	}

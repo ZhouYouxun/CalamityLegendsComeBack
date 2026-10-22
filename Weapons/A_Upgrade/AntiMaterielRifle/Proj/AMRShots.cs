@@ -443,9 +443,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj
 
             if (Main.LocalPlayer.active && !Main.LocalPlayer.dead)
             {
-                Main.LocalPlayer.Calamity().GeneralScreenShakePower = Math.Max(
-                    Main.LocalPlayer.Calamity().GeneralScreenShakePower,
-                    critical ? 7.5f : 4f);
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Main.LocalPlayer, Projectile.Center, critical ? 7.5f : 4f);
             }
 
             GeneralParticleHandler.SpawnParticle(new DirectionalPulseRing(

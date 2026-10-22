@@ -41,7 +41,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
         private int silvaRecoveryAuraIndex = -1;
         private int silvaRecoveryAuraFollowTime;
 
-        // ── 箭袋强化字段（每帧由 EquipQuiver 写入，ResetEffects 清零）──
+        // 内置箭袋强化：每帧按世界进度重建，只影响叶流的攻击路径。
         public float ChargeMultiplier = 1f;           // 所有战术右键蓄力时间乘数
         public int RecoveryExtraFlashes;              // 复苏右键额外治疗闪光数
         public int ReconExtraMarkFrames;              // 侦察右键额外标记持续帧数
@@ -76,6 +76,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
             BombardExplosionBonus = false;
             BombardRainDamageBonus = false;
             PlagueAdvancedTier = 0;
+            EquipQuiver(BalanceBlossomFlux.InnateQuiverTier);
         }
 
         public override void UpdateDead()
@@ -97,6 +98,25 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
 
         public override void PostUpdateEquips()
         {
+            if (HoldingBlossomFlux)
+            {
+                Player.statDefense += BalanceBlossomFlux.InnateQuiverDefenseBonus;
+                SilvaHarpEquipped |= CalamityMod.DownedBossSystem.downedDoG;
+                FairyDanceEquipped |= Main.hardMode;
+                RainbowSpiritDanceEquipped |= NPC.downedEmpressOfLight;
+                ArrowConversionEquipped |= Player.HeldItem.ModItem is NewLegendBlossomFlux weapon && weapon.TacticalArrowConversion;
+                if (NPC.downedEmpressOfLight)
+                {
+                    Player.lifeRegen += 6;
+                    Player.statDefense += 10;
+                }
+                else if (Main.hardMode)
+                {
+                    Player.lifeRegen += 4;
+                    Player.statDefense += 6;
+                }
+            }
+
             if (BadSeedEquipped)
                 Player.statDefense *= 0.5f;
         }
@@ -292,6 +312,9 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
             if (!RainbowSpiritDanceEquipped || !HoldingBlossomFlux || Player.whoAmI != Main.myPlayer)
                 return;
 
+            if (CurrentPreset == BlossomFluxChloroplastPresetType.Chlo_ABreak)
+                return;
+
             blossomFluxHitCounter++;
             if (blossomFluxHitCounter < 60)
                 return;
@@ -448,7 +471,7 @@ namespace CalamityLegendsComeBack.Accssory.BF.Common
 
                 // 类型不符（战术切换后残留的旧花）或槽位重复/越界都直接清掉，下面会按当前战术重新生成。
                 int slot = flower.CurrentSlot;
-                if (projectile.type != desiredType || slot < 0 || slot >= existingSlots.Length || existingSlots[slot])
+                if ((HoldingBlossomFlux && projectile.type != desiredType) || slot < 0 || slot >= existingSlots.Length || existingSlots[slot])
                 {
                     projectile.Kill();
                     continue;

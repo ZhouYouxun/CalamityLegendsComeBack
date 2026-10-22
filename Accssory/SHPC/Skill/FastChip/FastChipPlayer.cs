@@ -10,7 +10,7 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.FastChip
 
         public override void ResetEffects()
         {
-            FastChipEquipped = false;
+            FastChipEquipped = NPC.downedMoonlord;
             FastChipDrawbackActive = false;
         }
 

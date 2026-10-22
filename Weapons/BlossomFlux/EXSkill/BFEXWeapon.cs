@@ -95,7 +95,9 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
 
             // 终结技（大招）伤害面板始终取「突击」战术的左键基础面板，无论当前选择的是哪种战术。
             int assaultPanelBase = damageBalance.GetLeftClickBaseDamage(BlossomFluxChloroplastPresetType.Chlo_ABreak);
-            Projectile.damage = Math.Max(1, (int)Owner.GetTotalDamage(DamageClass.Ranged).ApplyTo(assaultPanelBase));
+            StatModifier damage = Owner.GetTotalDamage(DamageClass.Ranged);
+            damage += BalanceBlossomFlux.InnateQuiverDamageBonus;
+            Projectile.damage = Math.Max(1, (int)damage.ApplyTo(assaultPanelBase));
             Projectile.knockBack = Owner.HeldItem.knockBack;
 
             UpdateHeldProjectileVariables();
@@ -142,8 +144,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
                 return;
 
             float screenshake = MathHelper.Lerp(MinChargeScreenshake, MaxChargeScreenshake, chargeCompletion);
-            Owner.SetScreenshake(screenshake);
-            Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, screenshake);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Owner, Projectile.Center, screenshake);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Owner, Projectile.Center, screenshake);
         }
 
         private void ReadyPhase()
@@ -222,8 +224,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill
 
             if (Main.myPlayer == Projectile.owner)
             {
-                Owner.SetScreenshake(9f);
-                Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, 7f);
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Owner, Projectile.Center, 9f);
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Owner, Projectile.Center, 7f);
                 FireBarrageVolley();
             }
 

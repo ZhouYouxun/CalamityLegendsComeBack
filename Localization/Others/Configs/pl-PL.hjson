@@ -27,14 +27,9 @@ Mods: {
 					// Tooltip: Enables many recipes that improve gameplay flow
 				}
 
-				AllowBossSummonShop: {
-					// Label: "[i:GuideVoodooDoll] Allow Zoologist Boss Summons"
-					// Tooltip: The Zoologist sells Boss summons at the appropriate progression; a few recipes that would return pre-kill materials are temporarily disabled.
-				}
-
 				AllowOtherNPCQuickShop: {
 					// Label: "[i:GoldCoin] Allow Other NPC Convenience Shops"
-					// Tooltip: The Wizard, Goblin Tinkerer, Demolitionist, Arms Dealer, Zoologist and Archmage sell additional items as the world progresses.
+					// Tooltip: The Goblin Tinkerer, Demolitionist, Arms Dealer and Archmage sell additional items as the world progresses.
 				}
 
 				GiveQuickStartBoxOnSpawn: {

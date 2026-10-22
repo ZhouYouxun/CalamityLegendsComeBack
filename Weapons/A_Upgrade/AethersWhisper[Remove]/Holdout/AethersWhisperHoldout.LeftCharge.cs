@@ -147,7 +147,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.Holdout
 
             if (full)
             {
-                Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, AethersWhisperBalance.FullChargeScreenShake);
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Owner, Projectile.Center, AethersWhisperBalance.FullChargeScreenShake);
                 SoundEngine.PlaySound(SoundID.Item15 with { Volume = 0.5f, Pitch = -0.9f }, GunTip);
                 SoundEngine.PlaySound(SoundID.DD2_BetsysWrathImpact with { Volume = 0.7f, Pitch = -0.35f }, GunTip);
             }

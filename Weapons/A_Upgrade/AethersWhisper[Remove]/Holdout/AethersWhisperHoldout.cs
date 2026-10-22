@@ -14,6 +14,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AethersWhisper.Holdout
     /// </summary>
     internal sealed partial class AethersWhisperHoldout : BaseIdleHoldoutProjectile, ILocalizedModType
     {
+        // The item is disabled; registering this holdout would associate item type 0 (an empty hand)
+        // with it through BaseIdleHoldoutProjectile.ItemProjectileRelationship.
+        public override bool IsLoadingEnabled(Mod mod) => false;
+
         public new string LocalizationCategory => "Projectiles.AethersWhisper";
         public override string Texture => "CalamityMod/Items/Weapons/Magic/AethersWhisper";
 

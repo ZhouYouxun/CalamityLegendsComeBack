@@ -17,6 +17,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickTurret
         private const int DeployAnimationTime = 24;
 
         private int firingTime;
+        private int distantOwnerTimer;
         private int targetIndex = -1;
         private int deployTimer = DeployAnimationTime;
         private float angle;
@@ -49,6 +50,17 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickTurret
         public override void AI()
         {
             Player owner = Main.player[Projectile.owner];
+            if (Main.netMode != NetmodeID.MultiplayerClient)
+            {
+                distantOwnerTimer = Vector2.DistanceSquared(owner.Center, Projectile.Center) >
+                    MilitaryTurretUtility.OwnerRecallDistance * MilitaryTurretUtility.OwnerRecallDistance
+                    ? distantOwnerTimer + 1 : 0;
+                if (distantOwnerTimer >= MilitaryTurretUtility.OwnerRecallDelay)
+                {
+                    Projectile.Kill();
+                    return;
+                }
+            }
             if (!owner.active || owner.dead)
             {
                 Projectile.Kill();
@@ -231,7 +243,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClickTurret
 
         private int GetScaledDamage()
         {
-            float sourceScale = MathHelper.Clamp(SourceDamage / 80f, 0.65f, 2.5f);
+            Player owner = Main.player[Projectile.owner];
+            int progressionDamage = (int)owner.GetTotalDamage(DamageClass.Magic).ApplyTo(
+                new BalanceSHPC().GetTurretRightClickBaseDamage());
+            float sourceScale = Math.Max(1, progressionDamage) / 80f;
             return Math.Max(1, (int)Math.Round(Stats.BaseDamage * sourceScale));
         }
 

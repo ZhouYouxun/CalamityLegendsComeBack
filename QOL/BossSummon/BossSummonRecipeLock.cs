@@ -8,16 +8,13 @@ using Terraria.ModLoader;
 namespace CalamityLegendsComeBack.QOL.BossSummon
 {
     /// <summary>
-    /// The Zoologist offers these summons as a recovery path before their first kill.
+    /// The quartermaster offers these summons as a recovery path before their first kill.
     /// Their recipes stay unavailable until then, so their gated ingredients cannot be bypassed.
     /// </summary>
     internal sealed class BossSummonRecipeLock : ModSystem
     {
         public override void PostAddRecipes()
         {
-            if (CalamityLegendsComeBackConfig.Instance?.AllowBossSummonShop != true)
-                return;
-
             foreach (Recipe recipe in Main.recipe)
             {
                 if (recipe == null)
@@ -43,11 +40,11 @@ namespace CalamityLegendsComeBack.QOL.BossSummon
     {
         public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
         {
-            if (CalamityLegendsComeBackConfig.Instance?.AllowBossSummonShop != true || !IsRecipeLocked(item.type))
+            if (!IsRecipeLocked(item.type))
                 return;
 
-            tooltips.Add(new TooltipLine(Mod, "ZoologistSaleChinese", "售卖自动物学家"));
-            tooltips.Add(new TooltipLine(Mod, "ZoologistSaleEnglish", "Sold by the Zoologist"));
+            tooltips.Add(new TooltipLine(Mod, "QuartermasterSaleChinese", "可从物资官处购买"));
+            tooltips.Add(new TooltipLine(Mod, "QuartermasterSaleEnglish", "Sold by the Quartermaster"));
         }
 
         private static bool IsRecipeLocked(int itemType)

@@ -1,4 +1,5 @@
 using CalamityLegendsComeBack.Weapons.BlossomFlux;
+using CalamityLegendsComeBack.LegendaryTooltipEffects;
 using CalamityLegendsComeBack.Accssory.BF.Common;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.EXSkill;
 using CalamityLegendsComeBack.Weapons.BlossomFlux.Passive.PaRevo;
@@ -12,6 +13,8 @@ using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
+using Terraria.ModLoader.IO;
+using System.IO;
 
 namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 {
@@ -19,6 +22,18 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
     {
         public new string LocalizationCategory => "Items.Weapons";
         private BalanceBlossomFlux damageBalance = new();
+        internal bool TacticalArrowConversion;
+
+        public override ModItem Clone(Item item)
+        {
+            var clone = (NewLegendBlossomFlux)base.Clone(item);
+            clone.TacticalArrowConversion = TacticalArrowConversion;
+            return clone;
+        }
+        public override void SaveData(TagCompound tag) => tag["TacticalArrowConversion"] = TacticalArrowConversion;
+        public override void LoadData(TagCompound tag) => TacticalArrowConversion = tag.GetBool("TacticalArrowConversion");
+        public override void NetSend(BinaryWriter writer) => writer.Write(TacticalArrowConversion);
+        public override void NetReceive(BinaryReader reader) => TacticalArrowConversion = reader.ReadBoolean();
 
         public override void SetDefaults()
         {
@@ -26,6 +41,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             Item.height = 78;
             Item.damage = BFBalanceTable.Get(BFStat.Breakthrough_Left_Damage, 0);
             Item.DamageType = DamageClass.Ranged;
+            Item.ArmorPenetration = (int)BalanceBlossomFlux.InnateQuiverArmorPenetration;
             Item.useAnimation = 2;
             Item.useTime = 2;
             Item.useStyle = ItemUseStyleID.Shoot;
@@ -47,6 +63,7 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 
         public override void HoldItem(Player player)
         {
+            Item.ArmorPenetration = (int)BalanceBlossomFlux.InnateQuiverArmorPenetration;
             player.Calamity().mouseWorldListener = true;
             if (Main.myPlayer == player.whoAmI)
                 player.Calamity().rightClickListener = true;
@@ -69,7 +86,8 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 exPlayer.ConsumeAllEX() &&
                 !exWeaponActive)
             {
-                Vector2 direction = (player.Calamity().mouseWorld - player.Center).SafeNormalize(Vector2.UnitX * player.direction);
+                Vector2 aimPoint = global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(player, player.Calamity().mouseWorld);
+                Vector2 direction = (aimPoint - player.Center).SafeNormalize(Vector2.UnitX * player.direction);
                 Projectile.NewProjectile(
                     player.GetSource_ItemUse(Item),
                     player.Center,
@@ -103,6 +121,20 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
         {
             BlossomFluxChloroplastPresetType currentPreset = player.GetModPlayer<BFRightUIPlayer>().CurrentPreset;
             damage.Base += damageBalance.GetLeftClickBaseDamage(currentPreset) - Item.damage;
+            damage += BalanceBlossomFlux.InnateQuiverDamageBonus;
+            if (TacticalArrowConversion)
+                damage += BFAccessoryPlayer.ArrowRestRangedDamageBonus;
+            if (DownedBossSystem.downedDoG)
+                damage += 0.15f;
+            if (NPC.downedEmpressOfLight)
+                damage += 0.10f;
+        }
+
+        public override void ModifyWeaponCrit(Player player, ref float crit)
+        {
+            crit += BalanceBlossomFlux.InnateQuiverCritBonus;
+            if (DownedBossSystem.downedDoG)
+                crit += 5f;
         }
 
         public override void ModifyTooltips(List<TooltipLine> tooltips)
@@ -132,28 +164,19 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
                 ? string.Format(this.GetLocalizedValue("BF_EXHint"), keyText)
                 : this.GetLocalizedValue("BF_EXDisabledHint");
 
-            string legendaryText = this.GetLocalizedValue("LegendaryText");
-            string shiftHint = this.GetLocalizedValue("LegendaryHint");
-            bool shiftPressed = Main.keyState.PressingShift();
-            string legendarySection = shiftPressed ? legendaryText : shiftHint;
-
-            if (shiftPressed)
-            {
-                tooltips.RemoveAll(t => t.Text == "[GFB]");
-            }
-            else
-            {
-                string merged =
+            string merged =
                     leftPresetText.TrimEnd('\r', '\n') + "\n" +
                     rightPresetText.TrimEnd('\r', '\n') + "\n" +
                     formWheelHint.TrimEnd('\r', '\n') + "\n" +
+                    this.GetLocalizedValue("ArrowConversionHint") + "\n" +
+                    (Main.hardMode ? this.GetLocalizedValue("InnateFairies") + "\n" : string.Empty) +
+                    (NPC.downedEmpressOfLight ? this.GetLocalizedValue("InnateRainbow") + "\n" : string.Empty) +
                     passiveText.TrimEnd('\r', '\n') + "\n" +
-                    exHint.TrimEnd('\r', '\n') + "\n";
+                    exHint.TrimEnd('\r', '\n');
 
-                tooltips.FindAndReplace("[GFB]", merged);
-            }
-
-            tooltips.Add(new TooltipLine(Mod, "BlossomFluxForestLegendaryText", legendarySection));
+            tooltips.FindAndReplace("[GFB]", merged);
+            tooltips.Add(new TooltipLine(Mod, BlossomFluxForestLegendaryTooltip.TooltipLineName,
+                this.GetLocalizedValue("LegendaryText")));
         }
 
         public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
@@ -178,7 +201,14 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
             return BlossomFluxTacticalTextures.GetLocalDisplayedPreset();
         }
 
-        public override bool CanRightClick() => false;
+        public override bool CanRightClick() => true;
+
+        public override void RightClick(Player player)
+        {
+            TacticalArrowConversion = !TacticalArrowConversion;
+            Item.NetStateChanged();
+            SoundEngine.PlaySound(SoundID.MenuTick, player.Center);
+        }
 
         public override bool ConsumeItem(Player player) => false;
     }

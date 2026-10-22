@@ -3,31 +3,31 @@ Mods: {
 		Items: {
 			Weapons: {
 				StructureExtractor: {
-					DisplayName: Extracteur de structures
-					Tooltip: Tenez cet objet, faites glisser avec le clic gauche pour sélectionner une zone, puis confirmez l'exportation d'un fichier de structure .csch de Calamity.
+					// DisplayName: Structure Extractor
+					// Tooltip: Hold this item, drag with left click to select an area, then confirm to export a Calamity .csch structure file.
 				}
 			}
 		}
 
-		Projectiles.A_Dev.StructureExtractorOverlay.DisplayName: Matrice d'extraction de structures
+		// Projectiles.A_Dev.StructureExtractorOverlay.DisplayName: Structure Extraction Matrix
 
 		TheSpecialText: {
-			StructureExtractorSelectionLabel: "{0}x{1} | origine {2}, {3} | {4} tuiles"
-			StructureExtractorConfirmTitle: Confirmer l'exportation de la structure
-			StructureExtractorConfirmBody:
+			// StructureExtractorSelectionLabel: "{0}x{1} | origin {2}, {3} | {4} tiles"
+			// StructureExtractorConfirmTitle: Confirm Structure Export
+			/* StructureExtractorConfirmBody:
 				'''
-				Coin supérieur gauche : {0}, {1}
-				Taille : {2} x {3}
-				Total de tuiles : {4}
-				Dossier d'enregistrement : {5}
-				'''
-			StructureExtractorCancel: Annuler
-			StructureExtractorConfirm: Exporter
-			StructureExtractorCanceled: Extraction de structure annulée.
-			StructureExtractorExportSaved: Fichier de structure enregistré dans : {0}
-			StructureExtractorExportDetails: Sélection : coin supérieur gauche {0}, {1} ; taille {2}x{3} ; {4} tuiles.
-			StructureExtractorExportFailed: Échec de l'exportation de la structure : {0}
-			StructureExtractorExportError: Erreur d'exportation de structure : {0}
+				Top-left: {0}, {1}
+				Size: {2} x {3}
+				Total tiles: {4}
+				Save folder: {5}
+				''' */
+			// StructureExtractorCancel: Cancel
+			// StructureExtractorConfirm: Export
+			// StructureExtractorCanceled: Structure extraction cancelled.
+			// StructureExtractorExportSaved: Structure file saved to: {0}
+			// StructureExtractorExportDetails: Selection: top-left {0}, {1}; size {2}x{3}; {4} tiles.
+			// StructureExtractorExportFailed: Structure export failed: {0}
+			// StructureExtractorExportError: Structure export error: {0}
 		}
 	}
 }

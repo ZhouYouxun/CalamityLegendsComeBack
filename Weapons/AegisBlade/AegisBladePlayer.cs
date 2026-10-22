@@ -198,7 +198,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
 
             AegisEnergy = Math.Min(AegisEnergy + regenRate, BalanceAegisBlade.EnergyMax);
 
-            bool ready = AegisEnergy >= BalanceAegisBlade.EnergyMax;
+            bool ready = Main.hardMode && AegisEnergy >= BalanceAegisBlade.EnergyMax;
             LegendaryUltimateReadySound.PlayIfReadyTransition(Player, ref energyWasReady, ready);
         }
 
@@ -391,7 +391,7 @@ namespace CalamityLegendsComeBack.Weapons.AegisBlade
             // 掩体不再阻挡玩家，玩家可自由穿越
         }
 
-        public bool CanActivateUltimate => AegisEnergy >= BalanceAegisBlade.EnergyMax && !UltimateActive;
+        public bool CanActivateUltimate => Main.hardMode && AegisEnergy >= BalanceAegisBlade.EnergyMax && !UltimateActive;
 
         public void ActivateUltimate()
         {

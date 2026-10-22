@@ -430,7 +430,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     SoundEngine.PlaySound(SoundID.NPCHit53 with { Pitch = -0.2f }, npc.Center);
                     // 屏震要打在本地玩家上（每个客户端抖自己的屏），打在 npc.target 上等于只有目标那台机器抖
                     if (!Main.dedServ && Main.LocalPlayer.active)
-                        Main.LocalPlayer.Calamity().GeneralScreenShakePower = 7f;
+                        global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(Main.LocalPlayer, npc.Center, 7f);
                     AureusFx.Burst(npc.Center, 6f, 30);
                 }
             }
@@ -530,7 +530,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
             Player local = Main.LocalPlayer;
             if (local != null && local.active)
-                local.Calamity().GeneralScreenShakePower = Math.Max(local.Calamity().GeneralScreenShakePower, shake);
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(local, pos, shake);
 
             AureusFx.Burst(pos, 6f, burst, dustType);
         }
@@ -984,7 +984,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             {
                 SoundEngine.PlaySound(SoundID.NPCDeath10, npc.Center);
                 if (!Main.dedServ && Main.LocalPlayer.active)
-                    Main.LocalPlayer.Calamity().GeneralScreenShakePower = 8f;
+                    global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(Main.LocalPlayer, npc.Center, 8f);
                 AureusFx.Burst(npc.Center, 6f, 30);
 
                 // 发射器清场只在服务端做：客户端直接置 active=false 只是本地藏起来，服务端那边还活着。
@@ -1006,7 +1006,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             {
                 SoundEngine.PlaySound(SoundID.Item62 with { Volume = 0.7f }, npc.Center);
                 if (!Main.dedServ && Main.LocalPlayer.active)
-                    Main.LocalPlayer.Calamity().GeneralScreenShakePower = 12f;
+                    global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(Main.LocalPlayer, npc.Center, 12f);
                 AureusFx.Burst(npc.Center, 8f, 40);
             }
 
@@ -1104,7 +1104,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     SoundEngine.PlaySound(SoundID.Item62 with { Volume = 1.2f, Pitch = -0.2f }, npc.Center);
                     SoundEngine.PlaySound(SoundID.NPCDeath4, npc.Center);
                     if (!Main.dedServ && Main.LocalPlayer.active)
-                        Main.LocalPlayer.Calamity().GeneralScreenShakePower = 13f;
+                        global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(Main.LocalPlayer, npc.Center, 13f);
                     AureusFx.Burst(npc.Center, 8f, 40);
                     AureusFx.Burst(npc.Center, 5f, 24, DustID.PurpleTorch);
                 }

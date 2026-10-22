@@ -24,8 +24,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.EXSkill
         public bool EXFull => EXValue >= GetCurrentEXMax(Player);
         public int EXDisplayValue => Utils.Clamp(EXValue / GetFramesPerDisplayUnit(Player), 0, EXDisplayMax);
         public bool EXUnlocked =>
-            BalanceSHPC.GetCompletedStageIndex() >= 5 ||
-            Player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.LegendaryEmblemPlayer>().PermanentEXUnlock ||
             Player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.LegendaryEmblemPlayer>().EXAccessoryEquipped;
 
         public static int GetCurrentEXMax(Player player)

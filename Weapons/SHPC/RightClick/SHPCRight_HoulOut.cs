@@ -374,6 +374,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
                 heatPlayer.SyncHeatFromHoldout(stage, stageTimer, MaxHeatStage);
 
             SpawnTopHeatPlayerGlow(player, heatPlayer);
+            if (stage >= MaxHeatStage && (stageFilledThisFrame || Main.GameUpdateCount % 15 == 0))
+                SpawnHeatRedirectField(player, 240, 45);
 
             if (stage < MaxHeatStage)
                 maxHeatEntrySoundPlayed = false;
@@ -538,7 +540,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         private bool CanSustainCurrentMaximumHeat()
         {
-            return MaxHeatStage >= 5 && stage >= 5;
+            return Owner.GetModPlayer<HeatModulePlayer>().HeatModuleEquipped || BalanceSHPC.LaserNeverOverheats || (MaxHeatStage >= 5 && stage >= 5);
         }
 
         private void ApplyRecoilRotation()
@@ -712,12 +714,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
             PlayNormalFireSound();
             SpawnNormalShotMuzzleEffect(player, Vector2.UnitX.RotatedBy(Projectile.rotation));
 
-            if (stage >= 5 && (int)Main.GameUpdateCount % 15 == 0)
-                SpawnHeatRedirectField(player, 240, 45);
         }
 
         private bool ShouldApplyHeatBurnDebuff()
         {
+            if (BalanceSHPC.LaserNeverOverheats || Owner.GetModPlayer<HeatModulePlayer>().HeatModuleEquipped)
+                return false;
+
             int secondHighestStage = Math.Max(1, MaxHeatStage - 1);
             return stage >= secondHighestStage || stage >= 4;
         }

@@ -2,6 +2,7 @@ using CalamityLegendsComeBack.Weapons.SHPC.Effects.AAARules;
 using CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.CommandAscend;
 using CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.MilitaryCaller;
 using CalamityLegendsComeBack.Accssory.SHPC.General;
+using CalamityLegendsComeBack.Accssory.SHPC.Skill.Barrier;
 using CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip;
 using CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.ProjectilePossessionModule;
 using CalamityLegendsComeBack.Weapons.SHPC.EXSkill;
@@ -35,7 +36,7 @@ using Terraria.ModLoader.IO;
 
 namespace CalamityLegendsComeBack.Weapons.SHPC
 {
-    public class NewLegendSHPC : ModItem, ILocalizedModType
+    public partial class NewLegendSHPC : ModItem, ILocalizedModType
     {
         private const string MagazineIconTooltipLineName = "SHPCMagazineIconStrip";
 
@@ -72,20 +73,21 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         private const int BaseManaCost = 15;
         public const int MaxReservePerSlot = 9999;
 
-        private readonly int[] magazineEffectPowers = new int[MagazineCount];
-        private readonly int[] magazineAmmoTypes = new int[MagazineCount];
-        private readonly int[] magazineEffectIDs = new int[MagazineCount];
+        private int[] magazineEffectPowers = new int[MagazineCount];
+        private int[] magazineAmmoTypes = new int[MagazineCount];
+        private int[] magazineEffectIDs = new int[MagazineCount];
         // 外置弹药库：每格最多存 MaxReservePerSlot 个相同材料，开火时自动补充内弹夹
-        private readonly int[] magazineReserve = new int[MagazineCount];
+        private int[] magazineReserve = new int[MagazineCount];
         private int selectedMagazineIndex;
         private bool suppressWorldRightClickUntilRelease;
         private bool wasWorldRightClickInteractionActive;
 
         public int storedEffectPower
         {
-            get => magazineEffectPowers[CurrentMagazineIndex];
+            get => DebugModeActive ? GetBaseAmmoCapacity(DebugEffect.EffectID) : magazineEffectPowers[CurrentMagazineIndex];
             set
             {
+                if (DebugModeActive) return;
                 int index = CurrentMagazineIndex;
                 magazineEffectPowers[index] = Math.Max(0, value);
                 HandleDepletedMagazine(index);
@@ -94,26 +96,27 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         public int storedAmmoType
         {
-            get => magazineAmmoTypes[CurrentMagazineIndex];
-            set => magazineAmmoTypes[CurrentMagazineIndex] = value;
+            get => DebugModeActive ? DebugEffect.AmmoType : magazineAmmoTypes[CurrentMagazineIndex];
+            set { if (!DebugModeActive) magazineAmmoTypes[CurrentMagazineIndex] = value; }
         }
 
         public int storedEffectID
         {
-            get => magazineEffectIDs[CurrentMagazineIndex];
-            set => magazineEffectIDs[CurrentMagazineIndex] = value;
+            get => DebugModeActive ? DebugEffect.EffectID : magazineEffectIDs[CurrentMagazineIndex];
+            set { if (!DebugModeActive) magazineEffectIDs[CurrentMagazineIndex] = value; }
         }
 
         public int CurrentMagazineIndex
         {
             get
             {
+                if (DebugModeActive) return debugSelectedIndex;
                 selectedMagazineIndex = Utils.Clamp(selectedMagazineIndex, 0, MagazineCount - 1);
                 return selectedMagazineIndex;
             }
         }
 
-        public int GetActiveMagazineCount(Player player) => GetActiveMagazineCountForPlayer(player);
+        public int GetActiveMagazineCount(Player player) => DebugModeActive ? debugEffects.Length : GetActiveMagazineCountForPlayer(player);
 
         public static int GetActiveMagazineCountForPlayer(Player player)
         {
@@ -161,6 +164,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         private void ClampSelectedMagazineToActiveCount(Player player)
         {
+            if (DebugModeActive) return;
             int activeCount = GetActiveMagazineCount(player);
             selectedMagazineIndex = Utils.Clamp(selectedMagazineIndex, 0, activeCount - 1);
         }
@@ -174,6 +178,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         private void SanitizeMagazineSlot(int index)
         {
+            if (DebugModeActive) return;
             index = Utils.Clamp(index, 0, MagazineCount - 1);
 
             int ammoType = magazineAmmoTypes[index];
@@ -248,10 +253,18 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
             Item.value = CalamityGlobalItem.RarityPinkBuyPrice;
             Item.rare = ModContent.RarityType<BurnishedAuric>();
+            Item.accessory = true;
             //Item.rare = ItemRarityID.Pink;
         }
         #endregion
 
+
+        public override void UpdateAccessory(Player player, bool hideVisual)
+        {
+            BarrierPlayer barrierPlayer = player.GetModPlayer<BarrierPlayer>();
+            barrierPlayer.BarrierEquipped = true;
+            barrierPlayer.BarrierVisible = !hideVisual;
+        }
 
         #region ===== 灌注读取与通用查询 =====
 
@@ -333,6 +346,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         public bool TryLoadSelectedEffectAmmo(Player player, SHPCAmmoCandidate candidate)
         {
+            if (DebugModeActive) return false;
             int ammoType = candidate.AmmoType;
             if (ammoType <= ItemID.None || !EffectRegistry.IsRegisteredAmmo(ammoType))
                 return false;
@@ -357,6 +371,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         public SHPCMagazineSlot GetMagazineSlot(int index)
         {
+            if (DebugModeActive) return GetDebugMagazineSlot(index);
             index = Utils.Clamp(index, 0, MagazineCount - 1);
             SanitizeMagazineSlot(index);
             return new SHPCMagazineSlot(index, magazineAmmoTypes[index], magazineEffectIDs[index], magazineEffectPowers[index], magazineReserve[index], index == CurrentMagazineIndex);
@@ -364,6 +379,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         public SHPCMagazineSlot GetMagazineSlot(int index, Player player)
         {
+            if (DebugModeActive) return GetDebugMagazineSlot(index);
             ClampSelectedMagazineToActiveCount(player);
             index = Utils.Clamp(index, 0, GetActiveMagazineCount(player) - 1);
             SanitizeMagazineSlot(index);
@@ -372,6 +388,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         public bool SelectMagazine(int index)
         {
+            if (DebugModeActive) return SelectDebugMagazine(index);
             if (index < 0 || index >= MagazineCount)
                 return false;
 
@@ -381,6 +398,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         public bool SelectMagazine(int index, Player player)
         {
+            if (DebugModeActive) return SelectDebugMagazine(index);
             if (index < 0 || index >= GetActiveMagazineCount(player))
                 return false;
 
@@ -390,12 +408,14 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         private bool IsMagazineLoaded(int index)
         {
+            if (DebugModeActive) return index >= 0 && index < debugEffects.Length;
             return IsMagazineConfigured(index) &&
                    magazineEffectPowers[index] > 0;
         }
 
         private bool IsMagazineConfigured(int index)
         {
+            if (DebugModeActive) return index >= 0 && index < debugEffects.Length;
             SanitizeMagazineSlot(index);
             return IsValidAmmoEffectPair(magazineAmmoTypes[index], magazineEffectIDs[index]);
         }
@@ -405,6 +425,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         /// </summary>
         public bool HasLoadedAmmoType(int ammoType)
         {
+            if (DebugModeActive) return false; // Virtual materials are never owned items.
             for (int i = 0; i < MagazineCount; i++)
             {
                 if (IsMagazineConfigured(i) && magazineAmmoTypes[i] == ammoType)
@@ -416,6 +437,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         public bool TryFillEmptyMagazines(Player player)
         {
+            if (DebugModeActive) return true;
             ClampSelectedMagazineToActiveCount(player);
             int activeMagazineCount = GetActiveMagazineCount(player);
             HashSet<int> unavailableAmmoTypes = new();
@@ -460,6 +482,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         private void ConsumeCurrentMagazineShot()
         {
+            if (DebugModeActive) return;
             int index = CurrentMagazineIndex;
             if (!IsMagazineLoaded(index))
                 return;
@@ -470,6 +493,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         private void ConsumeCurrentMagazineShot(Player player)
         {
+            if (DebugModeActive) return;
             int index = CurrentMagazineIndex;
             if (!IsMagazineLoaded(index))
                 return;
@@ -480,6 +504,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         public void ConsumeCurrentMagazineShots(int amount, Player player = null)
         {
+            if (DebugModeActive) return;
             int index = CurrentMagazineIndex;
             if (!IsMagazineLoaded(index))
                 return;
@@ -500,6 +525,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         private bool TryPrepareCurrentMagazineForShot(Player player)
         {
+            SyncDebugMode(player);
+            if (DebugModeActive) return true;
             ClampSelectedMagazineToActiveCount(player);
             int index = CurrentMagazineIndex;
             if (IsMagazineLoaded(index))
@@ -544,6 +571,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         private bool HasProjectileEffectAvailableForCost(Player player)
         {
+            SyncDebugMode(player);
+            if (DebugModeActive) return true;
             ClampSelectedMagazineToActiveCount(player);
             int index = CurrentMagazineIndex;
             if (IsMagazineLoaded(index) ||
@@ -623,6 +652,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         public void DirectLoadMagazine(int slotIndex, int ammoType, int effectID, int capacity)
         {
+            if (DebugModeActive) return;
             slotIndex = Utils.Clamp(slotIndex, 0, MagazineCount - 1);
             if (!IsValidAmmoEffectPair(ammoType, effectID))
             {
@@ -640,6 +670,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         /// </summary>
         public void AddToReserve(int slotIndex, int ammoType, int effectID, int count)
         {
+            if (DebugModeActive) return;
             slotIndex = Utils.Clamp(slotIndex, 0, MagazineCount - 1);
             if (!IsValidAmmoEffectPair(ammoType, effectID) || count <= 0)
                 return;
@@ -659,6 +690,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         /// <summary>直接设置外置库数量（UI取出时用）。</summary>
         public void SetReserve(int slotIndex, int count)
         {
+            if (DebugModeActive) return;
             slotIndex = Utils.Clamp(slotIndex, 0, MagazineCount - 1);
             SanitizeMagazineSlot(slotIndex);
             if (!IsMagazineConfigured(slotIndex))
@@ -680,6 +712,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         private void TryReturnMagazineAmmo(Player player, int index)
         {
+            if (DebugModeActive) return;
             index = Utils.Clamp(index, 0, MagazineCount - 1);
             SanitizeMagazineSlot(index);
             int effectID = magazineEffectIDs[index];
@@ -846,6 +879,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         #endregion
 
         #region ===== 左键发射与安全枪口 =====
+        internal static Vector2 GetLeftClickAimDirection(Player player, Vector2 fallbackAimWorld)
+        {
+            Vector2 armPosition = player.RotatedRelativePoint(player.MountedCenter, true);
+            Vector2 aimWorld = CtrlChipPlayer.GetFireAimWorld(player, fallbackAimWorld);
+            return (aimWorld - armPosition).SafeNormalize(Vector2.UnitX * player.direction);
+        }
+
         public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
         {
 
@@ -867,6 +907,10 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             {
                 return false;
             }
+
+            CtrlChipPlayer fireControl = player.GetModPlayer<CtrlChipPlayer>();
+            if (player.whoAmI == Main.myPlayer && fireControl.CtrlChipEquipped && fireControl.ReticleHasTarget)
+                velocity = GetLeftClickAimDirection(player, Main.MouseWorld) * velocity.Length();
 
             int shotEffectID = TryPrepareCurrentMagazineForShot(player) ? storedEffectID : -1;
             Projectile.NewProjectile(
@@ -895,7 +939,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 Projectile.NewProjectile(
                     source,
                     player.Center,
-                    Vector2.Zero,
+                    velocity.SafeNormalize(Vector2.UnitX * player.direction),
                     ModContent.ProjectileType<SHPCLeftClickHoldout>(),
                     0,
                     0f,
@@ -1069,6 +1113,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         private int leftClickCooldown = 0;
         public override void HoldItem(Player player)
         {
+            SyncDebugMode(player);
             ClampSelectedMagazineToActiveCount(player);
 
             if (leftClickCooldown > 0)
@@ -1534,19 +1579,6 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         {
             Player player = Main.LocalPlayer;
             bool isChinese = Language.ActiveCulture.Name.StartsWith("zh");
-            bool shiftPressed = Main.keyState.PressingShift();
-
-            string legendaryText = this.GetLocalizedValue("LegendaryText");
-            string shiftHint = this.GetLocalizedValue("LegendaryHint");
-            string legendarySection = shiftPressed ? legendaryText : shiftHint;
-
-            if (shiftPressed)
-            {
-                // 按住Shift：隐藏所有功能描述，只显示传奇文本
-                tooltips.RemoveAll(t => t.Text == "[GFB]");
-            }
-            else
-            {
                 bool useCompactTooltip = true;
                 if (useCompactTooltip)
                 {
@@ -1567,11 +1599,12 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
                     string compactSuffix =
                         string.Format(this.GetLocalizedValue("SHPC_AmmoWheelHint"), compactFormKeyText).TrimEnd('\r', '\n') + "\n" +
-                        this.GetLocalizedValue($"SHPC_RightIntro{compactState + 1}").TrimEnd('\r', '\n') + "\n" +
+                        BuildRightClickTooltipText(compactState) + "\n" +
                         this.GetLocalizedValue("SHPC_UnloadHint").TrimEnd('\r', '\n') + "\n" +
                         this.GetLocalizedValue("SHPC_Passive").TrimEnd('\r', '\n') + "\n" +
-                        compactExHint.TrimEnd('\r', '\n') + "\n" +
-                        this.GetLocalizedValue("SHPC_Final").TrimEnd('\r', '\n');
+                        this.GetLocalizedValue(Main.hardMode ? "SHPC_PassiveII" : "SHPC_PassiveIILocked") + "\n" +
+                        this.GetLocalizedValue("SHPC_EquipEffect").TrimEnd('\r', '\n') + "\n" +
+                        compactExHint.TrimEnd('\r', '\n');
 
                     int placeholderIndex = tooltips.FindIndex(line => line.Text == "[GFB]");
                     if (placeholderIndex >= 0)
@@ -1586,12 +1619,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                 string leftIntro = this.GetLocalizedValue("SHPC_LeftIntro").TrimEnd('\r', '\n');
                 string ammoText = BuildMagazineTooltipText(player);
                 string unloadHintText = this.GetLocalizedValue("SHPC_UnloadHint").TrimEnd('\r', '\n');
-                string passiveText = this.GetLocalizedValue("SHPC_Passive").TrimEnd('\r', '\n');
+                string passiveText = this.GetLocalizedValue("SHPC_Passive").TrimEnd('\r', '\n') + "\n" +
+                    this.GetLocalizedValue(Main.hardMode ? "SHPC_PassiveII" : "SHPC_PassiveIILocked");
 
                 int state = GetRightClickProgressState();
-                string rightStateText = this.GetLocalizedValue($"SHPC_RightIntro{state + 1}");
-
-                string finalLine = this.GetLocalizedValue("SHPC_Final");
+                string rightStateText = BuildRightClickTooltipText(state);
 
                 string keyText = KeybindSystem.LegendarySkill.GetAssignedKeys().FirstOrDefault() ?? (isChinese ? "未绑定" : "Unbound");
                 string formKeyText = KeybindSystem.LegendaryWeaponFormSwitch.GetAssignedKeys().FirstOrDefault() ?? (isChinese ? "未绑定" : "Unbound");
@@ -1614,14 +1646,22 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
                     rightStateText + "\n\n" +
                     unloadHintText + "\n\n" +
                     passiveText + "\n\n" +
-                    exHint + "\n\n" +
-                    finalLine;
+                    this.GetLocalizedValue("SHPC_EquipEffect").TrimEnd('\r', '\n') + "\n\n" +
+                    exHint;
 
                 tooltips.FindAndReplace("[GFB]", finalText);
                 }
-            }
 
-            tooltips.Add(new TooltipLine(Mod, SHPCMatrixLegendaryTooltip.TooltipLineName, legendarySection));
+            tooltips.Add(new TooltipLine(Mod, SHPCMatrixLegendaryTooltip.TooltipLineName,
+                this.GetLocalizedValue("SHPC_Final")));
+        }
+
+        private string BuildRightClickTooltipText(int state)
+        {
+            string text = this.GetLocalizedValue($"SHPC_RightIntro{state + 1}").TrimEnd('\r', '\n');
+            if (BalanceSHPC.LaserNeverOverheats)
+                text += "\n" + this.GetLocalizedValue("SHPC_NeverOverheats").TrimEnd('\r', '\n');
+            return text;
         }
 
         public override bool PreDrawTooltipLine(DrawableTooltipLine line, ref int yOffset)
@@ -1636,7 +1676,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         private void DrawMagazineIconTooltipLine(DrawableTooltipLine line)
         {
             Player player = Main.LocalPlayer;
-            int slotCount = GetActiveMagazineCount(player);
+            int slotCount = DebugModeActive ? 1 : GetActiveMagazineCount(player);
             float uiScale = line.BaseScale.X;
             int iconSize = Math.Max(18, (int)(22f * uiScale));
             int slotWidth = Math.Max(58, (int)(72f * uiScale));
@@ -1647,7 +1687,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
             for (int i = 0; i < slotCount; i++)
             {
-                SHPCMagazineSlot slot = GetMagazineSlot(i, player);
+                SHPCMagazineSlot slot = GetMagazineSlot(DebugModeActive ? CurrentMagazineIndex : i, player);
                 Rectangle box = new(x + i * (slotWidth + gap), y, slotWidth, slotHeight);
                 Color frameColor = slot.Selected ? new Color(255, 221, 90) : new Color(126, 150, 176);
 
@@ -1726,7 +1766,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         private string BuildCurrentAmmoEffectTooltipText()
         {
             string effectDescription = IsMagazineConfigured(CurrentMagazineIndex)
-                ? Language.GetTextValue($"Mods.CalamityLegendsComeBack.AMMO.SHPCAmmo{magazineEffectIDs[CurrentMagazineIndex]}")
+                ? Language.GetTextValue($"Mods.CalamityLegendsComeBack.AMMO.SHPCAmmo{storedEffectID}")
                 : this.GetLocalizedValue("SHPC_DefaultAmmoEffect");
 
             return string.Format(this.GetLocalizedValue("SHPC_CurrentAmmoEffect"), effectDescription).TrimEnd('\r', '\n');
@@ -1734,6 +1774,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         private string BuildMagazineTooltipText(Player player)
         {
+            if (DebugModeActive) return "\n" + GetCurrentAmmoDisplayName();
             ClampSelectedMagazineToActiveCount(player);
             int activeMagazineCount = GetActiveMagazineCount(player);
             List<string> slots = new();
@@ -1790,6 +1831,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         #region ===== 清空与返还逻辑 =====
         public override void RightClick(Player player)
         {
+            if (DebugModeActive) return;
             ClampSelectedMagazineToActiveCount(player);
 
             if (Main.keyState.PressingShift())
@@ -1825,17 +1867,16 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         {
             ModItem clone = base.Clone(item);
 
-            if (clone is NewLegendSHPC newItem && item.ModItem is NewLegendSHPC oldItem)
+            if (clone is NewLegendSHPC newItem)
             {
-                oldItem.SanitizeAllMagazineSlots();
-                newItem.selectedMagazineIndex = oldItem.CurrentMagazineIndex;
-                for (int i = 0; i < MagazineCount; i++)
-                {
-                    newItem.magazineEffectPowers[i] = oldItem.magazineEffectPowers[i];
-                    newItem.magazineAmmoTypes[i] = oldItem.magazineAmmoTypes[i];
-                    newItem.magazineEffectIDs[i] = oldItem.magazineEffectIDs[i];
-                    newItem.magazineReserve[i] = oldItem.magazineReserve[i];
-                }
+                SanitizeAllMagazineSlots();
+                newItem.magazineEffectPowers = (int[])magazineEffectPowers.Clone();
+                newItem.magazineAmmoTypes = (int[])magazineAmmoTypes.Clone();
+                newItem.magazineEffectIDs = (int[])magazineEffectIDs.Clone();
+                newItem.magazineReserve = (int[])magazineReserve.Clone();
+                newItem.debugEffects = Array.Empty<RulesOfEffect>();
+                newItem.debugSelectedIndex = 0;
+                newItem.selectedMagazineIndex = DebugModeActive ? 0 : CurrentMagazineIndex;
                 newItem.SanitizeAllMagazineSlots();
             }
 
@@ -1845,7 +1886,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         public override void SaveData(TagCompound tag)
         {
             SanitizeAllMagazineSlots();
-            tag["selectedMagazineIndex"] = CurrentMagazineIndex;
+            tag["selectedMagazineIndex"] = DebugModeActive ? 0 : CurrentMagazineIndex;
             for (int i = 0; i < MagazineCount; i++)
             {
                 tag[$"magazineEffectPower{i}"] = magazineEffectPowers[i];
@@ -1881,7 +1922,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
 
         public override void NetSend(BinaryWriter writer)
         {
-            writer.Write(CurrentMagazineIndex);
+            writer.Write(DebugModeActive ? 0 : CurrentMagazineIndex);
             for (int i = 0; i < MagazineCount; i++)
             {
                 writer.Write(magazineEffectPowers[i]);

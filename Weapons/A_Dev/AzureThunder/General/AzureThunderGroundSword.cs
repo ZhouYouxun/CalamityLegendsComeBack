@@ -212,7 +212,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             SpawnForgingLightning();
             SpawnIntroBurst();
             AzureThunderSounds.PlaySwordBurst(Projectile.Center, true);
-            Main.player[Projectile.owner].Calamity().GeneralScreenShakePower = Math.Max(Main.player[Projectile.owner].Calamity().GeneralScreenShakePower, 2.2f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Main.player[Projectile.owner], Projectile.Center, 2.2f);
             Projectile.netUpdate = true;
         }
 

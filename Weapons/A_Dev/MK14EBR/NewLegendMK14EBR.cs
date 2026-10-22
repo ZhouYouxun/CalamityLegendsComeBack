@@ -133,10 +133,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
                 : this.GetLocalizedValue("MK14_LoadoutHint");
 
             string finalText =
-                intro + "\n" +
-                ammo + "\n" +
-                right + "\n" +
-                loadout + "\n";
+                intro.TrimEnd('\r', '\n') + "\n" +
+                ammo.TrimEnd('\r', '\n') + "\n" +
+                right.TrimEnd('\r', '\n') + "\n" +
+                loadout.TrimEnd('\r', '\n');
 
             tooltips.FindAndReplace("[GFB]", finalText);
         }
@@ -228,7 +228,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.MK14EBR
         internal static Vector2 GetMouseWorld(Player player)
         {
             Vector2 mouseWorld = player.Calamity().mouseWorld;
-            return mouseWorld == Vector2.Zero ? Main.MouseWorld : mouseWorld;
+            return global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(player, mouseWorld == Vector2.Zero ? Main.MouseWorld : mouseWorld);
         }
 
         private void ToggleModificationPanel(Player player)

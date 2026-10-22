@@ -262,7 +262,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         {
             SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/DeadSunExplosion")
             { Volume = 0.48f, Pitch = -0.45f, PitchVariance = 0.12f }, Projectile.Center);
-            Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, 4.8f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Owner, Projectile.Center, 4.8f);
 
             if (!Main.dedServ)
             {

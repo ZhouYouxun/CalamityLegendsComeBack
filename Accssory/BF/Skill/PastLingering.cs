@@ -5,6 +5,7 @@ using Terraria.ModLoader;
 
 namespace CalamityLegendsComeBack.Accssory.BF.Skill
 {
+    [Autoload(false)]
     public sealed class PastLingering : ModItem
     {
         public override string Texture => "CalamityLegendsComeBack/Accssory/BF/Skill/PastLingering";

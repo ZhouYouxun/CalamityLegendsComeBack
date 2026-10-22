@@ -11,7 +11,6 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.ChangeRight
         public static bool IsChangeRightAccessoryItem(int itemType)
         {
             return itemType == ModContent.ItemType<global::CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.CommandAscend.CommandAscend>() ||
-                   itemType == ModContent.ItemType<global::CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.MilitaryCaller.MilitaryCaller>() ||
                    itemType == ModContent.ItemType<global::CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.ProjectilePossessionModule.ProjectilePossessionModule>();
         }
 

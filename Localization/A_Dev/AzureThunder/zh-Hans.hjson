@@ -20,8 +20,8 @@ Mods: {
 						'''
 					AzureThunderUltimate:
 						'''
-						[c/FFE85A:终结技：终结技能量达到240后按] [[c/FFE85A:{0}]] [c/FFE85A:进入持续25秒的天理真和状态。]
-						[c/FFE85A:天理真和：强化青霆剑的左键与右键。]
+						[c/FFE85A:大招【万钧风雷】：按下【{0}】即可进入天理真和状态]
+						[c/FFE85A:持续25秒，期间强化青霆剑的左键与右键]
 						'''
 					AzureThunderPassiveHeavenEarth0: "[c/B8F4FF:天地造化：] [c/DCD6C8:开局解锁。击败荒漠灾虫、邪恶BOSS、猪龙鱼公爵、犽戎以强化本效果。]"
 					AzureThunderPassiveHeavenEarth1: "[c/B8F4FF:天地造化：] [c/DCD6C8:场上每存在一把青霆剑，+1魔力再生。]"

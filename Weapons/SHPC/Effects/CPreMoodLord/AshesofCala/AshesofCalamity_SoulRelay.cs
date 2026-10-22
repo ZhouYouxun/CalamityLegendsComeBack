@@ -89,11 +89,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.AshesofCala
             Vector2 normal = forward.RotatedBy(MathHelper.PiOver2);
             bool piercingShot = shotIndex % 3 == 2;
 
-            // 保留“正前方附近”的扇形偏移。
-            // 第一发偏移最大，后面的偏移逐渐收束，让弹幕看起来像往前方喷射，而不是锁定敌人。
+            // 追踪弹保留扇形偏移；不追踪弹沿瞄准方向直线发射。
+            // 第一发偏移最大，后面的追踪弹偏移逐渐收束。
             float spreadStrength = MathHelper.Lerp(0.26f, 0.06f, shotIndex / (float)(ShotCount - 1));
             float wave = (float)Math.Sin(shotIndex * 1.83f) * spreadStrength;
-            Vector2 direction = forward.RotatedBy(wave).SafeNormalize(forward);
+            Vector2 direction = piercingShot ? forward : forward.RotatedBy(wave).SafeNormalize(forward);
 
             // 保留发射点的左右错位，让它不是从同一个点挤出来。
             float sideOffset = (float)Math.Sin(shotIndex * 2.41f) * 18f;
@@ -102,7 +102,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.AshesofCala
                 ? MathHelper.Lerp(5.4f, 7.2f, shotIndex / (float)(ShotCount - 1))
                 : Main.rand.NextFloat(13.5f, 16.5f);
 
-            int damage = Math.Max(1, (int)(Projectile.damage * 0.77f));
+            int baseDamage = Math.Max(1, (int)(Projectile.damage * 0.77f));
+            int damage = piercingShot ? baseDamage * 2 : baseDamage;
 
             Projectile.NewProjectile(
                 Projectile.GetSource_FromThis(),

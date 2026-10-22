@@ -107,9 +107,6 @@ namespace CalamityLegendsComeBack
                 case GamePacketType.BFRecoveryShieldStateSync:
                     BFRecoveryShieldPackets.HandleState(reader);
                     break;
-                case GamePacketType.LegendarySupplyBoxClaimRequest:
-                    LegendarySupplyBoxPackets.HandleClaimRequest(reader, whoAmI);
-                    break;
                 default:
                     TetrisMultiplayerPackets.HandlePacket(packetType, reader, whoAmI);
                     break;

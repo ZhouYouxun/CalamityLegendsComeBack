@@ -78,25 +78,9 @@ Mods: {
 						GE_PassiveSealInfo: "[c/FFE050:  Sealed foes: {0}  Resonance Echo (+15% dmg / +8 def): {1}]"
 						GE_Ultimate:
 							'''
-							[c/A0F0FF:★ Ultimate — Dimensional Compression (press {0} to release)]
-							[c/A0F0FF:  Special hits give +4 energy. Current: {1}/240]
-							[c/A0F0FF:  On release: spikes triple into 3-layer drill (max 30)]
-							[c/A0F0FF:  Left click to launch; high-freq hits; player is invulnerable]
-							[c/A0F0FF:  Shatters after 3s for 6x area damage; clears all spikes]
-							'''
-						LegendaryHint: "[c/BABABA:Hold Shift to read the legendary record]"
-						LegendaryText:
-							'''
-							[c/B0D8FF:The first Glacial Embrace was closer to an awakened ice core, answering the wielder with spikes and cold blades.]
-							[c/B0D8FF:That design already had forms, but cleave, pierce, and strike too easily felt like three unrelated move sets.]
-							[c/80C8FF:After the rebuild, every form belongs to the same ice formation: cleaves spread cold blades, pierces nail targets, and strikes clamp the ice frame shut.]
-							[c/A0B0FF:Stable combos quicken the spikes and weave recovery, armor, and brief aurora protection into the rhythm.]
-							[c/E0C0FF:When glacial energy is pushed to its limit, the formation gathers into a three-layer divine drill and drives every previous rotation through at once.]
-							[c/C0A0FF:Learn to listen to its beat, step in rhythm with each frozen cadence —]
-							[c/C0A0FF:that is the only key to commanding absolute cold.]
-							[c/E0C0FF:When the final beat falls perfectly, the Diamond Drill awakens,]
-							[c/E0C0FF:forging every spike into one starlit aurora lance.]
-							[c/E0C0FF:Ending this battlefield of ice and fire with the will of absolute zero.]
+							[c/A0F0FF:Ultimate [Dimensional Compression]: Press [{0}] to gather all ice spikes.]
+							[c/A0F0FF:They form a piercing divine drill; you are invulnerable during the attack.]
+							[c/A0F0FF:Current energy: {1}/240]
 							'''
 					}
 				}

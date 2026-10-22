@@ -278,7 +278,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             NPC target = ResolvePrimaryTarget();
             int groupToken = BuildGroupToken(3);
             SpawnFlyingSwords(4, target, 2, AzureThunderFlyingSword.AttackModeTriggerCannon, groupToken, true);
-            Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, 3.5f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Owner, Projectile.Center, 3.5f);
         }
 
         private void SpawnFinalCannonStrike()
@@ -380,7 +380,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
 
             if (Main.projectile.IndexInRange(judgement))
                 AzureThunderPlayer.ApplyProjectileGrowth(Main.projectile[judgement]);
-            Owner.Calamity().GeneralScreenShakePower = Math.Max(Owner.Calamity().GeneralScreenShakePower, 10f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Owner, Projectile.Center, 10f);
         }
 
         private NPC ResolvePrimaryTarget()

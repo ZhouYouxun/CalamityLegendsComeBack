@@ -157,7 +157,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.P90
             DashCooldownTimer = NewLegendP90.RollCooldownFrames;
             dodgedHostileProjectileThisRoll = false;
             Player.fullRotationOrigin = Player.Size * 0.5f;
-            Player.Calamity().GeneralScreenShakePower = Math.Max(Player.Calamity().GeneralScreenShakePower, 2.4f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Player, Player.Center, 2.4f);
 
             int damage = Math.Max(1, (int)(Player.GetWeaponDamage(weapon) * 7.5f));
             int hitbox = Projectile.NewProjectile(

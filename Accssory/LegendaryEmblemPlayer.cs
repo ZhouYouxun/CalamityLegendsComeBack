@@ -1,5 +1,5 @@
+using Terraria;
 using Terraria.ModLoader;
-using Terraria.ModLoader.IO;
 
 namespace CalamityLegendsComeBack.Accssory
 {
@@ -7,27 +7,17 @@ namespace CalamityLegendsComeBack.Accssory
     {
         private bool temporaryEXUnlock;
 
-        public bool PermanentEXUnlock;
+        // Shared gate for legendary ultimates. Old character-consumable saves are no longer used.
+        // The temporary override is only used by the unregistered developer test item.
         public bool EXAccessoryEquipped
         {
-            get => PermanentEXUnlock || temporaryEXUnlock;
+            get => Main.hardMode || temporaryEXUnlock;
             set => temporaryEXUnlock = value;
         }
 
         public override void ResetEffects()
         {
             temporaryEXUnlock = false;
-        }
-
-        public override void SaveData(TagCompound tag)
-        {
-            if (PermanentEXUnlock)
-                tag["PermanentEXUnlock"] = true;
-        }
-
-        public override void LoadData(TagCompound tag)
-        {
-            PermanentEXUnlock = tag.GetBool("PermanentEXUnlock");
         }
     }
 }

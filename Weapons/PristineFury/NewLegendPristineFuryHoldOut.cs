@@ -274,7 +274,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
 
             ApplyRecoil(10f);
             TriggerMuzzleFlash(28);
-            Owner.SetScreenshake(3.5f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Owner, Projectile.Center, 3.5f);
 
             // 根据印记在列表中的位置微调音调，营造"频率计"感觉
             float pitchStep = nextIndex / (float)(TemporaryDebugMarkCycle.Length - 1);
@@ -583,7 +583,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             Color burstColor = PristineFuryMarkHelper.GetColor(CurrentMark);
             SpawnMuzzleBurst(burstColor, chargeLevel == 3f ? 1.8f : (chargeLevel == 2f ? 1.2f : 0.7f));
             rightCooldownTimer = RightChargeCooldown;
-            Owner.SetScreenshake(chargeLevel == 3f ? 8f : (chargeLevel == 2f ? 4f : 2f));
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Owner, Projectile.Center, chargeLevel == 3f ? 8f : (chargeLevel == 2f ? 4f : 2f));
 
             if (chargeLevel == 3f)
             {
@@ -632,7 +632,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             pfPlayer.HookChargeFrames = 0;
             pfPlayer.HookChargeOpacity = 0f;
 
-            Owner.SetScreenshake(5f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Owner, Projectile.Center, 5f);
             SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/Providence/ProvidenceBurn") { Volume = 0.7f, Pitch = -0.35f }, Projectile.Center);
             SoundEngine.PlaySound(SoundID.Item29 with { Volume = 0.8f, Pitch = -0.3f }, Projectile.Center);
         }
@@ -704,7 +704,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             ultimateImpactSpots = ComputeUltimateImpactSpots();
             ultimateAnchor = ComputeImpactCentroid(ultimateImpactSpots);
 
-            Owner.SetScreenshake(7f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Owner, Projectile.Center, 7f);
             SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/Providence/ProvidenceHolyBlastShoot") { Volume = 0.9f, Pitch = -0.05f }, Projectile.Center);
             SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/ArcNovaDiffuserBigShot") { Volume = 0.8f }, Projectile.Center);
             ApplyRecoil(20f);
@@ -887,7 +887,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                 Projectile.owner,
                 240f);
 
-            Owner.SetScreenshake(10f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Owner, Projectile.Center, 10f);
             SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/Providence/ProvidenceBurn") { Volume = 0.9f, Pitch = -0.15f }, ultimateAnchor);
         }
 
@@ -1089,7 +1089,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
         internal Vector2 GetMouseWorld()
         {
             Vector2 mouseWorld = Owner.Calamity().mouseWorld;
-            return mouseWorld == Vector2.Zero ? Main.MouseWorld : mouseWorld;
+            return global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(Owner, mouseWorld == Vector2.Zero ? Main.MouseWorld : mouseWorld);
         }
 
         internal NPC FindTarget(float range) => PristineFuryTargeting.FindTarget(GunTipPosition, range, Owner);

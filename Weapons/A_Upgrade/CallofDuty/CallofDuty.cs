@@ -102,7 +102,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty
         {
             string key = KeybindSystem.LegendarySkill?.GetAssignedKeys().Count > 0
                 ? KeybindSystem.LegendarySkill.GetAssignedKeys()[0]
-                : "P";
+                : "Unbound";
 
             string compact = string.Format(this.GetLocalizedValue("Compact"), key);
             tooltips.FindAndReplace("[GFB]", compact);
@@ -192,7 +192,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.CallofDuty
         internal static Vector2 GetMouseWorld(Player player)
         {
             Vector2 mouseWorld = player.Calamity().mouseWorld;
-            return mouseWorld == Vector2.Zero ? Main.MouseWorld : mouseWorld;
+            return global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(player, mouseWorld == Vector2.Zero ? Main.MouseWorld : mouseWorld);
         }
     }
 }

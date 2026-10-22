@@ -29,13 +29,10 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip
             CreateRecipe()
                 .AddIngredient<MysteriousCircuitry>(10)
                 .AddIngredient<DubiousPlating>(10)
-                .AddIngredient(ItemID.SoulofSight)
-                .AddIngredient(ItemID.SoulofMight)
-                .AddIngredient(ItemID.SoulofFright)
-                .AddIngredient(ItemID.HallowedBar, 10)
-                .AddIngredient(ItemID.ChlorophyteBullet, 500)
-                .AddIngredient(ItemID.MechanicalEye)
-                .AddTile(TileID.MythrilAnvil)
+                .AddIngredient<CalamityMod.Items.Accessories.ThePointer>()
+                .AddIngredient<CalamityMod.Items.DraedonMisc.CodebreakerBase>()
+                .AddIngredient<CalamityMod.Items.Placeables.DraedonStructures.LaboratoryTerminalItem>()
+                .AddTile(TileID.WorkBenches)
                 .Register();
         }
     }

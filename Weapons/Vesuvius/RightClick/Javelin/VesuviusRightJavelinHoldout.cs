@@ -96,7 +96,7 @@ namespace CalamityLegendsComeBack.Weapons.Vesuvius.RightClick
         {
             if (Main.myPlayer == Projectile.owner)
             {
-                Vector2 mouse = Owner.Calamity().mouseWorld;
+                Vector2 mouse = global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(Owner, Owner.Calamity().mouseWorld);
                 Vector2 aimDirection = (mouse - Owner.MountedCenter).SafeNormalize(Vector2.UnitX * Owner.direction);
                 float aimInterpolant = Utils.GetLerpValue(5f, 25f, Owner.Distance(mouse), true);
                 Projectile.velocity = Vector2.Lerp(Direction, aimDirection, aimInterpolant).SafeNormalize(Vector2.UnitX * Owner.direction);

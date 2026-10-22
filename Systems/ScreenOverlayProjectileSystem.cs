@@ -10,6 +10,11 @@ namespace CalamityLegendsComeBack.Systems
     {
     }
 
+    internal interface IUnscaledScreenOverlayProjectile
+    {
+        bool UseUnscaledOverlay { get; }
+    }
+
     internal sealed class ScreenOverlayProjectileSystem : ModSystem
     {
         public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
@@ -23,16 +28,23 @@ namespace CalamityLegendsComeBack.Systems
 
             layers.Insert(cursorLayerIndex, new LegacyGameInterfaceLayer(
                 "CalamityLegendsComeBack: Screen Overlay Projectiles",
-                DrawScreenOverlayProjectiles,
+                () => DrawScreenOverlayProjectiles(false),
                 InterfaceScaleType.Game));
+            layers.Insert(cursorLayerIndex + 1, new LegacyGameInterfaceLayer(
+                "CalamityLegendsComeBack: Unscaled Screen Overlay Projectiles",
+                () => DrawScreenOverlayProjectiles(true),
+                InterfaceScaleType.None));
         }
 
-        private static bool DrawScreenOverlayProjectiles()
+        private static bool DrawScreenOverlayProjectiles(bool unscaled)
         {
             for (int i = 0; i < Main.maxProjectiles; i++)
             {
                 Projectile projectile = Main.projectile[i];
                 if (!projectile.active || projectile.ModProjectile is not IScreenOverlayProjectile)
+                    continue;
+                bool needsUnscaled = projectile.ModProjectile is IUnscaledScreenOverlayProjectile { UseUnscaledOverlay: true };
+                if (needsUnscaled != unscaled)
                     continue;
 
                 Color lightColor = Color.White;

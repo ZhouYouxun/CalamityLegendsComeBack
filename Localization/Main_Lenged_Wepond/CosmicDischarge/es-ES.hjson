@@ -23,35 +23,30 @@ Mods: {
 					// UltimateActiveText: God-rift opened!
 					/* CosmicDischargeLeft:
 						'''
-						[c/8DEBFF:Left click: performs a three-hit combo in the current form. All hits inflict Godslayer Inferno and a rift mark.]
-						[c/8DEBFF:Whip form: each hit has its own smear, lightning, or line-beam signature. Lashes throw rift bombs; the thrust detonates where it hits.]
-						[c/8DEBFF:Sword form: the blade stays straight and fixed-length. Swings release heavy-homing DoG blades; the finisher creates distortion, rift cracks, and triple explosions.]
-						[c/8DEBFF:Chain Blade form: multiple chains converge on the cursor. The first two hits emphasize current and stars; the finisher uses starsmoke, laser walls, and a severe explosion.]
+						[c/8DEBFF:Left Click: Strike in the current form, leaving Godslayer Inferno and rift marks on hit.]
+						[c/8DEBFF:Whip form lashes from afar; sword form cuts through nearby enemies.]
+						[c/8DEBFF:Chain Blade form casts out its chains, ending with blades that rush the target together.]
 						''' */
 					/* CosmicDischargeRight:
 						'''
-						[c/6FDFFF:Right click: opens a divine rift portal and cycles forms (Whip -> Sword -> Chain Blade).]
-						[c/6FDFFF:During a third-hit windup: triggers Quick Draw. After a 20-frame charge, the target point erupts with a divine particle burst, granting 10 ultimate energy.]
+						[c/6FDFFF:Right Click: Open a rift to switch between whip, sword, and chain blade forms.]
+						[c/6FDFFF:Press right click during the final strike's windup to quick draw and blast the target point.]
 						''' */
 					/* CosmicDischargeUltimate:
 						'''
-						[c/FFE85A:Dimensional Compression: at 120 energy, press] [[c/FFE85A:{0}]] [c/FFE85A: to begin a 60-frame rift charge.]
-						[c/FFE85A:Burst: full-screen divine laser walls and a massive rift explosion, followed by a lingering divine fire field.]
+						[c/FFE85A:Ultimate [Dimensional Compression]: Press [{0}] to open a divine rift.]
+						[c/FFE85A:Its eruption leaves a field that shelters you.]
 						''' */
-					// CosmicDischargePassive: "[c/B8F4FF:Rift Seal:] [c/DCD6C8:while held, any single hit that would exceed 20% of your max HP is capped at that value. When triggered, gain 5 seconds of Rift Revival (+20% damage). Cooldown: 60 seconds.]"
-					// LegendaryHint: "[c/BABABA:Hold Shift to read the legendary record]"
+					/* CosmicDischargePassive:
+						'''
+						[c/B8F4FF:Passive [Rift Seal]: While held, the rift shields you from a crushing blow.]
+						[c/B8F4FF:When the seal breaks, Rift Revival briefly awakens your power.]
+						''' */
+					// CosmicDischargeUltimateLocked: "[c/9A9A9A:Ultimate [Dimensional Compression] is not yet unlocked.]"
 					// GrowthBase: "[c/8DEBFF:Current growth: three base combos. The sword finisher gains rift bombs after Devourer of Gods.]"
 					// GrowthDoG: "[c/8DEBFF:Current growth: the sword finisher fires two rift bombs. The chain finisher gains homing blades after Yharon.]"
 					// GrowthYharon: "[c/8DEBFF:Current growth: the chain finisher fires two homing blades. Quick Draw gains a sword wave after both final bosses.]"
 					// GrowthFinal: "[c/8DEBFF:Current growth: Quick Draw releases a sword wave; all form upgrades are unlocked.]"
-					/* LegendaryText:
-						'''
-						[c/8DEBFF:The first Cosmic Discharge felt like a compressed cosmic slash: open the rift and pour the energy straight out.]
-						[c/6FDFFF:That burst was dangerous enough, but it struggled to show the Devourer's segmented pressure, its chasing bites, and its constant approach.]
-						[c/8DEBFF:After the rebuild, rifts are no longer just exits for projectiles. They are where each form begins to consume the battlefield.]
-						[c/6FDFFF:Blade, opening, and void echo take over in turn, splitting a single release into a multi-stage language of endings.]
-						[c/B8F4FF:When the seal lights again, it is not promising safety. It is confirming that the next devouring still has a target to find.]
-						''' */
 				}
 			}
 		}

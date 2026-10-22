@@ -677,7 +677,7 @@
 //             PFLeftEffectRules.ApplyTheme(projectileIndex, holdout.CurrentMark);
 //             holdout.ApplyRecoil(34f);
 //             holdout.Owner.velocity -= direction * 3.2f;
-//             holdout.Owner.Calamity().GeneralScreenShakePower = Math.Max(holdout.Owner.Calamity().GeneralScreenShakePower, 6f);
+//             holdout.global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(Owner, Projectile.Center, Math.Max(holdout.Owner.Calamity().GeneralScreenShakePower, 6f));
 //             holdout.TriggerMuzzleFlash(28);
 //             holdout.SpawnMuzzleBurst(PristineFuryMarkHelper.GetColor(holdout.CurrentMark), 1.5f);
 //             SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Custom/DoGLaserWallBigAttack") { Volume = 0.78f, Pitch = 0.08f, MaxInstances = 2 }, muzzle);

@@ -1,0 +1,8 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		ArchivedWeaponTooltip: {
+			Warning: Ta broń jest niedokończona i nie jest już rozwijana
+			ShiftHint: Przytrzymaj Shift, aby zobaczyć ostatnią wersję
+		}
+	}
+}

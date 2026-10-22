@@ -92,13 +92,10 @@ Mods: {
 			}
 
 			Consumables: {
-				LegendarySupplyBox: {
-					// DisplayName: Legendary Supply Box
-					/* Tooltip:
-						'''
-						Right click to get a random legendary weapon, or use this box to craft a specific one.
-						Some weapons are still unbalanced. Try the balanced SHPC, Briny Baron and Blossom Flux first.
-						''' */
+				LongLostWeaponBlueprints: {
+					FlavorText: «Ого, тут ещё и секретные документы!»
+					// DisplayName: Long-Lost Weapon Blueprints
+					// Tooltip: Used to craft this mod's legendary weapons
 				}
 
 				RetroGameConsoleSupplyBox: {
@@ -122,19 +119,42 @@ Mods: {
 				}
 
 				QuickStartBox: {
-					// DisplayName: Quick Start Box
+					// DisplayName: Quick Initial Supply Box
 					// Tooltip: ""
 				}
-			}
-		}
 
-		Accessories: {
-			LegendaryEmblem: {
-				// DisplayName: Legendary Emblem
-				// Tooltip: Permanently unlocks every legendary weapon ultimate for this character
-				// AlreadyConsumed: This character has already received the Legendary Emblem's permanent boost.
-				// UnconsumedStatus: Ultimate skills are locked
-				// ConsumedStatus: Ultimate skills permanently unlocked
+				HardmodeSupplyBox: {
+					// DisplayName: Hardmode Supply Box
+					// Tooltip: Right click to obtain early Hardmode ores, souls, and other supplies
+				}
+
+				PostPlanteraSupplyBox: {
+					// DisplayName: Post-Plantera Supply Box
+					// Tooltip: Right click to obtain a Solar Tablet, Solar Veils, Grand Scales, and Living Shards
+				}
+
+				PostMoonLordSupplyBox: {
+					// DisplayName: Post-Moon Lord Supply Box
+					// Tooltip: Right click to obtain Unholy Essence and Ectoplasm
+				}
+
+				PostProvidenceSupplyBox: {
+					// DisplayName: Post-Providence Supply Box
+					// Tooltip: Right click to obtain Divine Geodes, Bloodstone, and Supreme Healing Potions
+				}
+
+				PostDevourerSupplyBox: {
+					// DisplayName: Post-Devourer Supply Box
+					// Tooltip: Right click to obtain Endothermic Energy, Darksun Fragments, and Nightmare Fuel
+				}
+
+				PostYharonSupplyBox: {
+					// DisplayName: Post-Yharon Supply Box
+					// Tooltip: Right click to obtain Yharon Soul Fragments and Auric Ore
+				}
+			}
+
+			Accessories: {
 			}
 		}
 
@@ -226,7 +246,8 @@ Mods: {
 				Every legendary weapon will be reworked over time, with plenty more new content on the way -- stay tuned.
 				Feedback and suggestions are welcome -- please leave a rational comment in the review section.
 				''' */
-			CrossoverItem: Кроссоверный предмет
+			// CrossoverItem: Crossover Item
+			CrossoverItemDiscontinued: Предмет коллаборации - Поддержка прекращена
 		}
 
 		Keybinds: {

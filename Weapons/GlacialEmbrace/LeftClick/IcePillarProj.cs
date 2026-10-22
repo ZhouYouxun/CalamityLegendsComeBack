@@ -89,7 +89,7 @@ namespace CalamityLegendsComeBack.Weapons.GlacialEmbrace.LeftClick
             }
 
             SoundEngine.PlaySound(SoundID.Item62 with { Volume = 1f, Pitch = -0.2f }, Projectile.Center);
-            player.Calamity().GeneralScreenShakePower = Math.Max(player.Calamity().GeneralScreenShakePower, 4.5f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(player, Projectile.Center, 4.5f);
         }
 
         public override void OnKill(int timeLeft)

@@ -32,11 +32,14 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             Projectile.width = 50;
             Projectile.height = 42;
             Projectile.friendly = true;
+            Projectile.DamageType = ModContent.GetInstance<RogueDamageClass>();
             Projectile.ignoreWater = true;
             Projectile.tileCollide = true;
             Projectile.penetrate = 1;
             Projectile.timeLeft = 240;
             Projectile.extraUpdates = 2;
+            Projectile.usesLocalNPCImmunity = true;
+            Projectile.localNPCHitCooldown = -1;
         }
 
         public override void AI()
@@ -44,7 +47,6 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             if (!initialized)
             {
                 Projectile.scale = 0.8f + 0.6f * Progress;
-                Projectile.DamageType = Owner.HeldItem.DamageType;
                 initialized = true;
             }
 
@@ -82,30 +84,32 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            if (Projectile.owner == Main.myPlayer)
-            {
-                int shockwaveIndex = Projectile.NewProjectile(
-                    Projectile.GetSource_OnHit(target),
-                    target.Center,
-                    Vector2.Zero,
-                    ModContent.ProjectileType<CalamityMod.Projectiles.Melee.EarthenTidesShockwave>(),
-                    (int)(Projectile.damage * 0.75f),
-                    0f,
-                    Projectile.owner,
-                    1.5f
-                );
+            Projectile.ai[0] = 1f;
+        }
 
-                if (Main.projectile.IndexInRange(shockwaveIndex))
-                {
-                    Main.projectile[shockwaveIndex].DamageType = ModContent.GetInstance<RogueDamageClass>();
-                    Main.projectile[shockwaveIndex].friendly = true;
-                    Main.projectile[shockwaveIndex].hostile = false;
-                }
-            }
+        public override bool OnTileCollide(Vector2 oldVelocity)
+        {
+            Projectile.ai[0] = 1f;
+            return true;
         }
 
         public override void OnKill(int timeLeft)
         {
+            // Replace the old normal-right impact with the stealth payload, exactly once at collision.
+            if (Projectile.ai[0] == 1f)
+            {
+                if (Main.myPlayer == Projectile.owner)
+                {
+                    int burst = Projectile.NewProjectile(Projectile.GetSource_Death(), Projectile.Center, Vector2.Zero,
+                        ModContent.ProjectileType<LeonidLionHead>(), Projectile.damage, Projectile.knockBack,
+                        Projectile.owner);
+                    if (burst.WithinBounds(Main.maxProjectiles))
+                        Main.projectile[burst].Calamity().stealthStrike = true;
+                }
+                return;
+            }
+
+            // A shot that expires without a collision only dissipates; it never detonates at the cursor.
             SoundEngine.PlaySound(SoundID.Item89 with { Volume = 0.85f, Pitch = -0.2f }, Projectile.Center);
             SoundEngine.PlaySound(SoundID.Item14 with { Volume = 0.6f, Pitch = 0.1f }, Projectile.Center);
 
@@ -126,29 +130,6 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
             LeonidStarlight.Burst(Projectile.Center, 2, LeonidVisualUtils.StarGold, LeonidStarlightShape.Halo,
                 speed: 3.5f, scale: 1f + Progress * 0.6f, hoverTime: 16, lifetime: 100, lanceSpeed: 13f);
 
-            // Release 7 reflective meteors
-            if (Main.myPlayer == Projectile.owner)
-            {
-                int reflectiveType = ModContent.ProjectileType<LeonidReflectiveMeteor>();
-                int splitDamage = (int)(Projectile.damage * 0.5f);
-
-                for (int i = 0; i < 7; i++)
-                {
-                    // Generate initial velocity in random directions
-                    float angle = Main.rand.NextFloat(MathHelper.TwoPi);
-                    float speed = Main.rand.NextFloat(5.5f, 13.5f);
-                    Vector2 splitVel = angle.ToRotationVector2() * speed;
-
-                    Projectile.NewProjectile(
-                        Projectile.GetSource_FromThis(),
-                        Projectile.Center,
-                        splitVel,
-                        reflectiveType,
-                        splitDamage,
-                        Projectile.knockBack * 0.4f,
-                        Projectile.owner);
-                }
-            }
         }
 
         public override bool PreDraw(ref Color lightColor)

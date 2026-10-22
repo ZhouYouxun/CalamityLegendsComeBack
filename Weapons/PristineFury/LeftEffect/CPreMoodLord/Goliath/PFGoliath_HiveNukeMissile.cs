@@ -117,7 +117,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury.LeftEffect
 
             Color theme = PFLeftEffectRules.GetThemeColor(Projectile, new Color(139, 242, 73));
             SoundEngine.PlaySound(new SoundStyle("CalamityMod/Sounds/Item/TheHiveNuke") { Volume = 0.78f }, Projectile.Center);
-            Main.player[Projectile.owner].Calamity().GeneralScreenShakePower = System.Math.Max(Main.player[Projectile.owner].Calamity().GeneralScreenShakePower, 6.5f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Main.player[Projectile.owner], Projectile.Center, 6.5f);
 
             Projectile.ExpandHitboxBy(120);
             Projectile.damage = (int)(Projectile.damage * 0.7f);

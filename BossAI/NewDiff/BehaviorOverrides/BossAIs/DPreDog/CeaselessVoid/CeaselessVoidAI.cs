@@ -435,7 +435,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 SoundEngine.PlaySound(SoundID.NPCHit53, npc.Center);
                 VoidFx.Burst(npc.Center, 7f, 30);
                 if (Main.netMode != NetmodeID.Server)
-                    Main.LocalPlayer.Calamity().GeneralScreenShakePower = 8f;
+                    global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(Main.LocalPlayer, npc.Center, 8f);
             }
         }
         #endregion
@@ -695,7 +695,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             if (timer == 1)
             {
                 SoundEngine.PlaySound(SoundID.NPCDeath10, npc.Center);
-                target.Calamity().GeneralScreenShakePower = 9f;
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(target, npc.Center, 9f);
             }
 
             if (timer == 45)
@@ -793,7 +793,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     npc.scale = 1f;
                     SoundEngine.PlaySound(SoundID.Item62, npc.Center);
                     SoundEngine.PlaySound(SoundID.NPCDeath4, npc.Center);
-                    target.Calamity().GeneralScreenShakePower = 13f;
+                    global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(target, npc.Center, 13f);
                     VoidFx.Burst(npc.Center, 8f, 40);
                     VoidFx.Burst(npc.Center, 5f, 24);
                 }

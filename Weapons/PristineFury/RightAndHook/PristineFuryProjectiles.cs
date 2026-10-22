@@ -333,7 +333,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
                     Projectile.owner);
             }
 
-            Main.player[Projectile.owner].SetScreenshake(5f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Main.player[Projectile.owner], Projectile.Center, 5f);
         }
 
         private void SpawnExplosionEffects()
@@ -1132,7 +1132,7 @@ namespace CalamityLegendsComeBack.Weapons.PristineFury
             if (Projectile.owner != Main.myPlayer)
                 return;
 
-            Main.player[Projectile.owner].SetScreenshake(chargeLevel == 3f ? 10f : 6f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Main.player[Projectile.owner], Projectile.Center, chargeLevel == 3f ? 10f : 6f);
             PristineFuryMark mark = (PristineFuryMark)(int)Projectile.ai[2];
 
             float damageMult = chargeLevel == 3f ? 0.90f : 0.70f;

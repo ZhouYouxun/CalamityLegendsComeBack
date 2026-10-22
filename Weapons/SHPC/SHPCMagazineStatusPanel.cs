@@ -79,7 +79,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             if (owner.HeldItem?.ModItem is not NewLegendSHPC weapon)
                 return false;
 
-            int bulletCount = weapon.GetActiveMagazineCount(owner);
+            int bulletCount = weapon.DebugModeActive ? 1 : weapon.GetActiveMagazineCount(owner);
             if (bulletCount <= 0)
                 return false;
 
@@ -100,7 +100,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             int firstBulletY = panelArea.Y + MagazinePadding + FeedLipHeight;
             for (int i = 0; i < bulletCount; i++)
             {
-                NewLegendSHPC.SHPCMagazineSlot slot = weapon.GetMagazineSlot(i, owner);
+                NewLegendSHPC.SHPCMagazineSlot slot = weapon.GetMagazineSlot(weapon.DebugModeActive ? weapon.CurrentMagazineIndex : i, owner);
                 Rectangle bulletArea = new(
                     panelArea.X + (panelArea.Width - BulletWidth) / 2,
                     firstBulletY + i * (BulletHeight + BulletGap),

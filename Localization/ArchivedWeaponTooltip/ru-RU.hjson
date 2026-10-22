@@ -1,0 +1,8 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		ArchivedWeaponTooltip: {
+			Warning: Это оружие не завершено и больше не поддерживается
+			ShiftHint: Удерживайте Shift, чтобы увидеть последнюю версию
+		}
+	}
+}

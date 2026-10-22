@@ -85,7 +85,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
             Projectile.rotation = slashDirection.ToRotation() + MathHelper.PiOver2;
 
             if (Time == 1f)
-                Owner.SetScreenshake(9f);
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Owner, Projectile.Center, 9f);
 
             if (Time >= 7f && Time <= SlashDuration - 5f)
             {
@@ -136,7 +136,7 @@ namespace CalamityLegendsComeBack.Weapons.CosmicDischarge
         {
             CosmicDischargeCommon.ApplyDoGDebuffs(target, 360);
             Owner.AddBuff(ModContent.BuffType<CosmicFreeze>(), 240);
-            Owner.SetScreenshake(8f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Owner, Projectile.Center, 8f);
 
             SoundStyle hitSound = new("CalamityMod/Sounds/Item/DemonSwordInsaneImpact");
             SoundEngine.PlaySound(hitSound with { Volume = 0.7f, Pitch = -0.1f }, target.Center);

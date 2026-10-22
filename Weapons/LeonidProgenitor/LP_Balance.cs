@@ -12,49 +12,39 @@ namespace CalamityLegendsComeBack.Weapons.LeonidProgenitor
         // Initial, EoC, Evil, Skeletron, Hardmode, Mech, Plantera, Golem,
         // MoonLord, Providence, Polterghast, DoG, Yharon, Exo+SC
         //
-        // LeonidProgenitor is a Yellow-rarity rogue weapon, available from
-        // early Hardmode. Stealth strike applies StealthDamageMultiplier (1.2×)
-        // on top of these values automatically via CalamityMod.
-
-        private static readonly int[] DefaultLeftClickBaseDamage =
+        // 每行一个时期，三列依次为：通用面板伤害、左键潜行倍率、右键潜行倍率。
+        // 右键现在仅能在满潜行时蓄力释放，倍率直接控制整套右键攻击伤害。
+        // 倍率只在发射源应用一次；本体、爆炸、衍生弹幕都从该源伤害按原比例继承。
+        private static readonly float[,] DefaultAttackDamageTable =
         {
-            14,     // Initial
-            20,     // Eye of Cthulhu
-            28,     // Evil Boss
-            36,     // Skeletron
-            48,     // Hardmode
-            72,     // Any Mechanical Boss
-            112,    // Plantera           ← intended first-available stage
-            150,    // Golem
-            205,    // Moon Lord
-            268,    // Providence
-            355,    // Polterghast
-            468,    // Devourer of Gods
-            604,    // Yharon
-            7650,   // Exo Mechs & Supreme Calamitas
+            // Panel   Left stealth   Right stealth
+            {    18,          1.0f,          2.2f }, // Initial
+            {    21,          1.0f,          2.2f }, // Eye of Cthulhu
+            {    25,          1.0f,          2.2f }, // Evil Boss
+            {    29,          1.0f,          2.2f }, // Skeletron
+            {    39,          1.0f,          2.2f }, // Hardmode
+            {    48,          1.0f,          2.2f }, // Any Mechanical Boss
+            {    58,          1.0f,          2.2f }, // Plantera
+            {    77,          1.0f,          2.2f }, // Golem
+            {   134,          1.0f,          2.2f }, // Moon Lord
+            {   175,          1.0f,          2.2f }, // Providence
+            {   264,          1.0f,          2.2f }, // Polterghast
+            {   347,          1.0f,          2.2f }, // Devourer of Gods
+            {   448,          1.0f,          2.2f }, // Yharon
+            {  5673,          1.0f,          2.2f }, // Exo Mechs & Supreme Calamitas
         };
 
-        // 大招（狮子座回响）伤害倍率：肉后/月后/神后三档
-        // 大招伤害 = 当前左键基础伤害 × 本档倍率
-        private static readonly float[] UltimateDamageMultipliers =
+        private static float GetAttackValue(int column, int stage)
         {
-            2.50f, // Tier 0: 肉后（大招解锁起点，机械 Boss 之后）
-            3.20f, // Tier 1: 月后（月亮领主之后）
-            4.00f  // Tier 2: 神后（亵渎天神 Providence 之后）
-        };
-
-        public static float GetUltimateDamageMultiplier() =>
-            UltimateDamageTier.Resolve(SourceFile, nameof(UltimateDamageMultipliers), UltimateDamageMultipliers);
-
-        public static int GetLeftClickBaseDamage()
-        {
-            int[] values = RuntimeBalanceData.GetSourceIntArray(SourceFile, nameof(DefaultLeftClickBaseDamage), DefaultLeftClickBaseDamage);
-            int stage = Utils.Clamp(GetCompletedStageIndex(), 0, values.Length - 1);
-            return System.Math.Max(1, values[stage]);
+            stage = Utils.Clamp(stage, 0, DefaultAttackDamageTable.GetLength(0) - 1);
+            return RuntimeBalanceData.GetSourceTableFloat(SourceFile, nameof(DefaultAttackDamageTable), stage, column,
+                DefaultAttackDamageTable[stage, column]);
         }
 
-        public static int GetInitialLeftClickBaseDamage() =>
-            RuntimeBalanceData.GetSourceIntArray(SourceFile, nameof(DefaultLeftClickBaseDamage), DefaultLeftClickBaseDamage)[0];
+        public static int GetLeftClickBaseDamage() => System.Math.Max(1, (int)GetAttackValue(0, GetCompletedStageIndex()));
+        public static float GetStealthDamageMultiplier(bool rightClick) =>
+            System.Math.Max(0f, GetAttackValue(rightClick ? 2 : 1, GetCompletedStageIndex()));
+        public static int GetInitialLeftClickBaseDamage() => System.Math.Max(1, (int)GetAttackValue(0, 0));
 
         public static int GetCompletedStageIndex()
         {

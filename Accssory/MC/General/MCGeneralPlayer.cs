@@ -21,6 +21,7 @@ namespace CalamityLegendsComeBack.Accssory.MC.General
 
         public bool PeacockDisplayActive =>
             willowBladeEquipped &&
+            MalachiteBalance.RightClickUnlocked &&
             MalachiteKunai.HasFullStoredPeacockFan(Player) &&
             MalachiteRightFeather.CountStoredRightFeathers(Player) >= MalachiteBalance.RightFeatherMaxCount;
 

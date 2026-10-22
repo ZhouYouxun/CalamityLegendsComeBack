@@ -1,0 +1,16 @@
+Mods: {
+	CalamityLegendsComeBack: {
+		Items: {
+			SHPCDebugTool: {
+				Tooltip:
+					'''
+					Solo te afecta a ti mientras esté en tu inventario y marcada como favorita
+					Amplía la rueda de la SHPC hasta casi la altura de la pantalla y desbloquea todos los materiales con munición de prueba ilimitada
+					Al quitarla o desmarcarla, elimina todos los materiales cargados y las reservas sin devolver los originales
+					Solo se obtiene con trampas
+					'''
+				DisplayName: Herramienta de depuración SHPC
+			}
+		}
+	}
+}

@@ -107,7 +107,7 @@ namespace CalamityLegendsComeBack.Weapons.YharimsCrystal.RightGeneral
         private void Detonate()
         {
             Player owner = Main.player[Projectile.owner];
-            owner.Calamity().GeneralScreenShakePower = System.Math.Max(owner.Calamity().GeneralScreenShakePower, 12f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(owner, Projectile.Center, 12f);
 
             SoundStyle boom = new("CalamityMod/Sounds/Item/DeadSunExplosion");
             SoundEngine.PlaySound(boom with { Volume = 1.1f, Pitch = -0.18f, PitchVariance = 0.12f }, Projectile.Center);

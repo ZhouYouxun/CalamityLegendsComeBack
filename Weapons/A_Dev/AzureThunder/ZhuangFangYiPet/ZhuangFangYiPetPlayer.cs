@@ -172,7 +172,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder.ZhuangFangYiPet
                     lightningScale: 0.9f);
             }
 
-            Player.Calamity().GeneralScreenShakePower = Math.Max(Player.Calamity().GeneralScreenShakePower, 6f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(Player, Player.Center, 6f);
         }
 
         public void QueueStrongAttackCandidate(NPC target)

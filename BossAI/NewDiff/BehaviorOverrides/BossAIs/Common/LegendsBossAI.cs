@@ -280,7 +280,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                 return;
 
             target.LegendsCamera().RequestFocus(npc.Center, focusStrength, holdFrames, riseFrames: 12, fallFrames: 34);
-            target.Calamity().GeneralScreenShakePower = Math.Max(target.Calamity().GeneralScreenShakePower, shakePower);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(target, npc.Center, shakePower);
         }
     }
 }

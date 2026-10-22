@@ -6,6 +6,26 @@ namespace CalamityLegendsComeBack.Weapons.BlossomFlux
 {
     public class BalanceBlossomFlux
     {
+        // 内置箭袋成长，替换同档效果；不改动下方基础伤害与战术数值表。
+        // 初始备用 / 邪恶 Boss 后同调 / 月亮领主后共鸣 / 噬魂幽花后主宰。
+        public static int InnateQuiverTier => DownedBossSystem.downedPolterghast ? 4 :
+            NPC.downedMoonlord ? 3 : NPC.downedBoss2 ? 2 : 1;
+        public static float InnateQuiverDamageBonus => InnateQuiverTier switch
+        {
+            1 => 0.08f,
+            2 => 0.11f,
+            3 => 0.14f,
+            _ => 0.18f
+        };
+        public static float InnateQuiverCritBonus => InnateQuiverTier switch
+        {
+            2 => 6f,
+            4 => 8f,
+            _ => 0f
+        };
+        public static float InnateQuiverArmorPenetration => InnateQuiverTier == 3 ? 12f : 0f;
+        public static int InnateQuiverDefenseBonus => InnateQuiverTier == 1 ? 4 : 0;
+
         // Edit damage here. Columns are:
         // Stage, Breakthrough, Recovery, Recon, Bombard, Plague.
         //

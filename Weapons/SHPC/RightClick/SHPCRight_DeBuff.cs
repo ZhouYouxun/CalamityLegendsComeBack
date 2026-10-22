@@ -29,6 +29,13 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
         public override void Update(Player player, ref int buffIndex)
         {
+            if (BalanceSHPC.LaserNeverOverheats || player.GetModPlayer<global::CalamityLegendsComeBack.Accssory.SHPC.Skill.HeatModule.HeatModulePlayer>().HeatModuleEquipped)
+            {
+                player.DelBuff(buffIndex);
+                buffIndex--;
+                return;
+            }
+
             SHPCRight_Player heatPlayer = player.GetModPlayer<SHPCRight_Player>();
             int actualStage = heatPlayer.HeatStage;
             int displayedStage = heatPlayer.GetDisplayedHeatLevel();

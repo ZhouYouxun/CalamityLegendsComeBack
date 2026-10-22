@@ -14,7 +14,6 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.ProjectilePossession
     {
         private const int MaxAllowedTimeLeft = 3600;
         private const int MaxAllowedDamage = 3600;
-        private const float AbsorbedSourceMultiplier = 0.8f;
         private static readonly HashSet<int> BlacklistedProjectileTypes = new()
         {
             ProjectileID.SaucerDeathray,
@@ -99,22 +98,33 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.ProjectilePossession
             int sourceMaxPenetrate = sourceProjectile.maxPenetrate;
             int cloneDamage = GetEmpoweredDamage(originalDamage);
 
+            // Snapshot before freeing the slot: NewProjectileDirect may reuse that same slot.
+            Projectile snapshot = new() { type = sourceProjectile.type, width = sourceProjectile.width, height = sourceProjectile.height };
+            CopyCloneState(sourceProjectile, snapshot, cloneDamage);
+            IEntitySource captureSource = owner.GetSource_Misc("SHPCProjectileCapture");
+            int sourceIdentity = sourceProjectile.identity;
+            int sourceOwner = sourceProjectile.owner;
+            // Remove the hostile projectile without triggering its damaging death effects.
+            sourceProjectile.active = false;
+            if (Main.netMode != NetmodeID.SinglePlayer)
+                NetMessage.SendData(MessageID.KillProjectile, -1, -1, null, sourceIdentity, sourceOwner);
+
             Projectile clone = Projectile.NewProjectileDirect(
-                sourceProjectile.GetSource_FromThis(),
-                sourceProjectile.Center,
+                captureSource,
+                snapshot.Center,
                 Vector2.Zero,
-                sourceProjectile.type,
+                snapshot.type,
                 cloneDamage,
                 originalKnockBack,
                 owner.whoAmI,
-                sourceProjectile.ai[0],
-                sourceProjectile.ai[1],
-                sourceProjectile.ai[2]);
+                snapshot.ai[0],
+                snapshot.ai[1],
+                snapshot.ai[2]);
 
             if (clone is null || !clone.active)
                 return false;
 
-            CopyCloneState(sourceProjectile, clone, cloneDamage);
+            CopyCloneState(snapshot, clone, cloneDamage);
 
             SHPCProjectilePossessionGlobalProjectile clonePossession = clone.GetGlobalProjectile<SHPCProjectilePossessionGlobalProjectile>();
             clonePossession.CaptureClone(
@@ -129,7 +139,6 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.ProjectilePossession
                 sourcePenetrate,
                 sourceMaxPenetrate);
 
-            sourceProjectile.GetGlobalProjectile<SHPCProjectilePossessionGlobalProjectile>().WeakenSourceProjectile(sourceProjectile);
             possessedClone = clone;
             return true;
         }
@@ -412,19 +421,6 @@ namespace CalamityLegendsComeBack.Accssory.SHPC.ChangeRight.ProjectilePossession
                 clone.ai[i] = source.ai[i];
             for (int i = 0; i < clone.localAI.Length && i < source.localAI.Length; i++)
                 clone.localAI[i] = source.localAI[i];
-        }
-
-        private void WeakenSourceProjectile(Projectile projectile)
-        {
-            if (WeakenedBySHPC)
-                return;
-
-            WeakenedBySHPC = true;
-            weakenedDamage = System.Math.Max(1, (int)System.MathF.Round(projectile.damage * AbsorbedSourceMultiplier));
-            weakenedMaxSpeed = projectile.velocity.Length() * AbsorbedSourceMultiplier;
-            projectile.velocity *= AbsorbedSourceMultiplier;
-            projectile.damage = weakenedDamage;
-            projectile.netUpdate = true;
         }
 
         private static int GetEmpoweredDamage(int baseDamage)

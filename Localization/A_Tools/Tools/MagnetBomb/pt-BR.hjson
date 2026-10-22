@@ -3,16 +3,16 @@ Mods: {
 		Items: {
 			Weapons: {
 				MagnetBombItem: {
-					DisplayName: Bomba magnética
-					Tooltip:
+					// DisplayName: Magnet Bomb
+					/* Tooltip:
 						'''
-						Clique com o botão esquerdo para arremessar uma bomba pegajosa que adere às superfícies.
-						Clique com o botão direito para detonar todas as bombas posicionadas ao mesmo tempo.
-						'''
+						Left click to throw a sticky bomb that adheres to surfaces.
+						Right click to detonate all deployed bombs simultaneously.
+						''' */
 				}
 			}
 		}
 
-		Projectiles.A_Tools.MagnetBombProj.DisplayName: Bomba magnética
+		// Projectiles.A_Tools.MagnetBombProj.DisplayName: Magnet Bomb
 	}
 }

@@ -68,6 +68,11 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
             SpawnFlightEffects(forward);
         }
 
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
+        {
+            modifiers.SourceDamage *= 1.3f;
+        }
+
         public override void OnKill(int timeLeft)
         {
             SoundEngine.PlaySound(ImpactSound, Projectile.Center);
@@ -111,7 +116,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.Effects.CPreMoodLord.CoreOfCalami
                     Projectile.Center,
                     direction * speed,
                     ModContent.ProjectileType<CoreOfCalamitySplitOrb>(),
-                    Math.Max(1, (int)(Projectile.damage * 0.3)),
+                    Math.Max(1, (int)(Projectile.damage * 0.3f * 1.2f)),
                     Projectile.knockBack * 0.72f,
                     Projectile.owner,
                     colorIndex);

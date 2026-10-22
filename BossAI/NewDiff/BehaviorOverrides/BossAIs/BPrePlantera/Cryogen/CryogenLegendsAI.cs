@@ -723,7 +723,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     SoundEngine.PlaySound(ShieldBreakSound, npc.Center);
 
                     // Screen shake
-                    player.Calamity().GeneralScreenShakePower = 10f;
+                    global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(player, npc.Center, 10f);
 
                     // Release 24-directional shards
                     if (Main.netMode != NetmodeID.MultiplayerClient)
@@ -1136,7 +1136,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             npc.netUpdate = true;
 
             SoundEngine.PlaySound(SoundID.Item14, npc.Center);
-            target.Calamity().GeneralScreenShakePower = 9f;
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(target, npc.Center, 9f);
             EmitCryoDustRing(npc.Center, 60f, 30, 5f);
             EmitFrostBurst(npc.Center, 5f, 40, 4);
 
@@ -1200,7 +1200,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                         npc.netUpdate = true;
 
                         SoundEngine.PlaySound(SoundID.Item14, npc.Center);
-                        target.Calamity().GeneralScreenShakePower = 7f;
+                        global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(target, npc.Center, 7f);
                         EmitCryoDustRing(npc.Center, 46f, 22, 4.5f);
                         EmitFrostBurst(npc.Center, 4f, 26, 3);
                         if (Main.netMode != NetmodeID.MultiplayerClient)
@@ -2027,7 +2027,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
                     Projectile.NewProjectile(npc.GetSource_FromAI(), target.Center + new Vector2(-180f, -500f), new Vector2(0f, 14f), ModContent.ProjectileType<CryogenJavelin>(), npc.damage / 3, 0f, Main.myPlayer, 2f);
                     Projectile.NewProjectile(npc.GetSource_FromAI(), target.Center + new Vector2(180f, -500f), new Vector2(0f, 14f), ModContent.ProjectileType<CryogenJavelin>(), npc.damage / 3, 0f, Main.myPlayer, 2f);
                     SoundEngine.PlaySound(SoundID.Item1 with { Pitch = -0.2f, Volume = 1.1f }, npc.Center);
-                    target.Calamity().GeneralScreenShakePower = 6f;
+                    global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(target, npc.Center, 6f);
                     FindHeldWeapon<CryogenHeldCrystalPiercer>(npc)?.Pulse(30f);
                 }
             }
@@ -2115,7 +2115,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
             Player target = Main.player[npc.target];
             if (target.active && !target.dead)
             {
-                target.Calamity().GeneralScreenShakePower = targetSubphase == 4 ? 15f : 12f;
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Set(target, npc.Center, targetSubphase == 4 ? 15f : 12f);
             }
 
             // Shards explosion on server
@@ -2372,7 +2372,7 @@ namespace CalamityLegendsComeBack.BossAI.NewDiff.Content.BehaviorOverrides.BossA
 
             Player local = Main.LocalPlayer;
             if (local != null && local.active)
-                local.Calamity().GeneralScreenShakePower = Math.Max(local.Calamity().GeneralScreenShakePower, shake);
+                global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(local, pos, shake);
 
             EmitFrostBurst(pos, burstSpeed, burst, burst / 6);
             EmitCryoDustRing(pos, 26f, 12, 4.5f);

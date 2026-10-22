@@ -41,6 +41,8 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
         // 打开时锁定具体的那把武器实例，避免背包里多把SHPC时互相串弹药
         public static void Open(int who, Item item)
         {
+            if (item.ModItem is NewLegendSHPC { DebugModeActive: true })
+                return;
             IsOpen = true;
             ownerWhoAmI = who;
             targetItem = item;
@@ -162,6 +164,7 @@ namespace CalamityLegendsComeBack.Weapons.SHPC
             if (targetItem == null || targetItem.IsAir) { Close(); return; }
             NewLegendSHPC weapon = targetItem.ModItem as NewLegendSHPC;
             if (weapon == null) { Close(); return; }
+            if (weapon.DebugModeActive) { Close(); return; }
 
             int slotCount = weapon.GetActiveMagazineCount(owner);
             panelCenter = Main.ScreenSize.ToVector2() * 0.5f;

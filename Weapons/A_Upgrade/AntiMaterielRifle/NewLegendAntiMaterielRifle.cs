@@ -9,6 +9,7 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 using CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle.Proj;
+using CalamityLegendsComeBack.LegendaryTooltipEffects;
 
 namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
 {
@@ -48,7 +49,11 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             Item.value = CalamityGlobalItem.RarityPinkBuyPrice;
             Item.rare = ItemRarityID.Orange;
             Item.crit = 20;
+            Item.accessory = true;
         }
+
+        public override void UpdateAccessory(Player player, bool hideVisual) =>
+            player.GetModPlayer<AMRRangedStealthPlayer>().Equipped = true;
 
         public override ModItem Clone(Item item)
         {
@@ -126,6 +131,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
                 this.GetLocalizedValue("InventoryToggle");
 
             tooltips.FindAndReplace("[GFB]", text);
+            tooltips.Add(new TooltipLine(Mod, "EquipEffect", this.GetLocalizedValue("EquipEffect"))
+            {
+                OverrideColor = new Color(102, 204, 255)
+            });
 
             AMRProgressionStage currentStage = AMRBalance.Stage;
             int maxStageIndex = (int)currentStage;
@@ -145,10 +154,8 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
             string legendaryText = this.GetLocalizedValue("LegendaryText");
             if (!string.IsNullOrWhiteSpace(legendaryText))
             {
-                tooltips.Add(new TooltipLine(Mod, "AMRLegendaryText", legendaryText)
-                {
-                    OverrideColor = new Color(102, 230, 255)
-                });
+                tooltips.Add(new TooltipLine(Mod, AntiMaterielRifleArmorBreakLegendaryTooltip.TooltipLineName,
+                    legendaryText));
             }
         }
 
@@ -171,7 +178,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Upgrade.AntiMaterielRifle
         internal static Vector2 GetMouseWorld(Player player)
         {
             Vector2 mouseWorld = player.Calamity().mouseWorld;
-            return mouseWorld == Vector2.Zero ? Main.MouseWorld : mouseWorld;
+            return global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(player, mouseWorld == Vector2.Zero ? Main.MouseWorld : mouseWorld);
         }
     }
 

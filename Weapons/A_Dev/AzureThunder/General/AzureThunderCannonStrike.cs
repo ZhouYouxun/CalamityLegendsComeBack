@@ -158,7 +158,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.AzureThunder
             else
                 SpawnTealImpact();
 
-            owner.Calamity().GeneralScreenShakePower = Math.Max(owner.Calamity().GeneralScreenShakePower, RedFinale ? 10f : 7f);
+            global::CalamityLegendsComeBack.Systems.ModScreenShake.Max(owner, Projectile.Center, RedFinale ? 10f : 7f);
             SoundEngine.PlaySound(SoundID.Item122 with { Volume = 0.9f, Pitch = RedFinale ? -0.22f : 0.04f }, Projectile.Center);
             SoundEngine.PlaySound(SoundID.Item14 with { Volume = RedFinale ? 0.7f : 0.42f, Pitch = -0.42f }, Projectile.Center);
         }

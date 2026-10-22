@@ -288,25 +288,15 @@ namespace CalamityLegendsComeBack.Weapons.SHPC.RightClick
 
             // ===== 第一优先级：追踪准星弹幕 =====
             // 直接搜索 CtrlChipNEWReticle 弹幕实体，而不仅仅使用 ReticleWorld
-            int reticleType = ModContent.ProjectileType<CtrlChipNEWReticle>();
-            Projectile reticleProj = null;
-            for (int i = 0; i < Main.maxProjectiles; i++)
-            {
-                Projectile p = Main.projectile[i];
-                if (p.active && p.owner == Projectile.owner && p.type == reticleType)
-                {
-                    reticleProj = p;
-                    break;
-                }
-            }
+            Vector2 reticleWorld = tacticalPlayer.ReticleWorld;
 
-            float maxReticleTurn = MathHelper.ToRadians(2f); // 准星追踪：每帧最多转2度
-            float maxEnemyTurn = MathHelper.ToRadians(1f);   // 敌人追踪：每帧最多转1度
+            float maxReticleTurn = MathHelper.ToRadians(2f * 1.3f);
+            float maxEnemyTurn = MathHelper.ToRadians(1f * 1.3f);
 
-            if (reticleProj != null)
+            if (reticleWorld != Vector2.Zero)
             {
                 // 直接追踪准星弹幕的实际位置
-                Vector2 toReticle = (reticleProj.Center - Projectile.Center).SafeNormalize(currentDirection);
+                Vector2 toReticle = (reticleWorld - Projectile.Center).SafeNormalize(currentDirection);
                 // 只追踪正前方180度内的准星
                 if (Vector2.Dot(currentDirection, toReticle) > 0f)
                 {

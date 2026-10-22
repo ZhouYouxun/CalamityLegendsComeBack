@@ -146,7 +146,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
                 validRightInput &&
                 player.ownedProjectileCounts[HoldoutType] <= 0)
             {
-                Vector2 shootDirection = (player.Calamity().mouseWorld - player.MountedCenter).SafeNormalize(Vector2.UnitX * player.direction);
+                Vector2 shootDirection = (global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(player, player.Calamity().mouseWorld) - player.MountedCenter).SafeNormalize(Vector2.UnitX * player.direction);
                 int holdoutDamage = GetConfiguredWeaponDamage(player, LifeRoundDamage);
 
                 Projectile.NewProjectile(
@@ -256,7 +256,7 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
                 return;
             }
 
-            player.ChangeDir(Math.Sign((player.Calamity().mouseWorld - player.Center).X));
+            player.ChangeDir(Math.Sign((global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(player, player.Calamity().mouseWorld) - player.Center).X));
             float itemRotation = player.compositeFrontArm.rotation + MathHelper.PiOver2 * player.gravDir;
 
             Vector2 itemPosition = player.MountedCenter + itemRotation.ToRotationVector2() * 7f;
@@ -272,10 +272,10 @@ namespace CalamityLegendsComeBack.Weapons.A_Dev.DesertEagle
             if (player.ownedProjectileCounts[HoldoutType] > 0)
                 return;
 
-            player.ChangeDir(Math.Sign((player.Calamity().mouseWorld - player.Center).X));
+            player.ChangeDir(Math.Sign((global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(player, player.Calamity().mouseWorld) - player.Center).X));
 
             float animProgress = 0.5f - player.itemTime / (float)Math.Max(1, player.itemTimeMax);
-            float rotation = (player.Center - player.Calamity().mouseWorld).ToRotation() * player.gravDir + MathHelper.PiOver2;
+            float rotation = (player.Center - global::CalamityLegendsComeBack.Accssory.SHPC.Skill.CtrlChip.CtrlChipPlayer.GetFireAimWorld(player, player.Calamity().mouseWorld)).ToRotation() * player.gravDir + MathHelper.PiOver2;
             if (animProgress < 0.4f)
                 rotation += -0.045f * (float)Math.Pow((0.6f - animProgress) / 0.6f, 2f) * player.direction;
 
